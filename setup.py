@@ -2,6 +2,7 @@
 
 from setuptools import setup
 import sys
+import os
 
 packages = ['cbc-sdk']
 
@@ -17,20 +18,26 @@ install_requires = [
     'protobuf',
     'solrq',
     'validators'
-    ]
+]
 
 tests_requires = [
     'pytest<=5.0'
-    ]
+]
 
 # if sys.version_info < (2, 7):
 #     install_requires.extend(['simplejson', 'total-ordering', 'ordereddict'])
 if sys.version_info < (3, 0):
     install_requires.extend(['futures'])
 
+
+def read(fname):
+    """Process files for configuration"""
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
+
 setup(
     name='cbc-sdk',
-    version='1.0.0',
+    version=read('VERSION'),
     url='https://github.com/carbonblack/cbc-sdk-python',
     license='MIT',
     author='Carbon Black',
@@ -46,9 +53,13 @@ setup(
     classifiers=[
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
+        'Intended Audience :: System Administrators',
         'Operating System :: OS Independent',
-        'Programming Language :: Python',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Topic :: Security',
         'Topic :: Software Development :: Libraries :: Python Modules'
-        ],
+    ],
     scripts=[]
-    )
+)
