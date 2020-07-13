@@ -1,5 +1,5 @@
 [run]
-source = src/cbc_sdk_python
+source = src/cbc-sdk
 [report]
 exclude_lines =
     pragma: no cover
