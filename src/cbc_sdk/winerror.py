@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from cbc_sdk.six import add_metaclass
 
 """Error related constants for win32

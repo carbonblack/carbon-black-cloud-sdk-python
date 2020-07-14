@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from cbc_sdk.query import PaginatedQuery, BaseQuery, SimpleQuery
 from cbc_sdk.errors import ApiError, TimeoutError
 import time

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from cbc_sdk.psc.livequery.models import Run, RunHistory
 from cbc_sdk.psc.rest_api import CbPSCBaseAPI
 from cbc_sdk.errors import CredentialError, ApiError

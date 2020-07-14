@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from cbc_sdk.models import MutableBaseModel, UnrefreshableModel
 from cbc_sdk.errors import ServerError
 from cbc_sdk.psc.devices_query import DeviceSearchQuery

@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from cbc_sdk.models import MutableBaseModel, CreatableModelMixin, NewBaseModel
 
 from copy import deepcopy

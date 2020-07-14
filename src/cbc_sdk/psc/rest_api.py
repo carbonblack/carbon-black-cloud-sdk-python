@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from cbc_sdk.connection import BaseAPI
 from cbc_sdk.errors import ApiError, ServerError
 from .cblr import LiveResponseSessionManager

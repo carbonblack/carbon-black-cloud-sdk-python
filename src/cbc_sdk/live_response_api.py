@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 
 """The Live Response API and associated objects."""
 

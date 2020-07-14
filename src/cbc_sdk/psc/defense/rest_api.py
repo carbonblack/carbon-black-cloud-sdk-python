@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from cbc_sdk.utils import convert_query_params
 from cbc_sdk.query import PaginatedQuery
 

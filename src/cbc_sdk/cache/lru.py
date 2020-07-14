@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 LRU cache based on stucchio's py-lru-cache module
 

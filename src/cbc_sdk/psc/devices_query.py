@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from cbc_sdk.errors import ApiError
 from .base_query import PSCQueryBase, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin
 

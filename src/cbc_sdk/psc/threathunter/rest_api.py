@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from cbc_sdk.psc.threathunter.query import Query
 from cbc_sdk.psc.rest_api import CbPSCBaseAPI
 from cbc_sdk.psc.threathunter.models import ReportSeverity
