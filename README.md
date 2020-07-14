@@ -4,7 +4,7 @@
 <br>
 **Release Date:** TBD
 
-
+[![Coverage Status](https://coveralls.io/repos/github/carbonblack/cbc-sdk-python/badge.svg?t=cwMaub)](https://coveralls.io/github/carbonblack/cbc-sdk-python)
 
 
 ## Recent updates
