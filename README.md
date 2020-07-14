@@ -4,7 +4,8 @@
 <br>
 **Release Date:** TBD
 
-
+[![Coverage Status](https://coveralls.io/repos/github/carbonblack/cbc-sdk-python/badge.svg?t=cwMaub)](https://coveralls.io/github/carbonblack/cbc-sdk-python)
+[![Codeship Status for carbonblack/cbc-sdk-python](https://app.codeship.com/projects/9e55a370-a772-0138-aae4-129773225755/status?branch=master)](https://app.codeship.com/projects/402767)
 
 
 ## Recent updates

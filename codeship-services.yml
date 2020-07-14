@@ -11,3 +11,12 @@ testingpython38:
     dockerfile: ./docker/python3.8/Dockerfile
   encrypted_env_file:
     - env.encrypted
+
+testingrhel:
+  build:
+    dockerfile: ./docker/rhel/Dockerfile
+
+testingubuntu:
+  build:
+    dockerfile: ./docker/ubuntu/Dockerfile
+    

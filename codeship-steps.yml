@@ -14,3 +14,9 @@
   - name: testing python 3.8
     service: testingpython38
     command: bin/tests_n_reports.sh
+  - name: testing red hat
+    service: testingrhel
+    command: pytest
+  - name: testing ubuntu
+    service: testingubuntu
+    command: pytest
