@@ -77,7 +77,7 @@ class Process(UnrefreshableModel):
 
         :param kwargs: Arguments to filter the event query with.
         :return: Returns a Query object with the appropriate search parameters for events
-        :rtype: :py:class:`cbapi.psc.threathunter.query.Query`
+        :rtype: :py:class:`cbc_sdk.psc.threathunter.query.Query`
 
         Example::
 
@@ -111,7 +111,7 @@ class Process(UnrefreshableModel):
 
         :return: Returns a Query object with the appropriate search parameters for parent processes,
                  or None if the process has no recorded parent
-        :rtype: :py:class:`cbapi.psc.threathunter.query.AsyncProcessQuery` or None
+        :rtype: :py:class:`cbc_sdk.psc.threathunter.query.AsyncProcessQuery` or None
         """
         if "parent_guid" in self._info:
             return self._cb.select(Process).where(process_guid=self.parent_guid)
