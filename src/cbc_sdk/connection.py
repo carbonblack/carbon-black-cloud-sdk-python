@@ -28,8 +28,7 @@ except ImportError:
 import logging
 import json
 
-from cbc_sdk.six import iteritems
-from cbc_sdk.six.moves import urllib
+import urllib
 
 from .auth import CredentialStoreFactory, Credentials
 from .errors import ClientError, QuerySyntaxError, ServerError, TimeoutError, ApiError, ObjectNotFoundError, \
@@ -392,7 +391,7 @@ class BaseAPI(object):
         """
         if ret.status_code == 200:
             message = ret.json()
-            for k, v in iteritems(expected):
+            for k, v in iter(expected.items()):
                 if k not in message or message[k] != v:
                     raise ServerError(ret.status_code, message)
         else:
@@ -566,7 +565,7 @@ class BaseAPI(object):
         if issubclass(cls, CreatableModelMixin):
             n = cls(self)
             if type(data) is dict:
-                for k, v in iteritems(data):
+                for k, v in iter(data.items()):
                     setattr(n, k, v)
             return n
         else:

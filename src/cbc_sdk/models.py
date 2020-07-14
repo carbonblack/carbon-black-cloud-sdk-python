@@ -4,12 +4,9 @@ from __future__ import absolute_import
 
 from copy import deepcopy
 
-from cbc_sdk.six import python_2_unicode_compatible
-
 import base64
 import os.path
-from cbc_sdk.six import iteritems, add_metaclass, integer_types
-from cbc_sdk.six.moves import range
+from cbc_sdk.six import add_metaclass
 from .response.utils import convert_from_cb, convert_to_cb
 import yaml
 import json
@@ -38,7 +35,7 @@ class CbMetaModel(type):
                 open(os.path.join(mcs.model_base_directory, swagger_meta_file), 'rb').read())
 
         clsdict["__doc__"] = "Represents a %s object in the Carbon Black server.\n\n" % (name,)
-        for field_name, field_info in iteritems(model_data.get("properties", {})):
+        for field_name, field_info in iter(model_data.get("properties", {}).items()):
             docstring = field_info.get("description", None)
             if docstring:
                 clsdict["__doc__"] += ":ivar %s: %s\n" % (field_name, docstring)
@@ -52,7 +49,7 @@ class CbMetaModel(type):
         cls._required_fields = model_data.get("required", [])
         cls._default_value = {}
 
-        for field_name, field_info in iteritems(model_data.get("properties", {})):
+        for field_name, field_info in iter(model_data.get("properties", {}).items()):
             cls._valid_fields.append(field_name)
 
             default_value = field_info.get("default", None)
@@ -81,7 +78,7 @@ class CbMetaModel(type):
             else:
                 setattr(cls, field_name, FieldDescriptor(field_name))
 
-        for fk_name, fk_info in iteritems(foreign_keys):
+        for fk_name, fk_info in iter(foreign_keys.items()):
             setattr(cls, fk_name, ForeignKeyFieldDescriptor(fk_name, fk_info[0], fk_info[1]))
 
         return cls
@@ -143,7 +140,7 @@ class EpochDateTimeFieldDescriptor(FieldDescriptor):
 
     def __get__(self, instance, instance_type=None):
         d = super(EpochDateTimeFieldDescriptor, self).__get__(instance, instance_type)
-        if type(d) is float or type(d) in integer_types:
+        if type(d) is float or type(d) is int:
             epoch_seconds = d / self.multiplier
             return datetime.utcfromtimestamp(epoch_seconds)
         else:
@@ -186,7 +183,6 @@ class BinaryFieldDescriptor(FieldDescriptor):
         super(BinaryFieldDescriptor, self).__set__(instance, base64.b64encode(value))
 
 
-@python_2_unicode_compatible
 @add_metaclass(CbMetaModel)
 class NewBaseModel(object):
     primary_key = "id"
@@ -464,7 +460,7 @@ class MutableBaseModel(NewBaseModel):
         return self
 
     def reset(self):
-        for k, v in iteritems(self._dirty_attributes):
+        for k, v in iter(self._dirty_attributes.items()):
             if v is None:
                 del self._info[k]
             else:

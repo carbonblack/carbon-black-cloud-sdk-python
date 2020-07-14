@@ -207,7 +207,7 @@ class LRUCacheDict(object):
 
         # Delete expired
         next_expire = None
-        for k, v in iter(self.__expire_times):
+        for k, v in iter(self.__expire_times.items()):
             if v < t:
                 marked_for_deletion.add(k)
             else:

@@ -1,11 +1,10 @@
 from __future__ import absolute_import
-from cbc_sdk.six import iteritems
 import sys
 
 
 def convert_query_params(qd):
     o = []
-    for k, v in iteritems(qd):
+    for k, v in iter(qd.items()):
         if type(v) == list:
             for item in v:
                 o.append((k, item))

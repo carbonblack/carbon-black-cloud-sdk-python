@@ -1,5 +1,5 @@
 from __future__ import print_function
-from cbc_sdk.six import PY3
+
 import sys
 import time
 import argparse
@@ -22,11 +22,6 @@ from cbc_sdk.psc.livequery import CbLiveQueryAPI
 from cbc_sdk.response import CbEnterpriseResponseAPI
 
 log = logging.getLogger(__name__)
-
-
-# Example scripts: we want to make sure that sys.stdout is using utf-8 encoding. See issue #36.
-if not PY3:
-    sys.stdout = codecs.getwriter('utf8')(sys.stdout)
 
 
 def eprint(*args, **kwargs):

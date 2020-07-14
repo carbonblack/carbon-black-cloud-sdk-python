@@ -2,7 +2,6 @@ from cbc_sdk.six.moves.configparser import RawConfigParser
 import os
 import attrdict
 import logging
-import cbc_sdk.six as six
 
 from .errors import CredentialError
 
@@ -44,7 +43,7 @@ class Credentials(attrdict.AttrDict):
 
         for k in ["ssl_verify", "ssl_verify_hostname", "ignore_system_proxy", "ssl_force_tls_1_2"]:
             x = self.get(k, default_profile.get(k, "True"))
-            if isinstance(x, six.string_types) and x.lower() in _boolean_states:
+            if isinstance(x, str) and x.lower() in _boolean_states:
                 self[k] = _boolean_states[x.lower()]
 
 
@@ -88,7 +87,7 @@ class FileCredentialStore(object):
         ]
 
         if "credential_file" in kwargs:
-            if isinstance(kwargs["credential_file"], six.string_types):
+            if isinstance(kwargs["credential_file"], str):
                 self.credential_search_path = [kwargs["credential_file"]]
             elif type(kwargs["credential_file"]) is list:
                 self.credential_search_path = kwargs["credential_file"]
@@ -103,7 +102,7 @@ class FileCredentialStore(object):
                                   (credential_profile, ", ".join(self.credential_search_path)))
 
         retval = {}
-        for k, v in six.iteritems(default_profile):
+        for k, v in iter(default_profile.items()):
             retval[k] = self.credentials.get(credential_profile, k)
 
         if not retval["url"] or not retval["token"]:

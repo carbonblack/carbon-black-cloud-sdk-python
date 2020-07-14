@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 """Exceptions that are thrown by CBAPI operations."""
 
-from cbc_sdk.six import python_2_unicode_compatible
-
 
 class ApiError(Exception):
     """Base class for all CBAPI errors; also raised for generic internal errors."""
@@ -28,7 +26,6 @@ class ApiError(Exception):
         return self.message
 
 
-@python_2_unicode_compatible
 class ClientError(ApiError):
     """A ClientError is raised when an HTTP 4xx error code is returned from the Carbon Black server."""
 
@@ -65,7 +62,6 @@ class ClientError(ApiError):
         return msg
 
 
-@python_2_unicode_compatible
 class QuerySyntaxError(ApiError):
     """The request contains a query with malformed syntax."""
 
@@ -95,7 +91,6 @@ class QuerySyntaxError(ApiError):
         return msg
 
 
-@python_2_unicode_compatible
 class ServerError(ApiError):
     """A ServerError is raised when an HTTP 5xx error code is returned from the Carbon Black server."""
 
@@ -132,7 +127,6 @@ class ServerError(ApiError):
         return msg
 
 
-@python_2_unicode_compatible
 class ObjectNotFoundError(ApiError):
     """The requested object could not be found in the Carbon Black datastore."""
 
@@ -162,7 +156,6 @@ class ObjectNotFoundError(ApiError):
         return msg
 
 
-@python_2_unicode_compatible
 class TimeoutError(ApiError):
     """A requested operation timed out."""
 
@@ -199,7 +192,6 @@ class TimeoutError(ApiError):
         return msg
 
 
-@python_2_unicode_compatible
 class UnauthorizedError(ApiError):
     """The action that was attempted was not authorized."""
 

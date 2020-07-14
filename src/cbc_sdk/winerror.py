@@ -1,4 +1,4 @@
-from cbc_sdk.six import iteritems, add_metaclass
+from cbc_sdk.six import add_metaclass
 
 """Error related constants for win32
 
@@ -10,7 +10,7 @@ class ErrorMetaClass(type):
     def __new__(mcs, name, bases, clsdict):
         error_lookup = dict()
 
-        for err_name, err_value in iteritems(clsdict):
+        for err_name, err_value in iter(clsdict.items()):
             if isinstance(err_value, int):
                 error_lookup[err_value] = err_name
 

@@ -75,9 +75,9 @@ def main(args):
     parser = argparse.ArgumentParser()
     commands = parser.add_subparsers(dest="command_name", help="CbAPI subcommand")
 
-    for cmd_name, cmd_config in iter(command_map):
+    for cmd_name, cmd_config in iter(command_map.items()):
         cmd_parser = commands.add_parser(cmd_name, help=cmd_config.get("help", None))
-        for cmd_arg_name, cmd_arg_config in iter(cmd_config.get("extra_args", {})):
+        for cmd_arg_name, cmd_arg_config in iter(cmd_config.get("extra_args", {}).items()):
             cmd_parser.add_argument(cmd_arg_name, **cmd_arg_config)
 
     opts = parser.parse_args(args)

@@ -14,11 +14,10 @@ from collections import defaultdict
 import shutil
 
 from cbc_sdk.errors import TimeoutError, ObjectNotFoundError, ApiError
-from cbc_sdk.six import itervalues
 from concurrent.futures import _base, wait
 from cbapi import winerror
 
-from cbc_sdk.six.moves.queue import Queue
+import queue
 
 from cbc_sdk.response.models import Sensor
 
@@ -1054,7 +1053,7 @@ class CbLRManagerBase(object):
 
             delete_list = []
             with self._session_lock:
-                for session in itervalues(self._sessions):
+                for session in iter(self._sessions.values()):
                     if session._refcount == 0:
                         delete_list.append(session.sensor_id)
                     else:

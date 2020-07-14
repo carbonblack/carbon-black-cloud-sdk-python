@@ -1,6 +1,6 @@
 import logging
 import threading
-from cbc_sdk.six.moves.queue import Queue
+import queue
 from collections import defaultdict
 from concurrent.futures import _base
 
@@ -54,7 +54,7 @@ class JobWorker(threading.Thread):
         super(JobWorker, self).__init__()
         self.cb = cb
         self.sensor_id = sensor_id
-        self.job_queue = Queue()
+        self.job_queue = queue.Queue()
         self.lr_session = None
         self.result_queue = result_queue
 
@@ -141,7 +141,7 @@ class LiveResponseJobScheduler(threading.Thread):
         self._idle_workers = set()
         self._unscheduled_jobs = defaultdict(list)
         self._max_workers = max_workers
-        self.schedule_queue = Queue()
+        self.schedule_queue = queue.Queue()
 
     def run(self):
         log.debug("Starting Live Response Job Scheduler")
