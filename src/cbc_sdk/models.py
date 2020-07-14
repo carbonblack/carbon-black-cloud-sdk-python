@@ -14,7 +14,6 @@ import time
 from .errors import ApiError, ServerError, InvalidObjectError
 import logging
 from datetime import datetime
-from cbc_sdk.utils import calculate_elapsed_time
 
 log = logging.getLogger(__name__)
 
@@ -148,7 +147,7 @@ class EpochDateTimeFieldDescriptor(FieldDescriptor):
 
     def __set__(self, instance, value):
         if isinstance(value, datetime):
-            new_value = calculate_elapsed_time(value - self.epoch) * self.multiplier
+            new_value = (value - self.epoch).total_seconds() * self.multiplier
         else:
             new_value = value
         super(EpochDateTimeFieldDescriptor, self).__set__(instance, new_value)

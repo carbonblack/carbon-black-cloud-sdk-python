@@ -14,12 +14,10 @@ from collections import defaultdict
 import validators
 import hashlib
 
-from cbc_sdk.protection import CbEnterpriseProtectionAPI
 from cbc_sdk.psc import CbPSCBaseAPI
 from cbc_sdk.psc.defense import CbDefenseAPI
 from cbc_sdk.psc.threathunter import CbThreatHunterAPI
 from cbc_sdk.psc.livequery import CbLiveQueryAPI
-from cbc_sdk.response import CbEnterpriseResponseAPI
 
 log = logging.getLogger(__name__)
 
@@ -45,34 +43,6 @@ def build_cli_parser(description="Cb Example Script"):
 def disable_insecure_warnings():
     import requests.packages.urllib3
     requests.packages.urllib3.disable_warnings()
-
-
-def get_cb_response_object(args):
-    if args.verbose:
-        logging.basicConfig()
-        logging.getLogger("cbapi").setLevel(logging.DEBUG)
-        logging.getLogger("__main__").setLevel(logging.DEBUG)
-
-    if args.cburl and args.apitoken:
-        cb = CbEnterpriseResponseAPI(url=args.cburl, token=args.apitoken, ssl_verify=(not args.no_ssl_verify))
-    else:
-        cb = CbEnterpriseResponseAPI(profile=args.profile)
-
-    return cb
-
-
-def get_cb_protection_object(args):
-    if args.verbose:
-        logging.basicConfig()
-        logging.getLogger("cbapi").setLevel(logging.DEBUG)
-        logging.getLogger("__main__").setLevel(logging.DEBUG)
-
-    if args.cburl and args.apitoken:
-        cb = CbEnterpriseProtectionAPI(args.cburl, args.apitoken)
-    else:
-        cb = CbEnterpriseProtectionAPI(profile=args.profile)
-
-    return cb
 
 
 def get_cb_psc_object(args):

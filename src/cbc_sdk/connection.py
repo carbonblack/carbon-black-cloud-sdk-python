@@ -37,7 +37,7 @@ from . import __version__
 
 from .cache.lru import lru_cache_function
 from .models import CreatableModelMixin
-from .utils import calculate_elapsed_time, convert_query_params
+from .utils import convert_query_params
 
 log = logging.getLogger(__name__)
 
@@ -259,7 +259,7 @@ class Connection(object):
             r = self.session.request(method, uri, headers=headers, verify=verify_ssl, proxies=proxies,
                                      timeout=self._timeout, **kwargs)
             log.debug('HTTP {0:s} {1:s} took {2:.3f}s (response {3:d})'.format(method, url,
-                                                                               calculate_elapsed_time(r.elapsed),
+                                                                               r.elapsed.total_seconds(),
                                                                                r.status_code))
         except requests.Timeout as timeout_error:
             raise TimeoutError(uri=uri, original_exception=timeout_error)

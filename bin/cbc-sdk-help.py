@@ -4,13 +4,11 @@
 
 import argparse
 import contextlib
+import configparser
 
 import os
 import sys
 from io import StringIO as StringIO
-
-
-from cbc_sdk.six.moves.configparser import RawConfigParser
 
 
 @contextlib.contextmanager
@@ -48,7 +46,7 @@ def configure(opts):
 
     org_key = input("Org Key: ")
 
-    config = RawConfigParser()
+    config = configparser.ConfigParser()
     config.readfp(StringIO('[default]'))
     config.set("default", "url", url)
     config.set("default", "token", "{0}/{1}".format(token, connector_id))

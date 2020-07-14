@@ -1,4 +1,4 @@
-from cbc_sdk.six.moves.configparser import RawConfigParser
+import configparser
 import os
 import attrdict
 import logging
@@ -92,7 +92,7 @@ class FileCredentialStore(object):
             elif type(kwargs["credential_file"]) is list:
                 self.credential_search_path = kwargs["credential_file"]
 
-        self.credentials = RawConfigParser(defaults=default_profile)
+        self.credentials = configparser.ConfigParser(defaults=default_profile)
         self.credential_files = self.credentials.read(self.credential_search_path)
 
     def get_credentials(self, profile=None):
