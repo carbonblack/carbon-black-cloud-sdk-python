@@ -10,7 +10,7 @@ import sys
 from io import StringIO as StringIO
 
 
-from cbapi.six.moves.configparser import RawConfigParser
+from cbc_sdk.six.moves.configparser import RawConfigParser
 
 
 @contextlib.contextmanager
@@ -28,7 +28,7 @@ def configure(opts):
     credential_path = os.path.join(os.path.expanduser("~"), ".carbonblack")
     credential_file = os.path.join(credential_path, "credentials.cbc")
 
-    print("Welcome to the CbAPI.")
+    print("Welcome to the cbc_sdk.")
     if os.path.exists(credential_file):
         print("An existing credential file exists at {0}.".format(credential_file))
         resp = input("Do you want to continue and overwrite the existing configuration? [Y/N] ")
