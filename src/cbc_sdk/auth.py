@@ -32,12 +32,7 @@ default_profile = {
     "ssl_force_tls_1_2": "False",
 
     "proxy": None,
-    "ignore_system_proxy": "False",
-
-    "rabbitmq_user": "cb",
-    "rabbitmq_pass": None,
-    "rabbitmq_host": "localhost",
-    "rabbitmq_port": 5004
+    "ignore_system_proxy": "False"
 }
 
 _boolean_states = {'1': True, 'yes': True, 'true': True, 'on': True,

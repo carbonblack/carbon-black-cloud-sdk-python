@@ -15,7 +15,6 @@ from cbc_sdk.errors import ApiError
 from cbc_sdk.psc.base_query import QueryBuilder, PSCQueryBase
 from cbc_sdk.psc.base_query import QueryBuilderSupportMixin, IterableQueryMixin
 import logging
-from six import string_types
 
 log = logging.getLogger(__name__)
 
@@ -336,7 +335,7 @@ class FacetQuery(PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
         :return: Query object
         :rtype: :py:class:`Query`
         """
-        if isinstance(field, string_types):
+        if isinstance(field, str):
             self._facet_fields.append(field)
         else:
             for name in field:

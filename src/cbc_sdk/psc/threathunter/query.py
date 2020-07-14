@@ -15,7 +15,6 @@ from cbc_sdk.query import PaginatedQuery, BaseQuery, SimpleQuery
 from cbc_sdk.errors import ApiError, TimeoutError
 import time
 from solrq import Q
-from six import string_types
 import logging
 import functools
 
@@ -33,7 +32,7 @@ class QueryBuilder(object):
 
     Examples::
 
-    >>> from cbc_sdk.psc.threathunter import QueryBuilder
+    >>> from cbapi.psc.threathunter import QueryBuilder
     >>> # build a query with chaining
     >>> query = QueryBuilder().where(process_name="malicious.exe").and_(device_name="suspect")
     >>> # start with an initial query, and chain another condition to it
@@ -57,7 +56,7 @@ class QueryBuilder(object):
         def wrap_guard_query_change(self, q, **kwargs):
             if self._raw_query is not None and (kwargs or isinstance(q, Q)):
                 raise ApiError("Cannot modify a raw query with structured parameters")
-            if self._query is not None and isinstance(q, string_types):
+            if self._query is not None and isinstance(q, str):
                 raise ApiError("Cannot modify a structured query with a raw parameter")
             return func(self, q, **kwargs)
         return wrap_guard_query_change
@@ -71,7 +70,7 @@ class QueryBuilder(object):
         :return: QueryBuilder object
         :rtype: :py:class:`QueryBuilder`
         """
-        if isinstance(q, string_types):
+        if isinstance(q, str):
             if self._raw_query is None:
                 self._raw_query = []
             self._raw_query.append(q)
@@ -96,7 +95,7 @@ class QueryBuilder(object):
         :return: QueryBuilder object
         :rtype: :py:class:`QueryBuilder`
         """
-        if isinstance(q, string_types):
+        if isinstance(q, str):
             self.where(q)
         elif isinstance(q, Q) or kwargs:
             if kwargs:
@@ -182,7 +181,7 @@ class Query(PaginatedQuery):
 
     Examples::
 
-    >>> from cbc_sdk.psc.threathunter import CbThreatHunterAPI,Process
+    >>> from cbapi.psc.threathunter import CbThreatHunterAPI,Process
     >>> cb = CbThreatHunterAPI()
     >>> query = cb.select(Process)
     >>> query = query.where(process_name="notepad.exe")
@@ -267,23 +266,40 @@ class Query(PaginatedQuery):
 
     def _get_query_parameters(self):
         args = self._default_args.copy()
-        args['q'] = self._query_builder._collapse()
+        args['query'] = self._query_builder._collapse()
         if self._query_builder._process_guid is not None:
-            args["cb.process_guid"] = self._query_builder._process_guid
-        args["fl"] = "*,parent_hash,parent_name,process_cmdline,backend_timestamp,device_external_ip,device_group," \
-            + "device_internal_ip,device_os,process_effective_reputation,process_reputation,ttp"
+            args["process_guid"] = self._query_builder._process_guid
+        args["fields"] = [
+            "*",
+            "parent_hash",
+            "parent_name",
+            "process_cmdline",
+            "backend_timestamp",
+            "device_external_ip",
+            "device_group",
+            "device_internal_ip",
+            "device_os",
+            "process_effective_reputation",
+            "process_reputation,ttp"
+        ]
 
         return args
 
     def _count(self):
-        args = {"search_params": self._get_query_parameters()}
+        args = self._get_query_parameters()
 
         log.debug("args: {}".format(str(args)))
 
-        self._total_results = int(self._cb.post_object(self._doc_class.urlobject.format(self._cb_credentials.org_key),
-                                                       body=args)
-                                  .json().get("response_header", {}).get("num_available", 0))
+        result = self._cb.post_object(
+            self._doc_class.urlobject.format(
+                self._cb.credentials.org_key,
+                args["process_guid"]
+            ), body=args
+        ).json()
+
+        self._total_results = int(result.get('num_available', 0))
         self._count_valid = True
+
         return self._total_results
 
     def _validate(self, args):
@@ -291,6 +307,13 @@ class Query(PaginatedQuery):
             return
 
         url = self._doc_class.validation_url.format(self._cb.credentials.org_key)
+
+        if args.get('query', False):
+            args['q'] = args['query']
+
+        # v2 search sort key does not work with v1 validation
+        args.pop('sort', None)
+
         validated = self._cb.get_object(url, query_parameters=args)
 
         if not validated.get("valid"):
@@ -305,7 +328,7 @@ class Query(PaginatedQuery):
             args['start'] = start
         args['rows'] = self._batch_size
 
-        args = {"search_params": args}
+        # args = {"search_params": args}
 
         current = start
         numrows = 0
@@ -313,16 +336,19 @@ class Query(PaginatedQuery):
         still_querying = True
 
         while still_querying:
-            url = self._doc_class.urlobject.format(self._cb.credentials.org_key)
+            url = self._doc_class.urlobject.format(
+                self._cb.credentials.org_key,
+                args["process_guid"]
+            )
             resp = self._cb.post_object(url, body=args)
             result = resp.json()
 
-            self._total_results = result.get("response_header", {}).get("num_available", 0)
-            self._total_segments = result.get("response_header", {}).get("total_segments", 0)
-            self._processed_segments = result.get("response_header", {}).get("processed_segments", 0)
+            self._total_results = result.get("num_available", 0)
+            self._total_segments = result.get("total_segments", 0)
+            self._processed_segments = result.get("processed_segments", 0)
             self._count_valid = True
 
-            results = result.get('docs', [])
+            results = result.get('results', [])
 
             for item in results:
                 yield item
@@ -355,8 +381,7 @@ class AsyncProcessQuery(Query):
         self._query_token = None
         self._timeout = 0
         self._timed_out = False
-        self._sort_by = "backend_timestamp"  # Requires default to prevent unstable fetching of results
-        self._sort_direction = "ASC"
+        self._sort = []
 
     def sort_by(self, key, direction="ASC"):
         """Sets the sorting behavior on a query's results.
@@ -369,11 +394,18 @@ class AsyncProcessQuery(Query):
         :param direction: the sort order, either "ASC" or "DESC"
         :rtype: :py:class:`AsyncProcessQuery`
         """
-        self._sort_by = key
-        self._sort_direction = direction
+        found = False
 
-        # Append to search_job query
-        self._default_args['sort'] = '{} {}'.format(key, direction)
+        for sort_item in self._sort:
+            if sort_item['field'] == key:
+                sort_item['order'] = direction
+                found = True
+
+        if not found:
+            self._sort.append({'field': key, 'order': direction})
+
+        self._default_args['sort'] = self._sort
+
         return self
 
     def timeout(self, msecs):
@@ -397,10 +429,11 @@ class AsyncProcessQuery(Query):
         args = self._get_query_parameters()
         self._validate(args)
 
-        url = "/threathunter/search/v1/orgs/{}/processes/search_jobs".format(self._cb.credentials.org_key)
-        query_start = self._cb.post_object(url, body={"search_params": args})
+        url = "/api/investigate/v2/orgs/{}/processes/search_jobs".format(self._cb.credentials.org_key)
+        query_start = self._cb.post_object(url, body=args)
 
-        self._query_token = query_start.json().get("query_id")
+        self._query_token = query_start.json().get("job_id")
+
         self._timed_out = False
         self._submit_time = time.time() * 1000
 
@@ -408,7 +441,7 @@ class AsyncProcessQuery(Query):
         if not self._query_token:
             self._submit()
 
-        status_url = "/threathunter/search/v1/orgs/{}/processes/search_jobs/{}".format(
+        status_url = "/api/investigate/v1/orgs/{}/processes/search_jobs/{}".format(
             self._cb.credentials.org_key,
             self._query_token,
         )
@@ -437,13 +470,13 @@ class AsyncProcessQuery(Query):
         if self._timed_out:
             raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
 
-        result_url = "/threathunter/search/v1/orgs/{}/processes/search_jobs/{}/results".format(
+        result_url = "/api/investigate/v2/orgs/{}/processes/search_jobs/{}/results".format(
             self._cb.credentials.org_key,
             self._query_token,
         )
         result = self._cb.get_object(result_url)
 
-        self._total_results = result.get('response_header', {}).get('num_available', 0)
+        self._total_results = result.get('num_available', 0)
         self._count_valid = True
 
         return self._total_results
@@ -463,7 +496,7 @@ class AsyncProcessQuery(Query):
         current = start
         rows_fetched = 0
         still_fetching = True
-        result_url_template = "/threathunter/search/v1/orgs/{}/processes/search_jobs/{}/results".format(
+        result_url_template = "/api/investigate/v2/orgs/{}/processes/search_jobs/{}/results".format(
             self._cb.credentials.org_key,
             self._query_token
         )
@@ -477,10 +510,10 @@ class AsyncProcessQuery(Query):
 
             result = self._cb.get_object(result_url, query_parameters=query_parameters)
 
-            self._total_results = result.get('response_header', {}).get('num_available', 0)
+            self._total_results = result.get('num_available', 0)
             self._count_valid = True
 
-            results = result.get('data', [])
+            results = result.get('results', [])
 
             for item in results:
                 yield item

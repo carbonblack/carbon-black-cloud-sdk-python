@@ -13,7 +13,6 @@
 
 from cbc_sdk.errors import ApiError, MoreThanOneResultError
 import functools
-from six import string_types
 from solrq import Q
 
 
@@ -43,7 +42,7 @@ class QueryBuilder(object):
         def wrap_guard_query_change(self, q, **kwargs):
             if self._raw_query is not None and (kwargs or isinstance(q, Q)):
                 raise ApiError("Cannot modify a raw query with structured parameters")
-            if self._query is not None and isinstance(q, string_types):
+            if self._query is not None and isinstance(q, str):
                 raise ApiError("Cannot modify a structured query with a raw parameter")
             return func(self, q, **kwargs)
 
@@ -58,7 +57,7 @@ class QueryBuilder(object):
         :return: QueryBuilder object
         :rtype: :py:class:`QueryBuilder`
         """
-        if isinstance(q, string_types):
+        if isinstance(q, str):
             if self._raw_query is None:
                 self._raw_query = []
             self._raw_query.append(q)
@@ -82,7 +81,7 @@ class QueryBuilder(object):
         :return: QueryBuilder object
         :rtype: :py:class:`QueryBuilder`
         """
-        if isinstance(q, string_types):
+        if isinstance(q, str):
             self.where(q)
         elif isinstance(q, Q) or kwargs:
             if kwargs:
@@ -274,7 +273,7 @@ class IterableQueryMixin:
         return res[0]
 
     def __len__(self):
-        return 0
+        return self._count()
 
     def __getitem__(self, item):
         return None
