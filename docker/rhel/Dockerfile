@@ -1,4 +1,4 @@
-from ubi8/ubi
+from registry.access.redhat.com/ubi8/ubi:latest
 MAINTAINER cb-developer-network@vmware.com
 
 COPY . /app
