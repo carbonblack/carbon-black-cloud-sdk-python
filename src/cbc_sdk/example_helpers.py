@@ -17,7 +17,6 @@ import sys
 import time
 import argparse
 import cmd
-import codecs
 import logging
 import ntpath
 import shutil
