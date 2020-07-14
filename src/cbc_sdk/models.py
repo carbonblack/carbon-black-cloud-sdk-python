@@ -17,7 +17,6 @@ from copy import deepcopy
 
 import base64
 import os.path
-from cbc_sdk.six import add_metaclass
 from .response.utils import convert_from_cb, convert_to_cb
 import yaml
 import json
@@ -193,8 +192,7 @@ class BinaryFieldDescriptor(FieldDescriptor):
         super(BinaryFieldDescriptor, self).__set__(instance, base64.b64encode(value))
 
 
-@add_metaclass(CbMetaModel)
-class NewBaseModel(object):
+class NewBaseModel(object, metaclass=CbMetaModel):
     primary_key = "id"
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
