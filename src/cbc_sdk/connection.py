@@ -361,7 +361,6 @@ class BaseAPI(object):
         product_name = kwargs.pop("product_name", None)
         credential_file = kwargs.pop("credential_file", None)
         integration_name = kwargs.pop("integration_name", None)
-        self.credential_store = CredentialStoreFactory.getCredentialStore(product_name, credential_file)
 
         url, token, org_key = kwargs.pop("url", None), kwargs.pop("token", None), kwargs.pop("org_key", None)
         if url and token:
@@ -377,6 +376,7 @@ class BaseAPI(object):
             self.credential_profile_name = None
         else:
             self.credential_profile_name = kwargs.pop("profile", None)
+            self.credential_store = CredentialStoreFactory.getCredentialStore(product_name, credential_file)
             self.credentials = self.credential_store.get_credentials(self.credential_profile_name)
 
         timeout = kwargs.pop("timeout", DEFAULT_POOL_TIMEOUT)

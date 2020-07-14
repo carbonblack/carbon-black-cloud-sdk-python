@@ -2,7 +2,7 @@ import pytest
 from cbc_sdk.errors import ApiError
 from cbc_sdk.psc.models import Device
 from cbc_sdk.psc.rest_api import CbPSCBaseAPI
-from test.cbtest import StubResponse, patch_cbapi
+from tests.unit.fixtures.stubresponse import StubResponse, patch_cbapi
 
 
 def test_get_device(monkeypatch):

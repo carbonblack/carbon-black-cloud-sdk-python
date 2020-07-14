@@ -17,7 +17,7 @@ from copy import deepcopy
 
 import base64
 import os.path
-from .response.utils import convert_from_cb, convert_to_cb
+from .utils import convert_from_cb, convert_to_cb
 import yaml
 import json
 import time
