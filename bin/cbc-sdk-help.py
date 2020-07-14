@@ -1,16 +1,25 @@
 #!/usr/bin/env python3
 
+# *******************************************************
+# Copyright (c) VMware, Inc. 2020. All Rights Reserved.
+# SPDX-License-Identifier: MIT
+# *******************************************************
+# *
+# * DISCLAIMER. THIS PROGRAM IS PROVIDED TO YOU "AS IS" WITHOUT
+# * WARRANTIES OR CONDITIONS OF ANY KIND, WHETHER ORAL OR WRITTEN,
+# * EXPRESS OR IMPLIED. THE AUTHOR SPECIFICALLY DISCLAIMS ANY IMPLIED
+# * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
+# * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
+
 """Credential helper"""
 
 import argparse
 import contextlib
+import configparser
 
 import os
 import sys
 from io import StringIO as StringIO
-
-
-from cbapi.six.moves.configparser import RawConfigParser
 
 
 @contextlib.contextmanager
@@ -28,7 +37,7 @@ def configure(opts):
     credential_path = os.path.join(os.path.expanduser("~"), ".carbonblack")
     credential_file = os.path.join(credential_path, "credentials.cbc")
 
-    print("Welcome to the CbAPI.")
+    print("Welcome to the cbc_sdk.")
     if os.path.exists(credential_file):
         print("An existing credential file exists at {0}.".format(credential_file))
         resp = input("Do you want to continue and overwrite the existing configuration? [Y/N] ")
@@ -48,7 +57,7 @@ def configure(opts):
 
     org_key = input("Org Key: ")
 
-    config = RawConfigParser()
+    config = configparser.ConfigParser()
     config.readfp(StringIO('[default]'))
     config.set("default", "url", url)
     config.set("default", "token", "{0}/{1}".format(token, connector_id))
@@ -75,9 +84,9 @@ def main(args):
     parser = argparse.ArgumentParser()
     commands = parser.add_subparsers(dest="command_name", help="CbAPI subcommand")
 
-    for cmd_name, cmd_config in iter(command_map):
+    for cmd_name, cmd_config in iter(command_map.items()):
         cmd_parser = commands.add_parser(cmd_name, help=cmd_config.get("help", None))
-        for cmd_arg_name, cmd_arg_config in iter(cmd_config.get("extra_args", {})):
+        for cmd_arg_name, cmd_arg_config in iter(cmd_config.get("extra_args", {}).items()):
             cmd_parser.add_argument(cmd_arg_name, **cmd_arg_config)
 
     opts = parser.parse_args(args)
