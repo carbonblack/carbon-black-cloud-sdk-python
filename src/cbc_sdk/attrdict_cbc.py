@@ -24,8 +24,6 @@ from abc import ABCMeta, abstractmethod
 from collections.abc import Mapping, MutableMapping, Sequence
 import re
 
-import six
-
 """A right-favoring Mapping merge."""
 
 
@@ -172,7 +170,7 @@ class Attr(Mapping):
         """
         if isinstance(obj, Mapping):
             obj = self._constructor(obj, self._configuration())
-        elif (isinstance(obj, Sequence) and not isinstance(obj, (six.string_types, six.binary_type))):
+        elif (isinstance(obj, Sequence) and not isinstance(obj, (str, bytes))):
             sequence_type = getattr(self, '_sequence_type', None)
 
             if sequence_type:
@@ -193,14 +191,13 @@ class Attr(Mapping):
             'register').
         """
         return (
-            isinstance(key, six.string_types) and
+            isinstance(key, str) and
             re.match('^[A-Za-z][A-Za-z0-9_]*$', key) and
             not hasattr(cls, key)
         )
 
 
-@six.add_metaclass(ABCMeta)
-class MutableAttr(Attr, MutableMapping):
+class MutableAttr(Attr, MutableMapping, metaclass=ABCMeta):
     """A mixin class for a mapping that allows for attribute-style access of values."""
     def _setattr(self, key, value):
         """Add an attribute to the object, without attempting to add it as a key to the mapping."""
@@ -281,9 +278,7 @@ class AttrDict(dict, MutableAttr):
 
     def __repr__(self):
         """Override offical string representation."""
-        return six.u('AttrDict({contents})').format(
-            contents=super(AttrDict, self).__repr__()
-        )
+        return f'AttrDict({super(AttrDict, self).__repr__()})'
 
     @classmethod
     def _constructor(cls, mapping, configuration):
