@@ -26,10 +26,7 @@ from collections import defaultdict
 import validators
 import hashlib
 
-from cbc_sdk import CbPSCBaseAPI
-from cbc_sdk.defense import CbDefenseAPI
-from cbc_sdk.threathunter import CbThreatHunterAPI
-from cbc_sdk.livequery import CbLiveQueryAPI
+from cbc_sdk import CBCloudAPI
 
 log = logging.getLogger(__name__)
 
@@ -57,59 +54,16 @@ def disable_insecure_warnings():
     requests.packages.urllib3.disable_warnings()
 
 
-def get_cb_psc_object(args):
+def get_cb_cloud_object(args):
     if args.verbose:
         logging.basicConfig()
         logging.getLogger("cbapi").setLevel(logging.DEBUG)
         logging.getLogger("__main__").setLevel(logging.DEBUG)
 
     if args.cburl and args.apitoken:
-        cb = CbPSCBaseAPI(url=args.cburl, token=args.apitoken, ssl_verify=(not args.no_ssl_verify))
+        cb = CBCloudAPI(url=args.cburl, token=args.apitoken, ssl_verify=(not args.no_ssl_verify))
     else:
-        cb = CbPSCBaseAPI(profile=args.profile)
-
-    return cb
-
-
-def get_cb_defense_object(args):
-    if args.verbose:
-        logging.basicConfig()
-        logging.getLogger("cbapi").setLevel(logging.DEBUG)
-        logging.getLogger("__main__").setLevel(logging.DEBUG)
-
-    if args.cburl and args.apitoken:
-        cb = CbDefenseAPI(url=args.cburl, token=args.apitoken, ssl_verify=(not args.no_ssl_verify))
-    else:
-        cb = CbDefenseAPI(profile=args.profile)
-
-    return cb
-
-
-def get_cb_threathunter_object(args):
-    if args.verbose:
-        logging.basicConfig()
-        logging.getLogger("cbapi").setLevel(logging.DEBUG)
-        logging.getLogger("__main__").setLevel(logging.DEBUG)
-
-    if args.cburl and args.apitoken:
-        cb = CbThreatHunterAPI(url=args.cburl, token=args.apitoken, ssl_verify=(not args.no_ssl_verify))
-    else:
-        cb = CbThreatHunterAPI(profile=args.profile)
-
-    return cb
-
-
-def get_cb_livequery_object(args):
-    if args.verbose:
-        logging.basicConfig()
-        logging.getLogger("cbapi").setLevel(logging.DEBUG)
-        logging.getLogger("__main__").setLevel(logging.DEBUG)
-
-    if args.cburl and args.apitoken and args.orgkey:
-        cb = CbLiveQueryAPI(url=args.cburl, token=args.apitoken, org_key=args.orgkey,
-                            ssl_verify=(not args.no_ssl_verify))
-    else:
-        cb = CbLiveQueryAPI(profile=args.profile)
+        cb = CBCloudAPI(profile=args.profile)
 
     return cb
 

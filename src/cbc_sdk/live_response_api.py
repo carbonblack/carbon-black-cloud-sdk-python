@@ -1255,14 +1255,14 @@ def poll_status(cb, url, desired_status="complete", timeout=None, delay=None):
 
 
 if __name__ == "__main__":
-    from cbc_sdk.defense import CbDefenseAPI
+    from cbc_sdk import CBCloudAPI
     import logging
     root = logging.getLogger()
     root.addHandler(logging.StreamHandler())
 
     logging.getLogger("cbapi").setLevel(logging.DEBUG)
 
-    c = CbDefenseAPI()
+    c = CBCloudAPI()
     j = GetFileJob(r"c:\test.txt")
     with c.select(Device, 3).lr_session() as lr_session:
         file_contents = lr_session.get_file(r"c:\test.txt")

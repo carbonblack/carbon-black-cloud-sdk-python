@@ -28,7 +28,7 @@ class QueryBuilder(object):
     ThreatHunter backend.
 
     This object can be instantiated directly, or can be managed implicitly
-    through the :py:meth:`CbThreatHunterAPI.select` API.
+    through the :py:meth:`CBCloudAPI.select` API.
 
     Examples::
 
@@ -181,8 +181,8 @@ class Query(PaginatedQuery):
 
     Examples::
 
-    >>> from cbc_sdk.threathunter import CbThreatHunterAPI,Process
-    >>> cb = CbThreatHunterAPI()
+    >>> from cbc_sdk.threathunter import CBCloudAPI,Process
+    >>> cb = CBCloudAPI()
     >>> query = cb.select(Process)
     >>> query = query.where(process_name="notepad.exe")
     >>> # alternatively:

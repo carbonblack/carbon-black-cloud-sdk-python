@@ -56,7 +56,7 @@ class Run(NewBaseModel):
         )
 
     @classmethod
-    def _query_implementation(cls, cb):
+    def _query_implementation(cls, cb, **kwargs):
         return RunQuery(cls, cb)
 
     def _refresh(self):
@@ -107,7 +107,7 @@ class RunHistory(Run):
                                   force_init=False, full_doc=True)
 
     @classmethod
-    def _query_implementation(cls, cb):
+    def _query_implementation(cls, cb, **kwargs):
         return RunHistoryQuery(cls, cb)
 
 
@@ -161,7 +161,7 @@ class Result(UnrefreshableModel):
             )
 
     @classmethod
-    def _query_implementation(cls, cb):
+    def _query_implementation(cls, cb, **kwargs):
         return ResultQuery(cls, cb)
 
     def __init__(self, cb, initial_data):
@@ -233,7 +233,7 @@ class DeviceSummary(UnrefreshableModel):
             )
 
     @classmethod
-    def _query_implementation(cls, cb):
+    def _query_implementation(cls, cb, **kwargs):
         return ResultQuery(cls, cb)
 
     def __init__(self, cb, initial_data):
@@ -276,7 +276,7 @@ class ResultFacet(UnrefreshableModel):
             )
 
     @classmethod
-    def _query_implementation(cls, cb):
+    def _query_implementation(cls, cb, **kwargs):
         return FacetQuery(cls, cb)
 
     def __init__(self, cb, initial_data):

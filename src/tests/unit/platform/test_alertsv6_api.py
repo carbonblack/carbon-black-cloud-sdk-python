@@ -1,7 +1,7 @@
 import pytest
 from cbc_sdk.errors import ApiError
 from cbc_sdk.platform.models import BaseAlert, CBAnalyticsAlert, VMwareAlert, WatchlistAlert, WorkflowStatus
-from cbc_sdk.rest_api import CbPSCBaseAPI
+from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.stubresponse import StubResponse, patch_cbapi
 
 
@@ -25,7 +25,7 @@ def test_query_basealert_with_all_bells_and_whistles(monkeypatch):
         return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
                                           "workflow": {"state": "OPEN"}}], "num_found": 1})
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_run_query)
     query = api.select(BaseAlert).where("Blort").set_categories(["SERIOUS", "CRITICAL"]).set_device_ids([6023]) \
         .set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
@@ -55,7 +55,7 @@ def test_query_basealert_with_create_time_as_start_end(monkeypatch):
         return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
                                           "workflow": {"state": "OPEN"}}], "num_found": 1})
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_run_query)
     query = api.select(BaseAlert).where("Blort").set_create_time(start="2019-09-30T12:34:56",
                                                                  end="2019-10-01T12:00:12")
@@ -78,7 +78,7 @@ def test_query_basealert_with_create_time_as_range(monkeypatch):
         return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
                                           "workflow": {"state": "OPEN"}}], "num_found": 1})
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_run_query)
     query = api.select(BaseAlert).where("Blort").set_create_time(range="-3w")
     a = query.one()
@@ -107,7 +107,7 @@ def test_query_basealert_facets(monkeypatch):
                                          {"field": {},
                                           "values": [{"id": "status", "name": "statusX", "total": 9}]}]})
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_run_facet_query)
     query = api.select(BaseAlert).where("Blort").set_workflows(["OPEN"])
     f = query.facets(["REPUTATION", "STATUS"])
@@ -117,7 +117,7 @@ def test_query_basealert_facets(monkeypatch):
 
 
 def test_query_basealert_invalid_create_time_combinations():
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     with pytest.raises(ApiError):
         api.select(BaseAlert).set_create_time()
     with pytest.raises(ApiError):
@@ -150,7 +150,7 @@ def test_query_basealert_invalid_criteria_values():
         {"method": "set_types", "arg": ["ERBOSOFT"]},
         {"method": "set_workflows", "arg": ["IN_LIMBO"]},
         ]
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     query = api.select(BaseAlert)
     for t in tests:
         meth = getattr(query, t["method"], None)
@@ -182,7 +182,7 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(monkeypatch):
         return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
                                           "workflow": {"state": "OPEN"}}], "num_found": 1})
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_run_query)
     query = api.select(CBAnalyticsAlert).where("Blort").set_categories(["SERIOUS", "CRITICAL"]) \
         .set_device_ids([6023]).set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
@@ -217,7 +217,7 @@ def test_query_cbanalyticsalert_facets(monkeypatch):
                                          {"field": {},
                                           "values": [{"id": "status", "name": "statusX", "total": 9}]}]})
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_run_facet_query)
     query = api.select(CBAnalyticsAlert).where("Blort").set_workflows(["OPEN"])
     f = query.facets(["REPUTATION", "STATUS"])
@@ -238,7 +238,7 @@ def test_query_cbanalyticsalert_invalid_criteria_values():
         {"method": "set_sensor_actions", "arg": ["FLIP_A_COIN"]},
         {"method": "set_threat_cause_vectors", "arg": ["NETWORK"]}
         ]
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     query = api.select(CBAnalyticsAlert)
     for t in tests:
         meth = getattr(query, t["method"], None)
@@ -266,7 +266,7 @@ def test_query_vmwarealert_with_all_bells_and_whistles(monkeypatch):
         return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
                                           "workflow": {"state": "OPEN"}}], "num_found": 1})
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_run_query)
     query = api.select(VMwareAlert).where("Blort").set_categories(["SERIOUS", "CRITICAL"]).set_device_ids([6023]) \
         .set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
@@ -298,7 +298,7 @@ def test_query_vmwarealert_facets(monkeypatch):
                                          {"field": {},
                                           "values": [{"id": "status", "name": "statusX", "total": 9}]}]})
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_run_facet_query)
     query = api.select(VMwareAlert).where("Blort").set_workflows(["OPEN"])
     f = query.facets(["REPUTATION", "STATUS"])
@@ -308,7 +308,7 @@ def test_query_vmwarealert_facets(monkeypatch):
 
 
 def test_query_vmwarealert_invalid_group_ids():
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234",
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234",
                        org_key="Z100", ssl_verify=True)
     with pytest.raises(ApiError):
         api.select(VMwareAlert).set_group_ids(["Bogus"])
@@ -335,7 +335,7 @@ def test_query_watchlistalert_with_all_bells_and_whistles(monkeypatch):
         return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
                                           "workflow": {"state": "OPEN"}}], "num_found": 1})
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_run_query)
     query = api.select(WatchlistAlert).where("Blort").set_categories(["SERIOUS", "CRITICAL"]).set_device_ids([6023]) \
         .set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
@@ -367,7 +367,7 @@ def test_query_watchlistalert_facets(monkeypatch):
                                          {"field": {},
                                           "values": [{"id": "status", "name": "statusX", "total": 9}]}]})
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_run_facet_query)
     query = api.select(WatchlistAlert).where("Blort").set_workflows(["OPEN"])
     f = query.facets(["REPUTATION", "STATUS"])
@@ -377,7 +377,7 @@ def test_query_watchlistalert_facets(monkeypatch):
 
 
 def test_query_watchlistalert_invalid_criteria_values():
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234",
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234",
                        org_key="Z100", ssl_verify=True)
     with pytest.raises(ApiError):
         api.select(WatchlistAlert).set_watchlist_ids([888])
@@ -396,7 +396,7 @@ def test_alerts_bulk_dismiss(monkeypatch):
         _was_called = True
         return StubResponse({"request_id": "497ABX"})
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_do_dismiss)
     q = api.select(BaseAlert).where("Blort").set_device_names(["HAL9000"])
     reqid = q.dismiss("Fixed", "Yessir")
@@ -415,7 +415,7 @@ def test_alerts_bulk_undismiss(monkeypatch):
         _was_called = True
         return StubResponse({"request_id": "497ABX"})
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_do_update)
     q = api.select(BaseAlert).where("Blort").set_device_names(["HAL9000"])
     reqid = q.update("Fixed", "NoSir")
@@ -434,7 +434,7 @@ def test_alerts_bulk_dismiss_watchlist(monkeypatch):
         _was_called = True
         return StubResponse({"request_id": "497ABX"})
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_do_dismiss)
     q = api.select(WatchlistAlert).where("Blort").set_device_names(["HAL9000"])
     reqid = q.dismiss("Fixed", "Yessir")
@@ -453,7 +453,7 @@ def test_alerts_bulk_dismiss_cbanalytics(monkeypatch):
         _was_called = True
         return StubResponse({"request_id": "497ABX"})
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_do_dismiss)
     q = api.select(CBAnalyticsAlert).where("Blort").set_device_names(["HAL9000"])
     reqid = q.dismiss("Fixed", "Yessir")
@@ -472,7 +472,7 @@ def test_alerts_bulk_dismiss_vmware(monkeypatch):
         _was_called = True
         return StubResponse({"request_id": "497ABX"})
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_do_dismiss)
     q = api.select(VMwareAlert).where("Blort").set_device_names(["HAL9000"])
     reqid = q.dismiss("Fixed", "Yessir")
@@ -491,7 +491,7 @@ def test_alerts_bulk_dismiss_threat(monkeypatch):
         _was_called = True
         return StubResponse({"request_id": "497ABX"})
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_do_dismiss)
     reqid = api.bulk_threat_dismiss(["B0RG", "F3R3NG1"], "Fixed", "Yessir")
     assert _was_called
@@ -509,7 +509,7 @@ def test_alerts_bulk_undismiss_threat(monkeypatch):
         _was_called = True
         return StubResponse({"request_id": "497ABX"})
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_do_update)
     reqid = api.bulk_threat_update(["B0RG", "F3R3NG1"], "Fixed", "NoSir")
     assert _was_called
@@ -527,7 +527,7 @@ def test_load_workflow(monkeypatch):
                 "workflow": {"state": "DISMISSED", "remediation": "Fixed", "comment": "Yessir",
                              "changed_by": "Robocop", "last_update_time": "2019-10-31T16:03:13.951Z"}}
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234",
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234",
                        org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, GET=_get_workflow)
     workflow = api.select(WorkflowStatus, "497ABX")

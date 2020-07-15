@@ -133,7 +133,7 @@ class Device(PSCMutableModel):
             self._refresh()
 
     @classmethod
-    def _query_implementation(cls, cb):
+    def _query_implementation(cls, cb, **kwargs):
         return DeviceSearchQuery(cls, cb)
 
     def _refresh(self):
@@ -227,7 +227,7 @@ class BaseAlert(PSCMutableModel):
             self._refresh()
 
     @classmethod
-    def _query_implementation(cls, cb):
+    def _query_implementation(cls, cb, **kwargs):
         return BaseAlertSearchQuery(cls, cb)
 
     def _refresh(self):
@@ -320,7 +320,7 @@ class WatchlistAlert(BaseAlert):
     urlobject = "/appservices/v6/orgs/{0}/alerts/watchlist"
 
     @classmethod
-    def _query_implementation(cls, cb):
+    def _query_implementation(cls, cb, **kwargs):
         return WatchlistAlertSearchQuery(cls, cb)
 
 
@@ -328,7 +328,7 @@ class CBAnalyticsAlert(BaseAlert):
     urlobject = "/appservices/v6/orgs/{0}/alerts/cbanalytics"
 
     @classmethod
-    def _query_implementation(cls, cb):
+    def _query_implementation(cls, cb, **kwargs):
         return CBAnalyticsAlertSearchQuery(cls, cb)
 
 
@@ -336,7 +336,7 @@ class VMwareAlert(BaseAlert):
     urlobject = "/appservices/v6/orgs/{0}/alerts/vmware"
 
     @classmethod
-    def _query_implementation(cls, cb):
+    def _query_implementation(cls, cb, **kwargs):
         return VMwareAlertSearchQuery(cls, cb)
 
 

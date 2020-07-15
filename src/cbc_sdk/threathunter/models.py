@@ -12,12 +12,13 @@
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
 from __future__ import absolute_import
-from cbc_sdk.errors import ApiError, InvalidObjectError
+from cbc_sdk.errors import ApiError, InvalidObjectError, NonQueryableModel
 from cbc_sdk.models import CreatableModelMixin, MutableBaseModel, UnrefreshableModel
-import logging
 from cbc_sdk.threathunter.query import Query, AsyncProcessQuery, TreeQuery, FeedQuery, ReportQuery, WatchlistQuery
-import validators
+
+import logging
 import time
+import validators
 
 log = logging.getLogger(__name__)
 
@@ -57,10 +58,13 @@ class Process(UnrefreshableModel):
                                                   initial_data=summary, force_init=False,
                                                   full_doc=True)
 
+        def _query_implementation(self, cb, **kwargs):
+            return Query(self, cb, **kwargs)
+
     @classmethod
-    def _query_implementation(cls, cb):
+    def _query_implementation(self, cb, **kwargs):
         # This will emulate a synchronous process query, for now.
-        return AsyncProcessQuery(cls, cb)
+        return AsyncProcessQuery(self, cb)
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
         super(Process, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
@@ -184,7 +188,7 @@ class Process(UnrefreshableModel):
 
 
 class Event(UnrefreshableModel):
-    """Events can be queried for via ``CbThreatHunterAPI.select``
+    """Events can be queried for via ``CBCloudAPI.select``
     or though an already selected process with ``Process.events()``.
     """
     urlobject = '/api/investigate/v2/orgs/{}/events/{}/_search'
@@ -193,8 +197,8 @@ class Event(UnrefreshableModel):
     primary_key = "process_guid"
 
     @classmethod
-    def _query_implementation(cls, cb):
-        return Query(cls, cb)
+    def _query_implementation(self, cb, **kwargs):
+        return Query(self, cb)
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
         super(Event, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
@@ -205,12 +209,12 @@ class Tree(UnrefreshableModel):
     """The preferred interface for interacting with Tree models
     is ``Process.tree()``.
     """
-    urlobject = '/threathunter/search/v1/orgs/{}/processes/tree'
+    urlobject = '/api/investigate/v1/orgs/{}/processes/tree'
     primary_key = 'process_guid'
 
     @classmethod
-    def _query_implementation(cls, cb):
-        return TreeQuery(cls, cb)
+    def _query_implementation(self, cb, **kwargs):
+        return TreeQuery(self, cb)
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
         super(Tree, self).__init__(
@@ -237,8 +241,8 @@ class Feed(FeedModel):
     swagger_meta_file = "threathunter/models/feed.yaml"
 
     @classmethod
-    def _query_implementation(cls, cb):
-        return FeedQuery(cls, cb)
+    def _query_implementation(self, cb, **kwargs):
+        return FeedQuery(self, cb)
 
     def __init__(self, cb, model_unique_id=None, initial_data=None):
         item = {}
@@ -405,8 +409,8 @@ class Report(FeedModel):
     swagger_meta_file = "threathunter/models/report.yaml"
 
     @classmethod
-    def _query_implementation(cls, cb):
-        return ReportQuery(cls, cb)
+    def _query_implementation(self, cb, **kwargs):
+        return ReportQuery(self, cb)
 
     def __init__(self, cb, model_unique_id=None, initial_data=None,
                  feed_id=None, from_watchlist=False):
@@ -692,6 +696,9 @@ class IOC(FeedModel):
 
         self._report_id = report_id
 
+    def _query_implementation(self, cb, **kwargs):
+        raise NonQueryableModel("IOC does not support querying")
+
     def validate(self):
         """Validates this IOC structure's state.
 
@@ -735,6 +742,9 @@ class IOC_V2(FeedModel):
                                      full_doc=True)
 
         self._report_id = report_id
+
+    def _query_implementation(self, cb, **kwargs):
+        raise NonQueryableModel("IOC_V2 does not support querying")
 
     def validate(self):
         """Validates this IOC_V2's state.
@@ -818,8 +828,8 @@ class Watchlist(FeedModel):
     swagger_meta_file = "threathunter/models/watchlist.yaml"
 
     @classmethod
-    def _query_implementation(cls, cb):
-        return WatchlistQuery(cls, cb)
+    def _query_implementation(self, cb, **kwargs):
+        return WatchlistQuery(self, cb)
 
     def __init__(self, cb, model_unique_id=None, initial_data=None):
         item = {}
@@ -1027,6 +1037,9 @@ class ReportSeverity(FeedModel):
                                              initial_data=initial_data, force_init=False,
                                              full_doc=True)
 
+    def _query_implementation(self, cb, **kwargs):
+        raise NonQueryableModel("IOC does not support querying")
+
 
 class Binary(UnrefreshableModel):
     """Represents a retrievable binary.
@@ -1053,6 +1066,9 @@ class Binary(UnrefreshableModel):
                                                  initial_data=item, force_init=False,
                                                  full_doc=True)
 
+        def _query_implementation(self, cb, **kwargs):
+            return Query(self, cb, **kwargs)
+
     def __init__(self, cb, model_unique_id):
         if not validators.sha256(model_unique_id):
             raise ApiError("model_unique_id must be a valid SHA256")
@@ -1063,6 +1079,9 @@ class Binary(UnrefreshableModel):
         super(Binary, self).__init__(cb, model_unique_id=model_unique_id,
                                      initial_data=item, force_init=False,
                                      full_doc=True)
+
+    def _query_implementation(self, cb, **kwargs):
+        return Query(self, cb, **kwargs)
 
     @property
     def summary(self):
@@ -1109,6 +1128,9 @@ class Downloads(UnrefreshableModel):
                                                       initial_data=item, force_init=False,
                                                       full_doc=True)
 
+        def _query_implementation(self, cb, **kwargs):
+            raise NonQueryableModel("IOC does not support querying")
+
     def __init__(self, cb, shas, expiration_seconds=3600):
         body = {
             "sha256": shas,
@@ -1121,6 +1143,9 @@ class Downloads(UnrefreshableModel):
         super(Downloads, self).__init__(cb, model_unique_id=None,
                                         initial_data=item, force_init=False,
                                         full_doc=True)
+
+    def _query_implementation(self, cb, **kwargs):
+        return Query(self, cb, **kwargs)
 
     @property
     def found(self):

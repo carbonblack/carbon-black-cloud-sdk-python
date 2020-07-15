@@ -18,6 +18,7 @@ import logging
 import json
 
 from cbc_sdk.errors import ServerError
+from .query import Query
 
 log = logging.getLogger(__name__)
 
@@ -31,6 +32,9 @@ class DefenseMutableModel(MutableBaseModel):
                                                   force_init=force_init, full_doc=full_doc)
         if not self._change_object_key_name:
             self._change_object_key_name = self.primary_key
+
+    def _query_implementation(cls, cb, **kwargs):
+        return Query(cls, cb, kwargs.get("query_string", None))
 
     def _parse(self, obj):
         if type(obj) == dict and self.info_key in obj:
@@ -150,6 +154,9 @@ class Event(NewBaseModel):
 
     def __init__(self, cb, model_unique_id, initial_data=None):
         super(Event, self).__init__(cb, model_unique_id, initial_data)
+
+    def _query_implementation(cls, cb, **kwargs):
+        return Query(cls, cb, kwargs.get("query_string", None))
 
 
 class Policy(DefenseMutableModel, CreatableModelMixin):
