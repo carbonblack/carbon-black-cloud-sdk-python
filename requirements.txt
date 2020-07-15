@@ -1,6 +1,5 @@
 # Package dependencies
 requests
-attrdict
 cachetools
 pyyaml
 pika
