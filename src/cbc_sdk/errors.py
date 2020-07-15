@@ -261,3 +261,9 @@ class MoreThanOneResultError(ApiError):
     """Only one object was requested, but multiple matches were found in the Carbon Black datastore."""
 
     pass
+
+
+class NonQueryableModel(ApiError):
+    """A model that attempted to be queried which is not queryable"""
+
+    pass

@@ -14,9 +14,7 @@
 from cbc_sdk.utils import convert_query_params
 from cbc_sdk.query import PaginatedQuery
 
-from cbc_sdk.psc.rest_api import CbPSCBaseAPI
 import logging
-import time
 
 log = logging.getLogger(__name__)
 
@@ -26,46 +24,10 @@ def convert_to_kv_pairs(q):
     return k, v
 
 
-class CbDefenseAPI(CbPSCBaseAPI):
-    """The main entry point into the Cb Defense API.
-
-    :param str profile: (optional) Use the credentials in the named profile when connecting to the Carbon Black server.
-        Uses the profile named 'default' when not specified.
-
-    Usage::
-
-    >>> from cbapi import CbDefenseAPI
-    >>> cb = CbDefenseAPI(profile="production")
-    """
-    def __init__(self, *args, **kwargs):
-        super(CbDefenseAPI, self).__init__(*args, **kwargs)
-
-    def _perform_query(self, cls, query_string=None):
-        return Query(cls, self, query_string)
-
-    def notification_listener(self, interval=60):
-        """Generator to continually poll the Cb Defense server for notifications (alerts). Note that this can only
-        be used with a 'SIEM' key generated in the Cb Defense console.
-        """
-        while True:
-            for notification in self.get_notifications():
-                yield notification
-            time.sleep(interval)
-
-    def get_notifications(self):
-        """Retrieve queued notifications (alerts) from the Cb Defense server. Note that this can only be used
-        with a 'SIEM' key generated in the Cb Defense console.
-
-        :returns: list of dictionary objects representing the notifications, or an empty list if none available.
-        """
-        res = self.get_object("/integrationServices/v3/notification")
-        return res.get("notifications", [])
-
-
 class Query(PaginatedQuery):
     """Represents a prepared query to the Cb Defense server.
 
-    This object is returned as part of a :py:meth:`CbDefenseAPI.select`
+    This object is returned as part of a :py:meth:`CBCloudAPI.select`
     operation on models requested from the Cb Defense server. You should not have to create this class yourself.
 
     The query is not executed on the server until it's accessed, either as an iterator (where it will generate values
@@ -75,8 +37,8 @@ class Query(PaginatedQuery):
 
     Examples::
 
-    >>> from cbc_sdk.psc.defense import CbDefenseAPI
-    >>> cb = CbDefenseAPI()
+    >>> from cbc_sdk import CBCloudAPI
+    >>> cb = CBCloudAPI()
 
     Notes:
         - The slicing operator only supports start and end parameters, but not step. ``[1:-1]`` is legal, but

@@ -12,8 +12,8 @@
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
 from cbc_sdk.errors import ApiError
-from cbc_sdk.psc.base_query import QueryBuilder, PSCQueryBase
-from cbc_sdk.psc.base_query import QueryBuilderSupportMixin, IterableQueryMixin
+from cbc_sdk.platform.base_query import QueryBuilder, PSCQueryBase
+from cbc_sdk.platform.base_query import QueryBuilderSupportMixin, IterableQueryMixin
 import logging
 
 log = logging.getLogger(__name__)

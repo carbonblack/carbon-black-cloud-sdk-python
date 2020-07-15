@@ -33,7 +33,7 @@ class Run(NewBaseModel):
     >>> run.refresh()
     """
     primary_key = "id"
-    swagger_meta_file = "psc/livequery/models/run.yaml"
+    swagger_meta_file = "livequery/models/run.yaml"
     urlobject = "/livequery/v1/orgs/{}/runs"
     urlobject_single = "/livequery/v1/orgs/{}/runs/{}"
     _is_deleted = False
@@ -56,7 +56,7 @@ class Run(NewBaseModel):
         )
 
     @classmethod
-    def _query_implementation(cls, cb):
+    def _query_implementation(cls, cb, **kwargs):
         return RunQuery(cls, cb)
 
     def _refresh(self):
@@ -107,7 +107,7 @@ class RunHistory(Run):
                                   force_init=False, full_doc=True)
 
     @classmethod
-    def _query_implementation(cls, cb):
+    def _query_implementation(cls, cb, **kwargs):
         return RunHistoryQuery(cls, cb)
 
 
@@ -116,7 +116,7 @@ class Result(UnrefreshableModel):
     Represents a single result from a LiveQuery ``Run``.
     """
     primary_key = "id"
-    swagger_meta_file = "psc/livequery/models/result.yaml"
+    swagger_meta_file = "livequery/models/result.yaml"
     urlobject = "/livequery/v1/orgs/{}/runs/{}/results/_search"
 
     class Device(UnrefreshableModel):
@@ -161,7 +161,7 @@ class Result(UnrefreshableModel):
             )
 
     @classmethod
-    def _query_implementation(cls, cb):
+    def _query_implementation(cls, cb, **kwargs):
         return ResultQuery(cls, cb)
 
     def __init__(self, cb, initial_data):
@@ -216,7 +216,7 @@ class DeviceSummary(UnrefreshableModel):
     Represents the summary of results from a single device during a single LiveQuery ``Run``.
     """
     primary_key = "id"
-    swagger_meta_file = "psc/livequery/models/device_summary.yaml"
+    swagger_meta_file = "livequery/models/device_summary.yaml"
     urlobject = "/livequery/v1/orgs/{}/runs/{}/results/device_summaries/_search"
 
     class Metrics(UnrefreshableModel):
@@ -233,7 +233,7 @@ class DeviceSummary(UnrefreshableModel):
             )
 
     @classmethod
-    def _query_implementation(cls, cb):
+    def _query_implementation(cls, cb, **kwargs):
         return ResultQuery(cls, cb)
 
     def __init__(self, cb, initial_data):
@@ -259,7 +259,7 @@ class ResultFacet(UnrefreshableModel):
     Represents the summary of results for a single field in a LiveQuery ``Run``.
     """
     primary_key = "field"
-    swagger_meta_file = "psc/livequery/models/facet.yaml"
+    swagger_meta_file = "livequery/models/facet.yaml"
     urlobject = "/livequery/v1/orgs/{}/runs/{}/results/_facet"
 
     class Values(UnrefreshableModel):
@@ -276,7 +276,7 @@ class ResultFacet(UnrefreshableModel):
             )
 
     @classmethod
-    def _query_implementation(cls, cb):
+    def _query_implementation(cls, cb, **kwargs):
         return FacetQuery(cls, cb)
 
     def __init__(self, cb, initial_data):
