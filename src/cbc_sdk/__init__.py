@@ -10,3 +10,6 @@ from cbc_sdk.psc import CbPSCBaseAPI
 from cbc_sdk.psc.defense import CbDefenseAPI
 from cbc_sdk.psc.threathunter import CbThreatHunterAPI
 from cbc_sdk.psc.livequery import CbLiveQueryAPI
+
+from .rest_api import CbPSCBaseAPI
+from .models import Device, Workflow, BaseAlert, WatchlistAlert, CBAnalyticsAlert, VMwareAlert, WorkflowStatus
