@@ -31,8 +31,11 @@ from cbapi import winerror
 
 import queue
 
-from cbc_sdk.response.models import Sensor
-
+OS_LIVE_RESPONSE_ENUM = {
+    "WINDOWS": 1,
+    "LINUX": 2,
+    "MAC": 4
+}
 
 log = logging.getLogger(__name__)
 
@@ -54,7 +57,7 @@ class LiveResponseError(Exception):
         self.decoded_win32_error = ""
 
         # Details object:
-        # {u'status': u'error', u'username': u'admin', u'sensor_id': 9, u'name': u'kill',
+        # {u'status': u'error', u'username': u'admin', u'device_id': 9, u'name': u'kill',
         # u'completion': 1464319733.190924, u'object': 1660, u'session_id': 7, u'result_type': u'WinHresult',
         # u'create_time': 1464319733.171967, u'result_desc': u'', u'id': 22, u'result_code': 2147942487}
 
@@ -89,18 +92,18 @@ class CbLRSessionBase(object):
 
     MAX_RETRY_COUNT = 5
 
-    def __init__(self, cblr_manager, session_id, sensor_id, session_data=None):
+    def __init__(self, cblr_manager, session_id, device_id, session_data=None):
         """
         Initialize the CbLRSessionBase.
 
         Args:
             cblr_manager (CbLRManagerBase): The Live Response manager governing this session.
             session_id (str): The ID of this session.
-            sensor_id (int): The ID of the sensor (remote machine) we're connected to.
+            device_id (int): The ID of the device (remote machine) we're connected to.
             session_data (dict): Additional session data.
         """
         self.session_id = session_id
-        self.sensor_id = sensor_id
+        self.device_id = device_id
         self._cblr_manager = cblr_manager
         self._cb = cblr_manager._cb
         # TODO: refcount should be in a different object in the scheduler
@@ -128,7 +131,7 @@ class CbLRSessionBase(object):
 
     def close(self):
         """Close the Live Response session."""
-        self._cblr_manager.close_session(self.sensor_id, self.session_id)
+        self._cblr_manager.close_session(self.device_id, self.session_id)
         self._closed = True
 
     def get_session_archive(self):
@@ -207,7 +210,7 @@ class CbLRSessionBase(object):
         Create a new file on the remote machine with the specified data.
 
         Example:
-        >>> with c.select(Sensor, 1).lr_session() as lr_session:
+        >>> with c.select(Device, 1).lr_session() as lr_session:
         ...     lr_session.put_file(open("test.txt", "rb"), r"c:\test.txt")
 
         Args:
@@ -227,7 +230,7 @@ class CbLRSessionBase(object):
         List the contents of a directory on the remote machine.
 
         Example:
-        >>> with c.select(Sensor, 1).lr_session() as lr_session:
+        >>> with c.select(Device, 1).lr_session() as lr_session:
         ...     pprint.pprint(lr_session.list_directory('C:\\\\temp\\\\'))
         [{u'attributes': [u'DIRECTORY'],
           u'create_time': 1471897244,
@@ -306,7 +309,7 @@ class CbLRSessionBase(object):
         Perform a full directory walk with recursion into subdirectories on the remote machine.
 
         Example:
-        >>> with c.select(Sensor, 1).lr_session() as lr_session:
+        >>> with c.select(Device, 1).lr_session() as lr_session:
         ...     for entry in lr_session.walk(directory_name):
         ...         print(entry)
         ('C:\\temp\\', [u'dir1', u'dir2'], [u'file1.txt'])
@@ -380,7 +383,7 @@ class CbLRSessionBase(object):
         Create a new process on the remote machine with the specified command string.
 
         Example:
-        >>> with c.select(Sensor, 1).lr_session() as lr_session:
+        >>> with c.select(Device, 1).lr_session() as lr_session:
         ...     print(lr_session.create_process(r'cmd.exe /c "ping.exe 192.168.1.1"'))
         Pinging 192.168.1.1 with 32 bytes of data:
         Reply from 192.168.1.1: bytes=32 time<1ms TTL=64
@@ -441,7 +444,7 @@ class CbLRSessionBase(object):
         List currently running processes on the remote machine.
 
         Example:
-        >>> with c.select(Sensor, 1).lr_session() as lr_session:
+        >>> with c.select(Device, 1).lr_session() as lr_session:
         ...     print(lr_session.list_processes()[0])
         {u'command_line': u'',
          u'create_time': 1476260500,
@@ -473,7 +476,7 @@ class CbLRSessionBase(object):
         Enumerate subkeys and values of the specified registry key on the remote machine.
 
         Example:
-        >>> with c.select(Sensor, 1).lr_session() as lr_session:
+        >>> with c.select(Device, 1).lr_session() as lr_session:
         >>>   pprint.pprint(lr_session.list_registry_keys_and_values('HKLM\\SYSTEM\\CurrentControlSet\\services\\ACPI'))
         {'sub_keys': [u'Parameters', u'Enum'],
          'values': [{u'value_data': 0,
@@ -539,7 +542,7 @@ class CbLRSessionBase(object):
         Return the associated value of the specified registry key on the remote machine.
 
         Example:
-        >>> with c.select(Sensor, 1).lr_session() as lr_session:
+        >>> with c.select(Device, 1).lr_session() as lr_session:
         >>>     pprint.pprint(lr_session.get_registry_value('HKLM\\SYSTEM\\CurrentControlSet\\services\\ACPI\\Start'))
         {u'value_data': 0, u'value_name': u'Start', u'value_type': u'REG_DWORD'}
 
@@ -560,7 +563,7 @@ class CbLRSessionBase(object):
         Set a registry value on the specified registry key on the remote machine.
 
         Example:
-        >>> with c.select(Sensor, 1).lr_session() as lr_session:
+        >>> with c.select(Device, 1).lr_session() as lr_session:
         ...     lr_session.set_registry_value('HKLM\\\\SYSTEM\\\\CurrentControlSet\\\\services\\\\ACPI\\\\testvalue', 1)
 
         Args:
@@ -685,7 +688,7 @@ class CbLRSessionBase(object):
         retries = self.MAX_RETRY_COUNT
 
         if "name" in data and data["name"] not in self.session_data["supported_commands"]:
-            raise ApiError("Command {0} not supported by this sensor".format(data["name"]))
+            raise ApiError("Command {0} not supported by this device".format(data["name"]))
 
         while retries:
             try:
@@ -693,8 +696,8 @@ class CbLRSessionBase(object):
                 resp = self._cb.post_object("{cblr_base}/session/{0}/command".format(self.session_id,
                                                                                      cblr_base=self.cblr_base), data)
             except ObjectNotFoundError as e:
-                if e.message.startswith("Sensor") or e.message.startswith("Session"):
-                    self.session_id, self.session_data = self._cblr_manager._get_or_create_session(self.sensor_id)
+                if e.message.startswith("Device") or e.message.startswith("Session"):
+                    self.session_id, self.session_data = self._cblr_manager._get_or_create_session(self.device_id)
                     retries -= 1
                     continue
                 else:
@@ -702,7 +705,7 @@ class CbLRSessionBase(object):
                         error_message = json.loads(e.message)
                         if error_message["status"] == "NOT_FOUND":
                             self.session_id, self.session_data = \
-                                self._cblr_manager._get_or_create_session(self.sensor_id)
+                                self._cblr_manager._get_or_create_session(self.device_id)
                             retries -= 1
                             continue
                     except Exception:
@@ -757,38 +760,40 @@ class LiveResponseMemdump(object):
         self.lr_session.delete_file(self.remote_filename)
 
 
-def jobrunner(callable, cb, sensor_id):
+def jobrunner(callable, cb, device_id):
     """
     Wrap a callable object with a live response session.
 
     Args:
         callable (object): The object to be wrapped.
         cb (BaseAPI): The CBAPI object reference.
-        sensor_id (int): The sensor ID to use to get the session.
+        device_id (int): The device ID to use to get the session.
 
     Returns:
         object: The wrapped object.
     """
-    with cb.select(Sensor, sensor_id).lr_session() as sess:
+    from cbc_sdk.psc.defense.models import Device
+    with cb.select(Device, device_id).lr_session() as sess:
         return callable(sess)
 
 
 class WorkItem(object):
     """Work item for scheduling."""
 
-    def __init__(self, fn, sensor_id):
+    def __init__(self, fn, device_id):
         """
         Initialize the WorkItem.
 
         Args:
             fn (func): The function to be called to do the actual work.
-            sensor_id (object): The sensor ID or Sensor object the work item is directed for.
+            device_id (object): The device ID or Device object the work item is directed for.
         """
         self.fn = fn
-        if isinstance(sensor_id, Sensor):
-            self.sensor_id = sensor_id.id
+        from cbc_sdk.psc.defense.models import Device
+        if isinstance(device_id, Device):
+            self.device_id = device_id.deviceId
         else:
-            self.sensor_id = int(sensor_id)
+            self.device_id = int(device_id)
 
         self.future = _base.Future()
 
@@ -796,29 +801,29 @@ class WorkItem(object):
 class CompletionNotification(object):
     """The notification that an operation is complete."""
 
-    def __init__(self, sensor_id):
+    def __init__(self, device_id):
         """
         Initialize the CompletionNotification.
 
         Args:
-            sensor_id (int): The sensor ID this notification is for.
+            device_id (int): The device ID this notification is for.
         """
-        self.sensor_id = sensor_id
+        self.device_id = device_id
 
 
 class WorkerStatus(object):
     """Holds the status of an individual worker."""
 
-    def __init__(self, sensor_id, status="ready", exception=None):
+    def __init__(self, device_id, status="ready", exception=None):
         """
         Initialize the WorkerStatus.
 
         Args:
-            sensor_id (int): The sensor ID this status is for.
+            device_id (int): The device ID this status is for.
             status (str): The current status value.
             exception (Exception): Any exception that happened.
         """
-        self.sensor_id = sensor_id
+        self.device_id = device_id
         self.status = status
         self.exception = exception
 
@@ -826,18 +831,18 @@ class WorkerStatus(object):
 class JobWorker(threading.Thread):
     """Thread object that executes individual Live Response jobs."""
 
-    def __init__(self, cb, sensor_id, result_queue):
+    def __init__(self, cb, device_id, result_queue):
         """
         Initialize the JobWorker.
 
         Args:
             cb (BaseAPI): The CBAPI object reference.
-            sensor_id (int): The ID of the sensor being used.
+            device_id (int): The ID of the device being used.
             result_queue (Queue): The queue where results are placed.
         """
         super(JobWorker, self).__init__()
         self.cb = cb
-        self.sensor_id = sensor_id
+        self.device_id = device_id
         self.job_queue = queue.Queue()
         self.lr_session = None
         self.result_queue = result_queue
@@ -845,8 +850,8 @@ class JobWorker(threading.Thread):
     def run(self):
         """Execute the job worker."""
         try:
-            self.lr_session = self.cb.live_response.request_session(self.sensor_id)
-            self.result_queue.put(WorkerStatus(self.sensor_id, status="ready"))
+            self.lr_session = self.cb.live_response.request_session(self.device_id)
+            self.result_queue.put(WorkerStatus(self.device_id, status="ready"))
 
             while True:
                 work_item = self.job_queue.get(block=True)
@@ -855,14 +860,14 @@ class JobWorker(threading.Thread):
                     return
 
                 self.run_job(work_item)
-                self.result_queue.put(CompletionNotification(self.sensor_id))
+                self.result_queue.put(CompletionNotification(self.device_id))
                 self.job_queue.task_done()
         except Exception as e:
-            self.result_queue.put(WorkerStatus(self.sensor_id, status="error", exception=e))
+            self.result_queue.put(WorkerStatus(self.device_id, status="error", exception=e))
         finally:
             if self.lr_session:
                 self.lr_session.close()
-            self.result_queue.put(WorkerStatus(self.sensor_id, status="exiting"))
+            self.result_queue.put(WorkerStatus(self.device_id, status="exiting"))
 
     def run_job(self, work_item):
         """
@@ -908,28 +913,28 @@ class LiveResponseJobScheduler(threading.Thread):
             log.debug("Got item: {0}".format(item))
             if isinstance(item, WorkItem):
                 # new WorkItem available
-                self._unscheduled_jobs[item.sensor_id].append(item)
+                self._unscheduled_jobs[item.device_id].append(item)
             elif isinstance(item, CompletionNotification):
                 # job completed
-                self._idle_workers.add(item.sensor_id)
+                self._idle_workers.add(item.device_id)
             elif isinstance(item, WorkerStatus):
                 if item.status == "error":
-                    log.error("Error encountered by JobWorker[{0}]: {1}".format(item.sensor_id,
+                    log.error("Error encountered by JobWorker[{0}]: {1}".format(item.device_id,
                                                                                 item.exception))
                 elif item.status == "exiting":
-                    log.debug("JobWorker[{0}] has exited, waiting...".format(item.sensor_id))
-                    self._job_workers[item.sensor_id].join()
-                    log.debug("JobWorker[{0}] deleted".format(item.sensor_id))
-                    del self._job_workers[item.sensor_id]
+                    log.debug("JobWorker[{0}] has exited, waiting...".format(item.device_id))
+                    self._job_workers[item.device_id].join()
+                    log.debug("JobWorker[{0}] deleted".format(item.device_id))
+                    del self._job_workers[item.device_id]
                     try:
-                        self._idle_workers.remove(item.sensor_id)
+                        self._idle_workers.remove(item.device_id)
                     except KeyError:
                         pass
                 elif item.status == "ready":
-                    log.debug("JobWorker[{0}] now ready to accept jobs, session established".format(item.sensor_id))
-                    self._idle_workers.add(item.sensor_id)
+                    log.debug("JobWorker[{0}] now ready to accept jobs, session established".format(item.device_id))
+                    self._idle_workers.add(item.device_id)
                 else:
-                    log.debug("Unknown status from JobWorker[{0}]: {1}".format(item.sensor_id, item.status))
+                    log.debug("Unknown status from JobWorker[{0}]: {1}".format(item.device_id, item.status))
             else:
                 log.debug("Received unknown item on the scheduler Queue, exiting")
                 # exiting the scheduler if we get None
@@ -944,7 +949,7 @@ class LiveResponseJobScheduler(threading.Thread):
         # First, see if there are new jobs to schedule on idle workers.
         self._schedule_existing_workers()
 
-        # If we have jobs scheduled to run on sensors with no current associated worker, let's spawn new ones.
+        # If we have jobs scheduled to run on devices with no current associated worker, let's spawn new ones.
         if set(self._unscheduled_jobs.keys()) - self._idle_workers:
             self._cleanup_idle_workers()
             self._spawn_new_workers()
@@ -954,21 +959,21 @@ class LiveResponseJobScheduler(threading.Thread):
         if not max:
             max = self._max_workers
 
-        for sensor in list(self._idle_workers)[:max]:
-            log.debug("asking worker for sensor id {0} to exit".format(sensor))
-            self._job_workers[sensor].job_queue.put(None)
+        for device in list(self._idle_workers)[:max]:
+            log.debug("asking worker for device id {0} to exit".format(device))
+            self._job_workers[device].job_queue.put(None)
 
     def _schedule_existing_workers(self):
-        log.debug("There are idle workers for sensor ids {0}".format(self._idle_workers))
+        log.debug("There are idle workers for device ids {0}".format(self._idle_workers))
 
         intersection = self._idle_workers.intersection(set(self._unscheduled_jobs.keys()))
 
         log.debug("{0} jobs ready to execute in existing execution slots".format(len(intersection)))
 
-        for sensor in intersection:
-            item = self._unscheduled_jobs[sensor].pop(0)
-            self._job_workers[sensor].job_queue.put(item)
-            self._idle_workers.remove(item.sensor_id)
+        for device in intersection:
+            item = self._unscheduled_jobs[device].pop(0)
+            self._job_workers[device].job_queue.put(item)
+            self._idle_workers.remove(item.device_id)
 
         self._cleanup_unscheduled_jobs()
 
@@ -996,18 +1001,19 @@ class LiveResponseJobScheduler(threading.Thread):
 
         schedule_max = self._max_workers - len(self._job_workers)
 
-        sensors = [s for s in self._cb.select(Sensor) if s.id in self._unscheduled_jobs
-                   and s.id not in self._job_workers
+        from cbc_sdk.psc.defense.models import Device
+        devices = [s for s in self._cb.select(Device) if s.deviceId in self._unscheduled_jobs
+                   and s.deviceId not in self._job_workers
                    and s.status == "Online"]
-        sensors_to_schedule = sorted(sensors, key=lambda x: (
+        devices_to_schedule = sorted(devices, key=lambda x: (
             int(x.num_storefiles_bytes) + int(x.num_eventlog_bytes), x.next_checkin_time
             ))[:schedule_max]
 
-        log.debug("Spawning new workers to handle these sensors: {0}".format(sensors_to_schedule))
-        for sensor in sensors_to_schedule:
-            log.debug("Spawning new JobWorker for sensor id {0}".format(sensor.id))
-            self._job_workers[sensor.id] = JobWorker(self._cb, sensor.id, self.schedule_queue)
-            self._job_workers[sensor.id].start()
+        log.debug("Spawning new workers to handle these devices: {0}".format(devices_to_schedule))
+        for device in devices_to_schedule:
+            log.debug("Spawning new JobWorker for device id {0}".format(device.deviceId))
+            self._job_workers[device.deviceId] = JobWorker(self._cb, device.deviceId, self.schedule_queue)
+            self._job_workers[device.deviceId].start()
 
 
 class CbLRManagerBase(object):
@@ -1038,13 +1044,13 @@ class CbLRManagerBase(object):
 
         self._job_scheduler = None
 
-    def submit_job(self, job, sensor):
+    def submit_job(self, job, device):
         """
         Submit a new job to be executed as a Live Response.
 
         Args:
             job (object): The job to be scheduled.
-            sensor (int): ID of the sensor to use for job execution.
+            device (int): ID of the device to use for job execution.
 
         Returns:
             Future: A reference to the running job.
@@ -1054,7 +1060,7 @@ class CbLRManagerBase(object):
             self._job_scheduler = LiveResponseJobScheduler(self._cb)
             self._job_scheduler.start()
 
-        work_item = WorkItem(job, sensor)
+        work_item = WorkItem(job, device)
         self._job_scheduler.submit_job(work_item)
         return work_item.future
 
@@ -1067,60 +1073,60 @@ class CbLRManagerBase(object):
             with self._session_lock:
                 for session in iter(self._sessions.values()):
                     if session._refcount == 0:
-                        delete_list.append(session.sensor_id)
+                        delete_list.append(session.device_id)
                     else:
                         try:
                             self._send_keepalive(session.session_id)
                         except ObjectNotFoundError:
-                            log.debug("Session {0} for sensor {1} not valid any longer, removing from cache"
-                                      .format(session.session_id, session.sensor_id))
-                            delete_list.append(session.sensor_id)
+                            log.debug("Session {0} for device {1} not valid any longer, removing from cache"
+                                      .format(session.session_id, session.device_id))
+                            delete_list.append(session.device_id)
                         except Exception:
-                            log.debug(("Keepalive on session {0} (sensor {1}) failed with unknown error, " +
-                                      "removing from cache").format(session.session_id, session.sensor_id))
-                            delete_list.append(session.sensor_id)
+                            log.debug(("Keepalive on session {0} (device {1}) failed with unknown error, " +
+                                      "removing from cache").format(session.session_id, session.device_id))
+                            delete_list.append(session.device_id)
 
-                for sensor_id in delete_list:
-                    self._close_session(self._sessions[sensor_id].session_id)
-                    del self._sessions[sensor_id]
+                for device_id in delete_list:
+                    self._close_session(self._sessions[device_id].session_id)
+                    del self._sessions[device_id]
 
-    def request_session(self, sensor_id):
+    def request_session(self, device_id):
         """
         Initiate a new Live Response session.
 
         Args:
-            sensor_id (int): The sensor ID to use.
+            device_id (int): The device ID to use.
 
         Returns:
             CbLRSessionBase: The new Live Response session.
         """
         if self._keepalive_sessions:
             with self._session_lock:
-                if sensor_id in self._sessions:
-                    session = self._sessions[sensor_id]
-                    self._sessions[sensor_id]._refcount += 1
+                if device_id in self._sessions:
+                    session = self._sessions[device_id]
+                    self._sessions[device_id]._refcount += 1
                 else:
-                    session_id, session_data = self._get_or_create_session(sensor_id)
-                    session = self.cblr_session_cls(self, session_id, sensor_id, session_data=session_data)
-                    self._sessions[sensor_id] = session
+                    session_id, session_data = self._get_or_create_session(device_id)
+                    session = self.cblr_session_cls(self, session_id, device_id, session_data=session_data)
+                    self._sessions[device_id] = session
         else:
-            session_id, session_data = self._get_or_create_session(sensor_id)
-            session = self.cblr_session_cls(self, session_id, sensor_id, session_data=session_data)
+            session_id, session_data = self._get_or_create_session(device_id)
+            session = self.cblr_session_cls(self, session_id, device_id, session_data=session_data)
 
         return session
 
-    def close_session(self, sensor_id, session_id):
+    def close_session(self, device_id, session_id):
         """
         Close the specified Live Response session.
 
         Args:
-            sensor_id (int): ID of the sensor.
+            device_id (int): ID of the device.
             session_id (int): ID of the session.
         """
         if self._keepalive_sessions:
             with self._session_lock:
                 try:
-                    self._sessions[sensor_id]._refcount -= 1
+                    self._sessions[device_id]._refcount -= 1
                 except KeyError:
                     pass
         else:
@@ -1129,6 +1135,59 @@ class CbLRManagerBase(object):
     def _send_keepalive(self, session_id):
         log.debug("Sending keepalive message for session id {0}".format(session_id))
         self._cb.get_object("{cblr_base}/session/{0}/keepalive".format(session_id, cblr_base=self.cblr_base))
+
+
+class LiveResponseSession(CbLRSessionBase):
+    def __init__(self, cblr_manager, session_id, device_id, session_data=None):
+        super(LiveResponseSession, self).__init__(cblr_manager, session_id, device_id, session_data=session_data)
+        from cbc_sdk.psc.defense.models import Device
+        device_info = self._cb.select(Device, self.device_id)
+        self.os_type = OS_LIVE_RESPONSE_ENUM.get(device_info.deviceType, None)
+
+
+class LiveResponseSessionManager(CbLRManagerBase):
+    cblr_base = "/integrationServices/v3/cblr"
+    cblr_session_cls = LiveResponseSession
+
+    def submit_job(self, job, device):
+        if self._job_scheduler is None:
+            # spawn the scheduler thread
+            self._job_scheduler = LiveResponseJobScheduler(self._cb)
+            self._job_scheduler.start()
+
+        work_item = WorkItem(job, device)
+        self._job_scheduler.submit_job(work_item)
+        return work_item.future
+
+    def _get_or_create_session(self, device_id):
+        session_id = self._create_session(device_id)
+
+        try:
+            res = poll_status(self._cb, "{cblr_base}/session/{0}".format(session_id, cblr_base=self.cblr_base),
+                              desired_status="ACTIVE", delay=1, timeout=360)
+        except Exception:
+            # "close" the session, otherwise it will stay in a pending state
+            self._close_session(session_id)
+
+            # the Cb server will return a 404 if we don't establish a session in time, so convert this to a "timeout"
+            raise TimeoutError(uri="{cblr_base}/session/{0}".format(session_id, cblr_base=self.cblr_base),
+                               message="Could not establish session with device {0}".format(device_id),
+                               error_code=404)
+        else:
+            return session_id, res
+
+    def _close_session(self, session_id):
+        try:
+            self._cb.put_object("{cblr_base}/session".format(session_id, cblr_base=self.cblr_base),
+                                {"session_id": session_id, "status": "CLOSE"})
+        except Exception:
+            pass
+
+    def _create_session(self, device_id):
+        response = self._cb.post_object("{cblr_base}/session/{0}".format(device_id, cblr_base=self.cblr_base),
+                                        {"device_id": device_id}).json()
+        session_id = response["id"]
+        return session_id
 
 
 class GetFileJob(object):
@@ -1196,16 +1255,16 @@ def poll_status(cb, url, desired_status="complete", timeout=None, delay=None):
 
 
 if __name__ == "__main__":
-    from cbc_sdk.response import CbEnterpriseResponseAPI
+    from cbc_sdk.psc.defense import CbDefenseAPI
     import logging
     root = logging.getLogger()
     root.addHandler(logging.StreamHandler())
 
     logging.getLogger("cbapi").setLevel(logging.DEBUG)
 
-    c = CbEnterpriseResponseAPI()
+    c = CbDefenseAPI()
     j = GetFileJob(r"c:\test.txt")
-    with c.select(Sensor, 3).lr_session() as lr_session:
+    with c.select(Device, 3).lr_session() as lr_session:
         file_contents = lr_session.get_file(r"c:\test.txt")
 
     future = c.live_response.submit_job(j.run, 3)

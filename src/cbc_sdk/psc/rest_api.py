@@ -13,7 +13,7 @@
 
 from cbc_sdk.connection import BaseAPI
 from cbc_sdk.errors import ApiError, ServerError
-from .cblr import LiveResponseSessionManager
+from cbc_sdk.live_response_api import LiveResponseSessionManager
 import logging
 
 log = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ class CbPSCBaseAPI(BaseAPI):
     >>> cb = CbPSCBaseAPI(profile="production")
     """
     def __init__(self, *args, **kwargs):
-        super(CbPSCBaseAPI, self).__init__(product_name="psc", *args, **kwargs)
+        super(CbPSCBaseAPI, self).__init__(product_name="cbc", *args, **kwargs)
         self._lr_scheduler = None
 
     def _perform_query(self, cls, **kwargs):
