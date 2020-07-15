@@ -32,7 +32,7 @@ class QueryBuilder(object):
 
     Examples::
 
-    >>> from cbc_sdk.psc.threathunter import QueryBuilder
+    >>> from cbc_sdk.threathunter import QueryBuilder
     >>> # build a query with chaining
     >>> query = QueryBuilder().where(process_name="malicious.exe").and_(device_name="suspect")
     >>> # start with an initial query, and chain another condition to it
@@ -181,7 +181,7 @@ class Query(PaginatedQuery):
 
     Examples::
 
-    >>> from cbc_sdk.psc.threathunter import CbThreatHunterAPI,Process
+    >>> from cbc_sdk.threathunter import CbThreatHunterAPI,Process
     >>> cb = CbThreatHunterAPI()
     >>> query = cb.select(Process)
     >>> query = query.where(process_name="notepad.exe")

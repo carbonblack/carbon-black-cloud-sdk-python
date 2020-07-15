@@ -13,9 +13,9 @@
 
 from cbc_sdk.models import MutableBaseModel, UnrefreshableModel
 from cbc_sdk.errors import ServerError
-from cbc_sdk.psc.devices_query import DeviceSearchQuery
-from cbc_sdk.psc.alerts_query import BaseAlertSearchQuery, WatchlistAlertSearchQuery, \
-                                   CBAnalyticsAlertSearchQuery, VMwareAlertSearchQuery
+from cbc_sdk.platform.devices_query import DeviceSearchQuery
+from cbc_sdk.platform.alerts_query import BaseAlertSearchQuery, WatchlistAlertSearchQuery, \
+    CBAnalyticsAlertSearchQuery, VMwareAlertSearchQuery
 
 from copy import deepcopy
 import logging
@@ -125,7 +125,7 @@ class Device(PSCMutableModel):
     urlobject = "/appservices/v6/orgs/{0}/devices"
     urlobject_single = "/appservices/v6/orgs/{0}/devices/{1}"
     primary_key = "id"
-    swagger_meta_file = "psc/models/device.yaml"
+    swagger_meta_file = "platform/models/device.yaml"
 
     def __init__(self, cb, model_unique_id, initial_data=None):
         super(Device, self).__init__(cb, model_unique_id, initial_data)
@@ -208,7 +208,7 @@ class Device(PSCMutableModel):
 
 
 class Workflow(UnrefreshableModel):
-    swagger_meta_file = "psc/models/workflow.yaml"
+    swagger_meta_file = "platform/models/workflow.yaml"
 
     def __init__(self, cb, initial_data=None):
         super(Workflow, self).__init__(cb, model_unique_id=None, initial_data=initial_data)
@@ -218,7 +218,7 @@ class BaseAlert(PSCMutableModel):
     urlobject = "/appservices/v6/orgs/{0}/alerts"
     urlobject_single = "/appservices/v6/orgs/{0}/alerts/{1}"
     primary_key = "id"
-    swagger_meta_file = "psc/models/base_alert.yaml"
+    swagger_meta_file = "platform/models/base_alert.yaml"
 
     def __init__(self, cb, model_unique_id, initial_data=None):
         super(BaseAlert, self).__init__(cb, model_unique_id, initial_data)
@@ -343,7 +343,7 @@ class VMwareAlert(BaseAlert):
 class WorkflowStatus(PSCMutableModel):
     urlobject_single = "/appservices/v6/orgs/{0}/workflow/status/{1}"
     primary_key = "id"
-    swagger_meta_file = "psc/models/workflow_status.yaml"
+    swagger_meta_file = "platform/models/workflow_status.yaml"
 
     def __init__(self, cb, model_unique_id, initial_data=None):
         super(WorkflowStatus, self).__init__(cb, model_unique_id, initial_data)

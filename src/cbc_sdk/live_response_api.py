@@ -772,7 +772,7 @@ def jobrunner(callable, cb, device_id):
     Returns:
         object: The wrapped object.
     """
-    from cbc_sdk.psc.defense.models import Device
+    from cbc_sdk.defense.models import Device
     with cb.select(Device, device_id).lr_session() as sess:
         return callable(sess)
 
@@ -789,7 +789,7 @@ class WorkItem(object):
             device_id (object): The device ID or Device object the work item is directed for.
         """
         self.fn = fn
-        from cbc_sdk.psc.defense.models import Device
+        from cbc_sdk.defense.models import Device
         if isinstance(device_id, Device):
             self.device_id = device_id.deviceId
         else:
@@ -1001,7 +1001,7 @@ class LiveResponseJobScheduler(threading.Thread):
 
         schedule_max = self._max_workers - len(self._job_workers)
 
-        from cbc_sdk.psc.defense.models import Device
+        from cbc_sdk.defense.models import Device
         devices = [s for s in self._cb.select(Device) if s.deviceId in self._unscheduled_jobs
                    and s.deviceId not in self._job_workers
                    and s.status == "Online"]
@@ -1140,7 +1140,7 @@ class CbLRManagerBase(object):
 class LiveResponseSession(CbLRSessionBase):
     def __init__(self, cblr_manager, session_id, device_id, session_data=None):
         super(LiveResponseSession, self).__init__(cblr_manager, session_id, device_id, session_data=session_data)
-        from cbc_sdk.psc.defense.models import Device
+        from cbc_sdk.defense.models import Device
         device_info = self._cb.select(Device, self.device_id)
         self.os_type = OS_LIVE_RESPONSE_ENUM.get(device_info.deviceType, None)
 
@@ -1255,7 +1255,7 @@ def poll_status(cb, url, desired_status="complete", timeout=None, delay=None):
 
 
 if __name__ == "__main__":
-    from cbc_sdk.psc.defense import CbDefenseAPI
+    from cbc_sdk.defense import CbDefenseAPI
     import logging
     root = logging.getLogger()
     root.addHandler(logging.StreamHandler())

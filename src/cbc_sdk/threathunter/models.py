@@ -15,7 +15,7 @@ from __future__ import absolute_import
 from cbc_sdk.errors import ApiError, InvalidObjectError
 from cbc_sdk.models import CreatableModelMixin, MutableBaseModel, UnrefreshableModel
 import logging
-from cbc_sdk.psc.threathunter.query import Query, AsyncProcessQuery, TreeQuery, FeedQuery, ReportQuery, WatchlistQuery
+from cbc_sdk.threathunter.query import Query, AsyncProcessQuery, TreeQuery, FeedQuery, ReportQuery, WatchlistQuery
 import validators
 import time
 
@@ -77,7 +77,7 @@ class Process(UnrefreshableModel):
 
         :param kwargs: Arguments to filter the event query with.
         :return: Returns a Query object with the appropriate search parameters for events
-        :rtype: :py:class:`cbc_sdk.psc.threathunter.query.Query`
+        :rtype: :py:class:`cbc_sdk.threathunter.query.Query`
 
         Example::
 
@@ -111,7 +111,7 @@ class Process(UnrefreshableModel):
 
         :return: Returns a Query object with the appropriate search parameters for parent processes,
                  or None if the process has no recorded parent
-        :rtype: :py:class:`cbc_sdk.psc.threathunter.query.AsyncProcessQuery` or None
+        :rtype: :py:class:`cbc_sdk.threathunter.query.AsyncProcessQuery` or None
         """
         if "parent_guid" in self._info:
             return self._cb.select(Process).where(process_guid=self.parent_guid)
@@ -234,7 +234,7 @@ class Feed(FeedModel):
     urlobject = "/threathunter/feedmgr/v2/orgs/{}/feeds"
     urlobject_single = "/threathunter/feedmgr/v2/orgs/{}/feeds/{}"
     primary_key = "id"
-    swagger_meta_file = "psc/threathunter/models/feed.yaml"
+    swagger_meta_file = "threathunter/models/feed.yaml"
 
     @classmethod
     def _query_implementation(cls, cb):
@@ -402,7 +402,7 @@ class Report(FeedModel):
     """
     urlobject = "/threathunter/feedmgr/v2/orgs/{}/feeds/{}/reports"
     primary_key = "id"
-    swagger_meta_file = "psc/threathunter/models/report.yaml"
+    swagger_meta_file = "threathunter/models/report.yaml"
 
     @classmethod
     def _query_implementation(cls, cb):
@@ -677,7 +677,7 @@ class Report(FeedModel):
 class IOC(FeedModel):
     """Represents a collection of categorized IOCs.
     """
-    swagger_meta_file = "psc/threathunter/models/iocs.yaml"
+    swagger_meta_file = "threathunter/models/iocs.yaml"
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, report_id=None):
         """Creates a new IOC instance.
@@ -720,7 +720,7 @@ class IOC_V2(FeedModel):
     """Represents a collection of IOCs of a particular type, plus matching criteria and metadata.
     """
     primary_key = "id"
-    swagger_meta_file = "psc/threathunter/models/ioc_v2.yaml"
+    swagger_meta_file = "threathunter/models/ioc_v2.yaml"
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, report_id=None):
         """Creates a new IOC_V2 instance.
@@ -815,7 +815,7 @@ class Watchlist(FeedModel):
     # NOTE(ww): Not documented.
     urlobject = "/threathunter/watchlistmgr/v2/watchlist"
     urlobject_single = "/threathunter/watchlistmgr/v2/watchlist/{}"
-    swagger_meta_file = "psc/threathunter/models/watchlist.yaml"
+    swagger_meta_file = "threathunter/models/watchlist.yaml"
 
     @classmethod
     def _query_implementation(cls, cb):
@@ -1017,7 +1017,7 @@ class ReportSeverity(FeedModel):
     """Represents severity information for a watchlist report.
     """
     primary_key = "report_id"
-    swagger_meta_file = "psc/threathunter/models/report_severity.yaml"
+    swagger_meta_file = "threathunter/models/report_severity.yaml"
 
     def __init__(self, cb, initial_data=None):
         if not initial_data:
@@ -1032,7 +1032,7 @@ class Binary(UnrefreshableModel):
     """Represents a retrievable binary.
     """
     primary_key = "sha256"
-    swagger_meta_file = "psc/threathunter/models/binary.yaml"
+    swagger_meta_file = "threathunter/models/binary.yaml"
     urlobject_single = "/ubs/v1/orgs/{}/sha256/{}/metadata"
 
     class Summary(UnrefreshableModel):

@@ -14,7 +14,7 @@
 from cbc_sdk.utils import convert_query_params
 from cbc_sdk.query import PaginatedQuery
 
-from cbc_sdk.psc.rest_api import CbPSCBaseAPI
+from cbc_sdk.rest_api import CbPSCBaseAPI
 import logging
 import time
 
@@ -75,7 +75,7 @@ class Query(PaginatedQuery):
 
     Examples::
 
-    >>> from cbc_sdk.psc.defense import CbDefenseAPI
+    >>> from cbc_sdk.defense import CbDefenseAPI
     >>> cb = CbDefenseAPI()
 
     Notes:

@@ -3,4 +3,4 @@
 from __future__ import absolute_import
 
 from .rest_api import CbDefenseAPI
-from cbc_sdk.psc.defense.models import Device, Event, Policy
+from cbc_sdk.defense.models import Device, Event, Policy

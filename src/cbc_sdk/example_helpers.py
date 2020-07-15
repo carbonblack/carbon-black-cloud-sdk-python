@@ -26,10 +26,10 @@ from collections import defaultdict
 import validators
 import hashlib
 
-from cbc_sdk.psc import CbPSCBaseAPI
-from cbc_sdk.psc.defense import CbDefenseAPI
-from cbc_sdk.psc.threathunter import CbThreatHunterAPI
-from cbc_sdk.psc.livequery import CbLiveQueryAPI
+from cbc_sdk import CbPSCBaseAPI
+from cbc_sdk.defense import CbDefenseAPI
+from cbc_sdk.threathunter import CbThreatHunterAPI
+from cbc_sdk.livequery import CbLiveQueryAPI
 
 log = logging.getLogger(__name__)
 

@@ -33,7 +33,7 @@ class Run(NewBaseModel):
     >>> run.refresh()
     """
     primary_key = "id"
-    swagger_meta_file = "psc/livequery/models/run.yaml"
+    swagger_meta_file = "livequery/models/run.yaml"
     urlobject = "/livequery/v1/orgs/{}/runs"
     urlobject_single = "/livequery/v1/orgs/{}/runs/{}"
     _is_deleted = False
@@ -116,7 +116,7 @@ class Result(UnrefreshableModel):
     Represents a single result from a LiveQuery ``Run``.
     """
     primary_key = "id"
-    swagger_meta_file = "psc/livequery/models/result.yaml"
+    swagger_meta_file = "livequery/models/result.yaml"
     urlobject = "/livequery/v1/orgs/{}/runs/{}/results/_search"
 
     class Device(UnrefreshableModel):
@@ -216,7 +216,7 @@ class DeviceSummary(UnrefreshableModel):
     Represents the summary of results from a single device during a single LiveQuery ``Run``.
     """
     primary_key = "id"
-    swagger_meta_file = "psc/livequery/models/device_summary.yaml"
+    swagger_meta_file = "livequery/models/device_summary.yaml"
     urlobject = "/livequery/v1/orgs/{}/runs/{}/results/device_summaries/_search"
 
     class Metrics(UnrefreshableModel):
@@ -259,7 +259,7 @@ class ResultFacet(UnrefreshableModel):
     Represents the summary of results for a single field in a LiveQuery ``Run``.
     """
     primary_key = "field"
-    swagger_meta_file = "psc/livequery/models/facet.yaml"
+    swagger_meta_file = "livequery/models/facet.yaml"
     urlobject = "/livequery/v1/orgs/{}/runs/{}/results/_facet"
 
     class Values(UnrefreshableModel):

@@ -1,7 +1,7 @@
 import pytest
-from cbc_sdk.psc.livequery.rest_api import CbLiveQueryAPI
-from cbc_sdk.psc.livequery.models import Run, Result
-from cbc_sdk.psc.livequery.query import ResultQuery, FacetQuery
+from cbc_sdk.livequery.rest_api import CbLiveQueryAPI
+from cbc_sdk.livequery.models import Run, Result
+from cbc_sdk.livequery.query import ResultQuery, FacetQuery
 from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.stubresponse import StubResponse, patch_cbapi
 

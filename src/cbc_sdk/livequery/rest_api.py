@@ -11,8 +11,8 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-from cbc_sdk.psc.livequery.models import Run, RunHistory
-from cbc_sdk.psc.rest_api import CbPSCBaseAPI
+from cbc_sdk.livequery.models import Run, RunHistory
+from cbc_sdk.rest_api import CbPSCBaseAPI
 from cbc_sdk.errors import CredentialError, ApiError
 import logging
 
@@ -27,7 +27,7 @@ class CbLiveQueryAPI(CbPSCBaseAPI):
 
     Usage::
 
-    >>> from cbc_sdk.psc.livequery import CbLiveQueryAPI
+    >>> from cbc_sdk.livequery import CbLiveQueryAPI
     >>> cb = CbLiveQueryAPI(profile="production")
     """
     def __init__(self, *args, **kwargs):

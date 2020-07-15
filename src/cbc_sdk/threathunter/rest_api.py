@@ -11,9 +11,9 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-from cbc_sdk.psc.threathunter.query import Query
-from cbc_sdk.psc.rest_api import CbPSCBaseAPI
-from cbc_sdk.psc.threathunter.models import ReportSeverity
+from cbc_sdk.threathunter.query import Query
+from cbc_sdk.rest_api import CbPSCBaseAPI
+from cbc_sdk.threathunter.models import ReportSeverity
 from cbc_sdk.errors import CredentialError
 import logging
 
@@ -28,7 +28,7 @@ class CbThreatHunterAPI(CbPSCBaseAPI):
 
     Usage::
 
-    >>> from cbc_sdk.psc.threathunter import CbThreatHunterAPI
+    >>> from cbc_sdk.threathunter import CbThreatHunterAPI
     >>> cb = CbThreatHunterAPI(profile="production")
     """
     def __init__(self, *args, **kwargs):

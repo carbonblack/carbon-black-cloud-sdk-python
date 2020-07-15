@@ -1,6 +1,6 @@
 import pytest
-from cbc_sdk.psc.models import Device, BaseAlert, WorkflowStatus
-from cbc_sdk.psc.rest_api import CbPSCBaseAPI
+from cbc_sdk.platform.models import Device, BaseAlert, WorkflowStatus
+from cbc_sdk.rest_api import CbPSCBaseAPI
 from tests.unit.fixtures.stubresponse import StubResponse, patch_cbapi
 
 
