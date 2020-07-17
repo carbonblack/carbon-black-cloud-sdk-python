@@ -1,6 +1,6 @@
-- name: Linters
-  service: testingpython38
-  command: bin/linters.sh
+# - name: Linters
+#   service: testingpython38
+#   command: bin/linters.sh
 
 - name: Tests
   type: parallel
