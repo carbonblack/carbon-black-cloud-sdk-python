@@ -18,6 +18,7 @@ import logging
 import json
 
 from cbc_sdk.errors import ServerError
+from .query import Query
 
 log = logging.getLogger(__name__)
 
@@ -31,6 +32,9 @@ class DefenseMutableModel(MutableBaseModel):
                                                   force_init=force_init, full_doc=full_doc)
         if not self._change_object_key_name:
             self._change_object_key_name = self.primary_key
+
+    def _query_implementation(cls, cb, **kwargs):
+        return Query(cls, cb, kwargs.get("query_string", None))
 
     def _parse(self, obj):
         if type(obj) == dict and self.info_key in obj:
@@ -122,7 +126,7 @@ class Device(DefenseMutableModel):
     urlobject = "/integrationServices/v3/device"
     primary_key = "deviceId"
     info_key = "deviceInfo"
-    swagger_meta_file = "psc/defense/models/deviceInfo.yaml"
+    swagger_meta_file = "defense/models/deviceInfo.yaml"
 
     def __init__(self, cb, model_unique_id, initial_data=None):
         super(Device, self).__init__(cb, model_unique_id, initial_data)
@@ -151,11 +155,14 @@ class Event(NewBaseModel):
     def __init__(self, cb, model_unique_id, initial_data=None):
         super(Event, self).__init__(cb, model_unique_id, initial_data)
 
+    def _query_implementation(cls, cb, **kwargs):
+        return Query(cls, cb, kwargs.get("query_string", None))
+
 
 class Policy(DefenseMutableModel, CreatableModelMixin):
     urlobject = "/integrationServices/v3/policy"
     info_key = "policyInfo"
-    swagger_meta_file = "psc/defense/models/policyInfo.yaml"
+    swagger_meta_file = "defense/models/policyInfo.yaml"
     _change_object_http_method = "PUT"
     _change_object_key_name = "policyId"
 

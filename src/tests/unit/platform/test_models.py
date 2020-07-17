@@ -1,6 +1,6 @@
 import pytest
-from cbc_sdk.psc.models import Device, BaseAlert, WorkflowStatus
-from cbc_sdk.psc.rest_api import CbPSCBaseAPI
+from cbc_sdk.platform.models import Device, BaseAlert, WorkflowStatus
+from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.stubresponse import StubResponse, patch_cbapi
 
 
@@ -21,7 +21,7 @@ def test_Device_lr_session(monkeypatch):
         assert url == "/appservices/v6/orgs/Z100/devices/6023"
         return {"id": 6023}
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     sked = StubScheduler(6023)
     api._lr_scheduler = sked
     patch_cbapi(monkeypatch, api, GET=_get_session)
@@ -45,7 +45,7 @@ def test_Device_background_scan(monkeypatch):
         _was_called = True
         return StubResponse(None, 204)
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, GET=_get_device, POST=_background_scan)
     dev = Device(api, 6023, {"id": 6023})
     dev.background_scan(True)
@@ -66,7 +66,7 @@ def test_Device_bypass(monkeypatch):
         _was_called = True
         return StubResponse(None, 204)
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, GET=_get_device, POST=_bypass)
     dev = Device(api, 6023, {"id": 6023})
     dev.bypass(False)
@@ -87,7 +87,7 @@ def test_Device_delete_sensor(monkeypatch):
         _was_called = True
         return StubResponse(None, 204)
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, GET=_get_device, POST=_delete_sensor)
     dev = Device(api, 6023, {"id": 6023})
     dev.delete_sensor()
@@ -108,7 +108,7 @@ def test_Device_uninstall_sensor(monkeypatch):
         _was_called = True
         return StubResponse(None, 204)
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, GET=_get_device, POST=_uninstall_sensor)
     dev = Device(api, 6023, {"id": 6023})
     dev.uninstall_sensor()
@@ -129,7 +129,7 @@ def test_Device_quarantine(monkeypatch):
         _was_called = True
         return StubResponse(None, 204)
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, GET=_get_device, POST=_quarantine)
     dev = Device(api, 6023, {"id": 6023})
     dev.quarantine(True)
@@ -150,7 +150,7 @@ def test_Device_update_policy(monkeypatch):
         _was_called = True
         return StubResponse(None, 204)
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, GET=_get_device, POST=_update_policy)
     dev = Device(api, 6023, {"id": 6023})
     dev.update_policy(8675309)
@@ -172,7 +172,7 @@ def test_Device_update_sensor_version(monkeypatch):
         _was_called = True
         return StubResponse(None, 204)
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, GET=_get_device, POST=_update_sensor_version)
     dev = Device(api, 6023, {"id": 6023})
     dev.update_sensor_version({"RHEL": "2.3.4.5"})
@@ -190,7 +190,7 @@ def test_BaseAlert_dismiss(monkeypatch):
         return StubResponse({"state": "DISMISSED", "remediation": "Fixed", "comment": "Yessir",
                              "changed_by": "Robocop", "last_update_time": "2019-10-31T16:03:13.951Z"})
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_do_dismiss)
     alert = BaseAlert(api, "ESD14U2C", {"id": "ESD14U2C", "workflow": {"state": "OPEN"}})
     alert.dismiss("Fixed", "Yessir")
@@ -213,7 +213,7 @@ def test_BaseAlert_undismiss(monkeypatch):
         return StubResponse({"state": "OPEN", "remediation": "Fixed", "comment": "NoSir",
                              "changed_by": "Robocop", "last_update_time": "2019-10-31T16:03:13.951Z"})
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_do_update)
     alert = BaseAlert(api, "ESD14U2C", {"id": "ESD14U2C", "workflow": {"state": "DISMISS"}})
     alert.update("Fixed", "NoSir")
@@ -236,7 +236,7 @@ def test_BaseAlert_dismiss_threat(monkeypatch):
         return StubResponse({"state": "DISMISSED", "remediation": "Fixed", "comment": "Yessir",
                              "changed_by": "Robocop", "last_update_time": "2019-10-31T16:03:13.951Z"})
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_do_dismiss)
     alert = BaseAlert(api, "ESD14U2C", {"id": "ESD14U2C", "threat_id": "B0RG", "workflow": {"state": "OPEN"}})
     wf = alert.dismiss_threat("Fixed", "Yessir")
@@ -259,7 +259,7 @@ def test_BaseAlert_undismiss_threat(monkeypatch):
         return StubResponse({"state": "OPEN", "remediation": "Fixed", "comment": "NoSir",
                              "changed_by": "Robocop", "last_update_time": "2019-10-31T16:03:13.951Z"})
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_do_update)
     alert = BaseAlert(api, "ESD14U2C", {"id": "ESD14U2C", "threat_id": "B0RG", "workflow": {"state": "OPEN"}})
     wf = alert.update_threat("Fixed", "NoSir")
@@ -290,7 +290,7 @@ def test_WorkflowStatus(monkeypatch):
                 "workflow": {"state": "DISMISSED", "remediation": "Fixed", "comment": "Yessir",
                              "changed_by": "Robocop", "last_update_time": "2019-10-31T16:03:13.951Z"}}
 
-    api = CbPSCBaseAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, GET=_get_workflow)
     wfstat = WorkflowStatus(api, "W00K13")
     assert wfstat.workflow_.changed_by == "Robocop"

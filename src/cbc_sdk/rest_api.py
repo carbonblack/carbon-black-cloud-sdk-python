@@ -12,33 +12,40 @@
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
 from cbc_sdk.connection import BaseAPI
-from cbc_sdk.errors import ApiError, ServerError
+from cbc_sdk.errors import ApiError, CredentialError, ServerError
 from cbc_sdk.live_response_api import LiveResponseSessionManager
+from cbc_sdk.livequery.models import Run, RunHistory
+from cbc_sdk.threathunter.models import ReportSeverity
 import logging
+import time
 
 log = logging.getLogger(__name__)
 
 
-class CbPSCBaseAPI(BaseAPI):
-    """The main entry point into the Cb PSC API.
+class CBCloudAPI(BaseAPI):
+    """The main entry point into the CBCloudAPI.
 
     :param str profile: (optional) Use the credentials in the named profile when connecting to the Carbon Black server.
         Uses the profile named 'default' when not specified.
 
     Usage::
 
-    >>> from cbapi import CbPSCBaseAPI
-    >>> cb = CbPSCBaseAPI(profile="production")
+    >>> from cbapi import CBCloudAPI
+    >>> cb = CBCloudAPI(profile="production")
     """
     def __init__(self, *args, **kwargs):
-        super(CbPSCBaseAPI, self).__init__(product_name="cbc", *args, **kwargs)
+        super(CBCloudAPI, self).__init__(product_name="cbc", *args, **kwargs)
         self._lr_scheduler = None
+
+        if not self.credentials.get("org_key", None):
+            raise CredentialError("No organization key specified")
+
 
     def _perform_query(self, cls, **kwargs):
         if hasattr(cls, "_query_implementation"):
-            return cls._query_implementation(self)
+            return cls._query_implementation(self, **kwargs)
         else:
-            raise ApiError("All PSC models should provide _query_implementation")
+            raise ApiError("All Carbon Black Cloud models must provide _query_implementation")
 
     # ---- LiveOps
 
@@ -50,6 +57,34 @@ class CbPSCBaseAPI(BaseAPI):
 
     def _request_lr_session(self, sensor_id):
         return self.live_response.request_session(sensor_id)
+
+    # ---- Live Query
+
+    def livequery(self, sql):
+        return self.select(Run).where(sql=sql)
+
+    def livequery_history(self, query=None):
+        return self.select(RunHistory).where(query)
+
+    # ---- Notifications
+
+    def notification_listener(self, interval=60):
+        """Generator to continually poll the Cb Defense server for notifications (alerts). Note that this can only
+        be used with a 'SIEM' key generated in the Cb Defense console.
+        """
+        while True:
+            for notification in self.get_notifications():
+                yield notification
+            time.sleep(interval)
+
+    def get_notifications(self):
+        """Retrieve queued notifications (alerts) from the Cb Defense server. Note that this can only be used
+        with a 'SIEM' key generated in the Cb Defense console.
+
+        :returns: list of dictionary objects representing the notifications, or an empty list if none available.
+        """
+        res = self.get_object("/integrationServices/v3/notification")
+        return res.get("notifications", [])
 
     # ---- Device API
 
@@ -214,3 +249,89 @@ class CbPSCBaseAPI(BaseAPI):
         :return: The request ID, which may be used to select a WorkflowStatus object.
         """
         return self._bulk_threat_update_status(threat_ids, "DISMISSED", remediation, comment)
+
+    # ---- ThreathHunter
+
+    def create(self, cls, data=None):
+        """Creates a new model.
+
+        >>> feed = cb.create(Feed, feed_data)
+
+        :param cls: The model being created
+        :param data: The data to pre-populate the model with
+        :type data: dict(str, object)
+        :return: an instance of `cls`
+        """
+        return cls(self, initial_data=data)
+
+    def validate_process_query(self, query):
+        """Validates the given IOC query.
+
+        >>> cb.validate_query("process_name:chrome.exe") # True
+
+        :param str query: the query to validate
+        :return: whether or not the query is valid
+        :rtype: bool
+        """
+        args = {"q": query}
+        url = "/api/investigate/v1/orgs/{}/processes/search_validation".format(
+            self.credentials.org_key
+        )
+        resp = self.get_object(url, query_parameters=args)
+
+        return resp.get("valid", False)
+
+    def convert_feed_query(self, query):
+        """Converts a legacy CB Response query to a ThreatHunter query.
+
+        :param str query: the query to convert
+        :return: the converted query
+        :rtype: str
+        """
+        args = {"query": query}
+        resp = self.post_object("/threathunter/feedmgr/v2/query/translate", args).json()
+
+        return resp.get("query")
+
+    @property
+    def custom_severities(self):
+        """Returns a list of active :py:class:`ReportSeverity` instances
+
+        :rtype: list[:py:class:`ReportSeverity`]
+        """
+        # TODO(ww): There's probably a better place to put this.
+        url = "/threathunter/watchlistmgr/v3/orgs/{}/reports/severity".format(
+            self.credentials.org_key
+        )
+        resp = self.get_object(url)
+        items = resp.get("results", [])
+        return [self.create(ReportSeverity, item) for item in items]
+
+    def fetch_process_queries(self):
+        """Retrieves a list of queries, active or complete, known by
+        the ThreatHunter server.
+
+        :return: a list of query ids
+        :rtype: list(str)
+        """
+        url = "/api/investigate/v1/orgs/{}/processes/search_jobs".format(
+            self.credentials.org_key
+        )
+        ids = self.get_object(url)
+        return ids.get("query_ids", [])
+
+    def process_limits(self):
+        """Returns a dictionary containing API limiting information.
+
+        Example:
+
+        >>> cb.limits()
+        {u'status_code': 200, u'time_bounds': {u'upper': 1545335070095, u'lower': 1542779216139}}
+
+        :return: a dict of limiting information
+        :rtype: dict(str, str)
+        """
+        url = "/api/investigate/v1/orgs/{}/processes/limits".format(
+            self.credentials.org_key
+        )
+        return self.get_object(url)
