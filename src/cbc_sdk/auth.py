@@ -13,7 +13,7 @@
 
 import configparser
 import os
-import cbc_sdk.attrdict_cbc as attrdict
+import cbc_sdk.attrdict as attrdict
 import logging
 
 from .errors import CredentialError
