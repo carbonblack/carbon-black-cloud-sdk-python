@@ -4,11 +4,10 @@ from setuptools import setup
 import sys
 import os
 
-packages = ['cbc-sdk']
+packages = ['cbc_sdk']
 
 install_requires = [
     'requests',
-    'attrdict',
     'cachetools',
     'pyyaml',
     'pika',
@@ -36,7 +35,7 @@ def read(fname):
 
 
 setup(
-    name='cbc-sdk',
+    name='cbc_sdk',
     version=read('VERSION'),
     url='https://github.com/carbonblack/cbc-sdk-python',
     license='MIT',

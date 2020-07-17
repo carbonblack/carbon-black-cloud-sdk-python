@@ -27,7 +27,7 @@ import shutil
 
 from cbc_sdk.errors import TimeoutError, ObjectNotFoundError, ApiError
 from concurrent.futures import _base, wait
-from cbapi import winerror
+from cbc_sdk import winerror
 
 import queue
 

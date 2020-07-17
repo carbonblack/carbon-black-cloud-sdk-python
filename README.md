@@ -27,7 +27,7 @@ Use of the Carbon Black API is governed by the license found in [LICENSE](LICENS
 
 The Carbon Black Cloud Python SDK is design to work on Python 3.6 and above.
 
-All requirements are installed as part of `pip install cbc-sdk` or if you're planning on pushing changes to the Carbon Black Cloud Python SDK, the following can be used after cloning the repo `pip install -r requirements.txt`
+All requirements are installed as part of `pip install cbc_sdk` or if you're planning on pushing changes to the Carbon Black Cloud Python SDK, the following can be used after cloning the repo `pip install -r requirements.txt`
 
 ### Carbon Black Cloud
 * Enterprise EDR
