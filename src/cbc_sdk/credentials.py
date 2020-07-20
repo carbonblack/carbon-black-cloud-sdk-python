@@ -35,12 +35,12 @@ class CredentialValue(Enum):
     PROXY = auto()
     IGNORE_SYSTEM_PROXY = auto()
 
-    def has_boolean_value(self):
+    def requires_boolean_value(self):
         """
-        Return whether or not this credential has a boolean value.
+        Return whether or not this credential requires a boolean value.
 
         Returns:
-            bool: True if the credential has a Boolean value, False if not.
+            bool: True if the credential requires a Boolean value, False if not.
         """
         return self in _bool_valued_credentials
 
@@ -106,7 +106,7 @@ class Credentials(object):
         Raises:
             CredentialError: If the credential is a boolean type and the value is not correct.
         """
-        if key.has_boolean_value():
+        if key.requires_boolean_value():
             if isinstance(value, bool):
                 self._values[key] = value
             elif isinstance(value, int):
@@ -114,7 +114,7 @@ class Credentials(object):
             elif value.lower() in _bool_values:
                 self._values[key] = _bool_values[value.lower()]
             else:
-                raise CredentialError(f"invalid boolean value '{value}' for credential '{key.name}'")
+                raise CredentialError(f"Invalid boolean value '{value}' for credential '{key.name}'")
         else:
             self._values[key] = value
 
@@ -152,7 +152,7 @@ class Credentials(object):
         if name.upper() in CredentialValue.__members__:
             return self.get_value(CredentialValue[name.upper()])
         else:
-            return super(object, self).__getattr__(name)
+            raise AttributeError(f"Attribute {name} not found")
 
     @staticmethod
     def default():
