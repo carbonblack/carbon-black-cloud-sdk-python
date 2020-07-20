@@ -89,7 +89,7 @@ def dynamic_load(full_class_name):
         module_path, class_name = full_class_name.rsplit('.', 1)
         module = import_module(module_path)
         return getattr(module, class_name)
-    except (ImportError, AttributeError) as e:
+    except (ImportError, AttributeError, ValueError) as e:
         raise ImportError(full_class_name) from e
 
 
