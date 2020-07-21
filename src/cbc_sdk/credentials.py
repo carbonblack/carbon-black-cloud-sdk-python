@@ -53,20 +53,6 @@ _bool_valued_credentials = [CredentialValue.SSL_VERIFY, CredentialValue.SSL_VERI
 _bool_values = {"0": False, "no": False, "off": False, "false": False,
                 "1": True, "yes": True, "on": True, "true": True}
 
-# Default values for credential parameters
-_default_values = {
-    CredentialValue.URL: None,
-    CredentialValue.TOKEN: None,
-    CredentialValue.ORG_KEY: None,
-    CredentialValue.SSL_VERIFY: True,
-    CredentialValue.SSL_VERIFY_HOSTNAME: True,
-    CredentialValue.SSL_CERT_FILE: None,
-    CredentialValue.SSL_FORCE_TLS_1_2: False,
-    CredentialValue.PROXY: None,
-    CredentialValue.IGNORE_SYSTEM_PROXY: False
-}
-
-
 # === THE CREDENTIALS DATA OBJECT === #
 
 
@@ -84,7 +70,17 @@ class Credentials(object):
         Raises:
             CredentialError: If the value is not correct for any credential of boolean type.
         """
-        self._values = {}
+        self._values = {  # default values
+            CredentialValue.URL: None,
+            CredentialValue.TOKEN: None,
+            CredentialValue.ORG_KEY: None,
+            CredentialValue.SSL_VERIFY: True,
+            CredentialValue.SSL_VERIFY_HOSTNAME: True,
+            CredentialValue.SSL_CERT_FILE: None,
+            CredentialValue.SSL_FORCE_TLS_1_2: False,
+            CredentialValue.PROXY: None,
+            CredentialValue.IGNORE_SYSTEM_PROXY: False
+        }
         if values is not None:
             for k in list(CredentialValue):
                 if k in values:
@@ -128,10 +124,7 @@ class Credentials(object):
         Returns:
             object: The credential's value, or a default value if the value was not explicitly set.
         """
-        if key in self._values:
-            return self._values[key]
-        else:
-            return _default_values[key]
+        return self._values[key]
 
     def __getattr__(self, name):
         """
