@@ -59,13 +59,12 @@ _bool_values = {"0": False, "no": False, "off": False, "false": False,
 class Credentials(object):
     """The object that contains credentials retrieved from the credential provider."""
 
-    def __init__(self, values=None, **kwargs):
+    def __init__(self, values=None):
         """
         Initialize the Credentials object.
 
         Args:
             values (dict): Dictionary containing values to be set in the credentials.
-            **kwargs (dict): Additional values to be set in the credentials.
 
         Raises:
             CredentialError: If the value is not correct for any credential of boolean type.
@@ -87,9 +86,6 @@ class Credentials(object):
                     self._set_value(k, values[k])
                 elif k.name.lower() in values:
                     self._set_value(k, values[k.name.lower()])
-        for k in list(CredentialValue):
-            if k.name.lower() in kwargs:
-                self._set_value(k, kwargs[k.name.lower()])
 
     def _set_value(self, key, value):
         """
@@ -146,19 +142,6 @@ class Credentials(object):
             return self.get_value(CredentialValue[name.upper()])
         else:
             raise AttributeError(f"Attribute {name} not found")
-
-    @staticmethod
-    def default():
-        """
-        Get a Credential instance containing default values for all credentials.
-
-        Returns:
-            Credentials: The default value instance.
-        """
-        return _default_credentials
-
-
-_default_credentials = Credentials()
 
 
 # === THE INTERFACES IMPLEMENTED BY CREDENTIAL PROVIDERS === #

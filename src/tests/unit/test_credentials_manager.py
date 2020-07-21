@@ -33,7 +33,7 @@ class TestCredentialProvider(CredentialProvider):
             CredentialError: If there is any error retrieving the credentials.
         """
         if section == "default":
-            return Credentials(url="http://example.com", token="ABCDEFGHIJKLM", org_key="A1B2C3D4")
+            return Credentials({"url": "http://example.com", "token": "ABCDEFGHIJKLM", "org_key": "A1B2C3D4"})
         raise CredentialError(f"credential section {section} not found")
 
 

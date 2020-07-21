@@ -65,59 +65,23 @@ def test_credential_dict_value_load(input_dict):
     assert creds.get_value(CredentialValue.IGNORE_SYSTEM_PROXY)
 
 
-def test_credential_keyword_load():
-    """Test that keyword parameters to Credentials can override the initialization dict."""
-    init_dict = {CredentialValue.URL: "http://example.com", CredentialValue.TOKEN: "ABCDEFGH",
-                 CredentialValue.ORG_KEY: "A1B2C3D4", CredentialValue.SSL_VERIFY: False,
-                 CredentialValue.SSL_VERIFY_HOSTNAME: False, CredentialValue.SSL_CERT_FILE: "foo.certs",
-                 CredentialValue.SSL_FORCE_TLS_1_2: True, CredentialValue.PROXY: "proxy.example",
-                 CredentialValue.IGNORE_SYSTEM_PROXY: True}
-    creds = Credentials(init_dict, url="http://override.example.com", org_key="A5B6C7D8", ssl_verify="yes",
-                        ignore_system_proxy=False)
-    assert creds.url == "http://override.example.com"
-    assert creds.token == "ABCDEFGH"
-    assert creds.org_key == "A5B6C7D8"
-    assert creds.ssl_verify
-    assert not creds.ssl_verify_hostname
-    assert creds.ssl_cert_file == "foo.certs"
-    assert creds.ssl_force_tls_1_2
-    assert creds.proxy == "proxy.example"
-    assert not creds.ignore_system_proxy
-
-
 def test_credential_partial_loads():
-    """Test that we can have credentials with some values from dict, some values from keywords, and some default."""
+    """Test that we can have credentials with some values from dict and some default."""
     init_dict = {"url": "http://example.com", "ssl_verify": 0}
-    creds = Credentials(init_dict, token="CAFEBABE", ssl_cert_file="blort.certs")
+    creds = Credentials(init_dict)
     assert creds.url == "http://example.com"
-    assert creds.token == "CAFEBABE"
+    assert creds.token is None
     assert creds.org_key is None
     assert not creds.ssl_verify
     assert creds.ssl_verify_hostname
-    assert creds.ssl_cert_file == "blort.certs"
+    assert creds.ssl_cert_file is None
     assert not creds.ssl_force_tls_1_2
     assert creds.proxy is None
     assert not creds.ignore_system_proxy
 
 
 def test_credential_boolean_parsing_failure():
-    """Tests failure of parsing a Boolean credential value in either the dict or keywords."""
+    """Tests failure of parsing a Boolean credential value."""
     init_dict = {"url": "http://example.com", "ssl_verify": "bogus"}
     with pytest.raises(CredentialError):
         Credentials(init_dict)
-    with pytest.raises(CredentialError):
-        Credentials(url="http://example.com", ignore_system_proxy="REALLYbogus")
-
-
-def test_default_credentials():
-    """Tests that Credentials.default() does exactly what it says on the tin."""
-    creds = Credentials.default()
-    assert creds.url is None
-    assert creds.token is None
-    assert creds.org_key is None
-    assert creds.ssl_verify
-    assert creds.ssl_verify_hostname
-    assert creds.ssl_cert_file is None
-    assert not creds.ssl_force_tls_1_2
-    assert creds.proxy is None
-    assert not creds.ignore_system_proxy
