@@ -11,14 +11,10 @@
 
 """Test code for the utility functions"""
 
-import pytest
+# import pytest
 from datetime import datetime
-from cbc_sdk.utils import convert_query_params, convert_from_cb, convert_to_cb, dynamic_load, dynamic_create
+from cbc_sdk.utils import convert_query_params, convert_from_cb, convert_to_cb
 
-
-class TestClassForLoad:
-    """Stub class to be used as a target for loading operations."""
-    pass
 
 # ==================================== Unit TESTS BELOW ====================================
 
@@ -65,19 +61,3 @@ def test_convert_to_cb():
     t = datetime(2020, 3, 11, 18, 34, 11, 123456)
     s = convert_to_cb(t)
     assert s == "2020-03-11 18:34:11.123456"
-
-
-def test_dynamic_load():
-    """Test to make sure we can dynamically load a class."""
-    class1 = dynamic_load('tests.unit.test_utils.TestClassForLoad')
-    assert class1 == TestClassForLoad
-    with pytest.raises(ImportError):
-        dynamic_load('bogus_package.bogus_class')
-
-
-def test_dynamic_create():
-    """Test to make sure we can dynamically load a class and create an instance of said class."""
-    obj1 = dynamic_create('tests.unit.test_utils.TestClassForLoad')
-    assert isinstance(obj1, TestClassForLoad)
-    with pytest.raises(ImportError):
-        dynamic_create('bogus_package.bogus_class')

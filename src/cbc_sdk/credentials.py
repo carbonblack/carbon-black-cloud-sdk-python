@@ -9,13 +9,12 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-"""Dynamic credentials management for the CBC SDK."""
+"""Credentials management for the CBC SDK."""
 
 import logging
 
 from enum import Enum, auto
 from .errors import CredentialError
-from .utils import dynamic_create
 
 log = logging.getLogger(__name__)
 
@@ -52,6 +51,7 @@ _bool_valued_credentials = [CredentialValue.SSL_VERIFY, CredentialValue.SSL_VERI
 # The possible string values that translate to Boolean
 _bool_values = {"0": False, "no": False, "off": False, "false": False,
                 "1": True, "yes": True, "on": True, "true": True}
+
 
 # === THE CREDENTIALS DATA OBJECT === #
 
@@ -164,79 +164,3 @@ class CredentialProvider:
             CredentialError: If there is any error retrieving the credentials.
         """
         raise NotImplementedError("protocol not implemented: get_credentials")
-
-
-class CredentialProviderFactory:
-    """The interface implemented by a credential provider factory."""
-
-    def get_credential_provider(self, init_params=None):
-        """
-        Create the credential provider object and return it.
-
-        Args:
-            init_params (dict): Initialization parameters for the specific credential provider.
-
-        Returns:
-            CredentialProvider: The new credential provider.
-
-        Raises:
-            CredentialError: If there is any error creating the credential provider.
-        """
-        raise NotImplementedError("protocol not implemented: get_credential_provider")
-
-
-# === THE CREDENTIALS MANAGER === #
-
-
-_known_credentials_providers = {
-    # TK
-}
-
-
-class CredentialsManager:
-    """The code section that manages the credentials."""
-    _provider = None
-    _cached_credentials = {}
-
-    @staticmethod
-    def load(provider, init_params=None):
-        """
-        Load the credential provider.
-
-        Args:
-            provider (str): The name (class name or "known name") of the credential provider to load.
-            init_params (dict): Initialization parameters that should be passed to the provider.
-
-        Raises:
-            CredentialError: If there is any error loading the credential provider.
-        """
-        if CredentialsManager._provider is not None:
-            raise CredentialError("CredentialsManager already loaded")
-        class_name = provider
-        if provider in _known_credentials_providers:
-            class_name = _known_credentials_providers[provider]
-        try:
-            factory = dynamic_create(class_name)
-            CredentialsManager._provider = factory.get_credential_provider(init_params)
-        except ImportError as e:
-            raise CredentialError(f"unknown credentials provider '{provider}") from e
-
-    @staticmethod
-    def get_credentials(section=None):
-        """
-        Return a Credentials object containing the configured credentials.
-
-        Args:
-            section (str): The credential section to retrieve.
-
-        Returns:
-            Credentials: The credentials retrieved from that source.
-
-        Raises:
-            CredentialError: If there is any error retrieving the credentials.
-        """
-        if section not in CredentialsManager._cached_credentials:
-            if CredentialsManager._provider is None:
-                raise CredentialError("credentials provider not yet loaded")
-            CredentialsManager._cached_credentials[section] = CredentialsManager._provider.get_credentials(section)
-        return CredentialsManager._cached_credentials[section]
