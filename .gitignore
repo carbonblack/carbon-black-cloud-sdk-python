@@ -135,3 +135,6 @@ dmypy.json
 codeship.aes
 env
 *.decrypted
+
+# IntelliJ
+.idea/
