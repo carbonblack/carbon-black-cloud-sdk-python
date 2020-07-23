@@ -14,8 +14,8 @@
 """Model and Query Classes for Platform Alerts and Workflows"""
 
 from cbc_sdk.errors import ApiError
-from cbc_sdk.platform.base import (PSCMutableModel, PSCQueryBase, QueryBuilder,
-                                   QueryBuilderSupportMixin, IterableQueryMixin)
+from cbc_sdk.platform import (PSCMutableModel, PSCQueryBase, QueryBuilder,
+                              QueryBuilderSupportMixin, IterableQueryMixin)
 from cbc_sdk.base import UnrefreshableModel
 from cbc_sdk.platform.devices import DeviceSearchQuery
 

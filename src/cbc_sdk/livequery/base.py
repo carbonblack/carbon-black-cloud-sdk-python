@@ -15,7 +15,7 @@
 
 from __future__ import absolute_import
 from cbc_sdk.base import UnrefreshableModel, NewBaseModel
-from cbc_sdk.platform.base import QueryBuilder, PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin
+from cbc_sdk.platform import QueryBuilder, PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin
 from cbc_sdk.errors import ApiError, ServerError
 import logging
 import time
