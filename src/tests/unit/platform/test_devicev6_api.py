@@ -1,6 +1,6 @@
 import pytest
 from cbc_sdk.errors import ApiError
-from cbc_sdk.platform.devices import Device
+from cbc_sdk.platform.models import Device
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.stubresponse import StubResponse, patch_cbapi
 

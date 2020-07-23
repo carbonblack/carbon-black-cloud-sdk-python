@@ -1,6 +1,7 @@
 import pytest
 from cbc_sdk.rest_api import CBCloudAPI
-from cbc_sdk.livequery.base import Run, RunQuery, RunHistoryQuery
+from cbc_sdk.livequery.models import Run
+from cbc_sdk.livequery.query import RunQuery, RunHistoryQuery
 from cbc_sdk.errors import ApiError, CredentialError
 from tests.unit.fixtures.stubresponse import StubResponse, patch_cbapi
 

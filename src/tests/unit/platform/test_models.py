@@ -1,6 +1,5 @@
 import pytest
-from cbc_sdk.platform.devices import Device
-from cbc_sdk.platform.alerts import BaseAlert, WorkflowStatus
+from cbc_sdk.platform.models import Device, BaseAlert, WorkflowStatus
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.stubresponse import StubResponse, patch_cbapi
 
