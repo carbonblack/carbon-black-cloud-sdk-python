@@ -11,9 +11,11 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
+"""Model Classes for Enterprise Endpoint Detection and Response"""
+
 from __future__ import absolute_import
 from cbc_sdk.errors import ApiError, InvalidObjectError, NonQueryableModel
-from cbc_sdk.models import CreatableModelMixin, MutableBaseModel, UnrefreshableModel
+from cbc_sdk.base import CreatableModelMixin, MutableBaseModel, UnrefreshableModel
 from cbc_sdk.threathunter.query import Query, AsyncProcessQuery, TreeQuery, FeedQuery, ReportQuery, WatchlistQuery
 
 import logging

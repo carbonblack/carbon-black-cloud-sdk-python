@@ -1,3 +1,5 @@
 from __future__ import absolute_import
 
-from .models import Device, Workflow, BaseAlert, WatchlistAlert, CBAnalyticsAlert, VMwareAlert, WorkflowStatus
+from cbc_sdk.platform.devices import Device
+from cbc_sdk.platform.alerts import BaseAlert, WatchlistAlert, CBAnalyticsAlert, VMwareAlert
+from cbc_sdk.platform.base import Workflow, WorkflowStatus

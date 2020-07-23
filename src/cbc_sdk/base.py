@@ -13,19 +13,22 @@
 
 from __future__ import absolute_import
 
-from copy import deepcopy
-
+import copy
 import base64
 import os.path
 from .utils import convert_from_cb, convert_to_cb
 import yaml
 import json
 import time
-from .errors import ApiError, ServerError, InvalidObjectError
+from .errors import ApiError, ServerError, InvalidObjectError, MoreThanOneResultError
 import logging
 from datetime import datetime
+from solrq import Q
+
 
 log = logging.getLogger(__name__)
+
+"""Base Models"""
 
 
 class CreatableModelMixin(object):
@@ -403,14 +406,15 @@ class MutableBaseModel(NewBaseModel):
 
     def _update_object(self):
         if self.__class__.primary_key in self._dirty_attributes.keys() or self._model_unique_id is None:
-            new_object_info = deepcopy(self._info)
+            new_object_info = copy.deepcopy(self._info)
             try:
                 if not self._new_object_needs_primary_key:
                     del(new_object_info[self.__class__.primary_key])
             except Exception:
                 pass
             log.debug("Creating a new {0:s} object".format(self.__class__.__name__))
-            ret = self._cb.api_json_request(self.__class__._new_object_http_method, self.urlobject,
+            http_method = self.__class__._new_object_http_method
+            ret = self._cb.api_json_request(http_method, self.urlobject,
                                             data=new_object_info)
         else:
             log.debug("Updating {0:s} with unique ID {1:s}".format(self.__class__.__name__, str(self._model_unique_id)))
@@ -508,3 +512,365 @@ class MutableBaseModel(NewBaseModel):
         if self.is_dirty():
             r += " (*)"
         return r
+
+
+"""Base Queries"""
+
+
+class BaseQuery(object):
+    def __init__(self, query=None):
+        self._query = query
+
+    def _clone(self):
+        return self.__class__(self._query)
+
+    def all(self):
+        return self._perform_query()
+
+    def first(self):
+        res = self[:1]
+        if not len(res):
+            return None
+        return res[0]
+
+    def one(self):
+        res = self[:2]
+
+        if len(res) == 0 or len(res) > 1:
+            raise MoreThanOneResultError(message="{0:d} results found for query {1:s}"
+                                         .format(len(self), str(self._query)))
+
+        return res[0]
+
+    def _perform_query(self):
+        # This has the effect of generating an empty iterator.
+        # See http://stackoverflow.com/questions/13243766/python-empty-generator-function
+        return
+        yield
+
+    def __len__(self):
+        return 0
+
+    def __getitem__(self, item):
+        return None
+
+    def __iter__(self):
+        return self._perform_query()
+
+
+class SimpleQuery(BaseQuery):
+    _multiple_where_clauses_accepted = False
+
+    def __init__(self, cls, cb, urlobject=None, returns_fulldoc=True):
+        super(SimpleQuery, self).__init__()
+
+        self._doc_class = cls
+        if not urlobject:
+            self._urlobject = cls.urlobject
+        else:
+            self._urlobject = urlobject
+        self._cb = cb
+        self._full_init = False
+        self._results = []
+        self._query = {}
+        self._sort_by = None
+        self._returns_full_doc = returns_fulldoc
+
+    def _clone(self):
+        nq = self.__class__(self._doc_class, self._cb)
+        nq._urlobject = self._urlobject
+        nq._full_init = self._full_init
+        nq._results = self._results[::]
+        nq._query = copy.deepcopy(self._query)
+        nq._sort_by = self._sort_by
+
+        return nq
+
+    def _match_query(self, i):
+        for k, v in iter(self._query.items()):
+            if isinstance(v, str):
+                v = v.lower()
+            target = getattr(i, k, None)
+            if target is None:
+                return False
+            if str(target).lower() != v:
+                return False
+        return True
+
+    def _sort(self, result_set):
+        if self._sort_by is not None:
+            return sorted(result_set, key=lambda x: getattr(x, self._sort_by, 0), reverse=True)
+        else:
+            return result_set
+
+    @property
+    def results(self):
+        if not self._full_init:
+            self._results = []
+            for item in self._cb.get_object(self._urlobject, default=[]):
+                t = self._doc_class.new_object(self._cb, item, full_doc=self._returns_full_doc)
+                if self._match_query(t):
+                    self._results.append(t)
+            self._results = self._sort(self._results)
+            self._full_init = True
+
+        return self._results
+
+    def __len__(self):
+        return len(self.results)
+
+    def __getitem__(self, item):
+        if isinstance(item, slice):
+            return [self.results[ii] for ii in range(*item.indices(len(self)))]
+        elif isinstance(item, int):
+            return self.results[item]
+        else:
+            raise TypeError("Invalid argument type")
+
+    def where(self, new_query):
+        if self._query and not self._multiple_where_clauses_accepted:
+            raise ApiError("Cannot have multiple 'where' clauses")
+
+        nq = self._clone()
+        field, value = new_query.split(':', 1)
+        nq._query[field] = value
+        nq._full_init = False
+        return nq
+
+    def and_(self, new_query):
+        if not self._multiple_where_clauses_accepted:
+            raise ApiError("Cannot have multiple 'where' clauses")
+        return self.where(new_query)
+
+    def _perform_query(self):
+        for item in self.results:
+            yield item
+
+    def sort(self, new_sort):
+        nq = self._clone()
+        nq._sort_by = new_sort
+        return nq
+
+
+class PaginatedQuery(BaseQuery):
+    def __init__(self, cls, cb, query=None):
+        super(PaginatedQuery, self).__init__(query)
+        self._doc_class = cls
+        self._cb = cb
+        # TODO: this should be subject to a TTL
+        self._total_results = 0
+        self._count_valid = False
+        self._batch_size = 100
+
+    def _clone(self):
+        nq = self.__class__(self._doc_class, self._cb, query=self._query)
+        nq._batch_size = self._batch_size
+        return nq
+
+    def __len__(self):
+        if self._count_valid:
+            return self._total_results
+        return self._count()
+
+    def __getitem__(self, item):
+        if isinstance(item, slice):
+            if item.step and item.step != 1:
+                raise ValueError("steps not supported")
+
+            must_count_result_set = False
+            if item.start is None or item.start == 0:
+                start = 0
+            else:
+                start = item.start
+                if item.start < 0:
+                    must_count_result_set = True
+
+            if item.stop is None or item.stop == 0:
+                numrows = 0
+            else:
+                numrows = item.stop - start
+                if item.stop < 0:
+                    must_count_result_set = True
+                elif numrows <= 0:
+                    return []
+
+            if must_count_result_set:
+                log.debug('Must count result set')
+                # general case
+                item_range = range(*item.indices(len(self)))
+                if not len(item_range):
+                    return []
+
+                start, numrows = item_range[0], len(item_range)
+
+            try:
+                return list(self._perform_query(start, numrows))
+            except StopIteration:
+                return []
+        elif isinstance(item, int):
+            if item < 0:
+                item += len(self)
+            if item < 0:
+                return None
+
+            try:
+                return next(self._perform_query(item, 1))
+            except StopIteration:
+                return None
+        else:
+            raise TypeError("invalid type")
+
+    def _perform_query(self, start=0, numrows=0):
+        for item in self._search(start=start, rows=numrows):
+            yield self._doc_class.new_object(self._cb, item)
+
+    def batch_size(self, new_batch_size):
+        nq = self._clone()
+        nq._batch_size = new_batch_size
+        return nq
+
+
+class QueryBuilder(object):
+    """
+    Provides a flexible interface for building prepared queries for the CB
+    PSC backend.
+
+    This object can be instantiated directly, or can be managed implicitly
+    through the :py:meth:`CBCloudAPI.select` API.
+
+    Examples::
+
+    >>> from cbc_sdk.base import QueryBuilder
+    >>> # build a query with chaining
+    >>> query = QueryBuilder().where(process_name="malicious.exe").and_(device_name="suspect")
+    >>> # start with an initial query, and chain another condition to it
+    >>> query = QueryBuilder(device_os="WINDOWS").or_(process_username="root")
+
+    """
+    def __init__(self, **kwargs):
+        if kwargs:
+            self._query = Q(**kwargs)
+        else:
+            self._query = None
+        self._raw_query = None
+        self._process_guid = None
+
+    def _guard_query_params(func):
+        """Decorates the query construction methods of *QueryBuilder*, preventing
+        them from being called with parameters that would result in an internally
+        inconsistent query.
+        """
+        @functools.wraps(func)
+        def wrap_guard_query_change(self, q, **kwargs):
+            if self._raw_query is not None and (kwargs or isinstance(q, Q)):
+                raise ApiError("Cannot modify a raw query with structured parameters")
+            if self._query is not None and isinstance(q, str):
+                raise ApiError("Cannot modify a structured query with a raw parameter")
+            return func(self, q, **kwargs)
+        return wrap_guard_query_change
+
+    @_guard_query_params
+    def where(self, q, **kwargs):
+        """Adds a conjunctive filter to a query.
+
+        :param q: string or `solrq.Q` object
+        :param kwargs: Arguments to construct a `solrq.Q` with
+        :return: QueryBuilder object
+        :rtype: :py:class:`QueryBuilder`
+        """
+        if isinstance(q, str):
+            if self._raw_query is None:
+                self._raw_query = []
+            self._raw_query.append(q)
+        elif isinstance(q, Q) or kwargs:
+            if self._query is not None:
+                raise ApiError("Use .and_() or .or_() for an extant solrq.Q object")
+            if kwargs:
+                self._process_guid = self._process_guid or kwargs.get("process_guid")
+                q = Q(**kwargs)
+            self._query = q
+        else:
+            raise ApiError(".where() only accepts strings or solrq.Q objects")
+
+        return self
+
+    @_guard_query_params
+    def and_(self, q, **kwargs):
+        """Adds a conjunctive filter to a query.
+
+        :param q: string or `solrq.Q` object
+        :param kwargs: Arguments to construct a `solrq.Q` with
+        :return: QueryBuilder object
+        :rtype: :py:class:`QueryBuilder`
+        """
+        if isinstance(q, str):
+            self.where(q)
+        elif isinstance(q, Q) or kwargs:
+            if kwargs:
+                self._process_guid = self._process_guid or kwargs.get("process_guid")
+                q = Q(**kwargs)
+            if self._query is None:
+                self._query = q
+            else:
+                self._query = self._query & q
+        else:
+            raise ApiError(".and_() only accepts strings or solrq.Q objects")
+
+        return self
+
+    @_guard_query_params
+    def or_(self, q, **kwargs):
+        """Adds a disjunctive filter to a query.
+
+        :param q: `solrq.Q` object
+        :param kwargs: Arguments to construct a `solrq.Q` with
+        :return: QueryBuilder object
+        :rtype: :py:class:`QueryBuilder`
+        """
+        if kwargs:
+            self._process_guid = self._process_guid or kwargs.get("process_guid")
+            q = Q(**kwargs)
+
+        if isinstance(q, Q):
+            if self._query is None:
+                self._query = q
+            else:
+                self._query = self._query | q
+        else:
+            raise ApiError(".or_() only accepts solrq.Q objects")
+
+        return self
+
+    @_guard_query_params
+    def not_(self, q, **kwargs):
+        """Adds a negative filter to a query.
+
+        :param q: `solrq.Q` object
+        :param kwargs: Arguments to construct a `solrq.Q` with
+        :return: QueryBuilder object
+        :rtype: :py:class:`QueryBuilder`
+        """
+        if kwargs:
+            q = ~Q(**kwargs)
+
+        if isinstance(q, Q):
+            if self._query is None:
+                self._query = q
+            else:
+                self._query = self._query & q
+        else:
+            raise ApiError(".not_() only accepts solrq.Q objects")
+
+    def _collapse(self):
+        """The query can be represented by either an array of strings
+        (_raw_query) which is concatenated and passed directly to Solr, or
+        a solrq.Q object (_query) which is then converted into a string to
+        pass to Solr. This function will perform the appropriate conversions to
+        end up with the 'q' string sent into the POST request to the
+        PSC-R query endpoint."""
+        if self._raw_query is not None:
+            return " ".join(self._raw_query)
+        elif self._query is not None:
+            return str(self._query)
+        else:
+            return "*:*"               # return everything

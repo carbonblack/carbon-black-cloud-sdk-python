@@ -1,6 +1,7 @@
 import pytest
 from cbc_sdk.errors import ApiError
-from cbc_sdk.platform.models import BaseAlert, CBAnalyticsAlert, VMwareAlert, WatchlistAlert, WorkflowStatus
+from cbc_sdk.platform.alerts import BaseAlert, CBAnalyticsAlert, VMwareAlert, WatchlistAlert
+from cbc_sdk.platform.base import WorkflowStatus
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.stubresponse import StubResponse, patch_cbapi
 
