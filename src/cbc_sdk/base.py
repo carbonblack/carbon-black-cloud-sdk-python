@@ -11,6 +11,8 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
+"""Models and Queries for the Base Carbon Black Cloud SDK"""
+
 from __future__ import absolute_import
 
 import copy
@@ -24,9 +26,10 @@ from .errors import ApiError, ServerError, InvalidObjectError, MoreThanOneResult
 import logging
 from datetime import datetime
 from solrq import Q
-
+import functools
 
 log = logging.getLogger(__name__)
+
 
 """Base Models"""
 
@@ -314,7 +317,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
             lines.append(" Last refreshed at {0:s}".format(time.ctime(self._last_refresh_time)))
         if not self._full_init:
             lines.append(" Partially initialized. Use .refresh() to load all attributes")
-        lines.append("-"*79)
+        lines.append("-" * 79)
         lines.append("")
 
         for attr in sorted(self._info):
