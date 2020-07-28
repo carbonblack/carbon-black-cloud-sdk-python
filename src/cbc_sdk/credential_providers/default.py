@@ -30,8 +30,9 @@ def default_credential_provider(credential_file):
         CredentialProvider: The default credential provider that CBCloudAPI should use.
     """
     # FUTURE: On Windows possibly return the registry-based provider
+    # Note: Using Environmental Variables will override the use of the FileCredentialProvider for the CBCloudAPI object
     if credential_file is None and os.environ.get('CBAPI_TOKEN', False) and os.environ.get('CBAPI_URL', False):
         log.debug("Using EnvironCredentialProvider")
-        return EnvironCredentialProvider()  # note: use of this provider means the profile property will go unused
+        return EnvironCredentialProvider()
     log.debug("Using FileCredentialProvider")
     return FileCredentialProvider(credential_file)
