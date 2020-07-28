@@ -122,7 +122,7 @@ def test_security_check_unix(fileuid, filemode, parentuid, parentmode, warned, p
     if warned:
         assert len(caplog.record_tuples) == 0
     else:
-        last_failmsg = caplog.record_tuples[0][2]
+        last_failmsg = caplog.record_tuples[1][2]
         assert prefix in last_failmsg
         assert last_failmsg.endswith(suffix)
 

@@ -105,10 +105,11 @@ class FileCredentialProvider(CredentialProvider):
                     failmsg = f"File {str(path)} has invalid permissions"
             if failmsg:
                 # for now, we just emit warning
-                log.warning("Security warning: " + failmsg)
                 if self._specific_file_warn:
-                    log.warning("A future version of CBC SDK will disallow access to this file altogether.")
+                    log.warning("Security warning: A future version of CBC SDK will disallow access to "
+                                "the following files altogether unless their permissions are updated.")
                     self._specific_file_warn = False
+                log.warning("Security warning: " + failmsg)
             return True
 
     def get_credentials(self, section=None):
