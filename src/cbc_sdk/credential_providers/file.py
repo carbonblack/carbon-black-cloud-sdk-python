@@ -109,7 +109,7 @@ class FileCredentialProvider(CredentialProvider):
                 self._last_failmsg = failmsg
                 log.warning("Security warning: " + failmsg)
                 if self._specific_file_warn:
-                    log.warning("A future version of CBC SDK wil disallow access to this file altogether.")
+                    log.warning("A future version of CBC SDK will disallow access to this file altogether.")
                     self._specific_file_warn = False
             return True
 
