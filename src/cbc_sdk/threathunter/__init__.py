@@ -1,5 +1,11 @@
 from __future__ import absolute_import
 
-from cbc_sdk.threathunter.models import (Process, Event, Tree, Binary, Downloads,
-                                         Feed, Report, IOC, IOC_V2, Watchlist)
-from cbc_sdk.threathunter.query import QueryBuilder
+from cbc_sdk.threathunter.base import (Process, Event, Tree, Query, AsyncProcessQuery,
+                                       TreeQuery)
+
+from cbc_sdk.threathunter.threat_intelligence import (Watchlist, Feed, Report,
+                                                      ReportSeverity, IOC, IOC_V2,
+                                                      FeedQuery, ReportQuery,
+                                                      WatchlistQuery)
+
+from cbc_sdk.threathunter.ubs import Binary, Downloads

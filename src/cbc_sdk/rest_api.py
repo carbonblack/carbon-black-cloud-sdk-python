@@ -15,7 +15,7 @@ from cbc_sdk.connection import BaseAPI
 from cbc_sdk.errors import ApiError, CredentialError, ServerError
 from cbc_sdk.live_response_api import LiveResponseSessionManager
 from cbc_sdk.livequery import Run, RunHistory
-from cbc_sdk.threathunter.models import ReportSeverity
+from cbc_sdk.threathunter.threat_intelligence import ReportSeverity
 import logging
 import time
 

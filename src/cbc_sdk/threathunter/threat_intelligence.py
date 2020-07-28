@@ -15,8 +15,7 @@
 
 from __future__ import absolute_import
 from cbc_sdk.errors import ApiError, InvalidObjectError, NonQueryableModel
-from cbc_sdk.base import CreatableModelMixin, MutableBaseModel, UnrefreshableModel
-from cbc_sdk.threathunter.query import Query, AsyncProcessQuery, TreeQuery, FeedQuery, ReportQuery, WatchlistQuery
+from cbc_sdk.base import CreatableModelMixin, MutableBaseModel, UnrefreshableModel, SimpleQuery
 
 import logging
 import time
@@ -25,213 +24,217 @@ import validators
 log = logging.getLogger(__name__)
 
 
+"""Models"""
+
+
 class FeedModel(UnrefreshableModel, CreatableModelMixin, MutableBaseModel):
     """A common base class for models used by the Feed and Watchlist APIs.
     """
     pass
 
 
-class Process(UnrefreshableModel):
-    """Represents a process retrieved by one of the CbTH endpoints.
+class Watchlist(FeedModel):
+    """Represents a ThreatHunter watchlist.
     """
-    default_sort = 'last_update desc'
-    primary_key = "process_guid"
-    validation_url = "/api/investigate/v1/orgs/{}/processes/search_validation"
-
-    class Summary(UnrefreshableModel):
-        """Represents a summary of organization-specific information for
-        a process.
-        """
-        default_sort = "last_update desc"
-        primary_key = "process_guid"
-        urlobject_single = "/api/investigate/v1/orgs/{}/processes/summary"
-
-        def __init__(self, cb, model_unique_id):
-            url = self.urlobject_single.format(cb.credentials.org_key)
-            summary = cb.get_object(url, query_parameters={"process_guid": model_unique_id})
-
-            while summary["incomplete_results"]:
-                log.debug("summary incomplete, requesting again")
-                summary = self._cb.get_object(
-                    url, query_parameters={"process_guid": self.process_guid}
-                )
-
-            super(Process.Summary, self).__init__(cb, model_unique_id=model_unique_id,
-                                                  initial_data=summary, force_init=False,
-                                                  full_doc=True)
-
-        def _query_implementation(self, cb, **kwargs):
-            return Query(self, cb, **kwargs)
+    # NOTE(ww): Not documented.
+    urlobject = "/threathunter/watchlistmgr/v2/watchlist"
+    urlobject_single = "/threathunter/watchlistmgr/v2/watchlist/{}"
+    swagger_meta_file = "threathunter/models/watchlist.yaml"
 
     @classmethod
     def _query_implementation(self, cb, **kwargs):
-        # This will emulate a synchronous process query, for now.
-        return AsyncProcessQuery(self, cb)
+        return WatchlistQuery(self, cb)
 
-    def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
-        super(Process, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
-                                      force_init=force_init, full_doc=full_doc)
+    def __init__(self, cb, model_unique_id=None, initial_data=None):
+        item = {}
 
-    @property
-    def summary(self):
-        """Returns organization-specific information about this process.
+        if initial_data:
+            item = initial_data
+        elif model_unique_id:
+            item = cb.get_object(self.urlobject_single.format(model_unique_id))
+
+        feed_id = item.get("id")
+
+        super(Watchlist, self).__init__(cb, model_unique_id=feed_id, initial_data=item,
+                                        force_init=False, full_doc=True)
+
+    def save(self):
+        """Saves this watchlist on the ThreatHunter server.
+
+        :return: The saved watchlist
+        :rtype: :py:class:`Watchlist`
+        :raise InvalidObjectError: if :py:meth:`validate` fails
         """
-        return self._cb.select(Process.Summary, self.process_guid)
+        self.validate()
 
-    def events(self, **kwargs):
-        """Returns a query for events associated with this process's process GUID.
-
-        :param kwargs: Arguments to filter the event query with.
-        :return: Returns a Query object with the appropriate search parameters for events
-        :rtype: :py:class:`cbc_sdk.threathunter.query.Query`
-
-        Example::
-
-        >>> [print(event) for event in process.events()]
-        >>> [print(event) for event in process.events(event_type="modload")]
-        """
-        query = self._cb.select(Event).where(process_guid=self.process_guid)
-
-        if kwargs:
-            query = query.and_(**kwargs)
-
-        return query
-
-    def tree(self):
-        """Returns a :py:class:`Tree` of children (and possibly siblings)
-        associated with this process.
-
-        :return: Returns a :py:class:`Tree` object
-        :rtype: :py:class:`Tree`
-
-        Example:
-
-        >>> tree = process.tree()
-        """
-        data = self._cb.select(Tree).where(process_guid=self.process_guid).all()
-        return Tree(self._cb, initial_data=data)
-
-    @property
-    def parents(self):
-        """Returns a query for parent processes associated with this process.
-
-        :return: Returns a Query object with the appropriate search parameters for parent processes,
-                 or None if the process has no recorded parent
-        :rtype: :py:class:`cbc_sdk.threathunter.query.AsyncProcessQuery` or None
-        """
-        if "parent_guid" in self._info:
-            return self._cb.select(Process).where(process_guid=self.parent_guid)
-        else:
-            return []
-
-    @property
-    def children(self):
-        """Returns a list of child processes for this process.
-
-        :return: Returns a list of process objects
-        :rtype: list of :py:class:`Process`
-        """
-        if isinstance(self.summary.children, list):
-            return [
-                Process(self._cb, initial_data=child)
-                for child in self.summary.children
-            ]
-        else:
-            return []
-
-    @property
-    def siblings(self):
-        """Returns a list of sibling processes for this process.
-
-        :return: Returns a list of process objects
-        :rtype: list of :py:class:`Process`
-        """
-        return [
-            Process(self._cb, initial_data=sibling)
-            for sibling in self.summary.siblings
-        ]
-
-    @property
-    def process_md5(self):
-        """Returns a string representation of the MD5 hash for this process.
-
-        :return: A string representation of the process's MD5.
-        :rtype: str
-        """
-        # NOTE: We have to check _info instead of poking the attribute directly
-        # to avoid the missing attrbute login in NewBaseModel.
-        if "process_hash" in self._info:
-            return next((hsh for hsh in self.process_hash if len(hsh) == 32), None)
-        else:
-            return None
-
-    @property
-    def process_sha256(self):
-        """Returns a string representation of the SHA256 hash for this process.
-
-        :return: A string representation of the process's SHA256.
-        :rtype: str
-        """
-        if "process_hash" in self._info:
-            return next((hsh for hsh in self.process_hash if len(hsh) == 64), None)
-        else:
-            return None
-
-    @property
-    def process_pids(self):
-        """Returns a list of PIDs associated with this process.
-
-        :return: A list of PIDs
-        :rtype: list of ints
-        """
-        # NOTE(ww): This exists because the API returns the list as "process_pid",
-        # which is misleading. We just give a slightly clearer name.
-        return self.process_pid
-
-
-class Event(UnrefreshableModel):
-    """Events can be queried for via ``CBCloudAPI.select``
-    or though an already selected process with ``Process.events()``.
-    """
-    urlobject = '/api/investigate/v2/orgs/{}/events/{}/_search'
-    validation_url = '/api/investigate/v1/orgs/{}/events/search_validation'
-    default_sort = 'last_update desc'
-    primary_key = "process_guid"
-
-    @classmethod
-    def _query_implementation(self, cb, **kwargs):
-        return Query(self, cb)
-
-    def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
-        super(Event, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
-                                    force_init=force_init, full_doc=full_doc)
-
-
-class Tree(UnrefreshableModel):
-    """The preferred interface for interacting with Tree models
-    is ``Process.tree()``.
-    """
-    urlobject = '/api/investigate/v1/orgs/{}/processes/tree'
-    primary_key = 'process_guid'
-
-    @classmethod
-    def _query_implementation(self, cb, **kwargs):
-        return TreeQuery(self, cb)
-
-    def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
-        super(Tree, self).__init__(
-            cb, model_unique_id=model_unique_id, initial_data=initial_data,
-            force_init=force_init, full_doc=full_doc
+        url = "/threathunter/watchlistmgr/v3/orgs/{}/watchlists".format(
+            self._cb.credentials.org_key
         )
+        new_info = self._cb.post_object(url, self._info).json()
+        self._info.update(new_info)
+        return self
+
+    def validate(self):
+        """Validates this watchlist's state.
+
+        :raise InvalidObjectError: if the watchlist's state is invalid
+        """
+        super(Watchlist, self).validate()
+
+    def update(self, **kwargs):
+        """Updates this watchlist with the given arguments.
+
+        >>> watchlist.update(name="New Name")
+
+        :param kwargs: The fields to update
+        :type kwargs: dict(str, str)
+        :raise InvalidObjectError: if `id` is missing or :py:meth:`validate` fails
+        :raise ApiError: if `report_ids` is given *and* is empty
+        """
+        if not self.id:
+            raise InvalidObjectError("missing Watchlist ID")
+
+        # NOTE(ww): Special case, according to the docs.
+        if "report_ids" in kwargs and not kwargs["report_ids"]:
+            raise ApiError("can't update a watchlist to have an empty report list")
+
+        for key, value in kwargs.items():
+            if key in self._info:
+                self._info[key] = value
+
+        self.validate()
+
+        url = "/threathunter/watchlistmgr/v3/orgs/{}/watchlists/{}".format(
+            self._cb.credentials.org_key,
+            self.id
+        )
+        new_info = self._cb.put_object(url, self._info).json()
+        self._info.update(new_info)
 
     @property
-    def children(self):
-        """Returns all of the children of the process that this tree is centered around.
+    def classifier_(self):
+        """Returns the classifier key and value, if any, for this watchlist.
 
-        :return: A list of :py:class:`Process` instances
-        :rtype: list of :py:class:`Process`
+        :rtype: tuple(str, str) or None
         """
-        return [Process(self._cb, initial_data=child) for child in self.nodes["children"]]
+        classifier_dict = self._info.get("classifier")
+
+        if not classifier_dict:
+            return None
+
+        return (classifier_dict["key"], classifier_dict["value"])
+
+    def delete(self):
+        """Deletes this watchlist from the ThreatHunter server.
+
+        :raise InvalidObjectError: if `id` is missing
+        """
+        if not self.id:
+            raise InvalidObjectError("missing Watchlist ID")
+
+        url = "/threathunter/watchlistmgr/v3/orgs/{}/watchlists/{}".format(
+            self._cb.credentials.org_key,
+            self.id
+        )
+        self._cb.delete_object(url)
+
+    def enable_alerts(self):
+        """Enable alerts for this watchlist. Alerts are not retroactive.
+
+        :raise InvalidObjectError: if `id` is missing
+        """
+        if not self.id:
+            raise InvalidObjectError("missing Watchlist ID")
+
+        url = "/threathunter/watchlistmgr/v3/orgs/{}/watchlists/{}/alert".format(
+            self._cb.credentials.org_key,
+            self.id
+        )
+        self._cb.put_object(url, None)
+
+    def disable_alerts(self):
+        """Disable alerts for this watchlist.
+
+        :raise InvalidObjectError: if `id` is missing
+        """
+        if not self.id:
+            raise InvalidObjectError("missing Watchlist ID")
+
+        url = "/threathunter/watchlistmgr/v3/orgs/{}/watchlists/{}/alert".format(
+            self._cb.credentials.org_key,
+            self.id
+        )
+        self._cb.delete_object(url)
+
+    def enable_tags(self):
+        """Enable tagging for this watchlist.
+
+        :raise InvalidObjectError: if `id` is missing
+        """
+        if not self.id:
+            raise InvalidObjectError("missing Watchlist ID")
+
+        url = "/threathunter/watchlistmgr/v3/orgs/{}/watchlists/{}/tag".format(
+            self._cb.credentials.org_key,
+            self.id
+        )
+        self._cb.put_object(url, None)
+
+    def disable_tags(self):
+        """Disable tagging for this watchlist.
+
+        :raise InvalidObjectError: if `id` is missing
+        """
+        if not self.id:
+            raise InvalidObjectError("missing Watchlist ID")
+
+        url = "/threathunter/watchlistmgr/v3/orgs/{}/watchlists/{}/tag".format(
+            self._cb.credentials.org_key,
+            self.id
+        )
+        self._cb.delete_object(url)
+
+    @property
+    def feed(self):
+        """Returns the feed linked to this watchlist, if there is one.
+
+        :return: the feed linked to this watchlist, if any
+        :rtype: :py:class:`Feed` or None
+        """
+        if not self.classifier:
+            return None
+        if self.classifier["key"] != "feed_id":
+            log.warning("Unexpected classifier type: {}".format(self.classifier["key"]))
+            return None
+
+        return self._cb.select(Feed, self.classifier["value"])
+
+    @property
+    def reports(self):
+        """Returns a list of :py:class:`Report` instances associated with this watchlist.
+
+        .. NOTE::
+            If this watchlist is a classifier (i.e. feed-linked) watchlist,
+            `reports` will be empty. To get the reports associated with the linked
+            feed, use :py:attr:`feed` like:
+
+            >>> for report in watchlist.feed.reports:
+            ...     print(report.title)
+
+        :return: A list of reports
+        :rtype: list(:py:class:`Report`)
+        """
+        if not self.report_ids:
+            return []
+
+        url = "/threathunter/watchlistmgr/v3/orgs/{}/reports/{}"
+        reports_ = []
+        for rep_id in self.report_ids:
+            path = url.format(self._cb.credentials.org_key, rep_id)
+            resp = self._cb.get_object(path)
+            reports_.append(Report(self._cb, initial_data=resp, from_watchlist=True))
+
+        return reports_
 
 
 class Feed(FeedModel):
@@ -680,6 +683,24 @@ class Report(FeedModel):
         return self._iocs_v2
 
 
+class ReportSeverity(FeedModel):
+    """Represents severity information for a watchlist report.
+    """
+    primary_key = "report_id"
+    swagger_meta_file = "threathunter/models/report_severity.yaml"
+
+    def __init__(self, cb, initial_data=None):
+        if not initial_data:
+            raise ApiError("ReportSeverity can only be initialized from initial_data")
+
+        super(ReportSeverity, self).__init__(cb, model_unique_id=initial_data.get(self.primary_key),
+                                             initial_data=initial_data, force_init=False,
+                                             full_doc=True)
+
+    def _query_implementation(self, cb, **kwargs):
+        raise NonQueryableModel("IOC does not support querying")
+
+
 class IOC(FeedModel):
     """Represents a collection of categorized IOCs.
     """
@@ -821,337 +842,79 @@ class IOC_V2(FeedModel):
         self._cb.delete_object(url)
 
 
-class Watchlist(FeedModel):
-    """Represents a ThreatHunter watchlist.
+"""Queries"""
+
+
+class FeedQuery(SimpleQuery):
+    """Represents the logic for a :py:class:`Feed` query.
+
+    >>> cb.select(Feed)
+    >>> cb.select(Feed, id)
+    >>> cb.select(Feed).where(include_public=True)
     """
-    # NOTE(ww): Not documented.
-    urlobject = "/threathunter/watchlistmgr/v2/watchlist"
-    urlobject_single = "/threathunter/watchlistmgr/v2/watchlist/{}"
-    swagger_meta_file = "threathunter/models/watchlist.yaml"
+    def __init__(self, doc_class, cb):
+        super(FeedQuery, self).__init__(doc_class, cb)
+        self._args = {}
 
-    @classmethod
-    def _query_implementation(self, cb, **kwargs):
-        return WatchlistQuery(self, cb)
-
-    def __init__(self, cb, model_unique_id=None, initial_data=None):
-        item = {}
-
-        if initial_data:
-            item = initial_data
-        elif model_unique_id:
-            item = cb.get_object(self.urlobject_single.format(model_unique_id))
-
-        feed_id = item.get("id")
-
-        super(Watchlist, self).__init__(cb, model_unique_id=feed_id, initial_data=item,
-                                        force_init=False, full_doc=True)
-
-    def save(self):
-        """Saves this watchlist on the ThreatHunter server.
-
-        :return: The saved watchlist
-        :rtype: :py:class:`Watchlist`
-        :raise InvalidObjectError: if :py:meth:`validate` fails
-        """
-        self.validate()
-
-        url = "/threathunter/watchlistmgr/v3/orgs/{}/watchlists".format(
-            self._cb.credentials.org_key
-        )
-        new_info = self._cb.post_object(url, self._info).json()
-        self._info.update(new_info)
+    def where(self, **kwargs):
+        self._args = dict(self._args, **kwargs)
         return self
 
-    def validate(self):
-        """Validates this watchlist's state.
-
-        :raise InvalidObjectError: if the watchlist's state is invalid
-        """
-        super(Watchlist, self).validate()
-
-    def update(self, **kwargs):
-        """Updates this watchlist with the given arguments.
-
-        >>> watchlist.update(name="New Name")
-
-        :param kwargs: The fields to update
-        :type kwargs: dict(str, str)
-        :raise InvalidObjectError: if `id` is missing or :py:meth:`validate` fails
-        :raise ApiError: if `report_ids` is given *and* is empty
-        """
-        if not self.id:
-            raise InvalidObjectError("missing Watchlist ID")
-
-        # NOTE(ww): Special case, according to the docs.
-        if "report_ids" in kwargs and not kwargs["report_ids"]:
-            raise ApiError("can't update a watchlist to have an empty report list")
-
-        for key, value in kwargs.items():
-            if key in self._info:
-                self._info[key] = value
-
-        self.validate()
-
-        url = "/threathunter/watchlistmgr/v3/orgs/{}/watchlists/{}".format(
-            self._cb.credentials.org_key,
-            self.id
-        )
-        new_info = self._cb.put_object(url, self._info).json()
-        self._info.update(new_info)
-
     @property
-    def classifier_(self):
-        """Returns the classifier key and value, if any, for this watchlist.
-
-        :rtype: tuple(str, str) or None
-        """
-        classifier_dict = self._info.get("classifier")
-
-        if not classifier_dict:
-            return None
-
-        return (classifier_dict["key"], classifier_dict["value"])
-
-    def delete(self):
-        """Deletes this watchlist from the ThreatHunter server.
-
-        :raise InvalidObjectError: if `id` is missing
-        """
-        if not self.id:
-            raise InvalidObjectError("missing Watchlist ID")
-
-        url = "/threathunter/watchlistmgr/v3/orgs/{}/watchlists/{}".format(
-            self._cb.credentials.org_key,
-            self.id
-        )
-        self._cb.delete_object(url)
-
-    def enable_alerts(self):
-        """Enable alerts for this watchlist. Alerts are not retroactive.
-
-        :raise InvalidObjectError: if `id` is missing
-        """
-        if not self.id:
-            raise InvalidObjectError("missing Watchlist ID")
-
-        url = "/threathunter/watchlistmgr/v3/orgs/{}/watchlists/{}/alert".format(
-            self._cb.credentials.org_key,
-            self.id
-        )
-        self._cb.put_object(url, None)
-
-    def disable_alerts(self):
-        """Disable alerts for this watchlist.
-
-        :raise InvalidObjectError: if `id` is missing
-        """
-        if not self.id:
-            raise InvalidObjectError("missing Watchlist ID")
-
-        url = "/threathunter/watchlistmgr/v3/orgs/{}/watchlists/{}/alert".format(
-            self._cb.credentials.org_key,
-            self.id
-        )
-        self._cb.delete_object(url)
-
-    def enable_tags(self):
-        """Enable tagging for this watchlist.
-
-        :raise InvalidObjectError: if `id` is missing
-        """
-        if not self.id:
-            raise InvalidObjectError("missing Watchlist ID")
-
-        url = "/threathunter/watchlistmgr/v3/orgs/{}/watchlists/{}/tag".format(
-            self._cb.credentials.org_key,
-            self.id
-        )
-        self._cb.put_object(url, None)
-
-    def disable_tags(self):
-        """Disable tagging for this watchlist.
-
-        :raise InvalidObjectError: if `id` is missing
-        """
-        if not self.id:
-            raise InvalidObjectError("missing Watchlist ID")
-
-        url = "/threathunter/watchlistmgr/v3/orgs/{}/watchlists/{}/tag".format(
-            self._cb.credentials.org_key,
-            self.id
-        )
-        self._cb.delete_object(url)
-
-    @property
-    def feed(self):
-        """Returns the feed linked to this watchlist, if there is one.
-
-        :return: the feed linked to this watchlist, if any
-        :rtype: :py:class:`Feed` or None
-        """
-        if not self.classifier:
-            return None
-        if self.classifier["key"] != "feed_id":
-            log.warning("Unexpected classifier type: {}".format(self.classifier["key"]))
-            return None
-
-        return self._cb.select(Feed, self.classifier["value"])
-
-    @property
-    def reports(self):
-        """Returns a list of :py:class:`Report` instances associated with this watchlist.
-
-        .. NOTE::
-            If this watchlist is a classifier (i.e. feed-linked) watchlist,
-            `reports` will be empty. To get the reports associated with the linked
-            feed, use :py:attr:`feed` like:
-
-            >>> for report in watchlist.feed.reports:
-            ...     print(report.title)
-
-        :return: A list of reports
-        :rtype: list(:py:class:`Report`)
-        """
-        if not self.report_ids:
-            return []
-
-        url = "/threathunter/watchlistmgr/v3/orgs/{}/reports/{}"
-        reports_ = []
-        for rep_id in self.report_ids:
-            path = url.format(self._cb.credentials.org_key, rep_id)
-            resp = self._cb.get_object(path)
-            reports_.append(Report(self._cb, initial_data=resp, from_watchlist=True))
-
-        return reports_
+    def results(self):
+        log.debug("Fetching all feeds")
+        url = self._doc_class.urlobject.format(self._cb.credentials.org_key)
+        resp = self._cb.get_object(url, query_parameters=self._args)
+        results = resp.get("results", [])
+        return [self._doc_class(self._cb, initial_data=item) for item in results]
 
 
-class ReportSeverity(FeedModel):
-    """Represents severity information for a watchlist report.
+class ReportQuery(SimpleQuery):
+    """Represents the logic for a :py:class:`Report` query.
+
+    >>> cb.select(Report).where(feed_id=id)
+
+    .. NOTE::
+        Only feed reports can be queried. Watchlist reports
+        should be interacted with via :py:meth:`Watchlist.reports`.
     """
-    primary_key = "report_id"
-    swagger_meta_file = "threathunter/models/report_severity.yaml"
+    def __init__(self, doc_class, cb):
+        super(ReportQuery, self).__init__(doc_class, cb)
+        self._args = {}
 
-    def __init__(self, cb, initial_data=None):
-        if not initial_data:
-            raise ApiError("ReportSeverity can only be initialized from initial_data")
+    def where(self, **kwargs):
+        self._args = dict(self._args, **kwargs)
+        return self
 
-        super(ReportSeverity, self).__init__(cb, model_unique_id=initial_data.get(self.primary_key),
-                                             initial_data=initial_data, force_init=False,
-                                             full_doc=True)
+    @property
+    def results(self):
+        if "feed_id" not in self._args:
+            raise ApiError("required parameter feed_id missing")
 
-    def _query_implementation(self, cb, **kwargs):
-        raise NonQueryableModel("IOC does not support querying")
+        feed_id = self._args["feed_id"]
+
+        log.debug("Fetching all reports")
+        url = self._doc_class.urlobject.format(
+            self._cb.credentials.org_key,
+            feed_id,
+        )
+        resp = self._cb.get_object(url)
+        results = resp.get("results", [])
+        return [self._doc_class(self._cb, initial_data=item, feed_id=feed_id) for item in results]
 
 
-class Binary(UnrefreshableModel):
-    """Represents a retrievable binary.
+class WatchlistQuery(SimpleQuery):
+    """Represents the logic for a :py:class:`Watchlist` query.
+
+    >>> cb.select(Watchlist)
     """
-    primary_key = "sha256"
-    swagger_meta_file = "threathunter/models/binary.yaml"
-    urlobject_single = "/ubs/v1/orgs/{}/sha256/{}/metadata"
-
-    class Summary(UnrefreshableModel):
-        """Represents a summary of organization-specific information
-        for a retrievable binary.
-        """
-        primary_key = "sha256"
-        urlobject_single = "/ubs/v1/orgs/{}/sha256/{}/summary/device"
-
-        def __init__(self, cb, model_unique_id):
-            if not validators.sha256(model_unique_id):
-                raise ApiError("model_unique_id must be a valid SHA256")
-
-            url = self.urlobject_single.format(cb.credentials.org_key, model_unique_id)
-            item = cb.get_object(url)
-
-            super(Binary.Summary, self).__init__(cb, model_unique_id=model_unique_id,
-                                                 initial_data=item, force_init=False,
-                                                 full_doc=True)
-
-        def _query_implementation(self, cb, **kwargs):
-            return Query(self, cb, **kwargs)
-
-    def __init__(self, cb, model_unique_id):
-        if not validators.sha256(model_unique_id):
-            raise ApiError("model_unique_id must be a valid SHA256")
-
-        url = self.urlobject_single.format(cb.credentials.org_key, model_unique_id)
-        item = cb.get_object(url)
-
-        super(Binary, self).__init__(cb, model_unique_id=model_unique_id,
-                                     initial_data=item, force_init=False,
-                                     full_doc=True)
-
-    def _query_implementation(self, cb, **kwargs):
-        return Query(self, cb, **kwargs)
+    def __init__(self, doc_class, cb):
+        super(WatchlistQuery, self).__init__(doc_class, cb)
 
     @property
-    def summary(self):
-        """Returns organization-specific information about this binary.
-        """
-        return self._cb.select(Binary.Summary, self.sha256)
+    def results(self):
+        log.debug("Fetching all watchlists")
 
-    @property
-    def download_url(self, expiration_seconds=3600):
-        """Returns a URL that can be used to download the file
-        for this binary. Returns None if no download can be found.
-
-        :param expiration_seconds: How long the download should be valid for
-        :raise InvalidObjectError: if URL retrieval should be retried
-        :return: A pre-signed AWS download URL
-        :rtype: str
-        """
-        downloads = self._cb.select(Downloads, [self.sha256],
-                                    expiration_seconds=expiration_seconds)
-
-        if self.sha256 in downloads.not_found:
-            return None
-        elif self.sha256 in downloads.error:
-            raise InvalidObjectError("{} should be retried".format(self.sha256))
-        else:
-            return next((item.url
-                        for item in downloads.found
-                        if self.sha256 == item.sha256), None)
-
-
-class Downloads(UnrefreshableModel):
-    """Represents download information for a list of process hashes.
-    """
-    urlobject = "/ubs/v1/orgs/{}/file/_download"
-
-    class FoundItem(UnrefreshableModel):
-        """Represents the download URL and process hash for a successfully
-        located binary.
-        """
-        primary_key = "sha256"
-
-        def __init__(self, cb, item):
-            super(Downloads.FoundItem, self).__init__(cb, model_unique_id=item["sha256"],
-                                                      initial_data=item, force_init=False,
-                                                      full_doc=True)
-
-        def _query_implementation(self, cb, **kwargs):
-            raise NonQueryableModel("IOC does not support querying")
-
-    def __init__(self, cb, shas, expiration_seconds=3600):
-        body = {
-            "sha256": shas,
-            "expiration_seconds": expiration_seconds,
-        }
-
-        url = self.urlobject.format(cb.credentials.org_key)
-        item = cb.post_object(url, body).json()
-
-        super(Downloads, self).__init__(cb, model_unique_id=None,
-                                        initial_data=item, force_init=False,
-                                        full_doc=True)
-
-    def _query_implementation(self, cb, **kwargs):
-        return Query(self, cb, **kwargs)
-
-    @property
-    def found(self):
-        """Returns a list of :py:class:`Downloads.FoundItem`, one
-        for each binary found in the binary store.
-        """
-        return [Downloads.FoundItem(self._cb, item) for item in self._info["found"]]
+        resp = self._cb.get_object(self._doc_class.urlobject)
+        results = resp.get("results", [])
+        return [self._doc_class(self._cb, initial_data=item) for item in results]
