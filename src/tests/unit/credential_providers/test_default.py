@@ -12,7 +12,7 @@
 """Test for the default credential provider function."""
 
 from cbc_sdk.credentials import CredentialProvider
-from cbc_sdk.credential_providers.default import default_credential_provider
+from cbc_sdk.credential_providers import default_credential_provider
 
 
 def test_default_credential_provider():

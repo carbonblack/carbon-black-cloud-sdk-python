@@ -11,7 +11,7 @@
 
 """Function which gives us the default credentials handler for use by CBCloudAPI."""
 
-from .file import FileCredentialProvider
+from .file_credential_provider import FileCredentialProvider
 
 
 def default_credential_provider():

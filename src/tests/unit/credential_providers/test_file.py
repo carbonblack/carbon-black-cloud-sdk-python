@@ -15,7 +15,7 @@ import pytest
 import os
 import sys
 from pathlib import Path
-from cbc_sdk.credential_providers.file import FileCredentialProvider
+from cbc_sdk.credential_providers import FileCredentialProvider
 from cbc_sdk.errors import CredentialError
 
 
