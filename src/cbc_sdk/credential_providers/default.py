@@ -9,7 +9,7 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-"""Function which gives us the default credentials handler for cuse by CBCloudAPI."""
+"""Function which gives us the default credentials handler for use by CBCloudAPI."""
 
 from .file import FileCredentialProvider
 

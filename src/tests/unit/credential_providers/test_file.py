@@ -171,7 +171,7 @@ def test_read_multiple_files():
     assert creds.ignore_system_proxy
 
 
-def test_file_witn_parsing_error():
+def test_file_with_parsing_error():
     """Test reading a file that has a parsing error."""
     sut = FileCredentialProvider(path_of("config_parseerror.cbc"))
     with pytest.raises(CredentialError):
