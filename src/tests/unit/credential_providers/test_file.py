@@ -33,7 +33,7 @@ def path_of(filename):
 def test_search_path_default(platform, sysprefix, monkeypatch):
     """Validate the building of the default search path based on the platform."""
     monkeypatch.setattr(sys, "platform", platform)
-    monkeypatch.setenv("windir", "C:\\Windows")
+    monkeypatch.setenv("windir", f"C:{os.sep}Windows")
     sut = FileCredentialProvider()
     search_path = sut._search_path
     assert len(search_path) == 6
