@@ -16,8 +16,8 @@ import logging
 import os
 import sys
 from pathlib import Path
-from ..credentials import Credentials, CredentialProvider
-from ..errors import CredentialError
+from cbc_sdk.credentials import Credentials, CredentialProvider
+from cbc_sdk.errors import CredentialError
 
 log = logging.getLogger(__name__)
 
