@@ -99,7 +99,7 @@ class MockStatResult:
     (1234, 0o644, 1234, 0o300, False, "Directory ", " has invalid permissions"),
     (1234, 0o644, 1230, 0o750, False, "Directory ", " not owned by current user"),
 ])
-def test_security_check_unix(fileuid, filemode, parentuid, parentmode, warned, prefix, suffix, monkeypatch):
+def test_security_check_unix(fileuid, filemode, parentuid, parentmode, warned, prefix, suffix, monkeypatch, caplog):
     """Test expected behavior for Unix-style security checks on a file."""
     monkeypatch.setattr(sys, "platform", "linux")
     monkeypatch.setattr(os, "geteuid", lambda: 1234, False)
@@ -119,14 +119,12 @@ def test_security_check_unix(fileuid, filemode, parentuid, parentmode, warned, p
     monkeypatch.setattr(sut, "_file_stat", mock_stat)
     assert sut._security_check(testpath)
     assert sut._specific_file_warn == warned
-    if prefix:
-        assert sut._last_failmsg.startswith(prefix)
+    if warned:
+        assert len(caplog.record_tuples) == 0
     else:
-        assert sut._last_failmsg is None
-    if suffix:
-        assert sut._last_failmsg.endswith(suffix)
-    else:
-        assert sut._last_failmsg is None
+        last_failmsg = caplog.record_tuples[0][2]
+        assert prefix in last_failmsg
+        assert last_failmsg.endswith(suffix)
 
 
 def test_read_single_file():

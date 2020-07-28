@@ -36,7 +36,6 @@ class FileCredentialProvider(CredentialProvider):
         self._cached_credentials = None
         self._specific_file_warn = True
         self._general_warn = True
-        self._last_failmsg = None
         if credential_file is None:
             filenames = ['credentials.psc', 'credentials.cbc']
             p = Path('.', '.carbonblack')
@@ -106,7 +105,6 @@ class FileCredentialProvider(CredentialProvider):
                     failmsg = f"File {str(path)} has invalid permissions"
             if failmsg:
                 # for now, we just emit warning
-                self._last_failmsg = failmsg
                 log.warning("Security warning: " + failmsg)
                 if self._specific_file_warn:
                     log.warning("A future version of CBC SDK will disallow access to this file altogether.")
