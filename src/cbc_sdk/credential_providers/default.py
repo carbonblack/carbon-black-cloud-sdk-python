@@ -32,6 +32,6 @@ def default_credential_provider(credential_file):
     # FUTURE: On Windows possibly return the registry-based provider
     if credential_file is None and os.environ.get('CBAPI_TOKEN', False) and os.environ.get('CBAPI_URL', False):
         log.debug("Using EnvironCredentialProvider")
-        return EnvironCredentialProvider()
+        return EnvironCredentialProvider()  # note: use of this provider means the profile property will go unused
     log.debug("Using FileCredentialProvider")
     return FileCredentialProvider(credential_file)
