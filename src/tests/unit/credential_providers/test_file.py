@@ -27,8 +27,8 @@ def path_of(filename):
 
 
 @pytest.mark.parametrize("platform, sysprefix", [
-    ("linux", "/etc/carbonblack"),
-    ("win32", "C:\\Windows\\carbonblack")
+    ("linux", f"{os.sep}etc{os.sep}carbonblack"),
+    ("win32", f"C:{os.sep}Windows{os.sep}carbonblack")
 ])
 def test_search_path_default(platform, sysprefix, monkeypatch):
     """Validate the building of the default search path based on the platform."""
