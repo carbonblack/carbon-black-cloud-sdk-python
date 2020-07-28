@@ -3,8 +3,13 @@
 import pytest
 from cbc_sdk.query import BaseQuery, SimpleQuery, PaginatedQuery
 # from cbc_sdk.base import BaseQuery, SimpleQuery, PaginatedQuery, QueryBuilder
-from cbc_sdk.threathunter.models import Feed
+from cbc_sdk.threathunter.models import Feed, Process
 from cbc_sdk.threathunter.query import FeedQuery
+from cbc_sdk.defense.query import Query
+# from cbc_sdk.defense import Query
+from cbc_sdk.defense.models import Device
+# from cbc_sdk.defense import Device
+
 
 # from cbc_sdk.threathunter import Feed
 from cbc_sdk.rest_api import CBCloudAPI
@@ -56,11 +61,11 @@ def test_simple_query(monkeypatch):
     assert isinstance(results, list)
     assert isinstance(results[0], Feed)
     assert results[0].id == "my_feed_id"
+    assert results[0].name == "My Feed"
     assert _was_called
 
     simpleQuery = SimpleQuery(Feed, api)
-    assert str(simpleQuery._doc_class) == "<class 'cbc_sdk.threathunter.models.Feed'>"
-    # assert str(simpleQuery._doc_class) == "<class 'cbc_sdk.threathunter.threat_intelligence.Feed'>"
+    assert simpleQuery._doc_class == Feed
     assert str(simpleQuery._urlobject) == "/threathunter/feedmgr/v2/orgs/{}/feeds"
     assert isinstance(simpleQuery, SimpleQuery)
     assert simpleQuery._cb == api
@@ -71,3 +76,52 @@ def test_simple_query(monkeypatch):
     assert clonedSimple._cb == simpleQuery._cb
     assert clonedSimple._results == simpleQuery._results
     assert clonedSimple._query == simpleQuery._query
+
+
+def test_paginated_query(monkeypatch):
+    """Test PaginatedQuery methods"""
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="WNEX", ssl_verify=True)
+    paginatedQuery = PaginatedQuery(Process, api, query="process_name='malicious.exe'")
+    assert isinstance(paginatedQuery, PaginatedQuery)
+    assert isinstance(paginatedQuery, BaseQuery)
+    assert paginatedQuery._doc_class == Process
+    assert paginatedQuery._query == "process_name='malicious.exe'"
+
+    # assert paginatedQuery.__len__() is not None
+
+    clonedPaginated = paginatedQuery._clone()
+    assert clonedPaginated._doc_class == paginatedQuery._doc_class
+    assert clonedPaginated._cb == paginatedQuery._cb
+    assert clonedPaginated._total_results == paginatedQuery._total_results
+    assert clonedPaginated._count_valid == paginatedQuery._count_valid
+    assert clonedPaginated._batch_size == paginatedQuery._batch_size
+
+    _devices_was_called = False
+
+    def _get_devices(url, **kwargs):
+        nonlocal _devices_was_called
+        assert url == "/integrationServices/v3/device"
+        _devices_was_called = True
+        return {"results": ["a device"]}
+
+    # processQuery = api.select(Process).where("process_guid='my_process_guid'")
+    # processQuery = PaginatedQuery(Process, api, query="process_guid:my_process_guid")
+    deviceQuery = Query(Device, api)
+    deviceQuery = deviceQuery.where("deviceId:'my_device_id'")
+
+    assert isinstance(deviceQuery, PaginatedQuery)
+    assert isinstance(deviceQuery, Query)
+
+    patch_cbapi(monkeypatch, api, GET=_get_devices)
+
+    x = deviceQuery.__getitem__(0)
+    # assert x is not None
+    assert _devices_was_called
+
+
+    # Devices needs to be updated to v6 routes, this x test does nothing
+
+
+def test_query_builder():
+    """Test the Base QueryBuilder methods"""
+    pass
