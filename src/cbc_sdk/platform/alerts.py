@@ -11,9 +11,197 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
+"""Model and Query Classes for Platform Alerts and Workflows"""
+
 from cbc_sdk.errors import ApiError
-from .base_query import PSCQueryBase, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin
-from .devices_query import DeviceSearchQuery
+from cbc_sdk.platform import (PSCMutableModel, PSCQueryBase, QueryBuilder,
+                              QueryBuilderSupportMixin, IterableQueryMixin)
+from cbc_sdk.base import UnrefreshableModel
+from cbc_sdk.platform.devices import DeviceSearchQuery
+
+import time
+
+"""Alert Models"""
+
+
+class BaseAlert(PSCMutableModel):
+    urlobject = "/appservices/v6/orgs/{0}/alerts"
+    urlobject_single = "/appservices/v6/orgs/{0}/alerts/{1}"
+    primary_key = "id"
+    swagger_meta_file = "platform/models/base_alert.yaml"
+
+    def __init__(self, cb, model_unique_id, initial_data=None):
+        super(BaseAlert, self).__init__(cb, model_unique_id, initial_data)
+        self._workflow = Workflow(cb, initial_data.get("workflow", None) if initial_data else None)
+        if model_unique_id is not None and initial_data is None:
+            self._refresh()
+
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
+        return BaseAlertSearchQuery(cls, cb)
+
+    def _refresh(self):
+        url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id)
+        resp = self._cb.get_object(url)
+        self._info = resp
+        self._workflow = Workflow(self._cb, resp.get("workflow", None))
+        self._last_refresh_time = time.time()
+        return True
+
+    @property
+    def workflow_(self):
+        return self._workflow
+
+    def _update_workflow_status(self, state, remediation, comment):
+        """
+        Update the workflow status of this alert.
+
+        :param str state: The state to set for this alert, either "OPEN" or "DISMISSED".
+        :param remediation str: The remediation status to set for the alert.
+        :param comment str: The comment to set for the alert.
+        """
+        request = {"state": state}
+        if remediation:
+            request["remediation_state"] = remediation
+        if comment:
+            request["comment"] = comment
+        url = self.urlobject_single.format(self._cb.credentials.org_key,
+                                           self._model_unique_id) + "/workflow"
+        resp = self._cb.post_object(url, request)
+        self._workflow = Workflow(self._cb, resp.json())
+        self._last_refresh_time = time.time()
+
+    def dismiss(self, remediation=None, comment=None):
+        """
+        Dismiss this alert.
+
+        :param remediation str: The remediation status to set for the alert.
+        :param comment str: The comment to set for the alert.
+        """
+        self._update_workflow_status("DISMISSED", remediation, comment)
+
+    def update(self, remediation=None, comment=None):
+        """
+        Update this alert.
+
+        :param remediation str: The remediation status to set for the alert.
+        :param comment str: The comment to set for the alert.
+        """
+        self._update_workflow_status("OPEN", remediation, comment)
+
+    def _update_threat_workflow_status(self, state, remediation, comment):
+        """
+        Update the workflow status of all alerts with the same threat ID, past or future.
+
+        :param str state: The state to set for this alert, either "OPEN" or "DISMISSED".
+        :param remediation str: The remediation status to set for the alert.
+        :param comment str: The comment to set for the alert.
+        """
+        request = {"state": state}
+        if remediation:
+            request["remediation_state"] = remediation
+        if comment:
+            request["comment"] = comment
+        url = "/appservices/v6/orgs/{0}/threat/{1}/workflow".format(self._cb.credentials.org_key,
+                                                                    self.threat_id)
+        resp = self._cb.post_object(url, request)
+        return Workflow(self._cb, resp.json())
+
+    def dismiss_threat(self, remediation=None, comment=None):
+        """
+        Dismiss alerts for this threat.
+
+        :param remediation str: The remediation status to set for the alert.
+        :param comment str: The comment to set for the alert.
+        """
+        return self._update_threat_workflow_status("DISMISSED", remediation, comment)
+
+    def update_threat(self, remediation=None, comment=None):
+        """
+        Update alerts for this threat.
+
+        :param remediation str: The remediation status to set for the alert.
+        :param comment str: The comment to set for the alert.
+        """
+        return self._update_threat_workflow_status("OPEN", remediation, comment)
+
+
+class WatchlistAlert(BaseAlert):
+    urlobject = "/appservices/v6/orgs/{0}/alerts/watchlist"
+
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
+        return WatchlistAlertSearchQuery(cls, cb)
+
+
+class CBAnalyticsAlert(BaseAlert):
+    urlobject = "/appservices/v6/orgs/{0}/alerts/cbanalytics"
+
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
+        return CBAnalyticsAlertSearchQuery(cls, cb)
+
+
+class VMwareAlert(BaseAlert):
+    urlobject = "/appservices/v6/orgs/{0}/alerts/vmware"
+
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
+        return VMwareAlertSearchQuery(cls, cb)
+
+
+class Workflow(UnrefreshableModel):
+    swagger_meta_file = "platform/models/workflow.yaml"
+
+    def __init__(self, cb, initial_data=None):
+        super(Workflow, self).__init__(cb, model_unique_id=None, initial_data=initial_data)
+
+
+class WorkflowStatus(PSCMutableModel):
+    urlobject_single = "/appservices/v6/orgs/{0}/workflow/status/{1}"
+    primary_key = "id"
+    swagger_meta_file = "platform/models/workflow_status.yaml"
+
+    def __init__(self, cb, model_unique_id, initial_data=None):
+        super(WorkflowStatus, self).__init__(cb, model_unique_id, initial_data)
+        self._request_id = model_unique_id
+        self._workflow = None
+        if model_unique_id is not None:
+            self._refresh()
+
+    def _refresh(self):
+        url = self.urlobject_single.format(self._cb.credentials.org_key, self._request_id)
+        resp = self._cb.get_object(url)
+        self._info = resp
+        self._workflow = Workflow(self._cb, resp.get("workflow", None))
+        self._last_refresh_time = time.time()
+        return True
+
+    @property
+    def id_(self):
+        return self._request_id
+
+    @property
+    def workflow_(self):
+        return self._workflow
+
+    @property
+    def queued(self):
+        self._refresh()
+        return self._info.get("status", "") == "QUEUED"
+
+    @property
+    def in_progress(self):
+        self._refresh()
+        return self._info.get("status", "") == "IN_PROGRESS"
+
+    @property
+    def finished(self):
+        self._refresh()
+        return self._info.get("status", "") == "FINISHED"
+
+
+"""Alert Queries"""
 
 
 class BaseAlertSearchQuery(PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):

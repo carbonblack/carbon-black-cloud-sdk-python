@@ -9,3 +9,4 @@ __version__ = '1.0.0a1'
 # from cbc_sdk.psc import CBCloudAPI
 
 from .rest_api import CBCloudAPI
+from .base import UnrefreshableModel

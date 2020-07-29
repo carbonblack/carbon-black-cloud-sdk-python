@@ -11,16 +11,20 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-from cbc_sdk.models import MutableBaseModel, CreatableModelMixin, NewBaseModel
+"""Model and Query Classes for Endpoint Standard"""
 
+from cbc_sdk.base import MutableBaseModel, CreatableModelMixin, NewBaseModel, PaginatedQuery
+from cbc_sdk.utils import convert_query_params, convert_to_kv_pairs
 from copy import deepcopy
 import logging
 import json
 
 from cbc_sdk.errors import ServerError
-from .query import Query
 
 log = logging.getLogger(__name__)
+
+
+"""Defense Models"""
 
 
 class DefenseMutableModel(MutableBaseModel):
@@ -182,3 +186,134 @@ class Policy(DefenseMutableModel, CreatableModelMixin):
         self._cb.put_object("{0}/rule/{1}".format(self._build_api_request_uri(), rule_id),
                             {"ruleInfo": new_rule})
         self.refresh()
+
+
+"""Defense Queries"""
+
+
+class Query(PaginatedQuery):
+    """Represents a prepared query to the Cb Defense server.
+
+    This object is returned as part of a :py:meth:`CBCloudAPI.select`
+    operation on models requested from the Cb Defense server. You should not have to create this class yourself.
+
+    The query is not executed on the server until it's accessed, either as an iterator (where it will generate values
+    on demand as they're requested) or as a list (where it will retrieve the entire result set and save to a list).
+    You can also call the Python built-in ``len()`` on this object to retrieve the total number of items matching
+    the query.
+
+    Examples::
+
+    >>> from cbc_sdk import CBCloudAPI
+    >>> cb = CBCloudAPI()
+
+    Notes:
+        - The slicing operator only supports start and end parameters, but not step. ``[1:-1]`` is legal, but
+          ``[1:2:-1]`` is not.
+        - You can chain where clauses together to create AND queries; only objects that match all ``where`` clauses
+          will be returned.
+    """
+    def __init__(self, doc_class, cb, query=None):
+        super(Query, self).__init__(doc_class, cb, None)
+        if query:
+            self._query = [query]
+        else:
+            self._query = []
+
+        self._sort_by = None
+        self._group_by = None
+        self._batch_size = 100
+
+    def _clone(self):
+        nq = self.__class__(self._doc_class, self._cb)
+        nq._query = self._query[::]
+        nq._sort_by = self._sort_by
+        nq._group_by = self._group_by
+        nq._batch_size = self._batch_size
+        return nq
+
+    def where(self, q):
+        """Add a filter to this query.
+
+        :param str q: Query string
+        :return: Query object
+        :rtype: :py:class:`Query`
+        """
+        nq = self._clone()
+        nq._query.append(q)
+        return nq
+
+    def and_(self, q):
+        """Add a filter to this query. Equivalent to calling :py:meth:`where` on this object.
+
+        :param str q: Query string
+        :return: Query object
+        :rtype: :py:class:`Query`
+        """
+        return self.where(q)
+
+    def prepare_query(self, args):
+        if self._query:
+            for qe in self._query:
+                k, v = convert_to_kv_pairs(qe)
+                args[k] = v
+
+        return args
+
+    def _count(self):
+        args = {'limit': 0}
+        args = self.prepare_query(args)
+
+        query_args = convert_query_params(args)
+        self._total_results = int(self._cb.get_object(self._doc_class.urlobject, query_parameters=query_args)
+                                  .get("totalResults", 0))
+        self._count_valid = True
+        return self._total_results
+
+    def _search(self, start=0, rows=0):
+        # iterate over total result set, 1000 at a time
+        args = {}
+        if start != 0:
+            args['start'] = start
+        args['rows'] = self._batch_size
+
+        current = start
+        numrows = 0
+
+        args = self.prepare_query(args)
+        still_querying = True
+
+        while still_querying:
+            query_args = convert_query_params(args)
+            result = self._cb.get_object(self._doc_class.urlobject, query_parameters=query_args)
+
+            self._total_results = result.get("totalResults", 0)
+            self._count_valid = True
+
+            results = result.get('results', [])
+
+            if results is None:
+                log.debug("Results are None")
+                if current >= 100000:
+                    log.info("Max result size exceeded. Truncated to 100k.")
+                break
+
+            for item in results:
+                yield item
+                current += 1
+                numrows += 1
+                if rows and numrows == rows:
+                    still_querying = False
+                    break
+
+            args['start'] = current + 1     # as of 6/2017, the indexing on the Cb Defense backend is still 1-based
+
+            if current >= self._total_results:
+                break
+
+            if not results:
+                log.debug("server reported total_results overestimated the number of results for this query by {0}"
+                          .format(self._total_results - current))
+                log.debug("resetting total_results for this query to {0}".format(current))
+                self._total_results = current
+                break

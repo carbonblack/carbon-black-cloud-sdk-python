@@ -11,167 +11,230 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-from cbc_sdk.query import PaginatedQuery, BaseQuery, SimpleQuery
-from cbc_sdk.errors import ApiError, TimeoutError
-import time
-from solrq import Q
-import logging
-import functools
+"""Model Classes for Enterprise Endpoint Detection and Response"""
 
+from __future__ import absolute_import
+from cbc_sdk.base import UnrefreshableModel, BaseQuery, PaginatedQuery
+from cbc_sdk.errors import ApiError, TimeoutError
+
+import logging
+import time
 
 log = logging.getLogger(__name__)
 
+"""Models"""
 
-class QueryBuilder(object):
+
+class Process(UnrefreshableModel):
+    """Represents a process retrieved by one of the CbTH endpoints.
     """
-    Provides a flexible interface for building prepared queries for the CB
-    ThreatHunter backend.
+    default_sort = 'last_update desc'
+    primary_key = "process_guid"
+    validation_url = "/api/investigate/v1/orgs/{}/processes/search_validation"
 
-    This object can be instantiated directly, or can be managed implicitly
-    through the :py:meth:`CBCloudAPI.select` API.
+    class Summary(UnrefreshableModel):
+        """Represents a summary of organization-specific information for
+        a process.
+        """
+        default_sort = "last_update desc"
+        primary_key = "process_guid"
+        urlobject_single = "/api/investigate/v1/orgs/{}/processes/summary"
 
-    Examples::
+        def __init__(self, cb, model_unique_id):
+            url = self.urlobject_single.format(cb.credentials.org_key)
+            summary = cb.get_object(url, query_parameters={"process_guid": model_unique_id})
 
-    >>> from cbc_sdk.threathunter import QueryBuilder
-    >>> # build a query with chaining
-    >>> query = QueryBuilder().where(process_name="malicious.exe").and_(device_name="suspect")
-    >>> # start with an initial query, and chain another condition to it
-    >>> query = QueryBuilder(device_os="WINDOWS").or_(process_username="root")
+            while summary["incomplete_results"]:
+                log.debug("summary incomplete, requesting again")
+                summary = self._cb.get_object(
+                    url, query_parameters={"process_guid": self.process_guid}
+                )
 
+            super(Process.Summary, self).__init__(cb, model_unique_id=model_unique_id,
+                                                  initial_data=summary, force_init=False,
+                                                  full_doc=True)
+
+        def _query_implementation(self, cb, **kwargs):
+            return Query(self, cb, **kwargs)
+
+    @classmethod
+    def _query_implementation(self, cb, **kwargs):
+        # This will emulate a synchronous process query, for now.
+        return AsyncProcessQuery(self, cb)
+
+    def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
+        super(Process, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
+                                      force_init=force_init, full_doc=full_doc)
+
+    @property
+    def summary(self):
+        """Returns organization-specific information about this process.
+        """
+        return self._cb.select(Process.Summary, self.process_guid)
+
+    def events(self, **kwargs):
+        """Returns a query for events associated with this process's process GUID.
+
+        :param kwargs: Arguments to filter the event query with.
+        :return: Returns a Query object with the appropriate search parameters for events
+        :rtype: :py:class:`cbc_sdk.threathunter.query.Query`
+
+        Example::
+
+        >>> [print(event) for event in process.events()]
+        >>> [print(event) for event in process.events(event_type="modload")]
+        """
+        query = self._cb.select(Event).where(process_guid=self.process_guid)
+
+        if kwargs:
+            query = query.and_(**kwargs)
+
+        return query
+
+    def tree(self):
+        """Returns a :py:class:`Tree` of children (and possibly siblings)
+        associated with this process.
+
+        :return: Returns a :py:class:`Tree` object
+        :rtype: :py:class:`Tree`
+
+        Example:
+
+        >>> tree = process.tree()
+        """
+        data = self._cb.select(Tree).where(process_guid=self.process_guid).all()
+        return Tree(self._cb, initial_data=data)
+
+    @property
+    def parents(self):
+        """Returns a query for parent processes associated with this process.
+
+        :return: Returns a Query object with the appropriate search parameters for parent processes,
+                 or None if the process has no recorded parent
+        :rtype: :py:class:`cbc_sdk.threathunter.query.AsyncProcessQuery` or None
+        """
+        if "parent_guid" in self._info:
+            return self._cb.select(Process).where(process_guid=self.parent_guid)
+        else:
+            return []
+
+    @property
+    def children(self):
+        """Returns a list of child processes for this process.
+
+        :return: Returns a list of process objects
+        :rtype: list of :py:class:`Process`
+        """
+        if isinstance(self.summary.children, list):
+            return [
+                Process(self._cb, initial_data=child)
+                for child in self.summary.children
+            ]
+        else:
+            return []
+
+    @property
+    def siblings(self):
+        """Returns a list of sibling processes for this process.
+
+        :return: Returns a list of process objects
+        :rtype: list of :py:class:`Process`
+        """
+        return [
+            Process(self._cb, initial_data=sibling)
+            for sibling in self.summary.siblings
+        ]
+
+    @property
+    def process_md5(self):
+        """Returns a string representation of the MD5 hash for this process.
+
+        :return: A string representation of the process's MD5.
+        :rtype: str
+        """
+        # NOTE: We have to check _info instead of poking the attribute directly
+        # to avoid the missing attrbute login in NewBaseModel.
+        if "process_hash" in self._info:
+            return next((hsh for hsh in self.process_hash if len(hsh) == 32), None)
+        else:
+            return None
+
+    @property
+    def process_sha256(self):
+        """Returns a string representation of the SHA256 hash for this process.
+
+        :return: A string representation of the process's SHA256.
+        :rtype: str
+        """
+        if "process_hash" in self._info:
+            return next((hsh for hsh in self.process_hash if len(hsh) == 64), None)
+        else:
+            return None
+
+    @property
+    def process_pids(self):
+        """Returns a list of PIDs associated with this process.
+
+        :return: A list of PIDs
+        :rtype: list of ints
+        """
+        # NOTE(ww): This exists because the API returns the list as "process_pid",
+        # which is misleading. We just give a slightly clearer name.
+        return self.process_pid
+
+
+class Event(UnrefreshableModel):
+    """Events can be queried for via ``CBCloudAPI.select``
+    or though an already selected process with ``Process.events()``.
     """
-    def __init__(self, **kwargs):
-        if kwargs:
-            self._query = Q(**kwargs)
-        else:
-            self._query = None
-        self._raw_query = None
-        self._process_guid = None
+    urlobject = '/api/investigate/v2/orgs/{}/events/{}/_search'
+    validation_url = '/api/investigate/v1/orgs/{}/events/search_validation'
+    default_sort = 'last_update desc'
+    primary_key = "process_guid"
 
-    def _guard_query_params(func):
-        """Decorates the query construction methods of *QueryBuilder*, preventing
-        them from being called with parameters that would result in an intetnally
-        inconsistent query.
+    @classmethod
+    def _query_implementation(self, cb, **kwargs):
+        return Query(self, cb)
+
+    def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
+        super(Event, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
+                                    force_init=force_init, full_doc=full_doc)
+
+
+class Tree(UnrefreshableModel):
+    """The preferred interface for interacting with Tree models
+    is ``Process.tree()``.
+    """
+    urlobject = '/api/investigate/v1/orgs/{}/processes/tree'
+    primary_key = 'process_guid'
+
+    @classmethod
+    def _query_implementation(self, cb, **kwargs):
+        return TreeQuery(self, cb)
+
+    def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
+        super(Tree, self).__init__(
+            cb, model_unique_id=model_unique_id, initial_data=initial_data,
+            force_init=force_init, full_doc=full_doc
+        )
+
+    @property
+    def children(self):
+        """Returns all of the children of the process that this tree is centered around.
+
+        :return: A list of :py:class:`Process` instances
+        :rtype: list of :py:class:`Process`
         """
-        @functools.wraps(func)
-        def wrap_guard_query_change(self, q, **kwargs):
-            if self._raw_query is not None and (kwargs or isinstance(q, Q)):
-                raise ApiError("Cannot modify a raw query with structured parameters")
-            if self._query is not None and isinstance(q, str):
-                raise ApiError("Cannot modify a structured query with a raw parameter")
-            return func(self, q, **kwargs)
-        return wrap_guard_query_change
+        return [Process(self._cb, initial_data=child) for child in self.nodes["children"]]
 
-    @_guard_query_params
-    def where(self, q, **kwargs):
-        """Adds a conjunctive filter to a query.
 
-        :param q: string or `solrq.Q` object
-        :param kwargs: Arguments to construct a `solrq.Q` with
-        :return: QueryBuilder object
-        :rtype: :py:class:`QueryBuilder`
-        """
-        if isinstance(q, str):
-            if self._raw_query is None:
-                self._raw_query = []
-            self._raw_query.append(q)
-        elif isinstance(q, Q) or kwargs:
-            if self._query is not None:
-                raise ApiError("Use .and_() or .or_() for an extant solrq.Q object")
-            if kwargs:
-                self._process_guid = self._process_guid or kwargs.get("process_guid")
-                q = Q(**kwargs)
-            self._query = q
-        else:
-            raise ApiError(".where() only accepts strings or solrq.Q objects")
-
-        return self
-
-    @_guard_query_params
-    def and_(self, q, **kwargs):
-        """Adds a conjunctive filter to a query.
-
-        :param q: string or `solrq.Q` object
-        :param kwargs: Arguments to construct a `solrq.Q` with
-        :return: QueryBuilder object
-        :rtype: :py:class:`QueryBuilder`
-        """
-        if isinstance(q, str):
-            self.where(q)
-        elif isinstance(q, Q) or kwargs:
-            if kwargs:
-                self._process_guid = self._process_guid or kwargs.get("process_guid")
-                q = Q(**kwargs)
-            if self._query is None:
-                self._query = q
-            else:
-                self._query = self._query & q
-        else:
-            raise ApiError(".and_() only accepts strings or solrq.Q objects")
-
-        return self
-
-    @_guard_query_params
-    def or_(self, q, **kwargs):
-        """Adds a disjunctive filter to a query.
-
-        :param q: `solrq.Q` object
-        :param kwargs: Arguments to construct a `solrq.Q` with
-        :return: QueryBuilder object
-        :rtype: :py:class:`QueryBuilder`
-        """
-        if kwargs:
-            self._process_guid = self._process_guid or kwargs.get("process_guid")
-            q = Q(**kwargs)
-
-        if isinstance(q, Q):
-            if self._query is None:
-                self._query = q
-            else:
-                self._query = self._query | q
-        else:
-            raise ApiError(".or_() only accepts solrq.Q objects")
-
-        return self
-
-    @_guard_query_params
-    def not_(self, q, **kwargs):
-        """Adds a negative filter to a query.
-
-        :param q: `solrq.Q` object
-        :param kwargs: Arguments to construct a `solrq.Q` with
-        :return: QueryBuilder object
-        :rtype: :py:class:`QueryBuilder`
-        """
-        if kwargs:
-            q = ~ Q(**kwargs)
-
-        if isinstance(q, Q):
-            if self._query is None:
-                self._query = q
-            else:
-                self._query = self._query & q
-        else:
-            raise ApiError(".not_() only accepts solrq.Q objects")
-
-    def _collapse(self):
-        """The query can be represented by either an array of strings
-        (_raw_query) which is concatenated and passed directly to Solr, or
-        a solrq.Q object (_query) which is then converted into a string to
-        pass to Solr. This function will perform the appropriate conversions to
-        end up with the 'q' string sent into the POST request to the
-        PSC-R query endpoint."""
-        if self._raw_query is not None:
-            return " ".join(self._raw_query)
-        elif self._query is not None:
-            return str(self._query)
-        else:
-            return "*:*"               # return everything
+"""Queries"""
 
 
 class Query(PaginatedQuery):
     """Represents a prepared query to the Cb ThreatHunter backend.
 
-    This object is returned as part of a :py:meth:`CbThreatHunterPI.select`
+    This object is returned as part of a :py:meth:`CbThreatHunterAPI.select`
     operation on models requested from the Cb ThreatHunter backend. You should not have to create this class yourself.
 
     The query is not executed on the server until it's accessed, either as an iterator (where it will generate values
@@ -585,78 +648,3 @@ class TreeQuery(BaseQuery):
             results["incomplete_results"] = result["incomplete_results"]
 
         return results
-
-
-class FeedQuery(SimpleQuery):
-    """Represents the logic for a :py:class:`Feed` query.
-
-    >>> cb.select(Feed)
-    >>> cb.select(Feed, id)
-    >>> cb.select(Feed).where(include_public=True)
-    """
-    def __init__(self, doc_class, cb):
-        super(FeedQuery, self).__init__(doc_class, cb)
-        self._args = {}
-
-    def where(self, **kwargs):
-        self._args = dict(self._args, **kwargs)
-        return self
-
-    @property
-    def results(self):
-        log.debug("Fetching all feeds")
-        url = self._doc_class.urlobject.format(self._cb.credentials.org_key)
-        resp = self._cb.get_object(url, query_parameters=self._args)
-        results = resp.get("results", [])
-        return [self._doc_class(self._cb, initial_data=item) for item in results]
-
-
-class ReportQuery(SimpleQuery):
-    """Represents the logic for a :py:class:`Report` query.
-
-    >>> cb.select(Report).where(feed_id=id)
-
-    .. NOTE::
-        Only feed reports can be queried. Watchlist reports
-        should be interacted with via :py:meth:`Watchlist.reports`.
-    """
-    def __init__(self, doc_class, cb):
-        super(ReportQuery, self).__init__(doc_class, cb)
-        self._args = {}
-
-    def where(self, **kwargs):
-        self._args = dict(self._args, **kwargs)
-        return self
-
-    @property
-    def results(self):
-        if "feed_id" not in self._args:
-            raise ApiError("required parameter feed_id missing")
-
-        feed_id = self._args["feed_id"]
-
-        log.debug("Fetching all reports")
-        url = self._doc_class.urlobject.format(
-            self._cb.credentials.org_key,
-            feed_id,
-        )
-        resp = self._cb.get_object(url)
-        results = resp.get("results", [])
-        return [self._doc_class(self._cb, initial_data=item, feed_id=feed_id) for item in results]
-
-
-class WatchlistQuery(SimpleQuery):
-    """Represents the logic for a :py:class:`Watchlist` query.
-
-    >>> cb.select(Watchlist)
-    """
-    def __init__(self, doc_class, cb):
-        super(WatchlistQuery, self).__init__(doc_class, cb)
-
-    @property
-    def results(self):
-        log.debug("Fetching all watchlists")
-
-        resp = self._cb.get_object(self._doc_class.urlobject)
-        results = resp.get("results", [])
-        return [self._doc_class(self._cb, initial_data=item) for item in results]
