@@ -47,7 +47,7 @@ from .errors import ClientError, QuerySyntaxError, ServerError, TimeoutError, Ap
 from . import __version__
 
 from .cache.lru import lru_cache_function
-from .models import CreatableModelMixin
+from .base import CreatableModelMixin
 from .utils import convert_query_params
 
 log = logging.getLogger(__name__)

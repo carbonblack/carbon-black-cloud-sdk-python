@@ -2,4 +2,4 @@
 
 from __future__ import absolute_import
 
-from cbc_sdk.defense.models import Device, Event, Policy
+from cbc_sdk.defense.base import Device, Event, Policy
