@@ -1,15 +1,9 @@
 """Testing the Query objects of cbc_sdk.base"""
 
 import pytest
-from cbc_sdk.query import BaseQuery, SimpleQuery, PaginatedQuery
-# from cbc_sdk.base import BaseQuery, SimpleQuery, PaginatedQuery, QueryBuilder
-from cbc_sdk.threathunter.models import Feed, Process
-from cbc_sdk.threathunter.query import FeedQuery
-from cbc_sdk.defense.query import Query
-# from cbc_sdk.defense import Query
-from cbc_sdk.defense.models import Device
-# from cbc_sdk.defense import Device
-# from cbc_sdk.threathunter import Feed
+from cbc_sdk.base import BaseQuery, SimpleQuery, PaginatedQuery
+from cbc_sdk.threathunter import Feed, Process, FeedQuery
+from cbc_sdk.defense import Query, Device
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.stubresponse import StubResponse, patch_cbapi
 

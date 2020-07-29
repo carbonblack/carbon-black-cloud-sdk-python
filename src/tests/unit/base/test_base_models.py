@@ -2,10 +2,10 @@
 
 import pytest
 import logging
-from cbc_sdk.models import MutableBaseModel, NewBaseModel
-from cbc_sdk.platform.models import Device
-from cbc_sdk.defense.models import Device as DefenseDevice
-from cbc_sdk.defense.models import Policy
+from cbc_sdk.base import MutableBaseModel, NewBaseModel
+from cbc_sdk.platform import Device
+from cbc_sdk.defense import Device as DefenseDevice
+from cbc_sdk.defense import Policy
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ServerError, InvalidObjectError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
