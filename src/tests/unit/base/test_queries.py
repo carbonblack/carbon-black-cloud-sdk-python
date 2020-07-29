@@ -9,8 +9,6 @@ from cbc_sdk.defense.query import Query
 # from cbc_sdk.defense import Query
 from cbc_sdk.defense.models import Device
 # from cbc_sdk.defense import Device
-
-
 # from cbc_sdk.threathunter import Feed
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.stubresponse import StubResponse, patch_cbapi
@@ -87,8 +85,6 @@ def test_paginated_query(monkeypatch):
     assert paginatedQuery._doc_class == Process
     assert paginatedQuery._query == "process_name='malicious.exe'"
 
-    # assert paginatedQuery.__len__() is not None
-
     clonedPaginated = paginatedQuery._clone()
     assert clonedPaginated._doc_class == paginatedQuery._doc_class
     assert clonedPaginated._cb == paginatedQuery._cb
@@ -102,10 +98,8 @@ def test_paginated_query(monkeypatch):
         nonlocal _devices_was_called
         assert url == "/integrationServices/v3/device"
         _devices_was_called = True
-        return {"results": ["a device"]}
+        return {"results": [{"deviceId": "my_device_id"}]}
 
-    # processQuery = api.select(Process).where("process_guid='my_process_guid'")
-    # processQuery = PaginatedQuery(Process, api, query="process_guid:my_process_guid")
     deviceQuery = Query(Device, api)
     deviceQuery = deviceQuery.where("deviceId:'my_device_id'")
 
@@ -114,7 +108,7 @@ def test_paginated_query(monkeypatch):
 
     patch_cbapi(monkeypatch, api, GET=_get_devices)
 
-    x = deviceQuery.__getitem__(0)
+    x = deviceQuery.__getitem__(1)
     # assert x is not None
     assert _devices_was_called
 
