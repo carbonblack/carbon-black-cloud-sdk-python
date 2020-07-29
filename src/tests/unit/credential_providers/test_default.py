@@ -11,12 +11,21 @@
 
 """Test for the default credential provider function."""
 
-from cbc_sdk.credentials import CredentialProvider
-from cbc_sdk.credential_providers import default_credential_provider
+from cbc_sdk.credential_providers import default_credential_provider, FileCredentialProvider, EnvironCredentialProvider
 
 
-def test_default_credential_provider():
+def test_default_credential_providers(monkeypatch):
     """Test that we get a proper value out of the default_credential_provider() function."""
-    val = default_credential_provider()
+    monkeypatch.delenv('CBAPI_TOKEN', False)
+    monkeypatch.delenv('CBAPI_URL', False)
+    val = default_credential_provider("myfile.cbc")
     assert val is not None
-    assert isinstance(val, CredentialProvider)
+    assert isinstance(val, FileCredentialProvider)
+    val = default_credential_provider(None)
+    assert val is not None
+    assert isinstance(val, FileCredentialProvider)
+    monkeypatch.setenv('CBAPI_TOKEN', 'ABCDEFGH')
+    monkeypatch.setenv('CBAPI_URL', 'http://example.com')
+    val = default_credential_provider(None)
+    assert val is not None
+    assert isinstance(val, EnvironCredentialProvider)
