@@ -13,9 +13,31 @@
 
 import logging
 import sys
-import winreg as reg
 from cbc_sdk.credentials import CredentialValue, Credentials, CredentialProvider
 from cbc_sdk.errors import CredentialError
+
+# The winreg module doesn't exist on Unix, so we perform some legerdemain to get around that fact.
+try:
+    import winreg
+    HKEY_CURRENT_USER = winreg.HKEY_CURRENT_USER
+    HKEY_LOCAL_MACHINE = winreg.HKEY_LOCAL_MACHINE
+    OpenKey = winreg.OpenKey
+    QueryValueEx = winreg.QueryValueEx
+except ModuleNotFoundError:
+    HKEY_CURRENT_USER = object()
+    HKEY_LOCAL_MACHINE = object()
+
+    def OpenKey(base, path):
+        """Stub to maintain source compatibility"""
+        return None
+
+    def QueryValueEx(key, name):
+        """Stub to maintain source compatibility"""
+        return None
+
+# Define these constants locally so they don't depend on winreg. From the Windows Registry API docs.
+REG_SZ = 1
+REG_DWORD = 4
 
 log = logging.getLogger(__name__)
 
@@ -51,7 +73,7 @@ class RegistryCredentialProvider(CredentialProvider):
         Returns:
             PyHKEY: Either HKEY_CURRENT_USER or HKEY_LOCAL_MACHINE.
         """
-        return reg.HKEY_CURRENT_USER if self._userkey else reg.HKEY_LOCAL_MACHINE
+        return HKEY_CURRENT_USER if self._userkey else HKEY_LOCAL_MACHINE
 
     def _open_key(self, basekey, path):
         """
@@ -68,7 +90,7 @@ class RegistryCredentialProvider(CredentialProvider):
             CredentialError: If the subkey could not be opened for any reason.
         """
         try:
-            return reg.OpenKey(basekey, path)
+            return OpenKey(basekey, path)
         except OSError as e:
             raise CredentialError(f"Unable to open registry subkey: {path}") from e
 
@@ -88,7 +110,7 @@ class RegistryCredentialProvider(CredentialProvider):
             CredentialError: If there was an unanticipated error reading the value.
         """
         try:
-            return reg.QueryValueEx(key, value_name)
+            return QueryValueEx(key, value_name)
         except FileNotFoundError:
             return None
         except OSError as e:
@@ -110,7 +132,7 @@ class RegistryCredentialProvider(CredentialProvider):
         """
         val = self._read_value(key, value_name)
         if val:
-            if val[1] != reg.REG_SZ:
+            if val[1] != REG_SZ:
                 raise CredentialError(f"value '{value_name}` is not of string type")
             return val[0]
         return None
@@ -131,7 +153,7 @@ class RegistryCredentialProvider(CredentialProvider):
         """
         val = self._read_value(key, value_name)
         if val:
-            if val[1] != reg.REG_DWORD:
+            if val[1] != REG_DWORD:
                 raise CredentialError(f"value '{value_name}` is not of integer type")
             return val[0] != 0
         return None

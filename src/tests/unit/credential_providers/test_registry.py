@@ -13,8 +13,9 @@
 
 import pytest
 import sys
-import winreg as reg
 from cbc_sdk.credential_providers import RegistryCredentialProvider
+from cbc_sdk.credential_providers.registry_credential_provider \
+    import HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, REG_SZ, REG_DWORD
 from cbc_sdk.errors import CredentialError
 
 
@@ -62,9 +63,9 @@ def test_select_base_key(monkeypatch):
     """Test that the base key is selected correctly depending on the flag."""
     monkeypatch.setattr(sys, "platform", "win32")
     sut = RegistryCredentialProvider()
-    assert sut._base_key() is reg.HKEY_CURRENT_USER
+    assert sut._base_key() is HKEY_CURRENT_USER
     sut = RegistryCredentialProvider(None, False)
-    assert sut._base_key() is reg.HKEY_LOCAL_MACHINE
+    assert sut._base_key() is HKEY_LOCAL_MACHINE
 
 
 def test_read_str(monkeypatch, mox):
@@ -73,8 +74,8 @@ def test_read_str(monkeypatch, mox):
     sut = RegistryCredentialProvider()
     mox.StubOutWithMock(sut, '_read_value')
     stub_key = StubKeyObject()
-    sut._read_value(stub_key, "Alpha").AndReturn(("Correct", reg.REG_SZ))
-    sut._read_value(stub_key, "Bravo").AndReturn((42, reg.REG_DWORD))
+    sut._read_value(stub_key, "Alpha").AndReturn(("Correct", REG_SZ))
+    sut._read_value(stub_key, "Bravo").AndReturn((42, REG_DWORD))
     sut._read_value(stub_key, "Charlie").AndReturn(None)
     sut._read_value(stub_key, "Delta").AndRaise(CredentialError("Unable to read"))
     mox.ReplayAll()
@@ -95,9 +96,9 @@ def test_read_bool(monkeypatch, mox):
     sut = RegistryCredentialProvider()
     mox.StubOutWithMock(sut, '_read_value')
     stub_key = StubKeyObject()
-    sut._read_value(stub_key, "Alpha").AndReturn((0, reg.REG_DWORD))
-    sut._read_value(stub_key, "Bravo").AndReturn((5, reg.REG_DWORD))
-    sut._read_value(stub_key, "Charlie").AndReturn(("!Funky!Stuff!", reg.REG_SZ))
+    sut._read_value(stub_key, "Alpha").AndReturn((0, REG_DWORD))
+    sut._read_value(stub_key, "Bravo").AndReturn((5, REG_DWORD))
+    sut._read_value(stub_key, "Charlie").AndReturn(("!Funky!Stuff!", REG_SZ))
     sut._read_value(stub_key, "Delta").AndReturn(None)
     sut._read_value(stub_key, "Echo").AndRaise(CredentialError("Unable to read"))
     mox.ReplayAll()
@@ -119,15 +120,15 @@ def test_read_credentials(monkeypatch, mox):
     sut = RegistryCredentialProvider()
     mox.StubOutWithMock(sut, '_read_value')
     stub_key = StubKeyObject()
-    sut._read_value(stub_key, "url").AndReturn(("http://example.com", reg.REG_SZ))
-    sut._read_value(stub_key, "token").AndReturn(("ABCDEFGH", reg.REG_SZ))
-    sut._read_value(stub_key, "org_key").AndReturn(("A1B2C3D4", reg.REG_SZ))
-    sut._read_value(stub_key, "ssl_verify").AndReturn((0, reg.REG_DWORD))
-    sut._read_value(stub_key, "ssl_verify_hostname").AndReturn((0, reg.REG_DWORD))
-    sut._read_value(stub_key, "ssl_cert_file").AndReturn(("foo.certs", reg.REG_SZ))
-    sut._read_value(stub_key, "ssl_force_tls_1_2").AndReturn((1, reg.REG_DWORD))
-    sut._read_value(stub_key, "proxy").AndReturn(("proxy.example", reg.REG_SZ))
-    sut._read_value(stub_key, "ignore_system_proxy").AndReturn((1, reg.REG_DWORD))
+    sut._read_value(stub_key, "url").AndReturn(("http://example.com", REG_SZ))
+    sut._read_value(stub_key, "token").AndReturn(("ABCDEFGH", REG_SZ))
+    sut._read_value(stub_key, "org_key").AndReturn(("A1B2C3D4", REG_SZ))
+    sut._read_value(stub_key, "ssl_verify").AndReturn((0, REG_DWORD))
+    sut._read_value(stub_key, "ssl_verify_hostname").AndReturn((0, REG_DWORD))
+    sut._read_value(stub_key, "ssl_cert_file").AndReturn(("foo.certs", REG_SZ))
+    sut._read_value(stub_key, "ssl_force_tls_1_2").AndReturn((1, REG_DWORD))
+    sut._read_value(stub_key, "proxy").AndReturn(("proxy.example", REG_SZ))
+    sut._read_value(stub_key, "ignore_system_proxy").AndReturn((1, REG_DWORD))
     mox.ReplayAll()
     creds = sut._read_credentials(stub_key)
     mox.VerifyAll()
@@ -179,17 +180,17 @@ def test_get_credentials(monkeypatch, mox):
     mox.StubOutWithMock(sut, '_read_value')
     key1 = StubKeyObject()
     key2 = StubKeyObject()
-    sut._open_key(reg.HKEY_CURRENT_USER, 'Software\\Test').AndReturn(key1)
+    sut._open_key(HKEY_CURRENT_USER, 'Software\\Test').AndReturn(key1)
     sut._open_key(key1, 'default').AndReturn(key2)
-    sut._read_value(key2, "url").AndReturn(("http://example.com", reg.REG_SZ))
-    sut._read_value(key2, "token").AndReturn(("ABCDEFGH", reg.REG_SZ))
-    sut._read_value(key2, "org_key").AndReturn(("A1B2C3D4", reg.REG_SZ))
-    sut._read_value(key2, "ssl_verify").AndReturn((0, reg.REG_DWORD))
-    sut._read_value(key2, "ssl_verify_hostname").AndReturn((0, reg.REG_DWORD))
-    sut._read_value(key2, "ssl_cert_file").AndReturn(("foo.certs", reg.REG_SZ))
-    sut._read_value(key2, "ssl_force_tls_1_2").AndReturn((1, reg.REG_DWORD))
-    sut._read_value(key2, "proxy").AndReturn(("proxy.example", reg.REG_SZ))
-    sut._read_value(key2, "ignore_system_proxy").AndReturn((1, reg.REG_DWORD))
+    sut._read_value(key2, "url").AndReturn(("http://example.com", REG_SZ))
+    sut._read_value(key2, "token").AndReturn(("ABCDEFGH", REG_SZ))
+    sut._read_value(key2, "org_key").AndReturn(("A1B2C3D4", REG_SZ))
+    sut._read_value(key2, "ssl_verify").AndReturn((0, REG_DWORD))
+    sut._read_value(key2, "ssl_verify_hostname").AndReturn((0, REG_DWORD))
+    sut._read_value(key2, "ssl_cert_file").AndReturn(("foo.certs", REG_SZ))
+    sut._read_value(key2, "ssl_force_tls_1_2").AndReturn((1, REG_DWORD))
+    sut._read_value(key2, "proxy").AndReturn(("proxy.example", REG_SZ))
+    sut._read_value(key2, "ignore_system_proxy").AndReturn((1, REG_DWORD))
     mox.ReplayAll()
     creds = sut.get_credentials('default')
     assert creds.url == "http://example.com"
@@ -215,7 +216,7 @@ def test_get_credentials_fail_open_section_key(monkeypatch, mox):
     mox.StubOutWithMock(sut, '_open_key')
     mox.StubOutWithMock(sut, '_read_value')
     key1 = StubKeyObject()
-    sut._open_key(reg.HKEY_CURRENT_USER, 'Software\\Test').AndReturn(key1)
+    sut._open_key(HKEY_CURRENT_USER, 'Software\\Test').AndReturn(key1)
     sut._open_key(key1, 'notexist').AndRaise(CredentialError("Unable to open registry subkey"))
     mox.ReplayAll()
     with pytest.raises(CredentialError) as e:
@@ -231,7 +232,7 @@ def test_get_credentials_fail_open_base_key(monkeypatch, mox):
     sut = RegistryCredentialProvider('Software\\Test')
     mox.StubOutWithMock(sut, '_open_key')
     mox.StubOutWithMock(sut, '_read_value')
-    sut._open_key(reg.HKEY_CURRENT_USER, 'Software\\Test').AndRaise(CredentialError("Unable to open registry subkey"))
+    sut._open_key(HKEY_CURRENT_USER, 'Software\\Test').AndRaise(CredentialError("Unable to open registry subkey"))
     mox.ReplayAll()
     with pytest.raises(CredentialError) as e:
         sut.get_credentials('default')
