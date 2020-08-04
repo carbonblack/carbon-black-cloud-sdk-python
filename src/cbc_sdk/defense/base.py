@@ -14,10 +14,13 @@
 """Model and Query Classes for Endpoint Standard"""
 
 from cbc_sdk.base import MutableBaseModel, CreatableModelMixin, NewBaseModel, PaginatedQuery
+from cbc_sdk.platform import (PSCQueryBase, QueryBuilder,
+                              QueryBuilderSupportMixin, IterableQueryMixin)
 from cbc_sdk.utils import convert_query_params, convert_to_kv_pairs
 from copy import deepcopy
 import logging
 import json
+import time
 
 from cbc_sdk.errors import ServerError
 
@@ -128,12 +131,32 @@ class DefenseMutableModel(MutableBaseModel):
 
 class Device(DefenseMutableModel):
     urlobject = "/integrationServices/v3/device"
+    urlobject_single = "/integrationServices/v3/device/{}"
     primary_key = "deviceId"
     info_key = "deviceInfo"
     swagger_meta_file = "defense/models/deviceInfo.yaml"
 
     def __init__(self, cb, model_unique_id, initial_data=None):
         super(Device, self).__init__(cb, model_unique_id, initial_data)
+        if model_unique_id is not None and initial_data is None:
+            self._refresh()
+
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
+        return Query(cls, cb)
+
+    def _refresh(self):
+        if self._model_unique_id is not None:
+            url = self.urlobject_single.format(self._model_unique_id)
+        else:
+            url = self.urlobject
+        resp = self._cb.get_object(url)
+        if isinstance(resp.get(self.info_key, None), dict):
+            self._info = resp.get(self.info_key)
+        else:
+            self._info = resp
+        self._last_refresh_time = time.time()
+        return True
 
     def lr_session(self):
         """
@@ -159,8 +182,10 @@ class Event(NewBaseModel):
     def __init__(self, cb, model_unique_id, initial_data=None):
         super(Event, self).__init__(cb, model_unique_id, initial_data)
 
+    @classmethod
     def _query_implementation(cls, cb, **kwargs):
-        return Query(cls, cb, kwargs.get("query_string", None))
+        # return Query(cls, cb, kwargs.get("query_string", None))
+        return Query(cls, cb)
 
 
 class Policy(DefenseMutableModel, CreatableModelMixin):
@@ -191,7 +216,7 @@ class Policy(DefenseMutableModel, CreatableModelMixin):
 """Defense Queries"""
 
 
-class Query(PaginatedQuery):
+class Query(PaginatedQuery, PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
     """Represents a prepared query to the Cb Defense server.
 
     This object is returned as part of a :py:meth:`CBCloudAPI.select`
@@ -213,54 +238,63 @@ class Query(PaginatedQuery):
         - You can chain where clauses together to create AND queries; only objects that match all ``where`` clauses
           will be returned.
     """
-    def __init__(self, doc_class, cb, query=None):
+    # def __init__(self, doc_class, cb, query=None):
+    def __init__(self, doc_class, cb):
         super(Query, self).__init__(doc_class, cb, None)
-        if query:
-            self._query = [query]
-        else:
-            self._query = []
 
         self._sort_by = None
         self._group_by = None
         self._batch_size = 100
+        self._criteria = {}
+        self._query_builder = QueryBuilder()
 
     def _clone(self):
         nq = self.__class__(self._doc_class, self._cb)
-        nq._query = self._query[::]
+        # nq._query = self._query[::]
         nq._sort_by = self._sort_by
         nq._group_by = self._group_by
         nq._batch_size = self._batch_size
+        nq._criteria = self._criteria
         return nq
 
-    def where(self, q):
-        """Add a filter to this query.
-
-        :param str q: Query string
-        :return: Query object
-        :rtype: :py:class:`Query`
-        """
-        nq = self._clone()
-        nq._query.append(q)
-        return nq
-
-    def and_(self, q):
-        """Add a filter to this query. Equivalent to calling :py:meth:`where` on this object.
-
-        :param str q: Query string
-        :return: Query object
-        :rtype: :py:class:`Query`
-        """
-        return self.where(q)
+    # def where(self, q):
+    #     """Add a filter to this query.
+    #
+    #     :param str q: Query string
+    #     :return: Query object
+    #     :rtype: :py:class:`Query`
+    #     """
+    #     nq = self._clone()
+    #     nq._query.append(q)
+    #     return nq
+    #
+    # def and_(self, q):
+    #     """Add a filter to this query. Equivalent to calling :py:meth:`where` on this object.
+    #
+    #     :param str q: Query string
+    #     :return: Query object
+    #     :rtype: :py:class:`Query`
+    #     """
+    #     return self.where(q)
 
     def prepare_query(self, args):
-        if self._query:
-            for qe in self._query:
-                k, v = convert_to_kv_pairs(qe)
-                args[k] = v
-
-        return args
+        # if self._query:
+        #     for qe in self._query:
+        #         k, v = convert_to_kv_pairs(qe)
+        #         args[k] = v
+        request = args
+        params = self._query_builder._collapse()
+        if params is not None:
+            for query in params.split(' '):
+                # convert from str('key:value') to dict{'key': 'value'}
+                key, value = query.split(':', 1)
+                request[key] = value
+        return request
 
     def _count(self):
+        if self._count_valid:
+            return self._total_results
+
         args = {'limit': 0}
         args = self.prepare_query(args)
 

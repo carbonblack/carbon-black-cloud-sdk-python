@@ -10,3 +10,4 @@ __version__ = '1.0.0a1'
 
 from .rest_api import CBCloudAPI
 from .base import UnrefreshableModel
+from .cache import lru
