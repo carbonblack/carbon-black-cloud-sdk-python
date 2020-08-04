@@ -22,16 +22,16 @@ log = logging.getLogger(__name__)
 
 
 default_profile = {
-    "url": None,
-    "token": None,
-    "org_key": None,
+    "url": "None",
+    "token": "None",
+    "org_key": "None",
 
     "ssl_verify": "True",
     "ssl_verify_hostname": "True",
-    "ssl_cert_file": None,
+    "ssl_cert_file": "None",
     "ssl_force_tls_1_2": "False",
 
-    "proxy": None,
+    "proxy": "None",
     "ignore_system_proxy": "False"
 }
 
