@@ -68,48 +68,71 @@ def test_select_base_key(monkeypatch):
     assert sut._base_key() is HKEY_LOCAL_MACHINE
 
 
-def test_read_str(monkeypatch, mox):
+@pytest.mark.parametrize('key, return_val, check_val', [
+    ('Alpha', ('Correct', REG_SZ), 'Correct'),
+    ('Bravo', None, None)
+])
+def test_read_str(monkeypatch, mox, key, return_val, check_val):
     """Test reading strings from the registry."""
     monkeypatch.setattr(sys, "platform", "win32")
     sut = RegistryCredentialProvider()
     mox.StubOutWithMock(sut, '_read_value')
     stub_key = StubKeyObject()
-    sut._read_value(stub_key, "Alpha").AndReturn(("Correct", REG_SZ))
-    sut._read_value(stub_key, "Bravo").AndReturn((42, REG_DWORD))
-    sut._read_value(stub_key, "Charlie").AndReturn(None)
-    sut._read_value(stub_key, "Delta").AndRaise(CredentialError("Unable to read"))
+    sut._read_value(stub_key, key).AndReturn(return_val)
     mox.ReplayAll()
-    assert "Correct" == sut._read_str(stub_key, "Alpha")
+    assert check_val == sut._read_str(stub_key, key)
+    mox.VerifyAll()
+
+
+def test_read_str_exceptions(monkeypatch, mox):
+    """Test reading strings from the registry in ways that throw exceptions."""
+    monkeypatch.setattr(sys, "platform", "win32")
+    sut = RegistryCredentialProvider()
+    mox.StubOutWithMock(sut, '_read_value')
+    stub_key = StubKeyObject()
+    sut._read_value(stub_key, "Alpha").AndReturn((42, REG_DWORD))
+    sut._read_value(stub_key, "Bravo").AndRaise(CredentialError("Unable to read"))
+    mox.ReplayAll()
     with pytest.raises(CredentialError) as e1:
-        sut._read_str(stub_key, "Bravo")
+        sut._read_str(stub_key, "Alpha")
     assert "not of string type" in str(e1.value)
-    assert sut._read_str(stub_key, "Charlie") is None
     with pytest.raises(CredentialError) as e2:
-        sut._read_str(stub_key, "Delta")
+        sut._read_str(stub_key, "Bravo")
     assert "Unable to read" in str(e2.value)
     mox.VerifyAll()
 
 
-def test_read_bool(monkeypatch, mox):
+@pytest.mark.parametrize('key, return_val, check_val', [
+    ('Alpha', (0, REG_DWORD), False),
+    ('Bravo', (5, REG_DWORD), True),
+    ('Charlie', None, None)
+])
+def test_read_bool(monkeypatch, mox, key, return_val, check_val):
     """Test reading boolean values from the registry."""
     monkeypatch.setattr(sys, "platform", "win32")
     sut = RegistryCredentialProvider()
     mox.StubOutWithMock(sut, '_read_value')
     stub_key = StubKeyObject()
-    sut._read_value(stub_key, "Alpha").AndReturn((0, REG_DWORD))
-    sut._read_value(stub_key, "Bravo").AndReturn((5, REG_DWORD))
-    sut._read_value(stub_key, "Charlie").AndReturn(("!Funky!Stuff!", REG_SZ))
-    sut._read_value(stub_key, "Delta").AndReturn(None)
-    sut._read_value(stub_key, "Echo").AndRaise(CredentialError("Unable to read"))
+    sut._read_value(stub_key, key).AndReturn(return_val)
     mox.ReplayAll()
-    assert sut._read_bool(stub_key, "Alpha") is False
-    assert sut._read_bool(stub_key, "Bravo") is True
+    assert sut._read_bool(stub_key, key) is check_val
+    mox.VerifyAll()
+
+
+def test_read_bool_exceptions(monkeypatch, mox):
+    """Test reading boolean values from the registry, in ways that generate exceptions."""
+    monkeypatch.setattr(sys, "platform", "win32")
+    sut = RegistryCredentialProvider()
+    mox.StubOutWithMock(sut, '_read_value')
+    stub_key = StubKeyObject()
+    sut._read_value(stub_key, "Alpha").AndReturn(("!Funky!Stuff!", REG_SZ))
+    sut._read_value(stub_key, "Bravo").AndRaise(CredentialError("Unable to read"))
+    mox.ReplayAll()
     with pytest.raises(CredentialError) as e1:
-        sut._read_bool(stub_key, "Charlie")
+        sut._read_bool(stub_key, "Alpha")
     assert "not of integer type" in str(e1.value)
-    assert sut._read_bool(stub_key, "Delta") is None
     with pytest.raises(CredentialError) as e2:
-        sut._read_bool(stub_key, "Echo")
+        sut._read_bool(stub_key, "Bravo")
     assert "Unable to read" in str(e2.value)
     mox.VerifyAll()
 

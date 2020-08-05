@@ -16,7 +16,7 @@ import sys
 from cbc_sdk.credentials import CredentialValue, Credentials, CredentialProvider
 from cbc_sdk.errors import CredentialError
 
-# The winreg module doesn't exist on Unix, so we perform some legerdemain to get around that fact.
+# The winreg module doesn't exist on Unix, so we have to adapt on the fly whether it's there or not.
 try:
     import winreg
     HKEY_CURRENT_USER = winreg.HKEY_CURRENT_USER
@@ -59,7 +59,6 @@ class RegistryCredentialProvider(CredentialProvider):
             CredentialError: If we attempt to instantiate this provider on a non-Windows system.
         """
         self._cached_credentials = {}
-        self._default_credentials = None
         self._usable = sys.platform.startswith("win32")
         if not self._usable:
             raise CredentialError("Registry credential provider is only usable on Windows systems")
@@ -171,15 +170,16 @@ class RegistryCredentialProvider(CredentialProvider):
         Raises:
             CredentialError: If there was any issue reading the credentials in.
         """
-        if not self._default_credentials:
-            self._default_credentials = Credentials()
         input = {}
         for cv in list(CredentialValue):
             if cv.requires_boolean_value():
                 value = self._read_bool(key, cv.name.lower())
-                input[cv] = self._default_credentials.get_value(cv) if value is None else value
+                if value is not None:
+                    input[cv] = value
             else:
-                input[cv] = self._read_str(key, cv.name.lower()) or self._default_credentials.get_value(cv)
+                value = self._read_str(key, cv.name.lower())
+                if value is not None:
+                    input[cv] = value
         return Credentials(input)
 
     def get_credentials(self, section=None):

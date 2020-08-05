@@ -20,7 +20,7 @@ install_requires = [
 ]
 
 tests_requires = [
-    'pytest<=5.0',
+    'pytest',
     'pymox'
 ]
 
