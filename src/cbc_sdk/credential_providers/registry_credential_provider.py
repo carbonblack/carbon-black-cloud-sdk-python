@@ -16,7 +16,12 @@ import sys
 from cbc_sdk.credentials import CredentialValue, Credentials, CredentialProvider
 from cbc_sdk.errors import CredentialError
 
-# The winreg module doesn't exist on Unix, so we have to adapt on the fly whether it's there or not.
+# The winreg module doesn't exist on Unix, so we have to stub out some functionality if it's not present.
+# The functionality we need is in the two top-level key names (HKEY_CURRENT_USER and HKEY_LOCAL_MACHINE)
+# and in two API functions, OpenKey and QueryValueEx. (Note that the credential provider won't even initialize if
+# sys.platform tells us we're on a non-Windows platform, so the stubs will never get called. This is primarily
+# for unit test purposes, since the tests HAVE to run in a Unix environment for Codeship,
+# where we fake out sys.platform and mock the internal methods that call those two API functions.)
 try:
     import winreg
     HKEY_CURRENT_USER = winreg.HKEY_CURRENT_USER
