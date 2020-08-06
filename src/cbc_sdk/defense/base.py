@@ -192,8 +192,14 @@ class Policy(DefenseMutableModel, CreatableModelMixin):
     urlobject = "/integrationServices/v3/policy"
     info_key = "policyInfo"
     swagger_meta_file = "defense/models/policyInfo.yaml"
+    primary_key = "id"
     _change_object_http_method = "PUT"
     _change_object_key_name = "policyId"
+
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
+        # return Query(cls, cb, kwargs.get("query_string", None))
+        return Query(cls, cb)
 
     @property
     def rules(self):

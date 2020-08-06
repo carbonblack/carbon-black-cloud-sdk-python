@@ -14,7 +14,7 @@
 """Model Classes for Enterprise Endpoint Detection and Response"""
 
 from __future__ import absolute_import
-from cbc_sdk.base import UnrefreshableModel, BaseQuery, PaginatedQuery
+from cbc_sdk.base import UnrefreshableModel, BaseQuery, PaginatedQuery, QueryBuilder
 from cbc_sdk.errors import ApiError, TimeoutError
 
 import logging
@@ -42,7 +42,9 @@ class Process(UnrefreshableModel):
 
         def __init__(self, cb, model_unique_id):
             url = self.urlobject_single.format(cb.credentials.org_key)
+            print(f"URL: {url} \nGUID: {model_unique_id}")
             summary = cb.get_object(url, query_parameters={"process_guid": model_unique_id})
+            log.debug("Summmary: ", summary)
 
             while summary["incomplete_results"]:
                 log.debug("summary incomplete, requesting again")
@@ -331,6 +333,7 @@ class Query(PaginatedQuery):
         args = self._default_args.copy()
         args['query'] = self._query_builder._collapse()
         if self._query_builder._process_guid is not None:
+            print("Found a guid: ", self._query_builder._process_guid)
             args["process_guid"] = self._query_builder._process_guid
         args["fields"] = [
             "*",
@@ -345,6 +348,7 @@ class Query(PaginatedQuery):
             "process_effective_reputation",
             "process_reputation,ttp"
         ]
+        print("args returning: ", args)
 
         return args
 
@@ -385,7 +389,7 @@ class Query(PaginatedQuery):
     def _search(self, start=0, rows=0):
         # iterate over total result set, 100 at a time
         args = self._get_query_parameters()
-        self._validate(args)
+        # self._validate(args)
 
         if start != 0:
             args['start'] = start
@@ -399,6 +403,7 @@ class Query(PaginatedQuery):
         still_querying = True
 
         while still_querying:
+            print("args: ", args)
             url = self._doc_class.urlobject.format(
                 self._cb.credentials.org_key,
                 args["process_guid"]
