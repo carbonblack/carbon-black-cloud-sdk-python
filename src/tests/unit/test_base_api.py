@@ -70,3 +70,16 @@ def test_BaseAPI_init_provider_raises_error():
     mock_provider = MockCredentialProvider({'my_section': creds})
     with pytest.raises(CredentialError):
         BaseAPI(integration_name='test4', credential_provider=mock_provider, profile='notexist')
+
+
+def test_BaseAPI_init_with_no_profile():
+    """
+    Test the case where an empty profile string and nothing else is specified.
+
+    This test case will force the use of the FileCredentialProvider, which will search for the "default" locations
+    of credential files, and may or may not find them depending on the environment. Whether it does or not is
+    irrelevant, though, as the empty profile string will be trapped by FileCredentialProvider before it attempts to
+    read any files.
+    """
+    with pytest.raises(CredentialError):
+        BaseAPI(profile='')

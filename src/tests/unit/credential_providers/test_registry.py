@@ -261,3 +261,19 @@ def test_get_credentials_fail_open_base_key(monkeypatch, mox):
         sut.get_credentials('default')
     assert "Unable to open registry subkey" in str(e.value)
     mox.VerifyAll()
+
+
+def test_get_credentials_no_section(monkeypatch, mox):
+    """Test that not specifying a section raises an error without ever touching the Registry."""
+    monkeypatch.setattr(sys, "platform", "win32")
+    sut = RegistryCredentialProvider('Software\\Test')
+    mox.StubOutWithMock(sut, '_open_key')
+    mox.StubOutWithMock(sut, '_read_value')
+    mox.ReplayAll()
+    with pytest.raises(CredentialError) as e1:
+        sut.get_credentials('')
+    assert "Section must be specified" in str(e1.value)
+    with pytest.raises(CredentialError) as e2:
+        sut.get_credentials()
+    assert "Section must be specified" in str(e2.value)
+    mox.VerifyAll()

@@ -200,6 +200,8 @@ class RegistryCredentialProvider(CredentialProvider):
         Raises:
             CredentialError: If there is any error retrieving the credentials.
         """
+        if not section:
+            raise CredentialError("Section must be specified")
         if section not in self._cached_credentials:
             with self._open_key(self._base_key(), self._keypath) as base_key:
                 with self._open_key(base_key, section) as section_key:
