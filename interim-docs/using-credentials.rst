@@ -25,6 +25,7 @@ Credentials may be supplied in a file that resembles a Windows ``.INI`` file in 
 multiple "profiles" or sets of credentials to be supplied in a single file.  This is an example of a credentials file:
 
 ::
+
     [default]
     url=http://example.com
     token=ABCDEFGH
@@ -96,3 +97,79 @@ environment, a warning message will be logged.
 
 Supplying the Credentials Via the Environment
 ---------------------------------------------
+The credentials may be supplied to CBC SDK via the environment variables ``CBAPI_URL``, ``CBAPI_TOKEN``,
+``CBAPI_ORG_KEY``, and ``CBAPI_SSL_VERIFY``. To use the environment variables, they must be set before the application
+is run (at least ``CBAPI_URL`` and ``CBAPI_TOKEN``), and the ``credential_file`` keyword parameter to ``CBCloudAPI``
+must be either ``None`` or left unspecified. (The ``profile`` keyword parameter will be ignored.)
+
+**N.B.:** Passing credentials via the environment can be insecure, and, if this method is used, a warning message to
+that effect will be generated in the log.
+
+Supplying the Credentials Via the Windows Registry
+--------------------------------------------------
+CBC SDK also provides the ability to use the Windows Registry to supply credentials, a method which is more secure on
+Windows than other methods.
+
+**N.B.:** Presently, to use the Windows Registry, you must supply its credential provider as an "external" credential
+provider.  A future version of the CBC SDK will move to using this as a default provider when running on Windows.
+
+By default, registry entries are stored under the key
+``HKEY_CURRENT_USER\Software\VMware Carbon Black\Cloud Credentials``.  Under this key, there may be multiple subkeys,
+each of which specifies a "profile" (as with credential files).  Within these subkeys, the following named values may
+be specified:
+
+* ``url`` (type ``REG_SZ``): The URL used to access the Carbon Black Cloud.
+* ``token`` (type ``REG_SZ``): The access token to be used to authenticate to the server.
+* ``org_key`` (type ``REG_SZ``): The organization key specifying which organization to work with.
+* ``ssl_verify`` (type ``REG_DWORD``): A value which is nonzero to validate the SSL connection, or zero to bypass
+  validation. The default is 1.
+* ``ssl_verify_hostname`` (type ``REG_DWORD``): A value which is nonzero to verify the host name of the server being
+  connected to, or zero to bypass this validation. The default is 1.
+* ``ssl_cert_file`` (type ``REG_SZ``): The name of an optional certificate file used to validate the certificates
+  of the SSL connection.  If not specified, the standard system certificate verification will be used.
+* ``ssl_force_tls_1_2`` (type ``REG_DWORD``): A value which is nonzero to force the connection to use TLS 1.2
+  rather than any later version. The default is 0.
+* ``proxy`` (type ``REG_SZ``): If specified, this is the name of a proxy host to be used in making the connection.
+* ``ignore_system_proxy`` (type ``REG_DWORD``): A value which is nonzero to force system proxy settings to be ignored
+  in making the connection to the server. The default is 0.
+
+Unrecognized named values are ignored.
+
+To use the Registry credential provider, create an instance of it, then pass the reference to that instance in the
+``credential_provider`` keyword parameter when creating ``CBCloudAPI``.  As with credential files, the name of the
+profile to be retrieved from the Registry should be specified in the keyword parameter ``profile``.
+
+**Example:**
+
+    >>> provider = RegistryCredentialProvider()
+    >>> cbc_api = CBCloudAPI(credential_provider=provider, profile='default')
+
+**TK: Use information for the Registry setup tool**
+
+**Advanced Usage:** The parameters ``keypath`` and ``userkey`` to ``RegistryCredentialProvider`` may be used to
+control the exact location of the "base" registry key where the sections of credentials are located.  The ``keypath``
+parameter allows specification of the path from ``HKEY_CURRENT_USER`` where the base registry key is located. If
+``userkey``, which is ``True`` by default, is ``False``, the path will be interpreted as being rooted at
+``HKEY_LOCAL_MACHINE`` rather than ``HKEY_CURRENT_USER``.
+
+**Example:**
+
+    >>> provider = RegistryCredentialProvider('Software\\Contoso\\My CBC Application')
+    >>> cbc_api = CBCloudAPI(credential_provider=provider, profile='default')
+
+Note the use of doubled backslashes to properly escape them under Python.
+
+Using an External Credential Provider
+-------------------------------------
+Credentials may also be supplied by other means, by writing a class that conforms to the ``CredentialProvider``
+interface protocol, and passing a reference to an object of that class in the ``credential_provider`` keyword parameter
+when creating ``CBCloudAPI``.  As with credential files, the name of the profile to be retrieved should be specified
+in the keyword parameter ``profile``, which will be passed to the supplied provider object.
+
+**Example:**
+
+    >>> provider = MyCredentialProvider()
+    >>> cbc_api = CBCloudAPI(credential_provider=provider, profile='default')
+
+Details of writing a credential provider may be found in the "Developing Credential Providers" document.
+**TK: better reference**
