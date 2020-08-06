@@ -3,7 +3,7 @@ This is where anything noteworthy about our tests will be recorded.
 
 ### Unit Test Mocking
 We use the [Pymox](https://pymox.readthedocs.io/en/latest/) library for creating mocks during unit tests.  The
-top-level lybrary object is accessible via the `mox` fixture for unit tests.
+top-level library object is accessible via the `mox` fixture for unit tests.
 
 With Pymox, one first creates the necessary mock objects or functions, which start off in _record mode,_ where all
 calls are saved to provide the "script" of expected inputs and responses.  Once this is done, calling `mox.ReplayAll()`
