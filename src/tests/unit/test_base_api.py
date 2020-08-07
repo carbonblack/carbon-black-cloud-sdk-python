@@ -14,8 +14,8 @@
 import pytest
 from cbc_sdk.connection import BaseAPI
 from cbc_sdk.credentials import Credentials
-from cbc_sdk.credential_providers import EnvironCredentialProvider
 from cbc_sdk.errors import CredentialError
+from cbc_sdk.credential_providers.default import default_provider_object
 from tests.unit.fixtures.mock_credentials import MockCredentialProvider
 
 
@@ -49,7 +49,6 @@ def test_BaseAPI_init_selecting_the_default_credential_provider(monkeypatch):
     assert sut.credentials.token == 'ABCDEFGHIJKLM'
     assert sut.credentials.org_key == 'A1B2C3D4'
     assert sut.credential_profile_name == 'anything'
-    assert isinstance(sut.credential_provider, EnvironCredentialProvider)
     assert sut.session.server == 'https://example.com'
     assert sut.session.token == 'ABCDEFGHIJKLM'
     assert 'test2' in sut.session.token_header['User-Agent']
@@ -92,14 +91,19 @@ def test_BaseAPI_init_with_no_profile():
         BaseAPI(profile='')
 
 
-def test_BaseAPI_init_with_only_profile_specified():
-    """
-    Test the case where we only supply a profile string to the BaseAPI.
-
-    This test case will definitely raise CredentialError during automated testing, because FileCredentialProvider
-    will not find any of the "standard" credential files.  During manual testing, though, the machine running the test
-    may have some of the "standard" credential files present.  Hopefully none of them will contain a section that
-    is named "Non Existent," or else the error will NOT be raised and this test will fail.
-    """
-    with pytest.raises(CredentialError):
-        BaseAPI(profile='Non Existent')
+def test_BaseAPI_init_with_only_profile_specified(mox):
+    """Test the case where we only supply a profile string to the BaseAPI."""
+    mox.StubOutWithMock(default_provider_object, 'get_default_provider')
+    creds = Credentials({'url': 'https://example.com', 'token': 'ABCDEFGHIJKLM', 'org_key': 'A1B2C3D4'})
+    mock_provider = MockCredentialProvider({'Valid': creds})
+    default_provider_object.get_default_provider(None).AndReturn(mock_provider)
+    mox.ReplayAll()
+    sut = BaseAPI(profile='Valid')
+    assert sut.credentials is creds
+    assert sut.credentials.url == 'https://example.com'
+    assert sut.credentials.token == 'ABCDEFGHIJKLM'
+    assert sut.credentials.org_key == 'A1B2C3D4'
+    assert sut.credential_profile_name == 'Valid'
+    assert sut.session.server == 'https://example.com'
+    assert sut.session.token == 'ABCDEFGHIJKLM'
+    mox.VerifyAll()
