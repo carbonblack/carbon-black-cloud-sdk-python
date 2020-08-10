@@ -13,10 +13,10 @@
 
 """Model and Query Classes for Endpoint Standard"""
 
-from cbc_sdk.base import MutableBaseModel, CreatableModelMixin, NewBaseModel, PaginatedQuery
-from cbc_sdk.platform import (PSCQueryBase, QueryBuilder,
-                              QueryBuilderSupportMixin, IterableQueryMixin)
-from cbc_sdk.utils import convert_query_params, convert_to_kv_pairs
+from cbc_sdk.base import (MutableBaseModel, CreatableModelMixin, NewBaseModel, PaginatedQuery,
+                          QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin)
+from cbc_sdk.platform import PSCQueryBase
+from cbc_sdk.utils import convert_query_params
 from copy import deepcopy
 import logging
 import json
@@ -143,7 +143,7 @@ class Device(DefenseMutableModel):
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
-        return Query(cls, cb)
+        return Query(cls, cb, kwargs.get("query_string", None))
 
     def _refresh(self):
         if self._model_unique_id is not None:
@@ -184,22 +184,21 @@ class Event(NewBaseModel):
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
-        # return Query(cls, cb, kwargs.get("query_string", None))
-        return Query(cls, cb)
+        return Query(cls, cb, kwargs.get("query_string", None))
+        # return Query(cls, cb)
 
 
 class Policy(DefenseMutableModel, CreatableModelMixin):
     urlobject = "/integrationServices/v3/policy"
     info_key = "policyInfo"
     swagger_meta_file = "defense/models/policyInfo.yaml"
-    primary_key = "id"
     _change_object_http_method = "PUT"
     _change_object_key_name = "policyId"
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
-        # return Query(cls, cb, kwargs.get("query_string", None))
-        return Query(cls, cb)
+        return Query(cls, cb, kwargs.get("query_string", None))
+        # return Query(cls, cb)
 
     @property
     def rules(self):
@@ -245,14 +244,15 @@ class Query(PaginatedQuery, PSCQueryBase, QueryBuilderSupportMixin, IterableQuer
           will be returned.
     """
     # def __init__(self, doc_class, cb, query=None):
-    def __init__(self, doc_class, cb):
-        super(Query, self).__init__(doc_class, cb, None)
+    def __init__(self, doc_class, cb, query=None):
+        super(Query, self).__init__(doc_class, cb, query)
 
         self._sort_by = None
         self._group_by = None
         self._batch_size = 100
         self._criteria = {}
         self._query_builder = QueryBuilder()
+
 
     def _clone(self):
         nq = self.__class__(self._doc_class, self._cb)
