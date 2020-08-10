@@ -14,8 +14,8 @@
 """Model and Query Classes for Audit and Remediation"""
 
 from __future__ import absolute_import
-from cbc_sdk.base import UnrefreshableModel, NewBaseModel
-from cbc_sdk.platform import QueryBuilder, PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin
+from cbc_sdk.base import UnrefreshableModel, NewBaseModel, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin
+from cbc_sdk.platform import PSCQueryBase
 from cbc_sdk.errors import ApiError, ServerError
 import logging
 import time

@@ -14,7 +14,7 @@
 """Model Classes for Enterprise Endpoint Detection and Response"""
 
 from __future__ import absolute_import
-from cbc_sdk.base import UnrefreshableModel, BaseQuery, PaginatedQuery, QueryBuilder
+from cbc_sdk.base import UnrefreshableModel, BaseQuery, PaginatedQuery, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin
 from cbc_sdk.errors import ApiError, TimeoutError
 
 import logging
@@ -42,15 +42,15 @@ class Process(UnrefreshableModel):
 
         def __init__(self, cb, model_unique_id):
             url = self.urlobject_single.format(cb.credentials.org_key)
-            print(f"URL: {url} \nGUID: {model_unique_id}")
             summary = cb.get_object(url, query_parameters={"process_guid": model_unique_id})
-            log.debug("Summmary: ", summary)
+            # log.debug("Summmary: ", summary)
 
-            while summary["incomplete_results"]:
-                log.debug("summary incomplete, requesting again")
-                summary = self._cb.get_object(
-                    url, query_parameters={"process_guid": self.process_guid}
-                )
+            # the "incomplete_results" key isn't being returned??
+            # while summary["incomplete_results"]:
+            #     log.debug("summary incomplete, requesting again")
+            #     summary = self._cb.get_object(
+            #         url, query_parameters={"process_guid": self.process_guid}
+            #     )
 
             super(Process.Summary, self).__init__(cb, model_unique_id=model_unique_id,
                                                   initial_data=summary, force_init=False,
@@ -233,7 +233,7 @@ class Tree(UnrefreshableModel):
 """Queries"""
 
 
-class Query(PaginatedQuery):
+class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
     """Represents a prepared query to the Cb ThreatHunter backend.
 
     This object is returned as part of a :py:meth:`CbThreatHunterAPI.select`
@@ -269,72 +269,14 @@ class Query(PaginatedQuery):
         self._batch_size = 100
         self._default_args = {}
 
-    def where(self, q=None, **kwargs):
-        """Add a filter to this query.
-
-        :param q: Query string, :py:class:`QueryBuilder`, or `solrq.Q` object
-        :param kwargs: Arguments to construct a `solrq.Q` with
-        :return: Query object
-        :rtype: :py:class:`Query`
-        """
-        if not q and not kwargs:
-            raise ApiError(".where() expects a string, a QueryBuilder, a solrq.Q, or kwargs")
-
-        if isinstance(q, QueryBuilder):
-            self._query_builder = q
-        else:
-            self._query_builder.where(q, **kwargs)
-        return self
-
-    def and_(self, q=None, **kwargs):
-        """Add a conjunctive filter to this query.
-
-        :param q: Query string or `solrq.Q` object
-        :param kwargs: Arguments to construct a `solrq.Q` with
-        :return: Query object
-        :rtype: :py:class:`Query`
-        """
-        if not q and not kwargs:
-            raise ApiError(".and_() expects a string, a solrq.Q, or kwargs")
-
-        self._query_builder.and_(q, **kwargs)
-        return self
-
-    def or_(self, q=None, **kwargs):
-        """Add a disjunctive filter to this query.
-
-        :param q: `solrq.Q` object
-        :param kwargs: Arguments to construct a `solrq.Q` with
-        :return: Query object
-        :rtype: :py:class:`Query`
-        """
-        if not q and not kwargs:
-            raise ApiError(".or_() expects a solrq.Q or kwargs")
-
-        self._query_builder.or_(q, **kwargs)
-        return self
-
-    def not_(self, q=None, **kwargs):
-        """Adds a negated filter to this query.
-
-        :param q: `solrq.Q` object
-        :param kwargs: Arguments to construct a `solrq.Q` with
-        :return: Query object
-        :rtype: :py:class:`Query`
-        """
-
-        if not q and not kwargs:
-            raise ApiError(".not_() expects a solrq.Q, or kwargs")
-
-        self._query_builder.not_(q, **kwargs)
-        return self
-
     def _get_query_parameters(self):
         args = self._default_args.copy()
         args['query'] = self._query_builder._collapse()
         if self._query_builder._process_guid is not None:
-            print("Found a guid: ", self._query_builder._process_guid)
             args["process_guid"] = self._query_builder._process_guid
+        if 'process_guid:' in args['query']:
+            q = args['query'].split(':', 1)
+            args["process_guid"] = q[1]
         args["fields"] = [
             "*",
             "parent_hash",
@@ -348,7 +290,6 @@ class Query(PaginatedQuery):
             "process_effective_reputation",
             "process_reputation,ttp"
         ]
-        print("args returning: ", args)
 
         return args
 
@@ -389,7 +330,7 @@ class Query(PaginatedQuery):
     def _search(self, start=0, rows=0):
         # iterate over total result set, 100 at a time
         args = self._get_query_parameters()
-        # self._validate(args)
+        self._validate(args)
 
         if start != 0:
             args['start'] = start
@@ -403,7 +344,6 @@ class Query(PaginatedQuery):
         still_querying = True
 
         while still_querying:
-            print("args: ", args)
             url = self._doc_class.urlobject.format(
                 self._cb.credentials.org_key,
                 args["process_guid"]
@@ -598,7 +538,7 @@ class AsyncProcessQuery(Query):
             log.debug("current: {}, total_results: {}".format(current, self._total_results))
 
 
-class TreeQuery(BaseQuery):
+class TreeQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
     """ Represents the logic for a Tree query.
     """
     def __init__(self, doc_class, cb):
