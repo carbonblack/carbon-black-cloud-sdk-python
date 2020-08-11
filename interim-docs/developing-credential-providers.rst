@@ -1,7 +1,7 @@
 Developing New Credential Providers
 ===================================
 The credentials management framework for the CBC SDK is designed to allow different handlers to be implemented, which
-may supply credentials to the ``CBCloudAPI`` in ways not anticipated by existing credential handlers.
+may supply credentials to the ``CBCloudAPI`` in ways not implemented by existing credential handlers.
 
 Writing the Credential Provider
 -------------------------------
@@ -15,8 +15,8 @@ to initialize your credential provider in any desired fashion.
 
 Using the Credential Provider
 -----------------------------
-Create an instance of your credential provider object and pass it as the keyword parameter ``credential_provider`` when
-creating your ``CBCloudAPI`` object.  Example:
+Create an instance of your credential provider object and pass it as the keyword parameter
+``credential_provider`` when creating your ``CBCloudAPI`` object.  Example:
 
     >>> provider = MyCredentialProvider()
     >>> cbc_api = CBCloudAPI(credential_provider=provider, profile='default')
@@ -33,9 +33,10 @@ CredentialValue class
 This class is of an enumerated type, and represents the various credential items loaded by the credential provider
 and fed to the rest of the SDK code.  The possible values are:
 
-* ``URL`` - The URL used to access the Carbon Black Cloud.
-* ``TOKEN`` - The access token to be used to authenticate to the server.
-* ``ORG_KEY`` - The organization key specifying which organization to work with.
+* ``URL`` - The URL used to access the Carbon Black Cloud.  This value *must* be specified.
+* ``TOKEN`` - The access token to be used to authenticate to the server. It is the same structure as the
+  ``X-Auth-Token:`` defined for direct API access in `the developer documentation`_. This value *must* be specified.
+* ``ORG_KEY`` - The organization key specifying which organization to work with.  This value *must* be specified.
 * ``SSL_VERIFY`` - A Boolean value indicating whether or not to validate the SSL connection.
   The default is ``True``.
 * ``SSL_VERIFY_HOSTNAME`` - A Boolean value indicating whether or not to verify the host name of the
@@ -47,6 +48,8 @@ and fed to the rest of the SDK code.  The possible values are:
 * ``PROXY`` - If specified, this is the name of a proxy host to be used in making the connection.
 * ``IGNORE_SYSTEM_PROXY`` - A Boolean value. If this is ``True``, any system proxy settings will be ignored
   in making the connection to the server. The default is ``False``.
+
+.. _`the developer documentation`: https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/#creating-an-api-key
 
 Values of this type have one method:
 

@@ -22,7 +22,9 @@ The credentials may be passed into the ``CBCloudAPI`` object when it is created 
 Supplying the Credentials in a File
 -----------------------------------
 Credentials may be supplied in a file that resembles a Windows ``.INI`` file in structure, which allows for
-multiple "profiles" or sets of credentials to be supplied in a single file.  This is an example of a credentials file:
+multiple "profiles" or sets of credentials to be supplied in a single file.  The file format is compatible with that
+used by the older CBAPI for Carbon Black Cloud, so older files can continue to be used.  This is an example of a
+credentials file:
 
 ::
 
@@ -45,9 +47,10 @@ Individual profiles or sections are delimited in the file by placing their name 
 each section, individual credential values are supplied in a `keyword=value` format.  Valid keywords are
 as follows:
 
-* ``url``: The URL used to access the Carbon Black Cloud.
-* ``token``: The access token to be used to authenticate to the server.
-* ``org_key``: The organization key specifying which organization to work with.
+* ``url``: The URL used to access the Carbon Black Cloud.  This value *must* be specified.
+* ``token``: The access token to be used to authenticate to the server.  It is the same structure as the
+  ``X-Auth-Token:`` defined for direct API access in `the developer documentation`_.  This value *must* be specified.
+* ``org_key``: The organization key specifying which organization to work with.  This value *must* be specified.
 * ``ssl_verify``: A Boolean value (see below) indicating whether or not to validate the SSL connection.
   The default is ``True``.
 * ``ssl_verify_hostname``: A Boolean value (see below) indicating whether or not to verify the host name of the
@@ -59,6 +62,8 @@ as follows:
 * ``proxy``: If specified, this is the name of a proxy host to be used in making the connection.
 * ``ignore_system_proxy``: A Boolean value (see below). If this is ``True``, any system proxy settings will be ignored
   in making the connection to the server. The default is ``False``.
+
+.. _`the developer documentation`: https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/#creating-an-api-key
 
 Unrecognized keywords are ignored.
 
