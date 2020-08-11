@@ -166,10 +166,10 @@ Note the use of doubled backslashes to properly escape them under Python.
 
 Using an External Credential Provider
 -------------------------------------
-Credentials may also be supplied by other means, by writing a class that conforms to the ``CredentialProvider``
-interface protocol, and passing a reference to an object of that class in the ``credential_provider`` keyword parameter
-when creating ``CBCloudAPI``.  As with credential files, the name of the profile to be retrieved should be specified
-in the keyword parameter ``profile``, which will be passed to the supplied provider object.
+Credentials may also be supplied by writing a class that conforms to the ``CredentialProvider`` interface protocol.
+When creating ``CBCloudAPI``, pass a reference to an object of that class in the ``credential_provider`` keyword
+parameter. Then pass the name of the profile you want to retrieve to the provider object using the keyword parameter
+``profile``.
 
 **Example:**
 

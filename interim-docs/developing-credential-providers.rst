@@ -5,10 +5,9 @@ may supply credentials to the ``CBCloudAPI`` in ways not implemented by existing
 
 Writing the Credential Provider
 -------------------------------
-All classes required to implement a new credential provider are in the ``cbc_sdk.credentials`` package, the contents
-of which are described later in this document.  It is recommended but not required that your new credential provider
-inherit from the ``CredentialProvider`` abstract class; you must, in any event, implement the methods from that
-abstract class as detailed.
+Find all classes required to implement a new credential provider in the ``cbc_sdk.credentials`` package. See below for
+descriptions of the classes. It is recommended, but not required, that your new credential provider inherit from the
+``CredentialProvider`` abstract class, and that you implement the methods from that abstract class as detailed.
 
 The arguments to the standard ``__init__()`` method are not defined by the interface specification; those may be used
 to initialize your credential provider in any desired fashion.
