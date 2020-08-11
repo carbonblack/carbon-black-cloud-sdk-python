@@ -102,10 +102,13 @@ environment, a warning message will be logged.
 
 Supplying the Credentials Via the Environment
 ---------------------------------------------
-The credentials may be supplied to CBC SDK via the environment variables ``CBAPI_URL``, ``CBAPI_TOKEN``,
-``CBAPI_ORG_KEY``, and ``CBAPI_SSL_VERIFY``. To use the environment variables, they must be set before the application
-is run (at least ``CBAPI_URL`` and ``CBAPI_TOKEN``), and the ``credential_file`` keyword parameter to ``CBCloudAPI``
-must be either ``None`` or left unspecified. (The ``profile`` keyword parameter will be ignored.)
+The credentials may be supplied to CBC SDK via the environment variables ``CBC_URL``, ``CBC_TOKEN``, ``CBC_ORG_KEY``,
+and ``CBC_SSL_VERIFY``. For backwards compatibility with CBAPI, the environment variables ``CBAPI_URL``,
+``CBAPI_TOKEN``, ``CBAPI_ORG_KEY``, and ``CBAPI_SSL_VERIFY`` may also be used; if both are specified, the newer
+``CBC_xxx`` environment variables override their corresponding ``CBAPI_xxx`` equivalents. To use the environment
+variables, they must be set before the application is run (at least ``CBC_URL`` or ``CBAPI_URL``, and ``CBC_TOKEN`` or
+``CBAPI_TOKEN``), and the ``credential_file`` keyword parameter to ``CBCloudAPI`` must be either ``None`` or left
+unspecified. (The ``profile`` keyword parameter will be ignored.)
 
 **N.B.:** Passing credentials via the environment can be insecure, and, if this method is used, a warning message to
 that effect will be generated in the log.
