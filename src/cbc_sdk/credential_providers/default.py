@@ -33,7 +33,8 @@ class DefaultProvider:
         """
         # FUTURE: On Windows possibly return the registry-based provider
         # Note: Using Environmental Variables will override the use of the FileCredentialProvider
-        if credential_file is None and os.environ.get('CBAPI_TOKEN', False) and os.environ.get('CBAPI_URL', False):
+        if credential_file is None and (os.environ.get('CBC_TOKEN', False) or os.environ.get('CBAPI_TOKEN', False)) \
+                and (os.environ.get('CBC_URL', False) or os.environ.get('CBAPI_URL', False)):
             log.debug("Using EnvironCredentialProvider")
             return EnvironCredentialProvider()
         log.debug("Using FileCredentialProvider")
