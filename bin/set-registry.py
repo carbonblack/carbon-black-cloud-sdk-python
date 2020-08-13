@@ -178,6 +178,7 @@ def gather_boolean(opts, data, index, true_attr, false_attr):
 def gather_section_data(opts):
     """
     Gather the data from the command-line arguments into a dict that can be written to the Registry.
+
     Args:
         opts (Namespace): Options passed to the utility.
 
@@ -205,6 +206,7 @@ def gather_section_data(opts):
 def main(args):
     """
     Process command-line input to the utility.
+
     Args:
         args (list): Command-line input to the utility.
     """
