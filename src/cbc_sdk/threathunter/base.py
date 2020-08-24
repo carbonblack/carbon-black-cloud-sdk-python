@@ -187,7 +187,7 @@ class Process(UnrefreshableModel):
 
 class Event(UnrefreshableModel):
     """Events can be queried for via ``CBCloudAPI.select``
-    or though an already selected process with ``Process.events()``.
+    or through an already selected process with ``Process.events()``.
     """
     urlobject = '/api/investigate/v2/orgs/{}/events/{}/_search'
     validation_url = '/api/investigate/v1/orgs/{}/events/search_validation'
