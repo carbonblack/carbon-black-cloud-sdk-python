@@ -152,10 +152,6 @@ def test_read_single_file():
     assert not creds.ignore_system_proxy
     with pytest.raises(CredentialError):
         sut.get_credentials("notexist")
-    with pytest.raises(CredentialError):
-        sut.get_credentials("")
-    with pytest.raises(CredentialError):
-        sut.get_credentials()
 
 
 def test_read_multiple_files():

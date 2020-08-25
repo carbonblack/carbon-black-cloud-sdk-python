@@ -24,10 +24,10 @@ class EnvironCredentialProvider(CredentialProvider):
         """Initializes the EnvironCredentialProvider."""
         log.warning("Security warning: Storing credentials in environment variables "
                     "is insecure and is not recommended.")
-        url = os.environ.get('CBC_URL', os.environ.get('CBAPI_URL', None))
-        token = os.environ.get('CBC_TOKEN', os.environ.get('CBAPI_TOKEN', None))
-        ssl_verify = os.environ.get('CBC_SSL_VERIFY', os.environ.get('CBAPI_SSL_VERIFY', True))
-        org_key = os.environ.get('CBC_ORG_KEY', os.environ.get('CBAPI_ORG_KEY', None))
+        url = os.environ.get('CBAPI_URL', None)
+        token = os.environ.get('CBAPI_TOKEN', None)
+        ssl_verify = os.environ.get('CBAPI_SSL_VERIFY', True)
+        org_key = os.environ.get('CBAPI_ORG_KEY', None)
         self._credentials = Credentials({CredentialValue.URL: url, CredentialValue.TOKEN: token,
                                          CredentialValue.ORG_KEY: org_key, CredentialValue.SSL_VERIFY: ssl_verify})
 

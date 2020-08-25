@@ -41,8 +41,7 @@ import json
 
 import urllib
 
-from .credentials import Credentials
-from .credential_providers import default_credential_provider
+from .auth import CredentialStoreFactory, Credentials
 from .errors import ClientError, QuerySyntaxError, ServerError, TimeoutError, ApiError, ObjectNotFoundError, \
     UnauthorizedError, ConnectionError
 from . import __version__
@@ -349,7 +348,7 @@ class Connection(object):
 
 
 class BaseAPI(object):
-    """The base API object used by all CBC SDK objects to communicate with the server."""
+    """The base API object used by all CBAPI objects to communicate with the server."""
 
     def __init__(self, *args, **kwargs):
         """
@@ -359,8 +358,9 @@ class BaseAPI(object):
             *args: TBD
             **kwargs: Additional arguments.
         """
+        product_name = kwargs.pop("product_name", None)
+        credential_file = kwargs.pop("credential_file", None)
         integration_name = kwargs.pop("integration_name", None)
-        self.credential_provider = kwargs.pop("credential_provider", None)
 
         url, token, org_key = kwargs.pop("url", None), kwargs.pop("token", None), kwargs.pop("org_key", None)
         if url and token:
@@ -375,11 +375,9 @@ class BaseAPI(object):
             self.credentials = Credentials(credentials)
             self.credential_profile_name = None
         else:
-            credential_file = kwargs.pop("credential_file", None)
             self.credential_profile_name = kwargs.pop("profile", None)
-            if not self.credential_provider:
-                self.credential_provider = default_credential_provider(credential_file)
-            self.credentials = self.credential_provider.get_credentials(self.credential_profile_name)
+            self.credential_store = CredentialStoreFactory.getCredentialStore(product_name, credential_file)
+            self.credentials = self.credential_store.get_credentials(self.credential_profile_name)
 
         timeout = kwargs.pop("timeout", DEFAULT_POOL_TIMEOUT)
         max_retries = kwargs.pop("max_retries", DEFAULT_RETRIES)
@@ -600,7 +598,7 @@ class BaseAPI(object):
 
 # by default, set expiration to 1 minute and max_size to 1k elements
 # TODO: how does this interfere with mutable objects?
-@lru_cache_function(max_size=1024, expiration=1 * 60)
+@lru_cache_function(max_size=1024, expiration=1*60)
 def select_instance(api, cls, unique_id, *args, **kwargs):
     """
     Select a cached instance of an object.
