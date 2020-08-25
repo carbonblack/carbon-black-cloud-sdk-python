@@ -380,8 +380,11 @@ class BaseAPI(object):
             if not self.credential_provider:
                 self.credential_provider = default_credential_provider(credential_file)
             self.credentials = self.credential_provider.get_credentials(self.credential_profile_name)
+<<<<<<< HEAD
             if not integration_name:
                 integration_name = self.credentials.integration
+=======
+>>>>>>> update branch to be inline with develop
 
         timeout = kwargs.pop("timeout", DEFAULT_POOL_TIMEOUT)
         max_retries = kwargs.pop("max_retries", DEFAULT_RETRIES)
