@@ -11,21 +11,38 @@
 
 """Test for the default credential provider function."""
 
+import pytest
 from cbc_sdk.credential_providers import default_credential_provider, FileCredentialProvider, EnvironCredentialProvider
 
 
-def test_default_credential_providers(monkeypatch):
-    """Test that we get a proper value out of the default_credential_provider() function."""
+def test_default_credential_providers_file(monkeypatch):
+    """Test that we get the FileCredentialProvider out of the default_credential_provider() function."""
     monkeypatch.delenv('CBAPI_TOKEN', False)
     monkeypatch.delenv('CBAPI_URL', False)
+    monkeypatch.delenv('CBC_TOKEN', False)
+    monkeypatch.delenv('CBC_URL', False)
     val = default_credential_provider("myfile.cbc")
     assert val is not None
     assert isinstance(val, FileCredentialProvider)
     val = default_credential_provider(None)
     assert val is not None
     assert isinstance(val, FileCredentialProvider)
-    monkeypatch.setenv('CBAPI_TOKEN', 'ABCDEFGH')
-    monkeypatch.setenv('CBAPI_URL', 'http://example.com')
+
+
+@pytest.mark.parametrize('urlvar, tokenvar', [
+    ('CBAPI_URL', 'CBAPI_TOKEN'),
+    ('CBAPI_URL', 'CBC_TOKEN'),
+    ('CBC_URL', 'CBAPI_TOKEN'),
+    ('CBC_URL', 'CBC_TOKEN')
+])
+def test_default_credential_providers_environ(monkeypatch, urlvar, tokenvar):
+    """Test that we get the EnvironCredentialProvider out of the default_credential_provider() function."""
+    monkeypatch.delenv('CBAPI_TOKEN', False)
+    monkeypatch.delenv('CBAPI_URL', False)
+    monkeypatch.delenv('CBC_TOKEN', False)
+    monkeypatch.delenv('CBC_URL', False)
+    monkeypatch.setenv(tokenvar, 'ABCDEFGH')
+    monkeypatch.setenv(urlvar, 'http://example.com')
     val = default_credential_provider(None)
     assert val is not None
     assert isinstance(val, EnvironCredentialProvider)
