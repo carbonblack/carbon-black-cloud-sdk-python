@@ -12,7 +12,6 @@ validators
 
 # Dev dependencies
 pytest==5.4.2
-pymox==0.7.8
 coverage==5.1
 coveralls==2.0.0
 flake8==3.8.1
