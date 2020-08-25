@@ -21,30 +21,6 @@ import os
 import sys
 from io import StringIO as StringIO
 
-try:
-    import winreg
-    HKEY_CURRENT_USER = winreg.HKEY_CURRENT_USER
-    CreateKeyEx = winreg.CreateKeyEx
-    SetValueEx = winreg.SetValueEx
-except ModuleNotFoundError:
-    HKEY_CURRENT_USER = object()
-
-    def CreateKeyEx(base, path, reserved, access_rights):
-        """Stub to maintain source compatibility"""
-        return None
-
-    def SetValueEx(key, name, reserved, type, value):
-        """Stub to maintain source compatibility"""
-        return None
-
-# Define these constants locally so they don't depend on winreg. From the Windows Registry API docs.
-REG_SZ = 1
-REG_DWORD = 4
-KEY_WRITE = 0x20006
-
-
-DEFAULT_KEYPATH = 'Software\\VMware Carbon Black\\Cloud Credentials\\default'
-
 
 @contextlib.contextmanager
 def temp_umask(umask):
@@ -54,32 +30,6 @@ def temp_umask(umask):
         yield
     finally:
         os.umask(oldmask)
-
-
-def configure_windows(opts):
-    """Configure the Registry"""
-    if not sys.platform.startswith("win32"):
-        print("Cannot configure registry on a non-Windows system")
-        return
-
-    print("Welcome to the cbc_sdk for Windows.")
-
-    url = input("URL to the Carbon Black Cloud API server (do not include '/integrationServices') [https://hostname]: ")
-
-    ssl_verify = True
-
-    connector_id = input("Connector ID: ")
-    token = input("API key: ")
-
-    org_key = input("Org Key: ")
-
-    with CreateKeyEx(HKEY_CURRENT_USER, DEFAULT_KEYPATH, 0, KEY_WRITE) as regkey:
-        SetValueEx(regkey, "url", 0, REG_SZ, url)
-        SetValueEx(regkey, "token", 0, REG_SZ, "{0}/{1}".format(token, connector_id))
-        SetValueEx(regkey, "org_key", 0, REG_SZ, org_key)
-        SetValueEx(regkey, "ssl_verify", 0, REG_DWORD, 1 if ssl_verify else 0)
-
-    print("Successfully wrote credentials to the registry.")
 
 
 def configure(opts):
@@ -125,11 +75,6 @@ command_map = {
         "extra_args": {},
         "help": "Configure CbAPI",
         "method": configure
-    },
-    "configure-windows": {
-        "extra_args": {},
-        "help": "Configure CbAPI for the Windows Registry",
-        "method": configure_windows
     }
 }
 
