@@ -154,10 +154,6 @@ def test_read_single_file():
     assert creds.integration is None
     with pytest.raises(CredentialError):
         sut.get_credentials("notexist")
-    with pytest.raises(CredentialError):
-        sut.get_credentials("")
-    with pytest.raises(CredentialError):
-        sut.get_credentials()
 
 
 def test_read_multiple_files():
