@@ -489,10 +489,8 @@ class CblrCli(cmd.Cmd):
         '''
 
         self._needs_attached()
-        #
         # note: option parsing is VERY specific to ensure command args are left
         # as untouched as possible
-        #
 
         OPTS = ['-o', '-d', '-w']
         optOut = None
@@ -520,7 +518,7 @@ class CblrCli(cmd.Cmd):
         # to see what we are supposed to execute
         if (self._is_path_absolute(exe)):
             pass
-            # do nothin
+            # do nothing
         elif (self._is_path_drive_relative(exe)):
             # append the current dirve
             exe = self.cwd[:2] + exe
@@ -541,7 +539,6 @@ class CblrCli(cmd.Cmd):
             cmdline = exe + ' ' + ' '.join(parts)
         else:
             cmdline = exe
-        # print "CMD: %s" % cmdline
 
         if not optWorkDir:
             optWorkDir = self.cwd
@@ -678,136 +675,6 @@ class CblrCli(cmd.Cmd):
             raise CliArgsException("Invalid argument passed to kill (%s)" % line)
 
         self.lr_session.kill_process(line)
-    #
-    # def do_reg(self, line):
-    #     '''
-    #     Command: reg
-    #
-    #     Description:
-    #     Perform registry actions (query/add/delete) against
-    #     the sensor registry.
-    #
-    #     Args:
-    #     reg [SUB_COMMAND] [SUB_SPECIFIC_OPTIONS]
-    #
-    #     where SUB_COMMAND is:
-    #
-    #     add - Add a registry key or value
-    #
-    #     delete - Delete a registry key or value
-    #
-    #     query - Query a registry key or value
-    #
-    #     SUB_SPECIFIC_OPTIONS:
-    #
-    #     reg add [key] [opts]
-    #         -v : add the value instead of the key
-    #         -t : value type (REG_DWORD, ....) requires -v
-    #         -d : data for the value - converted to appropriate type for
-    #              binary data hex encode
-    #         -f : force (overwrite value if it already exists)
-    #
-    #     reg delete [key] [opts]
-    #         -v : delete the value instead of the key
-    #
-    #     reg query [key] [opts]
-    #         -v : query a value instead of just a key
-    #     '''
-    #
-    #     self._needs_attached()
-    #
-    #     args = split_cli(line)
-    #     REG_OPTS = ['add', 'delete', 'query']
-    #     # pop the first arg off for the sub-command
-    #
-    #     subcmd = args.pop(0).lower()
-    #     if (subcmd not in REG_OPTS):
-    #         raise CliArgsException("Invalid reg subcommand! (%s)" % subcmd)
-    #
-    #     # parse out the args
-    #     if (subcmd == 'add'):
-    #         p = CliArgs("reg add <Key> [OPTIONS]")
-    #         p.add_option('-v', '--value', default=None, help='The value to add (instead of a key)')
-    #         p.add_option('-t', '--type', default=None, help='The value type to add')
-    #         p.add_option('-d', '--data', default=None, help='The data value to add')
-    #         p.add_option('-f', '--force', default=False, action='store_true', help='Overwrite existing value')
-    #
-    #         (opts, args) = p.parse_args(args)
-    #
-    #         if (opts.value):
-    #             if (not opts.type):
-    #                 raise CliArgsException("Must provide a value data type (-t) with -v option")
-    #             if (not opts.data):
-    #                 raise CliArgsException("Must provide a data value (-d) with -v option")
-    #
-    #             rval = {}
-    #             #rval['value_data'] = opts.data
-    #             rval['value_data'] = opts.data
-    #             rval['value_type'] = opts.type
-    #             rval['overwrite'] = opts.force
-    #
-    #             path = args[0] + '\\'+ opts.value
-    #
-    #             self._postCommandAndWait('reg set value', path, args=rval)
-    #
-    #         else:
-    #             # add a key
-    #             self._postCommandAndWait('reg create key', args[0])
-    #
-    #     elif (subcmd == 'delete'):
-    #         p = CliArgs("reg delete <Key> [OPTIONS]")
-    #         p.add_option('-v', '--value', default=None, help='The value to delete (instead of a key)')
-    #         (opts, args) = p.parse_args(args=args)
-    #
-    #         if (opts.value):
-    #             path = args[0] + "\\" + opts.value
-    #
-    #             print "DeleteValue: %s" % path
-    #             self._postCommandAndWait('reg delete value', path)
-    #
-    #         else:
-    #             self._postCommandAndWait('reg delete key', args[0])
-    #
-    #     else: # query
-    #         p = CliArgs('reg query <Key> [OPTIONS]')
-    #         p.add_option('-v', '--value', default=None, help='The value to query (instead of a key)')
-    #
-    #         (opts, args) = p.parse_args(args=args)
-    #
-    #         if (opts.value):
-    #             path = args[0] + "\\" + opts.value
-    #             ret = self._postCommandAndWait('reg query value', path)
-    #
-    #             value = ret.get('value', None)
-    #             if (value):
-    #                 self._print_reg_value(value)
-    #
-    #         else:
-    #             ret = self._postCommandAndWait('reg enum key', args[0])
-    #
-    #             subs = ret.get('sub_keys', [])
-    #             if (len(subs) > 0):
-    #                 print "Keys:"
-    #             for k in subs:
-    #                 print "%s" % k
-    #
-    #             values = ret.get('values', [])
-    #             if (len(values) > 0):
-    #                 print "Values:"
-    #             for v in values:
-    #                 print "REPR value: %s" + repr(v)
-    #                 self._print_reg_value(v)
-    #
-    # def _print_reg_value(self, value):
-    #     type = value['value_type']
-    #     name = value['value_name']
-    #     rawdata = value['value_data']
-    #
-    #     # handle default value
-    #     if (name == ''):
-    #         name = '(Default)'
-    #
-    #     print "  %-30s %10s %s" %(name, type, rawdata)
 
     # call the system shell
     def do_shell(self, line):

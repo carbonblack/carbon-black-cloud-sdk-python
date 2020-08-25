@@ -69,9 +69,3 @@ def convert_to_cb(dt):
         str: The date and time as a string.
     """
     return dt.strftime(cb_datetime_format)
-
-
-# def convert_to_kv_pairs(q):
-#     """Converts a key:value pair into key,value pair"""
-#     k, v = q.split(':', 1)
-#     return k, v

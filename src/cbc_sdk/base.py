@@ -892,10 +892,6 @@ class QueryBuilderSupportMixin:
         :rtype: :py:class:`Query`
         """
 
-        # if not q:
-        #     print(f"Not q and kwargs: {kwargs}")
-            # return self
-
         if isinstance(q, QueryBuilder):
             self._query_builder = q
         else:
