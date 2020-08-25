@@ -43,14 +43,6 @@ class Process(UnrefreshableModel):
         def __init__(self, cb, model_unique_id):
             url = self.urlobject_single.format(cb.credentials.org_key)
             summary = cb.get_object(url, query_parameters={"process_guid": model_unique_id})
-            # log.debug("Summmary: ", summary)
-
-            # the "incomplete_results" key isn't being returned??
-            # while summary["incomplete_results"]:
-            #     log.debug("summary incomplete, requesting again")
-            #     summary = self._cb.get_object(
-            #         url, query_parameters={"process_guid": self.process_guid}
-            #     )
 
             super(Process.Summary, self).__init__(cb, model_unique_id=model_unique_id,
                                                   initial_data=summary, force_init=False,
@@ -335,8 +327,6 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
         if start != 0:
             args['start'] = start
         args['rows'] = self._batch_size
-
-        # args = {"search_params": args}
 
         current = start
         numrows = 0

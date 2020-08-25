@@ -577,8 +577,6 @@ class CbLRSessionBase(object):
                 value_type = "REG_DWORD"
             elif type(value) == list:
                 value_type = "REG_MULTI_SZ"
-            # elif type(value) == bytes:
-            #     value_type = "REG_BINARY"
             else:
                 value_type = "REG_SZ"
                 value = str(value)

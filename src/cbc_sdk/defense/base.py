@@ -185,7 +185,6 @@ class Event(NewBaseModel):
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
         return Query(cls, cb, kwargs.get("query_string", None))
-        # return Query(cls, cb)
 
 
 class Policy(DefenseMutableModel, CreatableModelMixin):
