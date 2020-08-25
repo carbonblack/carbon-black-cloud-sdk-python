@@ -20,7 +20,8 @@ install_requires = [
 ]
 
 tests_requires = [
-    'pytest<=5.0'
+    'pytest',
+    'pymox'
 ]
 
 # if sys.version_info < (2, 7):
