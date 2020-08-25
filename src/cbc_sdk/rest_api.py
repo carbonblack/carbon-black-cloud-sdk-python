@@ -34,10 +34,10 @@ class CBCloudAPI(BaseAPI):
     >>> cb = CBCloudAPI(profile="production")
     """
     def __init__(self, *args, **kwargs):
-        super(CBCloudAPI, self).__init__(product_name="cbc", *args, **kwargs)
+        super(CBCloudAPI, self).__init__(*args, **kwargs)
         self._lr_scheduler = None
 
-        if not self.credentials.get("org_key", None):
+        if not self.credentials.org_key:
             raise CredentialError("No organization key specified")
 
 
