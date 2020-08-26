@@ -1,4 +1,4 @@
-"""Testing Devices object of cbc_sdk.defense"""
+"""Testing Device object of cbc_sdk.defense"""
 
 import pytest
 import logging
@@ -8,7 +8,7 @@ from cbc_sdk.defense import Policy
 from cbc_sdk.defense import Query
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.mock_devices import (DEFENSE_DEVICE_GET_HOSTNAME_RESP,
+from tests.unit.fixtures.defense.mock_devices import (DEFENSE_DEVICE_GET_HOSTNAME_RESP,
                                               DEFENSE_DEVICE_GET_HOSTNAME_EXACT_RESP,
                                               DEFENSE_DEVICE_GET_OWNERNAME_RESP,
                                               DEFENSE_DEVICE_GET_OWNERNAME_EXACT_RESP,
