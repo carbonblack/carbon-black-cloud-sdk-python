@@ -145,19 +145,6 @@ class Device(DefenseMutableModel):
     def _query_implementation(cls, cb, **kwargs):
         return Query(cls, cb, kwargs.get("query_string", None))
 
-    def _refresh(self):
-        if self._model_unique_id is not None:
-            url = self.urlobject_single.format(self._model_unique_id)
-        else:
-            url = self.urlobject
-        resp = self._cb.get_object(url)
-        if isinstance(resp.get(self.info_key, None), dict):
-            self._info = resp.get(self.info_key)
-        else:
-            self._info = resp
-        self._last_refresh_time = time.time()
-        return True
-
     def lr_session(self):
         """
         Retrieve a Live Response session object for this Device.
@@ -262,31 +249,8 @@ class Query(PaginatedQuery, PSCQueryBase, QueryBuilderSupportMixin, IterableQuer
         nq._criteria = self._criteria
         return nq
 
-    # def where(self, q):
-    #     """Add a filter to this query.
-    #
-    #     :param str q: Query string
-    #     :return: Query object
-    #     :rtype: :py:class:`Query`
-    #     """
-    #     nq = self._clone()
-    #     nq._query.append(q)
-    #     return nq
-    #
-    # def and_(self, q):
-    #     """Add a filter to this query. Equivalent to calling :py:meth:`where` on this object.
-    #
-    #     :param str q: Query string
-    #     :return: Query object
-    #     :rtype: :py:class:`Query`
-    #     """
-    #     return self.where(q)
 
     def prepare_query(self, args):
-        # if self._query:
-        #     for qe in self._query:
-        #         k, v = convert_to_kv_pairs(qe)
-        #         args[k] = v
         request = args
         params = self._query_builder._collapse()
         if params is not None:
