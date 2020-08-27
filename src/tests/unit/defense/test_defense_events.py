@@ -2,14 +2,11 @@
 
 import pytest
 import logging
-from cbc_sdk.defense import Device
 from cbc_sdk.defense import Event
-from cbc_sdk.defense import Policy
-from cbc_sdk.defense import Query
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.defense.mock_events import (EVENT_GET_HOSTNAME_RESP,
-                                             EVENT_GET_SPECIFIC_RESP)
+                                                     EVENT_GET_SPECIFIC_RESP)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -44,7 +41,8 @@ def test_event_query_0(cbcsdk_mock):
 
 def test_event_query_with_id_in_select(cbcsdk_mock):
     """Testing Event Querying with .select(Event, `id`)"""
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/event/a1e12604d67b11ea920d3d9192a785d1", EVENT_GET_SPECIFIC_RESP)
+    url = "/integrationServices/v3/event/a1e12604d67b11ea920d3d9192a785d1"
+    cbcsdk_mock.mock_request("GET", url, EVENT_GET_SPECIFIC_RESP)
     api = cbcsdk_mock.api
     event = api.select(Event, 'a1e12604d67b11ea920d3d9192a785d1')
     assert isinstance(event, Event)

@@ -36,8 +36,10 @@ def test_event_query_process_select_with_guid(cbcsdk_mock):
     assert isinstance(process, Process)
     assert process.process_guid == guid
 
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/events/search_validation", EVENT_SEARCH_VALIDATION_RESP)
-    cbcsdk_mock.mock_request("POST", r"/api/investigate/v2/orgs/test/events/J7G6DTLN\\-006633e3\\-00000334\\-00000000\\-1d677bedfbb1c2e/_search", EVENT_SEARCH_RESP)
+    search_validate_url = "/api/investigate/v1/orgs/test/events/search_validation"
+    cbcsdk_mock.mock_request("GET", search_validate_url, EVENT_SEARCH_VALIDATION_RESP)
+    url = r"/api/investigate/v2/orgs/test/events/J7G6DTLN\\-006633e3\\-00000334\\-00000000\\-1d677bedfbb1c2e/_search"
+    cbcsdk_mock.mock_request("POST", url, EVENT_SEARCH_RESP)
 
     events = [event for event in process.events()]
     assert events[0].process_guid == guid
@@ -53,10 +55,15 @@ def test_event_query_select_with_guid(cbcsdk_mock):
 
 def test_event_query_select_with_where(cbcsdk_mock):
     """Test Event Querying with where() clause"""
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/events/search_validation", EVENT_SEARCH_VALIDATION_RESP)
-    cbcsdk_mock.mock_request("POST", r"/api/investigate/v2/orgs/test/events/J7G6DTLN\\-006633e3\\-00000334\\-00000000\\-1d677bedfbb1c2e/_search", EVENT_SEARCH_RESP)
+    search_validate_url = "/api/investigate/v1/orgs/test/events/search_validation"
+    cbcsdk_mock.mock_request("GET", search_validate_url, EVENT_SEARCH_VALIDATION_RESP)
+
+    url = r"/api/investigate/v2/orgs/test/events/J7G6DTLN\\-006633e3\\-00000334\\-00000000\\-1d677bedfbb1c2e/_search"
+    cbcsdk_mock.mock_request("POST", url, EVENT_SEARCH_RESP)
+
     api = cbcsdk_mock.api
     guid = "J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e"
+
     # test .where(process_guid=...)
     events = api.select(Event).where(process_guid=guid)
     results = [res for res in events._perform_query(numrows=10)]
@@ -65,7 +72,8 @@ def test_event_query_select_with_where(cbcsdk_mock):
     assert first_event.process_guid == guid
 
     # test .where('process_guid:...')
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/events/J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e/_search", EVENT_SEARCH_RESP)
+    url = "/api/investigate/v2/orgs/test/events/J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e/_search"
+    cbcsdk_mock.mock_request("POST", url, EVENT_SEARCH_RESP)
     events = api.select(Event).where('process_guid:J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e')
     results = [res for res in events._perform_query(numrows=10)]
     first_event = results[0]

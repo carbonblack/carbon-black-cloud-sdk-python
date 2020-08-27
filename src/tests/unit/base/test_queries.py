@@ -1,11 +1,10 @@
 """Testing the Query objects of cbc_sdk.base"""
 
-import pytest
 from cbc_sdk.base import BaseQuery, SimpleQuery, PaginatedQuery
 from cbc_sdk.threathunter import Feed, Process, FeedQuery
 from cbc_sdk.defense import Query, Device
 from cbc_sdk.rest_api import CBCloudAPI
-from tests.unit.fixtures.stubresponse import StubResponse, patch_cbapi
+from tests.unit.fixtures.stubresponse import patch_cbapi
 
 
 def test_base_query():
@@ -105,7 +104,6 @@ def test_paginated_query(monkeypatch):
     x = deviceQuery.__getitem__(1)
     # assert x is not None
     assert _devices_was_called
-
 
     # Devices needs to be updated to v6 routes, this x test does nothing
 
