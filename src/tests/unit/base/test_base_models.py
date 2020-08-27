@@ -9,7 +9,7 @@ from cbc_sdk.defense import Policy
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ServerError, InvalidObjectError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.mock_devices import (DEVICE_GET_SPECIFIC_RESP, DEFENSE_DEVICE_GET_SPECIFIC_RESP,
+from tests.unit.fixtures.defense.mock_devices import (DEVICE_GET_SPECIFIC_RESP, DEFENSE_DEVICE_GET_SPECIFIC_RESP,
                                               POLICY_GET_SPECIFIC_RESP)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
