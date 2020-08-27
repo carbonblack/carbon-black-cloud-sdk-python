@@ -21,6 +21,7 @@ from copy import deepcopy
 import logging
 import json
 import time
+import sys
 
 from cbc_sdk.errors import ServerError
 
@@ -121,7 +122,7 @@ class DefenseMutableModel(MutableBaseModel):
                         raise ServerError(request_ret.status_code, message.get("message", ""),
                                           result="Did not update {0:s} record.".format(self.__class__.__name__))
             except Exception:
-                pass
+                raise
 
         self._dirty_attributes = {}
         if refresh_required:
