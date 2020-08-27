@@ -3,19 +3,17 @@
 import pytest
 import logging
 from cbc_sdk.defense import Device
-from cbc_sdk.defense import Event
-from cbc_sdk.defense import Policy
 from cbc_sdk.defense import Query
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.defense.mock_devices import (DEFENSE_DEVICE_GET_HOSTNAME_RESP,
-                                              DEFENSE_DEVICE_GET_HOSTNAME_EXACT_RESP,
-                                              DEFENSE_DEVICE_GET_OWNERNAME_RESP,
-                                              DEFENSE_DEVICE_GET_OWNERNAME_EXACT_RESP,
-                                              DEFENSE_DEVICE_GET_IP_RESP,
-                                              DEFENSE_DEVICE_GET_HOST_IP_RESP,
-                                              DEFENSE_DEVICE_GET_SPECIFIC_RESP,
-                                              DEFENSE_DEVICE_GET_ALL_RESP)
+                                                      DEFENSE_DEVICE_GET_HOSTNAME_EXACT_RESP,
+                                                      DEFENSE_DEVICE_GET_OWNERNAME_RESP,
+                                                      DEFENSE_DEVICE_GET_OWNERNAME_EXACT_RESP,
+                                                      DEFENSE_DEVICE_GET_IP_RESP,
+                                                      DEFENSE_DEVICE_GET_HOST_IP_RESP,
+                                                      DEFENSE_DEVICE_GET_SPECIFIC_RESP,
+                                                      DEFENSE_DEVICE_GET_ALL_RESP)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -58,6 +56,7 @@ def test_device_query_0(cbcsdk_mock):
     assert set(device._info.keys()) is not None
     print(device.__repr__())
     # assert device.validate()
+
 
 # validate is failing on these Device objects? When it enters the validate() function,
 # self = <[TypeError("argument of type 'NoneType' is not iterable") raised in repr()] Device object at 0x10d224a50>
@@ -131,15 +130,16 @@ def test_device_query_with_and(cbcsdk_mock):
     """Testing Device Querying with .where() and .and_()"""
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device", DEFENSE_DEVICE_GET_HOST_IP_RESP)
     api = cbcsdk_mock.api
-    defense_select_hostname_and_ip_device_query = api.select(Device).where('hostName:Win7x64').and_('ipAddress:10.210.34.165')
-    results = [result for result in defense_select_hostname_and_ip_device_query._perform_query()]
+    select_hostname_and_ip_device_query = api.select(Device).where('hostName:Win7x64').and_('ipAddress:10.210.34.165')
+    results = [result for result in select_hostname_and_ip_device_query._perform_query()]
     assert len(results) == 1
-    assert defense_select_hostname_and_ip_device_query._count() == len(results)
+    assert select_hostname_and_ip_device_query._count() == len(results)
     device = results[0]
     assert device._model_unique_id == 43407
     assert device.deviceId == 43407
     assert isinstance(device, Device)
     # assert device.validate()
+
 
 # validate works with this one???
 def test_device_query_with_id_in_select(cbcsdk_mock):

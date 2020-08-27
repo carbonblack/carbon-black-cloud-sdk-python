@@ -3,16 +3,15 @@
 import pytest
 import logging
 from cbc_sdk.defense import Policy
-from cbc_sdk.defense import Query
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.defense.mock_policy import (POLICY_GET_RESP,
-                                             POLICY_POST_RULE_RESP,
-                                             POLICY_GET_WITH_NEW_RULE_RESP,
-                                             POLICY_MODIFY_RULE_RESP,
-                                             POLICY_GET_WITH_MODIFIED_RULE_RESP,
-                                             POLICY_DELETE_RULE_RESP,
-                                             POLICY_GET_WITH_DELETED_RULE_RESP)
+                                                     POLICY_POST_RULE_RESP,
+                                                     POLICY_GET_WITH_NEW_RULE_RESP,
+                                                     POLICY_MODIFY_RULE_RESP,
+                                                     POLICY_GET_WITH_MODIFIED_RULE_RESP,
+                                                     POLICY_DELETE_RULE_RESP,
+                                                     POLICY_GET_WITH_DELETED_RULE_RESP)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -42,7 +41,8 @@ def test_policy_select_modify(cbcsdk_mock):
     assert policy.id == 30241
     policy.refresh()
 
-    new_rule = {"action": "DENY", "application": {"type": "NAME_PATH", "value": "my_path_test"}, "operation": "RUN", "required": True}
+    new_rule = {"action": "DENY", "application": {"type": "NAME_PATH", "value": "my_path_test"},
+                "operation": "RUN", "required": True}
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
     rules = policy.rules.values()
     rule_ids = [rule.pop('id') for rule in rules]
@@ -58,7 +58,8 @@ def test_policy_select_modify(cbcsdk_mock):
     rules_without_ids = rules
     assert new_rule in rules_without_ids
 
-    modified_rule = {"action": "IGNORE", "application": {"type": "NAME_PATH", "value": "new_test_path"}, "operation": "RUN", "required": True, "id": new_rule_id}
+    modified_rule = {"action": "IGNORE", "application": {"type": "NAME_PATH", "value": "new_test_path"},
+                     "operation": "RUN", "required": True, "id": new_rule_id}
     cbcsdk_mock.mock_request("PUT", "/integrationServices/v3/policy/30241/rule/22", POLICY_MODIFY_RULE_RESP)
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_WITH_MODIFIED_RULE_RESP)
     policy.replace_rule(new_rule_id, modified_rule)

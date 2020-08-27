@@ -110,6 +110,7 @@ def test_update_object(cbcsdk_mock):
     # struggling with this one cause of PATCH
     pass
 
+
 # TODO: figure out why "result": [something != "success"] doesn't raise ServerError
 def test_refresh_if_needed(cbcsdk_mock):
     """Test _refresh_if_needed method"""
@@ -139,7 +140,8 @@ def test_refresh_if_needed(cbcsdk_mock):
     # with pytest.raises(ServerError):
     # this should raise ServerError???
     mutableBaseModelDevice._refresh_if_needed(refresh_resp)
-        # assert model_id == 12345
+    # assert model_id == 12345
+
 
 # TODO: Need to implement PATCH in mock for dirty test
 def test_save(cbcsdk_mock):
