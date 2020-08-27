@@ -4,5 +4,4 @@ MAINTAINER cb-developer-network@vmware.com
 COPY . /app
 WORKDIR /app
 
-RUN pip3 install -r requirements.txt
-RUN python3 setup.py install develop
+RUN pip3 install .
