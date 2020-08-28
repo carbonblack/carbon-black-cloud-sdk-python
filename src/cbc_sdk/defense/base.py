@@ -242,7 +242,6 @@ class Query(PaginatedQuery, PSCQueryBase, QueryBuilderSupportMixin, IterableQuer
 
     def _clone(self):
         nq = self.__class__(self._doc_class, self._cb)
-        # nq._query = self._query[::]
         nq._sort_by = self._sort_by
         nq._group_by = self._group_by
         nq._batch_size = self._batch_size
