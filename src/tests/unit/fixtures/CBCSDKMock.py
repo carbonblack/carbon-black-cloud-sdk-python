@@ -78,6 +78,7 @@ class CBCSDKMock:
         """
         if verb == "GET" or verb == "RAW_GET" or \
            callable(body) or \
+           isinstance(body, self.StubResponse) or \
            body is Exception or body in Exception.__subclasses__():
             self.mocks["{}:{}".format(verb, url)] = body
         else:
@@ -160,12 +161,11 @@ class CBCSDKMock:
         return _delete_object
 
     def _self_patch_object(self):
-        def _patch_object(url, body, **kwargs):
-            self._capture_data(body)
+        def _patch_object(method, url, **kwargs):
             matched = self.match_key(self.get_mock_key("PATCH", url))
             if matched:
                 if callable(self.mocks[matched]):
-                    return self.StubResponse(self.mocks[matched](url, body, **kwargs))
+                    return self.StubResponse(self.mocks[matched](url, None, **kwargs))
                 elif self.mocks[matched] is Exception or self.mocks[matched] in Exception.__subclasses__():
                     raise self.mocks[matched]
                 else:
