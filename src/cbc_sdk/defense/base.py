@@ -230,7 +230,6 @@ class Query(PaginatedQuery, PSCQueryBase, QueryBuilderSupportMixin, IterableQuer
         - You can chain where clauses together to create AND queries; only objects that match all ``where`` clauses
           will be returned.
     """
-    # def __init__(self, doc_class, cb, query=None):
     def __init__(self, doc_class, cb, query=None):
         super(Query, self).__init__(doc_class, cb, query)
 
