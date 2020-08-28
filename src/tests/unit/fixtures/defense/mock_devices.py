@@ -121,6 +121,65 @@ DEFENSE_DEVICE_GET_SPECIFIC_RESP = {"deviceInfo": {
   }
 }
 
+DEFENSE_DEVICE_GET_SPECIFIC_RESP_1 = {"deviceInfo": {
+    "createTime" : None,
+    "lastReportedTime" : 1490119807460,
+    "deviceId" : 54321,
+    "email" : "Administrator",
+    "deviceType" : "WINDOWS",
+    "targetPriorityType" : "HIGH",
+    "organizationId" : 423,
+    "avUpdateServers" : None,
+    "avMaster" : False,
+    "lastContact" : 1490128179664,
+    "lastInternalIpAddress" : None,
+    "lastExternalIpAddress" : "1.2.3.4",
+    "lastLocation" : "OFFSITE",
+    "quarantined" : False,
+    "rootedBySensor" : False,
+    "rootedBySensorTime" : None,
+    "rootedByAnalytics" : False,
+    "rootedByAnalyticsTime" : None,
+    "firstVirusActivityTime" : 0,
+    "lastVirusActivityTime" : 0,
+    "organizationName" : "orgname.com",
+    "osVersion" : "Server 2012 R2 x64 ",
+    "sensorVersion" : "1.0.6.301",
+    "deviceGuid" : None,
+    "deviceOwnerId" : 58306,
+    "deviceSessionId" : None,
+    "assignedToId" : None,
+    "assignedToName" : None,
+    "messages" : None,
+    "windowsPlatform" : None,
+    "deregisteredTime" : None,
+    "uninstalledTime" : None,
+    "registeredTime" : 1489172152964,
+    "firstName" : None,
+    "lastName" : None,
+    "middleName" : None,
+    "policyName" : "Restrictive_Windows_Workstation",
+    "policyId" : 2145,
+    "activationCode" : None,
+    "activationCodeExpiryTime" : 1489776952672,
+    "lastShutdownTime" : 0,
+    "lastResetTime" : 0,
+    "sensorStates" : [ "ACTIVE" ],
+    "vdiBaseDevice" : None,
+    "passiveMode" : False,
+    "testId" : -1,
+    "scanStatus" : None,
+    "scanLastActionTime" : 0,
+    "scanLastCompleteTime" : 0,
+    "linuxKernelVersion" : None,
+    "avEngine" : "",
+    "avStatus" : [ "AV_NOT_REGISTERED" ],
+    "avLastScanTime" : 0,
+    "name" : "WIN-EK5MJ5DQC3Q",
+    "status" : "REGISTERED",
+  }
+}
+
 DEFENSE_DEVICE_GET_HOSTNAME_RESP = {
   "latestTime": 0,
   "success": True,
@@ -10806,6 +10865,7 @@ DEFENSE_DEVICE_GET_ALL_RESP = {
     }
   ]
 }
+
 POLICY_GET_SPECIFIC_RESP = {
   "policyInfo" : {
     "id" : 7049,
@@ -10828,3 +10888,5 @@ POLICY_GET_SPECIFIC_RESP = {
   "success" : True,
   "message" : "Success"
 }
+
+DEFENSE_DEVICE_PATCH_RESP = {"success": True, "deviceInfo": DEFENSE_DEVICE_GET_SPECIFIC_RESP["deviceInfo"]}

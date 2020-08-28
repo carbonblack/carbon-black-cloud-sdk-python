@@ -396,7 +396,6 @@ class MutableBaseModel(NewBaseModel):
                 del self._dirty_attributes[attrname]
         else:
             self._dirty_attributes[attrname] = self._info.get(attrname, None)
-
         # finally, make the change
         self._info[attrname] = new_value
 
