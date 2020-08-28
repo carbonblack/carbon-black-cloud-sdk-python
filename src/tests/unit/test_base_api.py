@@ -12,6 +12,8 @@
 """Tests for the BaseAPI object."""
 
 import pytest
+import sys
+from cbc_sdk import __version__
 from cbc_sdk.connection import BaseAPI
 from cbc_sdk.credentials import Credentials
 from cbc_sdk.errors import CredentialError
@@ -29,7 +31,7 @@ def test_BaseAPI_init_with_raw_credential_params():
     assert sut.credential_provider is None
     assert sut.session.server == 'https://example.com'
     assert sut.session.token == 'ABCDEFGHIJKLM'
-    assert 'test1' in sut.session.token_header['User-Agent']
+    assert sut.session.token_header['User-Agent'].startswith('test1')
 
 
 def test_BaseAPI_init_selecting_the_default_credential_provider(monkeypatch):
@@ -51,7 +53,7 @@ def test_BaseAPI_init_selecting_the_default_credential_provider(monkeypatch):
     assert sut.credential_profile_name == 'anything'
     assert sut.session.server == 'https://example.com'
     assert sut.session.token == 'ABCDEFGHIJKLM'
-    assert 'test2' in sut.session.token_header['User-Agent']
+    assert sut.session.token_header['User-Agent'].startswith('test2')
 
 
 def test_BaseAPI_init_external_credential_provider():
@@ -67,7 +69,7 @@ def test_BaseAPI_init_external_credential_provider():
     assert sut.credential_provider is mock_provider
     assert sut.session.server == 'https://example.com'
     assert sut.session.token == 'ABCDEFGHIJKLM'
-    assert 'test3' in sut.session.token_header['User-Agent']
+    assert sut.session.token_header['User-Agent'].startswith('test3')
 
 
 def test_BaseAPI_init_credential_provider_raises_error():
@@ -107,3 +109,16 @@ def test_BaseAPI_init_with_only_profile_specified(mox):
     assert sut.session.server == 'https://example.com'
     assert sut.session.token == 'ABCDEFGHIJKLM'
     mox.VerifyAll()
+
+
+PYTHON_VERS = f"{sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]}"
+
+
+@pytest.mark.parametrize("integration, expected_line", [
+    ('Anon/0.5.0', f"Anon/0.5.0 CBCSDK/{__version__} Python/{PYTHON_VERS}"),
+    (None, f"CBCSDK/{__version__} Python/{PYTHON_VERS}")
+])
+def test_BaseAPI_generate_user_agent(integration, expected_line):
+    """Test the generation of the User-Agent header."""
+    sut = BaseAPI(integration_name=integration, url='https://example.com', token='ABCDEFGHIJKLM', org_key='A1B2C3D4')
+    assert sut.session.token_header['User-Agent'] == expected_line
