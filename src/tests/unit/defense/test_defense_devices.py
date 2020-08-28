@@ -7,12 +7,16 @@ from cbc_sdk.defense import Query
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.defense.mock_devices import (DEFENSE_DEVICE_GET_HOSTNAME_RESP,
+                                                      DEFENSE_DEVICE_GET_HOSTNAME_RESP_0,
                                                       DEFENSE_DEVICE_GET_HOSTNAME_EXACT_RESP,
                                                       DEFENSE_DEVICE_GET_OWNERNAME_RESP,
                                                       DEFENSE_DEVICE_GET_OWNERNAME_EXACT_RESP,
                                                       DEFENSE_DEVICE_GET_IP_RESP,
                                                       DEFENSE_DEVICE_GET_HOST_IP_RESP,
                                                       DEFENSE_DEVICE_GET_SPECIFIC_RESP,
+                                                      DEFENSE_DEVICE_GET_SPECIFIC_RESP_1,
+                                                      DEFENSE_DEVICE_GET_SPECIFIC_RESP_2,
+                                                      DEFENSE_DEVICE_GET_SPECIFIC_RESP_3,
                                                       DEFENSE_DEVICE_GET_ALL_RESP)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -35,35 +39,35 @@ def cbcsdk_mock(monkeypatch, cb):
 
 # ==================================== UNIT TESTS BELOW ====================================
 
-# validate is failing on these Device objects? When it enters the validate() function,
-# self = <[TypeError("argument of type 'NoneType' is not iterable") raised in repr()] Device object at 0x10d224a50>
 def test_device_query_0(cbcsdk_mock):
     """Testing select() method with .where() hostName"""
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device", DEFENSE_DEVICE_GET_HOSTNAME_RESP)
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/12345", DEFENSE_DEVICE_GET_SPECIFIC_RESP)
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device", DEFENSE_DEVICE_GET_HOSTNAME_RESP_0)
     api = cbcsdk_mock.api
+    # testing hostName in quotes
     hostname_device_query = api.select(Device).where('hostName:Win7x64')
     results = [result for result in hostname_device_query._perform_query()]
     assert len(results) == 1
+    assert results[0].validate()
 
-    hostname_device_query = api.select(Device).where(hostName='Win7x64')
-    results = [result for result in hostname_device_query._perform_query()]
+    # testing hostName with keyword
+    keyword_hostname_device_query = api.select(Device).where(hostName='Win7x64')
+    results = [result for result in keyword_hostname_device_query._perform_query()]
     assert len(results) == 1
-    assert hostname_device_query._count() == len(results)
-    device = results[0]
-    assert device._model_unique_id == 43407
-    assert device.deviceId == 43407
-    assert isinstance(device, Device)
-    assert set(device._info.keys()) is not None
-    print(device.__repr__())
-    # assert device.validate()
+    assert keyword_hostname_device_query._count() == len(results)
+    first_device_result = results[0]
+    assert isinstance(first_device_result, Device)
+    assert first_device_result._model_unique_id == 12345
+    assert first_device_result.deviceId == 12345
+    assert first_device_result.validate()
 
 
-# validate is failing on these Device objects? When it enters the validate() function,
-# self = <[TypeError("argument of type 'NoneType' is not iterable") raised in repr()] Device object at 0x10d224a50>
 def test_device_query_1(cbcsdk_mock):
     """Testing select() method with .where() hostNameExact"""
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device", DEFENSE_DEVICE_GET_HOSTNAME_EXACT_RESP)
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/43407", DEFENSE_DEVICE_GET_SPECIFIC_RESP_2)
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device", DEFENSE_DEVICE_GET_HOSTNAME_RESP)
     api = cbcsdk_mock.api
+    # testing hostNameExact in quotes
     defense_select_hostname_exact_device_query = api.select(Device).where('hostNameExact:Win7x64')
     results = [result for result in defense_select_hostname_exact_device_query._perform_query()]
     assert len(results) == 1
@@ -72,30 +76,49 @@ def test_device_query_1(cbcsdk_mock):
     assert device._model_unique_id == 43407
     assert device.deviceId == 43407
     assert isinstance(device, Device)
-    # assert device.validate()
+    assert device.validate()
 
+    # testing hostNameExact keyword
+    keyword_hostname_device_query = api.select(Device).where(hostNameExact='Win7x64')
+    results = [result for result in keyword_hostname_device_query._perform_query()]
+    assert len(results) == 1
+    assert keyword_hostname_device_query._count() == len(results)
+    first_device_result = results[0]
+    assert isinstance(first_device_result, Device)
+    assert first_device_result._model_unique_id == 43407
+    assert first_device_result.deviceId == 43407
+    assert first_device_result.validate()
 
-# validate is failing on these Device objects? When it enters the validate() function,
-# self = <[TypeError("argument of type 'NoneType' is not iterable") raised in repr()] Device object at 0x10d224a50>
 def test_device_query_2(cbcsdk_mock):
     """Testing select() method with .where() ownerName"""
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/20572", DEFENSE_DEVICE_GET_SPECIFIC_RESP)
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device", DEFENSE_DEVICE_GET_OWNERNAME_RESP)
     api = cbcsdk_mock.api
+    # testing ownerName in quotes
     defense_select_ownername_device_query = api.select(Device).where('ownerName:smultani@carbonblack.com')
     results = [result for result in defense_select_ownername_device_query._perform_query()]
     assert defense_select_ownername_device_query._count() == len(results)
     device = results[0]
     assert device.email == "smultani@carbonblack.com"
     assert isinstance(device, Device)
-    # assert device.validate()
+    assert device.validate()
+
+    # testing ownerName keyword
+    keyword_defense_select_ownername_device_query = api.select(Device).where(ownerName='smultani@carbonblack.com')
+    results = [result for result in keyword_defense_select_ownername_device_query._perform_query()]
+    assert keyword_defense_select_ownername_device_query._count() == len(results)
+    device = results[0]
+    assert device.email == "smultani@carbonblack.com"
+    assert isinstance(device, Device)
+    assert device.validate()
 
 
-# validate is failing on these Device objects? When it enters the validate() function,
-# self = <[TypeError("argument of type 'NoneType' is not iterable") raised in repr()] Device object at 0x10d224a50>
 def test_device_query_3(cbcsdk_mock):
     """Testing select() method with .where() ownerNameExact"""
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/20572", DEFENSE_DEVICE_GET_SPECIFIC_RESP_3)
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device", DEFENSE_DEVICE_GET_OWNERNAME_EXACT_RESP)
     api = cbcsdk_mock.api
+    # testing ownerNameExact in quotes
     defense_select_ownername_exact_device_query = api.select(Device).where('ownerNameExact:smultani@carbonblack.com')
     results = [result for result in defense_select_ownername_exact_device_query._perform_query()]
     assert len(results) == 5
@@ -104,15 +127,29 @@ def test_device_query_3(cbcsdk_mock):
     assert device._model_unique_id == 20572
     assert device.deviceId == 20572
     assert isinstance(device, Device)
-    # assert device.validate()
+    assert device.validate()
+
+    print(cbcsdk_mock.mocks.keys())
+
+    # testing ownerNameExact keyword
+    keyword_defense_select_ownername_exact_device_query = api.select(Device).where(
+        ownerNameExact='smultani@carbonblack.com')
+    results = [result for result in keyword_defense_select_ownername_exact_device_query._perform_query()]
+    assert len(results) == 5
+    assert keyword_defense_select_ownername_exact_device_query._count() == len(results)
+    device = results[0]
+    assert device._model_unique_id == 20572
+    assert device.deviceId == 20572
+    assert isinstance(device, Device)
+    assert device.validate()
 
 
-# validate is failing on these Device objects? When it enters the validate() function,
-# self = <[TypeError("argument of type 'NoneType' is not iterable") raised in repr()] Device object at 0x10d224a50>
 def test_device_query_4(cbcsdk_mock):
     """Testing select() method with .where() ipAddress"""
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/43407", DEFENSE_DEVICE_GET_SPECIFIC_RESP_2)
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device", DEFENSE_DEVICE_GET_IP_RESP)
     api = cbcsdk_mock.api
+    # testing ipAddress in quotes
     defense_select_ip_device_query = api.select(Device).where('ipAddress:10.210.34.165')
     results = [result for result in defense_select_ip_device_query._perform_query()]
     assert len(results) == 1
@@ -121,15 +158,26 @@ def test_device_query_4(cbcsdk_mock):
     assert device._model_unique_id == 43407
     assert device.deviceId == 43407
     assert isinstance(device, Device)
-    # assert device.validate()
+    assert device.validate()
+
+    # testing ipAddress keyword
+    keyword_defense_select_ip_device_query = api.select(Device).where(ipAddress='10.210.34.165')
+    results = [result for result in keyword_defense_select_ip_device_query._perform_query()]
+    assert len(results) == 1
+    assert keyword_defense_select_ip_device_query._count() == len(results)
+    device = results[0]
+    assert device._model_unique_id == 43407
+    assert device.deviceId == 43407
+    assert isinstance(device, Device)
+    assert device.validate()
 
 
-# validate is failing on these Device objects? When it enters the validate() function,
-# self = <[TypeError("argument of type 'NoneType' is not iterable") raised in repr()] Device object at 0x10d224a50>
 def test_device_query_with_and(cbcsdk_mock):
     """Testing Device Querying with .where() and .and_()"""
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/43407", DEFENSE_DEVICE_GET_SPECIFIC_RESP_2)
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device", DEFENSE_DEVICE_GET_HOST_IP_RESP)
     api = cbcsdk_mock.api
+    # testing multiple where/and clauses
     select_hostname_and_ip_device_query = api.select(Device).where('hostName:Win7x64').and_('ipAddress:10.210.34.165')
     results = [result for result in select_hostname_and_ip_device_query._perform_query()]
     assert len(results) == 1
@@ -138,10 +186,9 @@ def test_device_query_with_and(cbcsdk_mock):
     assert device._model_unique_id == 43407
     assert device.deviceId == 43407
     assert isinstance(device, Device)
-    # assert device.validate()
+    assert device.validate()
 
 
-# validate works with this one???
 def test_device_query_with_id_in_select(cbcsdk_mock):
     """Testing Device Querying with .select(Device, `device_id`)"""
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/12345", DEFENSE_DEVICE_GET_SPECIFIC_RESP)
@@ -154,10 +201,9 @@ def test_device_query_with_id_in_select(cbcsdk_mock):
     assert defense_device_select_with_id.validate()
 
 
-# validate is failing on these Device objects? When it enters the validate() function,
-# self = <[TypeError("argument of type 'NoneType' is not iterable") raised in repr()] Device object at 0x10d224a50>
 def test_device_get_all(cbcsdk_mock):
     """Testing Device Querying for all devices"""
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/12345", DEFENSE_DEVICE_GET_SPECIFIC_RESP)
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device", DEFENSE_DEVICE_GET_ALL_RESP)
     api = cbcsdk_mock.api
     defense_device_select_all = api.select(Device)
@@ -166,11 +212,13 @@ def test_device_get_all(cbcsdk_mock):
     assert len(results) == 52
     dev = results[0]
     assert isinstance(dev, Device)
-    # dev.validate()
+    assert dev._model_unique_id == 12345
+    dev.validate()
 
 
 def test_device_search(cbcsdk_mock):
     """Testing Device _search()"""
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/12345", DEFENSE_DEVICE_GET_SPECIFIC_RESP)
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device", DEFENSE_DEVICE_GET_ALL_RESP)
     api = cbcsdk_mock.api
     defense_device_select_all = api.select(Device)
@@ -182,6 +230,7 @@ def test_device_search(cbcsdk_mock):
 
 def test_device_search_with_where(cbcsdk_mock):
     """Testing Device _search() with hostname and ip where clauses"""
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/43407", DEFENSE_DEVICE_GET_SPECIFIC_RESP)
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device", DEFENSE_DEVICE_GET_HOST_IP_RESP)
     api = cbcsdk_mock.api
     defense_device_select_host_ip = api.select(Device).where('hostName:Win7x64').and_('ipAddress:10.210.34.165')
@@ -194,4 +243,4 @@ def test_device_search_with_where(cbcsdk_mock):
     assert found_dev['name'] == 'Win7x64'
     dev = Device(api, found_dev['deviceId'], found_dev)
     assert isinstance(dev, Device)
-    # dev.validate()
+    dev.validate()
