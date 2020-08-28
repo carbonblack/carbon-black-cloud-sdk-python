@@ -380,6 +380,8 @@ class BaseAPI(object):
             if not self.credential_provider:
                 self.credential_provider = default_credential_provider(credential_file)
             self.credentials = self.credential_provider.get_credentials(self.credential_profile_name)
+            if not integration_name:
+                integration_name = self.credentials.integration
 
         timeout = kwargs.pop("timeout", DEFAULT_POOL_TIMEOUT)
         max_retries = kwargs.pop("max_retries", DEFAULT_RETRIES)

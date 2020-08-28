@@ -72,6 +72,23 @@ def test_BaseAPI_init_external_credential_provider():
     assert sut.session.token_header['User-Agent'].startswith('test3')
 
 
+def test_BaseAPI_init_external_credential_provider_with_integration():
+    """Test initializing the credentials from an externally-supplied provider."""
+    creds = Credentials({'url': 'https://example.com', 'token': 'ABCDEFGHIJKLM', 'org_key': 'A1B2C3D4',
+                         'integration': 'Anthrax'})
+    mock_provider = MockCredentialProvider({'my_section': creds})
+    sut = BaseAPI(credential_provider=mock_provider, profile='my_section')
+    assert sut.credentials is creds
+    assert sut.credentials.url == 'https://example.com'
+    assert sut.credentials.token == 'ABCDEFGHIJKLM'
+    assert sut.credentials.org_key == 'A1B2C3D4'
+    assert sut.credential_profile_name == 'my_section'
+    assert sut.credential_provider is mock_provider
+    assert sut.session.server == 'https://example.com'
+    assert sut.session.token == 'ABCDEFGHIJKLM'
+    assert sut.session.token_header['User-Agent'].startswith('Anthrax')
+
+
 def test_BaseAPI_init_credential_provider_raises_error():
     """Test initializing the credentials when the provider raises an error."""
     creds = Credentials({'url': 'https://example.com', 'token': 'ABCDEFGHIJKLM', 'org_key': 'A1B2C3D4'})

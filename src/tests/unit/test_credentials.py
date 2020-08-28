@@ -28,6 +28,7 @@ def test_credential_default_values():
     assert not creds.ssl_force_tls_1_2
     assert creds.proxy is None
     assert not creds.ignore_system_proxy
+    assert creds.integration is None
     with pytest.raises(AttributeError):
         assert creds.notexist is None
 
@@ -37,10 +38,10 @@ def test_credential_default_values():
       CredentialValue.ORG_KEY: "A1B2C3D4", CredentialValue.SSL_VERIFY: False,
       CredentialValue.SSL_VERIFY_HOSTNAME: False, CredentialValue.SSL_CERT_FILE: "foo.certs",
       CredentialValue.SSL_FORCE_TLS_1_2: True, CredentialValue.PROXY: "proxy.example",
-      CredentialValue.IGNORE_SYSTEM_PROXY: True}, ),
+      CredentialValue.IGNORE_SYSTEM_PROXY: True, CredentialValue.INTEGRATION: 'Bronski'}, ),
     ({"url": "http://example.com", "token": "ABCDEFGH", "org_key": "A1B2C3D4", "ssl_verify": "false",
       "ssl_verify_hostname": "no", "ssl_cert_file": "foo.certs", "ssl_force_tls_1_2": "1",
-      "proxy": "proxy.example", "ignore_system_proxy": "on"}, )
+      "proxy": "proxy.example", "ignore_system_proxy": "on", "integration": 'Bronski'}, )
 ])
 def test_credential_dict_value_load(input_dict):
     """Test loading credentials from a dict, and also access through both attributes and get_value."""
@@ -54,6 +55,7 @@ def test_credential_dict_value_load(input_dict):
     assert creds.ssl_force_tls_1_2
     assert creds.proxy == "proxy.example"
     assert creds.ignore_system_proxy
+    assert creds.integration == 'Bronski'
     assert creds.get_value(CredentialValue.URL) == "http://example.com"
     assert creds.get_value(CredentialValue.TOKEN) == "ABCDEFGH"
     assert creds.get_value(CredentialValue.ORG_KEY) == "A1B2C3D4"
@@ -63,6 +65,7 @@ def test_credential_dict_value_load(input_dict):
     assert creds.get_value(CredentialValue.SSL_FORCE_TLS_1_2)
     assert creds.get_value(CredentialValue.PROXY) == "proxy.example"
     assert creds.get_value(CredentialValue.IGNORE_SYSTEM_PROXY)
+    assert creds.get_value(CredentialValue.INTEGRATION) == 'Bronski'
 
 
 def test_credential_partial_loads():
@@ -78,6 +81,7 @@ def test_credential_partial_loads():
     assert not creds.ssl_force_tls_1_2
     assert creds.proxy is None
     assert not creds.ignore_system_proxy
+    assert creds.integration is None
 
 
 def test_credential_boolean_parsing_failure():

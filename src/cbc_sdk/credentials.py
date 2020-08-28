@@ -33,6 +33,7 @@ class CredentialValue(Enum):
     SSL_FORCE_TLS_1_2 = auto()
     PROXY = auto()
     IGNORE_SYSTEM_PROXY = auto()
+    INTEGRATION = auto()
 
     def requires_boolean_value(self):
         """
@@ -78,7 +79,8 @@ class Credentials(object):
             CredentialValue.SSL_CERT_FILE: None,
             CredentialValue.SSL_FORCE_TLS_1_2: False,
             CredentialValue.PROXY: None,
-            CredentialValue.IGNORE_SYSTEM_PROXY: False
+            CredentialValue.IGNORE_SYSTEM_PROXY: False,
+            CredentialValue.INTEGRATION: None
         }
         if values is not None:
             for k in list(CredentialValue):

@@ -140,6 +140,7 @@ def test_read_single_file():
     assert creds.ssl_force_tls_1_2
     assert creds.proxy == "proxy.example"
     assert creds.ignore_system_proxy
+    assert creds.integration == "Covax"
     creds = sut.get_credentials("partial")
     assert creds.url == "http://example.com"
     assert creds.token is None
@@ -150,6 +151,7 @@ def test_read_single_file():
     assert not creds.ssl_force_tls_1_2
     assert creds.proxy is None
     assert not creds.ignore_system_proxy
+    assert creds.integration is None
     with pytest.raises(CredentialError):
         sut.get_credentials("notexist")
     with pytest.raises(CredentialError):
@@ -171,6 +173,7 @@ def test_read_multiple_files():
     assert creds.ssl_force_tls_1_2
     assert creds.proxy == "proxy.example"
     assert creds.ignore_system_proxy
+    assert creds.integration == "Covax"
 
 
 def test_file_with_parsing_error():
