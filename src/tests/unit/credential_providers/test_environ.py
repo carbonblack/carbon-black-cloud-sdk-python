@@ -50,6 +50,7 @@ def test_environ_credentials(monkeypatch, name1, name2, name3, name4):
     assert not creds.ssl_force_tls_1_2
     assert creds.proxy is None
     assert not creds.ignore_system_proxy
+    assert creds.integration is None
     creds2 = sut.get_credentials("arbitrary")
     assert creds2 is creds
 
@@ -93,3 +94,4 @@ def test_environ_no_credentials(monkeypatch):
     assert not creds.ssl_force_tls_1_2
     assert creds.proxy is None
     assert not creds.ignore_system_proxy
+    assert creds.integration is None

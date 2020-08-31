@@ -7,17 +7,21 @@ Carbon Black Cloud.  The most important of these credential items are:
 * The access token which authenticates the user to the server, and also dictates what operations the user can perform.
 * The organization key, which specifies which organization to work with.
 * Optionally, a flag indicating whether the SSL connection should be verified (which defaults to ``True``).
+* Optionally, an integration name to be passed along wiith all HTTP requests made by the SDK.
 
 These may be passed into the ``CBCloudAPI`` object in one of several ways.
 
 Supplying the Credentials Directly
 ----------------------------------
 The credentials may be passed into the ``CBCloudAPI`` object when it is created via the keyword parameters ``url``,
-``token``, ``org_key``, and (optionally) ``ssl_verify``.
+``token``, ``org_key``, and (optionally) ``ssl_verify`` and ``integration_name``.
 
 **Example:**
 
     >>> cbc_api = CBCloudAPI(url='https://example.com', token='ABCDEFGHIJKLM', org_key='A1B2C3D4')
+
+**N.B.:** The ``integration_name`` may be specified even if using another credential provider. If specified as a
+parameter, the ``integration_name`` overrides any integration name specified by means of the credential provider.
 
 Supplying the Credentials in a File
 -----------------------------------
@@ -38,6 +42,7 @@ credentials file:
     ssl_force_tls_1_2=1
     proxy=proxy.example
     ignore_system_proxy=on
+    integration=MyScript/0.9.0
 
     [partial]
     url=http://example.com
@@ -62,6 +67,9 @@ as follows:
 * ``proxy``: If specified, this is the name of a proxy host to be used in making the connection.
 * ``ignore_system_proxy``: A Boolean value (see below). If this is ``True``, any system proxy settings will be ignored
   in making the connection to the server. The default is ``False``.
+* ``integration``: The name of the integration to use these credentials.  The string may optionally end with a slash
+  character, followed by the integration's version number.  Passed as part of the ``User-Agent:`` HTTP header on all
+  requests made by the SDK.
 
 .. _`the developer documentation`: https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/#creating-an-api-key
 
@@ -140,6 +148,9 @@ be specified:
 * ``proxy`` (type ``REG_SZ``): If specified, this is the name of a proxy host to be used in making the connection.
 * ``ignore_system_proxy`` (type ``REG_DWORD``): A value which is nonzero to force system proxy settings to be ignored
   in making the connection to the server. The default is 0.
+* ``integration`` (type ``REG_SZ``): The name of the integration to use these credentials.  The string may optionally
+  end with a slash character, followed by the integration's version number.  Passed as part of the ``User-Agent:``
+  HTTP header on all requests made by the SDK.
 
 Unrecognized named values are ignored.
 

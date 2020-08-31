@@ -188,10 +188,10 @@ class Connection(object):
             if credentials.ssl_cert_file:
                 self.ssl_verify = credentials.ssl_cert_file
 
-        user_agent = "cbapi/{0:s} Python/{1:d}.{2:d}.{3:d}" \
+        user_agent = "CBC_SDK/{0:s} Python/{1:d}.{2:d}.{3:d}" \
             .format(__version__, sys.version_info[0], sys.version_info[1], sys.version_info[2])
         if integration_name:
-            user_agent += " {}".format(integration_name)
+            user_agent = f"{integration_name} {user_agent}"
 
         self.token = credentials.token
         self.token_header = {'X-Auth-Token': self.token, 'User-Agent': user_agent}
@@ -380,6 +380,8 @@ class BaseAPI(object):
             if not self.credential_provider:
                 self.credential_provider = default_credential_provider(credential_file)
             self.credentials = self.credential_provider.get_credentials(self.credential_profile_name)
+            if not integration_name:
+                integration_name = self.credentials.integration
 
         timeout = kwargs.pop("timeout", DEFAULT_POOL_TIMEOUT)
         max_retries = kwargs.pop("max_retries", DEFAULT_RETRIES)

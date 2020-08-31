@@ -152,6 +152,7 @@ def test_read_credentials(monkeypatch, mox):
     sut._read_value(stub_key, "ssl_force_tls_1_2").AndReturn((1, REG_DWORD))
     sut._read_value(stub_key, "proxy").AndReturn(("proxy.example", REG_SZ))
     sut._read_value(stub_key, "ignore_system_proxy").AndReturn((1, REG_DWORD))
+    sut._read_value(stub_key, "integration").AndReturn(("Dhampir", REG_SZ))
     mox.ReplayAll()
     creds = sut._read_credentials(stub_key)
     mox.VerifyAll()
@@ -164,6 +165,7 @@ def test_read_credentials(monkeypatch, mox):
     assert creds.ssl_force_tls_1_2
     assert creds.proxy == "proxy.example"
     assert creds.ignore_system_proxy
+    assert creds.integration == "Dhampir"
 
 
 def test_read_credentials_defaults(monkeypatch, mox):
@@ -181,6 +183,7 @@ def test_read_credentials_defaults(monkeypatch, mox):
     sut._read_value(stub_key, "ssl_force_tls_1_2").AndReturn(None)
     sut._read_value(stub_key, "proxy").AndReturn(None)
     sut._read_value(stub_key, "ignore_system_proxy").AndReturn(None)
+    sut._read_value(stub_key, "integration").AndReturn(None)
     mox.ReplayAll()
     creds = sut._read_credentials(stub_key)
     mox.VerifyAll()
@@ -193,6 +196,7 @@ def test_read_credentials_defaults(monkeypatch, mox):
     assert not creds.ssl_force_tls_1_2
     assert creds.proxy is None
     assert not creds.ignore_system_proxy
+    assert creds.integration is None
 
 
 def test_get_credentials(monkeypatch, mox):
@@ -214,6 +218,7 @@ def test_get_credentials(monkeypatch, mox):
     sut._read_value(key2, "ssl_force_tls_1_2").AndReturn((1, REG_DWORD))
     sut._read_value(key2, "proxy").AndReturn(("proxy.example", REG_SZ))
     sut._read_value(key2, "ignore_system_proxy").AndReturn((1, REG_DWORD))
+    sut._read_value(key2, "integration").AndReturn(("Dhampir", REG_SZ))
     mox.ReplayAll()
     creds = sut.get_credentials('default')
     assert creds.url == "http://example.com"
@@ -225,6 +230,7 @@ def test_get_credentials(monkeypatch, mox):
     assert creds.ssl_force_tls_1_2
     assert creds.proxy == "proxy.example"
     assert creds.ignore_system_proxy
+    assert creds.integration == "Dhampir"
     creds2 = sut.get_credentials('default')
     assert creds2 is creds
     mox.VerifyAll()

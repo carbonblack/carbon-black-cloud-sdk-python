@@ -47,6 +47,9 @@ and fed to the rest of the SDK code.  The possible values are:
 * ``PROXY`` - If specified, this is the name of a proxy host to be used in making the connection.
 * ``IGNORE_SYSTEM_PROXY`` - A Boolean value. If this is ``True``, any system proxy settings will be ignored
   in making the connection to the server. The default is ``False``.
+* ``INTEGRATION`` - The name of the integration to use these credentials.  The string may optionally end with a slash
+  character, followed by the integration's version number.  Passed as part of the ``User-Agent:`` HTTP header on all
+  requests made by the SDK.
 
 .. _`the developer documentation`: https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/#creating-an-api-key
 
