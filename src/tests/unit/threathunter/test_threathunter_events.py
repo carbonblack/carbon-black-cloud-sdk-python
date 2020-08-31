@@ -65,7 +65,7 @@ def test_event_query_select_with_where(cbcsdk_mock):
     guid = "J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e"
 
     # test .where(process_guid=...)
-    events = api.select(Event).where(process_guid=guid)
+    events = api.select(Event).where(event_type='modload').and_(process_guid=guid)
     results = [res for res in events._perform_query(numrows=10)]
     assert len(results) == 10
     first_event = results[0]
@@ -74,7 +74,7 @@ def test_event_query_select_with_where(cbcsdk_mock):
     # test .where('process_guid:...')
     url = "/api/investigate/v2/orgs/test/events/J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e/_search"
     cbcsdk_mock.mock_request("POST", url, EVENT_SEARCH_RESP)
-    events = api.select(Event).where('process_guid:J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e')
+    events = api.select(Event).where('event_type:modload').where('process_guid:J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e')
     results = [res for res in events._perform_query(numrows=10)]
     first_event = results[0]
     assert first_event.process_guid == guid
