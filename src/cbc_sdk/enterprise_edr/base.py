@@ -74,7 +74,7 @@ class Process(UnrefreshableModel):
             kwargs: Arguments to filter the event query with.
 
         Returns:
-            query (cbc_sdk.threathunter.Query): Query object with the appropriate
+            query (cbc_sdk.enterprise_edr.Query): Query object with the appropriate
                 search parameters for events
 
         Example:
@@ -90,11 +90,10 @@ class Process(UnrefreshableModel):
         return query
 
     def tree(self):
-        """Returns a :py:class:`Tree` of children (and possibly siblings)
-        associated with this process.
+        """Returns a Process Tree associated with this process.
 
-        :return: Returns a :py:class:`Tree` object
-        :rtype: :py:class:`Tree`
+        Returns:
+            Tree (cbc_sdk.enterprise_edr.Tree): Tree with children (and possibly siblings).
 
         Example:
 
@@ -107,9 +106,10 @@ class Process(UnrefreshableModel):
     def parents(self):
         """Returns a query for parent processes associated with this process.
 
-        :return: Returns a Query object with the appropriate search parameters for parent processes,
-                 or None if the process has no recorded parent
-        :rtype: :py:class:`cbc_sdk.threathunter.query.AsyncProcessQuery` or None
+        Returns:
+            query (cbc_sdk.enterprise_edr.query.AsyncProcessQuery or None):
+                A Query object with the appropriate search parameters for parent processes,
+                or None if the process has no recorded parent.
         """
         if "parent_guid" in self._info:
             return self._cb.select(Process).where(process_guid=self.parent_guid)
@@ -120,8 +120,9 @@ class Process(UnrefreshableModel):
     def children(self):
         """Returns a list of child processes for this process.
 
-        :return: Returns a list of process objects
-        :rtype: list of :py:class:`Process`
+        Returns:
+            children ([Process]): List of Processes, one for each child of the
+                parent Process.
         """
         if isinstance(self.summary.children, list):
             return [
@@ -135,8 +136,9 @@ class Process(UnrefreshableModel):
     def siblings(self):
         """Returns a list of sibling processes for this process.
 
-        :return: Returns a list of process objects
-        :rtype: list of :py:class:`Process`
+        Returns:
+            sublings ([Process]): List of Processes, one for each sibling of the
+                parent Process.
         """
         return [
             Process(self._cb, initial_data=sibling)
@@ -147,8 +149,8 @@ class Process(UnrefreshableModel):
     def process_md5(self):
         """Returns a string representation of the MD5 hash for this process.
 
-        :return: A string representation of the process's MD5.
-        :rtype: str
+        Returns:
+            hash (str): MD5 hash of the process.
         """
         # NOTE: We have to check _info instead of poking the attribute directly
         # to avoid the missing attrbute login in NewBaseModel.
@@ -161,8 +163,8 @@ class Process(UnrefreshableModel):
     def process_sha256(self):
         """Returns a string representation of the SHA256 hash for this process.
 
-        :return: A string representation of the process's SHA256.
-        :rtype: str
+        Returns:
+            hash (str): SHA256 hash of the process.
         """
         if "process_hash" in self._info:
             return next((hsh for hsh in self.process_hash if len(hsh) == 64), None)
@@ -173,8 +175,8 @@ class Process(UnrefreshableModel):
     def process_pids(self):
         """Returns a list of PIDs associated with this process.
 
-        :return: A list of PIDs
-        :rtype: list of ints
+        Returns:
+            pids ([int]): List of integer PIDs.
         """
         # NOTE(ww): This exists because the API returns the list as "process_pid",
         # which is misleading. We just give a slightly clearer name.
@@ -182,9 +184,7 @@ class Process(UnrefreshableModel):
 
 
 class Event(UnrefreshableModel):
-    """Events can be queried for via ``CBCloudAPI.select``
-    or through an already selected process with ``Process.events()``.
-    """
+    """Events can be queried for via `CBCloudAPI.select` or an already selected process with `Process.events`."""
     urlobject = '/api/investigate/v2/orgs/{}/events/{}/_search'
     validation_url = '/api/investigate/v1/orgs/{}/events/search_validation'
     default_sort = 'last_update desc'
@@ -200,9 +200,7 @@ class Event(UnrefreshableModel):
 
 
 class Tree(UnrefreshableModel):
-    """The preferred interface for interacting with Tree models
-    is ``Process.tree()``.
-    """
+    """The preferred interface for interacting with Tree models is `Process.tree()`."""
     urlobject = '/api/investigate/v1/orgs/{}/processes/tree'
     primary_key = 'process_guid'
 
@@ -220,8 +218,8 @@ class Tree(UnrefreshableModel):
     def children(self):
         """Returns all of the children of the process that this tree is centered around.
 
-        :return: A list of :py:class:`Process` instances
-        :rtype: list of :py:class:`Process`
+        Returns:
+            children ([Process]): List of children for the Tree's parent process.
         """
         return [Process(self._cb, initial_data=child) for child in self.nodes["children"]]
 
@@ -230,10 +228,10 @@ class Tree(UnrefreshableModel):
 
 
 class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
-    """Represents a prepared query to the Cb ThreatHunter backend.
+    """Represents a prepared query to the Cb Enterprise EDR backend.
 
-    This object is returned as part of a :py:meth:`CbThreatHunterAPI.select`
-    operation on models requested from the Cb ThreatHunter backend. You should not have to create this class yourself.
+    This object is returned as part of a `CbEnterpriseEDRAPI.select`
+    operation on models requested from the Cb Enterprise EDR backend. You should not have to create this class yourself.
 
     The query is not executed on the server until it's accessed, either as an iterator (where it will generate values
     on demand as they're requested) or as a list (where it will retrieve the entire result set and save to a list).
@@ -242,7 +240,7 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
 
     Examples::
 
-    >>> from cbc_sdk.threathunter import CBCloudAPI,Process
+    >>> from cbc_sdk.enterprise_edr import CBCloudAPI,Process
     >>> cb = CBCloudAPI()
     >>> query = cb.select(Process)
     >>> query = query.where(process_name="notepad.exe")
@@ -375,7 +373,7 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
 class AsyncProcessQuery(Query):
     """Represents the query logic for an asychronous Process query.
 
-    This class specializes :py:class:`Query` to handle the particulars of
+    This class specializes `Query` to handle the particulars of
     process querying.
     """
     def __init__(self, doc_class, cb):
@@ -388,13 +386,16 @@ class AsyncProcessQuery(Query):
     def sort_by(self, key, direction="ASC"):
         """Sets the sorting behavior on a query's results.
 
-        Example::
+        Arguments:
+            key (str): The key in the schema to sort by.
+            direction (str): The sort order, either "ASC" or "DESC".
+
+        Returns:
+            Query (AsyncProcessQuery: The query with sorting parameters.
+
+        Example:
 
         >>> cb.select(Process).where(process_name="cmd.exe").sort_by("device_timestamp")
-
-        :param key: the key in the schema to sort by
-        :param direction: the sort order, either "ASC" or "DESC"
-        :rtype: :py:class:`AsyncProcessQuery`
         """
         found = False
 
@@ -413,13 +414,16 @@ class AsyncProcessQuery(Query):
     def timeout(self, msecs):
         """Sets the timeout on a process query.
 
-        Example::
+        Arguments:
+            msecs (int): Timeout duration, in milliseconds.
+
+        Returns:
+            Query (AsyncProcessQuery): The Query object with new milliseconds
+                parameter.
+
+        Example:
 
         >>> cb.select(Process).where(process_name="foo.exe").timeout(5000)
-
-        :param: msecs: the timeout duration, in milliseconds
-        :return: AsyncProcessQuery object
-        :rtype: :py:class:`AsyncProcessQuery`
         """
         self._timeout = msecs
         return self
@@ -533,8 +537,7 @@ class AsyncProcessQuery(Query):
 
 
 class TreeQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
-    """ Represents the logic for a Tree query.
-    """
+    """Represents the logic for a Tree query."""
     def __init__(self, doc_class, cb):
         super(TreeQuery, self).__init__()
         self._doc_class = doc_class
@@ -542,25 +545,29 @@ class TreeQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
         self._args = {}
 
     def where(self, **kwargs):
-        """Adds a conjunctive filter to this *TreeQuery*.
+        """Adds a conjunctive filter to this TreeQuery.
 
-        Example::
+        Arguments:
+            **kwargs: Arguments to invoke the TreeQuery with.
+
+        Returns:
+            Query (TreeQuery): TreeQuery with added arguments.
+
+        Example:
 
         >>> cb.select(Tree).where(process_guid="...")
-
-        :param: kwargs: Arguments to invoke the *TreeQuery* with.
-        :return: this *TreeQuery*
-        :rtype: :py:class:`TreeQuery`
         """
         self._args = dict(self._args, **kwargs)
         return self
 
     def and_(self, **kwargs):
-        """Adds a conjunctive filter to this *TreeQuery*.
+        """Adds a conjunctive filter to this TreeQuery.
 
-        :param: kwargs: Arguments to invoke the *TreeQuery* with.
-        :return: this *TreeQuery*
-        :rtype: :py:class:`TreeQuery`
+        Arguments:
+            **kwargs: Arguments to invoke the TreeQuery with.
+
+        Returns:
+            Query (TreeQuery): TreeQuery with added arguments.
         """
         self.where(**kwargs)
         return self
@@ -568,7 +575,8 @@ class TreeQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
     def or_(self, **kwargs):
         """Unsupported. Will raise if called.
 
-        :raise: :py:class:`ApiError`
+        Raises:
+            APIError: TreeQueries do not support _or() filters.
         """
         raise ApiError(".or_() cannot be called on Tree queries")
 
