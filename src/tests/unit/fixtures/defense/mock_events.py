@@ -32,10 +32,10 @@ EVENT_GET_HOSTNAME_RESP = {
           "postalCode": None
         },
         "deviceIpV4Address": "144.121.3.50",
-        "deviceId": 43407,
+        "deviceId": 98765,
         "deviceName": "Win7x64",
         "policyId": 11200,
-        "email": "Win7x64\\bit9qa",
+        "email": "email@example.org",
         "deviceType": "WINDOWS",
         "deviceHostName": None,
         "deviceVersion": "Windows 7 x64 SP: 1",
@@ -45,7 +45,7 @@ EVENT_GET_HOSTNAME_RESP = {
         "deviceOwnerName": None,
         "msmGroupId": 0,
         "msmGroupName": None,
-        "policyName": "sm-restrictive"
+        "policyName": "policy-restrictive"
       },
       "netFlow": {
         "destAddress": None,
@@ -60,7 +60,7 @@ EVENT_GET_HOSTNAME_RESP = {
         "service": None
       },
       "processDetails": {
-        "fullUserName": "NT AUTHORITY\\LOCAL SERVICE",
+        "fullUserName": "fullUserName",
         "targetName": "taskhost.exe",
         "parentName": "services.exe",
         "userName": "LOCAL SERVICE",
@@ -140,9 +140,9 @@ EVENT_GET_SPECIFIC_RESP = {
       "deviceLocation": None,
       "deviceIpV4Address": "144.121.3.50",
       "deviceType": "WINDOWS",
-      "email": "Win7x64\\bit9qa",
+      "email": "email@example.org",
       "policyId": 11200,
-      "deviceId": 43407,
+      "deviceId": 98765,
       "deviceName": "Win7x64",
       "deviceHostName": None,
       "deviceVersion": "Windows 7 x64 SP: 1",
@@ -152,7 +152,7 @@ EVENT_GET_SPECIFIC_RESP = {
       "deviceOwnerName": None,
       "msmGroupId": None,
       "msmGroupName": None,
-      "policyName": "sm-restrictive"
+      "policyName": "policy-restrictive"
     },
     "netFlow": {
       "destAddress": None,
@@ -181,7 +181,7 @@ EVENT_GET_SPECIFIC_RESP = {
       "interpreterName": None,
       "interpreterHash": None,
       "parentPrivatePid": "540-132368223470440203-0",
-      "fullUserName": "NT AUTHORITY\\SYSTEM",
+      "fullUserName": "fullUserName",
       "targetName": "notepad.exe",
       "name": "svchost.exe"
     },

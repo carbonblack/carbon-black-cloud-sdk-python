@@ -35,7 +35,7 @@ def test_event_query_0(cbcsdk_mock):
     events = api.select(Event).where('hostNameExact:Win7x64')
     results = [event for event in events._perform_query()]
     event = results[0]
-    assert event.deviceDetails['deviceId'] == 43407
+    assert event.deviceDetails['deviceId'] == 98765
     assert event.deviceDetails['deviceName'] == 'Win7x64'
 
 
@@ -47,5 +47,5 @@ def test_event_query_with_id_in_select(cbcsdk_mock):
     event = api.select(Event, 'a1e12604d67b11ea920d3d9192a785d1')
     assert isinstance(event, Event)
     assert event.eventId == 'a1e12604d67b11ea920d3d9192a785d1'
-    assert event.deviceDetails['deviceId'] == 43407
+    assert event.deviceDetails['deviceId'] == 98765
     assert event.deviceDetails['deviceName'] == 'Win7x64'

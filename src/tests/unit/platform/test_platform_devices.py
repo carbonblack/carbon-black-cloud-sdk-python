@@ -30,21 +30,21 @@ def cbcsdk_mock(monkeypatch, cb):
 
 def test_device_query_0(cbcsdk_mock):
     """Testing Device Querying with .select(Device, `device_id`)"""
-    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/43407", GET_DEVICE_RESP)
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
     api = cbcsdk_mock.api
-    platform_device_select_with_id = api.select(Device, 43407)
+    platform_device_select_with_id = api.select(Device, 98765)
     platform_device_select_with_id.refresh()
-    assert platform_device_select_with_id._model_unique_id == 43407
-    assert platform_device_select_with_id.id == 43407
+    assert platform_device_select_with_id._model_unique_id == 98765
+    assert platform_device_select_with_id.id == 98765
     assert isinstance(platform_device_select_with_id, Device)
     assert platform_device_select_with_id.validate()
 
 
 def test_device_query_with_where_and(cbcsdk_mock):
     """Testing Device Querying with .where() and .and_()"""
-    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/43407", GET_DEVICE_RESP)
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
     api = cbcsdk_mock.api
-    platform_device_select_with_where_stmt = api.select(Device).where(deviceId='43407').and_(name='win7x64')
+    platform_device_select_with_where_stmt = api.select(Device).where(deviceId='98765').and_(name='win7x64')
     assert isinstance(platform_device_select_with_where_stmt, DeviceSearchQuery)
 
     cbcsdk_mock.mock_request("POST", "/appservices/v6/orgs/test/devices/_search", POST_DEVICE_SEARCH_RESP)
@@ -53,8 +53,8 @@ def test_device_query_with_where_and(cbcsdk_mock):
     results = [res for res in platform_device_select_with_where_stmt._perform_query()]
 
     # compare select with ID inside the select method vs using .where() and .and_()
-    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/43407", GET_DEVICE_RESP)
-    platform_device_select_with_id = api.select(Device, 43407)
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
+    platform_device_select_with_id = api.select(Device, 98765)
     platform_device_select_with_id.refresh()
     assert results[0]._info['id'] == platform_device_select_with_id._info['id']
     assert len(results[0]._info) == len(platform_device_select_with_id._info)

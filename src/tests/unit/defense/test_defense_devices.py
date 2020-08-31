@@ -64,7 +64,7 @@ def test_device_query_0(cbcsdk_mock):
 
 def test_device_query_1(cbcsdk_mock):
     """Testing select() method with .where() hostNameExact"""
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/43407", DEFENSE_DEVICE_GET_SPECIFIC_RESP_2)
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/98765", DEFENSE_DEVICE_GET_SPECIFIC_RESP_2)
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device", DEFENSE_DEVICE_GET_HOSTNAME_RESP)
     api = cbcsdk_mock.api
     # testing hostNameExact in quotes
@@ -73,8 +73,8 @@ def test_device_query_1(cbcsdk_mock):
     assert len(results) == 1
     assert defense_select_hostname_exact_device_query._count() == len(results)
     device = results[0]
-    assert device._model_unique_id == 43407
-    assert device.deviceId == 43407
+    assert device._model_unique_id == 98765
+    assert device.deviceId == 98765
     assert isinstance(device, Device)
     assert device.validate()
 
@@ -85,47 +85,47 @@ def test_device_query_1(cbcsdk_mock):
     assert keyword_hostname_device_query._count() == len(results)
     first_device_result = results[0]
     assert isinstance(first_device_result, Device)
-    assert first_device_result._model_unique_id == 43407
-    assert first_device_result.deviceId == 43407
+    assert first_device_result._model_unique_id == 98765
+    assert first_device_result.deviceId == 98765
     assert first_device_result.validate()
 
 def test_device_query_2(cbcsdk_mock):
     """Testing select() method with .where() ownerName"""
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/20572", DEFENSE_DEVICE_GET_SPECIFIC_RESP)
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/23456", DEFENSE_DEVICE_GET_SPECIFIC_RESP)
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device", DEFENSE_DEVICE_GET_OWNERNAME_RESP)
     api = cbcsdk_mock.api
     # testing ownerName in quotes
-    defense_select_ownername_device_query = api.select(Device).where('ownerName:smultani@carbonblack.com')
+    defense_select_ownername_device_query = api.select(Device).where('ownerName:email@example.com')
     results = [result for result in defense_select_ownername_device_query._perform_query()]
     assert defense_select_ownername_device_query._count() == len(results)
     device = results[0]
-    assert device.email == "smultani@carbonblack.com"
+    assert device.email == "email@example.com"
     assert isinstance(device, Device)
     assert device.validate()
 
     # testing ownerName keyword
-    keyword_defense_select_ownername_device_query = api.select(Device).where(ownerName='smultani@carbonblack.com')
+    keyword_defense_select_ownername_device_query = api.select(Device).where(ownerName='email@example.com')
     results = [result for result in keyword_defense_select_ownername_device_query._perform_query()]
     assert keyword_defense_select_ownername_device_query._count() == len(results)
     device = results[0]
-    assert device.email == "smultani@carbonblack.com"
+    assert device.email == "email@example.com"
     assert isinstance(device, Device)
     assert device.validate()
 
 
 def test_device_query_3(cbcsdk_mock):
     """Testing select() method with .where() ownerNameExact"""
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/20572", DEFENSE_DEVICE_GET_SPECIFIC_RESP_3)
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/23456", DEFENSE_DEVICE_GET_SPECIFIC_RESP_3)
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device", DEFENSE_DEVICE_GET_OWNERNAME_EXACT_RESP)
     api = cbcsdk_mock.api
     # testing ownerNameExact in quotes
-    defense_select_ownername_exact_device_query = api.select(Device).where('ownerNameExact:smultani@carbonblack.com')
+    defense_select_ownername_exact_device_query = api.select(Device).where('ownerNameExact:email@example.com')
     results = [result for result in defense_select_ownername_exact_device_query._perform_query()]
-    assert len(results) == 5
+    assert len(results) == 2
     assert defense_select_ownername_exact_device_query._count() == len(results)
     device = results[0]
-    assert device._model_unique_id == 20572
-    assert device.deviceId == 20572
+    assert device._model_unique_id == 23456
+    assert device.deviceId == 23456
     assert isinstance(device, Device)
     assert device.validate()
 
@@ -133,58 +133,58 @@ def test_device_query_3(cbcsdk_mock):
 
     # testing ownerNameExact keyword
     keyword_defense_select_ownername_exact_device_query = api.select(Device).where(
-        ownerNameExact='smultani@carbonblack.com')
+        ownerNameExact='email@example.com')
     results = [result for result in keyword_defense_select_ownername_exact_device_query._perform_query()]
-    assert len(results) == 5
+    assert len(results) == 2
     assert keyword_defense_select_ownername_exact_device_query._count() == len(results)
     device = results[0]
-    assert device._model_unique_id == 20572
-    assert device.deviceId == 20572
+    assert device._model_unique_id == 23456
+    assert device.deviceId == 23456
     assert isinstance(device, Device)
     assert device.validate()
 
 
 def test_device_query_4(cbcsdk_mock):
     """Testing select() method with .where() ipAddress"""
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/43407", DEFENSE_DEVICE_GET_SPECIFIC_RESP_2)
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/98765", DEFENSE_DEVICE_GET_SPECIFIC_RESP_2)
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device", DEFENSE_DEVICE_GET_IP_RESP)
     api = cbcsdk_mock.api
     # testing ipAddress in quotes
-    defense_select_ip_device_query = api.select(Device).where('ipAddress:10.210.34.165')
+    defense_select_ip_device_query = api.select(Device).where('ipAddress:192.10.34.165')
     results = [result for result in defense_select_ip_device_query._perform_query()]
     assert len(results) == 1
     assert defense_select_ip_device_query._count() == len(results)
     device = results[0]
-    assert device._model_unique_id == 43407
-    assert device.deviceId == 43407
+    assert device._model_unique_id == 98765
+    assert device.deviceId == 98765
     assert isinstance(device, Device)
     assert device.validate()
 
     # testing ipAddress keyword
-    keyword_defense_select_ip_device_query = api.select(Device).where(ipAddress='10.210.34.165')
+    keyword_defense_select_ip_device_query = api.select(Device).where(ipAddress='192.10.34.165')
     results = [result for result in keyword_defense_select_ip_device_query._perform_query()]
     assert len(results) == 1
     assert keyword_defense_select_ip_device_query._count() == len(results)
     device = results[0]
-    assert device._model_unique_id == 43407
-    assert device.deviceId == 43407
+    assert device._model_unique_id == 98765
+    assert device.deviceId == 98765
     assert isinstance(device, Device)
     assert device.validate()
 
 
 def test_device_query_with_and(cbcsdk_mock):
     """Testing Device Querying with .where() and .and_()"""
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/43407", DEFENSE_DEVICE_GET_SPECIFIC_RESP_2)
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/98765", DEFENSE_DEVICE_GET_SPECIFIC_RESP_2)
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device", DEFENSE_DEVICE_GET_HOST_IP_RESP)
     api = cbcsdk_mock.api
     # testing multiple where/and clauses
-    select_hostname_and_ip_device_query = api.select(Device).where('hostName:Win7x64').and_('ipAddress:10.210.34.165')
+    select_hostname_and_ip_device_query = api.select(Device).where('hostName:Win7x64').and_('ipAddress:192.10.34.165')
     results = [result for result in select_hostname_and_ip_device_query._perform_query()]
     assert len(results) == 1
     assert select_hostname_and_ip_device_query._count() == len(results)
     device = results[0]
-    assert device._model_unique_id == 43407
-    assert device.deviceId == 43407
+    assert device._model_unique_id == 98765
+    assert device.deviceId == 98765
     assert isinstance(device, Device)
     assert device.validate()
 
@@ -209,7 +209,7 @@ def test_device_get_all(cbcsdk_mock):
     defense_device_select_all = api.select(Device)
     results = [result for result in defense_device_select_all._perform_query()]
     assert isinstance(defense_device_select_all, Query)
-    assert len(results) == 52
+    assert len(results) == 4
     dev = results[0]
     assert isinstance(dev, Device)
     assert dev._model_unique_id == 12345
@@ -225,21 +225,21 @@ def test_device_search(cbcsdk_mock):
     assert isinstance(defense_device_select_all, Query)
     query = defense_device_select_all._search(start=0, rows=100)
     results = [result for result in query]
-    assert len(results) == 52
+    assert len(results) == 4
 
 
 def test_device_search_with_where(cbcsdk_mock):
     """Testing Device _search() with hostname and ip where clauses"""
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/43407", DEFENSE_DEVICE_GET_SPECIFIC_RESP)
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/98765", DEFENSE_DEVICE_GET_SPECIFIC_RESP)
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device", DEFENSE_DEVICE_GET_HOST_IP_RESP)
     api = cbcsdk_mock.api
-    defense_device_select_host_ip = api.select(Device).where('hostName:Win7x64').and_('ipAddress:10.210.34.165')
+    defense_device_select_host_ip = api.select(Device).where('hostName:Win7x64').and_('ipAddress:192.10.34.165')
     assert isinstance(defense_device_select_host_ip, Query)
     query = defense_device_select_host_ip._search(start=0, rows=100)
     results = [result for result in query]
     assert len(results) == 1
     found_dev = results[0]
-    assert found_dev['deviceId'] == 43407
+    assert found_dev['deviceId'] == 98765
     assert found_dev['name'] == 'Win7x64'
     dev = Device(api, found_dev['deviceId'], found_dev)
     assert isinstance(dev, Device)

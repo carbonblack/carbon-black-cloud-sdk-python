@@ -768,7 +768,7 @@ FEED_GET_RESP = {
         {
             "name": "test ioc list",
             "owner": "WNEXFKQ7",
-            "provider_url": "http://garman.family",
+            "provider_url": "http://lastName.url",
             "summary": "iocs",
             "category": "first party",
             "source_label": None,
@@ -778,7 +778,7 @@ FEED_GET_RESP = {
         {
             "name": "adlist2",
             "owner": "WNEXFKQ7",
-            "provider_url": "http://garman.family",
+            "provider_url": "http://lastName.url",
             "summary": "iocs",
             "category": "first party",
             "source_label": None,

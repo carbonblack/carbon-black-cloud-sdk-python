@@ -29,10 +29,10 @@ BINARY_GET_DEVICE_SUMMARY_RESP = {
     "sha256": "00a16c806ff694b64e566886bba5122655eff89b45226cddc8651df7860e4524",
     "num_devices": 1,
     "first_seen_device_timestamp": "2020-05-06T19:11:18.279742Z",
-    "first_seen_device_id": 43407,
+    "first_seen_device_id": 98765,
     "first_seen_device_name": "Win7x64",
     "last_seen_device_timestamp": "2020-05-06T19:11:18.279742Z",
-    "last_seen_device_id": 43407,
+    "last_seen_device_id": 98765,
     "last_seen_device_name": "Win7x64"
 }
 
