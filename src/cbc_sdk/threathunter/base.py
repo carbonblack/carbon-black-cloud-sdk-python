@@ -14,7 +14,12 @@
 """Model Classes for Enterprise Endpoint Detection and Response"""
 
 from __future__ import absolute_import
-from cbc_sdk.base import UnrefreshableModel, BaseQuery, PaginatedQuery, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin
+from cbc_sdk.base import (UnrefreshableModel,
+                          BaseQuery,
+                          PaginatedQuery,
+                          QueryBuilder,
+                          QueryBuilderSupportMixin,
+                          IterableQueryMixin)
 from cbc_sdk.errors import ApiError, TimeoutError
 
 import logging
@@ -26,16 +31,13 @@ log = logging.getLogger(__name__)
 
 
 class Process(UnrefreshableModel):
-    """Represents a process retrieved by one of the CbTH endpoints.
-    """
+    """Represents a process retrieved by one of the CbTH endpoints."""
     default_sort = 'last_update desc'
     primary_key = "process_guid"
     validation_url = "/api/investigate/v1/orgs/{}/processes/search_validation"
 
     class Summary(UnrefreshableModel):
-        """Represents a summary of organization-specific information for
-        a process.
-        """
+        """Represents a summary of organization-specific information for a process."""
         default_sort = "last_update desc"
         primary_key = "process_guid"
         urlobject_single = "/api/investigate/v1/orgs/{}/processes/summary"
@@ -62,18 +64,20 @@ class Process(UnrefreshableModel):
 
     @property
     def summary(self):
-        """Returns organization-specific information about this process.
-        """
+        """Returns organization-specific information about this process."""
         return self._cb.select(Process.Summary, self.process_guid)
 
     def events(self, **kwargs):
         """Returns a query for events associated with this process's process GUID.
 
-        :param kwargs: Arguments to filter the event query with.
-        :return: Returns a Query object with the appropriate search parameters for events
-        :rtype: :py:class:`cbc_sdk.threathunter.query.Query`
+        Args:
+            kwargs: Arguments to filter the event query with.
 
-        Example::
+        Returns:
+            query (cbc_sdk.threathunter.Query): Query object with the appropriate
+                search parameters for events
+
+        Example:
 
         >>> [print(event) for event in process.events()]
         >>> [print(event) for event in process.events(event_type="modload")]
