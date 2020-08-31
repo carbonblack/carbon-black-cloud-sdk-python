@@ -31,8 +31,8 @@ GET_DEVICE_RESP = {
   "last_contact_time": "2020-08-26T21:05:42.518Z",
   "last_device_policy_changed_time": "2019-12-05T16:24:23.216Z",
   "last_device_policy_requested_time": "2020-06-23T00:43:28.164Z",
-  "last_external_ip_address": "144.121.3.50",
-  "last_internal_ip_address": "10.210.34.165",
+  "last_external_ip_address": "192.168.0.1",
+  "last_internal_ip_address": "192.168.0.1",
   "last_location": "OFFSITE",
   "last_name": None,
   "last_policy_updated_time": None,
@@ -117,7 +117,7 @@ POST_DEVICE_SEARCH_RESP = {
         },
         {
           "key_name": "SUBNET",
-          "key_value": "10.210.33",
+          "key_value": "192.10.33",
           "position": 0
         }
       ],
@@ -130,8 +130,8 @@ POST_DEVICE_SEARCH_RESP = {
       "last_contact_time": "2020-08-26T21:25:19.513Z",
       "last_device_policy_changed_time": "2019-12-05T16:24:23.216Z",
       "last_device_policy_requested_time": "2020-06-23T00:43:28.164Z",
-      "last_external_ip_address": "144.121.3.50",
-      "last_internal_ip_address": "10.210.34.165",
+      "last_external_ip_address": "192.168.0.1",
+      "last_internal_ip_address": "192.168.0.1",
       "last_location": "OFFSITE",
       "last_name": None,
       "last_policy_updated_time": "2020-01-06T22:55:56.218Z",
