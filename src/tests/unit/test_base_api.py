@@ -132,8 +132,8 @@ PYTHON_VERS = f"{sys.version_info[0]}.{sys.version_info[1]}.{sys.version_info[2]
 
 
 @pytest.mark.parametrize("integration, expected_line", [
-    ('Anon/0.5.0', f"Anon/0.5.0 CBCSDK/{__version__} Python/{PYTHON_VERS}"),
-    (None, f"CBCSDK/{__version__} Python/{PYTHON_VERS}")
+    ('Anon/0.5.0', f"Anon/0.5.0 CBC_SDK/{__version__} Python/{PYTHON_VERS}"),
+    (None, f"CBC_SDK/{__version__} Python/{PYTHON_VERS}")
 ])
 def test_BaseAPI_generate_user_agent(integration, expected_line):
     """Test the generation of the User-Agent header."""
