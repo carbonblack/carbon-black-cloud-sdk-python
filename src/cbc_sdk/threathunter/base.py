@@ -267,7 +267,7 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
         if self._query_builder._process_guid is not None:
             args["process_guid"] = self._query_builder._process_guid
         if 'process_guid:' in args['query']:
-            q = args['query'].split(':', 1)
+            q = args['query'].split('process_guid:', 1)
             args["process_guid"] = q[1]
         args["fields"] = [
             "*",
