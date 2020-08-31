@@ -185,7 +185,6 @@ class Policy(DefenseMutableModel, CreatableModelMixin):
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
         return Query(cls, cb, kwargs.get("query_string", None))
-        # return Query(cls, cb)
 
     @property
     def rules(self):
