@@ -911,16 +911,6 @@ class FeedQuery(SimpleQuery):
         self._args = dict(self._args, **kwargs)
         return self
 
-    def prepare_query(self, args):
-        request = args
-        params = self._query_builder._collapse()
-        if params is not None:
-            for query in params.split(' '):
-                # convert from str('key:value') to dict{'key': 'value'}
-                key, value = query.split(':', 1)
-                request[key] = value
-        return request
-
     @property
     def results(self):
         """Return a list of Feed objects matching self._args parameters."""
