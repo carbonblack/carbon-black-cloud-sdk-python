@@ -41,10 +41,6 @@ class PlatformMutableModel(MutableBaseModel):
         if not self._change_object_key_name:
             self._change_object_key_name = self.primary_key
 
-    def _parse(self, obj):
-        if type(obj) == dict and self.info_key in obj:
-            return obj[self.info_key]
-
     def _update_object(self):
         if self._change_object_http_method != "PATCH":
             return self._update_entire_object()
