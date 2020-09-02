@@ -99,30 +99,27 @@ class DefenseMutableModel(MutableBaseModel):
             raise ServerError(request_ret.status_code, message,
                               result="Did not update {} record.".format(self.__class__.__name__))
         else:
-            try:
-                message = request_ret.json()
-                log.debug("Received response: %s" % message)
-                if not isinstance(message, dict):
-                    raise ServerError(request_ret.status_code, message,
-                                      result="Unknown error updating {0:s} record.".format(self.__class__.__name__))
-                else:
-                    if message.get("success", False):
-                        if isinstance(message.get(self.info_key, None), dict):
-                            self._info = message.get(self.info_key)
-                            self._full_init = True
-                            refresh_required = False
-                        else:
-                            if self._change_object_key_name in message.keys():
-                                # if all we got back was an ID, try refreshing to get the entire record.
-                                log.debug("Only received an ID back from the server, forcing a refresh")
-                                self._info[self.primary_key] = message[self._change_object_key_name]
-                                refresh_required = True
+            message = request_ret.json()
+            log.debug("Received response: %s" % message)
+            if not isinstance(message, dict):
+                raise ServerError(request_ret.status_code, message,
+                                  result="Unknown error updating {0:s} record.".format(self.__class__.__name__))
+            else:
+                if message.get("success", False):
+                    if isinstance(message.get(self.info_key, None), dict):
+                        self._info = message.get(self.info_key)
+                        self._full_init = True
+                        refresh_required = False
                     else:
-                        # "success" is False
-                        raise ServerError(request_ret.status_code, message.get("message", ""),
-                                          result="Did not update {0:s} record.".format(self.__class__.__name__))
-            except Exception:
-                raise
+                        if self._change_object_key_name in message.keys():
+                            # if all we got back was an ID, try refreshing to get the entire record.
+                            log.debug("Only received an ID back from the server, forcing a refresh")
+                            self._info[self.primary_key] = message[self._change_object_key_name]
+                            refresh_required = True
+                else:
+                    # "success" is False
+                    raise ServerError(request_ret.status_code, message.get("message", ""),
+                                      result="Did not update {0:s} record.".format(self.__class__.__name__))
 
         self._dirty_attributes = {}
         if refresh_required:
