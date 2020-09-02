@@ -14,7 +14,7 @@
 from cbc_sdk.connection import BaseAPI
 from cbc_sdk.errors import ApiError, CredentialError, ServerError
 from cbc_sdk.live_response_api import LiveResponseSessionManager
-from cbc_sdk.livequery import Run, RunHistory
+from cbc_sdk.audit_remediation import Run, RunHistory
 from cbc_sdk.threathunter.threat_intelligence import ReportSeverity
 import logging
 import time
@@ -58,12 +58,12 @@ class CBCloudAPI(BaseAPI):
     def _request_lr_session(self, sensor_id):
         return self.live_response.request_session(sensor_id)
 
-    # ---- Live Query
+    # ---- Audit and Remediation
 
-    def livequery(self, sql):
+    def audit_remediation(self, sql):
         return self.select(Run).where(sql=sql)
 
-    def livequery_history(self, query=None):
+    def audit_remediation_history(self, query=None):
         return self.select(RunHistory).where(query)
 
     # ---- Notifications
