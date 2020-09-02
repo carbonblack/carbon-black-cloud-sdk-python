@@ -28,11 +28,9 @@ log = logging.getLogger(__name__)
 
 
 class Run(NewBaseModel):
-    """
-    Represents an Audit and Remediation run.
+    """Represents an Audit and Remediation run.
 
     Example:
-
     >>> run = cb.select(Run, run_id)
     >>> print(run.name, run.sql, run.create_time)
     >>> print(run.status, run.match_count)
@@ -367,11 +365,13 @@ class RunQuery(PSCQueryBase):
         return self
 
     def policy_ids(self, policy_ids):
-        """
-        Restricts this Audit and Remediation run to the given policy IDs.
+        """Restricts this Audit and Remediation run to the given policy IDs.
 
-        :param policy_ids: list of ints
-        :return: This instance
+        Arguments:
+            policy_ids ([int]): Policy ID's to perform the Run on.
+
+        Returns:
+            The RunQuery object with specified policy_ids.
         """
         if not all(isinstance(policy_id, int) for policy_id in policy_ids):
             raise ApiError("One or more invalid policy IDs")
@@ -379,40 +379,49 @@ class RunQuery(PSCQueryBase):
         return self
 
     def where(self, sql):
-        """
-        Sets this Audit and Remediation run's underlying SQL.
+        """Sets this Audit and Remediation run's underlying SQL.
 
-        :param sql: The SQL to execute
-        :return: This instance
+        Arguments:
+            sql (str): The SQL to execute for the Run.
+
+        Returns:
+            The RunQuery object with specified sql.
         """
         self._query_body["sql"] = sql
         return self
 
     def name(self, name):
-        """
-        Sets this Audit and Remediation run's name. If no name is explicitly set,
-        the run is named after its SQL.
+        """Sets this Audit and Remediation run's name.
 
-        :param name: The run name
-        :return: This instance
+        If no name is explicitly set, the run is named after its SQL.
+
+        Arguments:
+            name (str): The name for this Run.
+
+        Returns:
+            The RunQuery object with specified name.
         """
         self._query_body["name"] = name
         return self
 
     def notify_on_finish(self):
-        """
-        Sets the notify-on-finish flag on this Audit and Remediation run.
+        """Sets the notify-on-finish flag on this Audit and Remediation run.
 
-        :return: This instance
+        Returns:
+            The RunQuery object with `notify_on_finish` set to True.
         """
         self._query_body["notify_on_finish"] = True
         return self
 
     def submit(self):
-        """
-        Submits this Audit and Remediation run.
+        """Submits this Audit and Remediation run.
 
-        :return: A new `Run` instance containing the run's status
+        Returns:
+            A new `Run` instance containing the run's status.
+
+        Raises:
+            ApiError: If the Run does not have SQL set, or if the Run
+                has already been submitted.
         """
         if self._query_token is not None:
             raise ApiError(
@@ -429,10 +438,9 @@ class RunQuery(PSCQueryBase):
 
 
 class RunHistoryQuery(PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
-    """
-    Represents a query that retrieves historic Audit and Remediation runs.
-    """
+    """Represents a query that retrieves historic Audit and Remediation runs."""
     def __init__(self, doc_class, cb):
+        """Initialize a RunHistoryQuery object."""
         super().__init__(doc_class, cb)
         self._query_builder = QueryBuilder()
         self._sort = {}
@@ -440,13 +448,16 @@ class RunHistoryQuery(PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin
     def sort_by(self, key, direction="ASC"):
         """Sets the sorting behavior on a query's results.
 
-        Example::
+        Arguments:
+            key (str): The key in the schema to sort by.
+            direction (str): The sort order, either "ASC" or "DESC".
+
+        Returns:
+            RunHistoryQuery object with specified sorting key and order.
+
+        Example:
 
         >>> cb.select(Result).run_id(my_run).where(username="foobar").sort_by("uid")
-
-        :param key: the key in the schema to sort by
-        :param direction: the sort order, either "ASC" or "DESC"
-        :rtype: :py:class:`ResultQuery`
         """
         self._sort.update({"field": key, "order": direction})
         return self
@@ -511,10 +522,9 @@ class RunHistoryQuery(PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin
 
 
 class ResultQuery(PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
-    """
-    Represents a query that retrieves results from an Audit and Remediation run.
-    """
+    """Represents a query that retrieves results from an Audit and Remediation run."""
     def __init__(self, doc_class, cb):
+        """Initialize a ResultQuery object."""
         super().__init__(doc_class, cb)
         self._query_builder = QueryBuilder()
         self._criteria = {}
@@ -525,10 +535,11 @@ class ResultQuery(PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
     def criteria(self, **kwargs):
         """Sets the filter criteria on a query's results.
 
-        Example::
+        Arguments:
+            **kwargs (dict(str, str)): The criteria to apply to query results.
 
+        Example:
         >>> cb.select(Result).run_id(my_run).criteria(device_id=[123, 456])
-
         """
         self._criteria.update(kwargs)
         return self
@@ -536,13 +547,16 @@ class ResultQuery(PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
     def sort_by(self, key, direction="ASC"):
         """Sets the sorting behavior on a query's results.
 
-        Example::
+        Arguments:
+            key (str): The key in the schema to sort by.
+            direction (str): The sort order, either "ASC" or "DESC".
+
+        Returns:
+            ResultQuery object with specified sorting key and order.
+
+        Example:
 
         >>> cb.select(Result).run_id(my_run).where(username="foobar").sort_by("uid")
-
-        :param key: the key in the schema to sort by
-        :param direction: the sort order, either "ASC" or "DESC"
-        :rtype: :py:class:`ResultQuery`
         """
         self._sort.update({"field": key, "order": direction})
         return self
@@ -550,7 +564,13 @@ class ResultQuery(PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
     def run_id(self, run_id):
         """Sets the run ID to query results for.
 
-        Example::
+        Arguments:
+            run_id (int): The run ID to retrieve results for.
+
+        Returns:
+            ResultQuery object with specified run_id.
+
+        Example:
 
         >>> cb.select(Result).run_id(my_run)
         """
@@ -623,10 +643,9 @@ class ResultQuery(PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
 
 
 class FacetQuery(PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
-    """
-    Represents a query that receives facet information from an Audit and Remediation run.
-    """
+    """Represents a query that receives facet information from an Audit and Remediation run."""
     def __init__(self, doc_class, cb):
+        """Initialize a FacetQuery object."""
         super().__init__(doc_class, cb)
         self._query_builder = QueryBuilder()
         self._facet_fields = []
@@ -636,13 +655,15 @@ class FacetQuery(PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
     def facet_field(self, field):
         """Sets the facet fields to be received by this query.
 
-        Example::
+        Arguments:
+            field (str or [str]): Field(s) to be received.
+
+        Returns:
+            FacetQuery that will receive field(s) facet_field.
+
+        Example:
 
         >>> cb.select(ResultFacet).run_id(my_run).facet_field(["device.policy_name", "device.os"])
-
-        :param field: Field(s) to be received, either single string or list of strings
-        :return: Query object
-        :rtype: :py:class:`Query`
         """
         if isinstance(field, str):
             self._facet_fields.append(field)
@@ -654,10 +675,15 @@ class FacetQuery(PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
     def criteria(self, **kwargs):
         """Sets the filter criteria on a query's results.
 
-        Example::
+        Arguments:
+            **kwargs (dict(str,str)): The criteria to apply to the query.
+                Can be one of ["device_id", "policy_id", "os"].
 
+        Returns:
+            FacetQuery object with specified criteria.
+
+        Example:
         >>> cb.select(ResultFacet).run_id(my_run).criteria(device_id=[123, 456])
-
         """
         self._criteria.update(kwargs)
         return self
@@ -665,8 +691,13 @@ class FacetQuery(PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
     def run_id(self, run_id):
         """Sets the run ID to query results for.
 
-        Example::
+        Arguments:
+            run_id (int): The run ID to retrieve results for.
 
+        Returns:
+            FacetQuery object with specified run_id.
+
+        Example:
         >>> cb.select(ResultFacet).run_id(my_run)
         """
         self._run_id = run_id
