@@ -31,13 +31,13 @@ log = logging.getLogger(__name__)
 """Platform Models"""
 
 
-class PSCMutableModel(MutableBaseModel):
+class PlatformMutableModel(MutableBaseModel):
     _change_object_http_method = "PATCH"
     _change_object_key_name = None
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
-        super(PSCMutableModel, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
-                                              force_init=force_init, full_doc=full_doc)
+        super(PlatformMutableModel, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
+                                                   force_init=force_init, full_doc=full_doc)
         if not self._change_object_key_name:
             self._change_object_key_name = self.primary_key
 
@@ -130,7 +130,7 @@ class PSCMutableModel(MutableBaseModel):
 """Platform Queries"""
 
 
-class PSCQueryBase:
+class PlatformQueryBase:
     """
     Represents the base of all LiveQuery query classes.
     """

@@ -14,7 +14,7 @@
 """Model and Query Classes for Platform Devices"""
 
 from cbc_sdk.errors import ApiError
-from cbc_sdk.platform import PSCMutableModel, PSCQueryBase
+from cbc_sdk.platform import PlatformMutableModel, PlatformQueryBase
 from cbc_sdk.base import QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin
 
 import time
@@ -23,7 +23,7 @@ import time
 """"Device Models"""
 
 
-class Device(PSCMutableModel):
+class Device(PlatformMutableModel):
     urlobject = "/appservices/v6/orgs/{0}/devices"
     urlobject_single = "/appservices/v6/orgs/{0}/devices/{1}"
     primary_key = "id"
@@ -112,7 +112,7 @@ class Device(PSCMutableModel):
 """Device Queries"""
 
 
-class DeviceSearchQuery(PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
+class DeviceSearchQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
     """
     Represents a query that is used to locate Device objects.
     """

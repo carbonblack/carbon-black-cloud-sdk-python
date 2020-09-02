@@ -14,7 +14,7 @@
 """Model and Query Classes for Platform Alerts and Workflows"""
 
 from cbc_sdk.errors import ApiError
-from cbc_sdk.platform import PSCMutableModel, PSCQueryBase
+from cbc_sdk.platform import PlatformMutableModel, PlatformQueryBase
 from cbc_sdk.base import UnrefreshableModel, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin
 from cbc_sdk.platform.devices import DeviceSearchQuery
 
@@ -23,7 +23,7 @@ import time
 """Alert Models"""
 
 
-class BaseAlert(PSCMutableModel):
+class BaseAlert(PlatformMutableModel):
     urlobject = "/appservices/v6/orgs/{0}/alerts"
     urlobject_single = "/appservices/v6/orgs/{0}/alerts/{1}"
     primary_key = "id"
@@ -156,7 +156,7 @@ class Workflow(UnrefreshableModel):
         super(Workflow, self).__init__(cb, model_unique_id=None, initial_data=initial_data)
 
 
-class WorkflowStatus(PSCMutableModel):
+class WorkflowStatus(PlatformMutableModel):
     urlobject_single = "/appservices/v6/orgs/{0}/workflow/status/{1}"
     primary_key = "id"
     swagger_meta_file = "platform/models/workflow_status.yaml"
@@ -203,7 +203,7 @@ class WorkflowStatus(PSCMutableModel):
 """Alert Queries"""
 
 
-class BaseAlertSearchQuery(PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
+class BaseAlertSearchQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
     """
     Represents a query that is used to locate BaseAlert objects.
     """
