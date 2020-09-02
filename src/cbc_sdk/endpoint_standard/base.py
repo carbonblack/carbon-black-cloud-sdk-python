@@ -28,15 +28,15 @@ from cbc_sdk.errors import ServerError
 log = logging.getLogger(__name__)
 
 
-"""Defense Models"""
+"""Endpoint Standard Models"""
 
 
-class DefenseMutableModel(MutableBaseModel):
+class EndpointStandardMutableModel(MutableBaseModel):
     _change_object_http_method = "PATCH"
     _change_object_key_name = None
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
-        super(DefenseMutableModel, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
+        super(EndpointStandardMutableModel, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
                                                   force_init=force_init, full_doc=full_doc)
         if not self._change_object_key_name:
             self._change_object_key_name = self.primary_key
@@ -127,12 +127,12 @@ class DefenseMutableModel(MutableBaseModel):
         return self._model_unique_id
 
 
-class Device(DefenseMutableModel):
+class Device(EndpointStandardMutableModel):
     urlobject = "/integrationServices/v3/device"
     urlobject_single = "/integrationServices/v3/device/{}"
     primary_key = "deviceId"
     info_key = "deviceInfo"
-    swagger_meta_file = "defense/models/deviceInfo.yaml"
+    swagger_meta_file = "endpoint_standard/models/deviceInfo.yaml"
 
     def __init__(self, cb, model_unique_id, initial_data=None):
         super(Device, self).__init__(cb, model_unique_id, initial_data)
@@ -148,7 +148,7 @@ class Device(DefenseMutableModel):
         Retrieve a Live Response session object for this Device.
 
         :return: Live Response session object
-        :rtype: :py:class:`cbc_sdk.defense.cblr.LiveResponseSession`
+        :rtype: :py:class:`cbc_sdk.endpoint_standard.cblr.LiveResponseSession`
         :raises ApiError: if there is an error establishing a Live Response session for this Device
 
         """
@@ -172,10 +172,10 @@ class Event(NewBaseModel):
         return Query(cls, cb, kwargs.get("query_string", None))
 
 
-class Policy(DefenseMutableModel, CreatableModelMixin):
+class Policy(EndpointStandardMutableModel, CreatableModelMixin):
     urlobject = "/integrationServices/v3/policy"
     info_key = "policyInfo"
-    swagger_meta_file = "defense/models/policyInfo.yaml"
+    swagger_meta_file = "endpoint_standard/models/policyInfo.yaml"
     _change_object_http_method = "PUT"
     _change_object_key_name = "policyId"
 
@@ -201,14 +201,14 @@ class Policy(DefenseMutableModel, CreatableModelMixin):
         self.refresh()
 
 
-"""Defense Queries"""
+"""Endpoint Standard Queries"""
 
 
 class Query(PaginatedQuery, PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
-    """Represents a prepared query to the Cb Defense server.
+    """Represents a prepared query to the Cb Endpoint Standard server.
 
     This object is returned as part of a :py:meth:`CBCloudAPI.select`
-    operation on models requested from the Cb Defense server. You should not have to create this class yourself.
+    operation on models requested from the Cb Endpoint Standard server. You should not have to create this class yourself.
 
     The query is not executed on the server until it's accessed, either as an iterator (where it will generate values
     on demand as they're requested) or as a list (where it will retrieve the entire result set and save to a list).
@@ -304,7 +304,7 @@ class Query(PaginatedQuery, PSCQueryBase, QueryBuilderSupportMixin, IterableQuer
                     still_querying = False
                     break
 
-            args['start'] = current + 1     # as of 6/2017, the indexing on the Cb Defense backend is still 1-based
+            args['start'] = current + 1     # as of 6/2017, the indexing on the Cb Endpoint Standard backend is still 1-based
 
             if current >= self._total_results:
                 break

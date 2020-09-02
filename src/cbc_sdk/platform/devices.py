@@ -50,7 +50,7 @@ class Device(PSCMutableModel):
         Retrieve a Live Response session object for this Device.
 
         :return: Live Response session object
-        :rtype: :py:class:`cbc_sdk.defense.cblr.LiveResponseSession`
+        :rtype: :py:class:`cbc_sdk.endpoint_standard.cblr.LiveResponseSession`
         :raises ApiError: if there is an error establishing a Live Response session for this Device
 
         """

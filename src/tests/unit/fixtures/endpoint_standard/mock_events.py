@@ -125,7 +125,7 @@ EVENT_GET_HOSTNAME_RESP = {
 EVENT_GET_SPECIFIC_RESP = {
   "eventInfo": {
     "shortDescription": "The application \"<share><link hash=\"93b2ed4004ed5f7f3039dd7ecbd22c7e4e24b6373b4d9ef8d6e45a179b13a5e8\">svchost.exe</link></share>\" unsuccessfully invoked the application \"<share><link hash=\"933e1778b2760b3a9194c2799d7b76052895959c3caedefb4e9d764cbb6ad3b5\">notepad.exe</link></share>\".",
-    "longDescription": "The application \"<share><link hash=\"93b2ed4004ed5f7f3039dd7ecbd22c7e4e24b6373b4d9ef8d6e45a179b13a5e8\">C:\\Windows\\System32\\svchost.exe -k LocalSystemNetworkRestricted</link></share>\" invoked the application \"<share><link hash=\"933e1778b2760b3a9194c2799d7b76052895959c3caedefb4e9d764cbb6ad3b5\">C:\\windows\\system32\\notepad.exe</link></share>\". The operation was <accent>blocked by Cb Defense</accent>.",
+    "longDescription": "The application \"<share><link hash=\"93b2ed4004ed5f7f3039dd7ecbd22c7e4e24b6373b4d9ef8d6e45a179b13a5e8\">C:\\Windows\\System32\\svchost.exe -k LocalSystemNetworkRestricted</link></share>\" invoked the application \"<share><link hash=\"933e1778b2760b3a9194c2799d7b76052895959c3caedefb4e9d764cbb6ad3b5\">C:\\windows\\system32\\notepad.exe</link></share>\". The operation was <accent>blocked by Cb Endpoint Standard</accent>.",
     "eventTime": 1596563706477,
     "eventId": "a1e12604d67b11ea920d3d9192a785d1",
     "createTime": 1596563731121,
