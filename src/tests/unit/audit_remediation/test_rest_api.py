@@ -56,8 +56,8 @@ def test_audit_remediation_with_everything(monkeypatch):
         nonlocal _was_called
         assert url == "/livequery/v1/orgs/Z100/runs"
         assert body == {"sql": "select * from whatever;", "name": "AmyWasHere", "notify_on_finish": True,
-                        "device_filter": {"device_ids": [1, 2, 3], "device_types": ["Alpha", "Bravo", "Charlie"],
-                                          "policy_ids": [16, 27, 38]}}
+                        "device_filter": {"device_id": [1, 2, 3], "os": ["Alpha", "Bravo", "Charlie"],
+                                          "policy_id": [16, 27, 38]}}
         _was_called = True
         return StubResponse({"org_key": "Z100", "name": "FoobieBletch", "id": "abcdefg"})
 
