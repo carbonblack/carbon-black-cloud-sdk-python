@@ -15,7 +15,7 @@
 
 from cbc_sdk.base import (MutableBaseModel, CreatableModelMixin, NewBaseModel, PaginatedQuery,
                           QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin)
-from cbc_sdk.platform import PSCQueryBase
+from cbc_sdk.platform import PlatformQueryBase
 from cbc_sdk.utils import convert_query_params
 from copy import deepcopy
 import logging
@@ -204,7 +204,7 @@ class Policy(DefenseMutableModel, CreatableModelMixin):
 """Defense Queries"""
 
 
-class Query(PaginatedQuery, PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
+class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
     """Represents a prepared query to the Cb Defense server.
 
     This object is returned as part of a :py:meth:`CBCloudAPI.select`
