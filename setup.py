@@ -24,8 +24,6 @@ tests_requires = [
     'pymox'
 ]
 
-# if sys.version_info < (2, 7):
-#     install_requires.extend(['simplejson', 'total-ordering', 'ordereddict'])
 if sys.version_info < (3, 0):
     install_requires.extend(['futures'])
 

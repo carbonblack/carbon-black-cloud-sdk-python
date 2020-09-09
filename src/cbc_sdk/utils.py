@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 import dateutil.parser
+from importlib import import_module
 
 
 cb_datetime_format = "%Y-%m-%d %H:%M:%S.%f"

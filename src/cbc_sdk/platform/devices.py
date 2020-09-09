@@ -14,8 +14,8 @@
 """Model and Query Classes for Platform Devices"""
 
 from cbc_sdk.errors import ApiError
-from cbc_sdk.platform import (PSCMutableModel, PSCQueryBase, QueryBuilder,
-                                   QueryBuilderSupportMixin, IterableQueryMixin)
+from cbc_sdk.platform import PSCMutableModel, PSCQueryBase
+from cbc_sdk.base import QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin
 
 import time
 

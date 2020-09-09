@@ -13,11 +13,15 @@
 
 """Model and Query Classes for Endpoint Standard"""
 
-from cbc_sdk.base import MutableBaseModel, CreatableModelMixin, NewBaseModel, PaginatedQuery
-from cbc_sdk.utils import convert_query_params, convert_to_kv_pairs
+from cbc_sdk.base import (MutableBaseModel, CreatableModelMixin, NewBaseModel, PaginatedQuery,
+                          QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin)
+from cbc_sdk.platform import PSCQueryBase
+from cbc_sdk.utils import convert_query_params
 from copy import deepcopy
 import logging
 import json
+import time
+import sys
 
 from cbc_sdk.errors import ServerError
 
@@ -95,30 +99,27 @@ class DefenseMutableModel(MutableBaseModel):
             raise ServerError(request_ret.status_code, message,
                               result="Did not update {} record.".format(self.__class__.__name__))
         else:
-            try:
-                message = request_ret.json()
-                log.debug("Received response: %s" % message)
-                if not isinstance(message, dict):
-                    raise ServerError(request_ret.status_code, message,
-                                      result="Unknown error updating {0:s} record.".format(self.__class__.__name__))
-                else:
-                    if message.get("success", False):
-                        if isinstance(message.get(self.info_key, None), dict):
-                            self._info = message.get(self.info_key)
-                            self._full_init = True
-                            refresh_required = False
-                        else:
-                            if self._change_object_key_name in message.keys():
-                                # if all we got back was an ID, try refreshing to get the entire record.
-                                log.debug("Only received an ID back from the server, forcing a refresh")
-                                self._info[self.primary_key] = message[self._change_object_key_name]
-                                refresh_required = True
+            message = request_ret.json()
+            log.debug("Received response: %s" % message)
+            if not isinstance(message, dict):
+                raise ServerError(request_ret.status_code, message,
+                                  result="Unknown error updating {0:s} record.".format(self.__class__.__name__))
+            else:
+                if message.get("success", False):
+                    if isinstance(message.get(self.info_key, None), dict):
+                        self._info = message.get(self.info_key)
+                        self._full_init = True
+                        refresh_required = False
                     else:
-                        # "success" is False
-                        raise ServerError(request_ret.status_code, message.get("message", ""),
-                                          result="Did not update {0:s} record.".format(self.__class__.__name__))
-            except Exception:
-                pass
+                        if self._change_object_key_name in message.keys():
+                            # if all we got back was an ID, try refreshing to get the entire record.
+                            log.debug("Only received an ID back from the server, forcing a refresh")
+                            self._info[self.primary_key] = message[self._change_object_key_name]
+                            refresh_required = True
+                else:
+                    # "success" is False
+                    raise ServerError(request_ret.status_code, message.get("message", ""),
+                                      result="Did not update {0:s} record.".format(self.__class__.__name__))
 
         self._dirty_attributes = {}
         if refresh_required:
@@ -128,12 +129,19 @@ class DefenseMutableModel(MutableBaseModel):
 
 class Device(DefenseMutableModel):
     urlobject = "/integrationServices/v3/device"
+    urlobject_single = "/integrationServices/v3/device/{}"
     primary_key = "deviceId"
     info_key = "deviceInfo"
     swagger_meta_file = "defense/models/deviceInfo.yaml"
 
     def __init__(self, cb, model_unique_id, initial_data=None):
         super(Device, self).__init__(cb, model_unique_id, initial_data)
+        if model_unique_id is not None and initial_data is None:
+            self._refresh()
+
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
+        return Query(cls, cb, kwargs.get("query_string", None))
 
     def lr_session(self):
         """
@@ -159,6 +167,7 @@ class Event(NewBaseModel):
     def __init__(self, cb, model_unique_id, initial_data=None):
         super(Event, self).__init__(cb, model_unique_id, initial_data)
 
+    @classmethod
     def _query_implementation(cls, cb, **kwargs):
         return Query(cls, cb, kwargs.get("query_string", None))
 
@@ -169,6 +178,10 @@ class Policy(DefenseMutableModel, CreatableModelMixin):
     swagger_meta_file = "defense/models/policyInfo.yaml"
     _change_object_http_method = "PUT"
     _change_object_key_name = "policyId"
+
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
+        return Query(cls, cb, kwargs.get("query_string", None))
 
     @property
     def rules(self):
@@ -191,7 +204,7 @@ class Policy(DefenseMutableModel, CreatableModelMixin):
 """Defense Queries"""
 
 
-class Query(PaginatedQuery):
+class Query(PaginatedQuery, PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
     """Represents a prepared query to the Cb Defense server.
 
     This object is returned as part of a :py:meth:`CBCloudAPI.select`
@@ -214,53 +227,38 @@ class Query(PaginatedQuery):
           will be returned.
     """
     def __init__(self, doc_class, cb, query=None):
-        super(Query, self).__init__(doc_class, cb, None)
-        if query:
-            self._query = [query]
-        else:
-            self._query = []
+        super(Query, self).__init__(doc_class, cb, query)
 
         self._sort_by = None
         self._group_by = None
         self._batch_size = 100
+        self._criteria = {}
+        self._query_builder = QueryBuilder()
+
 
     def _clone(self):
         nq = self.__class__(self._doc_class, self._cb)
-        nq._query = self._query[::]
         nq._sort_by = self._sort_by
         nq._group_by = self._group_by
         nq._batch_size = self._batch_size
+        nq._criteria = self._criteria
         return nq
 
-    def where(self, q):
-        """Add a filter to this query.
-
-        :param str q: Query string
-        :return: Query object
-        :rtype: :py:class:`Query`
-        """
-        nq = self._clone()
-        nq._query.append(q)
-        return nq
-
-    def and_(self, q):
-        """Add a filter to this query. Equivalent to calling :py:meth:`where` on this object.
-
-        :param str q: Query string
-        :return: Query object
-        :rtype: :py:class:`Query`
-        """
-        return self.where(q)
 
     def prepare_query(self, args):
-        if self._query:
-            for qe in self._query:
-                k, v = convert_to_kv_pairs(qe)
-                args[k] = v
-
-        return args
+        request = args
+        params = self._query_builder._collapse()
+        if params is not None:
+            for query in params.split(' '):
+                # convert from str('key:value') to dict{'key': 'value'}
+                key, value = query.split(':', 1)
+                request[key] = value
+        return request
 
     def _count(self):
+        if self._count_valid:
+            return self._total_results
+
         args = {'limit': 0}
         args = self.prepare_query(args)
 

@@ -396,7 +396,6 @@ class MutableBaseModel(NewBaseModel):
                 del self._dirty_attributes[attrname]
         else:
             self._dirty_attributes[attrname] = self._info.get(attrname, None)
-
         # finally, make the change
         self._info[attrname] = new_value
 
@@ -877,3 +876,121 @@ class QueryBuilder(object):
             return str(self._query)
         else:
             return "*:*"               # return everything
+
+
+class QueryBuilderSupportMixin:
+    """
+    A mixin that supplies wrapper methods to access the _query_builder.
+    """
+    def where(self, q=None, **kwargs):
+        """Add a filter to this query.
+
+        :param q: Query string, :py:class:`QueryBuilder`, or `solrq.Q` object
+        :param kwargs: Arguments to construct a `solrq.Q` with
+        :return: Query object
+        :rtype: :py:class:`Query`
+        """
+
+        if isinstance(q, QueryBuilder):
+            self._query_builder = q
+        else:
+            self._query_builder.where(q, **kwargs)
+        return self
+
+    def and_(self, q=None, **kwargs):
+        """Add a conjunctive filter to this query.
+
+        :param q: Query string or `solrq.Q` object
+        :param kwargs: Arguments to construct a `solrq.Q` with
+        :return: Query object
+        :rtype: :py:class:`Query`
+        """
+        if not q and not kwargs:
+            raise ApiError(".and_() expects a string, a solrq.Q, or kwargs")
+
+        self._query_builder.and_(q, **kwargs)
+        return self
+
+    def or_(self, q=None, **kwargs):
+        """Add a disjunctive filter to this query.
+
+        :param q: `solrq.Q` object
+        :param kwargs: Arguments to construct a `solrq.Q` with
+        :return: Query object
+        :rtype: :py:class:`Query`
+        """
+        if not q and not kwargs:
+            raise ApiError(".or_() expects a solrq.Q or kwargs")
+
+        self._query_builder.or_(q, **kwargs)
+        return self
+
+    def not_(self, q=None, **kwargs):
+        """Adds a negated filter to this query.
+
+        :param q: `solrq.Q` object
+        :param kwargs: Arguments to construct a `solrq.Q` with
+        :return: Query object
+        :rtype: :py:class:`Query`
+        """
+
+        if not q and not kwargs:
+            raise ApiError(".not_() expects a solrq.Q, or kwargs")
+
+        self._query_builder.not_(q, **kwargs)
+        return self
+
+
+class IterableQueryMixin:
+    """
+    A mix-in to provide iterability to a query.
+    """
+    def all(self):
+        """
+        Returns all the items of a query as a list.
+
+        :return: List of query items
+        """
+        return self._perform_query()
+
+    def first(self):
+        """
+        Returns the first item that would be returned as the result of a query.
+
+        :return: First query item
+        """
+        allres = list(self)
+        res = allres[:1]
+        if not len(res):
+            return None
+        return res[0]
+
+    def one(self):
+        """
+        Returns the only item that would be returned by a query.
+
+        :return: Sole query return item
+        :raises MoreThanOneResultError: If the query returns zero items, or more than one item
+        """
+        allres = list(self)
+        res = allres[:2]
+        if len(res) == 0:
+            raise MoreThanOneResultError(
+                message="0 results for query {0:s}".format(self._query)
+            )
+        if len(res) > 1:
+            raise MoreThanOneResultError(
+                message="{0:d} results found for query {1:s}".format(
+                    len(self), self._query
+                )
+            )
+        return res[0]
+
+    def __len__(self):
+        return self._count()
+
+    def __getitem__(self, item):
+        return None
+
+    def __iter__(self):
+        return self._perform_query()
