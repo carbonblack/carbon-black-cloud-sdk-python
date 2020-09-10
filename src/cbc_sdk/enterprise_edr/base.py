@@ -50,6 +50,7 @@ class Process(UnrefreshableModel):
                                                   initial_data=summary, force_init=False,
                                                   full_doc=True)
 
+        @classmethod
         def _query_implementation(self, cb, **kwargs):
             return Query(self, cb, **kwargs)
 
