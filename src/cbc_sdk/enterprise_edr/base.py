@@ -31,7 +31,7 @@ log = logging.getLogger(__name__)
 
 
 class Process(UnrefreshableModel):
-    """Represents a process retrieved by one of the CbTH endpoints."""
+    """Represents a process retrieved by one of the Enterprise EDR endpoints."""
     default_sort = 'last_update desc'
     primary_key = "process_guid"
     validation_url = "/api/investigate/v1/orgs/{}/processes/search_validation"
