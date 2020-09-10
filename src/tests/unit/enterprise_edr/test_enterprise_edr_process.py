@@ -2,7 +2,7 @@
 
 import pytest
 import logging
-from cbc_sdk.enterprise_edr import Process, Tree, Query
+from cbc_sdk.enterprise_edr import Process, Tree, Event, Query, AsyncProcessQuery
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.enterprise_edr.mock_process import (GET_PROCESS_SUMMARY_RESP,
@@ -41,18 +41,45 @@ def test_process_select(cbcsdk_mock):
     summary = api.select(Process.Summary, guid)
     assert summary is not None
 
-def test_process_summary_select(cbcsdk_mock):
-    """Test the return type of a select() for a Process Summary."""
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/summary", GET_PROCESS_SUMMARY_RESP)
+
+def test_summary_select(cbcsdk_mock):
+    """Test querying for a Proc Summary."""
     api = cbcsdk_mock.api
-    # guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
-    # process = api.select(Process, guid)
-    # assert isinstance(process, Process)
-    # assert process.process_guid == guid
-    # assert process.summary is not None
-    # assert process.siblings is not None
-    summary = api.select(Process.Summary).where("process_guid:WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00")
+    guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
+    summary = api.select(Process.Summary).where(f"process_guid:{guid}")
     assert isinstance(summary, Query)
+
+
+def test_process_events(cbcsdk_mock):
+    """Testing Process.events()."""
+    api = cbcsdk_mock.api
+    guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
+    process = api.select(Process, guid)
+    assert isinstance(process.events(), Query)
+    # create the events query object to compare
+    events = process.events(event_type="modload")
+    # emulate the manual select in Process.events()
+    query = api.select(Event).where(process_guid=guid)
+    assert [isinstance(q, Query) for q in [events, query]]
+    # extract and compare the parameters from each Query
+    events_query_params = events._query_builder._collapse()
+    query_params = query.and_(event_type="modload")._query_builder._collapse()
+    expected_params = ("process_guid:WNEXFKQ7\\-0002b226\\-000015bd\\-00000000\\-"
+                       "1d6225bbba74c00 AND event_type:modload")
+    assert events_query_params == query_params
+    assert events_query_params == expected_params
+
+
+def test_process_parents(cbcsdk_mock):
+    """Testing Process.parents property/method."""
+    
+
+def test_process_select_where(cbcsdk_mock):
+    """Testing Process querying with where()."""
+    api = cbcsdk_mock.api
+    guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
+    process = api.select(Process).where(f"process_guid:{guid}")
+    assert isinstance(process, AsyncProcessQuery)
 
 
 def test_tree_select(cbcsdk_mock):

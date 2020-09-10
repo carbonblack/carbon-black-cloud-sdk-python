@@ -40,10 +40,10 @@ class Process(UnrefreshableModel):
         """Represents a summary of organization-specific information for a process."""
         default_sort = "last_update desc"
         primary_key = "process_guid"
-        urlobject_single = "/api/investigate/v1/orgs/{}/processes/summary"
+        urlobject = "/api/investigate/v1/orgs/{}/processes/summary"
 
         def __init__(self, cb, model_unique_id):
-            url = self.urlobject_single.format(cb.credentials.org_key)
+            url = self.urlobject.format(cb.credentials.org_key)
             summary = cb.get_object(url, query_parameters={"process_guid": model_unique_id})
 
             super(Process.Summary, self).__init__(cb, model_unique_id=model_unique_id,
@@ -306,7 +306,8 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
         return self._total_results
 
     def _validate(self, args):
-        if not self._doc_class.validation_url:
+        if not hasattr(self._doc_class, "validation_url"):
+        # if not self._doc_class.validation_url:
             return
 
         url = self._doc_class.validation_url.format(self._cb.credentials.org_key)
