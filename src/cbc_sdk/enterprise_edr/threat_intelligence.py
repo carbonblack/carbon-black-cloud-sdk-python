@@ -929,7 +929,6 @@ class ReportQuery(SimpleQuery):
             with via Watchlist.reports().
 
     Example:
-
     >>> cb.select(Report).where(feed_id=id)
     """
     def __init__(self, doc_class, cb):
