@@ -69,8 +69,8 @@ class CBCloudAPI(BaseAPI):
     # ---- Notifications
 
     def notification_listener(self, interval=60):
-        """Generator to continually poll the Cb Defense server for notifications (alerts). Note that this can only
-        be used with a 'SIEM' key generated in the Cb Defense console.
+        """Generator to continually poll the Cb Endpoint Standard server for notifications (alerts). Note that this can only
+        be used with a 'SIEM' key generated in the Cb Endpoint Standard console.
         """
         while True:
             for notification in self.get_notifications():
@@ -78,8 +78,8 @@ class CBCloudAPI(BaseAPI):
             time.sleep(interval)
 
     def get_notifications(self):
-        """Retrieve queued notifications (alerts) from the Cb Defense server. Note that this can only be used
-        with a 'SIEM' key generated in the Cb Defense console.
+        """Retrieve queued notifications (alerts) from the Cb Endpoint Standard server. Note that this can only be used
+        with a 'SIEM' key generated in the Cb Endpoint Standard console.
 
         :returns: list of dictionary objects representing the notifications, or an empty list if none available.
         """

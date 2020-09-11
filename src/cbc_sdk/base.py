@@ -735,7 +735,7 @@ class PaginatedQuery(BaseQuery):
 class QueryBuilder(object):
     """
     Provides a flexible interface for building prepared queries for the CB
-    PSC backend.
+    Cloud backend.
 
     This object can be instantiated directly, or can be managed implicitly
     through the :py:meth:`CBCloudAPI.select` API.
@@ -869,7 +869,7 @@ class QueryBuilder(object):
         a solrq.Q object (_query) which is then converted into a string to
         pass to Solr. This function will perform the appropriate conversions to
         end up with the 'q' string sent into the POST request to the
-        PSC-R query endpoint."""
+        Cloud API query endpoint."""
         if self._raw_query is not None:
             return " ".join(self._raw_query)
         elif self._query is not None:

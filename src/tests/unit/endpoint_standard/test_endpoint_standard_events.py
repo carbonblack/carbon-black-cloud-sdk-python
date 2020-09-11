@@ -1,11 +1,11 @@
-"""Testing Event object of cbc_sdk.defense"""
+"""Testing Event object of cbc_sdk.endpoint_standard"""
 
 import pytest
 import logging
-from cbc_sdk.defense import Event
+from cbc_sdk.endpoint_standard import Event
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.defense.mock_events import (EVENT_GET_HOSTNAME_RESP,
+from tests.unit.fixtures.endpoint_standard.mock_events import (EVENT_GET_HOSTNAME_RESP,
                                                      EVENT_GET_SPECIFIC_RESP)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
