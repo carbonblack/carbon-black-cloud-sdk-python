@@ -238,7 +238,7 @@ class Policy(EndpointStandardMutableModel, CreatableModelMixin):
 """Endpoint Standard Queries"""
 
 
-class Query(PaginatedQuery, PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
+class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
     """Represents a prepared query to the Cb Endpoint Standard server.
 
     This object is returned as part of a `CBCloudAPI.select`

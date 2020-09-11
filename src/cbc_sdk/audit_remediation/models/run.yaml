@@ -10,13 +10,13 @@ properties:
     description: The organization key for this run
   name:
     type: string
-    description: The name of the LiveQuery run
+    description: The name of the Audit and Remediation run
   id:
     type: string
     description: The run's unique ID
   sql:
     type: string
-    description: The LiveQuery query
+    description: The Audit and Remediation query
   created_by:
     type: string
     description: Placeholder # TODO(ww): Needs description
