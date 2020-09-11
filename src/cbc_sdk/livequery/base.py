@@ -15,7 +15,7 @@
 
 from __future__ import absolute_import
 from cbc_sdk.base import UnrefreshableModel, NewBaseModel, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin
-from cbc_sdk.platform import PSCQueryBase
+from cbc_sdk.platform import PlatformQueryBase
 from cbc_sdk.errors import ApiError, ServerError
 import logging
 import time
@@ -316,7 +316,7 @@ class DeviceSummaryFacet(ResultFacet):
 """LiveQuery Queries"""
 
 
-class RunQuery(PSCQueryBase):
+class RunQuery(PlatformQueryBase):
     """
     Represents a query that either creates or retrieves the
     status of a LiveQuery run.
@@ -416,7 +416,7 @@ class RunQuery(PSCQueryBase):
         return self._doc_class(self._cb, initial_data=resp.json())
 
 
-class RunHistoryQuery(PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
+class RunHistoryQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
     """
     Represents a query that retrieves historic LiveQuery runs.
     """
@@ -498,7 +498,7 @@ class RunHistoryQuery(PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin
                 break
 
 
-class ResultQuery(PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
+class ResultQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
     """
     Represents a query that retrieves results from a LiveQuery run.
     """
@@ -610,7 +610,7 @@ class ResultQuery(PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
                 break
 
 
-class FacetQuery(PSCQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
+class FacetQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
     """
     Represents a query that receives facet information from a LiveQuery run.
     """

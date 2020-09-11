@@ -1,11 +1,11 @@
-"""Testing Policy object of cbc_sdk.defense"""
+"""Testing Policy object of cbc_sdk.endpoint_standard"""
 
 import pytest
 import logging
-from cbc_sdk.defense import Policy
+from cbc_sdk.endpoint_standard import Policy
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.defense.mock_policy import (POLICY_GET_RESP,
+from tests.unit.fixtures.endpoint_standard.mock_policy import (POLICY_GET_RESP,
                                                      POLICY_POST_RULE_RESP,
                                                      POLICY_GET_WITH_NEW_RULE_RESP,
                                                      POLICY_MODIFY_RULE_RESP,
