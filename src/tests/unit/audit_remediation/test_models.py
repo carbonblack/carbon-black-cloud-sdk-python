@@ -1,6 +1,6 @@
 import pytest
 from cbc_sdk.rest_api import CBCloudAPI
-from cbc_sdk.livequery import Run, Result, ResultQuery, FacetQuery
+from cbc_sdk.audit_remediation import Run, Result, ResultQuery, FacetQuery
 from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.stubresponse import StubResponse, patch_cbapi
 
