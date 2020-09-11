@@ -6,7 +6,15 @@ from cbc_sdk.enterprise_edr import Process, Tree, Event, Query, AsyncProcessQuer
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.enterprise_edr.mock_process import (GET_PROCESS_SUMMARY_RESP,
-                                                           GET_TREE_RESP)
+                                                             GET_PROCESS_SUMMARY_RESP_1,
+                                                             GET_PROCESS_SUMMARY_RESP_2,
+                                                             GET_TREE_RESP,
+                                                             GET_PROCESS_VALIDATION_RESP,
+                                                             POST_PROCESS_SEARCH_JOB_RESP,
+                                                             GET_PROCESS_SEARCH_JOB_RESP,
+                                                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP,
+                                                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1,
+                                                             GET_PROCESS_SEARCH_PARENT_JOB_RESULTS_RESP)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -70,9 +78,38 @@ def test_process_events(cbcsdk_mock):
     assert events_query_params == expected_params
 
 
-def test_process_parents(cbcsdk_mock):
+@pytest.mark.parametrize('get_summary_response, guid, process_search_results, has_parent_process', [
+    (GET_PROCESS_SUMMARY_RESP, "test-0002b226-000015bd-00000000-1d6225bbba74c00",
+     GET_PROCESS_SEARCH_JOB_RESULTS_RESP, True),
+    (GET_PROCESS_SUMMARY_RESP_1, "test-00340b06-00000314-00000000-1d686b9e4d74f52",
+     None, False),
+    (GET_PROCESS_SUMMARY_RESP_2, "test-003513bc-0000035c-00000000-1d640200c9a6205",
+     GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1, True)
+    ])
+def test_process_parents(cbcsdk_mock, get_summary_response, guid, process_search_results, has_parent_process):
     """Testing Process.parents property/method."""
-    
+    api = cbcsdk_mock.api
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation", GET_PROCESS_VALIDATION_RESP)
+    process = api.select(Process, guid)
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/summary", get_summary_response)
+    # process.summary
+    if has_parent_process:
+        # assert isinstance(process.parents, Process)
+
+        cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_job", POST_PROCESS_SEARCH_JOB_RESP)
+        cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_jobs/2c292717-80ed-4f0d-845f-779e09470920", GET_PROCESS_SEARCH_JOB_RESP)
+        cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results", process_search_results)
+        # cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/summary", GET_PROCESS_SEARCH_PARENT_JOB_RESULTS_RESP)
+        # I think I need to re-mock a call to summary, which happens when selecting for parent_guid? But then error gets throw so?
+        parent_process = api.select(Process).where(process_guid=process.parents.process_guid)
+        print(f"Proc {process.process_guid}, Parents: {process.parents.process_guid}")
+        parent_search_results = [process for process in parent_process._perform_query()]
+
+        assert parent_search_results[0].process_guid == process.parents.process_guid
+    else:
+        assert process.parents == []
+
+
 
 def test_process_select_where(cbcsdk_mock):
     """Testing Process querying with where()."""
@@ -81,7 +118,7 @@ def test_process_select_where(cbcsdk_mock):
     process = api.select(Process).where(f"process_guid:{guid}")
     assert isinstance(process, AsyncProcessQuery)
 
-    
+
 def test_tree_select(cbcsdk_mock):
     """Testing Tree Querying"""
     cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/tree", GET_TREE_RESP)
