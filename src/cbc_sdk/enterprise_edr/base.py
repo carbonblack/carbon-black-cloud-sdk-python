@@ -52,7 +52,6 @@ class Process(UnrefreshableModel):
                                                   full_doc=True)
 
         @classmethod
-
         def _query_implementation(self, cb, **kwargs):
             return Query(self, cb, **kwargs)
 
@@ -107,15 +106,15 @@ class Process(UnrefreshableModel):
 
     @property
     def parents(self):
-        """Returns a query for parent processes associated with this process.
+        """Returns a parent process associated with this process.
 
         Returns:
-            query (cbc_sdk.enterprise_edr.query.AsyncProcessQuery or None):
-                A Query object with the appropriate search parameters for parent processes,
-                or None if the process has no recorded parent.
+            parent (Process): Parent Process if one exists, None if the process has no recorded parent.
         """
         if "parent_guid" in self._info:
-            return self._cb.select(Process).where(process_guid=self.parent_guid)
+            return self._cb.select(Process, self.parent_guid)
+        elif self.summary.parent:
+            return Process(self._cb, initial_data=self.summary.parent)
         else:
             return []
 
