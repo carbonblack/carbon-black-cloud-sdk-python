@@ -81,7 +81,7 @@ def test_process_select_where(cbcsdk_mock):
     process = api.select(Process).where(f"process_guid:{guid}")
     assert isinstance(process, AsyncProcessQuery)
 
-
+    
 def test_tree_select(cbcsdk_mock):
     """Testing Tree Querying"""
     cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/tree", GET_TREE_RESP)

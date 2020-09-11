@@ -44,6 +44,7 @@ class Process(UnrefreshableModel):
 
         def __init__(self, cb, model_unique_id):
             url = self.urlobject.format(cb.credentials.org_key)
+
             summary = cb.get_object(url, query_parameters={"process_guid": model_unique_id})
 
             super(Process.Summary, self).__init__(cb, model_unique_id=model_unique_id,
@@ -51,6 +52,7 @@ class Process(UnrefreshableModel):
                                                   full_doc=True)
 
         @classmethod
+
         def _query_implementation(self, cb, **kwargs):
             return Query(self, cb, **kwargs)
 
@@ -308,6 +310,7 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
     def _validate(self, args):
         if not hasattr(self._doc_class, "validation_url"):
         # if not self._doc_class.validation_url:
+
             return
 
         url = self._doc_class.validation_url.format(self._cb.credentials.org_key)
