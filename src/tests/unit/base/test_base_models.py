@@ -8,7 +8,7 @@ from cbc_sdk.endpoint_standard import Device as EndpointStandardDevice
 from cbc_sdk.endpoint_standard import Policy, Event
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ServerError, InvalidObjectError
-from cbc_sdk.threathunter import Feed
+from cbc_sdk.enterprise_edr import Feed
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.endpoint_standard.mock_events import EVENT_GET_SPECIFIC_RESP
 from tests.unit.fixtures.endpoint_standard.mock_devices import (DEVICE_GET_SPECIFIC_RESP,
@@ -16,7 +16,7 @@ from tests.unit.fixtures.endpoint_standard.mock_devices import (DEVICE_GET_SPECI
                                                       DEFENSE_DEVICE_GET_SPECIFIC_RESP_1,
                                                       POLICY_GET_SPECIFIC_RESP,
                                                       DEFENSE_DEVICE_PATCH_RESP)
-from tests.unit.fixtures.threathunter.mock_threatintel import FEED_GET_SPECIFIC_RESP
+from tests.unit.fixtures.enterprise_edr.mock_threatintel import FEED_GET_SPECIFIC_RESP
 
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')

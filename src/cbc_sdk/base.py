@@ -274,8 +274,9 @@ class NewBaseModel(object, metaclass=CbMetaModel):
 
     def _refresh(self):
         if self._model_unique_id is not None and self.__class__.primary_key not in self._dirty_attributes.keys():
+            # info = self._retrieve_cb_info()
+            # print(f"self: {self}, self._retrieve_cb_info: {self._retrieve_cb_info()}")
             self._info = self._parse(self._retrieve_cb_info())
-
             self._full_init = True
             self._last_refresh_time = time.time()
             return True

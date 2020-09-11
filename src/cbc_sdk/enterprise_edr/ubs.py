@@ -16,7 +16,7 @@
 from __future__ import absolute_import
 from cbc_sdk.errors import ApiError, InvalidObjectError, NonQueryableModel
 from cbc_sdk.base import UnrefreshableModel
-from cbc_sdk.threathunter.base import Query
+from cbc_sdk.enterprise_edr.base import Query
 
 import logging
 import validators
@@ -25,16 +25,13 @@ log = logging.getLogger(__name__)
 
 
 class Binary(UnrefreshableModel):
-    """Represents a retrievable binary.
-    """
+    """Represents a retrievable binary."""
     primary_key = "sha256"
-    swagger_meta_file = "threathunter/models/binary.yaml"
+    swagger_meta_file = "enterprise_edr/models/binary.yaml"
     urlobject_single = "/ubs/v1/orgs/{}/sha256/{}/metadata"
 
     class Summary(UnrefreshableModel):
-        """Represents a summary of organization-specific information
-        for a retrievable binary.
-        """
+        """Represents a summary of organization-specific information for a retrievable binary."""
         primary_key = "sha256"
         urlobject_single = "/ubs/v1/orgs/{}/sha256/{}/summary/device"
 
@@ -68,19 +65,22 @@ class Binary(UnrefreshableModel):
 
     @property
     def summary(self):
-        """Returns organization-specific information about this binary.
-        """
+        """Returns organization-specific information about this binary."""
         return self._cb.select(Binary.Summary, self.sha256)
 
     @property
     def download_url(self, expiration_seconds=3600):
-        """Returns a URL that can be used to download the file
-        for this binary. Returns None if no download can be found.
+        """Returns a URL that can be used to download the file for this binary. Returns None if no download found.
 
-        :param expiration_seconds: How long the download should be valid for
-        :raise InvalidObjectError: if URL retrieval should be retried
-        :return: A pre-signed AWS download URL
-        :rtype: str
+        Arguments:
+            expiration_seconds (int): How long the download should be valid for.
+
+        Returns:
+            URL (str): A pre-signed AWS download URL.
+            None: If no download is found.
+
+        Raises:
+            InvalidObjectError: If the URL retrieval should be retried.
         """
         downloads = self._cb.select(Downloads, [self.sha256],
                                     expiration_seconds=expiration_seconds)
@@ -96,14 +96,11 @@ class Binary(UnrefreshableModel):
 
 
 class Downloads(UnrefreshableModel):
-    """Represents download information for a list of process hashes.
-    """
+    """Represents download information for a list of process hashes."""
     urlobject = "/ubs/v1/orgs/{}/file/_download"
 
     class FoundItem(UnrefreshableModel):
-        """Represents the download URL and process hash for a successfully
-        located binary.
-        """
+        """Represents the download URL and process hash for a successfully located binary."""
         primary_key = "sha256"
 
         def __init__(self, cb, item):
@@ -132,7 +129,5 @@ class Downloads(UnrefreshableModel):
 
     @property
     def found(self):
-        """Returns a list of :py:class:`Downloads.FoundItem`, one
-        for each binary found in the binary store.
-        """
+        """Returns a list of Downloads.FoundItem, one for each binary found in the binary store."""
         return [Downloads.FoundItem(self._cb, item) for item in self._info["found"]]

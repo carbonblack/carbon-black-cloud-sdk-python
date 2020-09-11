@@ -1,11 +1,11 @@
-"""Testing Process and Tree objects of cbc_sdk.threathunter"""
+"""Testing Process and Tree objects of cbc_sdk.enterprise_edr"""
 
 import pytest
 import logging
-from cbc_sdk.threathunter import Process, Tree
+from cbc_sdk.enterprise_edr import Process, Tree
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.threathunter.mock_process import (GET_PROCESS_SUMMARY_RESP,
+from tests.unit.fixtures.enterprise_edr.mock_process import (GET_PROCESS_SUMMARY_RESP,
                                                            GET_TREE_RESP)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')

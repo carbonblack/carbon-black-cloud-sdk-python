@@ -28,18 +28,16 @@ log = logging.getLogger(__name__)
 
 
 class FeedModel(UnrefreshableModel, CreatableModelMixin, MutableBaseModel):
-    """A common base class for models used by the Feed and Watchlist APIs.
-    """
+    """A common base class for models used by the Feed and Watchlist APIs."""
     pass
 
 
 class Watchlist(FeedModel):
-    """Represents a ThreatHunter watchlist.
-    """
+    """Represents an Enterprise EDR watchlist."""
     # NOTE(ww): Not documented.
     urlobject = "/threathunter/watchlistmgr/v2/watchlist"
     urlobject_single = "/threathunter/watchlistmgr/v2/watchlist/{}"
-    swagger_meta_file = "threathunter/models/watchlist.yaml"
+    swagger_meta_file = "enterprise_edr/models/watchlist.yaml"
 
     @classmethod
     def _query_implementation(self, cb, **kwargs):
@@ -59,11 +57,13 @@ class Watchlist(FeedModel):
                                         force_init=False, full_doc=True)
 
     def save(self):
-        """Saves this watchlist on the ThreatHunter server.
+        """Saves this watchlist on the Enterprise EDR server.
 
-        :return: The saved watchlist
-        :rtype: :py:class:`Watchlist`
-        :raise InvalidObjectError: if :py:meth:`validate` fails
+        Returns:
+            Watchlist (Watchlist): The saved Watchlist.
+
+        Raises:
+            InvalidObjectError: If Watchlist.validate() fails.
         """
         self.validate()
 
@@ -77,19 +77,26 @@ class Watchlist(FeedModel):
     def validate(self):
         """Validates this watchlist's state.
 
-        :raise InvalidObjectError: if the watchlist's state is invalid
+        Raises:
+            InvalidObjectError: If the Watchlist's state is invalid.
         """
         super(Watchlist, self).validate()
 
     def update(self, **kwargs):
         """Updates this watchlist with the given arguments.
 
+        Arguments:
+            **kwargs (dict(str, str)): The fields to update.
+
+        Raises:
+            InvalidObjectError: If `id` is missing or Watchlist.validate() fails.
+            ApiError: If `report_ids` is given and is empty.
+
+        Example:
+
         >>> watchlist.update(name="New Name")
 
-        :param kwargs: The fields to update
-        :type kwargs: dict(str, str)
-        :raise InvalidObjectError: if `id` is missing or :py:meth:`validate` fails
-        :raise ApiError: if `report_ids` is given *and* is empty
+
         """
         if not self.id:
             raise InvalidObjectError("missing Watchlist ID")
@@ -115,7 +122,9 @@ class Watchlist(FeedModel):
     def classifier_(self):
         """Returns the classifier key and value, if any, for this watchlist.
 
-        :rtype: tuple(str, str) or None
+        Returns:
+            tuple(str, str): Watchlist's classifier key and value.
+            None: If there is no classifier key and value.
         """
         classifier_dict = self._info.get("classifier")
 
@@ -125,9 +134,10 @@ class Watchlist(FeedModel):
         return (classifier_dict["key"], classifier_dict["value"])
 
     def delete(self):
-        """Deletes this watchlist from the ThreatHunter server.
+        """Deletes this watchlist from the Enterprise EDR server.
 
-        :raise InvalidObjectError: if `id` is missing
+        Raises:
+            InvalidObjectError: If `id` is missing.
         """
         if not self.id:
             raise InvalidObjectError("missing Watchlist ID")
@@ -141,7 +151,8 @@ class Watchlist(FeedModel):
     def enable_alerts(self):
         """Enable alerts for this watchlist. Alerts are not retroactive.
 
-        :raise InvalidObjectError: if `id` is missing
+        Raises:
+            InvalidObjectError: If `id` is missing.
         """
         if not self.id:
             raise InvalidObjectError("missing Watchlist ID")
@@ -155,7 +166,8 @@ class Watchlist(FeedModel):
     def disable_alerts(self):
         """Disable alerts for this watchlist.
 
-        :raise InvalidObjectError: if `id` is missing
+        Raises:
+            InvalidObjectError: If `id` is missing.
         """
         if not self.id:
             raise InvalidObjectError("missing Watchlist ID")
@@ -169,7 +181,8 @@ class Watchlist(FeedModel):
     def enable_tags(self):
         """Enable tagging for this watchlist.
 
-        :raise InvalidObjectError: if `id` is missing
+        Raises:
+            InvalidObjectError: If `id` is missing.
         """
         if not self.id:
             raise InvalidObjectError("missing Watchlist ID")
@@ -183,7 +196,8 @@ class Watchlist(FeedModel):
     def disable_tags(self):
         """Disable tagging for this watchlist.
 
-        :raise InvalidObjectError: if `id` is missing
+        Raises:
+            InvalidObjectError: if `id` is missing.
         """
         if not self.id:
             raise InvalidObjectError("missing Watchlist ID")
@@ -196,11 +210,7 @@ class Watchlist(FeedModel):
 
     @property
     def feed(self):
-        """Returns the feed linked to this watchlist, if there is one.
-
-        :return: the feed linked to this watchlist, if any
-        :rtype: :py:class:`Feed` or None
-        """
+        """Returns the Feed linked to this Watchlist, if there is one."""
         if not self.classifier:
             return None
         if self.classifier["key"] != "feed_id":
@@ -211,18 +221,18 @@ class Watchlist(FeedModel):
 
     @property
     def reports(self):
-        """Returns a list of :py:class:`Report` instances associated with this watchlist.
+        """Returns a list of Report objects associated with this watchlist.
 
-        .. NOTE::
-            If this watchlist is a classifier (i.e. feed-linked) watchlist,
+        Returns:
+            Reports ([Report]): List of Reports associated with the watchlist.
+
+        Note:
+            If this Watchlist is a classifier (i.e. feed-linked) Watchlist,
             `reports` will be empty. To get the reports associated with the linked
-            feed, use :py:attr:`feed` like:
+            Feed, use feed like:
 
             >>> for report in watchlist.feed.reports:
             ...     print(report.title)
-
-        :return: A list of reports
-        :rtype: list(:py:class:`Report`)
         """
         if not self.report_ids:
             return []
@@ -238,12 +248,11 @@ class Watchlist(FeedModel):
 
 
 class Feed(FeedModel):
-    """Represents a ThreatHunter feed's metadata.
-    """
+    """Represents an Enterprise EDR feed's metadata."""
     urlobject = "/threathunter/feedmgr/v2/orgs/{}/feeds"
     urlobject_single = "/threathunter/feedmgr/v2/orgs/{}/feeds/{}"
     primary_key = "id"
-    swagger_meta_file = "threathunter/models/feed.yaml"
+    swagger_meta_file = "enterprise_edr/models/feed.yaml"
 
     @classmethod
     def _query_implementation(self, cb, **kwargs):
@@ -276,11 +285,13 @@ class Feed(FeedModel):
         self._reports = [Report(cb, initial_data=report, feed_id=feed_id) for report in reports]
 
     def save(self, public=False):
-        """Saves this feed on the ThreatHunter server.
+        """Saves this feed on the Enterprise EDR server.
 
-        :param public:  Whether to make the feed publicly available
-        :return: The saved feed
-        :rtype: :py:class:`Feed`
+        Arguments:
+            public (bool): Whether to make the feed publicly available.
+
+        Returns:
+            Feed (Feed): The saved Feed.
         """
         self.validate()
 
@@ -302,7 +313,8 @@ class Feed(FeedModel):
     def validate(self):
         """Validates this feed's state.
 
-        :raise InvalidObjectError: if the feed's state is invalid
+        Raises:
+            InvalidObjectError: If the Feed's state is invalid.
         """
         super(Feed, self).validate()
 
@@ -316,9 +328,10 @@ class Feed(FeedModel):
             report.validate()
 
     def delete(self):
-        """Deletes this feed from the ThreatHunter server.
+        """Deletes this feed from the Enterprise EDR server.
 
-        :raise InvalidObjectError: if `id` is missing
+        Raises:
+            InvalidObjectError: If `id` is missing.
         """
         if not self.id:
             raise InvalidObjectError("missing feed ID")
@@ -332,12 +345,16 @@ class Feed(FeedModel):
     def update(self, **kwargs):
         """Update this feed's metadata with the given arguments.
 
-        >>> feed.update(access="private")
+        Arguments:
+            **kwargs (dict(str, str)): The fields to update.
 
-        :param kwargs: The fields to update
-        :type kwargs: dict(str, str)
-        :raise InvalidObjectError: if `id` is missing or :py:meth:`validate` fails
-        :raise ApiError: if an invalid field is specified
+        Raises:
+            InvalidObjectError: If `id` is missing or Feed.validate() fails.
+            ApiError: If an invalid field is specified.
+
+        Example:
+
+        >>> feed.update(access="private")
         """
         if not self.id:
             raise InvalidObjectError("missing feed ID")
@@ -359,19 +376,21 @@ class Feed(FeedModel):
 
     @property
     def reports(self):
-        """Returns a list of :py:class:`Report` associated with this feed.
+        """Returns a list of Reports associated with this feed.
 
-        :return: a list of reports
-        :rtype: list(:py:class:`Report`)
+        Returns:
+            Reports ([Report]): List of Reports in this Feed.
         """
         return self._cb.select(Report).where(feed_id=self.id)
 
     def replace_reports(self, reports):
-        """Replace this feed's reports with the given reports.
+        """Replace this Feed's Reports with the given Reports.
 
-        :param reports: the reports to replace with
-        :type reports: list(:py:class:`Report`)
-        :raise InvalidObjectError: if `id` is missing
+        Arguments:
+            reports ([Report]): List of Reports to replace existing Reports with.
+
+        Raises:
+            InvalidObjectError: If `id` is missing.
         """
         if not self.id:
             raise InvalidObjectError("missing feed ID")
@@ -386,11 +405,13 @@ class Feed(FeedModel):
         self._cb.post_object(url, body)
 
     def append_reports(self, reports):
-        """Append the given reports to this feed's current reports.
+        """Append the given Reports to this Feed's current Reports.
 
-        :param reports: the reports to append
-        :type reports: list(:py:class:`Report`)
-        :raise InvalidObjectError: if `id` is missing
+        Arguments:
+            reports ([Report]): List of Reports to append to Feed.
+
+        Raises:
+            InvalidObjectError: If `id` is missing.
         """
         if not self.id:
             raise InvalidObjectError("missing feed ID")
@@ -407,11 +428,10 @@ class Feed(FeedModel):
 
 
 class Report(FeedModel):
-    """Represents reports retrieved from a ThreatHunter feed.
-    """
+    """Represents reports retrieved from an Enterprise EDR feed."""
     urlobject = "/threathunter/feedmgr/v2/orgs/{}/feeds/{}/reports"
     primary_key = "id"
-    swagger_meta_file = "threathunter/models/report.yaml"
+    swagger_meta_file = "enterprise_edr/models/report.yaml"
 
     @classmethod
     def _query_implementation(self, cb, **kwargs):
@@ -441,12 +461,13 @@ class Report(FeedModel):
     def save_watchlist(self):
         """Saves this report *as a watchlist report*.
 
-        .. NOTE::
+        Note:
             This method **cannot** be used to save a feed report. To
             save feed reports, create them with `cb.create` and use
-            :py:meth:`Feed.replace`.
+            `Feed.replace`.
 
-        :raise InvalidObjectError: if :py:meth:`validate` fails
+        Raises:
+            InvalidObjectError: If Report.validate() fails.
         """
         self.validate()
 
@@ -465,7 +486,8 @@ class Report(FeedModel):
     def validate(self):
         """Validates this report's state.
 
-        :raise InvalidObjectError: if the report's state is invalid
+        Raises:
+            InvalidObjectError: If the report's state is invalid
         """
         super(Report, self).validate()
 
@@ -476,22 +498,24 @@ class Report(FeedModel):
             [ioc.validate() for ioc in self._iocs_v2]
 
     def update(self, **kwargs):
-        """Update this report with the given arguments.
+        """Update this Report with the given arguments.
 
-        .. NOTE::
+        Arguments:
+            **kwargs (dict(str, str)): The Report fields to update.
+
+        Returns:
+            Report (Report): The updated Report.
+
+        Raises:
+            InvalidObjectError: If `id` is missing, or `feed_id` is missing
+                and this report is a Feed Report, or Report.validate() fails.
+
+        Note:
             The report's timestamp is always updated, regardless of whether
             passed explicitly.
 
         >>> report.update(title="My new report title")
-
-        :param kwargs: The fields to update
-        :type kwargs: dict(str, str)
-        :return: The updated report
-        :rtype: :py:class:`Report`
-        :raises InvalidObjectError: if `id` is missing, or `feed_id` is missing
-            and this report is a feed report, or :py:meth:`validate` fails
         """
-
         if not self.id:
             raise InvalidObjectError("missing Report ID")
 
@@ -523,12 +547,15 @@ class Report(FeedModel):
         return self
 
     def delete(self):
-        """Deletes this report from the ThreatHunter server.
+        """Deletes this report from the Enterprise EDR server.
+
+        Raises:
+            InvalidObjectError: If `id` is missing, or `feed_id` is missing
+                and this report is a Feed Report.
+
+        Example:
 
         >>> report.delete()
-
-        :raises InvalidObjectError: if `id` is missing, or `feed_id` is missing
-            and this report is a feed report
         """
         if not self.id:
             raise InvalidObjectError("missing Report ID")
@@ -555,12 +582,16 @@ class Report(FeedModel):
 
         Only watchlist reports have an ignore status.
 
+        Returns:
+            (bool): True if this Report is ignored, False otherwise.
+
+        Raises:
+            InvalidObjectError: If `id` is missing or this Report is not from a Watchlist.
+
+        Example:
+
         >>> if report.ignored:
         ...     report.unignore()
-
-        :return: whether or not this report is ignored
-        :rtype: bool
-        :raises InvalidObjectError: if `id` is missing or this report is not from a watchlist
         """
         if not self.id:
             raise InvalidObjectError("missing Report ID")
@@ -579,7 +610,8 @@ class Report(FeedModel):
 
         Only watchlist reports have an ignore status.
 
-        :raises InvalidObjectError: if `id` is missing or this report is not from a watchlist
+        Raises:
+            InvalidObjectError: If `id` is missing or this Report is not from a Watchlist.
         """
         if not self.id:
             raise InvalidObjectError("missing Report ID")
@@ -598,7 +630,8 @@ class Report(FeedModel):
 
         Only watchlist reports have an ignore status.
 
-        :raises InvalidObjectError: if `id` is missing or this report is not from a watchlist
+        Raises:
+            InvalidObjectError: If `id` is missing or this Report is not from a Watchlist.
         """
         if not self.id:
             raise InvalidObjectError("missing Report ID")
@@ -616,9 +649,12 @@ class Report(FeedModel):
     def custom_severity(self):
         """Returns the custom severity for this report.
 
-        :return: The custom severity for this report, if it exists
-        :rtype: :py:class:`ReportSeverity`
-        :raise InvalidObjectError: if `id` is missing or this report is from a watchlist
+        Returns:
+            ReportSeverity (ReportSeverity): The custom severity for this Report,
+                if it exists.
+
+        Raises:
+            InvalidObjectError: If `id` ismissing or this Report is from a Watchlist.
         """
         if not self.id:
             raise InvalidObjectError("missing report ID")
@@ -634,12 +670,17 @@ class Report(FeedModel):
 
     @custom_severity.setter
     def custom_severity(self, sev_level):
-        """Sets or removed the custom severity for this report
+        """Sets or removed the custom severity for this report.
 
-        :param int sev_level: the new severity, or None to remove the custom severity
-        :return: The new custom severity, or None if removed
-        :rtype: :py:class:`ReportSeverity` or None
-        :raise InvalidObjectError: if `id` is missing or this report is from a watchlist
+        Arguments:
+            sev_level (int): The new severity, or None to remove the custom severity.
+
+        Returns:
+            ReportSeverity (ReportSeverity): The new custom severity.
+            None: If the custom severity was removed.
+
+        Raises:
+            InvalidObjectError: If `id` is missing or this Report is from a Watchlist.
         """
         if not self.id:
             raise InvalidObjectError("missing report ID")
@@ -665,13 +706,15 @@ class Report(FeedModel):
 
     @property
     def iocs_(self):
-        """Returns a list of :py:class:`IOC_V2` associated with this report.
+        """Returns a list of IOC_V2's associated with this report.
+
+        Returns:
+            IOC_V2 ([IOC_V2]): List of IOC_V2's for associated with the Report.
+
+        Example:
 
         >>> for ioc in report.iocs_:
         ...     print(ioc.values)
-
-        :return: a list of IOCs
-        :rtype: list(:py:class:`IOC_V2`)
         """
         if not self.iocs_v2:
             return []
@@ -684,10 +727,9 @@ class Report(FeedModel):
 
 
 class ReportSeverity(FeedModel):
-    """Represents severity information for a watchlist report.
-    """
+    """Represents severity information for a Watchlist Report."""
     primary_key = "report_id"
-    swagger_meta_file = "threathunter/models/report_severity.yaml"
+    swagger_meta_file = "enterprise_edr/models/report_severity.yaml"
 
     def __init__(self, cb, initial_data=None):
         if not initial_data:
@@ -702,14 +744,14 @@ class ReportSeverity(FeedModel):
 
 
 class IOC(FeedModel):
-    """Represents a collection of categorized IOCs.
-    """
-    swagger_meta_file = "threathunter/models/iocs.yaml"
+    """Represents a collection of categorized IOCs."""
+    swagger_meta_file = "enterprise_edr/models/iocs.yaml"
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, report_id=None):
         """Creates a new IOC instance.
 
-        :raise ApiError: if `initial_data` is `None`
+        Raises:
+            ApiError: If `initial_data` is None.
         """
         if not initial_data:
             raise ApiError("IOC can only be initialized from initial_data")
@@ -725,7 +767,8 @@ class IOC(FeedModel):
     def validate(self):
         """Validates this IOC structure's state.
 
-        :raise InvalidObjectError: if the IOC structure's state is invalid
+        Raises:
+            InvalidObjectError: If the IOC structure's state is invalid.
         """
         super(IOC, self).validate()
 
@@ -747,15 +790,15 @@ class IOC(FeedModel):
 
 
 class IOC_V2(FeedModel):
-    """Represents a collection of IOCs of a particular type, plus matching criteria and metadata.
-    """
+    """Represents a collection of IOCs of a particular type, plus matching criteria and metadata."""
     primary_key = "id"
-    swagger_meta_file = "threathunter/models/ioc_v2.yaml"
+    swagger_meta_file = "enterprise_edr/models/ioc_v2.yaml"
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, report_id=None):
         """Creates a new IOC_V2 instance.
 
-        :raise ApiError: if `initial_data` is `None`
+        Raises:
+            ApiError: If `initial_data` is None.
         """
         if not initial_data:
             raise ApiError("IOC_V2 can only be initialized from initial_data")
@@ -772,7 +815,8 @@ class IOC_V2(FeedModel):
     def validate(self):
         """Validates this IOC_V2's state.
 
-        :raise InvalidObjectError: if the IOC_V2's state is invalid
+        Raises:
+            InvalidObjectError: If the IOC_V2's state is invalid.
         """
         super(IOC_V2, self).validate()
 
@@ -783,12 +827,16 @@ class IOC_V2(FeedModel):
     def ignored(self):
         """Returns whether or not this IOC is ignored
 
+        Returns:
+            (bool): True if the IOC is ignore, False otherwise.
+
+        Raises:
+            InvalidObjectError: If this IOC is missing an `id` or is not a Watchlist IOC.
+
+        Example:
+
         >>> if ioc.ignored:
         ...     ioc.unignore()
-
-        :return: the ignore status
-        :rtype: bool
-        :raise InvalidObjectError: if this IOC is missing an `id` or is not a watchlist IOC
         """
         if not self.id:
             raise InvalidObjectError("missing IOC ID")
@@ -808,7 +856,8 @@ class IOC_V2(FeedModel):
 
         Only watchlist IOCs have an ignore status.
 
-        :raises InvalidObjectError: if `id` is missing or this IOC is not from a watchlist
+        Raises:
+            InvalidObjectError: If `id` is missing or this IOC is not from a Watchlist.
         """
         if not self.id:
             raise InvalidObjectError("missing Report ID")
@@ -827,7 +876,8 @@ class IOC_V2(FeedModel):
 
         Only watchlist IOCs have an ignore status.
 
-        :raises InvalidObjectError: if `id` is missing or this IOC is not from a watchlist
+        Raises:
+            InvalidObjectError: If `id` is missing or this IOC is not from a Watchlist.
         """
         if not self.id:
             raise InvalidObjectError("missing Report ID")
@@ -846,7 +896,7 @@ class IOC_V2(FeedModel):
 
 
 class FeedQuery(SimpleQuery):
-    """Represents the logic for a :py:class:`Feed` query.
+    """Represents the logic for a Feed query.
 
     >>> cb.select(Feed)
     >>> cb.select(Feed, id)
@@ -857,11 +907,13 @@ class FeedQuery(SimpleQuery):
         self._args = {}
 
     def where(self, **kwargs):
+        """Add kwargs to self._args dictionary."""
         self._args = dict(self._args, **kwargs)
         return self
 
     @property
     def results(self):
+        """Return a list of Feed objects matching self._args parameters."""
         log.debug("Fetching all feeds")
         url = self._doc_class.urlobject.format(self._cb.credentials.org_key)
         resp = self._cb.get_object(url, query_parameters=self._args)
@@ -870,24 +922,27 @@ class FeedQuery(SimpleQuery):
 
 
 class ReportQuery(SimpleQuery):
-    """Represents the logic for a :py:class:`Report` query.
+    """Represents the logic for a Report query.
 
+    Note:
+        Only feed reports can be queried. Watchlist reports should be interacted
+            with via Watchlist.reports().
+
+    Example:
     >>> cb.select(Report).where(feed_id=id)
-
-    .. NOTE::
-        Only feed reports can be queried. Watchlist reports
-        should be interacted with via :py:meth:`Watchlist.reports`.
     """
     def __init__(self, doc_class, cb):
         super(ReportQuery, self).__init__(doc_class, cb)
         self._args = {}
 
     def where(self, **kwargs):
+        """Add kwargs to self._args dictionary."""
         self._args = dict(self._args, **kwargs)
         return self
 
     @property
     def results(self):
+        """Return a list of Report objects matching self._args['feed_id']."""
         if "feed_id" not in self._args:
             raise ApiError("required parameter feed_id missing")
 
@@ -904,7 +959,7 @@ class ReportQuery(SimpleQuery):
 
 
 class WatchlistQuery(SimpleQuery):
-    """Represents the logic for a :py:class:`Watchlist` query.
+    """Represents the logic for a Watchlist query.
 
     >>> cb.select(Watchlist)
     """
@@ -913,6 +968,7 @@ class WatchlistQuery(SimpleQuery):
 
     @property
     def results(self):
+        """Return a list of all Watchlist objects."""
         log.debug("Fetching all watchlists")
 
         resp = self._cb.get_object(self._doc_class.urlobject)
