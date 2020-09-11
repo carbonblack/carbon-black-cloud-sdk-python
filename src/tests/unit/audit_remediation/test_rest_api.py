@@ -1,6 +1,6 @@
 import pytest
 from cbc_sdk.rest_api import CBCloudAPI
-from cbc_sdk.livequery import Run, RunQuery, RunHistoryQuery
+from cbc_sdk.audit_remediation import Run, RunQuery, RunHistoryQuery
 from cbc_sdk.errors import ApiError, CredentialError
 from tests.unit.fixtures.stubresponse import StubResponse, patch_cbapi
 
@@ -28,7 +28,7 @@ def test_simple_get(monkeypatch):
     assert run.id == "abcdefg"
 
 
-def test_livequery(monkeypatch):
+def test_audit_remediation(monkeypatch):
     _was_called = False
 
     def _run_query(url, body, **kwargs):
@@ -40,7 +40,7 @@ def test_livequery(monkeypatch):
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_run_query)
-    query = api.livequery("select * from whatever;")
+    query = api.audit_remediation("select * from whatever;")
     assert isinstance(query, RunQuery)
     run = query.submit()
     assert _was_called
@@ -49,21 +49,21 @@ def test_livequery(monkeypatch):
     assert run.id == "abcdefg"
 
 
-def test_livequery_with_everything(monkeypatch):
+def test_audit_remediation_with_everything(monkeypatch):
     _was_called = False
 
     def _run_query(url, body, **kwargs):
         nonlocal _was_called
         assert url == "/livequery/v1/orgs/Z100/runs"
         assert body == {"sql": "select * from whatever;", "name": "AmyWasHere", "notify_on_finish": True,
-                        "device_filter": {"device_ids": [1, 2, 3], "device_types": ["Alpha", "Bravo", "Charlie"],
-                                          "policy_ids": [16, 27, 38]}}
+                        "device_filter": {"device_id": [1, 2, 3], "os": ["Alpha", "Bravo", "Charlie"],
+                                          "policy_id": [16, 27, 38]}}
         _was_called = True
         return StubResponse({"org_key": "Z100", "name": "FoobieBletch", "id": "abcdefg"})
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_run_query)
-    query = api.livequery("select * from whatever;").device_ids([1, 2, 3]).device_types(["Alpha", "Bravo", "Charlie"]) \
+    query = api.audit_remediation("select * from whatever;").device_ids([1, 2, 3]).device_types(["Alpha", "Bravo", "Charlie"]) \
         .policy_ids([16, 27, 38]).name("AmyWasHere").notify_on_finish()
     assert isinstance(query, RunQuery)
     run = query.submit()
@@ -73,28 +73,28 @@ def test_livequery_with_everything(monkeypatch):
     assert run.id == "abcdefg"
 
 
-def test_livequery_device_ids_broken():
+def test_audit_remediation_device_ids_broken():
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    query = api.livequery("select * from whatever;")
+    query = api.audit_remediation("select * from whatever;")
     with pytest.raises(ApiError):
         query = query.device_ids(["Bogus"])
 
 
-def test_livequery_device_types_broken():
+def test_audit_remediation_device_types_broken():
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    query = api.livequery("select * from whatever;")
+    query = api.audit_remediation("select * from whatever;")
     with pytest.raises(ApiError):
         query = query.device_types([420])
 
 
-def test_livequery_policy_ids_broken():
+def test_audit_remediation_policy_ids_broken():
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    query = api.livequery("select * from whatever;")
+    query = api.audit_remediation("select * from whatever;")
     with pytest.raises(ApiError):
         query = query.policy_ids(["Bogus"])
 
 
-def test_livequery_history(monkeypatch):
+def test_audit_remediation_history(monkeypatch):
     _was_called = False
 
     def _run_query(url, body, **kwargs):
@@ -109,7 +109,7 @@ def test_livequery_history(monkeypatch):
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_run_query)
-    query = api.livequery_history("xyzzy")
+    query = api.audit_remediation_history("xyzzy")
     assert isinstance(query, RunHistoryQuery)
     count = 0
     for item in query.all():
@@ -127,7 +127,7 @@ def test_livequery_history(monkeypatch):
     assert count == 3
 
 
-def test_livequery_history_with_everything(monkeypatch):
+def test_audit_remediation_history_with_everything(monkeypatch):
     _was_called = False
 
     def _run_query(url, body, **kwargs):
@@ -142,7 +142,7 @@ def test_livequery_history_with_everything(monkeypatch):
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_run_query)
-    query = api.livequery_history("xyzzy").sort_by("id")
+    query = api.audit_remediation_history("xyzzy").sort_by("id")
     assert isinstance(query, RunHistoryQuery)
     count = 0
     for item in query.all():
