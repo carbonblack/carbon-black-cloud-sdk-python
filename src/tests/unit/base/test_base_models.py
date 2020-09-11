@@ -3,18 +3,18 @@
 import pytest
 import logging
 from cbc_sdk.base import MutableBaseModel, NewBaseModel
-from cbc_sdk.platform import Device
 from cbc_sdk.defense import Device as DefenseDevice
 from cbc_sdk.defense import Policy, Event
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ServerError, InvalidObjectError
+from cbc_sdk.threathunter import Feed
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.defense.mock_events import EVENT_GET_SPECIFIC_RESP
-from tests.unit.fixtures.defense.mock_devices import (DEVICE_GET_SPECIFIC_RESP,
-                                                      DEFENSE_DEVICE_GET_SPECIFIC_RESP,
+from tests.unit.fixtures.defense.mock_devices import (DEFENSE_DEVICE_GET_SPECIFIC_RESP,
                                                       DEFENSE_DEVICE_GET_SPECIFIC_RESP_1,
                                                       POLICY_GET_SPECIFIC_RESP,
                                                       DEFENSE_DEVICE_PATCH_RESP)
+from tests.unit.fixtures.threathunter.mock_threatintel import FEED_GET_SPECIFIC_RESP
 
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -166,27 +166,29 @@ def test_original_document_nbm(cbcsdk_mock):
 
 def test_set_attr_mbm(cbcsdk_mock):
     """Test methods __setattr__ and _set of MutableBaseModel"""
-    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/12345", DEVICE_GET_SPECIFIC_RESP)
+    feed_id_1 = "pv65TYVQy8YWMX9KsQUg"
+    feed_id_2 = "qw76UZWRz9ZXNY0LtRVh"
+    cbcsdk_mock.mock_request("GET", f"/threathunter/feedmgr/v2/orgs/test/feeds/{feed_id_1}", FEED_GET_SPECIFIC_RESP)
     api = cbcsdk_mock.api
-    mutableBase = api.select(Device, 12345)
+    mutable_base = api.select(Feed, "pv65TYVQy8YWMX9KsQUg")
 
-    assert isinstance(mutableBase, MutableBaseModel)
-    assert isinstance(mutableBase, NewBaseModel)
-    assert isinstance(mutableBase, Device)
-    assert mutableBase._model_unique_id == 12345
+    assert isinstance(mutable_base, MutableBaseModel)
+    assert isinstance(mutable_base, NewBaseModel)
+    assert isinstance(mutable_base, Feed)
 
-    mutableBase.__setattr__("id", 54321)
+    assert mutable_base._model_unique_id == feed_id_1
 
-    assert mutableBase._model_unique_id == 54321
+    mutable_base.__setattr__("id", feed_id_2)
+    assert mutable_base._model_unique_id == feed_id_2
 
-    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/54321", DEVICE_GET_SPECIFIC_RESP)
+    cbcsdk_mock.mock_request("GET", f"/threathunter/feedmgr/v2/orgs/test/feeds/{feed_id_2}", FEED_GET_SPECIFIC_RESP)
 
-    mutableBase._set("id", 00000)
+    mutable_base._set("id", "aaaaaaaaaaaaaaaaaaaa")
 
-    assert mutableBase._model_unique_id == 00000
+    assert mutable_base._model_unique_id == "aaaaaaaaaaaaaaaaaaaa"
 
     # refresh at end of tests to clear dirty_attributes
-    mutableBase.reset()
+    mutable_base.reset()
 
 
 def test_refresh_mbm(cbcsdk_mock):

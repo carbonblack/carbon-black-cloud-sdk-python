@@ -37,7 +37,6 @@ def test_device_query_0(cbcsdk_mock):
     assert platform_device_select_with_id._model_unique_id == 98765
     assert platform_device_select_with_id.id == 98765
     assert isinstance(platform_device_select_with_id, Device)
-    assert platform_device_select_with_id.validate()
 
 
 def test_device_query_with_where_and(cbcsdk_mock):
@@ -59,4 +58,3 @@ def test_device_query_with_where_and(cbcsdk_mock):
     assert results[0]._info['id'] == platform_device_select_with_id._info['id']
     assert len(results[0]._info) == len(platform_device_select_with_id._info)
     assert len(results[0]._info) != 0
-    assert results[0].validate()
