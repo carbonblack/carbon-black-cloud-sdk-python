@@ -20,24 +20,25 @@ from cbc_sdk.utils import convert_query_params
 from copy import deepcopy
 import logging
 import json
-import time
-import sys
 
 from cbc_sdk.errors import ServerError
 
 log = logging.getLogger(__name__)
 
 
-"""Defense Models"""
+"""Endpoint Standard Models"""
 
 
-class DefenseMutableModel(MutableBaseModel):
+class EndpointStandardMutableModel(MutableBaseModel):
+    """Represents Endpoint Standard objects."""
     _change_object_http_method = "PATCH"
     _change_object_key_name = None
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
-        super(DefenseMutableModel, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
-                                                  force_init=force_init, full_doc=full_doc)
+        """Initialize an EndpointStandardMutableModel with model_unique_id and initial_data."""
+        super(EndpointStandardMutableModel, self).__init__(cb, model_unique_id=model_unique_id,
+                                                           initial_data=initial_data, force_init=force_init,
+                                                           full_doc=full_doc)
         if not self._change_object_key_name:
             self._change_object_key_name = self.primary_key
 
@@ -127,14 +128,16 @@ class DefenseMutableModel(MutableBaseModel):
         return self._model_unique_id
 
 
-class Device(DefenseMutableModel):
+class Device(EndpointStandardMutableModel):
+    """Represents an Endpoint Standard Device."""
     urlobject = "/integrationServices/v3/device"
     urlobject_single = "/integrationServices/v3/device/{}"
     primary_key = "deviceId"
     info_key = "deviceInfo"
-    swagger_meta_file = "defense/models/deviceInfo.yaml"
+    swagger_meta_file = "endpoint_standard/models/deviceInfo.yaml"
 
     def __init__(self, cb, model_unique_id, initial_data=None):
+        """Initialize a Device object with model_unique_id and initial_data."""
         super(Device, self).__init__(cb, model_unique_id, initial_data)
         if model_unique_id is not None and initial_data is None:
             self._refresh()
@@ -148,7 +151,7 @@ class Device(DefenseMutableModel):
         Retrieve a Live Response session object for this Device.
 
         :return: Live Response session object
-        :rtype: :py:class:`cbc_sdk.defense.cblr.LiveResponseSession`
+        :rtype: :py:class:`cbc_sdk.endpoint_standard.cblr.LiveResponseSession`
         :raises ApiError: if there is an error establishing a Live Response session for this Device
 
         """
@@ -156,6 +159,7 @@ class Device(DefenseMutableModel):
 
 
 class Event(NewBaseModel):
+    """Represents an Endpoint Standard Event."""
     urlobject = "/integrationServices/v3/event"
     primary_key = "eventId"
     info_key = "eventInfo"
@@ -165,6 +169,7 @@ class Event(NewBaseModel):
             return obj[self.info_key]
 
     def __init__(self, cb, model_unique_id, initial_data=None):
+        """Initialize an Event with model_unique_id and initial_data."""
         super(Event, self).__init__(cb, model_unique_id, initial_data)
 
     @classmethod
@@ -172,10 +177,11 @@ class Event(NewBaseModel):
         return Query(cls, cb, kwargs.get("query_string", None))
 
 
-class Policy(DefenseMutableModel, CreatableModelMixin):
+class Policy(EndpointStandardMutableModel, CreatableModelMixin):
+    """Represents an Endpoint Standard Policy."""
     urlobject = "/integrationServices/v3/policy"
     info_key = "policyInfo"
-    swagger_meta_file = "defense/models/policyInfo.yaml"
+    swagger_meta_file = "endpoint_standard/models/policyInfo.yaml"
     _change_object_http_method = "PUT"
     _change_object_key_name = "policyId"
 
@@ -185,38 +191,66 @@ class Policy(DefenseMutableModel, CreatableModelMixin):
 
     @property
     def rules(self):
+        """Returns a dictionary of rules and rule IDs for this Policy."""
         return dict([(r.get("id"), r) for r in self.policy.get("rules", [])])
 
     def add_rule(self, new_rule):
+        """Adds a rule to this Policy.
+
+        Arguments:
+            new_rule (dict(str,str)): The new rule to add to this Policy.
+
+        Notes:
+            - The new rule must conform to this dictionary format:
+
+                {"action": "ACTION",
+                "application": {"type": "TYPE", "value": "VALUE"},
+                "operation": "OPERATION",
+                "required": "REQUIRED"}
+
+            - The dictionary keys have these possible values:
+
+                "action": ["IGNORE", "ALLOW", "DENY", "TERMINATE_PROCESS",
+                           "TERMINATE_THREAD", "TERMINATE"]
+                "type": ["NAME_PATH", "SIGNED_BY", "REPUTATION"]
+                "value": Any string value to match on
+                "operation": ["BYPASS_ALL", "INVOKE_SCRIPT", "INVOKE_SYSAPP",
+                              "POL_INVOKE_NOT_TRUSTED", "INVOKE_CMD_INTERPRETER",
+                              "RANSOM", "NETWORK", "PROCESS_ISOLATION", "CODE_INJECTION",
+                              "MEMORY_SCRAPE", "RUN_INMEMORY_CODE", "ESCALATE", "RUN"]
+                "required": [True, False]
+        """
         self._cb.post_object("{0}/rule".format(self._build_api_request_uri()), {"ruleInfo": new_rule})
         self.refresh()
 
     def delete_rule(self, rule_id):
+        """Deletes a rule from this Policy."""
         self._cb.delete_object("{0}/rule/{1}".format(self._build_api_request_uri(), rule_id))
         self.refresh()
 
     def replace_rule(self, rule_id, new_rule):
+        """Replaces a rule in this policy."""
         self._cb.put_object("{0}/rule/{1}".format(self._build_api_request_uri(), rule_id),
                             {"ruleInfo": new_rule})
         self.refresh()
 
 
-"""Defense Queries"""
+"""Endpoint Standard Queries"""
 
 
 class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
-    """Represents a prepared query to the Cb Defense server.
+    """Represents a prepared query to the Cb Endpoint Standard server.
 
-    This object is returned as part of a :py:meth:`CBCloudAPI.select`
-    operation on models requested from the Cb Defense server. You should not have to create this class yourself.
+    This object is returned as part of a `CBCloudAPI.select`
+    operation on models requested from the Cb Endpoint Standard server.
+    You should not have to create this class yourself.
 
     The query is not executed on the server until it's accessed, either as an iterator (where it will generate values
     on demand as they're requested) or as a list (where it will retrieve the entire result set and save to a list).
-    You can also call the Python built-in ``len()`` on this object to retrieve the total number of items matching
+    You can also call the Python built-in `len() on this object to retrieve the total number of items matching
     the query.
 
-    Examples::
-
+    Example:
     >>> from cbc_sdk import CBCloudAPI
     >>> cb = CBCloudAPI()
 
@@ -227,6 +261,7 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
           will be returned.
     """
     def __init__(self, doc_class, cb, query=None):
+        """Initialize a Query object."""
         super(Query, self).__init__(doc_class, cb, query)
 
         self._sort_by = None
@@ -234,7 +269,6 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
         self._batch_size = 100
         self._criteria = {}
         self._query_builder = QueryBuilder()
-
 
     def _clone(self):
         nq = self.__class__(self._doc_class, self._cb)
@@ -244,8 +278,8 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
         nq._criteria = self._criteria
         return nq
 
-
     def prepare_query(self, args):
+        """Adds query parameters that are part of a `select().where()` clause to the request."""
         request = args
         params = self._query_builder._collapse()
         if params is not None:
@@ -303,8 +337,8 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
                 if rows and numrows == rows:
                     still_querying = False
                     break
-
-            args['start'] = current + 1     # as of 6/2017, the indexing on the Cb Defense backend is still 1-based
+            # as of 6/2017, the indexing on the Cb Endpoint Standard backend is still 1-based
+            args['start'] = current + 1
 
             if current >= self._total_results:
                 break

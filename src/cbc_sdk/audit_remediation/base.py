@@ -24,27 +24,26 @@ import time
 log = logging.getLogger(__name__)
 
 
-"""LiveQuery Models"""
+"""Audit and Remediation Models"""
 
 
 class Run(NewBaseModel):
-    """
-    Represents a LiveQuery run.
+    """Represents an Audit and Remediation run.
 
-    Example::
-
+    Example:
     >>> run = cb.select(Run, run_id)
     >>> print(run.name, run.sql, run.create_time)
     >>> print(run.status, run.match_count)
     >>> run.refresh()
     """
     primary_key = "id"
-    swagger_meta_file = "livequery/models/run.yaml"
+    swagger_meta_file = "audit_remediation/models/run.yaml"
     urlobject = "/livequery/v1/orgs/{}/runs"
     urlobject_single = "/livequery/v1/orgs/{}/runs/{}"
     _is_deleted = False
 
     def __init__(self, cb, model_unique_id=None, initial_data=None):
+        """Initialize a Run object with initial_data."""
         if initial_data is not None:
             item = initial_data
         elif model_unique_id is not None:
@@ -75,6 +74,14 @@ class Run(NewBaseModel):
         return True
 
     def stop(self):
+        """Stop a running query.
+
+        Returns:
+            (bool): True if query was stopped successfully, False otherwise.
+
+        Raises:
+            ServerError: If the server response cannot be parsed as JSON.
+        """
         if self._is_deleted:
             raise ApiError("cannot stop a deleted query")
         url = self.urlobject_single.format(self._cb.credentials.org_key, self.id) + "/status"
@@ -89,6 +96,11 @@ class Run(NewBaseModel):
         return False
 
     def delete(self):
+        """Delete a query.
+
+        Returns:
+            (bool): True if the query was deleted successfully, False otherwise.
+        """
         if self._is_deleted:
             return True  # already deleted
         url = self.urlobject_single.format(self._cb.credentials.org_key, self.id)
@@ -100,12 +112,11 @@ class Run(NewBaseModel):
 
 
 class RunHistory(Run):
-    """
-    Represents a historical LiveQuery ``Run``.
-    """
+    """Represents a historical Audit and Remediation `Run`."""
     urlobject_history = "/livequery/v1/orgs/{}/runs/_search"
 
     def __init__(self, cb, initial_data=None):
+        """Initialize a RunHistory object with initial_data."""
         item = initial_data
         model_unique_id = item.get("id")
         super(Run, self).__init__(cb,
@@ -118,20 +129,17 @@ class RunHistory(Run):
 
 
 class Result(UnrefreshableModel):
-    """
-    Represents a single result from a LiveQuery ``Run``.
-    """
+    """Represents a single result from an Audit and Remediation `Run`."""
     primary_key = "id"
-    swagger_meta_file = "livequery/models/result.yaml"
+    swagger_meta_file = "audit_remediation/models/result.yaml"
     urlobject = "/livequery/v1/orgs/{}/runs/{}/results/_search"
 
     class Device(UnrefreshableModel):
-        """
-        Represents device information for a result.
-        """
+        """Represents device information for a result."""
         primary_key = "id"
 
         def __init__(self, cb, initial_data):
+            """Initialize a Device Result object with initial_data."""
             super(Result.Device, self).__init__(
                 cb,
                 model_unique_id=initial_data["id"],
@@ -141,10 +149,9 @@ class Result(UnrefreshableModel):
             )
 
     class Fields(UnrefreshableModel):
-        """
-        Represents the fields of a result.
-        """
+        """Represents the fields of a result."""
         def __init__(self, cb, initial_data):
+            """Initialize a Result Fields object with initial_data."""
             super(Result.Fields, self).__init__(
                 cb,
                 model_unique_id=None,
@@ -154,10 +161,9 @@ class Result(UnrefreshableModel):
             )
 
     class Metrics(UnrefreshableModel):
-        """
-        Represents the metrics for a result.
-        """
+        """Represents the metrics of a result."""
         def __init__(self, cb, initial_data):
+            """Initialize a Result Metrics object with initial_data."""
             super(Result.Metrics, self).__init__(
                 cb,
                 model_unique_id=None,
@@ -171,6 +177,10 @@ class Result(UnrefreshableModel):
         return ResultQuery(cls, cb)
 
     def __init__(self, cb, initial_data):
+        """Initialize a Result object with initial_data.
+
+        Device, Fields, and Metrics objects are attached using initial_data.
+        """
         super(Result, self).__init__(
             cb,
             model_unique_id=initial_data["id"],
@@ -188,48 +198,51 @@ class Result(UnrefreshableModel):
 
     @property
     def device_(self):
-        """
-        Returns the reified ``Result.Device`` for this result.
-        """
+        """Returns the reified `Result.Device` for this result."""
         return self._device
 
     @property
     def fields_(self):
-        """
-        Returns the reified ``Result.Fields`` for this result.
-        """
+        """Returns the reified `Result.Fields` for this result."""
         return self._fields
 
     @property
     def metrics_(self):
-        """
-        Returns the reified ``Result.Metrics`` for this result.
-        """
+        """Returns the reified `Result.Metrics` for this result."""
         return self._metrics
 
     def query_device_summaries(self):
+        """Returns a ResultQuery for a DeviceSummary.
+
+        This represents the search for a summary of results from a single device of a `Run`.
+        """
         return self._cb.select(DeviceSummary).run_id(self._run_id)
 
     def query_result_facets(self):
+        """Returns a ResultQuery for a ResultFacet.
+
+        This represents the search for a summary of results from a single field of a `Run`.
+        """
         return self._cb.select(ResultFacet).run_id(self._run_id)
 
     def query_device_summary_facets(self):
+        """Returns a ResultQuery for a DeviceSummaryFacet.
+
+        This represents the search for a summary of a single device summary of a `Run`.
+        """
         return self._cb.select(DeviceSummaryFacet).run_id(self._run_id)
 
 
 class DeviceSummary(UnrefreshableModel):
-    """
-    Represents the summary of results from a single device during a single LiveQuery ``Run``.
-    """
+    """Represents the summary of results from a single device during a single Audit and Remediation `Run`."""
     primary_key = "id"
-    swagger_meta_file = "livequery/models/device_summary.yaml"
+    swagger_meta_file = "audit_remediation/models/device_summary.yaml"
     urlobject = "/livequery/v1/orgs/{}/runs/{}/results/device_summaries/_search"
 
     class Metrics(UnrefreshableModel):
-        """
-        Represents the metrics for a result.
-        """
+        """Represents the metrics for a result."""
         def __init__(self, cb, initial_data):
+            """Initialize a DeviceSummary Metrics object with initial_data."""
             super(DeviceSummary.Metrics, self).__init__(
                 cb,
                 model_unique_id=None,
@@ -243,6 +256,7 @@ class DeviceSummary(UnrefreshableModel):
         return ResultQuery(cls, cb)
 
     def __init__(self, cb, initial_data):
+        """Initialize a DeviceSummary object with initial_data."""
         super(DeviceSummary, self).__init__(
             cb,
             model_unique_id=initial_data["id"],
@@ -254,25 +268,20 @@ class DeviceSummary(UnrefreshableModel):
 
     @property
     def metrics_(self):
-        """
-        Returns the reified ``DeviceSummary.Metrics`` for this result.
-        """
+        """Returns the reified `DeviceSummary.Metrics` for this result."""
         return self._metrics
 
 
 class ResultFacet(UnrefreshableModel):
-    """
-    Represents the summary of results for a single field in a LiveQuery ``Run``.
-    """
+    """Represents the summary of results for a single field in an Audit and Remediation `Run`."""
     primary_key = "field"
-    swagger_meta_file = "livequery/models/facet.yaml"
+    swagger_meta_file = "audit_remediation/models/facet.yaml"
     urlobject = "/livequery/v1/orgs/{}/runs/{}/results/_facet"
 
     class Values(UnrefreshableModel):
-        """
-        Represents the values associated with a field.
-        """
+        """Represents the values associated with a field."""
         def __init__(self, cb, initial_data):
+            """Initialize a ResultFacet Values object with initial_data."""
             super(ResultFacet.Values, self).__init__(
                 cb,
                 model_unique_id=None,
@@ -286,6 +295,7 @@ class ResultFacet(UnrefreshableModel):
         return FacetQuery(cls, cb)
 
     def __init__(self, cb, initial_data):
+        """Initialize a ResultFacet object with initial_data."""
         super(ResultFacet, self).__init__(
             cb,
             model_unique_id=None,
@@ -297,23 +307,20 @@ class ResultFacet(UnrefreshableModel):
 
     @property
     def values_(self):
-        """
-        Returns the reified ``ResultFacet.Values`` for this result.
-        """
+        """Returns the reified `ResultFacet.Values` for this result."""
         return self._values
 
 
 class DeviceSummaryFacet(ResultFacet):
-    """
-    Represents the summary of results for a single device summary in a LiveQuery ``Run``.
-    """
+    """Represents the summary of results for a single device summary in an Audit and Remediation `Run`."""
     urlobject = "/livequery/v1/orgs/{}/runs/{}/results/device_summaries/_facet"
 
     def __init__(self, cb, initial_data):
+        """Initialize a DeviceSummaryFacet object with initial_data."""
         super(DeviceSummaryFacet, self).__init__(cb, initial_data)
 
 
-"""LiveQuery Queries"""
+"""Audit and Remediation Queries"""
 
 
 class RunQuery(PlatformQueryBase):
@@ -323,84 +330,101 @@ class RunQuery(PlatformQueryBase):
     """
 
     def __init__(self, doc_class, cb):
+        """Initialize a RunQuery object."""
         super().__init__(doc_class, cb)
         self._query_token = None
         self._query_body = {"device_filter": {}}
         self._device_filter = self._query_body["device_filter"]
 
     def device_ids(self, device_ids):
-        """
-        Restricts the devices that this LiveQuery run is performed on
-        to the given IDs.
+        """Restricts the devices that this Audit and Remediation run is performed on to the given IDs.
 
-        :param device_ids: list of ints
-        :return: This instance
+        Arguments:
+            device_ids ([int]): Device IDs to perform the Run on.
+
+        Returns:
+            The RunQuery with specified device_ids.
         """
         if not all(isinstance(device_id, int) for device_id in device_ids):
             raise ApiError("One or more invalid device IDs")
-        self._device_filter["device_ids"] = device_ids
+        self._device_filter["device_id"] = device_ids
         return self
 
     def device_types(self, device_types):
-        """
-        Restricts the devices that this LiveQuery run is performed on
-        to the given device types.
+        """Restricts the devices that this Audit and Remediation run is performed on to the given OS.
 
-        :param device_types: list of strs
-        :return: This instance
+        Arguments:
+            device_types ([str]): Device types to perform the Run on.
+
+        Returns:
+            The RunQuery object with specified device_types.
+
+        Note:
+            Device type can be one of ["WINDOWS", "MAC", "LINUX"].
         """
         if not all(isinstance(device_type, str) for device_type in device_types):
             raise ApiError("One or more invalid device types")
-        self._device_filter["device_types"] = device_types
+        self._device_filter["os"] = device_types
         return self
 
     def policy_ids(self, policy_ids):
-        """
-        Restricts this LiveQuery run to the given policy IDs.
+        """Restricts this Audit and Remediation run to the given policy IDs.
 
-        :param policy_ids: list of ints
-        :return: This instance
+        Arguments:
+            policy_ids ([int]): Policy ID's to perform the Run on.
+
+        Returns:
+            The RunQuery object with specified policy_ids.
         """
         if not all(isinstance(policy_id, int) for policy_id in policy_ids):
             raise ApiError("One or more invalid policy IDs")
-        self._device_filter["policy_ids"] = policy_ids
+        self._device_filter["policy_id"] = policy_ids
         return self
 
     def where(self, sql):
-        """
-        Sets this LiveQuery run's underlying SQL.
+        """Sets this Audit and Remediation run's underlying SQL.
 
-        :param sql: The SQL to execute
-        :return: This instance
+        Arguments:
+            sql (str): The SQL to execute for the Run.
+
+        Returns:
+            The RunQuery object with specified sql.
         """
         self._query_body["sql"] = sql
         return self
 
     def name(self, name):
-        """
-        Sets this LiveQuery run's name. If no name is explicitly set,
-        the run is named after its SQL.
+        """Sets this Audit and Remediation run's name.
 
-        :param name: The run name
-        :return: This instance
+        If no name is explicitly set, the run is named after its SQL.
+
+        Arguments:
+            name (str): The name for this Run.
+
+        Returns:
+            The RunQuery object with specified name.
         """
         self._query_body["name"] = name
         return self
 
     def notify_on_finish(self):
-        """
-        Sets the notify-on-finish flag on this LiveQuery run.
+        """Sets the notify-on-finish flag on this Audit and Remediation run.
 
-        :return: This instance
+        Returns:
+            The RunQuery object with `notify_on_finish` set to True.
         """
         self._query_body["notify_on_finish"] = True
         return self
 
     def submit(self):
-        """
-        Submits this LiveQuery run.
+        """Submits this Audit and Remediation run.
 
-        :return: A new ``Run`` instance containing the run's status
+        Returns:
+            A new `Run` instance containing the run's status.
+
+        Raises:
+            ApiError: If the Run does not have SQL set, or if the Run
+                has already been submitted.
         """
         if self._query_token is not None:
             raise ApiError(
@@ -408,7 +432,7 @@ class RunQuery(PlatformQueryBase):
             )
 
         if "sql" not in self._query_body:
-            raise ApiError("Missing LiveQuery SQL")
+            raise ApiError("Missing Audit and Remediation SQL")
 
         url = self._doc_class.urlobject.format(self._cb.credentials.org_key)
         resp = self._cb.post_object(url, body=self._query_body)
@@ -421,6 +445,7 @@ class RunHistoryQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQuery
     Represents a query that retrieves historic LiveQuery runs.
     """
     def __init__(self, doc_class, cb):
+        """Initialize a RunHistoryQuery object."""
         super().__init__(doc_class, cb)
         self._query_builder = QueryBuilder()
         self._sort = {}
@@ -428,13 +453,16 @@ class RunHistoryQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQuery
     def sort_by(self, key, direction="ASC"):
         """Sets the sorting behavior on a query's results.
 
-        Example::
+        Arguments:
+            key (str): The key in the schema to sort by.
+            direction (str): The sort order, either "ASC" or "DESC".
+
+        Returns:
+            RunHistoryQuery object with specified sorting key and order.
+
+        Example:
 
         >>> cb.select(Result).run_id(my_run).where(username="foobar").sort_by("uid")
-
-        :param key: the key in the schema to sort by
-        :param direction: the sort order, either "ASC" or "DESC"
-        :rtype: :py:class:`ResultQuery`
         """
         self._sort.update({"field": key, "order": direction})
         return self
@@ -503,6 +531,7 @@ class ResultQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixi
     Represents a query that retrieves results from a LiveQuery run.
     """
     def __init__(self, doc_class, cb):
+        """Initialize a ResultQuery object."""
         super().__init__(doc_class, cb)
         self._query_builder = QueryBuilder()
         self._criteria = {}
@@ -513,10 +542,11 @@ class ResultQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixi
     def criteria(self, **kwargs):
         """Sets the filter criteria on a query's results.
 
-        Example::
+        Arguments:
+            **kwargs (dict(str, str)): The criteria to apply to query results.
 
+        Example:
         >>> cb.select(Result).run_id(my_run).criteria(device_id=[123, 456])
-
         """
         self._criteria.update(kwargs)
         return self
@@ -524,13 +554,16 @@ class ResultQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixi
     def sort_by(self, key, direction="ASC"):
         """Sets the sorting behavior on a query's results.
 
-        Example::
+        Arguments:
+            key (str): The key in the schema to sort by.
+            direction (str): The sort order, either "ASC" or "DESC".
+
+        Returns:
+            ResultQuery object with specified sorting key and order.
+
+        Example:
 
         >>> cb.select(Result).run_id(my_run).where(username="foobar").sort_by("uid")
-
-        :param key: the key in the schema to sort by
-        :param direction: the sort order, either "ASC" or "DESC"
-        :rtype: :py:class:`ResultQuery`
         """
         self._sort.update({"field": key, "order": direction})
         return self
@@ -538,7 +571,13 @@ class ResultQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixi
     def run_id(self, run_id):
         """Sets the run ID to query results for.
 
-        Example::
+        Arguments:
+            run_id (int): The run ID to retrieve results for.
+
+        Returns:
+            ResultQuery object with specified run_id.
+
+        Example:
 
         >>> cb.select(Result).run_id(my_run)
         """
@@ -615,6 +654,7 @@ class FacetQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin
     Represents a query that receives facet information from a LiveQuery run.
     """
     def __init__(self, doc_class, cb):
+        """Initialize a FacetQuery object."""
         super().__init__(doc_class, cb)
         self._query_builder = QueryBuilder()
         self._facet_fields = []
@@ -624,13 +664,15 @@ class FacetQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin
     def facet_field(self, field):
         """Sets the facet fields to be received by this query.
 
-        Example::
+        Arguments:
+            field (str or [str]): Field(s) to be received.
+
+        Returns:
+            FacetQuery that will receive field(s) facet_field.
+
+        Example:
 
         >>> cb.select(ResultFacet).run_id(my_run).facet_field(["device.policy_name", "device.os"])
-
-        :param field: Field(s) to be received, either single string or list of strings
-        :return: Query object
-        :rtype: :py:class:`Query`
         """
         if isinstance(field, str):
             self._facet_fields.append(field)
@@ -642,10 +684,15 @@ class FacetQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin
     def criteria(self, **kwargs):
         """Sets the filter criteria on a query's results.
 
-        Example::
+        Arguments:
+            **kwargs (dict(str,str)): The criteria to apply to the query.
+                Can be one of ["device_id", "policy_id", "os"].
 
+        Returns:
+            FacetQuery object with specified criteria.
+
+        Example:
         >>> cb.select(ResultFacet).run_id(my_run).criteria(device_id=[123, 456])
-
         """
         self._criteria.update(kwargs)
         return self
@@ -653,8 +700,13 @@ class FacetQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin
     def run_id(self, run_id):
         """Sets the run ID to query results for.
 
-        Example::
+        Arguments:
+            run_id (int): The run ID to retrieve results for.
 
+        Returns:
+            FacetQuery object with specified run_id.
+
+        Example:
         >>> cb.select(ResultFacet).run_id(my_run)
         """
         self._run_id = run_id

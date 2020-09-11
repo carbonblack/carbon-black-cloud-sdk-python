@@ -356,7 +356,7 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
                     still_querying = False
                     break
 
-            args['start'] = current + 1  # as of 6/2017, the indexing on the Cb Defense backend is still 1-based
+            args['start'] = current + 1  # as of 6/2017, the indexing on the Cb Endpoint Standard backend is still 1-based
 
             if current >= self._total_results:
                 break

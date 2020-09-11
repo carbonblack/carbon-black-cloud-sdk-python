@@ -3,14 +3,16 @@
 import pytest
 import logging
 from cbc_sdk.base import MutableBaseModel, NewBaseModel
-from cbc_sdk.defense import Device as DefenseDevice
-from cbc_sdk.defense import Policy, Event
+from cbc_sdk.platform import Device
+from cbc_sdk.endpoint_standard import Device as EndpointStandardDevice
+from cbc_sdk.endpoint_standard import Policy, Event
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ServerError, InvalidObjectError
 from cbc_sdk.threathunter import Feed
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.defense.mock_events import EVENT_GET_SPECIFIC_RESP
-from tests.unit.fixtures.defense.mock_devices import (DEFENSE_DEVICE_GET_SPECIFIC_RESP,
+from tests.unit.fixtures.endpoint_standard.mock_events import EVENT_GET_SPECIFIC_RESP
+from tests.unit.fixtures.endpoint_standard.mock_devices import (DEVICE_GET_SPECIFIC_RESP,
+                                                      DEFENSE_DEVICE_GET_SPECIFIC_RESP,
                                                       DEFENSE_DEVICE_GET_SPECIFIC_RESP_1,
                                                       POLICY_GET_SPECIFIC_RESP,
                                                       DEFENSE_DEVICE_PATCH_RESP)
@@ -58,7 +60,7 @@ def test_getattr_nbm(cbcsdk_mock):
     """Test __getattr__ method of NewBaseModel"""
     api = cbcsdk_mock.api
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/12345", DEFENSE_DEVICE_GET_SPECIFIC_RESP)
-    containsIdMutableBase = api.select(DefenseDevice, 12345)
+    containsIdMutableBase = api.select(EndpointStandardDevice, 12345)
     assert containsIdMutableBase._model_unique_id == 12345
     assert containsIdMutableBase.__getattr__("avMaster") is False
 
@@ -201,7 +203,7 @@ def test_refresh_mbm(cbcsdk_mock):
     # _refresh() should return True if there's a set model_unique_id and the
     # primary_key hasn't been modified
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/12345", DEFENSE_DEVICE_GET_SPECIFIC_RESP)
-    containsIdMutableBase = api.select(DefenseDevice, 12345)
+    containsIdMutableBase = api.select(EndpointStandardDevice, 12345)
     assert containsIdMutableBase._model_unique_id == 12345
     assert "deviceId" not in containsIdMutableBase._dirty_attributes.keys()
     assert containsIdMutableBase._refresh() is True
@@ -213,7 +215,7 @@ def test_refresh_mbm(cbcsdk_mock):
     assert containsIdMutableBase.primary_key == "deviceId"
     assert "deviceId" in containsIdMutableBase._dirty_attributes.keys()
     assert containsIdMutableBase.__class__.primary_key in containsIdMutableBase._dirty_attributes.keys()
-    assert isinstance(containsIdMutableBase, DefenseDevice)
+    assert isinstance(containsIdMutableBase, EndpointStandardDevice)
     assert containsIdMutableBase._refresh() is False
 
     # refresh at end of tests to clear dirty_attributes
@@ -224,7 +226,7 @@ def test_is_dirty_mbm(cbcsdk_mock):
     """Test is_dirty method of MutableBaseModel"""
     api = cbcsdk_mock.api
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/12345", DEFENSE_DEVICE_GET_SPECIFIC_RESP)
-    mutableBaseModelDevice = DefenseDevice(api, 12345)
+    mutableBaseModelDevice = EndpointStandardDevice(api, 12345)
     assert mutableBaseModelDevice.is_dirty() is False
 
     mutableBaseModelDevice._set("deviceId", 99999)
@@ -239,7 +241,7 @@ def test_update_object_mbm(cbcsdk_mock):
     # if primary_key hasn't been modified, we use the _change_object_http_method
     api = cbcsdk_mock.api
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/12345", DEFENSE_DEVICE_GET_SPECIFIC_RESP)
-    mutableBaseModelDevice = DefenseDevice(api, 12345)
+    mutableBaseModelDevice = EndpointStandardDevice(api, 12345)
     cbcsdk_mock.mock_request("PATCH", "/integrationServices/v3/device/12345", DEFENSE_DEVICE_PATCH_RESP)
     print(mutableBaseModelDevice._info)
     mutableBaseModelDevice._set("name", "newFakeName")
@@ -256,14 +258,11 @@ def test_update_object_mbm(cbcsdk_mock):
     mutableBaseModelDevice.reset()
 
 
-# TODO: figure out why "result": [something != "success"] doesn't raise ServerError
-# It was because of the try except L#124 in cbc_sdk.defense.base, hid the errors
-# I think we should raise the exceptions
 def test_refresh_if_needed_mbm(cbcsdk_mock):
     """Test _refresh_if_needed method of MutableBaseModel"""
     api = cbcsdk_mock.api
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/12345", DEFENSE_DEVICE_GET_SPECIFIC_RESP)
-    mutableBaseModelDevice = DefenseDevice(api, 12345)
+    mutableBaseModelDevice = EndpointStandardDevice(api, 12345)
 
     # 200 status code
     refresh_resp_200 = cbcsdk_mock.StubResponse({"success": True, "deviceInfo": {"deviceId": 12345}}, 200)
@@ -295,7 +294,7 @@ def test_save_mbm(cbcsdk_mock):
     """Test save method of MutableBaseModel"""
     api = cbcsdk_mock.api
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/12345", DEFENSE_DEVICE_GET_SPECIFIC_RESP)
-    mutableBaseModelDevice = DefenseDevice(api, 12345)
+    mutableBaseModelDevice = EndpointStandardDevice(api, 12345)
 
     assert mutableBaseModelDevice.save() is None
     assert mutableBaseModelDevice._info["firstName"] is None
@@ -315,7 +314,7 @@ def test_reset_mbm(cbcsdk_mock):
     """Test reset method of MutableBaseModel"""
     api = cbcsdk_mock.api
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/12345", DEFENSE_DEVICE_GET_SPECIFIC_RESP)
-    device = DefenseDevice(api, 12345)
+    device = EndpointStandardDevice(api, 12345)
     assert device._dirty_attributes == {}
     device._set("lastName", "restNewName")
     assert "lastName" in device._dirty_attributes
@@ -338,14 +337,14 @@ def test_delete_mbm(cbcsdk_mock):
     assert emptyMutableBase.delete() is None
 
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/12345", DEFENSE_DEVICE_GET_SPECIFIC_RESP)
-    mutableBaseModelDevice = DefenseDevice(api, 12345)
+    mutableBaseModelDevice = EndpointStandardDevice(api, 12345)
     assert mutableBaseModelDevice._model_unique_id == 12345
     cbcsdk_mock.mock_request("DELETE", "/integrationServices/v3/device/12345", body=None)
     assert mutableBaseModelDevice.delete() is None
 
     # receiving a status code outside of (200,204) should raise a ServerError
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/54321", DEFENSE_DEVICE_GET_SPECIFIC_RESP_1)
-    newDevice = DefenseDevice(api, 54321)
+    newDevice = EndpointStandardDevice(api, 54321)
     delete_resp = cbcsdk_mock.StubResponse(contents={"success": False}, scode=403,
                                            text="Failed to delete for some reason")
     cbcsdk_mock.mock_request("DELETE", "/integrationServices/v3/device/54321", delete_resp)
