@@ -5,6 +5,13 @@ GET_PROCESS_VALIDATION_RESP = {
     "value_search_query": False
 }
 
+GET_PROCESS_VALIDATION_RESP_INVALID = {
+    "invalid_message": "Invalid Query Parameter",
+    "valid": False,
+    "value_search_query": False,
+    "invalid_trigger_offset": 0
+}
+
 POST_PROCESS_SEARCH_JOB_RESP = {
     "job_id": "2c292717-80ed-4f0d-845f-779e09470920"
 }
@@ -37,7 +44,7 @@ GET_PROCESS_SEARCH_JOB_RESULTS_RESP = {
             "modload_count": 1,
             "netconn_count": 0,
             "org_id": "test",
-            "parent_guid": "test-0002b226-00000001-00000000-1d6225bbba74c00",
+            "parent_guid": "test-0002b226-00000001-00000000-1d6225bbba74c00procsearchparent",
             "parent_hash": [
                 "9090e0e44e14709fb09b23b98572e0e61c810189e2de8f7156021bc81c3b1bb6",
                 "bccc12eb2ef644e662a63a023fb83f9b"
@@ -48,7 +55,7 @@ GET_PROCESS_SEARCH_JOB_RESULTS_RESP = {
                 "\"C:\\Program Files\\VMware\\VMware Tools\\vmtoolsd.exe\""
             ],
             "process_effective_reputation": "TRUSTED_WHITE_LIST",
-            "process_guid": "test-0034d5f2-00000ba0-00000000-1d68709850fe522",
+            "process_guid": "test-0034d5f2-00000ba0-00000000-1d68709850fe522getprocjobres",
             "process_hash": [
                 "63d423ea882264dbb157a965c200306212fc5e1c6ddb8cbbb0f1d3b51ecd82e6",
                 "c7084336325dc8eadfb1e8ff876921c4"
@@ -75,7 +82,7 @@ GET_PROCESS_SEARCH_JOB_RESULTS_RESP = {
             ]
         }
     ],
-    "num_found": 6168,
+    "num_found": 616,
     "num_available": 1,
     "contacted": 45,
     "completed": 45
@@ -269,7 +276,7 @@ GET_PROCESS_SUMMARY_RESP = {
         "ingress_time": 1598477387331,
         "legacy": True,
         "org_id": "test",
-        "parent_guid": "test-0002b226-00000001-00000000-1d6225bbba74c00",
+        "parent_guid": "test-0002b226-00000001-00000000-1d6225bbba74c0parent",
         "parent_hash": [
             "81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85"
         ],
@@ -279,7 +286,7 @@ GET_PROCESS_SUMMARY_RESP = {
         "process_cmdline": [
             "/usr/lib/polkit-1/polkitd --no-debug"
         ],
-        "process_guid": "test-0002b226-000015bd-00000000-1d6225bbba74c00",
+        "process_guid": "test-0002b226-000015bd-00000000-1d6225bbba74c09",
         "process_hash": [
             "5920199e4fbfa47c1717b863814722148a353e54f8c10912cf1f991a1c86309d"
         ],
@@ -319,14 +326,14 @@ GET_PROCESS_SUMMARY_RESP = {
             "ingress_time": 1589371825851,
             "legacy": True,
             "org_id": "test",
-            "parent_guid": "test-0002b226-00000001-00000000-1d6225bbba74c00",
+            "parent_guid": "test-0002b226-00000001-00000000-1d6225bbba74c00siblingparent",
             "parent_hash": [
                 "81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85"
             ],
             "parent_name": "/usr/lib/systemd/systemd",
             "parent_pid": 1,
             "partition_id": 0,
-            "process_guid": "test-0002b226-0000192c-00000000-1d6225bbba74c00",
+            "process_guid": "test-0002b226-0000192c-00000000-1d6225bbba74c00siblingproc",
             "process_hash": [
                 "b9e3723553385b6e3d487bfae3878f9f8e57593ae4ec0a1ff4087f94b8e8368a"
             ],
@@ -366,7 +373,7 @@ GET_PROCESS_SUMMARY_RESP = {
             "ingress_time": 1597156546529,
             "legacy": True,
             "org_id": "test",
-            "parent_guid": "test-0002b226-00000001-00000000-1d6225bbba74c00",
+            "parent_guid": "test-0002b226-00000001-00000000-1d6225bbba74c00sibling2parent",
             "parent_hash": [
                 "81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85"
             ],
@@ -417,7 +424,7 @@ GET_PROCESS_SUMMARY_RESP = {
             "ingress_time": 1597157696823,
             "legacy": True,
             "org_id": "test",
-            "parent_guid": "test-0002b226-00000001-00000000-1d6225bbba74c00",
+            "parent_guid": "test-0002b226-00000001-00000000-1d6225bbba74c00sibling3parent",
             "parent_hash": [
                 "81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85"
             ],
@@ -784,8 +791,7 @@ GET_PROCESS_SUMMARY_RESP_2 = {
         "process_effective_reputation": "ADAPTIVE_WHITE_LIST",
         "process_guid": "7DESJ9GN-003513bc-0000035c-00000000-1d640200c9a6204",
         "process_hash": [
-            "708c8760385810080c4d17fa84d325ca",
-            "a5f3d6f51fe87d0a01b4d4a1907952bdaf31b5f0887f5b2253a83f9f0180c2ce"
+            "708c8760385810080c4d17fa84d325ca"
         ],
         "process_name": "/usr/bin/bash",
         "process_pid": [
@@ -2584,7 +2590,108 @@ GET_PROCESS_SUMMARY_RESP_2 = {
         "regmod_count": 0,
         "scriptload_count": 0
     },
-    "children": None
+    "children": [
+            {
+                "_s3_location": "1zQ8BfT2QUeXYSUjbQjZkQ:1747e718a0f:1e258:125d:default:3",
+                "backend_timestamp": "2020-09-11T18:33:27.336Z",
+                "childproc_count": 0,
+                "crossproc_count": 19,
+                "device_external_ip": "52.56.32.175",
+                "device_group_id": 0,
+                "device_id": 3410694,
+                "device_internal_ip": "10.240.0.114",
+                "device_name": "win10-carbonblack",
+                "device_os": "WINDOWS",
+                "device_policy": "default",
+                "device_policy_id": 6525,
+                "device_timestamp": "2020-09-11T18:31:13.332Z",
+                "filemod_count": 0,
+                "has_children": False,
+                "index_class": "default",
+                "ingress_time": 1599849196001,
+                "modload_count": 0,
+                "netconn_count": 0,
+                "org_id": "7DESJ9GN",
+                "parent_guid": "7DESJ9GN-00340b06-00000314-00000000-1d686b9e4d74f52",
+                "parent_hash": [
+                    "d5e122606054fa0b03db3ee8cf9ea7701e523875e2bdb87581ad7232ffc9308e",
+                    "e83650f70459a027aa596e1a73c961a1"
+                ],
+                "parent_name": "c:\\windows\\system32\\wininit.exe",
+                "parent_pid": 788,
+                "partition_id": 0,
+                "process_cmdline": [
+                    "\"fontdrvhost.exe\""
+                ],
+                "process_effective_reputation": "TRUSTED_WHITE_LIST",
+                "process_guid": "7DESJ9GN-00340b06-00000288-00000000-1d686b9e55303cd",
+                "process_hash": [
+                    "87295b931a8811415c3e8e9db19eed93",
+                    "725ffd2bc38975251262e85335e2c68b67a6c645d1948e5c39d43fb976327625"
+                ],
+                "process_name": "c:\\windows\\system32\\fontdrvhost.exe",
+                "process_pid": [
+                    648
+                ],
+                "process_reputation": "TRUSTED_WHITE_LIST",
+                "process_start_time": "2020-09-09T15:00:02.850Z",
+                "process_username": [
+                    "Font Driver Host\\UMFD-0"
+                ],
+                "regmod_count": 0,
+                "scriptload_count": 0
+            },
+            {
+                "_s3_location": "FPzxTk8ORr2rGTrMkESxEg:1747ec36d68:17e08f:e23:default:3",
+                "backend_timestamp": "2020-09-11T20:03:23.737Z",
+                "childproc_count": 240,
+                "crossproc_count": 174,
+                "device_external_ip": "52.56.32.175",
+                "device_group_id": 0,
+                "device_id": 3410694,
+                "device_internal_ip": "10.240.0.114",
+                "device_name": "win10-carbonblack",
+                "device_os": "WINDOWS",
+                "device_policy": "default",
+                "device_policy_id": 6525,
+                "device_timestamp": "2020-09-11T20:00:03.353Z",
+                "filemod_count": 0,
+                "has_children": True,
+                "index_class": "default",
+                "ingress_time": 1599854555174,
+                "modload_count": 0,
+                "netconn_count": 0,
+                "org_id": "7DESJ9GN",
+                "parent_guid": "7DESJ9GN-00340b06-00000314-00000000-1d686b9e4d74f52",
+                "parent_hash": [
+                    "d5e122606054fa0b03db3ee8cf9ea7701e523875e2bdb87581ad7232ffc9308e",
+                    "e83650f70459a027aa596e1a73c961a1"
+                ],
+                "parent_name": "c:\\windows\\system32\\wininit.exe",
+                "parent_pid": 788,
+                "partition_id": 0,
+                "process_cmdline": [
+                    "C:\\WINDOWS\\system32\\services.exe"
+                ],
+                "process_effective_reputation": "TRUSTED_WHITE_LIST",
+                "process_guid": "7DESJ9GN-00340b06-0000038c-00000000-1d686b9e4ea6b5d",
+                "process_hash": [
+                    "bccc12eb2ef644e662a63a023fb83f9b",
+                    "9090e0e44e14709fb09b23b98572e0e61c810189e2de8f7156021bc81c3b1bb6"
+                ],
+                "process_name": "c:\\windows\\system32\\services.exe",
+                "process_pid": [
+                    908
+                ],
+                "process_reputation": "TRUSTED_WHITE_LIST",
+                "process_start_time": "2020-09-09T15:00:02.164Z",
+                "process_username": [
+                    "NT AUTHORITY\\SYSTEM"
+                ],
+                "regmod_count": 50,
+                "scriptload_count": 0
+            },
+    ]
 }
 
 GET_TREE_RESP = {
@@ -2614,14 +2721,14 @@ GET_TREE_RESP = {
                 "ingress_time": 1589371825851,
                 "legacy": True,
                 "org_id": "test",
-                "parent_guid": "test-0002b226-00000001-00000000-1d6225bbba74c00",
+                "parent_guid": "test-0002b226-00000001-00000000-1d6225bbba74c00childtreeparent",
                 "parent_hash": [
                     "81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85"
                 ],
                 "parent_name": "/usr/lib/systemd/systemd",
                 "parent_pid": 1,
                 "partition_id": 0,
-                "process_guid": "test-0002b226-0000192c-00000000-1d6225bbba74c00",
+                "process_guid": "test-0002b226-0000192c-00000000-1d6225bbba74c00childtreeproc",
                 "process_hash": [
                     "b9e3723553385b6e3d487bfae3878f9f8e57593ae4ec0a1ff4087f94b8e8368a"
                 ],
@@ -2659,7 +2766,7 @@ GET_TREE_RESP = {
         "legacy": True,
         "org_id": "test",
         "partition_id": 0,
-        "process_guid": "test-0002b226-00000001-00000000-1d6225bbba74c00",
+        "process_guid": "test-0002b226-00000001-00000000-1d6225bbba74c00treeproc",
         "process_hash": [
             "81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85"
         ],
@@ -2674,4 +2781,10 @@ GET_TREE_RESP = {
             "UNKNOWN_APP"
         ]
     }
+}
+
+GET_SUMMARY_NOT_FOUND = {
+    "message": "Resource does not exist",
+    "translation_key": "threathunter_resource_does_not_exist",
+    "translation_format_values": None
 }
