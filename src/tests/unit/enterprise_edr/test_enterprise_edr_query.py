@@ -2,22 +2,18 @@
 
 import pytest
 import logging
-from cbc_sdk.enterprise_edr import Process, Tree, Event, Query, AsyncProcessQuery
+from cbc_sdk.enterprise_edr import Process
 from cbc_sdk.rest_api import CBCloudAPI
-from cbc_sdk.errors import ObjectNotFoundError, ApiError
+from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.enterprise_edr.mock_process import (GET_PROCESS_SUMMARY_RESP,
                                                              GET_PROCESS_SUMMARY_RESP_1,
-                                                             GET_PROCESS_SUMMARY_RESP_2,
-                                                             GET_TREE_RESP,
                                                              GET_PROCESS_VALIDATION_RESP,
                                                              GET_PROCESS_VALIDATION_RESP_INVALID,
                                                              POST_PROCESS_SEARCH_JOB_RESP,
                                                              GET_PROCESS_SEARCH_JOB_RESP,
                                                              GET_PROCESS_SEARCH_JOB_RESULTS_RESP,
-                                                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1,
-                                                             GET_PROCESS_SEARCH_PARENT_JOB_RESULTS_RESP,
-                                                             GET_SUMMARY_NOT_FOUND)
+                                                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 

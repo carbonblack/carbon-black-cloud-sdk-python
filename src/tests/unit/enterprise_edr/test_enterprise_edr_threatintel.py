@@ -6,9 +6,9 @@ from cbc_sdk.enterprise_edr import Watchlist, Report, Feed
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.enterprise_edr.mock_threatintel import (WATCHLIST_GET_RESP,
-                                                               REPORT_GET_RESP,
-                                                               FEED_GET_RESP,
-                                                               FEED_GET_SPECIFIC_RESP)
+                                                                 REPORT_GET_RESP,
+                                                                 FEED_GET_RESP,
+                                                                 FEED_GET_SPECIFIC_RESP)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 

@@ -2,11 +2,11 @@
 
 import pytest
 import logging
-from cbc_sdk.enterprise_edr import Event, Process, Query
+from cbc_sdk.enterprise_edr import Event, Process
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.enterprise_edr.mock_events import (EVENT_SEARCH_VALIDATION_RESP,
-                                                          EVENT_SEARCH_RESP)
+                                                            EVENT_SEARCH_RESP)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 

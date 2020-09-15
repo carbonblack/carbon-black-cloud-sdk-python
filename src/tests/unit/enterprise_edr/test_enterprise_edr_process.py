@@ -13,10 +13,8 @@ from tests.unit.fixtures.enterprise_edr.mock_process import (GET_PROCESS_SUMMARY
                                                              GET_PROCESS_VALIDATION_RESP,
                                                              POST_PROCESS_SEARCH_JOB_RESP,
                                                              GET_PROCESS_SEARCH_JOB_RESP,
-                                                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP,
                                                              GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1,
-                                                             GET_PROCESS_SEARCH_PARENT_JOB_RESULTS_RESP,
-                                                             GET_SUMMARY_NOT_FOUND)
+                                                             GET_PROCESS_SEARCH_PARENT_JOB_RESULTS_RESP)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
