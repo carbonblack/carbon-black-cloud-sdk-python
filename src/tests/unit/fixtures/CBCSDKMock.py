@@ -101,13 +101,10 @@ class CBCSDKMock:
                 if (self.mocks[matched] is Exception or
                         self.mocks[matched] in Exception.__subclasses__() or
                         getattr(self.mocks[matched], '__module__', None) == cbc_sdk.errors.__name__):
-                    print("Exception")
                     raise self.mocks[matched]
                 elif callable(self.mocks[matched]):
                     return self.mocks[matched](url, query_parameters, default)
                 else:
-                    print("Not an exception")
-                    print(self.mocks[matched])
                     return self.mocks[matched]
             pytest.fail("GET called for %s when it shouldn't be" % url)
         return _get_object
