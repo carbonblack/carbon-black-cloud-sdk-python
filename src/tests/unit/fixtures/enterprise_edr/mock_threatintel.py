@@ -456,6 +456,56 @@ WATCHLIST_GET_RESP = {
     ]
 }
 
+WATCHLIST_GET_SPECIFIC_RESP = {
+    "name": "ATT&CK Framework",
+    "description": "Existing description for the watchlist.",
+    "id": "watchlistId",
+    "tags_enabled": True,
+    "alerts_enabled": False,
+    "create_timestamp": 1597173159,
+    "last_update_timestamp": 1597173159,
+    "report_ids": None,
+    "classifier": {
+        "key": "feed_id",
+        "value": "feed_id_associated"
+    }
+}
+
+WATCHLIST_GET_SPECIFIC_MISSING_FIELDS_RESP = {
+    "description": "Description of invalid response.",
+    "id": "watchlistMissingFieldsWithID",
+    "tags_enabled": True,
+    "alerts_enabled": False,
+    "create_timestamp": 1597173159,
+    "last_update_timestamp": 1597173159,
+    "report_ids": None
+}
+
+WATCHLIST_GET_SPECIFIC_INVALID_CLASSIFIER_RESP = {
+    "name": "ATT&CK Framework",
+    "description": "Existing description for the watchlist.",
+    "id": "watchlistInvalidClassifier",
+    "tags_enabled": True,
+    "alerts_enabled": False,
+    "create_timestamp": 1597173159,
+    "last_update_timestamp": 1597173159,
+    "report_ids": None,
+    "classifier": {
+        "key": "only_feed_id_is_expected",
+        "value": "abcdefgh"
+    }
+}
+
+CREATE_WATCHLIST_DATA = {
+ "name": "myWatchlist",
+ "description": "My Description.",
+ "id": "watchlistId",
+ "tags_enabled": True,
+ "alerts_enabled": True,
+ "create_timestamp": 1600197345,
+ "last_update_timestamp": 1600197345,
+}
+
 REPORT_GET_RESP = {
     "results": [
         {

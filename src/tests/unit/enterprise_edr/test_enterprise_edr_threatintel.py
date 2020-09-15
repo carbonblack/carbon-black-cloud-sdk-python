@@ -3,9 +3,14 @@
 import pytest
 import logging
 from cbc_sdk.enterprise_edr import Watchlist, Report, Feed
+from cbc_sdk.errors import InvalidObjectError, ApiError
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.enterprise_edr.mock_threatintel import (WATCHLIST_GET_RESP,
+                                                                 WATCHLIST_GET_SPECIFIC_RESP,
+                                                                 WATCHLIST_GET_SPECIFIC_MISSING_FIELDS_RESP,
+                                                                 WATCHLIST_GET_SPECIFIC_INVALID_CLASSIFIER_RESP,
+                                                                 CREATE_WATCHLIST_DATA,
                                                                  REPORT_GET_RESP,
                                                                  FEED_GET_RESP,
                                                                  FEED_GET_SPECIFIC_RESP)
@@ -38,6 +43,184 @@ def test_watchlist_query(cbcsdk_mock):
     results = [res for res in watchlist._perform_query()]
     assert results is not None
     assert isinstance(results[0], Watchlist)
+
+
+def test_watchlist_init(cbcsdk_mock):
+    """Testing Watchlist.__init__()."""
+    id = "watchlistId"
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_RESP)
+    watchlist = Watchlist(cbcsdk_mock.api, model_unique_id="watchlistId", initial_data=None)
+    assert watchlist._model_unique_id == "watchlistId"
+
+
+def test_watchlist_save(cbcsdk_mock):
+    """Testing Watchlist.save()."""
+    api = cbcsdk_mock.api
+    id = "watchlistId"
+    cbcsdk_mock.mock_request("POST", "/threathunter/watchlistmgr/v3/orgs/test/watchlists", WATCHLIST_GET_SPECIFIC_RESP)
+    watchlist = Watchlist(api, model_unique_id="watchlistId", initial_data=CREATE_WATCHLIST_DATA)
+    watchlist.validate()
+    watchlist.save()
+
+    # if the Watchlist response is missing a required field per enterprise_edr.models.Watchlist, raise InvalidObjectError
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_MISSING_FIELDS_RESP)
+    watchlist = api.select(Watchlist, "watchlistId")
+    with pytest.raises(InvalidObjectError):
+        watchlist.validate()
+    with pytest.raises(InvalidObjectError):
+        watchlist.save()
+
+
+def test_watchlist_update(cbcsdk_mock):
+    """Testing Watchlist.update()."""
+    id = "watchlistId"
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_RESP)
+    watchlist = Watchlist(cbcsdk_mock.api, model_unique_id="watchlistId", initial_data=None)
+    assert "description" in watchlist._info
+    assert "nonexistant_key" not in watchlist._info
+    assert watchlist._info["description"] == "Existing description for the watchlist."
+    cbcsdk_mock.mock_request("PUT", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}", WATCHLIST_GET_SPECIFIC_RESP)
+    watchlist.update(description="My New Description", nonexistant_key="This Is Ignored")
+    assert watchlist._info["description"] == "My New Description"
+
+
+def test_watchlist_update_invalid_object(cbcsdk_mock):
+    """Testing Watchlist.update() raising InvalidObjectError when Watchlist ID is missing."""
+    watchlist = Watchlist(cbcsdk_mock.api, model_unique_id=None, initial_data=None)
+    with pytest.raises(InvalidObjectError):
+        watchlist.update(nonexistant_key="This is ignored")
+
+
+def test_watchlist_update_api_error(cbcsdk_mock):
+    """Testing Watchlist.update() raising ApiError when passing in "report_ids" with empty list."""
+    id = "watchlistId"
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_RESP)
+    watchlist = Watchlist(cbcsdk_mock.api, model_unique_id="watchlistId", initial_data=None)
+    cbcsdk_mock.mock_request("PUT", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}", WATCHLIST_GET_SPECIFIC_RESP)
+    with pytest.raises(ApiError):
+        watchlist.update(report_ids=[])
+
+
+def test_watchlist_classifier(cbcsdk_mock):
+    """Testing Watchlist.classifier_ property."""
+    watchlist = Watchlist(cbcsdk_mock.api, model_unique_id="watchlistId", initial_data=WATCHLIST_GET_SPECIFIC_RESP)
+    assert watchlist.classifier_ == ("feed_id", "feed_id_associated")
+
+
+def test_watchlist_classifier_empty(cbcsdk_mock):
+    """Testing Watchlist.classifier_ when "classifier" is not in self._info."""
+    watchlist = Watchlist(cbcsdk_mock.api)
+    assert "classifier" not in watchlist._info
+    assert watchlist.classifier_ is None
+
+
+def test_watchlist_delete(cbcsdk_mock):
+    """Testing Watchlist.delete()."""
+    id = "watchlistId"
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_RESP)
+    cbcsdk_mock.mock_request("DELETE", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}", None)
+    watchlist = Watchlist(cbcsdk_mock.api, model_unique_id="watchlistId")
+    watchlist.delete()
+
+
+def test_watchlist_delete_no_id(cbcsdk_mock):
+    """Testing Watchlist.delete() raising InvalidObjectError when ID is missing."""
+    watchlist = Watchlist(cbcsdk_mock.api, model_unique_id=None)
+    with pytest.raises(InvalidObjectError):
+        watchlist.delete()
+
+
+def test_enable_alerts(cbcsdk_mock):
+    """Testing Watchlist.enable_alerts()."""
+    api = cbcsdk_mock.api
+    id = "watchlistId"
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_RESP)
+    watchlist = Watchlist(api, model_unique_id="watchlistId")
+    cbcsdk_mock.mock_request("PUT", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}/alert", {"alert": True})
+    watchlist.enable_alerts()
+
+
+
+def test_enable_alerts_no_id(cbcsdk_mock):
+    """Testing Watchlist.enable_alerts() raising InvalidObjectError when ID is missing."""
+    api = cbcsdk_mock.api
+    watchlist = Watchlist(api, model_unique_id=None)
+    with pytest.raises(InvalidObjectError):
+        watchlist.enable_alerts()
+
+
+def test_disable_alerts(cbcsdk_mock):
+    """Testing Watchlist.disable_alerts()."""
+    api = cbcsdk_mock.api
+    id = "watchlistId"
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_RESP)
+    watchlist = Watchlist(api, model_unique_id="watchlistId")
+    cbcsdk_mock.mock_request("DELETE", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}/alert", None)
+    watchlist.disable_alerts()
+
+
+def test_disable_alerts_no_id(cbcsdk_mock):
+    """Testing Watchlist.disable_alerts() raising InvalidObjectError when ID is missing."""
+    api = cbcsdk_mock.api
+    watchlist = Watchlist(api, model_unique_id=None)
+    with pytest.raises(InvalidObjectError):
+        watchlist.disable_alerts()
+
+
+def test_watchlist_enable_tags(cbcsdk_mock):
+    """Testing Watchlist.enable_tags()."""
+    api = cbcsdk_mock.api
+    id = "watchlistId"
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_RESP)
+    watchlist = Watchlist(api, model_unique_id="watchlistId")
+    cbcsdk_mock.mock_request("PUT", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}/tag", {"tag": True})
+    watchlist.enable_tags()
+
+
+def test_watchlist_enable_tags_no_id(cbcsdk_mock):
+    """Testing Watchlist.enable_tags() raising InvalidObjectError when ID is missing."""
+    api = cbcsdk_mock.api
+    watchlist = Watchlist(api, model_unique_id=None)
+    with pytest.raises(InvalidObjectError):
+        watchlist.enable_tags()
+
+
+def test_watchlist_disable_tags(cbcsdk_mock):
+    """Testing Watchlist.disable_tags()."""
+    api = cbcsdk_mock.api
+    id = "watchlistId"
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_RESP)
+    watchlist = Watchlist(api, model_unique_id="watchlistId")
+    cbcsdk_mock.mock_request("DELETE", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}/tag", None)
+    watchlist.disable_tags()
+
+
+def test_watchlist_disable_tags_no_id(cbcsdk_mock):
+    """Testing Watchlist.disable_tags() raising InvalidObjectError when ID is missing."""
+    api = cbcsdk_mock.api
+    watchlist = Watchlist(api, model_unique_id=None)
+    with pytest.raises(InvalidObjectError):
+        watchlist.disable_tags()
+
+
+def test_watchlist_feed(cbcsdk_mock):
+    """Testing Watchlist.feed property."""
+    api = cbcsdk_mock.api
+    id = "watchlistMissingFieldsWithID"
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_MISSING_FIELDS_RESP)
+    watchlist = api.select(Watchlist, "watchlistMissingFieldsWithID")
+    assert not watchlist.classifier
+    assert watchlist.feed == None
+
+
+def test_watchlist_feed_invalid_classifier(cbcsdk_mock):
+    """Testing Watchlist.feed property when "classifier" is missing."""
+    api = cbcsdk_mock.api
+    id = "watchlistInvalidClassifier"
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_INVALID_CLASSIFIER_RESP)
+    watchlist = api.select(Watchlist, "watchlistInvalidClassifier")
+    assert watchlist.classifier
+    assert watchlist.feed == None
 
 
 def test_report_query(cbcsdk_mock):
