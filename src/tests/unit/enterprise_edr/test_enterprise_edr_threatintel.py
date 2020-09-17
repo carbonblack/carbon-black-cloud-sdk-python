@@ -13,7 +13,8 @@ from tests.unit.fixtures.enterprise_edr.mock_threatintel import (WATCHLIST_GET_R
                                                                  CREATE_WATCHLIST_DATA,
                                                                  REPORT_GET_RESP,
                                                                  FEED_GET_RESP,
-                                                                 FEED_GET_SPECIFIC_RESP)
+                                                                 FEED_GET_SPECIFIC_RESP,
+                                                                 FEED_GET_SPECIFIC_FROM_WATCHLIST_RESP)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -207,6 +208,16 @@ def test_watchlist_disable_tags_no_id(cbcsdk_mock):
 
 def test_watchlist_feed(cbcsdk_mock):
     """Testing Watchlist.feed property."""
+    api = cbcsdk_mock.api
+    id = "watchlistId"
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}",
+                             WATCHLIST_GET_SPECIFIC_RESP)
+    watchlist = api.select(Watchlist, "watchlistId")
+    cbcsdk_mock.mock_request("GET", "/threathunter/feedmgr/v2/orgs/test/feeds/feed_id_associated",
+                             FEED_GET_SPECIFIC_FROM_WATCHLIST_RESP)
+
+    feed_assoc_with_watchlist = watchlist.feed
+    assert feed_assoc_with_watchlist.id == "feed_id_associated"
 
 
 def test_watchlist_feed_missing_classifier(cbcsdk_mock):
@@ -229,6 +240,24 @@ def test_watchlist_feed_invalid_classifier(cbcsdk_mock):
     watchlist = api.select(Watchlist, "watchlistInvalidClassifier")
     assert watchlist.classifier
     assert watchlist.feed is None
+
+
+def test_watchlist_reports(cbcsdk_mock):
+    """Testing Watchlist.reports property."""
+    api = cbcsdk_mock.api
+    id = "watchlistInvalidClassifier"
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}",
+                             WATCHLIST_GET_SPECIFIC_RESP)
+    watchlist = api.select(Watchlist, "watchlistInvalidClassifier")
+    cbcsdk_mock.mock_request("GET", "/threathunter/watchlistmgr/v3/orgs/test/reports/reportId0",
+                             FEED_GET_SPECIFIC_RESP)
+    cbcsdk_mock.mock_request("GET", "/threathunter/watchlistmgr/v3/orgs/test/reports/reportId1",
+                             FEED_GET_SPECIFIC_RESP)
+    cbcsdk_mock.mock_request("GET", "/threathunter/watchlistmgr/v3/orgs/test/reports/reportId2",
+                             FEED_GET_SPECIFIC_RESP)
+    assert watchlist.reports is not None
+    assert isinstance(watchlist.reports, list)
+    assert [isinstance(report, Report) for report in watchlist.reports]
 
 
 def test_report_query(cbcsdk_mock):

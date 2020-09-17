@@ -91,8 +91,10 @@ def test_query_get_query_parameters(cbcsdk_mock, get_process_search_response, gu
         "device_group",
         "device_internal_ip",
         "device_os",
+        "device_policy",
         "process_effective_reputation",
         "process_reputation",
+        "process_start_time",
         "ttp"], "process_guid": guid, "query": f'process_guid:{guid}'}
 
 
