@@ -62,8 +62,9 @@ def test_watchlist_save(cbcsdk_mock):
     watchlist.validate()
     watchlist.save()
 
-    # if the Watchlist response is missing a required field per enterprise_edr.models.Watchlist, raise InvalidObjectError
-    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_MISSING_FIELDS_RESP)
+    # if Watchlist response is missing a required field per enterprise_edr.models.Watchlist, raise InvalidObjectError
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}",
+                             WATCHLIST_GET_SPECIFIC_MISSING_FIELDS_RESP)
     watchlist = api.select(Watchlist, "watchlistId")
     with pytest.raises(InvalidObjectError):
         watchlist.validate()
@@ -79,7 +80,8 @@ def test_watchlist_update(cbcsdk_mock):
     assert "description" in watchlist._info
     assert "nonexistant_key" not in watchlist._info
     assert watchlist._info["description"] == "Existing description for the watchlist."
-    cbcsdk_mock.mock_request("PUT", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}", WATCHLIST_GET_SPECIFIC_RESP)
+    cbcsdk_mock.mock_request("PUT", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}",
+                             WATCHLIST_GET_SPECIFIC_RESP)
     watchlist.update(description="My New Description", nonexistant_key="This Is Ignored")
     assert watchlist._info["description"] == "My New Description"
 
@@ -96,7 +98,8 @@ def test_watchlist_update_api_error(cbcsdk_mock):
     id = "watchlistId"
     cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_RESP)
     watchlist = Watchlist(cbcsdk_mock.api, model_unique_id="watchlistId", initial_data=None)
-    cbcsdk_mock.mock_request("PUT", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}", WATCHLIST_GET_SPECIFIC_RESP)
+    cbcsdk_mock.mock_request("PUT", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}",
+                             WATCHLIST_GET_SPECIFIC_RESP)
     with pytest.raises(ApiError):
         watchlist.update(report_ids=[])
 
@@ -138,7 +141,6 @@ def test_enable_alerts(cbcsdk_mock):
     watchlist = Watchlist(api, model_unique_id="watchlistId")
     cbcsdk_mock.mock_request("PUT", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}/alert", {"alert": True})
     watchlist.enable_alerts()
-
 
 
 def test_enable_alerts_no_id(cbcsdk_mock):
@@ -205,22 +207,28 @@ def test_watchlist_disable_tags_no_id(cbcsdk_mock):
 
 def test_watchlist_feed(cbcsdk_mock):
     """Testing Watchlist.feed property."""
+
+
+def test_watchlist_feed_missing_classifier(cbcsdk_mock):
+    """Testing Watchlist.feed property."""
     api = cbcsdk_mock.api
     id = "watchlistMissingFieldsWithID"
-    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_MISSING_FIELDS_RESP)
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}",
+                             WATCHLIST_GET_SPECIFIC_MISSING_FIELDS_RESP)
     watchlist = api.select(Watchlist, "watchlistMissingFieldsWithID")
     assert not watchlist.classifier
-    assert watchlist.feed == None
+    assert watchlist.feed is None
 
 
 def test_watchlist_feed_invalid_classifier(cbcsdk_mock):
     """Testing Watchlist.feed property when "classifier" is missing."""
     api = cbcsdk_mock.api
     id = "watchlistInvalidClassifier"
-    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_INVALID_CLASSIFIER_RESP)
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}",
+                             WATCHLIST_GET_SPECIFIC_INVALID_CLASSIFIER_RESP)
     watchlist = api.select(Watchlist, "watchlistInvalidClassifier")
     assert watchlist.classifier
-    assert watchlist.feed == None
+    assert watchlist.feed is None
 
 
 def test_report_query(cbcsdk_mock):

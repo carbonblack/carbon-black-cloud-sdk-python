@@ -39,11 +39,11 @@ def cbcsdk_mock(monkeypatch, cb):
 def test_process_select(cbcsdk_mock):
     """Testing Process Querying with select()"""
     cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/summary", GET_PROCESS_SUMMARY_RESP)
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+                             GET_PROCESS_VALIDATION_RESP)
     api = cbcsdk_mock.api
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     process = api.select(Process, guid)
-    assert isinstance(process, Process)
-    assert process.process_guid == guid
     assert process.summary is not None
     assert process.siblings is not None
     summary = api.select(Process.Summary, guid)
@@ -78,18 +78,19 @@ def test_process_events(cbcsdk_mock):
     assert events_query_params == expected_params
 
 
-@pytest.mark.parametrize('get_summary_response, guid, process_search_results, has_parent_process', [
-    (GET_PROCESS_SUMMARY_RESP, "test-0002b226-000015bd-00000000-1d6225bbba74c00",
-     GET_PROCESS_SEARCH_PARENT_JOB_RESULTS_RESP, True),
-    (GET_PROCESS_SUMMARY_RESP_1, "test-00340b06-00000314-00000000-1d686b9e4d74f52",
-     None, False),
-    (GET_PROCESS_SUMMARY_RESP_2, "test-003513bc-0000035c-00000000-1d640200c9a6205",
-     GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1, True)
-    ])
+@pytest.mark.parametrize('get_summary_response, guid, process_search_results, has_parent_process',
+                         [(GET_PROCESS_SUMMARY_RESP, "test-0002b226-000015bd-00000000-1d6225bbba74c00",
+                           GET_PROCESS_SEARCH_PARENT_JOB_RESULTS_RESP, True),
+                          (GET_PROCESS_SUMMARY_RESP_1, "test-00340b06-00000314-00000000-1d686b9e4d74f52",
+                           None, False),
+                          (GET_PROCESS_SUMMARY_RESP_2, "test-003513bc-0000035c-00000000-1d640200c9a6205",
+                           GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1, True)
+                          ])
 def test_process_parents(cbcsdk_mock, get_summary_response, guid, process_search_results, has_parent_process):
     """Testing Process.parents property/method."""
     api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation", GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+                             GET_PROCESS_VALIDATION_RESP)
     # query for a Process
     process = api.select(Process, guid)
     cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/summary", get_summary_response)
@@ -99,11 +100,16 @@ def test_process_parents(cbcsdk_mock, get_summary_response, guid, process_search
         assert isinstance(process.parents, Process)
 
         # mock the POST of a search
-        cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_job", POST_PROCESS_SEARCH_JOB_RESP)
+        cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_job",
+                                 POST_PROCESS_SEARCH_JOB_RESP)
         # mock the GET to check search status
-        cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_jobs/2c292717-80ed-4f0d-845f-779e09470920", GET_PROCESS_SEARCH_JOB_RESP)
+        cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
+                                         "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                                 GET_PROCESS_SEARCH_JOB_RESP)
         # mock the GET to get search results
-        cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results", process_search_results)
+        cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
+                                         "2c292717-80ed-4f0d-845f-779e09470920/results"),
+                                 process_search_results)
 
         # query for a Process that has a guid == the guid of the parent process
         parent_process = api.select(Process).where(process_guid=process.parents.process_guid)
@@ -120,8 +126,7 @@ def test_process_parents(cbcsdk_mock, get_summary_response, guid, process_search
 @pytest.mark.parametrize('get_summary_response, guid, expected_num_children', [
     (GET_PROCESS_SUMMARY_RESP, "test-0002b226-000015bd-00000000-1d6225bbba74c00", 0),
     (GET_PROCESS_SUMMARY_RESP_1, "test-00340b06-00000314-00000000-1d686b9e4d74f52", 3),
-    (GET_PROCESS_SUMMARY_RESP_2, "test-003513bc-0000035c-00000000-1d640200c9a6205", 2)
-    ])
+    (GET_PROCESS_SUMMARY_RESP_2, "test-003513bc-0000035c-00000000-1d640200c9a6205", 2)])
 def test_process_children(cbcsdk_mock, get_summary_response, guid, expected_num_children):
     """Testing Process.children property."""
     api = cbcsdk_mock.api
@@ -139,8 +144,8 @@ def test_process_children(cbcsdk_mock, get_summary_response, guid, expected_num_
 @pytest.mark.parametrize('get_summary_response, guid, md5', [
     (GET_PROCESS_SUMMARY_RESP, "test-0002b226-000015bd-00000000-1d6225bbba74c00", None),
     (GET_PROCESS_SUMMARY_RESP_1, "test-00340b06-00000314-00000000-1d686b9e4d74f52", "e83650f70459a027aa596e1a73c961a1"),
-    (GET_PROCESS_SUMMARY_RESP_2, "test-003513bc-0000035c-00000000-1d640200c9a6205", "708c8760385810080c4d17fa84d325ca")
-    ])
+    (GET_PROCESS_SUMMARY_RESP_2, "test-003513bc-0000035c-00000000-1d640200c9a6205",
+     "708c8760385810080c4d17fa84d325ca")])
 def test_process_md5(cbcsdk_mock, get_summary_response, guid, md5):
     """Testing Process.process_md5 property."""
     api = cbcsdk_mock.api
@@ -152,17 +157,19 @@ def test_process_md5(cbcsdk_mock, get_summary_response, guid, md5):
 def test_process_md5_not_found(cbcsdk_mock):
     """Testing error raising when receiving 404 for a Process."""
     api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/summary", ObjectNotFoundError(uri='uri_to_get_summ'))
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/summary",
+                             ObjectNotFoundError(uri='uri_to_get_summ'))
     process = api.select(Process, "someNonexistantGuid")
     with pytest.raises(ObjectNotFoundError):
         process.summary
 
 
 @pytest.mark.parametrize('get_summary_response, guid, sha256', [
-    (GET_PROCESS_SUMMARY_RESP, "test-0002b226-000015bd-00000000-1d6225bbba74c00", "5920199e4fbfa47c1717b863814722148a353e54f8c10912cf1f991a1c86309d"),
-    (GET_PROCESS_SUMMARY_RESP_1, "test-00340b06-00000314-00000000-1d686b9e4d74f52", "d5e122606054fa0b03db3ee8cf9ea7701e523875e2bdb87581ad7232ffc9308e"),
-    (GET_PROCESS_SUMMARY_RESP_2, "test-003513bc-0000035c-00000000-1d640200c9a6205", None)
-    ])
+    (GET_PROCESS_SUMMARY_RESP, "test-0002b226-000015bd-00000000-1d6225bbba74c00",
+     "5920199e4fbfa47c1717b863814722148a353e54f8c10912cf1f991a1c86309d"),
+    (GET_PROCESS_SUMMARY_RESP_1, "test-00340b06-00000314-00000000-1d686b9e4d74f52",
+     "d5e122606054fa0b03db3ee8cf9ea7701e523875e2bdb87581ad7232ffc9308e"),
+    (GET_PROCESS_SUMMARY_RESP_2, "test-003513bc-0000035c-00000000-1d640200c9a6205", None)])
 def test_process_sha256(cbcsdk_mock, get_summary_response, guid, sha256):
     """Testing Process.process_sha256 property."""
     api = cbcsdk_mock.api
@@ -174,8 +181,7 @@ def test_process_sha256(cbcsdk_mock, get_summary_response, guid, sha256):
 @pytest.mark.parametrize('get_summary_response, guid, pids', [
     (GET_PROCESS_SUMMARY_RESP, "test-0002b226-000015bd-00000000-1d6225bbba74c00", [5565]),
     (GET_PROCESS_SUMMARY_RESP_1, "test-00340b06-00000314-00000000-1d686b9e4d74f52", [788]),
-    (GET_PROCESS_SUMMARY_RESP_2, "test-003513bc-0000035c-00000000-1d640200c9a6205", [860])
-    ])
+    (GET_PROCESS_SUMMARY_RESP_2, "test-003513bc-0000035c-00000000-1d640200c9a6205", [860])])
 def test_process_pids(cbcsdk_mock, get_summary_response, guid, pids):
     """Testing Process.process_pids property."""
     api = cbcsdk_mock.api
