@@ -8,13 +8,11 @@ from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.endpoint_standard.mock_devices import (ENDPOINT_STANDARD_DEVICE_GET_HOSTNAME_RESP,
                                                                 ENDPOINT_STANDARD_DEVICE_GET_HOSTNAME_RESP_0,
-                                                                ENDPOINT_STANDARD_DEVICE_GET_HOSTNAME_EXACT_RESP,
                                                                 ENDPOINT_STANDARD_DEVICE_GET_OWNERNAME_RESP,
                                                                 ENDPOINT_STANDARD_DEVICE_GET_OWNERNAME_EXACT_RESP,
                                                                 ENDPOINT_STANDARD_DEVICE_GET_IP_RESP,
                                                                 ENDPOINT_STANDARD_DEVICE_GET_HOST_IP_RESP,
                                                                 ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP,
-                                                                ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_1,
                                                                 ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_2,
                                                                 ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_3,
                                                                 ENDPOINT_STANDARD_DEVICE_GET_ALL_RESP,

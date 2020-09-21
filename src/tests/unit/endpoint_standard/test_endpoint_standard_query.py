@@ -7,8 +7,7 @@ from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.endpoint_standard.mock_devices import (ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP,
-                                                                ENDPOINT_STANDARD_DEVICE_GET_HOSTNAME_RESP_0,
-                                                                ENDPOINT_STANDARD_DEVICE_GET_HOSTNAME_RESP_EMPTY)
+                                                                ENDPOINT_STANDARD_DEVICE_GET_HOSTNAME_RESP_0)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -46,7 +45,7 @@ def test_endpoint_standard_query_clone(cbcsdk_mock):
     new_device_query = device_query.batch_size(1000)
     assert new_device_query._batch_size != cloned._batch_size
     # updated query should not affect the cloned query
-    device_query = new_device_query.and_(hostNameExact='Win7x64')
+    new_device_query = new_device_query.and_(hostNameExact='Win7x64')
     assert cloned._query_builder._collapse() != new_device_query._query_builder._collapse()
 
 
