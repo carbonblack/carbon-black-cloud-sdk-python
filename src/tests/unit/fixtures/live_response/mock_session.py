@@ -125,3 +125,75 @@ SESSION_CLOSE_RESP = {
     "current_command_index": 0,
     "create_time": 1502126655758
 }
+
+USESSION_INIT_RESP = {
+    "hostname": None,
+    "address": None,
+    "os_version": None,
+    "current_working_directory": None,
+    "supported_commands": None,
+    "drives": None,
+    "id": "1:7777",
+    "sensor_id": 7777,
+    "check_in_timeout": 900,
+    "session_timeout": 900,
+    "sensor_check_in_time": None,
+    "status": "PENDING",
+    "current_command_index": 0,
+    "create_time": 1502126352449
+}
+
+USESSION_POLL_RESP = {
+    "hostname": None,
+    "address": None,
+    "os_version": None,
+    "current_working_directory": "/",
+    "supported_commands": [
+        "put file",
+        "get file",
+        "memdump",
+        "create directory",
+        "delete file",
+        "directory list",
+        "process list",
+        "kill",
+        "create process"
+    ],
+    "drives": ["/"],
+    "id": "1:7777",
+    "sensor_id": 7777,
+    "check_in_timeout": 900,
+    "session_timeout": 900,
+    "sensor_check_in_time": 1502126744685,
+    "status": "ACTIVE",
+    "current_command_index": 0,
+    "create_time": 1502126655758
+}
+
+USESSION_CLOSE_RESP = {
+    "hostname": None,
+    "address": None,
+    "os_version": None,
+    "current_working_directory": "/",
+    "supported_commands": [
+        "put file",
+        "get file",
+        "memdump",
+        "create directory",
+        "delete file",
+        "directory list",
+        "process list",
+        "kill",
+        "create process"
+    ],
+    "drives": ["/"],
+    "id": "1:7777",
+    "sensor_id": 7777,
+    "check_in_timeout": 900,
+    "session_timeout": 900,
+    "sensor_check_in_time": 1502126744685,
+    "status": "CLOSE",
+    "current_command_index": 0,
+    "create_time": 1502126655758
+}
+

@@ -16,7 +16,8 @@ import pytest
 import copy
 import io
 import sys
-from cbc_sdk.errors import ObjectNotFoundError, ServerError, TimeoutError
+from concurrent.futures import wait
+from cbc_sdk.errors import ApiError, ObjectNotFoundError, ServerError, TimeoutError
 from cbc_sdk.live_response_api import LiveResponseError, LiveResponseSessionManager
 from cbc_sdk.winerror import HRESULT_FROM_WIN32, Win32Error
 from cbc_sdk.rest_api import CBCloudAPI
@@ -34,10 +35,13 @@ from tests.unit.fixtures.live_response.mock_command import (DIRECTORY_LIST_START
                                                             REG_GET_END_RESP, REG_SET_START_RESP, REG_SET_END_RESP,
                                                             REG_CREATE_KEY_START_RESP, REG_CREATE_KEY_END_RESP,
                                                             REG_DELETE_KEY_START_RESP, REG_DELETE_KEY_END_RESP,
-                                                            REG_DELETE_START_RESP, REG_DELETE_END_RESP)
-from tests.unit.fixtures.live_response.mock_device import DEVICE_RESPONSE
+                                                            REG_DELETE_START_RESP, REG_DELETE_END_RESP,
+                                                            MEMDUMP_START_RESP, MEMDUMP_END_RESP,
+                                                            MEMDUMP_DEL_START_RESP, MEMDUMP_DEL_END_RESP)
+from tests.unit.fixtures.live_response.mock_device import DEVICE_RESPONSE, UDEVICE_RESPONSE, DEVICE_QUERY_RESPONSE
 from tests.unit.fixtures.live_response.mock_session import (SESSION_INIT_RESP, SESSION_POLL_RESP,
-                                                            SESSION_POLL_RESP_ERROR, SESSION_CLOSE_RESP)
+                                                            SESSION_POLL_RESP_ERROR, SESSION_CLOSE_RESP,
+                                                            USESSION_INIT_RESP, USESSION_POLL_RESP, USESSION_CLOSE_RESP)
 
 
 
@@ -524,3 +528,63 @@ def test_registry_delete(cbcsdk_mock):
     with manager.request_session(2468) as session:
         session.delete_registry_value('HKLM\\SYSTEM\\CurrentControlSet\\services\\ACPI\\testvalue')
 
+
+def test_registry_unsupported_command(cbcsdk_mock):
+    cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/7777', USESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:7777', USESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/integrationServices/v3/device/7777', UDEVICE_RESPONSE)
+    cbcsdk_mock.mock_request('PUT', '/integrationServices/v3/cblr/session', USESSION_CLOSE_RESP)
+    manager = LiveResponseSessionManager(cbcsdk_mock.api)
+    with manager.request_session(7777) as session:
+        with pytest.raises(ApiError) as excinfo:
+            session.create_registry_key('HKLM\\SYSTEM\\CurrentControlSet\\services\\ACPI\\Nonsense')
+        assert excinfo.value.__str__().startswith("Command reg create key not supported")
+
+
+def test_memdump(cbcsdk_mock):
+    generated_file_name = None
+    target_file_name = None
+
+    def respond_to_post(url, body, **kwargs):
+        assert body['session_id'] == '1:2468'
+        nonlocal generated_file_name, target_file_name
+        if body['name'] == 'memdump':
+            generated_file_name = body['object']
+            target_file_name = generated_file_name
+            if body['compress']:
+                target_file_name += '.zip'
+            retval = copy.deepcopy(MEMDUMP_START_RESP)
+            retval['object'] = generated_file_name
+            return retval
+        elif body['name'] == 'delete file':
+            assert body['object'] == target_file_name
+            retval = copy.deepcopy(MEMDUMP_DEL_START_RESP)
+            retval['object'] = target_file_name
+            return retval
+        else:
+            pytest.fail(f"Invalid command name seen: {body['name']}")
+
+    def respond_get1(url, query_parameters, default):
+        retval = copy.deepcopy(MEMDUMP_END_RESP)
+        retval['object'] = generated_file_name
+        return retval
+
+    def respond_get2(url, query_parameters, default):
+        retval = copy.deepcopy(MEMDUMP_DEL_END_RESP)
+        retval['object'] = target_file_name
+        return retval
+
+    cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/2468', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/integrationServices/v3/device/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/1:2468/command', respond_to_post)
+    cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468/command/101', respond_get1)
+    cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468/command/102', respond_get2)
+    cbcsdk_mock.mock_request('PUT', '/integrationServices/v3/cblr/session', SESSION_CLOSE_RESP)
+    manager = LiveResponseSessionManager(cbcsdk_mock.api)
+    with manager.request_session(2468) as session:
+        memdump = session.start_memdump()
+        assert memdump.lr_session is session
+        assert memdump.remote_filename == target_file_name
+        memdump.wait()
+        memdump.delete()

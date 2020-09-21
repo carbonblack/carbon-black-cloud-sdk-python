@@ -514,3 +514,55 @@ REG_DELETE_END_RESP = {
     'completion_time': 2345678901
 }
 
+MEMDUMP_START_RESP = {
+    'id': 101,
+    'session_id': '1:2468',
+    'sensor_id': 2468,
+    'command_timeout': 120,
+    'status': 'in progress',
+    'name': 'memdump',
+    'object': None,
+    'completion_time': 0,
+    'return_code': 0,
+    'complete': False,
+    'percentdone': 0,
+    'dumping': True
+}
+
+MEMDUMP_END_RESP = {
+    'id': 101,
+    'session_id': '1:2468',
+    'sensor_id': 2468,
+    'command_timeout': 120,
+    'status': 'complete',
+    'name': 'memdump',
+    'object': None,
+    'completion_time': 2345678901,
+    'return_code': 0,
+    'complete': True,
+    'percentdone': 100,
+    'dumping': False
+}
+
+MEMDUMP_DEL_START_RESP = {
+    'id': 102,
+    'session_id': '1:2468',
+    'sensor_id': 2468,
+    'command_timeout': 120,
+    'status': 'in progress',
+    'name': 'delete file',
+    'object': None,
+    'completion_time': 0
+}
+
+MEMDUMP_DEL_END_RESP = {
+    'id': 102,
+    'session_id': '1:2468',
+    'sensor_id': 2468,
+    'command_timeout': 120,
+    'status': 'complete',
+    'name': 'delete file',
+    'object': None,
+    'completion_time': 2345678901
+}
+
