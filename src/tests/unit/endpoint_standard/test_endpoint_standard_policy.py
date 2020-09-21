@@ -6,12 +6,12 @@ from cbc_sdk.endpoint_standard import Policy, Query
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.endpoint_standard.mock_policy import (POLICY_GET_RESP,
-                                                     POLICY_POST_RULE_RESP,
-                                                     POLICY_GET_WITH_NEW_RULE_RESP,
-                                                     POLICY_MODIFY_RULE_RESP,
-                                                     POLICY_GET_WITH_MODIFIED_RULE_RESP,
-                                                     POLICY_DELETE_RULE_RESP,
-                                                     POLICY_GET_WITH_DELETED_RULE_RESP)
+                                                               POLICY_POST_RULE_RESP,
+                                                               POLICY_GET_WITH_NEW_RULE_RESP,
+                                                               POLICY_MODIFY_RULE_RESP,
+                                                               POLICY_GET_WITH_MODIFIED_RULE_RESP,
+                                                               POLICY_DELETE_RULE_RESP,
+                                                               POLICY_GET_WITH_DELETED_RULE_RESP)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 

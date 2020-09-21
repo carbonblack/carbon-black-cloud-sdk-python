@@ -7,18 +7,18 @@ from cbc_sdk.endpoint_standard.base import EndpointStandardMutableModel
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.endpoint_standard.mock_devices import (ENDPOINT_STANDARD_DEVICE_GET_HOSTNAME_RESP,
-                                                      ENDPOINT_STANDARD_DEVICE_GET_HOSTNAME_RESP_0,
-                                                      ENDPOINT_STANDARD_DEVICE_GET_HOSTNAME_EXACT_RESP,
-                                                      ENDPOINT_STANDARD_DEVICE_GET_OWNERNAME_RESP,
-                                                      ENDPOINT_STANDARD_DEVICE_GET_OWNERNAME_EXACT_RESP,
-                                                      ENDPOINT_STANDARD_DEVICE_GET_IP_RESP,
-                                                      ENDPOINT_STANDARD_DEVICE_GET_HOST_IP_RESP,
-                                                      ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP,
-                                                      ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_1,
-                                                      ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_2,
-                                                      ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_3,
-                                                      ENDPOINT_STANDARD_DEVICE_GET_ALL_RESP,
-                                                      ENDPOINT_STANDARD_DEVICE_PATCH_RESP)
+                                                                ENDPOINT_STANDARD_DEVICE_GET_HOSTNAME_RESP_0,
+                                                                ENDPOINT_STANDARD_DEVICE_GET_HOSTNAME_EXACT_RESP,
+                                                                ENDPOINT_STANDARD_DEVICE_GET_OWNERNAME_RESP,
+                                                                ENDPOINT_STANDARD_DEVICE_GET_OWNERNAME_EXACT_RESP,
+                                                                ENDPOINT_STANDARD_DEVICE_GET_IP_RESP,
+                                                                ENDPOINT_STANDARD_DEVICE_GET_HOST_IP_RESP,
+                                                                ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP,
+                                                                ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_1,
+                                                                ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_2,
+                                                                ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_3,
+                                                                ENDPOINT_STANDARD_DEVICE_GET_ALL_RESP,
+                                                                ENDPOINT_STANDARD_DEVICE_PATCH_RESP)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -65,7 +65,8 @@ def test_device_query_0(cbcsdk_mock):
 
 def test_device_query_1(cbcsdk_mock):
     """Testing select() method with .where() hostNameExact"""
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/98765", ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_2)
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/98765",
+                             ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_2)
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device", ENDPOINT_STANDARD_DEVICE_GET_HOSTNAME_RESP)
     api = cbcsdk_mock.api
     # testing hostNameExact in quotes
@@ -89,6 +90,7 @@ def test_device_query_1(cbcsdk_mock):
     assert first_device_result._model_unique_id == 98765
     assert first_device_result.deviceId == 98765
     assert first_device_result.validate()
+
 
 def test_device_query_2(cbcsdk_mock):
     """Testing select() method with .where() ownerName"""
@@ -116,7 +118,8 @@ def test_device_query_2(cbcsdk_mock):
 
 def test_device_query_3(cbcsdk_mock):
     """Testing select() method with .where() ownerNameExact"""
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/23456", ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_3)
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/23456",
+                             ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_3)
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device", ENDPOINT_STANDARD_DEVICE_GET_OWNERNAME_EXACT_RESP)
     api = cbcsdk_mock.api
     # testing ownerNameExact in quotes
@@ -147,7 +150,8 @@ def test_device_query_3(cbcsdk_mock):
 
 def test_device_query_4(cbcsdk_mock):
     """Testing select() method with .where() ipAddress"""
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/98765", ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_2)
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/98765",
+                             ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_2)
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device", ENDPOINT_STANDARD_DEVICE_GET_IP_RESP)
     api = cbcsdk_mock.api
     # testing ipAddress in quotes
@@ -175,7 +179,8 @@ def test_device_query_4(cbcsdk_mock):
 
 def test_device_query_with_and(cbcsdk_mock):
     """Testing Device Querying with .where() and .and_()"""
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/98765", ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_2)
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/98765",
+                             ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_2)
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device", ENDPOINT_STANDARD_DEVICE_GET_HOST_IP_RESP)
     api = cbcsdk_mock.api
     # testing multiple where/and clauses
@@ -234,7 +239,8 @@ def test_device_search_with_where(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/98765", ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP)
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device", ENDPOINT_STANDARD_DEVICE_GET_HOST_IP_RESP)
     api = cbcsdk_mock.api
-    endpoint_standard_device_select_host_ip = api.select(Device).where('hostName:Win7x64').and_('ipAddress:192.10.34.165')
+    endpoint_standard_device_select_host_ip = (api.select(Device).where('hostName:Win7x64')
+                                               .and_('ipAddress:192.10.34.165'))
     assert isinstance(endpoint_standard_device_select_host_ip, Query)
     query = endpoint_standard_device_select_host_ip._search(start=0, rows=100)
     results = [result for result in query]
@@ -282,7 +288,8 @@ def test_endpoint_mutable_model_update_entire_object(cbcsdk_mock):
     update_entire = model._update_entire_object()
 
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/12345", ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP)
-    updated_obj_resp = cbcsdk_mock.StubResponse({"success": True, "deviceId": 12345}, text="text in response", scode=200)
+    updated_obj_resp = cbcsdk_mock.StubResponse({"success": True, "deviceId": 12345},
+                                                text="text in response", scode=200)
     refresh = model._refresh_if_needed(updated_obj_resp)
     assert refresh == update_entire
 
@@ -293,7 +300,8 @@ def test_endpoint_mutable_model_update_entire_object(cbcsdk_mock):
     update_entire = model._update_entire_object()
 
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/54321", ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP)
-    new_obj_response = cbcsdk_mock.StubResponse({"success": True, "deviceId": 54321}, text="text in response", scode=200)
+    new_obj_response = cbcsdk_mock.StubResponse({"success": True, "deviceId": 54321},
+                                                text="text in response", scode=200)
     refresh = model._refresh_if_needed(new_obj_response)
     assert refresh == update_entire
 
@@ -313,7 +321,8 @@ def test_endpoint_mutable_model_patch_object(cbcsdk_mock):
     patch_object_return = model._patch_object()
 
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/56789", ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP)
-    new_obj_response = cbcsdk_mock.StubResponse({"success": True, "deviceId": 56789}, text="text in response", scode=200)
+    new_obj_response = cbcsdk_mock.StubResponse({"success": True, "deviceId": 56789},
+                                                text="text in response", scode=200)
     patched_device = model._refresh_if_needed(new_obj_response)
 
     assert patch_object_return == patched_device

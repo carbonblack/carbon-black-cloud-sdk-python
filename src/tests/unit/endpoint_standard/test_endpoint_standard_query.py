@@ -2,7 +2,7 @@
 
 import pytest
 import logging
-from cbc_sdk.endpoint_standard import Device, Query
+from cbc_sdk.endpoint_standard import Device
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
