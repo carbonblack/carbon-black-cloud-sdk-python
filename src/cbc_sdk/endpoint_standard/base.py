@@ -264,18 +264,18 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
         """Initialize a Query object."""
         super(Query, self).__init__(doc_class, cb, query)
 
-        self._sort_by = None
-        self._group_by = None
+        # max batch_size is 5000
         self._batch_size = 100
-        self._criteria = {}
-        self._query_builder = QueryBuilder()
+        if query is not None:
+            # copy existing .where(), and_() queries
+            self._query_builder = QueryBuilder()
+            self._query_builder._query = query._query_builder._query
+        else:
+            self._query_builder = QueryBuilder()
 
     def _clone(self):
-        nq = self.__class__(self._doc_class, self._cb)
-        nq._sort_by = self._sort_by
-        nq._group_by = self._group_by
+        nq = self.__class__(self._doc_class, self._cb, query=self)
         nq._batch_size = self._batch_size
-        nq._criteria = self._criteria
         return nq
 
     def prepare_query(self, args):
@@ -293,7 +293,8 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
         if self._count_valid:
             return self._total_results
 
-        args = {'limit': 0}
+        # args = {'limit': 0}
+        args = {}
         args = self.prepare_query(args)
 
         query_args = convert_query_params(args)
@@ -303,7 +304,8 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
         return self._total_results
 
     def _search(self, start=0, rows=0):
-        # iterate over total result set, 1000 at a time
+        # iterate over total result set, in batches of self._batch_size at a time
+        # defaults to 100 results each call
         args = {}
         if start != 0:
             args['start'] = start

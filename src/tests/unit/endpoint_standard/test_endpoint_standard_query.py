@@ -33,15 +33,21 @@ def cbcsdk_mock(monkeypatch, cb):
 
 def test_endpoint_standard_query_clone(cbcsdk_mock):
     """Testing Query._clone()."""
-    # This test isn't really doing anything. All of these attrs are None
-    # TODO: figure out how to set these attrs, then check for equality
     device_query = cbcsdk_mock.api.select(Device).where(deviceId=12345)
-    # device_query._sort_by({"key": "deviceId", "direction": "ASC"})
     cloned = device_query._clone()
-    assert cloned._sort_by == device_query._sort_by
-    assert cloned._group_by == device_query._group_by
-    assert cloned._batch_size == device_query._batch_size
-    assert cloned._criteria == device_query._criteria
+    # cloned query should be identical, but have unique _query_builders
+    assert device_query._batch_size == cloned._batch_size
+    assert device_query._query_builder._collapse() == cloned._query_builder._collapse()
+    assert device_query._batch_size == cloned._batch_size
+    assert device_query._query_builder != cloned._query_builder
+
+    # updated query should not affect the cloned query
+    # Query.batch_size() clones a query
+    new_device_query = device_query.batch_size(1000)
+    assert new_device_query._batch_size != cloned._batch_size
+    # updated query should not affect the cloned query
+    device_query = new_device_query.and_(hostNameExact='Win7x64')
+    assert cloned._query_builder._collapse() != new_device_query._query_builder._collapse()
 
 
 def test_endpoint_standard_query_mix_raw_structured(cbcsdk_mock):
