@@ -1,10 +1,18 @@
 import pytest
+import json
+
+
+class StubElapsed(object):
+    def total_seconds(self):
+        return 0
 
 
 class StubResponse(object):
-    def __init__(self, contents, scode=200):
+    def __init__(self, contents, scode=200, text=None):
         self._contents = contents
         self.status_code = scode
+        self.text = text or json.dumps(contents)
+        self.elapsed = StubElapsed()
 
     def json(self):
         return self._contents
