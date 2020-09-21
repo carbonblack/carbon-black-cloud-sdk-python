@@ -293,7 +293,6 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
         if self._count_valid:
             return self._total_results
 
-        # args = {'limit': 0}
         args = {}
         args = self.prepare_query(args)
 
