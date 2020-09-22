@@ -1,6 +1,7 @@
 type: object
 required: [] # TODO(ww): Find out which result fields are required
 properties:
+  # id is not longer returned with calls to /livequery/v1/orgs/{org_key}/runs/{id}/results/device_summaries/_search
   id:
     type: string
     description: The result's unique ID
@@ -8,13 +9,27 @@ properties:
     type: integer
     format: int32 # NOTE(ww): This is a guess
     description: Number of results returned for this particular device
-  device_id:
-    type: integer
-    format: int32 # NOTE(ww): This is a guess
-    description: The device's unique ID
-  device_name:
-    type: string
-    description: The device's name
+  device:
+    type: array
+    description: Information associated with the device
+    items:
+      id:
+        type: integer
+        format: int32 # NOTE(ww): This is a guess
+        description: The device's unique ID
+      name:
+        type: string
+        description: The device's name
+      policy_id:
+        type: integer
+        format: int32 # NOTE(ww): This is a guess
+        description: The device's policy ID
+      policy_name:
+        type: string
+        description: The device's policy name
+      os:
+        type: string
+        description: The device's operating system
   time_received:
     type: string
     description: The time at which this result was received # NOTE(ww): This is a guess
@@ -25,16 +40,6 @@ properties:
   device_message:
     type: string
     description: Placeholder # TODO(ww): Needs description
-  os:
-    type: string
-    description: The device's operating system
-  policy_id:
-    type: integer
-    format: int32 # NOTE(ww): This is a guess
-    description: The device's policy ID
-  policy_name:
-    type: string
-    description: The device's policy name
   metrics:
     type: array
     description: Metrics associated with the device
@@ -49,4 +54,3 @@ properties:
           type: number
           format: float
           description: The value of the particular metric
-            

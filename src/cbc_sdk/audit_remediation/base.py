@@ -235,7 +235,7 @@ class Result(UnrefreshableModel):
 
 class DeviceSummary(UnrefreshableModel):
     """Represents the summary of results from a single device during a single Audit and Remediation `Run`."""
-    primary_key = "id"
+    primary_key = "device_id"
     swagger_meta_file = "audit_remediation/models/device_summary.yaml"
     urlobject = "/livequery/v1/orgs/{}/runs/{}/results/device_summaries/_search"
 
@@ -259,8 +259,8 @@ class DeviceSummary(UnrefreshableModel):
         """Initialize a DeviceSummary object with initial_data."""
         super(DeviceSummary, self).__init__(
             cb,
-            model_unique_id=initial_data["id"],
-            initial_data=initial_data,
+            model_unique_id=initial_data["device"]["id"],
+            initial_data=initial_data["device"],
             force_init=False,
             full_doc=True,
         )
