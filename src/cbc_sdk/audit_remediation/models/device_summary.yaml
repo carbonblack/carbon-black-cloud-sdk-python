@@ -10,9 +10,9 @@ properties:
     format: int32 # NOTE(ww): This is a guess
     description: Number of results returned for this particular device
   device:
-    type: array
+    type: object
     description: Information associated with the device
-    items:
+    properties:
       id:
         type: integer
         format: int32 # NOTE(ww): This is a guess
