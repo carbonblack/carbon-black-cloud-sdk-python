@@ -23,6 +23,7 @@ from mox import Func, IgnoreArg
 
 
 def test_try_json(mox):
+    """Test the try_json method operation."""
     resp_data = {'Something': 'Going On'}
     resp1 = StubResponse(resp_data)
     resp2 = StubResponse(resp_data)
@@ -42,6 +43,7 @@ def test_try_json(mox):
     ({'url': 'https://example.com'}, "No API token provided")
 ])
 def test_initial_connection_error(cdata, msg_prefix):
+    """Test the initial raising of a ConnectionError by the connection."""
     creds = Credentials(cdata)
     with pytest.raises(ConnectionError) as excinfo:
         Connection(creds)
@@ -53,6 +55,7 @@ def test_initial_connection_error(cdata, msg_prefix):
     (ValueError, "Unknown error establishing cbapi session")
 ])
 def test_session_adapter_creation_failure(mox, adapter_raises, msg_prefix):
+    """Test the failure cases that come from the failure to create the session adapter."""
     creds = Credentials({'url': 'https://example.com', 'token': 'ABCDEFGH'})
     import cbc_sdk.connection
     mox.StubOutWithMock(cbc_sdk.connection, 'CbAPISessionAdapter', use_mock_anything=True)
@@ -66,6 +69,7 @@ def test_session_adapter_creation_failure(mox, adapter_raises, msg_prefix):
 
 
 def test_session_cert_file_and_proxies():
+    """Test to make sure the certificate file and proxy parameters get stashed in the right place."""
     creds = Credentials({'url': 'https://example.com', 'token': 'ABCDEFGH', 'ssl_cert_file': 'blort',
                          'proxy': 'foobie.bletch.com'})
     conn = Connection(creds)
@@ -75,6 +79,7 @@ def test_session_cert_file_and_proxies():
 
 
 def test_session_ignore_system_proxy():
+    """Test to make sure the ignore system proxy parameter has the right effect."""
     creds = Credentials({'url': 'https://example.com', 'token': 'ABCDEFGH', 'ignore_system_proxy': True})
     conn = Connection(creds)
     assert conn.proxies['http'] == ''
@@ -88,6 +93,7 @@ def test_session_ignore_system_proxy():
     (ValueError, ApiError, "Unknown exception when connecting to server:")
 ])
 def test_http_request_exception_cases(mox, exception_raised, exception_caught, prefix):
+    """Test the cases in which the underlying session object throws an exception as a result of a request."""
     creds = Credentials({'url': 'https://example.com', 'token': 'ABCDEFGH'})
     conn = Connection(creds)
     mox.StubOutWithMock(conn.session, 'request')
@@ -109,6 +115,7 @@ def test_http_request_exception_cases(mox, exception_raised, exception_caught, p
     (StubResponse({}, 400, "Echo Error"), ClientError, "Echo Error")
 ])
 def test_http_request_error_code_cases(mox, response, exception_caught, prefix):
+    """Test the cases in which http_request throws an exception as a result of receiving an error status."""
     creds = Credentials({'url': 'https://example.com', 'token': 'ABCDEFGH'})
     conn = Connection(creds)
     mox.StubOutWithMock(conn.session, 'request')
@@ -122,6 +129,7 @@ def test_http_request_error_code_cases(mox, response, exception_caught, prefix):
 
 
 def test_http_request_happy_path(mox):
+    """Test the happy-path case of http_request."""
     def validate_headers(hdrs):
         assert hdrs['X-Auth-Token'] == 'ABCDEFGH'
         assert hdrs['User-Agent'].startswith("CBC_SDK/")
@@ -140,6 +148,7 @@ def test_http_request_happy_path(mox):
 
 
 def test_request_helper_methods(mox):
+    """Test the four helper methods of http_request."""
     creds = Credentials({'url': 'https://example.com', 'token': 'ABCDEFGH'})
     conn = Connection(creds)
     mox.StubOutWithMock(conn.session, 'request')

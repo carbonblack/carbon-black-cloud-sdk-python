@@ -12,10 +12,11 @@ class StubResponse(object):
         self._contents = contents
         self.status_code = scode
         self.text = text or json.dumps(contents)
+        self.content = self.text
         self.elapsed = StubElapsed()
 
     def json(self):
-        return self._contents
+        return self._contents or json.loads(self.text)
 
 
 def _failing_get_object(url, parms=None, default=None):

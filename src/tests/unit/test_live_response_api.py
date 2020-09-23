@@ -16,7 +16,6 @@ import pytest
 import copy
 import io
 import sys
-from concurrent.futures import wait
 from cbc_sdk.errors import ApiError, ObjectNotFoundError, ServerError, TimeoutError
 from cbc_sdk.live_response_api import LiveResponseError, LiveResponseSessionManager
 from cbc_sdk.winerror import HRESULT_FROM_WIN32, Win32Error
@@ -78,12 +77,14 @@ FILE_NOT_FOUND_ERR = {'status': 'error', 'result_type': 'WinHresult',
      "", "")
 ])
 def test_live_response_error(details, message, decoded_win32):
+    """Test the creation of a LiveResponseError."""
     err = LiveResponseError(details)
     assert err.message == message
     assert err.decoded_win32_error == decoded_win32
 
 
 def test_create_manager(cbcsdk_mock):
+    """Test creating the Live Response session manager."""
     sut = LiveResponseSessionManager(cbcsdk_mock.api, 35)
     assert sut._timeout == 35
     assert not sut._keepalive_sessions
@@ -91,6 +92,7 @@ def test_create_manager(cbcsdk_mock):
 
 
 def test_create_session(cbcsdk_mock):
+    """Test creating a Live Response session."""
     cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/2468', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/device/2468', DEVICE_RESPONSE)
@@ -105,6 +107,7 @@ def test_create_session(cbcsdk_mock):
 
 
 def test_create_session_with_poll_error(cbcsdk_mock):
+    """Test creating a Live Response session with an error in the polling."""
     cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/2468', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468', SESSION_POLL_RESP_ERROR)
     cbcsdk_mock.mock_request('PUT', '/integrationServices/v3/cblr/session', SESSION_CLOSE_RESP)
@@ -116,6 +119,7 @@ def test_create_session_with_poll_error(cbcsdk_mock):
 
 
 def test_create_session_with_init_poll_timeout(cbcsdk_mock):
+    """Test creating a Live Response session with a timeout in the initial polling."""
     cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/2468', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('PUT', '/integrationServices/v3/cblr/session', SESSION_CLOSE_RESP)
@@ -129,6 +133,7 @@ def test_create_session_with_init_poll_timeout(cbcsdk_mock):
 
 
 def test_create_session_with_keepalive_option(cbcsdk_mock):
+    """Test creating a Live Response session using the keepalive option."""
     cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/2468', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/device/2468', DEVICE_RESPONSE)
@@ -155,6 +160,7 @@ def test_create_session_with_keepalive_option(cbcsdk_mock):
     (ServerError(404, 'test error'),)
 ])
 def test_session_maintenance_sends_keepalive(cbcsdk_mock, thrown_exception):
+    """Test to ensure the session maintenance sends the keepalive messages as needed."""
     cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/2468', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/device/2468', DEVICE_RESPONSE)
@@ -171,6 +177,7 @@ def test_session_maintenance_sends_keepalive(cbcsdk_mock, thrown_exception):
 
 
 def test_list_directory(cbcsdk_mock):
+    """Test the response to the 'list directory' command."""
     cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/2468', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/device/2468', DEVICE_RESPONSE)
@@ -189,6 +196,7 @@ def test_list_directory(cbcsdk_mock):
 
 
 def test_delete_file(cbcsdk_mock):
+    """Test the response to the 'delete file' command."""
     cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/2468', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/device/2468', DEVICE_RESPONSE)
@@ -201,6 +209,7 @@ def test_delete_file(cbcsdk_mock):
 
 
 def test_delete_file_with_error(cbcsdk_mock):
+    """Test the response to the 'delete file' command when it returns an error."""
     cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/2468', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/device/2468', DEVICE_RESPONSE)
@@ -215,6 +224,7 @@ def test_delete_file_with_error(cbcsdk_mock):
 
 
 def test_put_file(cbcsdk_mock, mox):
+    """Test the response to the 'put file' command."""
     def respond_to_post(url, body, **kwargs):
         assert body['session_id'] == '1:2468'
         assert body['name'] == 'put file'
@@ -237,7 +247,9 @@ def test_put_file(cbcsdk_mock, mox):
         session.put_file(filep, 'foobar.txt')
         mox.VerifyAll()
 
+
 def test_create_directory(cbcsdk_mock):
+    """Test the response to the 'create directory' command."""
     cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/2468', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/device/2468', DEVICE_RESPONSE)
@@ -250,6 +262,7 @@ def test_create_directory(cbcsdk_mock):
 
 
 def test_walk(cbcsdk_mock, mox):
+    """Test the logic of the directory walking."""
     cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/2468', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/device/2468', DEVICE_RESPONSE)
@@ -288,6 +301,7 @@ def test_walk(cbcsdk_mock, mox):
 
 
 def test_walk_bottomup_with_error(cbcsdk_mock, mox):
+    """Test the logic of the directory walking with an error in one of the directories."""
     called_error_response = 0
 
     def error_response(err):
@@ -328,6 +342,7 @@ def test_walk_bottomup_with_error(cbcsdk_mock, mox):
 
 
 def test_kill_process(cbcsdk_mock):
+    """Test the response to the 'kill' command."""
     cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/2468', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/device/2468', DEVICE_RESPONSE)
@@ -340,6 +355,7 @@ def test_kill_process(cbcsdk_mock):
 
 
 def test_kill_process_timeout(cbcsdk_mock):
+    """Test the response to the 'kill' command when it times out."""
     cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/2468', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/device/2468', DEVICE_RESPONSE)
@@ -352,6 +368,7 @@ def test_kill_process_timeout(cbcsdk_mock):
 
 
 def test_create_process(cbcsdk_mock):
+    """Test the response to the 'create process' command with wait for completion."""
     cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/2468', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/device/2468', DEVICE_RESPONSE)
@@ -364,6 +381,7 @@ def test_create_process(cbcsdk_mock):
 
 
 def test_spawn_process(cbcsdk_mock):
+    """Test the response to the 'create process' command without wait for completion."""
     cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/2468', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/device/2468', DEVICE_RESPONSE)
@@ -376,6 +394,7 @@ def test_spawn_process(cbcsdk_mock):
 
 @pytest.mark.parametrize("remotefile", [('junk.txt',), (None,)])
 def test_run_process_with_output(cbcsdk_mock, mox, remotefile):
+    """Test the response to the 'create process' command with output that we retrieve."""
     def respond_to_post(url, body, **kwargs):
         assert body['session_id'] == '1:2468'
         if body['name'] == 'create process':
@@ -411,6 +430,7 @@ def test_run_process_with_output(cbcsdk_mock, mox, remotefile):
 
 
 def test_list_processes(cbcsdk_mock):
+    """Test the response to the 'list processes' command."""
     cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/2468', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/device/2468', DEVICE_RESPONSE)
@@ -427,6 +447,7 @@ def test_list_processes(cbcsdk_mock):
 
 
 def test_registry_enum(cbcsdk_mock):
+    """Test the response to the 'reg enum keys' command."""
     cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/2468', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/device/2468', DEVICE_RESPONSE)
@@ -450,6 +471,7 @@ def test_registry_enum(cbcsdk_mock):
 
 
 def test_registry_get(cbcsdk_mock):
+    """Test the response to the 'reg get value' command."""
     cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/2468', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/device/2468', DEVICE_RESPONSE)
@@ -472,6 +494,7 @@ def test_registry_get(cbcsdk_mock):
     (80231, 80231, False, 'REG_QWORD', 'REG_QWORD')
 ])
 def test_registry_set(cbcsdk_mock, set_val, check_val, overwrite, set_type, check_type):
+    """Test the response to the 'reg set value' command."""
     def respond_to_post(url, body, **kwargs):
         assert body['session_id'] == '1:2468'
         assert body['name'] == 'reg set value'
@@ -494,6 +517,7 @@ def test_registry_set(cbcsdk_mock, set_val, check_val, overwrite, set_type, chec
 
 
 def test_registry_create_key(cbcsdk_mock):
+    """Test the response to the 'reg create key' command."""
     cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/2468', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/device/2468', DEVICE_RESPONSE)
@@ -506,6 +530,7 @@ def test_registry_create_key(cbcsdk_mock):
 
 
 def test_registry_delete_key(cbcsdk_mock):
+    """Test the response to the 'reg delete key' command."""
     cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/2468', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/device/2468', DEVICE_RESPONSE)
@@ -518,6 +543,7 @@ def test_registry_delete_key(cbcsdk_mock):
 
 
 def test_registry_delete(cbcsdk_mock):
+    """Test the response to the 'reg delete value' command."""
     cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/2468', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/device/2468', DEVICE_RESPONSE)
@@ -530,6 +556,7 @@ def test_registry_delete(cbcsdk_mock):
 
 
 def test_registry_unsupported_command(cbcsdk_mock):
+    """Test the response to a command that we know isn't supported on the target node."""
     cbcsdk_mock.mock_request('POST', '/integrationServices/v3/cblr/session/7777', USESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:7777', USESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/device/7777', UDEVICE_RESPONSE)
@@ -542,6 +569,7 @@ def test_registry_unsupported_command(cbcsdk_mock):
 
 
 def test_memdump(cbcsdk_mock):
+    """Test the response to the 'memdump' command."""
     generated_file_name = None
     target_file_name = None
 
