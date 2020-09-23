@@ -1,3 +1,5 @@
+"""Mock command responses for Live Response."""
+
 DIRECTORY_LIST_START_RESP = {
     'id': 6,
     'session_id': '1:2468',
@@ -565,4 +567,3 @@ MEMDUMP_DEL_END_RESP = {
     'object': None,
     'completion_time': 2345678901
 }
-

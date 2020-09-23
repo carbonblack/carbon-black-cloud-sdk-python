@@ -14,7 +14,7 @@
 import pytest
 import requests
 import ssl
-from cbc_sdk.connection import MAX_RETRIES, try_json, Connection
+from cbc_sdk.connection import try_json, Connection
 from cbc_sdk.credentials import Credentials
 from cbc_sdk.errors import (ApiError, ClientError, ConnectionError, ObjectNotFoundError, QuerySyntaxError, ServerError,
                             TimeoutError, UnauthorizedError)

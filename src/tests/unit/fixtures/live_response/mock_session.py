@@ -1,3 +1,5 @@
+"""Mock session responses for the Live Response API."""
+
 SESSION_INIT_RESP = {
     "hostname": None,
     "address": None,
@@ -196,4 +198,3 @@ USESSION_CLOSE_RESP = {
     "current_command_index": 0,
     "create_time": 1502126655758
 }
-

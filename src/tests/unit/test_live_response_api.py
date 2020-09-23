@@ -37,11 +37,10 @@ from tests.unit.fixtures.live_response.mock_command import (DIRECTORY_LIST_START
                                                             REG_DELETE_START_RESP, REG_DELETE_END_RESP,
                                                             MEMDUMP_START_RESP, MEMDUMP_END_RESP,
                                                             MEMDUMP_DEL_START_RESP, MEMDUMP_DEL_END_RESP)
-from tests.unit.fixtures.live_response.mock_device import DEVICE_RESPONSE, UDEVICE_RESPONSE, DEVICE_QUERY_RESPONSE
+from tests.unit.fixtures.live_response.mock_device import DEVICE_RESPONSE, UDEVICE_RESPONSE
 from tests.unit.fixtures.live_response.mock_session import (SESSION_INIT_RESP, SESSION_POLL_RESP,
                                                             SESSION_POLL_RESP_ERROR, SESSION_CLOSE_RESP,
                                                             USESSION_INIT_RESP, USESSION_POLL_RESP, USESSION_CLOSE_RESP)
-
 
 
 @pytest.fixture(scope="function")

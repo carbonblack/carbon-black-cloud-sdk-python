@@ -1,14 +1,20 @@
+"""Stub responses for use in mock testing"""
+
 import pytest
 import json
 
 
 class StubElapsed(object):
+    """Stub for the "elapsed" member of the response class."""
     def total_seconds(self):
+        """Return the total number of seconds elapsed."""
         return 0
 
 
 class StubResponse(object):
+    """Stub for an HTTP response object."""
     def __init__(self, contents, scode=200, text=None):
+        """Initialize the StubResponse object."""
         self._contents = contents
         self.status_code = scode
         self.text = text or json.dumps(contents)
@@ -16,6 +22,7 @@ class StubResponse(object):
         self.elapsed = StubElapsed()
 
     def json(self):
+        """Return the JSON contents of the response."""
         return self._contents or json.loads(self.text)
 
 
@@ -40,6 +47,7 @@ def _failing_delete_object(url):
 
 
 def patch_cbapi(monkeypatch, api, **kwargs):
+    """Patch an API instance with our "failing" stub functions."""
     monkeypatch.setattr(api, "get_object", kwargs.get('GET', _failing_get_object))
     monkeypatch.setattr(api, "get_raw_data", kwargs.get('RAW_GET', _failing_get_raw_data))
     monkeypatch.setattr(api, "post_object", kwargs.get('POST', _failing_post_object))
