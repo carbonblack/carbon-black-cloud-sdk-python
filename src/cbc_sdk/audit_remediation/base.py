@@ -324,10 +324,7 @@ class DeviceSummaryFacet(ResultFacet):
 
 
 class RunQuery(PlatformQueryBase):
-    """
-    Represents a query that either creates or retrieves the
-    status of a LiveQuery run.
-    """
+    """Represents a query that either creates or retrieves the status of a LiveQuery run."""
 
     def __init__(self, doc_class, cb):
         """Initialize a RunQuery object."""
@@ -443,9 +440,7 @@ class RunQuery(PlatformQueryBase):
 
 
 class RunHistoryQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
-    """
-    Represents a query that retrieves historic LiveQuery runs.
-    """
+    """Represents a query that retrieves historic LiveQuery runs."""
     def __init__(self, doc_class, cb):
         """Initialize a RunHistoryQuery object."""
         super().__init__(doc_class, cb)
@@ -529,9 +524,7 @@ class RunHistoryQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQuery
 
 
 class ResultQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
-    """
-    Represents a query that retrieves results from a LiveQuery run.
-    """
+    """Represents a query that retrieves results from a LiveQuery run."""
     def __init__(self, doc_class, cb):
         """Initialize a ResultQuery object."""
         super().__init__(doc_class, cb)
@@ -652,9 +645,7 @@ class ResultQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixi
 
 
 class FacetQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
-    """
-    Represents a query that receives facet information from a LiveQuery run.
-    """
+    """Represents a query that receives facet information from a LiveQuery run."""
     def __init__(self, doc_class, cb):
         """Initialize a FacetQuery object."""
         super().__init__(doc_class, cb)
