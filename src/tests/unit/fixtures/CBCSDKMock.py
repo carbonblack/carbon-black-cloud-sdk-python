@@ -16,6 +16,7 @@
 import pytest
 import re
 import copy
+from cbc_sdk.errors import ServerError
 
 
 class CBCSDKMock:
@@ -36,15 +37,19 @@ class CBCSDKMock:
 
     class StubResponse(object):
         """Stubbed response to object to support json function similar to requests package"""
-        def __init__(self, contents, scode=200, text=""):
+        def __init__(self, contents, scode=200, text="", json_parsable=True):
             """Init default properties"""
-            self._contents = contents
+            self.content = contents
             self.status_code = scode
             self.text = text
+            self._json_parsable = json_parsable
 
         def json(self):
             """Mimics request package"""
-            return self._contents
+            if self._json_parsable:
+                return self.content
+            else:
+                raise ServerError(200, "Cannot parse response as JSON: {0:s}".format(self.content))
 
     def get_mock_key(self, verb, url):
         """Algorithm for getting/setting mocked VERB + URL"""
@@ -135,9 +140,9 @@ class CBCSDKMock:
             matched = self.match_key(self.get_mock_key("PUT", url))
             if matched:
                 response = self.mocks[matched]
-                if response._contents is None:
+                if response.content is None:
                     response = copy.deepcopy(self.mocks[matched])
-                    response._contents = body
+                    response.content = body
                 elif callable(self.mocks[matched]):
                     return self.StubResponse(self.mocks[matched](url, body, **kwargs))
                 elif self.mocks[matched] is Exception or self.mocks[matched] in Exception.__subclasses__():

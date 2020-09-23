@@ -437,6 +437,8 @@ class RunQuery(PlatformQueryBase):
         url = self._doc_class.urlobject.format(self._cb.credentials.org_key)
         resp = self._cb.post_object(url, body=self._query_body)
 
+        self._query_token = resp.json().get("id")
+
         return self._doc_class(self._cb, initial_data=resp.json())
 
 
