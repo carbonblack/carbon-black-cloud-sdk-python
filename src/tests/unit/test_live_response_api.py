@@ -165,7 +165,7 @@ def test_session_maintenance_sends_keepalive(cbcsdk_mock, thrown_exception):
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/device/2468', DEVICE_RESPONSE)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468/keepalive', {})
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468/keepalive', thrown_exception)
-    manager = LiveResponseSessionManager(cbcsdk_mock.api, sys.maxsize, True)
+    manager = LiveResponseSessionManager(cbcsdk_mock.api, 100000, True)
     try:
         with manager.request_session(2468):
             manager._maintain_sessions()
