@@ -59,7 +59,7 @@ def try_json(resp):
     Return a parsed JSON representation of the input.
 
     Args:
-        resp (str): Input to be parsed.
+        resp (Response): Input to be parsed.
 
     Returns:
         object: The parsed JSON result, or an empty dict if the value is not valid JSON.
