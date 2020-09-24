@@ -6,8 +6,8 @@ from cbc_sdk.enterprise_edr import Downloads, Binary
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.enterprise_edr.mock_ubs import (BINARY_GET_METADATA_RESP,
-                                                       BINARY_GET_DEVICE_SUMMARY_RESP,
-                                                       BINARY_GET_FILE_RESP)
+                                                         BINARY_GET_DEVICE_SUMMARY_RESP,
+                                                         BINARY_GET_FILE_RESP)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 

@@ -2,16 +2,16 @@
 
 import pytest
 import logging
-from cbc_sdk.endpoint_standard import Policy
+from cbc_sdk.endpoint_standard import Policy, Query
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.endpoint_standard.mock_policy import (POLICY_GET_RESP,
-                                                     POLICY_POST_RULE_RESP,
-                                                     POLICY_GET_WITH_NEW_RULE_RESP,
-                                                     POLICY_MODIFY_RULE_RESP,
-                                                     POLICY_GET_WITH_MODIFIED_RULE_RESP,
-                                                     POLICY_DELETE_RULE_RESP,
-                                                     POLICY_GET_WITH_DELETED_RULE_RESP)
+                                                               POLICY_POST_RULE_RESP,
+                                                               POLICY_GET_WITH_NEW_RULE_RESP,
+                                                               POLICY_MODIFY_RULE_RESP,
+                                                               POLICY_GET_WITH_MODIFIED_RULE_RESP,
+                                                               POLICY_DELETE_RULE_RESP,
+                                                               POLICY_GET_WITH_DELETED_RULE_RESP)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -86,3 +86,9 @@ def test_policy_select(cbcsdk_mock):
     assert isinstance(policy, Policy)
     assert policy.id == 30241
     assert policy.name == "Lyon_test"
+
+
+def test_policy_query_implementation(cbcsdk_mock):
+    """Testing Policy._query_implementation."""
+    policy = Policy(cbcsdk_mock.api)
+    assert isinstance(policy._query_implementation(cbcsdk_mock.api), Query)

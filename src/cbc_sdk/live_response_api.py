@@ -274,24 +274,41 @@ class CbLRSessionBase(object):
         command_id = resp.get('id')
         self._poll_command(command_id)
 
-    def path_join(self, *dirnames):
+    def _pathsep(self):
         """
-        Join multiple directory names into a single one.
-
-        Args:
-            *dirnames (list): List of directory names to join together.
+        Return the path separator used on the target node.
 
         Returns:
-            str: The joined directory name.
+            str: Path separator used on the target node.
         """
         if self.os_type == 1:
             # Windows
-            return "\\".join(dirnames)
-        else:
-            # Unix/Mac OS X
-            return "/".join(dirnames)
+            return "\\"
+        # Unix/Mac
+        return '/'
 
-    def path_islink(self, fi):
+    def _path_compose(self, base, new_component, add_end=False):
+        """
+        Compose a new path based on a base and a new component.
+
+        Args:
+            base (str): The base path to be used.
+            new_component (str): The new component to be appended.
+            add_end (bool): True to add an extra path separator at the end. Default False.
+
+        Returns:
+            str: The composed path.
+        """
+        sep = self._pathsep()
+        rc = [base]
+        if not base.endswith(sep):
+            rc.append(sep)
+        rc.append(new_component)
+        if add_end:
+            rc.append(sep)
+        return "".join(rc)
+
+    def _path_islink(self, fi):
         """
         Determine if the path is a link. Not implemented.
 
@@ -299,7 +316,7 @@ class CbLRSessionBase(object):
             fi (str): File to check.
 
         Returns:
-            True if the file is a link, False if not.
+            bool: True if the file is a link, False if not.
         """
         # TODO: implement
         return False
@@ -325,7 +342,7 @@ class CbLRSessionBase(object):
             list: List of tuples containing directory name, subdirectory names, file names.
         """
         try:
-            allfiles = self.list_directory(self.path_join(top, "*"))
+            allfiles = self.list_directory(self._path_compose(top, '*'))
         except Exception as err:
             if onerror is not None:
                 onerror(err)
@@ -345,8 +362,8 @@ class CbLRSessionBase(object):
             yield top, [fn["filename"] for fn in dirnames], [fn["filename"] for fn in filenames]
 
         for name in dirnames:
-            new_path = self.path_join(top, name["filename"])
-            if followlinks or not self.path_islink(new_path):
+            new_path = self._path_compose(top, name['filename'], True)
+            if followlinks or not self._path_islink(new_path):
                 for x in self.walk(new_path, topdown, onerror, followlinks):
                     yield x
         if not topdown:
@@ -514,13 +531,11 @@ class CbLRSessionBase(object):
         data = {"name": "reg enum key", "object": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
-        results = {}
-        results["values"] = self._poll_command(command_id).get("values", [])
-        results["sub_keys"] = self._poll_command(command_id).get("sub_keys", [])
-        return results
+        raw_output = self._poll_command(command_id)
+        return {'values': raw_output.get('values', []), 'sub_keys': raw_output.get('sub_keys', [])}
 
     # returns a list containing a dictionary for each registry value in the key
-    def list_registry_keys(self, regkey):
+    def list_registry_values(self, regkey):
         """
         Enumerate all registry values from the specified registry key on the remote machine.
 
@@ -572,17 +587,19 @@ class CbLRSessionBase(object):
             overwrite (bool): If True, any existing value will be overwritten.
             value_type (str): The type of value.  Examples: REG_DWORD, REG_MULTI_SZ, REG_SZ
         """
+        real_value = value
         if value_type is None:
             if type(value) == int:
                 value_type = "REG_DWORD"
             elif type(value) == list:
                 value_type = "REG_MULTI_SZ"
+                real_value = [str(item) for item in list(value)]
             else:
                 value_type = "REG_SZ"
-                value = str(value)
+                real_value = str(value)
 
         data = {"name": "reg set value", "object": regkey, "overwrite": overwrite, "value_type": value_type,
-                "value_data": value}
+                "value_data": real_value}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
         self._poll_command(command_id)
@@ -670,7 +687,7 @@ class CbLRSessionBase(object):
         else:
             workdir = '/tmp'
 
-        return self.path_join(workdir, 'cblr.%s.tmp' % (randfile,))
+        return self._path_compose(workdir, f'cblr.{randfile}.tmp')
 
     def _poll_command(self, command_id, **kwargs):
         return poll_status(self._cb, "{cblr_base}/session/{0}/command/{1}".format(self.session_id, command_id,
@@ -1026,7 +1043,7 @@ class CbLRManagerBase(object):
 
         Args:
             cb (BaseAPI): The CBAPI object reference.
-            timeout (int): Timeout to use for requesus.
+            timeout (int): Timeout to use for requests, in seconds.
             keepalive_sessions (bool): If True, "ping" sessions occasionally to ensure they stay alive.
         """
         self._timeout = timeout
@@ -1034,8 +1051,12 @@ class CbLRManagerBase(object):
         self._sessions = {}
         self._session_lock = threading.RLock()
         self._keepalive_sessions = keepalive_sessions
+        self._init_poll_delay = 1
+        self._init_poll_timeout = 360
 
         if keepalive_sessions:
+            self._cleanup_thread_running = True
+            self._cleanup_thread_event = threading.Event()
             self._cleanup_thread = threading.Thread(target=self._session_keepalive_thread)
             self._cleanup_thread.daemon = True
             self._cleanup_thread.start()
@@ -1062,31 +1083,42 @@ class CbLRManagerBase(object):
         self._job_scheduler.submit_job(work_item)
         return work_item.future
 
+    def _maintain_sessions(self):
+        delete_list = []
+        with self._session_lock:
+            for session in iter(self._sessions.values()):
+                if not self._cleanup_thread_running:
+                    break
+                if session._refcount == 0:
+                    delete_list.append(session.device_id)
+                else:
+                    try:
+                        self._send_keepalive(session.session_id)
+                    except ObjectNotFoundError:
+                        log.debug("Session {0} for device {1} not valid any longer, removing from cache"
+                                  .format(session.session_id, session.device_id))
+                        delete_list.append(session.device_id)
+                    except Exception:
+                        log.debug(("Keepalive on session {0} (device {1}) failed with unknown error, " +
+                                   "removing from cache").format(session.session_id, session.device_id))
+                        delete_list.append(session.device_id)
+
+            for device_id in delete_list:
+                self._close_session(self._sessions[device_id].session_id)
+                del self._sessions[device_id]
+
     def _session_keepalive_thread(self):
         log.debug("Starting Live Response scheduler cleanup task")
-        while True:
-            time.sleep(self._timeout)
+        while self._cleanup_thread_running:
+            self._cleanup_thread_event.wait(self._timeout)
+            if self._cleanup_thread_running:
+                self._maintain_sessions()
+        log.debug("Ending Live Response scheduler cleanup task")
 
-            delete_list = []
-            with self._session_lock:
-                for session in iter(self._sessions.values()):
-                    if session._refcount == 0:
-                        delete_list.append(session.device_id)
-                    else:
-                        try:
-                            self._send_keepalive(session.session_id)
-                        except ObjectNotFoundError:
-                            log.debug("Session {0} for device {1} not valid any longer, removing from cache"
-                                      .format(session.session_id, session.device_id))
-                            delete_list.append(session.device_id)
-                        except Exception:
-                            log.debug(("Keepalive on session {0} (device {1}) failed with unknown error, " +
-                                      "removing from cache").format(session.session_id, session.device_id))
-                            delete_list.append(session.device_id)
-
-                for device_id in delete_list:
-                    self._close_session(self._sessions[device_id].session_id)
-                    del self._sessions[device_id]
+    def stop_keepalive_thread(self):
+        if self._keepalive_sessions:
+            self._cleanup_thread_running = False
+            self._cleanup_thread_event.set()
 
     def request_session(self, device_id):
         """
@@ -1162,7 +1194,7 @@ class LiveResponseSessionManager(CbLRManagerBase):
 
         try:
             res = poll_status(self._cb, "{cblr_base}/session/{0}".format(session_id, cblr_base=self.cblr_base),
-                              desired_status="ACTIVE", delay=1, timeout=360)
+                              desired_status="ACTIVE", delay=self._init_poll_delay, timeout=self._init_poll_timeout)
         except Exception:
             # "close" the session, otherwise it will stay in a pending state
             self._close_session(session_id)
@@ -1241,6 +1273,7 @@ def poll_status(cb, url, desired_status="complete", timeout=None, delay=None):
 
     while status != desired_status and time.time() - start_time < timeout:
         res = cb.get_object(url)
+        log.error(f"url: {url} -> status: {res['status']}")
         if res["status"] == desired_status:
             log.debug(json.dumps(res))
             return res
