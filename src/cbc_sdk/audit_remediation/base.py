@@ -235,7 +235,7 @@ class Result(UnrefreshableModel):
 
 class DeviceSummary(UnrefreshableModel):
     """Represents the summary of results from a single device during a single Audit and Remediation `Run`."""
-    primary_key = "id"
+    primary_key = "device_id"
     swagger_meta_file = "audit_remediation/models/device_summary.yaml"
     urlobject = "/livequery/v1/orgs/{}/runs/{}/results/device_summaries/_search"
 
@@ -259,8 +259,8 @@ class DeviceSummary(UnrefreshableModel):
         """Initialize a DeviceSummary object with initial_data."""
         super(DeviceSummary, self).__init__(
             cb,
-            model_unique_id=initial_data["id"],
-            initial_data=initial_data,
+            model_unique_id=initial_data["device"]["id"],
+            initial_data=initial_data["device"],
             force_init=False,
             full_doc=True,
         )
@@ -324,10 +324,7 @@ class DeviceSummaryFacet(ResultFacet):
 
 
 class RunQuery(PlatformQueryBase):
-    """
-    Represents a query that either creates or retrieves the
-    status of a LiveQuery run.
-    """
+    """Represents a query that either creates or retrieves the status of a LiveQuery run."""
 
     def __init__(self, doc_class, cb):
         """Initialize a RunQuery object."""
@@ -437,13 +434,13 @@ class RunQuery(PlatformQueryBase):
         url = self._doc_class.urlobject.format(self._cb.credentials.org_key)
         resp = self._cb.post_object(url, body=self._query_body)
 
+        self._query_token = resp.json().get("id")
+
         return self._doc_class(self._cb, initial_data=resp.json())
 
 
 class RunHistoryQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
-    """
-    Represents a query that retrieves historic LiveQuery runs.
-    """
+    """Represents a query that retrieves historic LiveQuery runs."""
     def __init__(self, doc_class, cb):
         """Initialize a RunHistoryQuery object."""
         super().__init__(doc_class, cb)
@@ -527,9 +524,7 @@ class RunHistoryQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQuery
 
 
 class ResultQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
-    """
-    Represents a query that retrieves results from a LiveQuery run.
-    """
+    """Represents a query that retrieves results from a LiveQuery run."""
     def __init__(self, doc_class, cb):
         """Initialize a ResultQuery object."""
         super().__init__(doc_class, cb)
@@ -650,9 +645,7 @@ class ResultQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixi
 
 
 class FacetQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
-    """
-    Represents a query that receives facet information from a LiveQuery run.
-    """
+    """Represents a query that receives facet information from a LiveQuery run."""
     def __init__(self, doc_class, cb):
         """Initialize a FacetQuery object."""
         super().__init__(doc_class, cb)

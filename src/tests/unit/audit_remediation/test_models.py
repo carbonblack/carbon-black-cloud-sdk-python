@@ -122,9 +122,9 @@ def test_result_device_summaries(monkeypatch):
                         "sort": [{"field": "device_name", "order": "ASC"}], "start": 0}
         _was_called = True
         return StubResponse({"org_key": "Z100", "num_found": 2,
-                             "results": [{"id": "ghijklm", "total_results": 2, "device_id": 314159,
+                             "results": [{"id": "ghijklm", "total_results": 2, "device": {"id": 314159, "name": "device1"},
                                           "metrics": [{"key": "aaa", "value": 0.0}, {"key": "bbb", "value": 0.0}]},
-                                         {"id": "mnopqrs", "total_results": 3, "device_id": 271828,
+                                         {"id": "mnopqrs", "total_results": 3, "device": {"id": 271828, "name": "device2"},
                                           "metrics": [{"key": "aaa", "value": 0.0}, {"key": "bbb", "value": 0.0}]}]})
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
@@ -134,12 +134,14 @@ def test_result_device_summaries(monkeypatch):
     assert isinstance(query, ResultQuery)
     count = 0
     for item in query.all():
-        if item.id == "ghijklm":
-            assert item.total_results == 2
+        if item.id == 314159:
+            # assert item.total_results == 2
             assert item.device_id == 314159
-        elif item.id == "mnopqrs":
-            assert item.total_results == 3
+            assert item.name == "device1"
+        elif item.id == 271828:
+            # assert item.total_results == 3
             assert item.device_id == 271828
+            assert item.name == "device2"
         else:
             pytest.fail("Invalid object with ID %s seen" % item.id)
         count = count + 1
