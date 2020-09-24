@@ -456,6 +456,58 @@ WATCHLIST_GET_RESP = {
     ]
 }
 
+WATCHLIST_GET_SPECIFIC_RESP = {
+    "name": "ATT&CK Framework",
+    "description": "Existing description for the watchlist.",
+    "id": "watchlistId",
+    "tags_enabled": True,
+    "alerts_enabled": False,
+    "create_timestamp": 1597173159,
+    "last_update_timestamp": 1597173159,
+    "report_ids": ["reportId0",
+                   "reportId1",
+                   "reportId2"],
+    "classifier": {
+        "key": "feed_id",
+        "value": "feed_id_associated"
+    }
+}
+
+WATCHLIST_GET_SPECIFIC_MISSING_FIELDS_RESP = {
+    "description": "Description of invalid response.",
+    "id": "watchlistMissingFieldsWithID",
+    "tags_enabled": True,
+    "alerts_enabled": False,
+    "create_timestamp": 1597173159,
+    "last_update_timestamp": 1597173159,
+    "report_ids": None
+}
+
+WATCHLIST_GET_SPECIFIC_INVALID_CLASSIFIER_RESP = {
+    "name": "ATT&CK Framework",
+    "description": "Existing description for the watchlist.",
+    "id": "watchlistInvalidClassifier",
+    "tags_enabled": True,
+    "alerts_enabled": False,
+    "create_timestamp": 1597173159,
+    "last_update_timestamp": 1597173159,
+    "report_ids": None,
+    "classifier": {
+        "key": "only_feed_id_is_expected",
+        "value": "abcdefgh"
+    }
+}
+
+CREATE_WATCHLIST_DATA = {
+ "name": "myWatchlist",
+ "description": "My Description.",
+ "id": "watchlistId",
+ "tags_enabled": True,
+ "alerts_enabled": True,
+ "create_timestamp": 1600197345,
+ "last_update_timestamp": 1600197345,
+}
+
 REPORT_GET_RESP = {
     "results": [
         {
@@ -868,6 +920,43 @@ FEED_GET_SPECIFIC_RESP = {
         "source_label": None,
         "access": "private",
         "id": "pv65TYVQy8YWMX9KsQUg"
+    },
+    "reports": [
+        {
+            "id": "109027d1-064c-477d-aa34-528606ef72a9",
+            "timestamp": 1592578548,
+            "title": "simple hash - chrome.exe",
+            "description": "A regular non-malicious hash to test watchlist event triggering",
+            "severity": 1,
+            "link": None,
+            "tags": None,
+            "iocs": None,
+            "iocs_v2": [
+                {
+                    "id": "109027d2-064c-477d-aa34-528606ef72a1",
+                    "match_type": "equality",
+                    "values": [
+                        "b2e5665591b2118ca13709f61b60d700"
+                    ],
+                    "field": "md5",
+                    "link": "www.yahoo.com"
+                }
+            ],
+            "visibility": None
+        }
+    ]
+}
+
+FEED_GET_SPECIFIC_FROM_WATCHLIST_RESP = {
+    "feedinfo": {
+        "name": "EA16489_test_5",
+        "owner": "WNEXFKQ7",
+        "provider_url": "some_url",
+        "summary": "Simple IOC trigger",
+        "category": "None",
+        "source_label": None,
+        "access": "private",
+        "id": "feed_id_associated"
     },
     "reports": [
         {

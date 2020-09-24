@@ -40,16 +40,20 @@ class Process(UnrefreshableModel):
         """Represents a summary of organization-specific information for a process."""
         default_sort = "last_update desc"
         primary_key = "process_guid"
-        urlobject_single = "/api/investigate/v1/orgs/{}/processes/summary"
+        urlobject = "/api/investigate/v1/orgs/{}/processes/summary"
 
         def __init__(self, cb, model_unique_id):
-            url = self.urlobject_single.format(cb.credentials.org_key)
+            url = self.urlobject.format(cb.credentials.org_key)
+
             summary = cb.get_object(url, query_parameters={"process_guid": model_unique_id})
 
             super(Process.Summary, self).__init__(cb, model_unique_id=model_unique_id,
                                                   initial_data=summary, force_init=False,
                                                   full_doc=True)
 
+
+
+        @classmethod
         def _query_implementation(self, cb, **kwargs):
             return Query(self, cb, **kwargs)
 
@@ -104,15 +108,15 @@ class Process(UnrefreshableModel):
 
     @property
     def parents(self):
-        """Returns a query for parent processes associated with this process.
+        """Returns a parent process associated with this process.
 
         Returns:
-            query (cbc_sdk.enterprise_edr.query.AsyncProcessQuery or None):
-                A Query object with the appropriate search parameters for parent processes,
-                or None if the process has no recorded parent.
+            parent (Process): Parent Process if one exists, None if the process has no recorded parent.
         """
         if "parent_guid" in self._info:
-            return self._cb.select(Process).where(process_guid=self.parent_guid)
+            return self._cb.select(Process, self.parent_guid)
+        elif self.summary.parent:
+            return Process(self._cb, initial_data=self.summary.parent)
         else:
             return []
 
@@ -137,7 +141,7 @@ class Process(UnrefreshableModel):
         """Returns a list of sibling processes for this process.
 
         Returns:
-            sublings ([Process]): List of Processes, one for each sibling of the
+            siblings ([Process]): List of Processes, one for each sibling of the
                 parent Process.
         """
         return [
@@ -156,6 +160,8 @@ class Process(UnrefreshableModel):
         # to avoid the missing attrbute login in NewBaseModel.
         if "process_hash" in self._info:
             return next((hsh for hsh in self.process_hash if len(hsh) == 32), None)
+        elif "process_hash" in self.summary._info["process"]:
+            return next((hash for hash in self.summary._info["process"]["process_hash"] if len(hash) == 32), None)
         else:
             return None
 
@@ -168,6 +174,8 @@ class Process(UnrefreshableModel):
         """
         if "process_hash" in self._info:
             return next((hsh for hsh in self.process_hash if len(hsh) == 64), None)
+        elif "process_hash" in self.summary._info["process"]:
+            return next((hash for hash in self.summary._info["process"]["process_hash"] if len(hash) == 64), None)
         else:
             return None
 
@@ -177,10 +185,16 @@ class Process(UnrefreshableModel):
 
         Returns:
             pids ([int]): List of integer PIDs.
+            None if there are no associated PIDs.
         """
         # NOTE(ww): This exists because the API returns the list as "process_pid",
         # which is misleading. We just give a slightly clearer name.
-        return self.process_pid
+        if "process_pid" in self._info:
+            return self.process_pid
+        elif "process_pid" in self.summary._info["process"]:
+            return self.summary._info["process"]["process_pid"]
+        else:
+            return None
 
 
 class Event(UnrefreshableModel):
@@ -281,8 +295,11 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
             "device_group",
             "device_internal_ip",
             "device_os",
+            "device_policy",
             "process_effective_reputation",
-            "process_reputation,ttp"
+            "process_reputation",
+            "process_start_time",
+            "ttp"
         ]
 
         return args
@@ -305,7 +322,7 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
         return self._total_results
 
     def _validate(self, args):
-        if not self._doc_class.validation_url:
+        if not hasattr(self._doc_class, "validation_url"):
             return
 
         url = self._doc_class.validation_url.format(self._cb.credentials.org_key)
