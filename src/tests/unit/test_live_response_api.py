@@ -137,7 +137,7 @@ def test_create_session_with_keepalive_option(cbcsdk_mock):
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/cblr/session/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/integrationServices/v3/device/2468', DEVICE_RESPONSE)
     cbcsdk_mock.mock_request('PUT', '/integrationServices/v3/cblr/session', SESSION_CLOSE_RESP)
-    manager = LiveResponseSessionManager(cbcsdk_mock.api, sys.maxsize, True)
+    manager = LiveResponseSessionManager(cbcsdk_mock.api, 100000, True)
     try:
         with manager.request_session(2468) as session1:
             assert session1.session_id == '1:2468'
