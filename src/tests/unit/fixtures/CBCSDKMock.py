@@ -16,8 +16,7 @@
 import pytest
 import re
 import copy
-from cbc_sdk.errors import ServerError
-
+import cbc_sdk
 
 class CBCSDKMock:
     """Mock framework for unit tests that need to fetch Carbon Black Cloud data"""
@@ -49,7 +48,7 @@ class CBCSDKMock:
             if self._json_parsable:
                 return self.content
             else:
-                raise ServerError(200, "Cannot parse response as JSON: {0:s}".format(self.content))
+                raise cbc_sdk.errors.ServerError(200, "Cannot parse response as JSON: {0:s}".format(self.content))
 
     def get_mock_key(self, verb, url):
         """Algorithm for getting/setting mocked VERB + URL"""
