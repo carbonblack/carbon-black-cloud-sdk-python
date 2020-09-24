@@ -12,13 +12,16 @@
 """Tests for the BaseAPI object."""
 
 import pytest
+import json
 import sys
 from cbc_sdk import __version__
 from cbc_sdk.connection import BaseAPI
 from cbc_sdk.credentials import Credentials
-from cbc_sdk.errors import CredentialError
+from cbc_sdk.errors import CredentialError, ServerError
 from cbc_sdk.credential_providers.default import default_provider_object
 from tests.unit.fixtures.mock_credentials import MockCredentialProvider
+from tests.unit.fixtures.stubresponse import StubResponse
+from mox import Func
 
 
 def test_BaseAPI_init_with_raw_credential_params():
@@ -139,3 +142,138 @@ def test_BaseAPI_generate_user_agent(integration, expected_line):
     """Test the generation of the User-Agent header."""
     sut = BaseAPI(integration_name=integration, url='https://example.com', token='ABCDEFGHIJKLM', org_key='A1B2C3D4')
     assert sut.session.token_header['User-Agent'] == expected_line
+
+
+@pytest.mark.parametrize("response, expected, scode", [
+    (StubResponse({'color': 'green'}, 400), {}, 400),
+    (StubResponse({'color': 'green'}), {'color': 'blue'}, 200),
+    (StubResponse({'color': 'green'}), {'color': 'green', 'mode': 3}, 200)
+])
+def test_BaseAPI_raise_unless_json_raises(response, expected, scode):
+    """Test the "raise" cases of raise_unless_json."""
+    sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
+    with pytest.raises(ServerError) as excinfo:
+        sut.raise_unless_json(response, expected)
+    assert excinfo.value.error_code == scode
+
+
+@pytest.mark.parametrize("expath, response, params, default, expected", [
+    ('/path', StubResponse({'a': 1, 'b': 2}), None, {'a': 8, 'b': 9}, {'a': 1, 'b': 2}),
+    ('/path?x=1&y=2', StubResponse({'a': 1, 'b': 2}), [('x', 1), ('y', 2)], {'a': 8, 'b': 9}, {'a': 1, 'b': 2}),
+    ('/path?x=1&y=2', StubResponse({'a': 1, 'b': 2}), {'x': 1, 'y': 2}, {'a': 8, 'b': 9}, {'a': 1, 'b': 2}),
+    ('/path', StubResponse({'a': 1, 'b': 2}, 204), None, {'a': 8, 'b': 9}, {'a': 8, 'b': 9})
+])
+def test_BaseAPI_get_object_returns(mox, expath, response, params, default, expected):
+    """Test the cases where get_object returns a value."""
+    sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
+    mox.StubOutWithMock(sut.session, 'http_request')
+    sut.session.http_request('GET', expath, headers={}, data=None).AndReturn(response)
+    mox.ReplayAll()
+    rc = sut.get_object('/path', params, default)
+    assert rc == expected
+    mox.VerifyAll()
+
+
+@pytest.mark.parametrize("response, errcode, prefix", [
+    (StubResponse({'errorMessage': 'Test Alpha Message'}), 200, 'Test Alpha Message'),
+    (StubResponse(None, 200, "{'a': 14"), 200, 'Cannot parse response as JSON:'),
+    (StubResponse({'a': 1}, 404), 404, 'Unknown error:')
+])
+def test_BaseAPI_get_object_raises_from_returns(mox, response, errcode, prefix):
+    """Test the cases where get_object raises an exception based on what it receives."""
+    sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
+    mox.StubOutWithMock(sut.session, 'http_request')
+    sut.session.http_request('GET', '/path', headers={}, data=None).AndReturn(response)
+    mox.ReplayAll()
+    with pytest.raises(ServerError) as excinfo:
+        sut.get_object('/path')
+    assert excinfo.value.error_code == errcode
+    assert excinfo.value.message.startswith(prefix)
+    mox.VerifyAll()
+
+
+@pytest.mark.parametrize("expath, code, response, params, default, expected", [
+    ('/path', 200, 'Boston1', None, 'Denver0', 'Boston1'),
+    ('/path?x=1&y=2', 200, 'Boston1', [('x', 1), ('y', 2)], 'Denver0', 'Boston1'),
+    ('/path?x=1&y=2', 200, 'Boston1', {'x': 1, 'y': 2}, 'Denver0', 'Boston1'),
+    ('/path', 204, 'Boston1', None, 'Denver0', 'Denver0')
+])
+def test_BaseAPI_get_raw_data_returns(mox, expath, code, response, params, default, expected):
+    """Test the cases where get_raw_data returns a value."""
+    sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
+    mox.StubOutWithMock(sut.session, 'http_request')
+    sut.session.http_request('GET', expath, headers={}, data=None).AndReturn(StubResponse(None, code, response))
+    mox.ReplayAll()
+    rc = sut.get_raw_data('/path', params, default)
+    assert rc == expected
+    mox.VerifyAll()
+
+
+@pytest.mark.parametrize("response, errcode, prefix", [
+    (StubResponse({'errorMessage': 'Test Alpha Message'}), 200, 'Test Alpha Message'),
+    (StubResponse(None, 404, 'Test text'), 404, 'Unknown error:')
+])
+def test_BaseAPI_get_raw_data_raises_from_returns(mox, response, errcode, prefix):
+    """Test the cases where get_raw_data raises an exception based on what it receives."""
+    sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
+    mox.StubOutWithMock(sut.session, 'http_request')
+    sut.session.http_request('GET', '/path', headers={}, data=None).AndReturn(response)
+    mox.ReplayAll()
+    with pytest.raises(ServerError) as excinfo:
+        sut.get_raw_data('/path')
+    assert excinfo.value.error_code == errcode
+    assert excinfo.value.message.startswith(prefix)
+    mox.VerifyAll()
+
+
+def test_BaseAPI_post_object(mox):
+    """Test the operation of post_object."""
+    def validate_header(hdrs):
+        assert hdrs['Content-Type'] == 'application/json'
+        return True
+
+    def validate_data(data):
+        real_data = json.loads(data)
+        assert real_data == {'a': 1, 'b': 2}
+        return True
+
+    sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
+    mox.StubOutWithMock(sut.session, 'http_request')
+    sut.session.http_request('POST', '/path', headers=Func(validate_header), data=Func(validate_data)) \
+        .AndReturn(StubResponse({'zyx': 100}))
+    mox.ReplayAll()
+    rc = sut.post_object('/path', {'a': 1, 'b': 2})
+    assert rc.json() == {'zyx': 100}
+    mox.VerifyAll()
+
+
+def test_BaseAPI_put_object(mox):
+    """Test the operation of put_object."""
+    def validate_header(hdrs):
+        assert hdrs['Content-Type'] == 'application/json'
+        return True
+
+    def validate_data(data):
+        real_data = json.loads(data)
+        assert real_data == {'a': 1, 'b': 2}
+        return True
+
+    sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
+    mox.StubOutWithMock(sut.session, 'http_request')
+    sut.session.http_request('PUT', '/path', headers=Func(validate_header), data=Func(validate_data)) \
+        .AndReturn(StubResponse({'zyx': 100}))
+    mox.ReplayAll()
+    rc = sut.put_object('/path', {'a': 1, 'b': 2})
+    assert rc.json() == {'zyx': 100}
+    mox.VerifyAll()
+
+
+def test_BaseAPI_delete_object(mox):
+    """Test the operation of delete_object."""
+    sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
+    mox.StubOutWithMock(sut.session, 'http_request')
+    sut.session.http_request('DELETE', '/path', headers={}, data=None).AndReturn(StubResponse({'zyx': 100}))
+    mox.ReplayAll()
+    rc = sut.delete_object('/path')
+    assert rc.json() == {'zyx': 100}
+    mox.VerifyAll()

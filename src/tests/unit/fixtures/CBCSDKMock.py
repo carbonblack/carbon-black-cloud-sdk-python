@@ -53,6 +53,8 @@ class CBCSDKMock:
 
     def match_key(self, request):
         """Matches mocked requests against incoming request"""
+        if request in self.mocks:
+            return request
         for key in self.mocks.keys():
             exp = key.replace("/", ".")
             matched = re.match(exp, request)
