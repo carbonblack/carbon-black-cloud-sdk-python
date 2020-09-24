@@ -62,7 +62,7 @@ DEVICE_GET_SPECIFIC_RESP = {
     "windows_platform": None
 }
 
-DEFENSE_DEVICE_GET_SPECIFIC_RESP = {"deviceInfo": {
+ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP = {"deviceInfo": {
     "createTime" : None,
     "lastReportedTime" : 1490119807460,
     "deviceId" : 12345,
@@ -121,7 +121,7 @@ DEFENSE_DEVICE_GET_SPECIFIC_RESP = {"deviceInfo": {
   }
 }
 
-DEFENSE_DEVICE_GET_SPECIFIC_RESP_1 = {"deviceInfo": {
+ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_1 = {"deviceInfo": {
     "createTime" : None,
     "lastReportedTime" : 1490119807460,
     "deviceId" : 54321,
@@ -180,7 +180,7 @@ DEFENSE_DEVICE_GET_SPECIFIC_RESP_1 = {"deviceInfo": {
   }
 }
 
-DEFENSE_DEVICE_GET_SPECIFIC_RESP_2 = {"deviceInfo": {
+ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_2 = {"deviceInfo": {
     "createTime" : None,
     "lastReportedTime" : 1490119807460,
     "deviceId" : 98765,
@@ -239,7 +239,7 @@ DEFENSE_DEVICE_GET_SPECIFIC_RESP_2 = {"deviceInfo": {
   }
 }
 
-DEFENSE_DEVICE_GET_SPECIFIC_RESP_3 = {"deviceInfo": {
+ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_3 = {"deviceInfo": {
     "createTime" : None,
     "lastReportedTime" : 1490119807460,
     "deviceId" : 23456,
@@ -298,7 +298,7 @@ DEFENSE_DEVICE_GET_SPECIFIC_RESP_3 = {"deviceInfo": {
   }
 }
 
-DEFENSE_DEVICE_GET_HOSTNAME_RESP_0 = {
+ENDPOINT_STANDARD_DEVICE_GET_HOSTNAME_RESP_0 = {
   "latestTime": 0,
   "success": True,
   "message": "Success",
@@ -363,7 +363,9 @@ DEFENSE_DEVICE_GET_HOSTNAME_RESP_0 = {
     "status" : "REGISTERED",
 }]}
 
-DEFENSE_DEVICE_GET_HOSTNAME_RESP = {
+ENDPOINT_STANDARD_DEVICE_GET_HOSTNAME_RESP_EMPTY = {}
+
+ENDPOINT_STANDARD_DEVICE_GET_HOSTNAME_RESP = {
   "latestTime": 0,
   "success": True,
   "message": "Success",
@@ -481,7 +483,7 @@ DEFENSE_DEVICE_GET_HOSTNAME_RESP = {
   ]
 }
 
-DEFENSE_DEVICE_GET_HOSTNAME_EXACT_RESP = {
+ENDPOINT_STANDARD_DEVICE_GET_HOSTNAME_EXACT_RESP = {
   "latestTime": 0,
   "success": True,
   "message": "Success",
@@ -599,7 +601,7 @@ DEFENSE_DEVICE_GET_HOSTNAME_EXACT_RESP = {
   ]
 }
 
-DEFENSE_DEVICE_GET_OWNERNAME_RESP = {
+ENDPOINT_STANDARD_DEVICE_GET_OWNERNAME_RESP = {
   "latestTime": 0,
   "success": True,
   "message": "Success",
@@ -820,7 +822,7 @@ DEFENSE_DEVICE_GET_OWNERNAME_RESP = {
   ]
 }
 
-DEFENSE_DEVICE_GET_OWNERNAME_EXACT_RESP = {
+ENDPOINT_STANDARD_DEVICE_GET_OWNERNAME_EXACT_RESP = {
   "latestTime": 0,
   "success": True,
   "message": "Success",
@@ -1042,7 +1044,7 @@ DEFENSE_DEVICE_GET_OWNERNAME_EXACT_RESP = {
   ]
 }
 
-DEFENSE_DEVICE_GET_IP_RESP = {
+ENDPOINT_STANDARD_DEVICE_GET_IP_RESP = {
   "latestTime": 0,
   "success": True,
   "message": "Success",
@@ -1160,7 +1162,7 @@ DEFENSE_DEVICE_GET_IP_RESP = {
   ]
 }
 
-DEFENSE_DEVICE_GET_HOST_IP_RESP = {
+ENDPOINT_STANDARD_DEVICE_GET_HOST_IP_RESP = {
   "latestTime": 0,
   "success": True,
   "message": "Success",
@@ -1278,7 +1280,7 @@ DEFENSE_DEVICE_GET_HOST_IP_RESP = {
   ]
 }
 
-DEFENSE_DEVICE_GET_ALL_RESP = {
+ENDPOINT_STANDARD_DEVICE_GET_ALL_RESP = {
   "latestTime": 0,
   "success": True,
   "message": "Success",
@@ -1727,4 +1729,4 @@ POLICY_GET_SPECIFIC_RESP = {
   "message" : "Success"
 }
 
-DEFENSE_DEVICE_PATCH_RESP = {"success": True, "deviceInfo": DEFENSE_DEVICE_GET_SPECIFIC_RESP["deviceInfo"]}
+ENDPOINT_STANDARD_DEVICE_PATCH_RESP = {"success": True, "deviceInfo": ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP["deviceInfo"]}
