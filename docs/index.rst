@@ -1,41 +1,58 @@
-.. Carbon Black Cloud Python SDK documentation master file, created by
-   sphinx-quickstart on Thu Apr 28 09:52:29 2016.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 CBC SDK: Carbon Black Cloud SDK for Python
 ==========================================
 
 Release v\ |release|.
 
-To regenerate docs (while in /cbc_sdk):
+To regenerate docs (while in /cbc_sdk)::
   >>> sphinx-apidoc -f -o docs src/cbc_sdk
 Then while in /docs:
   >>> make html
+  
 View the documentation by opening docs/_build/html/index.html
 
+
 Carbon Black Cloud Python SDK provides a straightforward interface to the VMware Carbon Black Cloud products: Endpoint Standard, Audit and Remediation, and Enterprise EDR.
-This library provides a Pythonic layer to access the raw power of the REST APIs of all Carbon Black products, making it easier to query data from any platform or on-premise APIs, combine data from multiple API calls, manage all API credentials in one place, and manipulate data as Python objects. Take a look::
+This library provides a Pythonic layer to access the REST APIs of all Carbon Black Cloud products, making it easier to query and combine data from multiple API calls, manage API credentials, and manipulate data as Python objects. Take a look::
 
+  As of version 1.0a, Carbon Black Cloud Python SDK supports Carbon Black Cloud Endpoint Standard (formerly CB Defense):
 
-As of version 1.2, Carbon Black Cloud Python SDK also supports Carbon Black Cloud Endpoint Standard (formerly CB Defense):
+  >>> from cbc_sdk import CBCloudAPI
+  >>> from cbc_sdk.endpoint_standard import Device
+  >>> #
+  >>> # Create our Carbon Black Cloud API object
+  >>> #
+  >>> cb = CBCloudAPI()
+  >>> #
+  >>> # Select any devices that have the hostname WIN-IA9NQ1GN8OI and an internal IP address of 192.168.215.150
+  >>> #
+  >>> devices = cb.select(Device).where('hostNameExact:WIN-IA9NQ1GN8OI').and_("ipAddress:192.168.215.150")
+  >>> #
+  >>> # Change those devices' policies to the Windows_Restrictive_Workstation policy.
+  >>> #
+  >>> for device in devices:
+  >>>     device.policyName = "Restrictive_Windows_Workstation"
+  >>>     device.save()
 
-   >>> from cbapi.psc.defense import *
-   >>> #
-   >>> # Create our CB Defense API object
-   >>> #
-   >>> p = CbDefenseAPI()
-   >>> #
-   >>> # Select any devices that have the hostname WIN-IA9NQ1GN8OI and an internal IP address of 192.168.215.150
-   >>> #
-   >>> devices = c.select(Device).where('hostNameExact:WIN-IA9NQ1GN8OI').and_("ipAddress:192.168.215.150").first()
-   >>> #
-   >>> # Change those devices' policy into the Windows_Restrictive_Workstation policy.
-   >>> #
-   >>> for dev in devices:
-   >>>     dev.policyName = "Restrictive_Windows_Workstation"
-   >>>     dev.save()
+Additionally, there is support for Enterprise EDR (formerly CB ThreatHunter):
 
+  >>> from cbc_sdk import CBCloudAPI
+  >>> from cbc_sdk.endpoint_standard import Device
+  >>> #
+  >>> # Create our Carbon Black Cloud API object
+  >>> #
+  >>> cb = CBCloudAPI()
+  >>> #
+  >>> # Select any devices that have the hostname WIN-IA9NQ1GN8OI and an internal IP address of 192.168.215.150
+  >>> #
+  >>> devices = cb.select(Device).where('hostNameExact:WIN-IA9NQ1GN8OI').and_("ipAddress:192.168.215.150")
+  >>> #
+  >>> # Change those devices' policies to the Windows_Restrictive_Workstation policy.
+  >>> #
+  >>> for device in devices:
+  >>>     device.policyName = "Restrictive_Windows_Workstation"
+  >>>     device.save()
+
+And Audit and Remediation (formerly CB LiveOps):
 
 Major Features
 --------------
