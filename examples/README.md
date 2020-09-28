@@ -1,9 +1,9 @@
 # Running the Example Scripts
 
-To run the example scripts, first set up the CBAPI with either the `pip install cbapi` or `python setup.py develop`
+To run the example scripts, first set up the CBC SDK with either the `pip install cbc_sdk` or `python setup.py develop`
 commands as detailed in the top-level `README.md` file.  You may also set your `PYTHONPATH` environment variable to
-point to the `{cbapi}/src` directory, where `{cbapi}` refers to the top-level directory where you have cloned
-the CBAPI repository.
+point to the `{cbc_sdk}/src` directory, where `{cbc_sdk}` refers to the top-level directory where you have cloned
+the CBC SDK repository.
 
 You should also have an API key and have set up a `credentials` file as detailed in the "API Token" section of the
 top-level `README.md` file.
