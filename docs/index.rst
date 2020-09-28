@@ -8,10 +8,11 @@ CBC SDK: Carbon Black Cloud SDK for Python
 
 Release v\ |release|.
 
-To regenerate docs:
+To regenerate docs (while in /cbc_sdk):
   >>> sphinx-apidoc -f -o docs src/cbc_sdk
-Then from /docs:
+Then while in /docs:
   >>> make html
+View the documentation by opening docs/_build/html/index.html
 
 Carbon Black Cloud Python SDK provides a straightforward interface to the VMware Carbon Black Cloud products: Endpoint Standard, Audit and Remediation, and Enterprise EDR.
 This library provides a Pythonic layer to access the raw power of the REST APIs of all Carbon Black products, making it easier to query data from any platform or on-premise APIs, combine data from multiple API calls, manage all API credentials in one place, and manipulate data as Python objects. Take a look::
