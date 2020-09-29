@@ -1,4 +1,4 @@
-CBC SDK
+cbc\_sdk package
 ================
 
 Subpackages
@@ -45,6 +45,7 @@ cbc\_sdk.errors module
 ----------------------
 
 .. automodule:: cbc_sdk.errors
+   :noindex:
    :members:
    :undoc-members:
    :show-inheritance:

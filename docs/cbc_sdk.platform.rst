@@ -1,4 +1,4 @@
-Platform
+cbc\_sdk.platform package
 =========================
 
 Submodules
