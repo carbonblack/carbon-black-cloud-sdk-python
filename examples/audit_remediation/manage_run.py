@@ -13,7 +13,7 @@
 
 import sys
 from cbc_sdk.example_helpers import build_cli_parser, get_cb_cloud_object
-from cbc_sdk.audit_remediation.base import Run
+from cbc_sdk.audit_remediation.base import Run, RunHistory
 
 
 def create_run(cb, args):
@@ -57,7 +57,7 @@ def run_delete(cb, args):
 
 
 def run_history(cb, args):
-    results = cb.query_history(args.query)
+    results = cb.select(RunHistory).where(args.query)
     if args.sort_by:
         dir = "DESC" if args.descending_results else "ASC"
         results.sort_by(args.sort_by, direction=dir)
