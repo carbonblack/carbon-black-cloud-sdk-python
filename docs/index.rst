@@ -37,7 +37,7 @@ which is explained in the `Developer Network Authentication Guide
 <https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/>`_.
 
 The SDK manages your API credentials for you. There are multiple ways to supply the SDK
-with your API credentials, which is explained in :ref:`getting-started`.
+with your API credentials, which is explained in :ref:`authentication`.
 
 User Guide
 ----------
@@ -49,6 +49,7 @@ Get started with Carbon Black Cloud Python SDK here. For detailed information on
 
 
    installation
+   authentication
    getting-started
    concepts
    logging

@@ -30,7 +30,7 @@ class CBCloudAPI(BaseAPI):
 
     Usage::
 
-    >>> from cbapi import CBCloudAPI
+    >>> from cbc_sdk import CBCloudAPI
     >>> cb = CBCloudAPI(profile="production")
     """
     def __init__(self, *args, **kwargs):

@@ -5,3 +5,7 @@
 .wy-nav-side {
 	background: #0A4B8C;
 }
+
+.wy-table-responsive table td {
+white-space: normal;
+}
