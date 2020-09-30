@@ -8,20 +8,36 @@ CBC SDK: Carbon Black Cloud SDK for Python
 
 Release v\ |release|.
 
-To regenerate docs (while in /cbc_sdk):
-  >>> sphinx-apidoc -f -o docs src/cbc_sdk
-Then while in /docs:
-  >>> make html
-View the documentation by opening docs/_build/html/index.html
-
+The Carbon Black Cloud Python SDK provides an easy interface to connect with Carbon Black Cloud products,
+including Endpoint Standard, Audit and Remediation, and Enterprise EDR. Use this SDK
+to more easily query and manage your endpoints, manipulate data as Python objects, and
+harness the full power of Carbon Black Cloud APIs.
 
 Major Features
 --------------
-
+- Support For All Carbon Black Cloud Products
+    Endpoint Standard, Audit and Remediation, and Enterprise EDR
+- Reduced Complexity
+    The SDK manages the differences among Carbon Black Cloud APIs
+    behind a single, consistent Python interface. Spend less time
+    learning specific API calls, and more time controlling your environment.
+- More Efficient Performance
+    A built-in caching layer makes repeated access to the same resource
+    more efficient. Instead of making identical API requests repeatedly,
+    the SDK caches the results of the request the first time, and references
+    the cache when you make future requests for the resource. This reduces the
+    time required to access the resource later.
 
 API Credentials
 ---------------
 
+To use the SDK and access data in Carbon Black Cloud, you must set up API keys with
+the correct permissions. Different APIs have different permission requirements for use,
+which is explained in the `Developer Network Authentication Guide
+<https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/>`_.
+
+The SDK manages your API credentials for you. There are multiple ways to supply the SDK
+with your API credentials, which is explained in :ref:`getting-started`.
 
 User Guide
 ----------
