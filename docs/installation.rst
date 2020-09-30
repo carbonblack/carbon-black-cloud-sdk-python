@@ -1,10 +1,10 @@
 Installation
 ================================
 
-If you already have Python installed, skip to "Using Pip"
+If you already have Python installed, skip to `Use Pip`_.
 
-Installing Python
------------------
+Install Python
+--------------
 
 Carbon Black Cloud Python SDK is compatible with Python 3.6+.
 UNIX systems usually have Python installed by default; it will
@@ -32,8 +32,17 @@ installer <https://www.python.org/downloads/>`_ from python.org.
 
 Ensure that the "Add Python to PATH" option is checked.
 
-Virtual Environments
---------------------
+Use Pip
+-------
+
+Once Python and Pip are installed, open a command prompt and type::
+
+    $ pip install cbc-sdk
+
+This will download and install the latest version of the SDK from the Python PyPI packaging server.
+
+Virtual Environments (optional)
+-------------------------------
 
 If you are installing the SDK with the intent to contribute to it's development,
 it is recommended that you use virtual environments to manage multiple installations.
@@ -46,21 +55,12 @@ i.e., one which is installed as part of your operating system [1]_.
 See the python.org `virtual environment guide <https://docs.python.org/3/library/venv.html>`_
 for more information.
 
-Using Pip
----------
-
-Once Python and Pip are installed, open a command prompt and type::
-
-    $ pip install cbc-sdk
-
-This will download and install the latest version of the SDK from the Python PyPI packaging server.
-
-Getting Source Code
------------------------
+Get Source Code
+---------------
 
 Carbon Black Cloud Python SDK is actively developed on GitHub and the code is available from the
 `Carbon Black GitHub repository <https://github.com/carbonblack/cbc-sdk-python>`_.
-The version of the SDK on GitHub will reflect the latest development version.
+The version of the SDK on GitHub reflects the latest development version.
 
 To clone the latest version of the SDK repository from GitHub::
 
