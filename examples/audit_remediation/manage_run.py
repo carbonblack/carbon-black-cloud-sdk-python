@@ -17,14 +17,14 @@ from cbc_sdk.audit_remediation.base import Run, RunHistory
 
 
 def create_run(cb, args):
-    query = cb.query(args.sql)
+    query = cb.select(Run).where(sql=args.sql)
 
     if args.device_ids:
         query.device_ids(args.device_ids)
     if args.device_types:
         query.device_types(args.device_types)
-    if args.policy_ids:
-        query.policy_ids(args.policy_ids)
+    if args.policy_id:
+        query.policy_id(args.policy_id)
     if args.notify:
         query.notify_on_finish()
     if args.name:
@@ -97,11 +97,10 @@ def main():
         help="Device types to filter on",
     )
     create_command.add_argument(
-        "--policy_ids",
-        nargs="+",
-        type=str,
+        "--policy_id",
+        type=int,
         required=False,
-        help="Policy IDs to filter on",
+        help="Policy ID to filter on. Only one policy_id can be specified.",
     )
 
     status_command = commands.add_parser(
