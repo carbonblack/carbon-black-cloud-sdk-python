@@ -1,5 +1,9 @@
 # Running the Example Scripts
 
+The example scripts must be retrieved locally before they can be run.  The easiest and most convenient way to do this
+is by cloning the repository. You may also retrieve individual examples by viewing them on GitHub in "raw" mode and
+using your browser's `Save As...` function to save a copy locally. 
+
 To run the example scripts, first set up the CBC SDK with either the `pip install cbc_sdk` or `python setup.py develop`
 commands as detailed in the top-level `README.md` file.  You may also set your `PYTHONPATH` environment variable to
 point to the `{cbc_sdk}/src` directory, where `{cbc_sdk}` refers to the top-level directory where you have cloned
