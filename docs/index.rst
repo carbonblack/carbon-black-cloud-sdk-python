@@ -45,6 +45,7 @@ User Guide
 Get started with Carbon Black Cloud Python SDK here. For detailed information on the objects and methods exposed by Carbon Black Cloud Python SDK, see the full API Documentation below.
 
 .. toctree::
+   :caption: User Guide
    :maxdepth: 2
 
 
@@ -55,14 +56,16 @@ Get started with Carbon Black Cloud Python SDK here. For detailed information on
    logging
    changelog
 
-API Documentation
+SDK Documentation
 -----------------
 
 .. toctree::
+   :caption: SDK Documentation
    :maxdepth: 2
 
    cbc_sdk.audit_remediation
    cbc_sdk.credential_providers
+   developing-credential-providers
    cbc_sdk.endpoint_standard
    cbc_sdk.enterprise_edr
    cbc_sdk.platform

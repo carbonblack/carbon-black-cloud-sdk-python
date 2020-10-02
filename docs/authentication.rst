@@ -3,107 +3,53 @@
 Authentication
 ==============
 
-The Carbon Black Cloud Python SDK uses API Keys to authenticate with
-the Carbon Black Cloud. See the `Developer Network Authentication Guide`_ for
-information about generating API Keys.
 
-Components of API Credentials
------------------------------
+Carbon Black Cloud APIs require authentication to secure your data.
 
-When supplying API credentials to the SDK `at runtime <#id2>`_, `with a file <#id3>`_,
-or `with Windows Registry <#id4>`_, the credentials include these components:
+There are a few methods for authentication listed below. Every method requires an API Key.
+See the `Developer Network Authentication Guide`_ to learn how to generate an API Key.
 
-***** **Required**
+Authentication Methods
+----------------------
 
-+-------------------------+------------------------------------------------------+---------+
-|  Keyword                | Definition                                           | Default |
-+=========================+======================================================+=========+
-| ``url`` *****           | The URL used to access the Carbon Black Cloud.       |         |
-+-------------------------+------------------------------------------------------+---------+
-| ``token`` *****         | The access token to authenticate with.  Same         |         |
-|                         | structure as ``X-Auth-Token`` defined in             |         |
-|                         | the `Developer Network Authentication Guide`_.       |         |
-|                         | Derived from an API Key's Secret Key and API ID.     |         |
-+-------------------------+------------------------------------------------------+---------+
-|``org_key`` *****        | The organization key specifying which organization to|         |
-|                         | work with.                                           |         |
-+-------------------------+------------------------------------------------------+---------+
-| ``ssl_verify``          | A Boolean value (see below) indicating whether or not| ``True``|
-|                         | to validate the SSL connection.                      |         |
-+-------------------------+------------------------------------------------------+---------+
-| ``ssl_verify_hostname`` | A Boolean value (see below) indicating whether or not| ``True``|
-|                         | to verify the host name of the server being connected|         |
-|                         | to.                                                  |         |
-+-------------------------+------------------------------------------------------+---------+
-|``ignore_system_proxy``  | A Boolean value (see below). If this is ``True``, any|``False``|
-|                         | system proxy settings will be ignored in making the  |         |
-|                         | connection to the server.                            |         |
-+-------------------------+------------------------------------------------------+---------+
-|``ssl_force_tls_1_2``    | A Boolean value (see below). If this is ``True``,    |``False``|
-|                         | the connection will be forced to use TLS 1.2         |         |
-|                         | rather than any later version.                       |         |
-+-------------------------+------------------------------------------------------+---------+
-|``ssl_cert_file``        | The name of an optional certificate file used to     |         |
-|                         | validate the certificates of the SSL connection.     |         |
-|                         | If not specified, the standard system certificate    |         |
-|                         | verification will be used.                           |         |
-+-------------------------+------------------------------------------------------+---------+
-|``proxy``                | If specified, this is the name of a proxy host to be |         |
-|                         | used in making the connection.                       |         |
-+-------------------------+------------------------------------------------------+---------+
-|``integration_name``     | The name of the integration to use these credentials.|         |
-|                         | The string may optionally end with a slash character,|         |
-|                         | followed by the integration's version number.  Passed|         |
-|                         | as part of the ``User-Agent:`` HTTP header on all    |         |
-|                         | requests made by the SDK.                            |         |
-+-------------------------+------------------------------------------------------+---------+
+:ref:`At Runtime`:
 
+  Credentials may be passed into :py:mod:`CBCloudAPI() <cbc_sdk.rest_api.CBCloudAPI>`
+  via keyword parameters.
 
-When supplying API credentials to the SDK `with environmental variables <#id5>`_ (not recommended),
-the credentials include these components:
+    >>> cbc_api = CBCloudAPI(url='defense.conferdeploy.net', token=ABCD/1234,
+    ...                         org_key='ABCDEFGH')
 
-+-------------------------+----------------------+---------+
-| Keyword                 | Alternative          | Default |
-+=========================+======================+=========+
-| ``CBC_URL``             | ``CBAPI_URL``        |         |
-+-------------------------+----------------------+---------+
-| ``CBC_TOKEN``           | ``CBAPI_TOKEN``      |         |
-+-------------------------+----------------------+---------+
-| ``CBC_ORG_KEY``         | ``CBAPI_ORG_KEY``    |         |
-+-------------------------+----------------------+---------+
-| ``CBC_SSL_VERIFY``      | ``CBAPI_SSL_VERIFY`` | ``True``|
-+-------------------------+----------------------+---------+
+:ref:`With a File`:
 
-Alternative keywords are available to maintain backwards compatibility with CBAPI.
+    Credentials may be stored in a ``credentials.cbc`` file. With support for
+    multiple profiles, this method makes it easy to manage multiple API Keys for
+    different products and permission levels.
 
-Boolean Values
-^^^^^^^^^^^^^^
+    >>> cbc_api = CBCloudAPI('~/.carbonblack/myfile.cbc', profile='default')
 
-Boolean values are specified by using the strings ``true``, ``yes``, ``on``, or ``1`` to represent a
-``True`` value, or the strings ``false``, ``no``, ``off``, or ``0`` to represent a ``False`` value. All of these
-are case-insensitive. Any other string value specified will result in an error.
+:ref:`With Windows Registry`:
 
-For example, to disable SSL connection validation, any of the following would work::
+    Windows Registry is a secure option for storing API credentials on Windows systems.
 
-  ssl_verify=False
-  ssl_verify=false
-  ssl_verify=No
-  ssl_verify=no
-  ssl_verify=Off
-  ssl_verify=off
-  ssl_verify=0
+    >>> provider = RegistryCredentialProvider()
+    >>> cbc_api = CBCloudAPI(credential_provider=provider, profile='default')
 
-Supply SDK With Credentials
----------------------------
+:ref:`With an External Credential Provider`:
 
-Credentials may be passed into the :py:mod:`CBCloudAPI <cbc_sdk.rest_api.CBCloudAPI>` object in several ways:
+  Credential Providers allow for custom methods of loading API credentials. This
+  method requires you to write your own Credential Provider.
 
-- `At Runtime`_
-- `With a File`_
-- `With Windows Registry`_
-- `With Environmental Variables`_
+  >>> provider = MyCredentialProvider()
+  >>> cbc_api = CBCloudAPI(credential_provider=provider, profile='default')
 
-.. _`Developer Network Authentication Guide`: https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/#creating-an-api-key
+**Not Recommended**:
+
+:ref:`With Environmental Variables`:
+
+    Environmental variables can be used for authentication, but pose a security risk.
+    This method is not recommended unless absolutely necessary.
+
 
 At Runtime
 ^^^^^^^^^^
@@ -116,7 +62,7 @@ The credentials may be passed into the :py:mod:`CBCloudAPI <cbc_sdk.rest_api.CBC
     ...                  org_key='A1B2C3D4', ssl_verify=False, integration_name='MyScript/1.0')
 
 The ``integration_name`` may be specified even if using another credential provider. If specified as a
-parameter, the ``integration_name`` overrides any integration name specified by means of the credential provider.
+parameter, this overrides any integration name specified by means of the credential provider.
 
 With a File
 ^^^^^^^^^^^
@@ -155,7 +101,6 @@ each section, individual credential values are supplied in a ``keyword=value`` f
 
 
 Unrecognized keywords are ignored.
-
 
 
 By default, the CBC SDK looks for credentials files in the following locations:
@@ -237,7 +182,7 @@ profile to be retrieved from the Registry should be specified in the keyword par
     >>> provider = RegistryCredentialProvider()
     >>> cbc_api = CBCloudAPI(credential_provider=provider, profile='default')
 
-**TK: Use information for the Registry setup tool**
+.. TK: Use information for the Registry setup tool
 
 **Advanced Usage:** The parameters ``keypath`` and ``userkey`` to ``RegistryCredentialProvider`` may be used to
 control the exact location of the "base" registry key where the sections of credentials are located.  The ``keypath``
@@ -252,6 +197,21 @@ parameter allows specification of the path from ``HKEY_CURRENT_USER`` where the 
 
 Note the use of doubled backslashes to properly escape them under Python.
 
+With an External Credential Provider
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Credentials may also be supplied by writing a class that conforms to the ``CredentialProvider`` interface protocol.
+When creating :py:mod:`CBCloudAPI <cbc_sdk.rest_api.CBCloudAPI>`, pass a reference to a ``CredentialProvider`` object in the ``credential_provider`` keyword
+parameter. Then pass the name of the profile you want to retrieve from the provider object using the keyword parameter
+``profile``.
+
+**Example:**
+
+    >>> provider = MyCredentialProvider()
+    >>> cbc_api = CBCloudAPI(credential_provider=provider, profile='default')
+
+Details of writing a credential provider may be found in the :doc:`Developing a Custom Credential Provider <developing-credential-providers>`
+document.
+
 With Environmental Variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The credentials may be supplied to CBC SDK via the environment variables ``CBC_URL``, ``CBC_TOKEN``, ``CBC_ORG_KEY``,
@@ -265,17 +225,90 @@ unspecified. (The ``profile`` keyword parameter will be ignored.)
 **N.B.:** Passing credentials via the environment can be insecure, and, if this method is used, a warning message to
 that effect will be generated in the log.
 
-Using an External Credential Provider
--------------------------------------
-Credentials may also be supplied by writing a class that conforms to the ``CredentialProvider`` interface protocol.
-When creating :py:mod:`CBCloudAPI <cbc_sdk.rest_api.CBCloudAPI>`, pass a reference to an object of that class in the ``credential_provider`` keyword
-parameter. Then pass the name of the profile you want to retrieve to the provider object using the keyword parameter
-``profile``.
+Explanation of API Credential Components
+----------------------------------------
 
-**Example:**
+When supplying API credentials to the SDK :ref:`at runtime <At Runtime>`, :ref:`with a file <With a File>`,
+or :ref:`with Windows Registry <With Windows Registry>`, the credentials include these components:
 
-    >>> provider = MyCredentialProvider()
-    >>> cbc_api = CBCloudAPI(credential_provider=provider, profile='default')
+***** **Required**
 
-Details of writing a credential provider may be found in the "Developing Credential Providers" document.
-**TK: better reference**
++-------------------------+------------------------------------------------------+---------+
+|  Keyword                | Definition                                           | Default |
++=========================+======================================================+=========+
+| ``url`` *****           | The URL used to access the Carbon Black Cloud.       |         |
++-------------------------+------------------------------------------------------+---------+
+| ``token`` *****         | The access token to authenticate with.  Same         |         |
+|                         | structure as ``X-Auth-Token`` defined in             |         |
+|                         | the `Developer Network Authentication Guide`_.       |         |
+|                         | Derived from an API Key's Secret Key and API ID.     |         |
++-------------------------+------------------------------------------------------+---------+
+|``org_key`` *****        | The organization key specifying which organization to|         |
+|                         | work with.                                           |         |
++-------------------------+------------------------------------------------------+---------+
+| ``ssl_verify``          | A Boolean value (see below) indicating whether or not| ``True``|
+|                         | to validate the SSL connection.                      |         |
++-------------------------+------------------------------------------------------+---------+
+| ``ssl_verify_hostname`` | A Boolean value (see below) indicating whether or not| ``True``|
+|                         | to verify the host name of the server being connected|         |
+|                         | to.                                                  |         |
++-------------------------+------------------------------------------------------+---------+
+|``ignore_system_proxy``  | A Boolean value (see below). If this is ``True``, any|``False``|
+|                         | system proxy settings will be ignored in making the  |         |
+|                         | connection to the server.                            |         |
++-------------------------+------------------------------------------------------+---------+
+|``ssl_force_tls_1_2``    | A Boolean value (see below). If this is ``True``,    |``False``|
+|                         | the connection will be forced to use TLS 1.2         |         |
+|                         | rather than any later version.                       |         |
++-------------------------+------------------------------------------------------+---------+
+|``ssl_cert_file``        | The name of an optional certificate file used to     |         |
+|                         | validate the certificates of the SSL connection.     |         |
+|                         | If not specified, the standard system certificate    |         |
+|                         | verification will be used.                           |         |
++-------------------------+------------------------------------------------------+---------+
+|``proxy``                | If specified, this is the name of a proxy host to be |         |
+|                         | used in making the connection.                       |         |
++-------------------------+------------------------------------------------------+---------+
+|``integration_name``     | The name of the integration to use these credentials.|         |
+|                         | The string may optionally end with a slash character,|         |
+|                         | followed by the integration's version number.  Passed|         |
+|                         | as part of the ``User-Agent:`` HTTP header on all    |         |
+|                         | requests made by the SDK.                            |         |
++-------------------------+------------------------------------------------------+---------+
+
+.. _`Developer Network Authentication Guide`: https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/#creating-an-api-key
+
+
+When supplying API credentials to the SDK :ref:`with environmental variables <With Environmental Variables>`,
+the credentials include these components:
+
++-------------------------+----------------------+---------+
+| Keyword                 | Alternative          | Default |
++=========================+======================+=========+
+| ``CBC_URL``             | ``CBAPI_URL``        |         |
++-------------------------+----------------------+---------+
+| ``CBC_TOKEN``           | ``CBAPI_TOKEN``      |         |
++-------------------------+----------------------+---------+
+| ``CBC_ORG_KEY``         | ``CBAPI_ORG_KEY``    |         |
++-------------------------+----------------------+---------+
+| ``CBC_SSL_VERIFY``      | ``CBAPI_SSL_VERIFY`` | ``True``|
++-------------------------+----------------------+---------+
+
+Alternative keywords are available to maintain backwards compatibility with CBAPI.
+
+Boolean Values
+^^^^^^^^^^^^^^
+
+Boolean values are specified by using the strings ``true``, ``yes``, ``on``, or ``1`` to represent a
+``True`` value, or the strings ``false``, ``no``, ``off``, or ``0`` to represent a ``False`` value. All of these
+are case-insensitive. Any other string value specified will result in an error.
+
+For example, to disable SSL connection validation, any of the following would work::
+
+  ssl_verify=False
+  ssl_verify=false
+  ssl_verify=No
+  ssl_verify=no
+  ssl_verify=Off
+  ssl_verify=off
+  ssl_verify=0
