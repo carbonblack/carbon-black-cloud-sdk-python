@@ -6,8 +6,45 @@ Authentication
 
 Carbon Black Cloud APIs require authentication to secure your data.
 
-There are a few methods for authentication listed below. Every method requires an API Key.
-See the `Developer Network Authentication Guide`_ to learn how to generate an API Key.
+There are a few methods for authentication listed below. Every method requires
+an API Key. See the `Developer Network Authentication Guide`_ to learn how to
+generate an API Key.
+
+The SDK only uses one API Key at a time. It is recommeded to create API Keys for
+specific actions, and use them as needed.
+
+For example, if using the
+`Platform Devices API <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/devices-api/#search-devices>`_
+to search for mission critical devices, and the
+`Endpoint Standard Live Response API <https://developer.carbonblack.com/reference/carbon-black-cloud/cb-defense/latest/live-response-api/>`_
+to execute commands on those devices, generate two API Keys. The Platform API Key should have the
+Custom Access Level, and the Live Response Key should have the Live Response Access Level.
+Store these Keys with profile names, and reference the profile names when creating
+CBCloudAPI objects.
+
+::
+
+  # import relevant modules
+  >>> from cbc_sdk.platform import Device
+  >>> from cbc_sdk import CBCloudAPI
+
+  # create Platform API object
+  >>> platform_api = CBCloudAPI(profile='platform')
+
+  # create Live Response API object
+  >>> live_response_api = CBCloudAPI(profile='live_response')
+
+  # search for specific devices with Platform Devices API
+  >>> important_devs = platform_api.select(Device).set_target_priorities("MISSION_CRITICAL")
+
+  # execute commands with Live Response API
+  >>> for device in important_devs:
+  ...      lr_session = live_response_api.live_response.request_session(device.deviceId)
+  ...      lr_session.create_process(r'cmd.exe /c "ping.exe 192.168.1.1"'))
+  ...      lr_session.close()
+
+
+
 
 Authentication Methods
 ----------------------
