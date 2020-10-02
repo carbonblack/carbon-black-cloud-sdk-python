@@ -105,7 +105,7 @@ class Run(NewBaseModel):
             return True  # already deleted
         url = self.urlobject_single.format(self._cb.credentials.org_key, self.id)
         result = self._cb.delete_object(url)
-        if result.status_code == 200:
+        if result.status_code in [200, 204]:
             self._is_deleted = True
             return True
         return False
@@ -360,22 +360,27 @@ class RunQuery(PlatformQueryBase):
             Device type can be one of ["WINDOWS", "MAC", "LINUX"].
         """
         if not all(isinstance(device_type, str) for device_type in device_types):
-            raise ApiError("One or more invalid device types")
+            raise ApiError("device_type must be a list of strings, including"
+                           " 'WINDOWS', 'MAC', and/or 'LINUX'")
         self._device_filter["os"] = device_types
         return self
 
-    def policy_ids(self, policy_ids):
-        """Restricts this Audit and Remediation run to the given policy IDs.
+    def policy_id(self, policy_id):
+        """Restricts this Audit and Remediation run to the given policy ID.
 
         Arguments:
-            policy_ids ([int]): Policy ID's to perform the Run on.
+            policy_id (int) or (list[int]): Policy ID to perform the Run on.
 
         Returns:
-            The RunQuery object with specified policy_ids.
+            The RunQuery object with specified policy_id.
         """
-        if not all(isinstance(policy_id, int) for policy_id in policy_ids):
-            raise ApiError("One or more invalid policy IDs")
-        self._device_filter["policy_id"] = policy_ids
+        if isinstance(policy_id, list) and isinstance(policy_id[0], int):
+            self._device_filter["policy_id"] = policy_id
+        elif isinstance(policy_id, int):
+            self._device_filter["policy_id"] = [policy_id]
+        else:
+            raise ApiError("Policy ID must be an integer or a list containing one"
+                           f"integer. Type is {type(policy_id)}")
         return self
 
     def where(self, sql):
