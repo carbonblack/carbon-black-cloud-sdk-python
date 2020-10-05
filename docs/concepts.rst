@@ -1,35 +1,84 @@
 Concepts
 ================================
 
-Select
-------
+Create Queries with :func:`CBCloudAPI.select() <cbc_sdk.connection.BaseAPI.select>`
+-----------------------------------------------------------------------------------
 
-Data is retrieved from the Carbon Black Cloud with ``CBCloudAPI.select()`` statements.
-A ``select()`` statement creates a Query. The Query is not executed on the server
-until it's accessed, either as an iterator (where it will generate values on demand
-as they're requested) or as a list (where it will retrieve the entire result set
-and save to a list). You can also call the Python built-in ``len()`` on this object
-to retrieve the total number of items matching the Query.
+Data is retrieved from the Carbon Black Cloud with :func:`CBCloudAPI.select() <cbc_sdk.connection.BaseAPI.select>` statements.
+A ``select()`` statement creates a ``query``, which can be further refined with parameters or criteria, and then executed.
 
 ::
 
-  # query for devices
-  >>> devices = api.select(Device).where('deviceHostName:Win7x64').and_('ipAddress:10.0.0.1')
-  >>> type(devices)
-  ... cbc_sdk.endpoint_standard.DeviceSearchQuery
-  # execute the query
-  >>> for device in devices:
-  ...   print(device._info)
+  # Create a query for devices
+  >>> device_query = api.select(Device).where('deviceHostName:Win7x64')
 
-The CBCloudAPI.select() method uses where(), and_(), and or_() to add filtering to a query.
-The select statement is an abstraction of QueryBuilder(), with support for either
-raw string-based queries ``api.select(Device).where("hostName:Win7x64")``, or
-keyword arguments ``api.select(Device).where(hostName="Win7x64")``. Queries must be
+  # Refine the query further
+  >>> device_query = device_query.and_('ipAddress:10.0.0.1')
+
+  # The query has not yet been executed
+  >>> type(device_query)
+  <class cbc_sdk.endpoint_standard.DeviceSearchQuery>
+
+This query will search for devices with a hostname containing ``Win7x64``, and a reported
+IP address of ``10.0.0.1``. The query is not executed on the server until it's accessed, either as an iterator (where it will generate values on demand
+as they're requested) or as a list (where it will retrieve the entire result set
+and save to a list).
+
+::
+
+  # Execute the query by accessing as a list
+  >>> matching_devices = [device for device in device_query]
+
+  >>> print(f"First matching device ID: {matching_devices[0].deviceId}")
+  First matching device ID: 1234
+
+  # Or as an iterator
+  >>> for matching_device in device_query:
+  ...   print(f"Matching device ID: {matching_device.deviceId})
+  Matching device ID: 1234
+  Matching device ID: 5678
+
+You can also call the Python built-in ``len()`` on this object
+to retrieve the total number of items matching the query.
+
+::
+
+  # Retrieve total number of matching devices
+  >>> len(device_query)
+  2
+
+Refine Queries with :func:`where() <cbc_sdk.base.QueryBuilder.where>`, :func:`and_() <cbc_sdk.base.QueryBuilder.and_>`, and :func:`or_() <cbc_sdk.base.QueryBuilder.or_>`
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Queries can be refined during or after declaration with
+:func:`where() <cbc_sdk.base.QueryBuilder.where>`,
+:func:`and_() <cbc_sdk.base.QueryBuilder.and_>`, and
+:func:`or_() <cbc_sdk.base.QueryBuilder.or_>`.
+
+::
+
+  # NOT SUPPORTED. ONLY ONE GUID PER SEARCH
+  >>> process_query = api.select(Process).where(process_guid='guid').or_(process_guid='anotherguid')
+
+
+  # ALL PARAMS ARE 'AND' TOGETHER FOR DEVICE SEARCH
+  >>> device_query = api.select(Device).where(ipAddress='10.0.0.1').and_(deviceId=1234).and_()
+
+All queries are of type :meth:`QueryBuilder() <cbc_sdk.base.QueryBuilder>`, with support for either
+raw string-based queries , or keyword arguments.
+
+::
+
+  # Equivalent queries
+  >>> string_query = api.select(Device).where("hostName:Win7x64")
+  >>> keyword_query = api.select(Device).where(hostName="Win7x64").
+
+Queries must be
 consistent in their use of strings or keywords; do not mix strings and keywords,
 pick one and stick to it.
 
-Query vs Criteria
-^^^^^^^^^^^^^^^^^
+Query Parameters vs Criteria
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Some Carbon Black Cloud APIs use GET requests with query parameters to filter search results,
 and some APIs use POST requests with "criteria" and "query" keys in the JSON request body
