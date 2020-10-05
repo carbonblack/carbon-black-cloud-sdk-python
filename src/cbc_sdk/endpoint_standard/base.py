@@ -284,9 +284,16 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
         params = self._query_builder._collapse()
         if params is not None:
             for query in params.split(' '):
-                # convert from str('key:value') to dict{'key': 'value'}
-                key, value = query.split(':', 1)
-                request[key] = value
+                try:
+                    # convert from str('key:value') to dict{'key': 'value'}
+                    key, value = query.split(':', 1)
+                    # must remove leading or trailing parentheses that were inserted by logical combinations
+                    key = key.strip('(').strip(')')
+                    value = value.strip('(').strip(')')
+                    request[key] = value
+                except ValueError:
+                    # AND or OR encountered
+                    pass
         return request
 
     def _count(self):

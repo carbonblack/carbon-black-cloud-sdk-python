@@ -64,3 +64,22 @@ def test_endpoint_standard_query_count(cbcsdk_mock):
     assert not hostname_device_query._count_valid
     assert hostname_device_query._count() == 1
     assert hostname_device_query._count_valid
+
+
+def test_endpoint_standard_query_or_and(cbcsdk_mock):
+    """Testing handling multiple and_() and or_() clauses on a query, esp. query._query_builder._collapse()."""
+    api = cbcsdk_mock.api
+    device_query = api.select(Device).where(hostName='Win7x64').and_(ipAddress='10.0.0.1')
+    device_query.or_(ipAddress='10.0.0.2')
+    # the query has parentheses added when doing logical OR
+    assert device_query._query_builder._collapse() == '(hostName:Win7x64 AND ipAddress:10.0.0.1) OR ipAddress:10.0.0.2'
+    request = device_query.prepare_query({})
+    assert request == {'hostName': 'Win7x64', 'ipAddress': '10.0.0.2'}
+
+    another_dev_query = api.select(Device).where(hostName='Win7x64')
+    another_dev_query.or_(hostNameExact='Win10x64')
+    another_dev_query.or_(ownerName='DevRel')
+    another_dev_query.or_(ownerNameExact='DeveloperRelations')
+    assert another_dev_query._query_builder._collapse() == '((hostName:Win7x64 OR hostNameExact:Win10x64) OR ownerName:DevRel) OR ownerNameExact:DeveloperRelations'
+    request = another_dev_query.prepare_query({})
+    assert request == {'hostName': 'Win7x64', 'hostNameExact': 'Win10x64', 'ownerName': 'DevRel', 'ownerNameExact': 'DeveloperRelations'}
