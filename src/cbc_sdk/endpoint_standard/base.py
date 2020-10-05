@@ -259,6 +259,8 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
           ``[1:2:-1]`` is not.
         - You can chain where clauses together to create AND queries; only objects that match all ``where`` clauses
           will be returned.
+          - Device Queries with multiple search parameters only support AND operations, not OR. Use of
+          Query.or_(myParameter='myValue') will add 'AND myParameter:myValue' to the search query.
     """
     def __init__(self, doc_class, cb, query=None):
         """Initialize a Query object."""
