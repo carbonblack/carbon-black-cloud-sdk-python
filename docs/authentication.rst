@@ -49,14 +49,6 @@ CBCloudAPI objects.
 Authentication Methods
 ----------------------
 
-:ref:`At Runtime`:
-
-  Credentials may be passed into :py:mod:`CBCloudAPI() <cbc_sdk.rest_api.CBCloudAPI>`
-  via keyword parameters.
-
-    >>> cbc_api = CBCloudAPI(url='defense.conferdeploy.net', token=ABCD/1234,
-    ...                         org_key='ABCDEFGH')
-
 :ref:`With a File`:
 
     Credentials may be stored in a ``credentials.cbc`` file. With support for
@@ -82,24 +74,21 @@ Authentication Methods
 
 **Not Recommended**:
 
+:ref:`At Runtime`:
+
+  Credentials may be passed into :py:mod:`CBCloudAPI() <cbc_sdk.rest_api.CBCloudAPI>`
+  via keyword parameters. This method should be used with caution, taking care to not
+  share your API credentials when managing code with source control.
+
+    >>> cbc_api = CBCloudAPI(url='defense.conferdeploy.net', token=ABCD/1234,
+    ...                         org_key='ABCDEFGH')
+
+**Not Recommended**:
+
 :ref:`With Environmental Variables`:
 
     Environmental variables can be used for authentication, but pose a security risk.
     This method is not recommended unless absolutely necessary.
-
-
-At Runtime
-^^^^^^^^^^
-The credentials may be passed into the :py:mod:`CBCloudAPI <cbc_sdk.rest_api.CBCloudAPI>` object when it is created via the keyword parameters ``url``,
-``token``, ``org_key``, and (optionally) ``ssl_verify`` and ``integration_name``.
-
-**Example:**
-
-    >>> api = CBCloudAPI(url='https://example.com', token='ABCDEFGHIJKLMNOPQRSTUVWX/12345678',
-    ...                  org_key='A1B2C3D4', ssl_verify=False, integration_name='MyScript/1.0')
-
-The ``integration_name`` may be specified even if using another credential provider. If specified as a
-parameter, this overrides any integration name specified by means of the credential provider.
 
 With a File
 ^^^^^^^^^^^
@@ -249,6 +238,20 @@ parameter. Then pass the name of the profile you want to retrieve from the provi
 Details of writing a credential provider may be found in the :doc:`Developing a Custom Credential Provider <developing-credential-providers>`
 document.
 
+At Runtime
+^^^^^^^^^^
+The credentials may be passed into the :py:mod:`CBCloudAPI <cbc_sdk.rest_api.CBCloudAPI>` object when it is created via the keyword parameters ``url``,
+``token``, ``org_key``, and (optionally) ``ssl_verify`` and ``integration_name``.
+
+**Example:**
+
+    >>> api = CBCloudAPI(url='https://example.com', token='ABCDEFGHIJKLMNOPQRSTUVWX/12345678',
+    ...                  org_key='A1B2C3D4', ssl_verify=False, integration_name='MyScript/1.0')
+
+The ``integration_name`` may be specified even if using another credential provider. If specified as a
+parameter, this overrides any integration name specified by means of the credential provider.
+
+
 With Environmental Variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The credentials may be supplied to CBC SDK via the environment variables ``CBC_URL``, ``CBC_TOKEN``, ``CBC_ORG_KEY``,
@@ -320,7 +323,7 @@ When supplying API credentials to the SDK :ref:`with environmental variables <Wi
 the credentials include these components:
 
 +-------------------------+----------------------+---------+
-| Keyword                 | Alternative          | Default |
+| Keyword                 | Legacy          | Default |
 +=========================+======================+=========+
 | ``CBC_URL``             | ``CBAPI_URL``        |         |
 +-------------------------+----------------------+---------+
