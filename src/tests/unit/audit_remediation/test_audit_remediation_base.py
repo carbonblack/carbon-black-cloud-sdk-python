@@ -87,17 +87,27 @@ def test_result_fields_with_metrics(cbcsdk_mock):
 def test_result_query_criteria(cbcsdk_mock):
     """Testing set_* criteria methods for ResultQuery."""
     api = cbcsdk_mock.api
-    result_q = api.select(Result).run_id(1).set_device_os(["WINDOWS"]).set_device_ids([1,2,3])\
-                .set_device_names(["Win7x64", "Win10"]).set_policy_ids([1,2]).set_policy_names(["default", "policy2"])\
-                .set_statuses(["not_started", "matched"])
+    result_q = api.select(Result).run_id(1).set_device_os(["WINDOWS"]).set_device_ids([1, 2, 3])\
+        .set_device_names(["Win7x64", "Win10"]).set_policy_ids([1, 2]).set_policy_names(["default", "policy2"])\
+        .set_statuses(["not_started", "matched"])
     assert result_q._build_request(start=0, rows=100) == {"criteria": {
         "device.os": ["WINDOWS"],
-        "device.id": [1,2,3],
+        "device.id": [1, 2, 3],
         "device.name": ["Win7x64", "Win10"],
-        "device.policy_id": [1,2],
+        "device.policy_id": [1, 2],
         "device.policy_name": ["default", "policy2"],
         "status": ["not_started", "matched"]
     }, "start": 0, "rows": 100, "query": "*:*"}
+
+
+def test_result_query_update_criteria(cbcsdk_mock):
+    """Testing the public update_criteria() function accessing private _update_criteria()."""
+    api = cbcsdk_mock.api
+    query = api.select(Result).run_id(2).update_criteria("my.key.dot.notation", ["criteria_val_1", "criteria_val_2"])
+    assert query._build_request(start=0, rows=100) == {"criteria": {
+        "my.key.dot.notation": ["criteria_val_1", "criteria_val_2"]
+    }, "start": 0, "rows": 100, "query": "*:*"}
+
 
 def test_facet_query_criteria(cbcsdk_mock):
     """Testing set_* criteria for FacetQuery."""
@@ -113,6 +123,16 @@ def test_facet_query_criteria(cbcsdk_mock):
         "device.policy_name": ["default", "policy2"],
         "status": ["not_started", "matched"]
     }, "query": "*:*", "terms": {"fields": [], "rows": 100}}
+
+
+def test_result_facet_query_update_criteria(cbcsdk_mock):
+    """Testing the public update_criteria() function accessing private _update_criteria()."""
+    api = cbcsdk_mock.api
+    query = api.select(ResultFacet).run_id(2).update_criteria("my.key.dot.notation", ["criteria_val_1", "criteria_val_2"])
+    assert query._build_request(rows=100) == {"criteria": {
+        "my.key.dot.notation": ["criteria_val_1", "criteria_val_2"]
+    }, "query": "*:*", "terms": {"fields": [], "rows": 100}}
+
 
 def test_device_summary_metrics(cbcsdk_mock):
     """Testing DeviceSummary.metrics_ property."""

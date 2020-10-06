@@ -539,6 +539,24 @@ class ResultQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixi
         self._batch_size = 100
         self._run_id = None
 
+    def update_criteria(self, key, newlist):
+        """Update the criteria on this query with a custom criteria key.
+
+        Args:
+            key (str): The key for the criteria item to be set.
+            newlist (list): List of values to be set for the criteria item.
+
+        Returns:
+            The ResultQuery with specified custom criteria.
+
+        Example:
+            query = api.select(Alert).update_criteria("my.criteria.key", ["criteria_value"])
+
+        Note: Use this method if there is no implemented method for your desired criteria.
+        """
+        self._update_criteria(key, newlist)
+        return self
+
     def _update_criteria(self, key, newlist):
         """
         Updates a list of criteria being collected for a query, by setting or appending items.
@@ -764,6 +782,24 @@ class FacetQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin
         else:
             for name in field:
                 self._facet_fields.append(name)
+        return self
+
+    def update_criteria(self, key, newlist):
+        """Update the criteria on this query with a custom criteria key.
+
+        Args:
+            key (str): The key for the criteria item to be set.
+            newlist (list): List of values to be set for the criteria item.
+
+        Returns:
+            The FacetQuery with specified custom criteria.
+
+        Example:
+            query = api.select(ResultFacet).update_criteria("my.criteria.key", ["criteria_value"])
+
+        Note: Use this method if there is no implemented method for your desired criteria.
+        """
+        self._update_criteria(key, newlist)
         return self
 
     def _update_criteria(self, key, newlist):
