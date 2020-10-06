@@ -624,7 +624,7 @@ class ResultQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixi
         self._update_criteria("device.policy_name", policy_names)
         return self
 
-    def set_status(self, statuses):
+    def set_statuses(self, statuses):
         """Sets the status criteria.
 
         Arguments:
@@ -851,7 +851,7 @@ class FacetQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin
         self._update_criteria("device.policy_name", policy_names)
         return self
 
-    def set_status(self, statuses):
+    def set_statuses(self, statuses):
         """Sets the status criteria.
 
         Arguments:
