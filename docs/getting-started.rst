@@ -65,7 +65,7 @@ In that case, change directory to whichever directory you saved the script to.
 
 Execute the script by using the command ``python list_devices.py -q '1'`` (in some environments,
 ``python3 list_devices.py -q '1'``).  If all is well, you will see a list of devices (endpoints) registered in your
-organization, showing their numeric ID, hist name, IP address, and last checkin time.
+organization, showing their numeric ID, host name, IP address, and last checkin time.
 
 You can change what devices are shown by modifying the query value supplied to the ``-q`` parameter, and also by using
 additional parameters to modify the search criteria.  Execute the command ``python list_devices.py --help`` (in some
@@ -79,6 +79,6 @@ devices; the query string is passed to that object via the ``where()`` method, a
 specific setters.
 
 The query is an iterable object, and calling upon its iterator methods invokes the query, which, in this case, is the
-`Search Devices<https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/devices-api/#search-devices>`_
+`Search Devices <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/devices-api/#search-devices>`_
 API.  The example script turns those results into an in-memory list, then iterates on that list, printing only certain
 properties of each retrieved Device object.
