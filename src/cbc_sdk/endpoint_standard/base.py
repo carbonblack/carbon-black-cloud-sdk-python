@@ -17,6 +17,7 @@ from cbc_sdk.base import (MutableBaseModel, CreatableModelMixin, NewBaseModel, P
                           QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin)
 from cbc_sdk.platform import PlatformQueryBase
 from cbc_sdk.utils import convert_query_params
+from cbc_sdk.errors import ApiError
 from copy import deepcopy
 import logging
 import json
@@ -279,6 +280,14 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
         nq = self.__class__(self._doc_class, self._cb, query=self)
         nq._batch_size = self._batch_size
         return nq
+
+    def or_(self, **kwargs):
+        """Unsupported. Will raise if called.
+
+        Raises:
+            ApiError: .or_() cannot be called on Endpoint Standard queries.
+        """
+        raise ApiError(".or_() cannot be called on Endpoint Standard queries.")
 
     def prepare_query(self, args):
         """Adds query parameters that are part of a `select().where()` clause to the request."""
