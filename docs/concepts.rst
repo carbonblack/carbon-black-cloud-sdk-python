@@ -4,7 +4,7 @@ Concepts
 Queries
 ----------------------------------------
 
-Generally, to retrieve information from your Carbon Black Cloud instance you will:
+Generally, to retrieve information from your Carbon Black Cloud instance:
 
 1. `Create a Query <#create-queries-with-cbcloudapi-select>`_
 2. `Refine the Query <#refine-queries-with-where-and-and-or>`_
@@ -154,6 +154,7 @@ with this JSON Request Body:
   }
 
 The query parameters are sent in ``"query"``, and the criteria are sent in ``"criteria"``.
+Not all APIs support criteria. See the list of supported modules below.
 
 Modules with Support for Criteria
 """""""""""""""""""""""""""""""""
@@ -164,9 +165,13 @@ Modules with Support for Criteria
   - :meth:`cbc_sdk.audit_remediation.base.RunQuery.policy_id`
 
 :mod:`cbc_sdk.audit_remediation.base.ResultQuery`
-  - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.criteria`
-    - See `Get Query Run Results <https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/latest/livequery-api/#get-query-run-results>`_
-    for supported criteria.
+  - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.set_device_ids`
+  - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.set_device_names`
+  - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.set_device_os`
+  - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.set_policy_ids`
+  - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.set_policy_names`
+  - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.set_status`
+
 
 
 
