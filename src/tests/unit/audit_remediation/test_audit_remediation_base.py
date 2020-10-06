@@ -99,7 +99,20 @@ def test_result_query_criteria(cbcsdk_mock):
         "status": ["not_started", "matched"]
     }, "start": 0, "rows": 100, "query": "*:*"}
 
-
+def test_facet_query_criteria(cbcsdk_mock):
+    """Testing set_* criteria for FacetQuery."""
+    api = cbcsdk_mock.api
+    facet_q = api.select(ResultFacet).run_id(1).set_device_os(["WINDOWS"]).set_device_ids([1,2,3])\
+                .set_device_names(["Win7x64", "Win10"]).set_policy_ids([1,2]).set_policy_names(["default", "policy2"])\
+                .set_status(["not_started", "matched"])
+    assert facet_q._build_request(rows=100) == {"criteria": {
+        "device.os": ["WINDOWS"],
+        "device.id": [1,2,3],
+        "device.name": ["Win7x64", "Win10"],
+        "device.policy_id": [1,2],
+        "device.policy_name": ["default", "policy2"],
+        "status": ["not_started", "matched"]
+    }, "query": "*:*", "terms": {"fields": [], "rows": 100}}
 
 def test_device_summary_metrics(cbcsdk_mock):
     """Testing DeviceSummary.metrics_ property."""

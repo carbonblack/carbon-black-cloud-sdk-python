@@ -155,7 +155,7 @@ def test_result_query_result_facets(monkeypatch):
     def _run_facets(url, body, **kwargs):
         nonlocal _was_called
         assert url == "/livequery/v1/orgs/Z100/runs/abcdefg/results/_facet"
-        assert body == {"query": "xyzzy", "criteria": {"device_name": ["AxCx", "A7X"]},
+        assert body == {"query": "xyzzy", "criteria": {"device.name": ["AxCx", "A7X"]},
                         "terms": {"fields": ["alpha", "bravo", "charlie"]}}
         _was_called = True
         return StubResponse({"terms": [{"field": "alpha", "values": [{"total": 1, "id": "alpha1", "name": "alpha1"},
@@ -171,7 +171,7 @@ def test_result_query_result_facets(monkeypatch):
     patch_cbapi(monkeypatch, api, POST=_run_facets)
     result = Result(api, {"id": "abcdefg", "device": {"id": "abcdefg"}, "fields": {}, "metrics": {}})
     query = result.query_result_facets().where("xyzzy").facet_field("alpha").facet_field(["bravo", "charlie"]) \
-        .criteria(device_name=["AxCx", "A7X"])
+        .set_device_names(["AxCx", "A7X"])
     assert isinstance(query, FacetQuery)
     count = 0
     for item in query.all():
@@ -198,7 +198,7 @@ def test_result_query_device_summary_facets(monkeypatch):
     def _run_facets(url, body, **kwargs):
         nonlocal _was_called
         assert url == "/livequery/v1/orgs/Z100/runs/abcdefg/results/device_summaries/_facet"
-        assert body == {"query": "xyzzy", "criteria": {"device_name": ["AxCx", "A7X"]},
+        assert body == {"query": "xyzzy", "criteria": {"device.name": ["AxCx", "A7X"]},
                         "terms": {"fields": ["alpha", "bravo", "charlie"]}}
         _was_called = True
         return StubResponse({"terms": [{"field": "alpha", "values": [{"total": 1, "id": "alpha1", "name": "alpha1"},
@@ -214,7 +214,7 @@ def test_result_query_device_summary_facets(monkeypatch):
     patch_cbapi(monkeypatch, api, POST=_run_facets)
     result = Result(api, {"id": "abcdefg", "device": {"id": "abcdefg"}, "fields": {}, "metrics": {}})
     query = result.query_device_summary_facets().where("xyzzy").facet_field("alpha") \
-        .facet_field(["bravo", "charlie"]).criteria(device_name=["AxCx", "A7X"])
+        .facet_field(["bravo", "charlie"]).set_device_names(["AxCx", "A7X"])
     assert isinstance(query, FacetQuery)
     count = 0
     for item in query.all():
