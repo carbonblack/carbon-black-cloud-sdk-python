@@ -178,6 +178,91 @@ GET_RUN_RESULTS_RESP_2 = {
     ]
 }
 
+GET_RUN_RESULTS_RESP_3 = {
+    "org_key": "A1B2C3D4E5",
+    "num_found": 3,
+    "results": [
+        {
+            "id": "4bkd3tkgdba8iis2r8kf7itaxdtr6tnz",
+            "device": {
+                "id": 12345,
+                "name": "Win10",
+                "policy_id": 1,
+                "policy_name": "default",
+                "os": "WINDOWS"
+            },
+            "status": "matched",
+            "time_received": "2020-09-14T13:01:30.989Z",
+            "device_message": "",
+            "fields": {
+                "author": "",
+                "directory": "/Users/win",
+                "locale": "en",
+                "name": "Chrome Media Router",
+                "path": "/Users/bit9qa/Library/Application Support/Google/Chrome/Default/Extensions/pkedcjkdefgpdelpbcmbmeomcjbeemfm/7519.422.0.3_0/",
+                "persistent": 0,
+                "shell": "/bin/bash",
+                "type": "",
+                "update_url": "https://clients2.google.com/service/update2/crx",
+                "username": "win",
+                "version": "7519.422.0.3"
+            }
+        },
+        {
+            "id": "4bkd3tkgdba8iis2r8kf7itaxdtr6tnz",
+            "device": {
+                "id": 12345,
+                "name": "Win10",
+                "policy_id": 1,
+                "policy_name": "default",
+                "os": "WINDOWS"
+            },
+            "status": "matched",
+            "time_received": "2020-09-14T13:01:30.989Z",
+            "device_message": "",
+            "fields": {
+                "author": "",
+                "directory": "/Users/win",
+                "locale": "en",
+                "name": "Chrome Media Router",
+                "path": "/Users/bit9qa/Library/Application Support/Google/Chrome/Default/Extensions/pkedcjkdefgpdelpbcmbmeomcjbeemfm/7419.311.0.1_0/",
+                "persistent": 0,
+                "shell": "/bin/bash",
+                "type": "",
+                "update_url": "https://clients2.google.com/service/update2/crx",
+                "username": "win",
+                "version": "7419.311.0.1"
+            }
+        },
+        {
+            "id": "4bkd3tkgdba8iis2r8kf7itaxdtr6tnz",
+            "device": {
+                "id": 12345,
+                "name": "Win7x64",
+                "policy_id": 2,
+                "policy_name": "policy2",
+                "os": "WINDOWS"
+            },
+            "status": "matched",
+            "time_received": "2020-09-14T13:01:30.989Z",
+            "device_message": "",
+            "fields": {
+                "author": "",
+                "directory": "/Users/win",
+                "locale": "en",
+                "name": "Chrome Media Router",
+                "path": "/Users/bit9qa/Library/Application Support/Google/Chrome/Default/Extensions/pkedcjkdefgpdelpbcmbmeomcjbeemfm/7619.603.0.2_0/",
+                "persistent": 0,
+                "shell": "/bin/bash",
+                "type": "",
+                "update_url": "https://clients2.google.com/service/update2/crx",
+                "username": "win",
+                "version": "7619.603.0.2"
+            }
+        }
+    ]
+}
+
 GET_DEVICE_SUMMARY_RESP_1 = {
     "org_key": "test",
     "num_found": 5,

@@ -539,16 +539,101 @@ class ResultQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixi
         self._batch_size = 100
         self._run_id = None
 
-    def criteria(self, **kwargs):
-        """Sets the filter criteria on a query's results.
+    # def criteria(self, **kwargs):
+    #     """Sets the filter criteria on a query's results.
+    #
+    #     Arguments:
+    #         **kwargs (dict(str, str)): The criteria to apply to query results.
+    #
+    #     Example:
+    #     >>> cb.select(Result).run_id(my_run).criteria(device_id=[123, 456])
+    #     """
+    #     self._criteria.update(kwargs)
+    #     return self
+
+    def _update_criteria(self, key, newlist):
+        """
+        Updates a list of criteria being collected for a query, by setting or appending items.
+
+        Args:
+            key (str): The key for the criteria item to be set.
+            newlist (list): List of values to be set for the criteria item.
+        """
+        oldlist = self._criteria.get(key, [])
+        self._criteria[key] = oldlist + newlist
+
+    def set_device_ids(self, device_ids):
+        """Sets the device.id criteria filter.
 
         Arguments:
-            **kwargs (dict(str, str)): The criteria to apply to query results.
+            device_ids ([int]): Device IDs to filter on.
 
-        Example:
-        >>> cb.select(Result).run_id(my_run).criteria(device_id=[123, 456])
+        Returns:
+            The ResultQuery with specified device.id.
         """
-        self._criteria.update(kwargs)
+        if not all(isinstance(device_id, int) for device_id in device_ids):
+            raise ApiError("One or more invalid device IDs")
+        self._update_criteria("device.id", device_ids)
+        return self
+
+    def set_device_names(self, device_names):
+        """Sets the device.name criteria filter.
+
+        Arguments:
+            device_names ([int]): Device names to filter on.
+
+        Returns:
+            The ResultQuery with specified device.name.
+        """
+        if not all(isinstance(name, str) for name in device_names):
+            raise ApiError("One or more invalid device names")
+        self._update_criteria("device.name", device_names)
+        return self
+
+    def set_device_os(self, device_os):
+        """Sets the device.os criteria.
+
+        Arguments:
+            device_os ([str]): Device OS's to filter on.
+
+        Returns:
+            The ResultQuery object with specified device_os.
+
+        Note:
+            Device OS's can be one or more of ["WINDOWS", "MAC", "LINUX"].
+        """
+        if not all(isinstance(os, str) for os in device_os):
+            raise ApiError("device_type must be a list of strings, including"
+                           " 'WINDOWS', 'MAC', and/or 'LINUX'")
+        self._update_criteria("device.os", device_os)
+        return self
+
+    def set_policy_ids(self, policy_ids):
+        """Sets the device.policy_id criteria.
+
+        Arguments:
+            policy_ids ([str]): Device policy ID's to filter on.
+
+        Returns:
+            The ResultQuery object with specified policy_ids.
+        """
+        if not all(isinstance(id, int) for id in policy_ids):
+            raise ApiError("policy_ids must be a list of integers.")
+        self._update_criteria("device.policy_id", policy_ids)
+        return self
+
+    def set_policy_names(self, policy_names):
+        """Sets the device.policy_name criteria.
+
+        Arguments:
+            policy_names ([str]): Device policy names to filter on.
+
+        Returns:
+            The ResultQuery object with specified policy_names.
+        """
+        if not all(isinstance(name, str) for name in policy_names):
+            raise ApiError("policy_names must be a list of strings.")
+        self._update_criteria("device.policy_name", policy_names)
         return self
 
     def sort_by(self, key, direction="ASC"):

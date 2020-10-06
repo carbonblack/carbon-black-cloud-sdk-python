@@ -10,6 +10,7 @@ from tests.unit.fixtures.audit_remediation.mock_runs import (GET_RUN_RESP,
                                                              GET_RUN_RESULTS_RESP,
                                                              GET_RUN_RESULTS_RESP_1,
                                                              GET_RUN_RESULTS_RESP_2,
+                                                             GET_RUN_RESULTS_RESP_3,
                                                              GET_DEVICE_SUMMARY_RESP_1,
                                                              GET_RESULTS_FACETS_RESP,
                                                              POST_RUN_HISTORY_RESP)
@@ -81,6 +82,21 @@ def test_result_fields_with_metrics(cbcsdk_mock):
     result = Result(api, initial_data=GET_RUN_RESULTS_RESP_1)
     metrics = result.metrics_
     assert metrics._info == {"cpu": 24.3, "memory": 8.0}
+
+
+def test_result_query_criteria(cbcsdk_mock):
+    """Testing set_* criteria methods for ResultQuery."""
+    api = cbcsdk_mock.api
+    result_q = api.select(Result).run_id(1).set_device_os(["WINDOWS"]).set_device_ids([1,2,3])\
+                .set_device_names(["Win7x64", "Win10"]).set_policy_ids([1,2]).set_policy_names(["default", "policy2"])
+    assert result_q._build_request(start=0, rows=100) == {"criteria": {
+        "device.os": ["WINDOWS"],
+        "device.id": [1,2,3],
+        "device.name": ["Win7x64", "Win10"],
+        "device.policy_id": [1,2],
+        "device.policy_name": ["default", "policy2"]
+    }, "start": 0, "rows": 100, "query": "*:*"}
+
 
 
 def test_device_summary_metrics(cbcsdk_mock):

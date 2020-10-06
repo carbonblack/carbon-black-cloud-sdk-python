@@ -118,7 +118,7 @@ def test_result_device_summaries(monkeypatch):
     def _run_summaries(url, body, **kwargs):
         nonlocal _was_called
         assert url == "/livequery/v1/orgs/Z100/runs/abcdefg/results/device_summaries/_search"
-        assert body == {"query": "foo", "criteria": {"device_name": ["AxCx", "A7X"]},
+        assert body == {"query": "foo", "criteria": {"device.name": ["AxCx", "A7X"]},
                         "sort": [{"field": "device_name", "order": "ASC"}], "start": 0}
         _was_called = True
         return StubResponse({"org_key": "Z100", "num_found": 2,
@@ -130,7 +130,7 @@ def test_result_device_summaries(monkeypatch):
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_run_summaries)
     result = Result(api, {"id": "abcdefg", "device": {"id": "abcdefg"}, "fields": {}, "metrics": {}})
-    query = result.query_device_summaries().where("foo").criteria(device_name=["AxCx", "A7X"]).sort_by("device_name")
+    query = result.query_device_summaries().where("foo").set_device_names(["AxCx", "A7X"]).sort_by("device_name")
     assert isinstance(query, ResultQuery)
     count = 0
     for item in query.all():
