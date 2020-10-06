@@ -81,9 +81,7 @@ A query is not executed on the server until it's accessed, either as an iterator
 ::
 
   # Execute the query by accessing as a list
-  >>> matching_devices = [device for device in device_query]
-
-  >>> print(f"First matching device ID: {matching_devices[0].deviceId}")
+  >>> print(f"First matching device ID: {device_query[0].deviceId}")
   First matching device ID: 1234
 
   # Or as an iterator
@@ -125,13 +123,13 @@ Executing this query results in an API call similar to ``GET /integrationService
 Criteria
 """"""""
 
-Criteria also modify a query, and can be used with our without parameters.
+Criteria can be used to add filters to a query, and can be used with our without parameters.
 When using CBC SDK, there are API-specific methods you can use to add criteria to queries.
 
 ::
 
   # Create a query for alerts
-  >>> alert_query = api.select(cbc_sdk.Platform.Alert)
+  >>> alert_query = api.select(cbc_sdk.platform.alerts.BaseAlert)
 
   # Refine the query with parameters
   >>> alert_query.where(alert_severity=9).or_(alert_severity=10)
