@@ -568,7 +568,7 @@ class ResultQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixi
         """Sets the device.name criteria filter.
 
         Arguments:
-            device_names ([int]): Device names to filter on.
+            device_names ([str]): Device names to filter on.
 
         Returns:
             The ResultQuery with specified device.name.
@@ -600,7 +600,7 @@ class ResultQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixi
         """Sets the device.policy_id criteria.
 
         Arguments:
-            policy_ids ([str]): Device policy ID's to filter on.
+            policy_ids ([int]): Device policy ID's to filter on.
 
         Returns:
             The ResultQuery object with specified policy_ids.
