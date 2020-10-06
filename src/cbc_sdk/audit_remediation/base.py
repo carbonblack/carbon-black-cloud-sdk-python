@@ -539,18 +539,6 @@ class ResultQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixi
         self._batch_size = 100
         self._run_id = None
 
-    # def criteria(self, **kwargs):
-    #     """Sets the filter criteria on a query's results.
-    #
-    #     Arguments:
-    #         **kwargs (dict(str, str)): The criteria to apply to query results.
-    #
-    #     Example:
-    #     >>> cb.select(Result).run_id(my_run).criteria(device_id=[123, 456])
-    #     """
-    #     self._criteria.update(kwargs)
-    #     return self
-
     def _update_criteria(self, key, newlist):
         """
         Updates a list of criteria being collected for a query, by setting or appending items.
