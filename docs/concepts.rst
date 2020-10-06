@@ -1,28 +1,82 @@
 Concepts
 ================================
 
+Queries
+----------------------------------------
+
+Generally, to retrieve information from your Carbon Black Cloud instance you will:
+
+1. `Create a Query <#create-queries-with-cbcloudapi-select>`_
+2. `Refine the Query <#refine-queries-with-where-and-and-or>`_
+3. `Execute the Query <#execute-a-query>`_
+
 Create Queries with :func:`CBCloudAPI.select() <cbc_sdk.connection.BaseAPI.select>`
------------------------------------------------------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Data is retrieved from the Carbon Black Cloud with :func:`CBCloudAPI.select() <cbc_sdk.connection.BaseAPI.select>` statements.
-A ``select()`` statement creates a ``query``, which can be further refined with parameters or criteria, and then executed.
+A ``select()`` statement creates a ``query``, which can be further `refined with parameters or criteria <#refine-queries-with-where-and-and-or>`_, and then `executed <#refine-queries-with-where-and-and-or>`_.
 
 ::
 
   # Create a query for devices
-  >>> device_query = api.select(Device).where('deviceHostName:Win7x64')
-
-  # Refine the query further
-  >>> device_query = device_query.and_('ipAddress:10.0.0.1')
+  >>> device_query = api.select(endpoint_standard.Device).where('hostName:Win7x64')
 
   # The query has not yet been executed
   >>> type(device_query)
-  <class cbc_sdk.endpoint_standard.DeviceSearchQuery>
+  <class cbc_sdk.endpoint_standard.Query>
 
-This query will search for devices with a hostname containing ``Win7x64``, and a reported
-IP address of ``10.0.0.1``. The query is not executed on the server until it's accessed, either as an iterator (where it will generate values on demand
-as they're requested) or as a list (where it will retrieve the entire result set
-and save to a list).
+This query will search for Endpoint Standard Devices with a hostname containing ``Win7x64``.
+
+
+Refine Queries with :func:`where() <cbc_sdk.base.QueryBuilder.where>`, :func:`and_() <cbc_sdk.base.QueryBuilder.and_>`, and :func:`or_() <cbc_sdk.base.QueryBuilder.or_>`
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Queries can be refined during or after declaration with
+:func:`where() <cbc_sdk.base.QueryBuilder.where>`,
+:func:`and_() <cbc_sdk.base.QueryBuilder.and_>`, and
+:func:`or_() <cbc_sdk.base.QueryBuilder.or_>`.
+
+::
+
+  # Create a query for events
+  >>> event_query = api.select(endpoint_standard.Event).where(hostName='Win10').and_(ipAddress='10.0.0.1')
+
+  # Refine the query
+  >>> event_query.and_(applicationName='googleupdate.exe')
+  >>> event_query.and_(eventType='REGISTRY_ACCESS')
+  >>> event_query.and_(ownerNameExact='DevRel')
+
+This query will search for Endpoint Standard Events created by the application
+``googleupdate.exe`` accessing the registry on a device with a hostname containing
+``Win10``, an IP Address of ``10.0.0.1``, and owned by ``DevRel``.
+
+Be Consistent When Refining Queries
+"""""""""""""""""""""""""""""""""""
+
+All queries are of type :meth:`QueryBuilder() <cbc_sdk.base.QueryBuilder>`, with support for either
+raw string-based queries , or keyword arguments.
+
+::
+
+  # Equivalent queries
+  >>> string_query = api.select(Device).where("hostName:Win7x64")
+  >>> keyword_query = api.select(Device).where(hostName="Win7x64").
+
+Queries must be
+consistent in their use of strings or keywords; do not mix strings and keywords.
+
+::
+
+  # Not allowed
+  >>> mixed_query = api.select(Device).where(hostName='Win7x').and_("ipAddress:10.0.0.1")
+  cbc_sdk.errors.ApiError: Cannot modify a structured query with a raw parameter
+
+Execute a Query
+^^^^^^^^^^^^^^^
+
+A query is not executed on the server until it's accessed, either as an iterator
+(where it will generate results on demand as they're requested) or as a list
+(where it will retrieve the entire result set and save to a list).
 
 ::
 
@@ -47,62 +101,75 @@ to retrieve the total number of items matching the query.
   >>> len(device_query)
   2
 
-Refine Queries with :func:`where() <cbc_sdk.base.QueryBuilder.where>`, :func:`and_() <cbc_sdk.base.QueryBuilder.and_>`, and :func:`or_() <cbc_sdk.base.QueryBuilder.or_>`
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-Queries can be refined during or after declaration with
-:func:`where() <cbc_sdk.base.QueryBuilder.where>`,
-:func:`and_() <cbc_sdk.base.QueryBuilder.and_>`, and
-:func:`or_() <cbc_sdk.base.QueryBuilder.or_>`.
-
-::
-
-  # NOT SUPPORTED. ONLY ONE GUID PER SEARCH
-  >>> process_query = api.select(Process).where(process_guid='guid').or_(process_guid='anotherguid')
-
-
-  # ALL PARAMS ARE 'AND' TOGETHER FOR DEVICE SEARCH
-  >>> device_query = api.select(Device).where(ipAddress='10.0.0.1').and_(deviceId=1234).and_()
-
-All queries are of type :meth:`QueryBuilder() <cbc_sdk.base.QueryBuilder>`, with support for either
-raw string-based queries , or keyword arguments.
-
-::
-
-  # Equivalent queries
-  >>> string_query = api.select(Device).where("hostName:Win7x64")
-  >>> keyword_query = api.select(Device).where(hostName="Win7x64").
-
-Queries must be
-consistent in their use of strings or keywords; do not mix strings and keywords,
-pick one and stick to it.
-
 Query Parameters vs Criteria
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Some Carbon Black Cloud APIs use GET requests with query parameters to filter search results,
-and some APIs use POST requests with "criteria" and "query" keys in the JSON request body
-to filter search results.
+For queries, some Carbon Black Cloud APIs use ``GET`` requests with parameters,
+and some use ``POST`` requests with criteria.
 
-For APIs that use GET requests to retrieve data, using ``where()``, ``and_()``,
-and ``or_()`` methods on ``select()`` will put the filtering parameters in
-the query parameters of the GET request.
+Parameters
+""""""""""
 
-For APIs that use POST requests to retrieve data, the ``where()``, ``and_()``,
-and ``or_()`` methods on ``select()`` will put the filtering parameters in
-the JSON request body key ``query``. Filtering criteria can further narrow search
-results, with the use of the ``.criteria()`` method and criteria keyword arguments.
-Platform Alert and Device objects support individual filtering criteria methods,
-like ``.set_device_os()``, ``.set_reputations()``, and more. These methods put
-the filtering criteria in the JSON request body key ``criteria``.
+Parameters modify a query. When modifying a query with
+:func:`where() <cbc_sdk.base.QueryBuilder.where>`,
+:func:`and_() <cbc_sdk.base.QueryBuilder.and_>`, and
+:func:`or_() <cbc_sdk.base.QueryBuilder.or_>`, those modifications become query
+parameters when sent to Carbon Black Cloud.
 
 ::
 
-  # query for Alerts
-  >>> alerts = api.select(Alert).set_device_os(["MAC"]).set_device_os_versions(["10.14.6"])\
-  ...                           .set_reputations(["COMPANY_BLACK_LIST"])
+  >>> device_query = api.select(endpoint_standard.Device).where(hostName='Win7').and_(ipAddress='10.0.0.1')
 
-**APIs/Models with support for criteria:**
+Executing this query results in an API call similar to ``GET /integrationServices/v3/device?hostName='Win7'&ipAddress='10.0.0.1'``
+
+Criteria
+""""""""
+
+Criteria also modify a query, and can be used with our without parameters.
+When using CBC SDK, there are API-specific methods you can use to add criteria to queries.
+
+::
+
+  # Create a query for alerts
+  >>> alert_query = api.select(cbc_sdk.Platform.Alert)
+
+  # Refine the query with parameters
+  >>> alert_query.where(alert_severity=9).or_(alert_severity=10)
+
+  # Refine the query with criteria
+  >>> alert_query.set_device_os(["MAC"]).set_device_os_versions(["10.14.6"])
+
+
+Executing this query results in an API call to ``POST /appservices/v6/orgs/{org_key}/alerts/_search``
+with this JSON Request Body:
+
+.. code-block:: json
+
+  {
+    "query": "alert_severity:9 OR alert_severity:10",
+    "criteria": {
+      "device_os": ["MAC"],
+      "device_os_version": ["10.14.6"]
+    }
+  }
+
+The query parameters are sent in ``"query"``, and the criteria are sent in ``"criteria"``.
+
+Modules with Support for Criteria
+"""""""""""""""""""""""""""""""""
+
+:mod:`cbc_sdk.audit_remediation.base.RunQuery`
+  - :meth:`cbc_sdk.audit_remediation.base.RunQuery.device_ids`
+  - :meth:`cbc_sdk.audit_remediation.base.RunQuery.device_types`
+  - :meth:`cbc_sdk.audit_remediation.base.RunQuery.policy_id`
+
+:mod:`cbc_sdk.audit_remediation.base.ResultQuery`
+  - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.criteria`
+    - See `Get Query Run Results <https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/latest/livequery-api/#get-query-run-results>`_
+    for supported criteria.
+
+
+
 
 Audit and Remediation
 ^^^^^^^^^^^^^^^^^^^^^
