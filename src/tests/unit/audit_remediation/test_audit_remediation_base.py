@@ -89,7 +89,7 @@ def test_result_query_criteria(cbcsdk_mock):
     api = cbcsdk_mock.api
     result_q = api.select(Result).run_id(1).set_device_os(["WINDOWS"]).set_device_ids([1,2,3])\
                 .set_device_names(["Win7x64", "Win10"]).set_policy_ids([1,2]).set_policy_names(["default", "policy2"])\
-                .set_status(["not_started", "matched"])
+                .set_statuses(["not_started", "matched"])
     assert result_q._build_request(start=0, rows=100) == {"criteria": {
         "device.os": ["WINDOWS"],
         "device.id": [1,2,3],
@@ -104,7 +104,7 @@ def test_facet_query_criteria(cbcsdk_mock):
     api = cbcsdk_mock.api
     facet_q = api.select(ResultFacet).run_id(1).set_device_os(["WINDOWS"]).set_device_ids([1,2,3])\
                 .set_device_names(["Win7x64", "Win10"]).set_policy_ids([1,2]).set_policy_names(["default", "policy2"])\
-                .set_status(["not_started", "matched"])
+                .set_statuses(["not_started", "matched"])
     assert facet_q._build_request(rows=100) == {"criteria": {
         "device.os": ["WINDOWS"],
         "device.id": [1,2,3],
