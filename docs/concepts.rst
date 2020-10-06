@@ -159,18 +159,22 @@ Not all APIs support criteria. See the list of supported modules below.
 Modules with Support for Criteria
 """""""""""""""""""""""""""""""""
 
-:mod:`cbc_sdk.audit_remediation.base.RunQuery`
+:mod:`Run <cbc_sdk.audit_remediation.base.Run>`
   - :meth:`cbc_sdk.audit_remediation.base.RunQuery.device_ids`
   - :meth:`cbc_sdk.audit_remediation.base.RunQuery.device_types`
   - :meth:`cbc_sdk.audit_remediation.base.RunQuery.policy_id`
 
-:mod:`cbc_sdk.audit_remediation.base.ResultQuery`
+:mod:`Result <cbc_sdk.audit_remediation.base.Result>` and :mod:`Device Summary <cbc_sdk.audit_remediation.base.DeviceSummary>`
+
+
   - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.set_device_ids`
   - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.set_device_names`
   - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.set_device_os`
   - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.set_policy_ids`
   - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.set_policy_names`
   - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.set_status`
+
+:mod:`ResultFacet <cbc_sdk.audit_remediation.base.ResultFacet>`
 
 
 
