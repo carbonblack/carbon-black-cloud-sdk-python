@@ -166,7 +166,6 @@ Modules with Support for Criteria
 
 :mod:`Result <cbc_sdk.audit_remediation.base.Result>` and :mod:`Device Summary <cbc_sdk.audit_remediation.base.DeviceSummary>`
 
-
   - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.set_device_ids`
   - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.set_device_names`
   - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.set_device_os`
@@ -176,6 +175,12 @@ Modules with Support for Criteria
 
 :mod:`ResultFacet <cbc_sdk.audit_remediation.base.ResultFacet>`
 
+  - :meth:`cbc_sdk.audit_remediation.base.FacetQuery.set_device_ids`
+  - :meth:`cbc_sdk.audit_remediation.base.FacetQuery.set_device_names`
+  - :meth:`cbc_sdk.audit_remediation.base.FacetQuery.set_device_os`
+  - :meth:`cbc_sdk.audit_remediation.base.FacetQuery.set_policy_ids`
+  - :meth:`cbc_sdk.audit_remediation.base.FacetQuery.set_policy_names`
+  - :meth:`cbc_sdk.audit_remediation.base.FacetQuery.set_status`
 
 
 
