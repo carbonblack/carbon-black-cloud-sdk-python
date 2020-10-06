@@ -624,6 +624,20 @@ class ResultQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixi
         self._update_criteria("device.policy_name", policy_names)
         return self
 
+    def set_status(self, statuses):
+        """Sets the status criteria.
+
+        Arguments:
+            statuses ([str]): Query statuses to filter on.
+
+        Returns:
+            The ResultQuery object with specified statuses.
+        """
+        if not all(isinstance(status, str) for status in statuses):
+            raise ApiError("statuses must be a list of strings.")
+        self._update_criteria("status", statuses)
+        return self
+
     def sort_by(self, key, direction="ASC"):
         """Sets the sorting behavior on a query's results.
 

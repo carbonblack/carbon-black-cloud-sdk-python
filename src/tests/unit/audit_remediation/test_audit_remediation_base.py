@@ -88,13 +88,15 @@ def test_result_query_criteria(cbcsdk_mock):
     """Testing set_* criteria methods for ResultQuery."""
     api = cbcsdk_mock.api
     result_q = api.select(Result).run_id(1).set_device_os(["WINDOWS"]).set_device_ids([1,2,3])\
-                .set_device_names(["Win7x64", "Win10"]).set_policy_ids([1,2]).set_policy_names(["default", "policy2"])
+                .set_device_names(["Win7x64", "Win10"]).set_policy_ids([1,2]).set_policy_names(["default", "policy2"])\
+                .set_status(["not_started", "matched"])
     assert result_q._build_request(start=0, rows=100) == {"criteria": {
         "device.os": ["WINDOWS"],
         "device.id": [1,2,3],
         "device.name": ["Win7x64", "Win10"],
         "device.policy_id": [1,2],
-        "device.policy_name": ["default", "policy2"]
+        "device.policy_name": ["default", "policy2"],
+        "status": ["not_started", "matched"]
     }, "start": 0, "rows": 100, "query": "*:*"}
 
 
