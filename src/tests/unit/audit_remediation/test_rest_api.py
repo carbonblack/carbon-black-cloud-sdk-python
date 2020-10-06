@@ -57,14 +57,14 @@ def test_audit_remediation_with_everything(monkeypatch):
         assert url == "/livequery/v1/orgs/Z100/runs"
         assert body == {"sql": "select * from whatever;", "name": "AmyWasHere", "notify_on_finish": True,
                         "device_filter": {"device_id": [1, 2, 3], "os": ["Alpha", "Bravo", "Charlie"],
-                                          "policy_id": [16, 27, 38]}}
+                                          "policy_id": [16]}}
         _was_called = True
         return StubResponse({"org_key": "Z100", "name": "FoobieBletch", "id": "abcdefg"})
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_run_query)
     query = api.audit_remediation("select * from whatever;").device_ids([1, 2, 3]).device_types(["Alpha", "Bravo", "Charlie"]) \
-        .policy_ids([16, 27, 38]).name("AmyWasHere").notify_on_finish()
+        .policy_id(16).name("AmyWasHere").notify_on_finish()
     assert isinstance(query, RunQuery)
     run = query.submit()
     assert _was_called
@@ -87,11 +87,11 @@ def test_audit_remediation_device_types_broken():
         query = query.device_types([420])
 
 
-def test_audit_remediation_policy_ids_broken():
+def test_audit_remediation_policy_id_broken():
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     query = api.audit_remediation("select * from whatever;")
     with pytest.raises(ApiError):
-        query = query.policy_ids(["Bogus"])
+        query = query.policy_id(["Bogus"])
 
 
 def test_audit_remediation_history(monkeypatch):
