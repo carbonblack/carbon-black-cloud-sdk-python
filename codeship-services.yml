@@ -23,3 +23,7 @@ testingubuntu:
 testingamazon:
   build:
     dockerfile: ./docker/amazon/Dockerfile
+
+testingsuse:
+  build:
+    dockerfile: ./docker/suse/Dockerfile

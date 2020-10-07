@@ -27,3 +27,6 @@
   - name: testing amazon
     service: testingamazon
     command: pytest
+  - name: testing suse
+    service: testingsuse
+    command: pytest
