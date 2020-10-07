@@ -20,6 +20,6 @@ testingubuntu:
   build:
     dockerfile: ./docker/ubuntu/Dockerfile
 
-testingal2:
+testingamazon:
   build:
     dockerfile: ./docker/amazon/Dockerfile
