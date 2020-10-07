@@ -24,3 +24,6 @@
   - name: testing ubuntu
     service: testingubuntu
     command: pytest
+  - name: testing al2
+    service: testingal2
+    command: pytest
