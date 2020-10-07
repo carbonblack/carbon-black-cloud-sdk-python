@@ -19,4 +19,7 @@ testingrhel:
 testingubuntu:
   build:
     dockerfile: ./docker/ubuntu/Dockerfile
-    
+
+testingal2:
+  build:
+    dockerfile: ./docker/amazon/Dockerfile
