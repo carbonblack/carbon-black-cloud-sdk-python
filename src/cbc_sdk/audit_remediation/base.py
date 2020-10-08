@@ -539,16 +539,121 @@ class ResultQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixi
         self._batch_size = 100
         self._run_id = None
 
-    def criteria(self, **kwargs):
-        """Sets the filter criteria on a query's results.
+    def update_criteria(self, key, newlist):
+        """Update the criteria on this query with a custom criteria key.
 
-        Arguments:
-            **kwargs (dict(str, str)): The criteria to apply to query results.
+        Args:
+            key (str): The key for the criteria item to be set.
+            newlist (list): List of values to be set for the criteria item.
+
+        Returns:
+            The ResultQuery with specified custom criteria.
 
         Example:
-        >>> cb.select(Result).run_id(my_run).criteria(device_id=[123, 456])
+            query = api.select(Alert).update_criteria("my.criteria.key", ["criteria_value"])
+
+        Note: Use this method if there is no implemented method for your desired criteria.
         """
-        self._criteria.update(kwargs)
+        self._update_criteria(key, newlist)
+        return self
+
+    def _update_criteria(self, key, newlist):
+        """
+        Updates a list of criteria being collected for a query, by setting or appending items.
+
+        Args:
+            key (str): The key for the criteria item to be set.
+            newlist (list): List of values to be set for the criteria item.
+        """
+        oldlist = self._criteria.get(key, [])
+        self._criteria[key] = oldlist + newlist
+
+    def set_device_ids(self, device_ids):
+        """Sets the device.id criteria filter.
+
+        Arguments:
+            device_ids ([int]): Device IDs to filter on.
+
+        Returns:
+            The ResultQuery with specified device.id.
+        """
+        if not all(isinstance(device_id, int) for device_id in device_ids):
+            raise ApiError("One or more invalid device IDs")
+        self._update_criteria("device.id", device_ids)
+        return self
+
+    def set_device_names(self, device_names):
+        """Sets the device.name criteria filter.
+
+        Arguments:
+            device_names ([str]): Device names to filter on.
+
+        Returns:
+            The ResultQuery with specified device.name.
+        """
+        if not all(isinstance(name, str) for name in device_names):
+            raise ApiError("One or more invalid device names")
+        self._update_criteria("device.name", device_names)
+        return self
+
+    def set_device_os(self, device_os):
+        """Sets the device.os criteria.
+
+        Arguments:
+            device_os ([str]): Device OS's to filter on.
+
+        Returns:
+            The ResultQuery object with specified device_os.
+
+        Note:
+            Device OS's can be one or more of ["WINDOWS", "MAC", "LINUX"].
+        """
+        if not all(isinstance(os, str) for os in device_os):
+            raise ApiError("device_type must be a list of strings, including"
+                           " 'WINDOWS', 'MAC', and/or 'LINUX'")
+        self._update_criteria("device.os", device_os)
+        return self
+
+    def set_policy_ids(self, policy_ids):
+        """Sets the device.policy_id criteria.
+
+        Arguments:
+            policy_ids ([int]): Device policy ID's to filter on.
+
+        Returns:
+            The ResultQuery object with specified policy_ids.
+        """
+        if not all(isinstance(id, int) for id in policy_ids):
+            raise ApiError("policy_ids must be a list of integers.")
+        self._update_criteria("device.policy_id", policy_ids)
+        return self
+
+    def set_policy_names(self, policy_names):
+        """Sets the device.policy_name criteria.
+
+        Arguments:
+            policy_names ([str]): Device policy names to filter on.
+
+        Returns:
+            The ResultQuery object with specified policy_names.
+        """
+        if not all(isinstance(name, str) for name in policy_names):
+            raise ApiError("policy_names must be a list of strings.")
+        self._update_criteria("device.policy_name", policy_names)
+        return self
+
+    def set_statuses(self, statuses):
+        """Sets the status criteria.
+
+        Arguments:
+            statuses ([str]): Query statuses to filter on.
+
+        Returns:
+            The ResultQuery object with specified statuses.
+        """
+        if not all(isinstance(status, str) for status in statuses):
+            raise ApiError("statuses must be a list of strings.")
+        self._update_criteria("status", statuses)
         return self
 
     def sort_by(self, key, direction="ASC"):
@@ -679,20 +784,121 @@ class FacetQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin
                 self._facet_fields.append(name)
         return self
 
-    def criteria(self, **kwargs):
-        """Sets the filter criteria on a query's results.
+    def update_criteria(self, key, newlist):
+        """Update the criteria on this query with a custom criteria key.
 
-        Arguments:
-            **kwargs (dict(str,str)): The criteria to apply to the query.
-                Can be one of ["device_id", "policy_id", "os"].
+        Args:
+            key (str): The key for the criteria item to be set.
+            newlist (list): List of values to be set for the criteria item.
 
         Returns:
-            FacetQuery object with specified criteria.
+            The FacetQuery with specified custom criteria.
 
         Example:
-        >>> cb.select(ResultFacet).run_id(my_run).criteria(device_id=[123, 456])
+            query = api.select(ResultFacet).update_criteria("my.criteria.key", ["criteria_value"])
+
+        Note: Use this method if there is no implemented method for your desired criteria.
         """
-        self._criteria.update(kwargs)
+        self._update_criteria(key, newlist)
+        return self
+
+    def _update_criteria(self, key, newlist):
+        """
+        Updates a list of criteria being collected for a query, by setting or appending items.
+
+        Args:
+            key (str): The key for the criteria item to be set.
+            newlist (list): List of values to be set for the criteria item.
+        """
+        oldlist = self._criteria.get(key, [])
+        self._criteria[key] = oldlist + newlist
+
+    def set_device_ids(self, device_ids):
+        """Sets the device.id criteria filter.
+
+        Arguments:
+            device_ids ([int]): Device IDs to filter on.
+
+        Returns:
+            The FacetQuery with specified device.id.
+        """
+        if not all(isinstance(device_id, int) for device_id in device_ids):
+            raise ApiError("One or more invalid device IDs")
+        self._update_criteria("device.id", device_ids)
+        return self
+
+    def set_device_names(self, device_names):
+        """Sets the device.name criteria filter.
+
+        Arguments:
+            device_names ([str]): Device names to filter on.
+
+        Returns:
+            The FacetQuery with specified device.name.
+        """
+        if not all(isinstance(name, str) for name in device_names):
+            raise ApiError("One or more invalid device names")
+        self._update_criteria("device.name", device_names)
+        return self
+
+    def set_device_os(self, device_os):
+        """Sets the device.os criteria.
+
+        Arguments:
+            device_os ([str]): Device OS's to filter on.
+
+        Returns:
+            The FacetQuery object with specified device_os.
+
+        Note:
+            Device OS's can be one or more of ["WINDOWS", "MAC", "LINUX"].
+        """
+        if not all(isinstance(os, str) for os in device_os):
+            raise ApiError("device_type must be a list of strings, including"
+                           " 'WINDOWS', 'MAC', and/or 'LINUX'")
+        self._update_criteria("device.os", device_os)
+        return self
+
+    def set_policy_ids(self, policy_ids):
+        """Sets the device.policy_id criteria.
+
+        Arguments:
+            policy_ids ([int]): Device policy ID's to filter on.
+
+        Returns:
+            The FacetQuery object with specified policy_ids.
+        """
+        if not all(isinstance(id, int) for id in policy_ids):
+            raise ApiError("policy_ids must be a list of integers.")
+        self._update_criteria("device.policy_id", policy_ids)
+        return self
+
+    def set_policy_names(self, policy_names):
+        """Sets the device.policy_name criteria.
+
+        Arguments:
+            policy_names ([str]): Device policy names to filter on.
+
+        Returns:
+            The FacetQuery object with specified policy_names.
+        """
+        if not all(isinstance(name, str) for name in policy_names):
+            raise ApiError("policy_names must be a list of strings.")
+        self._update_criteria("device.policy_name", policy_names)
+        return self
+
+    def set_statuses(self, statuses):
+        """Sets the status criteria.
+
+        Arguments:
+            statuses ([str]): Query statuses to filter on.
+
+        Returns:
+            The FacetQuery object with specified statuses.
+        """
+        if not all(isinstance(status, str) for status in statuses):
+            raise ApiError("statuses must be a list of strings.")
+        self._update_criteria("status", statuses)
         return self
 
     def run_id(self, run_id):
