@@ -17,6 +17,7 @@ from cbc_sdk.base import (MutableBaseModel, CreatableModelMixin, NewBaseModel, P
                           QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin)
 from cbc_sdk.platform import PlatformQueryBase
 from cbc_sdk.utils import convert_query_params
+from cbc_sdk.errors import ApiError
 from copy import deepcopy
 import logging
 import json
@@ -259,6 +260,8 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
           ``[1:2:-1]`` is not.
         - You can chain where clauses together to create AND queries; only objects that match all ``where`` clauses
           will be returned.
+          - Device Queries with multiple search parameters only support AND operations, not OR. Use of
+          Query.or_(myParameter='myValue') will add 'AND myParameter:myValue' to the search query.
     """
     def __init__(self, doc_class, cb, query=None):
         """Initialize a Query object."""
@@ -278,15 +281,30 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
         nq._batch_size = self._batch_size
         return nq
 
+    def or_(self, **kwargs):
+        """Unsupported. Will raise if called.
+
+        Raises:
+            ApiError: .or_() cannot be called on Endpoint Standard queries.
+        """
+        raise ApiError(".or_() cannot be called on Endpoint Standard queries.")
+
     def prepare_query(self, args):
         """Adds query parameters that are part of a `select().where()` clause to the request."""
         request = args
         params = self._query_builder._collapse()
         if params is not None:
             for query in params.split(' '):
-                # convert from str('key:value') to dict{'key': 'value'}
-                key, value = query.split(':', 1)
-                request[key] = value
+                try:
+                    # convert from str('key:value') to dict{'key': 'value'}
+                    key, value = query.split(':', 1)
+                    # must remove leading or trailing parentheses that were inserted by logical combinations
+                    key = key.strip('(').strip(')')
+                    value = value.strip('(').strip(')')
+                    request[key] = value
+                except ValueError:
+                    # AND or OR encountered
+                    pass
         return request
 
     def _count(self):
