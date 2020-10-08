@@ -64,3 +64,31 @@ def test_endpoint_standard_query_count(cbcsdk_mock):
     assert not hostname_device_query._count_valid
     assert hostname_device_query._count() == 1
     assert hostname_device_query._count_valid
+
+
+def test_endpoint_standard_query_or_apierror(cbcsdk_mock):
+    """Testing raising ApiError when using or_() on a Endpoint Standard query."""
+    api = cbcsdk_mock.api
+    device_query = api.select(Device).where(hostName='Win7x64').and_(ipAddress='10.0.0.1')
+    # integrationServices v3 doesn't support logical OR with parameters
+    with pytest.raises(ApiError):
+        device_query.or_(ipAddress='10.0.0.2')
+
+
+def test_endpoint_standard_query_and(cbcsdk_mock):
+    """Testing handling multiple and_() clauses on a query, esp. query._query_builder._collapse()."""
+    api = cbcsdk_mock.api
+    device_query = api.select(Device).where(hostName='Win7x64').and_(ipAddress='10.0.0.1')
+    device_query.and_(ownerName='DevRel')
+    # the query has parentheses added when doing third parameter
+    assert device_query._query_builder._collapse() == '(hostName:Win7x64 AND ipAddress:10.0.0.1) AND ownerName:DevRel'
+    request = device_query.prepare_query({})
+    assert request == {'hostName': 'Win7x64', 'ipAddress': '10.0.0.1', 'ownerName': 'DevRel'}
+
+    another_dev_query = api.select(Device).where(hostName='Win7')
+    another_dev_query.and_(hostNameExact='Win7x64')
+    another_dev_query.and_(ownerName='Dev')
+    another_dev_query.and_(ownerNameExact='DeveloperRelations')
+    assert another_dev_query._query_builder._collapse() == '((hostName:Win7 AND hostNameExact:Win7x64) AND ownerName:Dev) AND ownerNameExact:DeveloperRelations'
+    request = another_dev_query.prepare_query({})
+    assert request == {'hostName': 'Win7', 'hostNameExact': 'Win7x64', 'ownerName': 'Dev', 'ownerNameExact': 'DeveloperRelations'}
