@@ -1,3 +1,5 @@
+.. _developing-credential-providers:
+
 Developing New Credential Providers
 ===================================
 The credentials management framework for the CBC SDK is designed to allow different handlers to be implemented, which
