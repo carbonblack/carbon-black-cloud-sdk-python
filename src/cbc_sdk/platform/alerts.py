@@ -461,7 +461,7 @@ class BaseAlertSearchQuery(PlatformQueryBase, QueryBuilderSupportMixin, Iterable
 
     def set_device_os_versions(self, device_os_versions):
         """
-        Restricts the alerts that this query is performed on to the specified device operating system versions..
+        Restricts the alerts that this query is performed on to the specified device operating system versions.
 
         Args:
             device_os_versions (list): List of string operating system versions.
