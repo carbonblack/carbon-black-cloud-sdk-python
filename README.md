@@ -39,7 +39,6 @@ All requirements are installed as part of `pip install cbc_sdk` or if you're pla
 ### Python Packages
 | Product | Package |
 | ------- | ------- |
-| CBC SDK Base | [cbc_sdk.base](src/cbc_sdk/base.py) |
 | Audit and Remediation | [cbc_sdk.audit_remediation](src/cbc_sdk/audit_remediation) |
 | Endpoint Standard | [cbc_sdk.endpoint_standard](src/cbc_sdk/endpoint_standard) |
 | Enterprise EDR | [cbc_sdk.enterprise_edr](src/cbc_sdk/enterprise_edr) |
@@ -48,14 +47,14 @@ All requirements are installed as part of `pip install cbc_sdk` or if you're pla
 
 ## Getting Started
 
-TBD
+Visit the [Getting Started Guide](carbon-black-cloud-python-sdk.readthedocs.io/en/latest/getting-started.html) for an example of authenticating and making an API call using the SDK.
 
 
 ## Developing Improvements for the Carbon Black Cloud Python SDK
 
-Use the following steps if you want to provide additional examples, fix a bug, or add a feature to the Toolkit.
+Use the following steps if you want to provide additional examples, fix a bug, or add a feature to the SDK.
 
-### Installing for Toolkit development
+### Installing for SDK development
 
 You will need to fork the repo in order to create pull requests when submitting code for review. For details on forking a repo, see [here](https://help.github.com/en/github/getting-started-with-github/fork-a-repo).
 
@@ -76,7 +75,9 @@ pip install -e .
 
 ### Running the SDK tests
 
-TBD
+From the parent directory `cbc-sdk-python`, run the following command:
+
+``pytest``
 
 ### Development Flow
 
