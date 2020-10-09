@@ -37,11 +37,11 @@ All requirements are installed as part of `pip install cbc_sdk` or if you're pla
 
 
 ### Python Packages
-* [CBC SDK Base](src/cbc_sdk/base.py)
-* Audit and Remediation
-* Endpoint Standard
-* Enterprise EDR
-* Platform APIs
+* [CBC SDK Base](src/cbc_sdk/base.py) (cbc_sdk)
+* Audit and Remediation (cbc_sdk.audit_remediation)
+* Endpoint Standard (cbc_sdk.endpoint_standard)
+* Enterprise EDR (cbc_sdk.enterprise_edr)
+* Platform APIs (cbc_sdk.platform)
 
 
 ## Getting Started
