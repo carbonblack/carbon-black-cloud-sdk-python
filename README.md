@@ -5,7 +5,7 @@
 **Release Date:** TBD
 
 [![Coverage Status](https://coveralls.io/repos/github/carbonblack/cbc-sdk-python/badge.svg?t=cwMaub)](https://coveralls.io/github/carbonblack/cbc-sdk-python)
-[![Codeship Status for carbonblack/cbc-sdk-python](https://app.codeship.com/projects/9e55a370-a772-0138-aae4-129773225755/status?branch=master)](https://app.codeship.com/projects/402767)
+[![Codeship Status for carbonblack/cbc-sdk-python](https://app.codeship.com/projects/9e55a370-a772-0138-aae4-129773225755/status?branch=develop)](https://app.codeship.com/projects/402767)
 
 
 ## Recent updates
@@ -30,11 +30,18 @@ The Carbon Black Cloud Python SDK is design to work on Python 3.6 and above.
 All requirements are installed as part of `pip install cbc_sdk` or if you're planning on pushing changes to the Carbon Black Cloud Python SDK, the following can be used after cloning the repo `pip install -r requirements.txt`
 
 ### Carbon Black Cloud
-* Enterprise EDR
+* [Platform](https://developer.carbonblack.com/reference/carbon-black-cloud/platform-apis/)
+* [Endpoint Standard](https://developer.carbonblack.com/reference/carbon-black-cloud/cb-defense/)
+* [Audit and Remediation](https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/)
+* [Enterprise EDR](https://developer.carbonblack.com/reference/carbon-black-cloud/cb-threathunter/)
 
 
 ### Python Packages
-TBD
+* [CBC SDK Base](src/cbc_sdk/base.py)
+* Audit and Remediation
+* Endpoint Standard
+* Enterprise EDR
+* Platform APIs
 
 
 ## Getting Started
