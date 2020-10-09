@@ -47,7 +47,7 @@ All requirements are installed as part of `pip install cbc_sdk` or if you're pla
 
 ## Getting Started
 
-Visit the [Getting Started Guide](carbon-black-cloud-python-sdk.readthedocs.io/en/latest/getting-started.html) for an example of authenticating and making an API call using the SDK.
+Visit the [Getting Started Guide](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/getting-started.html) for an example of authenticating and making an API call using the SDK.
 
 
 ## Developing Improvements for the Carbon Black Cloud Python SDK
@@ -75,9 +75,7 @@ pip install -e .
 
 ### Running the SDK tests
 
-From the parent directory `cbc-sdk-python`, run the following command:
-
-``pytest``
+From the parent directory `cbc-sdk-python`, run the command `pytest`.
 
 ### Development Flow
 
