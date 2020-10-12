@@ -27,9 +27,12 @@ Use of the Carbon Black API is governed by the license found in [LICENSE](LICENS
 
 The Carbon Black Cloud Python SDK is design to work on Python 3.6 and above.
 
-All requirements are installed as part of `pip install cbc_sdk` or if you're planning on pushing changes to the Carbon Black Cloud Python SDK, the following can be used after cloning the repo `pip install -r requirements.txt`
+All requirements are installed as part of `pip install cbc_sdk`. If you're planning on pushing changes to the Carbon Black Cloud Python SDK, the following can be used after cloning the repo `pip install -r requirements.txt`
 
 ### Carbon Black Cloud
+
+At least one Carbon Black Cloud product is required to use this SDK:
+
 * [Platform](https://developer.carbonblack.com/reference/carbon-black-cloud/platform-apis/)
 * [Endpoint Standard](https://developer.carbonblack.com/reference/carbon-black-cloud/cb-defense/)
 * [Audit and Remediation](https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/)
@@ -76,6 +79,19 @@ pip install -e .
 ### Running the SDK tests
 
 From the parent directory `cbc-sdk-python`, run the command `pytest`.
+
+### Building the documentation
+
+ReadTheDocs hosts [the documentation for the SDK](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/). If you make changes to the SDK that require an update to the documentation,
+build the docs locally with the following commands:
+
+```
+sphinx-apidoc -f -o docs src/cbc_sdk
+cd docs
+make html
+```
+
+The documentation is built in `docs/_build/html`. 
 
 ### Development Flow
 
