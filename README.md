@@ -40,12 +40,27 @@ At least one Carbon Black Cloud product is required to use this SDK:
 
 
 ### Python Packages
-| Product | Package |
-| ------- | ------- |
-| Audit and Remediation | [cbc_sdk.audit_remediation](src/cbc_sdk/audit_remediation) |
-| Endpoint Standard | [cbc_sdk.endpoint_standard](src/cbc_sdk/endpoint_standard) |
-| Enterprise EDR | [cbc_sdk.enterprise_edr](src/cbc_sdk/enterprise_edr) |
-| Platform | [cbc_sdk.platform](src/cbc_sdk/platform) |
+
+requests
+cachetools
+pyyaml
+pika
+prompt_toolkit
+pygments
+python-dateutil
+protobuf
+solrq
+validators
+
+If developing the SDK, you also need:
+
+pytest==5.4.2
+pymox==0.7.8
+coverage==5.1
+coveralls==2.0.0
+flake8==3.8.1
+flake8-colors==0.1.6
+flake8-docstrings==1.5.0
 
 
 ## Getting Started
@@ -91,7 +106,7 @@ cd docs
 make html
 ```
 
-The documentation is built in `docs/_build/html`. 
+The documentation is built in `docs/_build/html`.
 
 ### Development Flow
 
