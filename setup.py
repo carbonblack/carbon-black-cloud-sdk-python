@@ -41,6 +41,8 @@ setup(
     author='Carbon Black',
     author_email='dev-support@carbonblack.com',
     description='Carbon Black Cloud Python SDK',
+    long_description=read('README.md'),
+    long_description_content_type='text/markdown',
     packages=packages,
     include_package_data=True,
     package_dir={'': 'src'},
