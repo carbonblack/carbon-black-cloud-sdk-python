@@ -11,7 +11,7 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-"""Manages the CBAPI connection to the server."""
+"""Manages the CBC SDK connection to the server."""
 
 from __future__ import absolute_import
 
