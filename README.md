@@ -5,7 +5,7 @@
 **Release Date:** TBD
 
 [![Coverage Status](https://coveralls.io/repos/github/carbonblack/cbc-sdk-python/badge.svg?t=cwMaub)](https://coveralls.io/github/carbonblack/cbc-sdk-python)
-[![Codeship Status for carbonblack/cbc-sdk-python](https://app.codeship.com/projects/9e55a370-a772-0138-aae4-129773225755/status?branch=master)](https://app.codeship.com/projects/402767)
+[![Codeship Status for carbonblack/cbc-sdk-python](https://app.codeship.com/projects/9e55a370-a772-0138-aae4-129773225755/status?branch=develop)](https://app.codeship.com/projects/402767)
 
 
 ## Recent updates
@@ -27,26 +27,52 @@ Use of the Carbon Black API is governed by the license found in [LICENSE](LICENS
 
 The Carbon Black Cloud Python SDK is design to work on Python 3.6 and above.
 
-All requirements are installed as part of `pip install cbc_sdk` or if you're planning on pushing changes to the Carbon Black Cloud Python SDK, the following can be used after cloning the repo `pip install -r requirements.txt`
+All requirements are installed as part of `pip install cbc_sdk`. If you're planning on pushing changes to the Carbon Black Cloud Python SDK, the following can be used after cloning the repo `pip install -r requirements.txt`
 
 ### Carbon Black Cloud
-* Enterprise EDR
+
+At least one Carbon Black Cloud product is required to use this SDK:
+
+* [Platform](https://developer.carbonblack.com/reference/carbon-black-cloud/platform-apis/)
+* [Endpoint Standard](https://developer.carbonblack.com/reference/carbon-black-cloud/cb-defense/)
+* [Audit and Remediation](https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/)
+* [Enterprise EDR](https://developer.carbonblack.com/reference/carbon-black-cloud/cb-threathunter/)
 
 
 ### Python Packages
-TBD
+
+- requests
+- cachetools
+- pyyaml
+- pika
+- prompt_toolkit
+- pygments
+- python-dateutil
+- protobuf
+- solrq
+- validators
+
+If developing the SDK, you also need:
+
+- pytest==5.4.2
+- pymox==0.7.8
+- coverage==5.1
+- coveralls==2.0.0
+- flake8==3.8.1
+- flake8-colors==0.1.6
+- flake8-docstrings==1.5.0
 
 
 ## Getting Started
 
-TBD
+Visit the [Getting Started Guide](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/getting-started.html) for an example of authenticating and making an API call using the SDK.
 
 
 ## Developing Improvements for the Carbon Black Cloud Python SDK
 
-Use the following steps if you want to provide additional examples, fix a bug, or add a feature to the Toolkit.
+Use the following steps if you want to provide additional examples, fix a bug, or add a feature to the SDK.
 
-### Installing for Toolkit development
+### Installing for SDK development
 
 You will need to fork the repo in order to create pull requests when submitting code for review. For details on forking a repo, see [here](https://help.github.com/en/github/getting-started-with-github/fork-a-repo).
 
@@ -67,7 +93,20 @@ pip install -e .
 
 ### Running the SDK tests
 
-TBD
+From the parent directory `cbc-sdk-python`, run the command `pytest`.
+
+### Building the documentation
+
+ReadTheDocs hosts [the documentation for the SDK](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/). If you make changes to the SDK that require an update to the documentation,
+build the docs locally with the following commands:
+
+```
+sphinx-apidoc -f -o docs src/cbc_sdk
+cd docs
+make html
+```
+
+The documentation is built in `docs/_build/html`.
 
 ### Development Flow
 
