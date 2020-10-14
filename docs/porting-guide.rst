@@ -6,7 +6,6 @@ the CBC SDK.
 
 Import Changes
 --------------
-
 A number of packages have new name equivalents in the CBC SDK.
 
 * Package ``cbapi.example_helpers`` -> ``cbc_sdk.example_helpers``
@@ -19,7 +18,6 @@ A number of packages have new name equivalents in the CBC SDK.
 
 Code Changes
 ------------
-
 **Helper Functions:** Replace all calls to ``get_cb_defense_object()``, ``get_cb_livequery_object()``,
 ``get_cb_psc_object()``, and ``get_cb_threathunter_object()`` with ``get_cb_cloud_object()``.
 
