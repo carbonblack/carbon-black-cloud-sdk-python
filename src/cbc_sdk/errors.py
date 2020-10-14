@@ -10,11 +10,11 @@
 # * EXPRESS OR IMPLIED. THE AUTHOR SPECIFICALLY DISCLAIMS ANY IMPLIED
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
-"""Exceptions that are thrown by CBAPI operations."""
+"""Exceptions that are thrown by CBC SDK operations."""
 
 
 class ApiError(Exception):
-    """Base class for all CBAPI errors; also raised for generic internal errors."""
+    """Base class for all CBC SDK errors; also raised for generic internal errors."""
 
     def __init__(self, message=None, original_exception=None):
         """

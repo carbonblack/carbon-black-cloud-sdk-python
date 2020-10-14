@@ -11,7 +11,7 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-"""Manages the CBAPI connection to the server."""
+"""Manages the CBC SDK connection to the server."""
 
 from __future__ import absolute_import
 
@@ -209,7 +209,7 @@ class Connection(object):
             raise ApiError("This version of Python and OpenSSL do not support TLSv1.2: {}".format(e),
                            original_exception=e)
         except Exception as e:
-            raise ApiError("Unknown error establishing cbapi session: {0}: {1}".format(e.__class__.__name__, e),
+            raise ApiError("Unknown error establishing CBC SDK session: {0}: {1}".format(e.__class__.__name__, e),
                            original_exception=e)
 
         self.session.mount(self.server, tls_adapter)
