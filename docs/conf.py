@@ -74,7 +74,7 @@ html_static_path = ['_static']
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "_static/Cb-Python-API.png"
+html_logo = "_static/cbc-sdk-thumbnail.png"
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'CarbonBlackAPI-PythonBindingsdoc'
