@@ -108,7 +108,7 @@ Now we'll repeat this example, but using the Python command line directly withou
 Access your Python interpreter with the ``python`` command (or ``python3`` if required) and type:
 
 >>> from cbc_sdk.rest_api import CBCloudAPI
->>> from cbc_sdk.platform.devices import Device
+>>> from cbc_sdk.platform import Device
 >>> cb = CBCloudAPI(profile='default')
 
 This imports the necessary classes and creates an instance of the base ``CBCloudAPI`` object.  By default, the file
