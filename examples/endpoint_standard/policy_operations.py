@@ -17,8 +17,8 @@ import json
 import logging
 
 from cbc_sdk.errors import ServerError
-from cbc_sdk.example_helpers import build_cli_parser, get_cb_cloud_object
-from cbc_sdk.endpoint_standard.base import Policy
+from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
+from cbc_sdk.endpoint_standard import Policy
 
 log = logging.getLogger(__name__)
 

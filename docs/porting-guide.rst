@@ -8,13 +8,16 @@ Import Changes
 --------------
 A number of packages have new name equivalents in the CBC SDK.
 
-* Package ``cbapi.example_helpers`` -> ``cbc_sdk.example_helpers``
-* Package ``cbapi.psc`` -> ``cbc_sdk.platform``
+* Package ``cbapi.example_helpers`` -> ``cbc_sdk.helpers``
+* Package ``cbapi.psc`` -> ``cbc_sdk``
+* Package ``cbapi.psc.alerts_query`` -> ``cbc_sdk.platform``
+* Package ``cbapi.psc.devices_query`` -> ``cbc_sdk.platform``
 * Package ``cbapi.psc.livequery`` -> ``cbc_sdk.audit_remediation``
-* Package ``cbapi.psc.livequery.models`` -> ``cbc_sdk.audit_remediation.base``
+* Package ``cbapi.psc.livequery.models`` -> ``cbc_sdk.audit_remediation``
 * Package ``cbapi.psc.defense`` -> ``cbc_sdk.endpoint_standard``
-* Package ``cbapi.psc.defense.models`` -> ``cbc_sdk.endpoint_standard.base``
-* Package ``cbapi.psc.threathunter.models`` -> ``cbc_sdk.enterprise_edr.threat_intelligence``
+* Package ``cbapi.psc.defense.models`` -> ``cbc_sdk.endpoint_standard``
+* Package ``cbapi.psc.threathunter`` -> ``cbc_sdk.enterprise_edr``
+* Package ``cbapi.psc.threathunter.models`` -> ``cbc_sdk.enterprise_edr``
 
 Code Changes
 ------------
@@ -26,3 +29,8 @@ Code Changes
 * Replace ``cb.query(sql_query)`` with ``cb.select(Run).where(sql=sql_query)``.
 * Replace ``cb.query_history(query_string)`` with ``cb.select(RunHistory).where(query_string)``.
 * On a query object, use the ``policy_id()`` method instead of ``policy_ids()``.  Only one policy ID can be specified.
+
+**Base API Object**
+
+The different API objects, ``CbDefenseAPI``, ``CbLiveQueryAPI``, ``CbPSCBaseAPI``, and ``CbThreatHunterAPI`` are
+replaced with ``CBCloudAPI``.  Import this object from the ``cbc_sdk`` package, i.e. ``from cbc_sdk import CBCloudAPI``.

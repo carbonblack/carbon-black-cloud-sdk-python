@@ -13,8 +13,8 @@
 """Example script performing operations on feeds and reports."""
 
 import sys
-from cbc_sdk.enterprise_edr.threat_intelligence import Feed, Report
-from cbc_sdk.example_helpers import eprint, build_cli_parser, get_cb_cloud_object
+from cbc_sdk.enterprise_edr import Feed, Report
+from cbc_sdk.helpers import eprint, build_cli_parser, get_cb_cloud_object
 import logging
 import json
 
