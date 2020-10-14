@@ -1,6 +1,38 @@
 Concepts
 ================================
 
+Platform Devices vs Endpoint Standard Devices
+---------------------------------------------
+For most use cases, Platform Devices are sufficient to access information about devices
+and change that information. If you want to connect to a device using Live Response,
+then you must use Endpoint Standard Devices and a Live Response API Key.
+
+::
+
+  # Device information is accessible with Platform Devices
+  >>> api = CBCloudAPI(profile='platform')
+  >>> platform_devices = api.select(platform.Device).set_os(["WINDOWS", "LINUX"])
+  >>> for device in platform_devices:
+  ...   print(
+        f'''
+        Device ID: {device.id}
+        Device Name: {device.name}
+
+        '''
+  Device ID: 1234
+  Device Name: Win10x64
+
+  Device ID: 5678
+  Device Name: UbuntuDev
+
+
+  # Live Response is accessible with Endpoint Standard Devices
+  >>> api = CBCloudAPI(profile='live_response')
+  >>> endpoint_standard_device = api.select(endpoint_standard.Device, 1234)
+  >>> endpoint_standard_device.lr_session()
+  url: /integrationServices/v3/cblr/session/428:1234 -> status: PENDING
+  [...]
+
 Queries
 ----------------------------------------
 
@@ -19,13 +51,13 @@ A ``select()`` statement creates a ``query``, which can be further `refined with
 ::
 
   # Create a query for devices
-  >>> device_query = api.select(endpoint_standard.Device).where('hostName:Win7x64')
+  >>> device_query = api.select(platform.Device).where('avStatus:AV_ACTIVE')
 
   # The query has not yet been executed
   >>> type(device_query)
-  <class cbc_sdk.endpoint_standard.Query>
+  <class cbc_sdk.platform.devices.DeviceSearchQuery>
 
-This query will search for Endpoint Standard Devices with a hostname containing ``Win7x64``.
+This query will search for Platform Devices with antivirus active.
 
 
 Refine Queries with :func:`where() <cbc_sdk.base.QueryBuilder.where>`, :func:`and_() <cbc_sdk.base.QueryBuilder.and_>`, and :func:`or_() <cbc_sdk.base.QueryBuilder.or_>`
@@ -59,8 +91,8 @@ raw string-based queries , or keyword arguments.
 ::
 
   # Equivalent queries
-  >>> string_query = api.select(Device).where("hostName:Win7x64")
-  >>> keyword_query = api.select(Device).where(hostName="Win7x64").
+  >>> string_query = api.select(platform.Device).where("avStatus:AV_ACTIVE")
+  >>> keyword_query = api.select(platform.Device).where(avStatus="AV_ACTIVE").
 
 Queries must be
 consistent in their use of strings or keywords; do not mix strings and keywords.
@@ -68,7 +100,7 @@ consistent in their use of strings or keywords; do not mix strings and keywords.
 ::
 
   # Not allowed
-  >>> mixed_query = api.select(Device).where(hostName='Win7x').and_("ipAddress:10.0.0.1")
+  >>> mixed_query = api.select(platform.Device).where(avStatus='Win7x').and_("virtualMachine:true")
   cbc_sdk.errors.ApiError: Cannot modify a structured query with a raw parameter
 
 Execute a Query
@@ -80,15 +112,18 @@ A query is not executed on the server until it's accessed, either as an iterator
 
 ::
 
+  # Create and Refine a query
+  >>> device_query = api.select(platform.Device).where('avStatus:AV_ACTIVE').set_os(["WINDOWS"])
+
   # Execute the query by accessing as a list
   >>> matching_devices = [device for device in device_query]
 
-  >>> print(f"First matching device ID: {matching_devices[0].deviceId}")
+  >>> print(f"First matching device ID: {matching_devices[0].id}")
   First matching device ID: 1234
 
   # Or as an iterator
   >>> for matching_device in device_query:
-  ...   print(f"Matching device ID: {matching_device.deviceId})
+  ...   print(f"Matching device ID: {matching_device.id})
   Matching device ID: 1234
   Matching device ID: 5678
 
@@ -100,6 +135,9 @@ to retrieve the total number of items matching the query.
   # Retrieve total number of matching devices
   >>> len(device_query)
   2
+
+In this example, the matching device ID's are accessed with ``device.id``. If using
+Endpoint Standard Devices, the device ID's are accessed with ``device.deviceId``.
 
 Query Parameters vs Criteria
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
