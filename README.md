@@ -1,6 +1,7 @@
 # VMware Carbon Black Cloud Python SDK
 
-Alpha Release
+This is currently an Alpha Release.  Feedback is encouraged.
+
 **Latest Version:** 1.0.0a1
 <br>
 **Release Date:** 15 October 2020
