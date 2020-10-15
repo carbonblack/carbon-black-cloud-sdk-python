@@ -42,7 +42,7 @@ import json
 import urllib
 
 from .credentials import Credentials
-from .credential_providers import default_credential_provider
+from .credential_providers.default import default_credential_provider
 from .errors import ClientError, QuerySyntaxError, ServerError, TimeoutError, ApiError, ObjectNotFoundError, \
     UnauthorizedError, ConnectionError
 from . import __version__
