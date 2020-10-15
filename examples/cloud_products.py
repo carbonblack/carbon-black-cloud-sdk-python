@@ -86,53 +86,62 @@ ransomware_watchlist = Watchlist(eedr_api, initial_data=
 # Save the new Watchlist
 ransomware_watchlist.save()
 
-# Find Enterprise EDR Processes that match Egregor ransomware behavior (from Carbon Black Threat Analysis Unit)
-# filemod_count:[10000 TO *] filemod_name:recover-files.txt (modload_name:rundll32.exe OR modload_name:regsvr32.exe)
-egregor_ransomware_processes = eedr_api.select(Process).where("filemod_count:[10000 TO *]")
+try:
+    # Find Enterprise EDR Processes that match Egregor ransomware behavior (from Carbon Black Threat Analysis Unit)
+    egregor_ransomware_processes = eedr_api.select(Process).where("filemod_count:[10000 TO *]")
 
-# Extract the Process hashes
-process_hashes = set()
-for process in egregor_ransomware_processes:
-    process_hashes.add(process.process_md5())
-    process_hashes.add(process.process_sha256())
+    # Extract the Process hashes
+    process_hashes = set()
+    for process in egregor_ransomware_processes:
+        process_hashes.add(process.process_md5)
+        process_hashes.add(process.process_sha256)
+        
+    # Create an Enterprise EDR Report with the found Process hashes
+    ransomware_hashes_report = Report(eedr_api, from_watchlist=True, initial_data=
+                               {
+                                   "id": 1,
+                                   "timestamp": time.time(),
+                                   "title": "Egregor Ransomware Hashes",
+                                   "description": "IOC suggesting ransomware behavior",
+                                   "severity": 10,
+                                   "iocs_v2": [
+                                       {
+                                           "id": 1,
+                                           "match_type": "equality",
+                                           "field": "process_hash",
+                                           "values": list(process_hashes)
+                                       }]
+                               })
+    # Save the Report as a Watchlist Report (vs. a Feed Report)
+    ransomware_hashes_report.save_watchlist()
 
-# Create an Enterprise EDR Report with the found Process hashes
-ransomware_hashes_report = Report(eedr_api, from_watchlist=True, initial_data=
-                           {
-                               "id": 1,
-                               "timestamp": time.time(),
-                               "title": "Egregor Ransomware Hashes",
-                               "description": "IOC suggesting ransomware behavior",
-                               "severity": 10,
-                               "iocs_v2": [
-                                   {
-                                       "id": 1,
-                                       "match_type": "equality",
-                                       "values": list(process_hashes)
-                                   }]
-                           })
-# Save the Report as a Watchlist Report (vs. a Feed Report)
-ransomware_hashes_report.save_watchlist()
+    # Add the Report to the new Watchlist
+    ransomware_watchlist.update(report_ids=[ransomware_hashes_report.id])
 
-# Add the Report to the new Watchlist
-ransomware_watchlist.update(report_ids=[ransomware_hashes_report.id])
+    egregor_query = "filemod_count:[10000 TO *] filemod_name:recover-files.txt (modload_name:rundll32.exe OR modload_name:regsvr32.exe)"
 
-# Continuously monitor for any Processes that exhibit Egregor ransomware behavior
-ransomware_hashes_report = Report(eedr_api, from_watchlist=True, initial_data=
-                           {
-                               "id": 1,
-                               "timestamp": time.time(),
-                               "title": "Egregor Ransomware Report",
-                               "description": "IOC suggesting ransomware behavior",
-                               "severity": 10,
-                               "iocs_v2": [
-                                   {
-                                       "id": 1,
-                                       "match_type": "equality",
-                                       "values": list(process_hashes)
-                                   }]
-                           })
+    # Continuously monitor for any Processes that exhibit Egregor ransomware behavior
+    ransomware_query_report = Report(eedr_api, from_watchlist=True, initial_data=
+                               {
+                                   "id": 1,
+                                   "timestamp": time.time(),
+                                   "title": "Egregor Ransomware Report",
+                                   "description": "IOC suggesting ransomware behavior",
+                                   "severity": 10,
+                                   "iocs_v2": [
+                                       {
+                                           "id": 1,
+                                           "match_type": "query",
+                                           "values": [egregor_query]
+                                       }]
+                               })
+    # Save the Report as a Watchlist Report (vs. a Feed Report)
+    ransomware_query_report.save_watchlist()
 
+    # Add the Reports to the Watchlist
+    ransomware_watchlist.update(report_ids=[ransomware_hashes_report.id, ransomware_query_report.id])
+except Exception as e:
+    print(f"failed: {e}")
 ransomware_watchlist.delete()
 
 
