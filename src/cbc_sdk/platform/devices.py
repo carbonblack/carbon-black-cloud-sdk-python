@@ -57,6 +57,15 @@ class Device(PlatformModel):
         """
         return DeviceSearchQuery(cls, cb)
 
+    @property
+    def deviceId(self):
+        """Warn user that Platform Devices use 'id', not 'device_id'.
+
+        Platform Device API's return 'id' in API responses, where Endpoint Standard
+        API's return 'deviceId'.
+        """
+        raise AttributeError("Platform Devices use .id property for device ID.")
+
     def _refresh(self):
         """
         Rereads the device data from the server.
