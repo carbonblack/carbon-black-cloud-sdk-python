@@ -1,8 +1,9 @@
-# Carbon Black Cloud Python SDK
+# VMware Carbon Black Cloud Python SDK
 
+Alpha Release
 **Latest Version:** 1.0.0a1
 <br>
-**Release Date:** TBD
+**Release Date:** 15 October 2020
 
 [![Coverage Status](https://coveralls.io/repos/github/carbonblack/cbc-sdk-python/badge.svg?t=cwMaub)](https://coveralls.io/github/carbonblack/cbc-sdk-python)
 [![Codeship Status for carbonblack/cbc-sdk-python](https://app.codeship.com/projects/9e55a370-a772-0138-aae4-129773225755/status?branch=develop)](https://app.codeship.com/projects/402767)
@@ -15,7 +16,7 @@ View the latest release notes [here](https://github.com/carbonblack/cbc-sdk-pyth
 
 ## License
 
-Use of the Carbon Black API is governed by the license found in [LICENSE](LICENSE).
+Use of the Carbon Black Cloud Python SDK is governed by the license found in [LICENSE](LICENSE).
 
 ## Support
 
@@ -78,7 +79,7 @@ You will need to fork the repo in order to create pull requests when submitting 
 
 ```
 git clone https://github.com/{fork-name}/cbc-sdk-python
-cd cbc-sdk-python
+cd carbon-black-cloud-sdk-python
 pip install -r requirements.txt
 ```
 
@@ -93,7 +94,7 @@ pip install -e .
 
 ### Running the SDK tests
 
-From the parent directory `cbc-sdk-python`, run the command `pytest`.
+From the parent directory `carbon-black-cloud-sdk-python`, run the command `pytest`.
 
 ### Building the documentation
 
