@@ -36,11 +36,11 @@ def read(fname):
 setup(
     name='cbc_sdk',
     version=read('VERSION'),
-    url='https://github.com/carbonblack/cbc-sdk-python',
+    url='https://github.com/carbonblack/carbon-black-cloud-sdk-python',
     license='MIT',
     author='Carbon Black',
-    author_email='dev-support@carbonblack.com',
-    description='Carbon Black Cloud Python SDK',
+    author_email='cb-developer-network@vmware.com'
+    description='VMware Carbon Black Cloud Python SDK',
     long_description=read('README.md'),
     long_description_content_type='text/markdown',
     packages=packages,
