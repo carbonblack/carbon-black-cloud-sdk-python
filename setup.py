@@ -1,4 +1,4 @@
-"""Carbon Black Cloud Python SDK"""
+"""VMware Carbon Black Cloud Python SDK"""
 
 from setuptools import setup
 import sys
