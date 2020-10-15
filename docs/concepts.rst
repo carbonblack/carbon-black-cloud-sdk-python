@@ -196,97 +196,78 @@ The query parameters are sent in ``"query"``, and the criteria are sent in ``"cr
 Modules with Support for Criteria
 """""""""""""""""""""""""""""""""
 
-:mod:`cbc_sdk.audit_remediation.base.RunQuery`
+:mod:`Run <cbc_sdk.audit_remediation.base.Run>`
   - :meth:`cbc_sdk.audit_remediation.base.RunQuery.device_ids`
   - :meth:`cbc_sdk.audit_remediation.base.RunQuery.device_types`
   - :meth:`cbc_sdk.audit_remediation.base.RunQuery.policy_id`
 
-:mod:`cbc_sdk.audit_remediation.base.ResultQuery`
-  - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.criteria`
-    - See `Get Query Run Results <>`_
-    for supported criteria.
+:mod:`Result <cbc_sdk.audit_remediation.base.Result>` and :mod:`Device Summary <cbc_sdk.audit_remediation.base.DeviceSummary>`
+
+  - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.set_device_ids`
+  - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.set_device_names`
+  - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.set_device_os`
+  - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.set_policy_ids`
+  - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.set_policy_names`
+  - :meth:`cbc_sdk.audit_remediation.base.ResultQuery.set_status`
+
+:mod:`ResultFacet <cbc_sdk.audit_remediation.base.ResultFacet>` and :mod:`DeviceSummaryFacet <cbc_sdk.audit_remediation.base.DeviceSummaryFacet>`
 
 
+  - :meth:`cbc_sdk.audit_remediation.base.FacetQuery.set_device_ids`
+  - :meth:`cbc_sdk.audit_remediation.base.FacetQuery.set_device_names`
+  - :meth:`cbc_sdk.audit_remediation.base.FacetQuery.set_device_os`
+  - :meth:`cbc_sdk.audit_remediation.base.FacetQuery.set_policy_ids`
+  - :meth:`cbc_sdk.audit_remediation.base.FacetQuery.set_policy_names`
+  - :meth:`cbc_sdk.audit_remediation.base.FacetQuery.set_status`
 
+:mod:`Alert <cbc_sdk.platform.alerts.BaseAlert>`
 
-Audit and Remediation
-^^^^^^^^^^^^^^^^^^^^^
-  - Result - ResultQuery to get Run Results
-      POST /livequery/v1/orgs/{org_key}/runs/{id}/results/_search
-      https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/latest/livequery-api/#get-query-run-results
-      - has .criteria() method implemented (freeform, you supply the kwargs)
-      Possible keyword arguments to .criteria():
-      - device.id
-      - device.name
-      - device.os
-      - device.policy_id
-      - device.policy_name
-      - status
+  - :meth:`cbc_sdk.platform.alerts.BaseAlertSearchQuery.set_categories`
+  - :meth:`cbc_sdk.platform.alerts.BaseAlertSearchQuery.set_create_time`
+  - :meth:`cbc_sdk.platform.alerts.BaseAlertSearchQuery.set_device_ids`
+  - :meth:`cbc_sdk.platform.alerts.BaseAlertSearchQuery.set_device_names`
+  - :meth:`cbc_sdk.platform.alerts.BaseAlertSearchQuery.set_device_os`
+  - :meth:`cbc_sdk.platform.alerts.BaseAlertSearchQuery.set_device_os_versions`
+  - :meth:`cbc_sdk.platform.alerts.BaseAlertSearchQuery.set_device_username`
+  - :meth:`cbc_sdk.platform.alerts.BaseAlertSearchQuery.set_group_results`
+  - :meth:`cbc_sdk.platform.alerts.BaseAlertSearchQuery.set_alert_ids`
+  - :meth:`cbc_sdk.platform.alerts.BaseAlertSearchQuery.set_legacy_alert_ids`
+  - :meth:`cbc_sdk.platform.alerts.BaseAlertSearchQuery.set_minimum_severity`
+  - :meth:`cbc_sdk.platform.alerts.BaseAlertSearchQuery.set_policy_ids`
+  - :meth:`cbc_sdk.platform.alerts.BaseAlertSearchQuery.set_policy_names`
+  - :meth:`cbc_sdk.platform.alerts.BaseAlertSearchQuery.set_process_names`
+  - :meth:`cbc_sdk.platform.alerts.BaseAlertSearchQuery.set_process_sha256`
+  - :meth:`cbc_sdk.platform.alerts.BaseAlertSearchQuery.set_reputations`
+  - :meth:`cbc_sdk.platform.alerts.BaseAlertSearchQuery.set_tags`
+  - :meth:`cbc_sdk.platform.alerts.BaseAlertSearchQuery.set_target_priorities`
+  - :meth:`cbc_sdk.platform.alerts.BaseAlertSearchQuery.set_threat_ids`
+  - :meth:`cbc_sdk.platform.alerts.BaseAlertSearchQuery.set_types`
+  - :meth:`cbc_sdk.platform.alerts.BaseAlertSearchQuery.set_workflows`
 
-  - DeviceSummary - ResultQuery to get Device Summaries
-      POST /livequery/v1/orgs/{}/runs/{}/results/device_summaries/_search
-      https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/latest/livequery-api/#get-device-summary-from-results
-      - has .criteria() method implemented (freeform, you supply the kwargs)
-      Possible keyword arguments to .criteria():
-      - device.id
-      - device.name
-      - device.os
-      - device.policy_id
-      - device.policy_name
-      - status
+:mod:`WatchlistAlert <cbc_sdk.platform.alerts.WatchlistAlert>`
 
-  - ResultFacet - FacetQuery to Get Facets From Live Query Results
-      POST /livequery/v1/orgs/{}/runs/{}/results/_facet
-      https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/latest/livequery-api/#get-facets-from-live-query-results
-      - has .criteria() method implemented (freeform, you supply the kwargs)
-      Possible keyword arguments to .criteria():
-      - device.id
-      - device.name
-      - device.os
-      - device.policy_id
-      - device.policy_name
-      - status
+  - :meth:`cbc_sdk.platform.alerts.WatchlistAlertSearchQuery.set_watchlist_ids`
+  - :meth:`cbc_sdk.platform.alerts.WatchlistAlertSearchQuery.set_watchlist_names`
 
-  - DeviceSummaryFacet - inherits ResultFacet -- has same .criteria() method
-      POST /livequery/v1/orgs/{}/runs/{}/results/device_summaries/_facet
-      https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/latest/livequery-api/#get-device-summary-facets
-      Possible keyword arguments to .criteria():
-      - device.id
-      - device.name
-      - device.os
-      - device.policy_id
-      - device.policy_name
-      - status
+:mod:`CBAnalyticsAlert <cbc_sdk.platform.alerts.CBAnalyticsAlert>`
 
-  - RunHistory - RunHistoryQuery
-      POST /livequery/v1/orgs/{}/runs/_search
-      https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/latest/livequery-api/#get-query-history
-      - does not yet have .criteria() method implemented
+  - :meth:`cbc_sdk.platform.alerts.CBAnalyticsAlertSearchQuery.set_blocked_threat_categories`
+  - :meth:`cbc_sdk.platform.alerts.CBAnalyticsAlertSearchQuery.set_device_locations`
+  - :meth:`cbc_sdk.platform.alerts.CBAnalyticsAlertSearchQuery.set_kill_chain_statuses`
+  - :meth:`cbc_sdk.platform.alerts.CBAnalyticsAlertSearchQuery.set_not_blocked_threat_categories`
+  - :meth:`cbc_sdk.platform.alerts.CBAnalyticsAlertSearchQuery.set_policy_applied`
+  - :meth:`cbc_sdk.platform.alerts.CBAnalyticsAlertSearchQuery.set_reason_code`
+  - :meth:`cbc_sdk.platform.alerts.CBAnalyticsAlertSearchQuery.set_run_states`
+  - :meth:`cbc_sdk.platform.alerts.CBAnalyticsAlertSearchQuery.set_sensor_actions`
+  - :meth:`cbc_sdk.platform.alerts.CBAnalyticsAlertSearchQuery.set_threat_cause_vectors`
 
-Enterprise EDR
-^^^^^^^^^^^^^^
+:mod:`VMwareAlert <cbc_sdk.platform.alerts.VMwareAlert>`
 
-  - Event - enterprise_edr.Query to get Events associated with a Process
-    POST /api/investigate/v2/orgs/{}/events/{}/_search
-    https://developer.carbonblack.com/reference/carbon-black-cloud/cb-threathunter/latest/process-search-v2/#get-events-associated-with-a-given-process
-    - does not have .criteria() method implemented
+  - :meth:`cbc_sdk.platform.alerts.VMwareAlertSearchQuery.set_group_ids`
 
-  - Process - AsyncProcessQuery to start a Process search job
-    POST /api/investigate/v2/orgs/{}/processes/search_jobs
-    https://developer.carbonblack.com/reference/carbon-black-cloud/cb-threathunter/latest/process-search-v2/#start-a-process-search-job
-    - does not have .criteria() method implemented
+Modules not yet Supported for Criteria
+""""""""""""""""""""""""""""""""""""""
 
-Platform
-^^^^^^^^
-
-  - Alerts - BaseAlertSearchQuery, WatchlistAlertSearchQuery, CBAnalyticsAlertSearchQuery, VMwareAlertSearchQuery
-    POST /appservices/v6/orgs/{0}/alerts/{1}
-    POST /appservices/v6/orgs/{0}/alerts/watchlist
-    POST /appservices/v6/orgs/{0}/alerts/cbanalytics
-    POST /appservices/v6/orgs/{0}/alerts/vmware
-
-    https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alerts-api/#search-request
-    See "Additional Supported ``criteria`` Parameter Values" on that page for accepted criteria
-    of each type of Alert.
-
-    - have methods for each possible criteria
+:mod:`RunHistory <cbc_sdk.audit_remediation.base.RunHistory>`
+:mod:`Event <cbc_sdk.enterprise_edr.base.Event>`
+:mod:`Process <cbc_sdk.enterprise_edr.base.Process>`
