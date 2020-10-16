@@ -12,7 +12,8 @@
 """Test for the default credential provider function."""
 
 import pytest
-from cbc_sdk.credential_providers import default_credential_provider, FileCredentialProvider, EnvironCredentialProvider
+from cbc_sdk.credential_providers import FileCredentialProvider, EnvironCredentialProvider
+from cbc_sdk.credential_providers.default import default_credential_provider
 
 
 def test_default_credential_providers_file(monkeypatch):

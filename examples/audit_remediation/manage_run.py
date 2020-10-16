@@ -12,8 +12,8 @@
 """Example script which manages LiveQuery runs."""
 
 import sys
-from cbc_sdk.example_helpers import build_cli_parser, get_cb_cloud_object
-from cbc_sdk.audit_remediation.base import Run, RunHistory
+from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
+from cbc_sdk.audit_remediation import Run, RunHistory
 
 
 def create_run(cb, args):

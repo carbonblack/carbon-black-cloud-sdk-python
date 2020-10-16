@@ -39,7 +39,7 @@ CBCloudAPI objects.
 
   # execute commands with Live Response API
   >>> for device in important_devs:
-  ...      lr_session = live_response_api.live_response.request_session(device.deviceId)
+  ...      lr_session = live_response_api.live_response.request_session(device.id)
   ...      lr_session.create_process(r'cmd.exe /c "ping.exe 192.168.1.1"'))
   ...      lr_session.close()
 

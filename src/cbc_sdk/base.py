@@ -876,7 +876,7 @@ class QueryBuilder(object):
         elif self._query is not None:
             return str(self._query)
         else:
-            return "*:*"               # return everything
+            return ""               # return everything
 
 
 class QueryBuilderSupportMixin:

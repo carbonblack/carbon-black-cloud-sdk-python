@@ -6,6 +6,9 @@
 CBC SDK: Carbon Black Cloud SDK for Python
 ==========================================
 
+In Alpha Development
+--------------------
+
 Release v\ |release|.
 
 The Carbon Black Cloud Python SDK provides an easy interface to connect with Carbon Black Cloud products,
@@ -53,6 +56,7 @@ Get started with Carbon Black Cloud Python SDK here. For detailed information on
    authentication
    Getting Started <getting-started>
    concepts
+   porting-guide
    logging
    changelog
 

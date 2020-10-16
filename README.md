@@ -1,21 +1,24 @@
-# Carbon Black Cloud Python SDK
+# VMware Carbon Black Cloud Python SDK
+
+This is currently an Alpha Release.  Feedback is encouraged.
 
 **Latest Version:** 1.0.0a1
 <br>
-**Release Date:** TBD
+**Release Date:** 15 October 2020
 
-[![Coverage Status](https://coveralls.io/repos/github/carbonblack/cbc-sdk-python/badge.svg?t=cwMaub)](https://coveralls.io/github/carbonblack/cbc-sdk-python)
-[![Codeship Status for carbonblack/cbc-sdk-python](https://app.codeship.com/projects/9e55a370-a772-0138-aae4-129773225755/status?branch=develop)](https://app.codeship.com/projects/402767)
+[![Coverage Status](https://coveralls.io/repos/github/carbonblack/carbon-black-cloud-sdk-python/badge.svg?t=Id6Baf)](https://coveralls.io/github/carbonblack/carbon-black-cloud-sdk-python)
+[![Codeship Status for carbonblack/carbon-black-cloud-sdk-python](https://app.codeship.com/projects/9e55a370-a772-0138-aae4-129773225755/status?branch=develop)](https://app.codeship.com/projects/402767)
+
 
 
 ## Recent updates
 
-View the latest release notes [here](https://github.com/carbonblack/cbc-sdk-python/releases).
+View the latest release notes [here](https://github.com/carbonblack/carbon-black-cloud-sdk-python/releases).
 
 
 ## License
 
-Use of the Carbon Black API is governed by the license found in [LICENSE](LICENSE).
+Use of the Carbon Black Cloud Python SDK is governed by the license found in [LICENSE](LICENSE).
 
 ## Support
 
@@ -27,7 +30,7 @@ Use of the Carbon Black API is governed by the license found in [LICENSE](LICENS
 
 The Carbon Black Cloud Python SDK is design to work on Python 3.6 and above.
 
-All requirements are installed as part of `pip install cbc_sdk`. If you're planning on pushing changes to the Carbon Black Cloud Python SDK, the following can be used after cloning the repo `pip install -r requirements.txt`
+All requirements are installed as part of `pip install carbon-black-cloud-sdk`. If you're planning on pushing changes to the Carbon Black Cloud Python SDK, the following can be used after cloning the repo `pip install -r requirements.txt`
 
 ### Carbon Black Cloud
 
@@ -77,8 +80,8 @@ Use the following steps if you want to provide additional examples, fix a bug, o
 You will need to fork the repo in order to create pull requests when submitting code for review. For details on forking a repo, see [here](https://help.github.com/en/github/getting-started-with-github/fork-a-repo).
 
 ```
-git clone https://github.com/{fork-name}/cbc-sdk-python
-cd cbc-sdk-python
+git clone https://github.com/{fork-name}/carbon-black-cloud-sdk-python
+cd carbon-black-cloud-sdk-python
 pip install -r requirements.txt
 ```
 
@@ -93,7 +96,7 @@ pip install -e .
 
 ### Running the SDK tests
 
-From the parent directory `cbc-sdk-python`, run the command `pytest`.
+From the parent directory `carbon-black-cloud-sdk-python`, run the command `pytest`.
 
 ### Building the documentation
 

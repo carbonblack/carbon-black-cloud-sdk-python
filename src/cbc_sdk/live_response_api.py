@@ -781,7 +781,7 @@ def jobrunner(callable, cb, device_id):
 
     Args:
         callable (object): The object to be wrapped.
-        cb (BaseAPI): The CBAPI object reference.
+        cb (BaseAPI): The CBC SDK object reference.
         device_id (int): The device ID to use to get the session.
 
     Returns:
@@ -851,7 +851,7 @@ class JobWorker(threading.Thread):
         Initialize the JobWorker.
 
         Args:
-            cb (BaseAPI): The CBAPI object reference.
+            cb (BaseAPI): The CBC SDK object reference.
             device_id (int): The ID of the device being used.
             result_queue (Queue): The queue where results are placed.
         """
@@ -907,7 +907,7 @@ class LiveResponseJobScheduler(threading.Thread):
         Initialize the LiveResponseJobScheduler.
 
         Args:
-            cb (BaseAPI): The CBAPI object reference.
+            cb (BaseAPI): The CBC SDK object reference.
             max_workers (int): Maximum number of JobWorker threads to use.
         """
         super(LiveResponseJobScheduler, self).__init__()
@@ -1042,7 +1042,7 @@ class CbLRManagerBase(object):
         Initialize the CbLRManagerBase object.
 
         Args:
-            cb (BaseAPI): The CBAPI object reference.
+            cb (BaseAPI): The CBC SDK object reference.
             timeout (int): Timeout to use for requests, in seconds.
             keepalive_sessions (bool): If True, "ping" sessions occasionally to ensure they stay alive.
         """
@@ -1251,7 +1251,7 @@ def poll_status(cb, url, desired_status="complete", timeout=None, delay=None):
     Poll the status of a Live Response query.
 
     Args:
-        cb (BaseAPI): The CBAPI object reference.
+        cb (BaseAPI): The CBC SDK object reference.
         url (str): The URL to poll.
         desired_status (str): The status we're looking for.
         timeout (int): The timeout value in seconds.
