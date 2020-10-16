@@ -1,10 +1,18 @@
 """VMware Carbon Black Cloud Python SDK"""
 
-from setuptools import setup
+from setuptools import setup, find_packages
 import sys
 import os
 
-packages = ['cbc_sdk']
+packages = [
+        'cbc_sdk',
+        'cbc_sdk.audit_remediation',
+        'cbc_sdk.cache',
+        'cbc_sdk.credential_providers',
+        'cbc_sdk.endpoint_standard',
+        'cbc_sdk.enterprise_edr',
+        'cbc_sdk.platform'
+        ]
 
 install_requires = [
     'requests',
