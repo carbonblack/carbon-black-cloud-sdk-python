@@ -1,0 +1,6 @@
+[default]
+token=ABCDEFGH
+ssl_verify=false
+ssl_cert_file=foo.certs
+proxy=proxy.example
+integration=Covax

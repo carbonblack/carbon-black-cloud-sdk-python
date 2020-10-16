@@ -1,0 +1,6 @@
+[run]
+source = src/cbc_sdk
+[report]
+exclude_lines =
+    pragma: no cover
+    if __name__ == .__main__.:

@@ -1,0 +1,6 @@
+[default]
+url=http://example.com
+org_key=A1B2C3D4
+ssl_verify_hostname=no
+ssl_force_tls_1_2=1
+ignore_system_proxy=on

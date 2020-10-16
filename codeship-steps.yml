@@ -1,0 +1,26 @@
+- name: Linters
+  type: parallel
+  steps:
+  - name: Linting step
+    tag: master
+    service: testingpython38
+    command: bin/linters.sh
+
+- name: Tests
+  type: parallel
+  steps:
+  - name: testing python 3.6
+    service: testingpython36
+    command: pytest
+  - name: testing python 3.7
+    service: testingpython37
+    command: pytest
+  - name: testing python 3.8
+    service: testingpython38
+    command: bin/tests_n_reports.sh
+  - name: testing red hat
+    service: testingrhel
+    command: pytest
+  - name: testing ubuntu
+    service: testingubuntu
+    command: pytest
