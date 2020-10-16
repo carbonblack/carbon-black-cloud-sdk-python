@@ -34,11 +34,11 @@ def read(fname):
 
 
 setup(
-    name='cbc_sdk',
+    name='carbon_black_cloud_sdk',
     version=read('VERSION'),
     url='https://github.com/carbonblack/carbon-black-cloud-sdk-python',
     license='MIT',
-    author='Carbon Black',
+    author='VMware Carbon Black',
     author_email='cb-developer-network@vmware.com',
     description='VMware Carbon Black Cloud Python SDK',
     long_description=read('README.md'),
