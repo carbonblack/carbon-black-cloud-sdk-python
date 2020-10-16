@@ -1,6 +1,6 @@
 """VMware Carbon Black Cloud Python SDK"""
 
-from setuptools import setup, find_packages
+from setuptools import setup
 import sys
 import os
 
