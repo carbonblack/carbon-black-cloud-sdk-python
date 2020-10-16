@@ -7,12 +7,13 @@ This is currently an Alpha Release.  Feedback is encouraged.
 **Release Date:** 15 October 2020
 
 [![Coverage Status](https://coveralls.io/repos/github/carbonblack/carbon-black-cloud-sdk-python/badge.svg?t=Id6Baf)](https://coveralls.io/github/carbonblack/carbon-black-cloud-sdk-python)
-[![Codeship Status for carbonblack/cbc-sdk-python](https://app.codeship.com/projects/9e55a370-a772-0138-aae4-129773225755/status?branch=develop)](https://app.codeship.com/projects/402767)
+[![Codeship Status for carbonblack/carbon-black-cloud-sdk-python](https://app.codeship.com/projects/9e55a370-a772-0138-aae4-129773225755/status?branch=develop)](https://app.codeship.com/projects/402767)
+
 
 
 ## Recent updates
 
-View the latest release notes [here](https://github.com/carbonblack/cbc-sdk-python/releases).
+View the latest release notes [here](https://github.com/carbonblack/carbon-black-cloud-sdk-python/releases).
 
 
 ## License
@@ -79,7 +80,7 @@ Use the following steps if you want to provide additional examples, fix a bug, o
 You will need to fork the repo in order to create pull requests when submitting code for review. For details on forking a repo, see [here](https://help.github.com/en/github/getting-started-with-github/fork-a-repo).
 
 ```
-git clone https://github.com/{fork-name}/cbc-sdk-python
+git clone https://github.com/{fork-name}/carbon-black-cloud-sdk-python
 cd carbon-black-cloud-sdk-python
 pip install -r requirements.txt
 ```
