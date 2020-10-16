@@ -5,7 +5,7 @@ agree to abide by the VMware [code of conduct](CODE-OF-CONDUCT.md).
 
 Fork, then clone the repo:
 
-    git clone git@github.com:carbonblack/cbc-sdk-python.git
+    git clone git@github.com:carbonblack/carbon-black-cloud-sdk-python.git
 
 Set up your machine:
 
@@ -21,7 +21,7 @@ Make your change. Add tests for your change. Make the tests pass:
 
     pytest
 
-Push to your fork and [submit a pull request](https://github.com/carbonblack/cbc-sdk-python/compare/).
+Push to your fork and [submit a pull request](https://github.com/carbonblack/carbon-black-cloud-sdk-python/compare/).
 
 We try to respond to pull requests as quickly as possible. We may suggest
 some changes or improvements or alternatives.
