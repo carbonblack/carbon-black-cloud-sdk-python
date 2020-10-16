@@ -95,7 +95,7 @@ try:
     for process in egregor_ransomware_processes:
         process_hashes.add(process.process_md5)
         process_hashes.add(process.process_sha256)
-        
+
     # Create an Enterprise EDR Report with the found Process hashes
     ransomware_hashes_report = Report(eedr_api, from_watchlist=True, initial_data=
                                {
@@ -142,6 +142,7 @@ try:
     ransomware_watchlist.update(report_ids=[ransomware_hashes_report.id, ransomware_query_report.id])
 except Exception as e:
     print(f"failed: {e}")
+print(ransomware_watchlist._info)
 ransomware_watchlist.delete()
 
 
