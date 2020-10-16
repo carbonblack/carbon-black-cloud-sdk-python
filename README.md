@@ -6,8 +6,9 @@ This is currently an Alpha Release.  Feedback is encouraged.
 <br>
 **Release Date:** 15 October 2020
 
-[![Coverage Status](https://coveralls.io/repos/github/carbonblack/carbon-black-cloud-sdk-python/badge.svg?t=cwMaub)](https://coveralls.io/github/carbonblack/carbon-black-cloud-sdk-python)
+[![Coverage Status](https://coveralls.io/repos/github/carbonblack/carbon-black-cloud-sdk-python/badge.svg?t=Id6Baf)](https://coveralls.io/github/carbonblack/carbon-black-cloud-sdk-python)
 [![Codeship Status for carbonblack/carbon-black-cloud-sdk-python](https://app.codeship.com/projects/9e55a370-a772-0138-aae4-129773225755/status?branch=develop)](https://app.codeship.com/projects/402767)
+
 
 
 ## Recent updates
@@ -29,7 +30,7 @@ Use of the Carbon Black Cloud Python SDK is governed by the license found in [LI
 
 The Carbon Black Cloud Python SDK is design to work on Python 3.6 and above.
 
-All requirements are installed as part of `pip install cbc_sdk`. If you're planning on pushing changes to the Carbon Black Cloud Python SDK, the following can be used after cloning the repo `pip install -r requirements.txt`
+All requirements are installed as part of `pip install carbon-black-cloud-sdk`. If you're planning on pushing changes to the Carbon Black Cloud Python SDK, the following can be used after cloning the repo `pip install -r requirements.txt`
 
 ### Carbon Black Cloud
 
