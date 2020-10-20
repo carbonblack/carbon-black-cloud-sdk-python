@@ -30,7 +30,8 @@ To test this, open a command window and use the command:
 ``python --version``
 It should run Python and show that you are running Python 3.8.
 
-### Install CBC Python SDK Requirements
+Install CBC Python SDK Requirements
+-----------------------------------
 From the top-level CBC SDK source directory, execute the following commands:
 
 ``pip install -r requirements.txt``
