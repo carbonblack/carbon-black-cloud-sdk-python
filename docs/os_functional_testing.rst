@@ -22,12 +22,13 @@ Fix the Execution PATH
 ----------------------
 Go to the Environment Variables dialog (System Control Panel or Properties page
 for My Computer/This PC, then select **Advanced system settings** and then the
-**Environment Variables...** button). Ensure that the first two components of
-the user PATH environment variable are `%USERPROFILE%\AppData\Local\Programs\Python\Python38`
-and `%USERPROFILE%\AppData\Local\Programs\Python\Python38\Scripts`. 
+**Environment Variables** button). Ensure that the first two components of
+the user PATH environment variable are *%USERPROFILE%\AppData\Local\Programs\Python\Python38*
+and *%USERPROFILE%\AppData\Local\Programs\Python\Python38\Scripts*. 
 
-To test this, open a command window and use the command `python --version`. It should
-run Python and show that you are running Python 3.8.
+To test this, open a command window and use the command:
+``python --version``
+It should run Python and show that you are running Python 3.8.
 
 ### Install CBC Python SDK Requirements
 From the top-level CBC SDK source directory, execute the following commands:
