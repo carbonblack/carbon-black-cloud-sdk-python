@@ -23,8 +23,8 @@ Fix the Execution PATH
 Go to the Environment Variables dialog (System Control Panel or Properties page
 for My Computer/This PC, then select **Advanced system settings** and then the
 **Environment Variables** button). Ensure that the first two components of
-the user PATH environment variable are *%USERPROFILE%\AppData\Local\Programs\Python\Python38*
-and *%USERPROFILE%\AppData\Local\Programs\Python\Python38\Scripts*. 
+the user PATH environment variable are *%USERPROFILE%\\AppData\\Local\\Programs\\Python\\Python38*
+and *%USERPROFILE%\\AppData\\Local\\Programs\\Python\\Python38\\Scripts*. 
 
 To test this, open a command window and use the command:
 ``python --version``
