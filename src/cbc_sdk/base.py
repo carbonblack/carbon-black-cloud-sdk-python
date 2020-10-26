@@ -547,9 +547,7 @@ class BaseQuery(object):
 
     def _perform_query(self):
         # This has the effect of generating an empty iterator.
-        # See http://stackoverflow.com/questions/13243766/python-empty-generator-function
-        return
-        yield
+        yield from ()
 
     def __len__(self):
         return 0
