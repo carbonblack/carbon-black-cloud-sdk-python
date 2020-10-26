@@ -546,8 +546,6 @@ class BaseQuery(object):
         return res[0]
 
     def _perform_query(self):
-        # This has the effect of generating an empty iterator.
-        # See http://stackoverflow.com/questions/13243766/python-empty-generator-function
         return
 
     def __len__(self):
