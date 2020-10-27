@@ -517,15 +517,21 @@ class DeviceSearchQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQue
             Any: Result of the async query, which is then returned by the future.
         """
         url = self._build_url("/_search")
-        request = self._build_request(0, -1)
-        resp = self._cb.post_object(url, body=request)
-        result = resp.json()
+        self._total_results = 0
+        self._count_valid = False
+        output = []
+        while not self._count_valid or len(output) < self._total_results:
+            request = self._build_request(len(output), -1)
+            resp = self._cb.post_object(url, body=request)
+            result = resp.json()
 
-        self._total_results = result["num_found"]
-        self._count_valid = True
+            if not self._count_valid:
+                self._total_results = result["num_found"]
+                self._count_valid = True
 
-        results = result.get("results", [])
-        return [self._doc_class(self._cb, item["id"], item) for item in results]
+            results = result.get("results", [])
+            output += [self._doc_class(self._cb, item["id"], item) for item in results]
+        return output
 
     def download(self):
         """
