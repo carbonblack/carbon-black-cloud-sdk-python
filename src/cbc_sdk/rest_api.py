@@ -11,6 +11,8 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
+"""Definition of the CBCloudAPI object, the core object for interacting with the Carbon Black Cloud SDK."""
+
 from cbc_sdk.connection import BaseAPI
 from cbc_sdk.errors import ApiError, CredentialError, ServerError
 from cbc_sdk.live_response_api import LiveResponseSessionManager
@@ -18,6 +20,7 @@ from cbc_sdk.audit_remediation import Run, RunHistory
 from cbc_sdk.enterprise_edr.threat_intelligence import ReportSeverity
 import logging
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 log = logging.getLogger(__name__)
 
@@ -35,7 +38,9 @@ class CBCloudAPI(BaseAPI):
     """
     def __init__(self, *args, **kwargs):
         super(CBCloudAPI, self).__init__(*args, **kwargs)
+        self._thread_pool_count = kwargs.pop('thread_pool_count', 1)
         self._lr_scheduler = None
+        self._async_executor = None
 
         if not self.credentials.org_key:
             raise CredentialError("No organization key specified")
@@ -46,6 +51,24 @@ class CBCloudAPI(BaseAPI):
             return cls._query_implementation(self, **kwargs)
         else:
             raise ApiError("All Carbon Black Cloud models must provide _query_implementation")
+
+    # ---- Async
+
+    def _async_submit(self, callable, *args, **kwargs):
+        """
+        Submit a task to the executor, creating it if it doesn't yet exist.
+
+        Args:
+            callable (func): A callable to be executed as a background task.
+            *args (list): Arguments to be passed to the callable.
+            **kwargs (dict): Keyword arguments to be passed to the callable.
+
+        Returns:
+            Future: A future object representing the background task, which will pass along the result.
+        """
+        if not self._async_executor:
+            self._async_executor = ThreadPoolExecutor(max_workers=self._thread_pool_count)
+        return self._async_executor.submit(callable, args, kwargs)
 
     # ---- LiveOps
 
@@ -250,7 +273,7 @@ class CBCloudAPI(BaseAPI):
         """
         return self._bulk_threat_update_status(threat_ids, "DISMISSED", remediation, comment)
 
-    # ---- ThreathHunter
+    # ---- ThreatHunter
 
     def create(self, cls, data=None):
         """Creates a new model.
@@ -324,7 +347,6 @@ class CBCloudAPI(BaseAPI):
         """Returns a dictionary containing API limiting information.
 
         Example:
-
         >>> cb.limits()
         {u'status_code': 200, u'time_bounds': {u'upper': 1545335070095, u'lower': 1542779216139}}
 
