@@ -26,6 +26,10 @@ Use of the Carbon Black Cloud Python SDK is governed by the license found in [LI
 2. Use the [Developer Community Forum](https://community.carbonblack.com/) to discuss issues and get answers from other API developers in the Carbon Black Community.
 3. Create a github issue for bugs and change requests. Formal [Carbon Black Support](http://carbonblack.com/resources/support/) coming with v1.0.
 
+## Documentation
+
+Visit [ReadTheDocs](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/) for this project's documentation.
+
 ## Requirements
 
 The Carbon Black Cloud Python SDK is design to work on Python 3.6 and above.
