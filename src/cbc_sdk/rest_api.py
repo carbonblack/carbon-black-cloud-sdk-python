@@ -273,7 +273,7 @@ class CBCloudAPI(BaseAPI):
         """
         return self._bulk_threat_update_status(threat_ids, "DISMISSED", remediation, comment)
 
-    # ---- ThreatHunter
+    # ---- Enterprise EDR
 
     def create(self, cls, data=None):
         """Creates a new model.
