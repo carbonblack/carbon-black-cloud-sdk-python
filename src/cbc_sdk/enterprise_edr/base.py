@@ -51,8 +51,6 @@ class Process(UnrefreshableModel):
                                                   initial_data=summary, force_init=False,
                                                   full_doc=True)
 
-
-
         @classmethod
         def _query_implementation(self, cb, **kwargs):
             return Query(self, cb, **kwargs)
@@ -272,37 +270,188 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
         super(Query, self).__init__(doc_class, cb, None)
 
         self._query_builder = QueryBuilder()
-        self._sort_by = None
+        self._criteria = {}
+        self._exclusions = {}
+        self._sort_by = []
         self._group_by = None
-        self._batch_size = 100
+        self._batch_size = 500
+        self._start = 0
+        self._time_range = {}
+        self._fields = ["*"]
         self._default_args = {}
+
+    def update_criteria(self, key, newlist):
+        """Update the criteria on this query with a custom criteria key.
+
+        Args:
+            key (str): The key for the criteria item to be set.
+            newlist (list): List of values to be set for the criteria item.
+
+        Returns:
+            The ResultQuery with specified custom criteria.
+
+        Example:
+            query = api.select(Event).update_criteria("my.criteria.key", ["criteria_value"])
+        """
+        if not isinstance(newlist, list):
+            raise ApiError(f"Criteria value(s) must be a list. {newlist} is a {type(newlist)}.")
+        self._update_criteria(key, newlist)
+        return self
+
+    def _update_criteria(self, key, newlist):
+        """
+        Updates a list of criteria being collected for a query, by setting or appending items.
+
+        Args:
+            key (str): The key for the criteria item to be set.
+            newlist (list): List of values to be set for the criteria item.
+        """
+        oldlist = self._criteria.get(key, [])
+        self._criteria[key] = oldlist + newlist
+
+    def update_exclusions(self, key, newlist):
+        """Update the criteria on this query with a custom exclusion key.
+
+        Args:
+            key (str): The key for the exclusion item to be set.
+            newlist (list): List of values to be set for the exclusion item.
+
+        Returns:
+            The ResultQuery with specified custom exclusion.
+
+        Example:
+            query = api.select(Event).update_exclusions("my.exclusion.key", ["exclusion_value"])
+        """
+        if not isinstance(newlist, list):
+            raise ApiError(f"Exclusion value(s) must be a list. {newlist} is a {type(newlist)}.")
+        self._update_exclusions(key, newlist)
+        return self
+
+    def _update_exclusions(self, key, newlist):
+        """
+        Updates a list of exclusion being collected for a query, by setting or appending items.
+
+        Args:
+            key (str): The key for the exclusion item to be set.
+            newlist (list): List of values to be set for the exclusion item.
+        """
+        oldlist = self._exclusions.get(key, [])
+        self._exclusions[key] = oldlist + newlist
+
+    def update_fields(self, fields):
+        """
+        Overwrites the fields to be returned with the response.
+
+        Args:
+            fields (list[str]): List of fields to be returned.
+        """
+        if not isinstance(fields, list):
+            raise ApiError(f"Fields must be a list of strings. {fields} is a {type(fields)}.")
+        self._fields = fields
+        self._default_args["fields"] = self._fields
+        return self
+
+    def update_start(self, start):
+        """
+        Updates the 'start' query body parameter, determining where to begin retrieving results from.
+
+        Args:
+            start (int): Where to start results from.
+        """
+        if not isinstance(start, int):
+            raise ApiError(f"Start must be an integer. {start} is a {type(start)}.")
+        self._start = start
+        self._default_args["start"] = self._start
+        return self
+
+    def update_rows(self, rows):
+        """
+        Updates the 'rows' query body parameter, determining how many rows of results to request.
+
+        Args:
+            rows (int): How many rows to request.
+        """
+        if not isinstance(rows, int):
+            raise ApiError(f"Rows must be an integer. {rows} is a {type(rows)}.")
+        self._batch_size = rows
+        self._default_args["rows"] = self._batch_size
+        return self
+
+    def update_time_range(self, start=None, end=None, window=None):
+        """
+        Update the 'time_range' query body parameter, determining a time window based on 'device_timestamp'.
+
+        Args:
+            start (str in ISO 8601 timestamp): When to start the result search.
+            end (str in ISO 8601 timestamp): When to end the result search.
+            window (str): Time window to execute the result search, ending on the current time.
+                Should be in the form "-2w", where y=year, w=week, d=day, h=hour, m=minute, s=second.
+
+        Note:
+            - `window` will take precendent over `start` and `end` if provided.
+
+        Examples:
+            query = api.select(Event).update_time_range(start="2020-10-20T20:34:07Z")
+            second_query = api.select(Event).update_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
+            third_query = api.select(Event).update_time_range(window='-3d')
+        """
+        if start:
+            if not isinstance(start, str):
+                raise ApiError(f"Start time must be a string in ISO 8601 format. {start} is a {type(start)}.")
+            self._time_range["start"] = start
+        if end:
+            if not isinstance(end, str):
+                raise ApiError(f"End time must be a string in ISO 8601 format. {end} is a {type(end)}.")
+            self._time_range["end"] = end
+        if window:
+            if not isinstance(window, str):
+                raise ApiError(f"Window must be a string. {window} is a {type(window)}.")
+            self._time_range["window"] = window
+        return self
 
     def _get_query_parameters(self):
         args = self._default_args.copy()
+        if self._criteria:
+            args["criteria"] = self._criteria
+        if self._exclusions:
+            args["exclusions"] = self._exclusions
+        if self._time_range:
+            args["time_range"] = self._time_range
         args['query'] = self._query_builder._collapse()
         if self._query_builder._process_guid is not None:
             args["process_guid"] = self._query_builder._process_guid
         if 'process_guid:' in args['query']:
-            q = args['query'].split('process_guid:', 1)
-            args["process_guid"] = q[1]
-        args["fields"] = [
-            "*",
-            "parent_hash",
-            "parent_name",
-            "process_cmdline",
-            "backend_timestamp",
-            "device_external_ip",
-            "device_group",
-            "device_internal_ip",
-            "device_os",
-            "device_policy",
-            "process_effective_reputation",
-            "process_reputation",
-            "process_start_time",
-            "ttp"
-        ]
-
+            q = args['query'].split('process_guid:', 1)[1].split(' ', 1)[0]
+            args["process_guid"] = q
         return args
+
+    def sort_by(self, key, direction="ASC"):
+        """Sets the sorting behavior on a query's results.
+
+        Arguments:
+            key (str): The key in the schema to sort by.
+            direction (str): The sort order, either "ASC" or "DESC".
+
+        Returns:
+            Query: The query with sorting parameters.
+
+        Example:
+
+        >>> cb.select(Process).where(process_name="cmd.exe").sort_by("device_timestamp")
+        """
+        found = False
+
+        for sort_item in self._sort_by:
+            if sort_item['field'] == key:
+                sort_item['order'] = direction
+                found = True
+
+        if not found:
+            self._sort_by.append({'field': key, 'order': direction})
+
+        self._default_args['sort'] = self._sort_by
+
+        return self
 
     def _count(self):
         args = self._get_query_parameters()
@@ -338,14 +487,15 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
         if not validated.get("valid"):
             raise ApiError("Invalid query: {}: {}".format(args, validated["invalid_message"]))
 
-    def _search(self, start=0, rows=0):
-        # iterate over total result set, 100 at a time
+    def _search(self, start=None, rows=None):
+        # iterate over total result set, 500 at a time
         args = self._get_query_parameters()
         self._validate(args)
 
-        if start != 0:
+        if start:
             args['start'] = start
-        args['rows'] = self._batch_size
+        if rows:
+            args['rows'] = rows
 
         current = start
         numrows = 0
@@ -398,35 +548,6 @@ class AsyncProcessQuery(Query):
         self._query_token = None
         self._timeout = 0
         self._timed_out = False
-        self._sort = []
-
-    def sort_by(self, key, direction="ASC"):
-        """Sets the sorting behavior on a query's results.
-
-        Arguments:
-            key (str): The key in the schema to sort by.
-            direction (str): The sort order, either "ASC" or "DESC".
-
-        Returns:
-            Query (AsyncProcessQuery: The query with sorting parameters.
-
-        Example:
-
-        >>> cb.select(Process).where(process_name="cmd.exe").sort_by("device_timestamp")
-        """
-        found = False
-
-        for sort_item in self._sort:
-            if sort_item['field'] == key:
-                sort_item['order'] = direction
-                found = True
-
-        if not found:
-            self._sort.append({'field': key, 'order': direction})
-
-        self._default_args['sort'] = self._sort
-
-        return self
 
     def timeout(self, msecs):
         """Sets the timeout on a process query.
