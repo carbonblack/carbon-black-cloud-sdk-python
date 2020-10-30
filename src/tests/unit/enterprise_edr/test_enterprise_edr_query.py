@@ -2,7 +2,7 @@
 
 import pytest
 import logging
-from cbc_sdk.enterprise_edr import Process
+from cbc_sdk.enterprise_edr import Process, Event
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -81,21 +81,7 @@ def test_query_get_query_parameters(cbcsdk_mock, get_process_search_response, gu
     cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
                                      "2c292717-80ed-4f0d-845f-779e09470920/results"), get_process_search_response)
     process_query = api.select(Process).where(f"process_guid:{guid}")
-    assert process_query._get_query_parameters() == {"fields": [
-        "*",
-        "parent_hash",
-        "parent_name",
-        "process_cmdline",
-        "backend_timestamp",
-        "device_external_ip",
-        "device_group",
-        "device_internal_ip",
-        "device_os",
-        "device_policy",
-        "process_effective_reputation",
-        "process_reputation",
-        "process_start_time",
-        "ttp"], "process_guid": guid, "query": f'process_guid:{guid}'}
+    assert process_query._get_query_parameters() == {"process_guid": guid, "query": f'process_guid:{guid}'}
 
 
 @pytest.mark.parametrize('get_process_search_response, guid', [
@@ -121,24 +107,79 @@ def test_query_validate_not_valid(cbcsdk_mock, get_process_search_response, guid
         process_query._validate(params)
 
 
+def test_query_update_fields_exception(cbcsdk_mock):
+    """Testing raising ApiError in Query.update_fields()."""
+    api = cbcsdk_mock.api
+    event = api.select(Event)
+    assert event._fields == ["*"]
+    event.update_fields(["event_type"])
+    assert event._get_query_parameters()["fields"] == ["event_type"]
+    with pytest.raises(ApiError):
+        event.update_fields("not_a_list")
+
+
+def test_query_update_start_exception(cbcsdk_mock):
+    """Testing raising ApiError in Query.update_start()."""
+    api = cbcsdk_mock.api
+    event = api.select(Event)
+    assert event._start == 0
+    event.update_start(5)
+    assert event._get_query_parameters()["start"] == 5
+    with pytest.raises(ApiError):
+        event.update_start('not_an_integer')
+
+
+def test_query_update_rows(cbcsdk_mock):
+    """Testing raising ApiError in Query.update_rows()."""
+    api = cbcsdk_mock.api
+    event = api.select(Event)
+    assert event._batch_size == 500
+    event.update_rows(10)
+    assert event._get_query_parameters()["rows"] == 10
+    with pytest.raises(ApiError):
+        event.update_rows("not_an_integer")
+
+
+def test_query_update_time_range(cbcsdk_mock):
+    """Testing raising ApiError in Query.update_time_range()."""
+    api = cbcsdk_mock.api
+    event = api.select(Event)
+    assert "time_range" not in event._get_query_parameters()
+    event.update_time_range(start="2020-10-30T20:34:07")
+    assert event._get_query_parameters()["time_range"] == {"start": "2020-10-30T20:34:07"}
+    event.update_time_range(end="2020-10-31T20:34:07")
+    assert event._get_query_parameters()["time_range"] == {"start": "2020-10-30T20:34:07",
+                                                           "end": "2020-10-31T20:34:07"}
+    event.update_time_range(window="-4h")
+    assert event._get_query_parameters()["time_range"] == {"start": "2020-10-30T20:34:07",
+                                                           "end": "2020-10-31T20:34:07",
+                                                           "window": "-4h"}
+    with pytest.raises(ApiError):
+        event.update_time_range(start=1)
+    with pytest.raises(ApiError):
+        event.update_time_range(end=9)
+    with pytest.raises(ApiError):
+        event.update_time_range(window=100)
+
+
 def test_async_sort_by(cbcsdk_mock):
     """Testing AsyncProcessQuery.sort_by()."""
     api = cbcsdk_mock.api
     async_query = api.select(Process).where("process_guid:someguid")
     # add one key to sort by
-    assert async_query._sort == []
+    assert async_query._sort_by == []
     async_query.sort_by("device_timestamp", direction="ASC")
-    assert async_query._sort == [{"field": "device_timestamp", "order": "ASC"}]
+    assert async_query._sort_by == [{"field": "device_timestamp", "order": "ASC"}]
     assert async_query._default_args == {"sort": [{"field": "device_timestamp", "order": "ASC"}]}
     # add another key to sort by
     async_query.sort_by("key_to_sort_by", direction="DESC")
-    assert async_query._sort == [{"field": "device_timestamp", "order": "ASC"},
+    assert async_query._sort_by == [{"field": "device_timestamp", "order": "ASC"},
                                  {"field": "key_to_sort_by", "order": "DESC"}]
     assert async_query._default_args == {"sort": [{"field": "device_timestamp", "order": "ASC"},
                                                   {"field": "key_to_sort_by", "order": "DESC"}]}
     # update the sort direction for a field
     async_query.sort_by("key_to_sort_by", direction="ASC")
-    assert async_query._sort == [{"field": "device_timestamp", "order": "ASC"},
+    assert async_query._sort_by == [{"field": "device_timestamp", "order": "ASC"},
                                  {"field": "key_to_sort_by", "order": "ASC"}]
     assert async_query._default_args == {"sort": [{"field": "device_timestamp", "order": "ASC"},
                                                   {"field": "key_to_sort_by", "order": "ASC"}]}
