@@ -197,20 +197,19 @@ class Process(UnrefreshableModel):
             return None
 
 
-class Event(UnrefreshableModel):
-    """Events can be queried for via `CBCloudAPI.select` or an already selected process with `Process.events`."""
-    urlobject = '/api/investigate/v2/orgs/{}/events/{}/_search'
-    validation_url = '/api/investigate/v1/orgs/{}/events/search_validation'
-    default_sort = 'last_update desc'
-    primary_key = "process_guid"
+class EnrichedEvent(UnrefreshableModel):
+    """Represents an enriched event retrieved by one of the Enterprise EDR endpoints."""
+    default_sort = 'device_timestamp'
+    primary_key = "event_id"
 
     @classmethod
     def _query_implementation(self, cb, **kwargs):
-        return Query(self, cb)
+        # This will emulate a synchronous process query, for now.
+        return AsyncEventQuery(self, cb)
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
-        super(Event, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
-                                    force_init=force_init, full_doc=full_doc)
+        super(EnrichedEvent, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
+                                      force_init=force_init, full_doc=full_doc)
 
 
 class Tree(UnrefreshableModel):
@@ -236,6 +235,22 @@ class Tree(UnrefreshableModel):
             children ([Process]): List of children for the Tree's parent process.
         """
         return [Process(self._cb, initial_data=child) for child in self.nodes["children"]]
+
+
+class Event(UnrefreshableModel):
+    """Events can be queried for via `CBCloudAPI.select` or an already selected process with `Process.events`."""
+    urlobject = '/api/investigate/v2/orgs/{}/events/{}/_search'
+    validation_url = '/api/investigate/v1/orgs/{}/events/search_validation'
+    default_sort = 'last_update desc'
+    primary_key = "process_guid"
+
+    @classmethod
+    def _query_implementation(self, cb, **kwargs):
+        return Query(self, cb)
+
+    def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
+        super(Event, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
+                                    force_init=force_init, full_doc=full_doc)
 
 
 """Queries"""
@@ -612,3 +627,179 @@ class TreeQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
             results["incomplete_results"] = result["incomplete_results"]
 
         return results
+
+
+class AsyncEventQuery(Query):
+    """Represents the query logic for an asychronous Event query.
+
+    This class specializes `Query` to handle the particulars of
+    enriched events querying.
+    """
+    def __init__(self, doc_class, cb):
+        super(AsyncEventQuery, self).__init__(doc_class, cb)
+        self._query_token = None
+        self._timeout = 0
+        self._timed_out = False
+        self._sort = []
+
+    def _validate(self, args):
+        raise ApiError("validate() not available on EnrichedEvent queries")
+
+    def _get_query_parameters(self):
+        """Need to override base class implementation as it sets custom (invalid) fields"""
+        args = self._default_args.copy()
+        args['query'] = self._query_builder._collapse()
+
+        return args
+
+
+    def sort_by(self, key, direction="ASC"):
+        """Sets the sorting behavior on a query's results.
+
+        Arguments:
+            key (str): The key in the schema to sort by.
+            direction (str): The sort order, either "ASC" or "DESC".
+
+        Returns:
+            Query (AsyncEventQuery: The query with sorting parameters.
+
+        Example:
+
+        >>> cb.select(EnrichedEvent).where(process_name="cmd.exe").sort_by("device_timestamp")
+        """
+        found = False
+
+        for sort_item in self._sort:
+            if sort_item['field'] == key:
+                sort_item['order'] = direction
+                found = True
+
+        if not found:
+            self._sort.append({'field': key, 'order': direction})
+
+        self._default_args['sort'] = self._sort
+
+        return self
+
+    def timeout(self, msecs):
+        """Sets the timeout on a event query.
+
+        Arguments:
+            msecs (int): Timeout duration, in milliseconds.
+
+        Returns:
+            Query (AsyncEventQuery): The Query object with new milliseconds
+                parameter.
+
+        Example:
+
+        >>> cb.select(EnrichedEvent).where(process_name="foo.exe").timeout(5000)
+        """
+        self._timeout = msecs
+        return self
+
+    def _submit(self):
+        if self._query_token:
+            raise ApiError("Query already submitted: token {0}".format(self._query_token))
+
+        args = self._get_query_parameters()
+
+        url = "/api/investigate/v2/orgs/{}/enriched_events/search_jobs".format(self._cb.credentials.org_key)
+        query_start = self._cb.post_object(url, body=args)
+        print(query_start.json())
+        self._query_token = query_start.json().get("job_id")
+
+        self._timed_out = False
+        self._submit_time = time.time() * 1000
+
+    def _still_querying(self):
+        if not self._query_token:
+            self._submit()
+
+        status_url = "/api/investigate/v1/orgs/{}/enriched_events/search_jobs/{}".format(
+            self._cb.credentials.org_key,
+            self._query_token,
+        )
+        result = self._cb.get_object(status_url)
+        print(result)
+        searchers_contacted = result.get("contacted", 0)
+        searchers_completed = result.get("completed", 0)
+        log.debug("contacted = {}, completed = {}".format(searchers_contacted, searchers_completed))
+        if searchers_contacted == 0:
+            return True
+        if searchers_completed < searchers_contacted:
+            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:
+                self._timed_out = True
+                return False
+            return True
+
+        return False
+
+    def _count(self):
+        if self._count_valid:
+            return self._total_results
+
+        while self._still_querying():
+            time.sleep(.5)
+
+        if self._timed_out:
+            raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
+
+        result_url = "/api/investigate/v2/orgs/{}/enriched_events/search_jobs/{}/results".format(
+            self._cb.credentials.org_key,
+            self._query_token,
+        )
+        result = self._cb.get_object(result_url)
+
+        self._total_results = result.get('num_available', 0)
+        self._count_valid = True
+
+        return self._total_results
+
+    def _search(self, start=0, rows=0):
+        if not self._query_token:
+            self._submit()
+
+        while self._still_querying():
+            time.sleep(.5)
+
+        if self._timed_out:
+            raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
+
+        log.debug("Pulling results, timed_out={}".format(self._timed_out))
+
+        current = start
+        rows_fetched = 0
+        still_fetching = True
+        result_url_template = "/api/investigate/v2/orgs/{}/enriched_events/search_jobs/{}/results".format(
+            self._cb.credentials.org_key,
+            self._query_token
+        )
+        query_parameters = {}
+        while still_fetching:
+            result_url = '{}?start={}&rows={}'.format(
+                result_url_template,
+                current,
+                10  # Batch gets to reduce API calls
+            )
+
+            result = self._cb.get_object(result_url, query_parameters=query_parameters)
+            print(result)
+            self._total_results = result.get('num_available', 0)
+            self._count_valid = True
+
+            results = result.get('results', [])
+
+            for item in results:
+                yield item
+                current += 1
+                rows_fetched += 1
+
+                if rows and rows_fetched >= rows:
+                    still_fetching = False
+                    break
+
+            if current >= self._total_results:
+                still_fetching = False
+
+            log.debug("current: {}, total_results: {}".format(current, self._total_results))
