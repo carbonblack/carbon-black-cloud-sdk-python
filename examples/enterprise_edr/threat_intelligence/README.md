@@ -186,7 +186,6 @@ link = "https://www.domaintools.com/resources/blog/free-covid-19-threat-list-dom
 Use the extracted Title, ID, Description, Timestamp, and Severity to create a Report.
 
 ```python
-import time
 from examples.enterprise_edr.threat_intelligence.results import AnalysisResult
 my_report = AnalysisResult(title=title, analysis_name=id, description=description,
                         timestamp=timestamp, score=severity)
@@ -225,6 +224,40 @@ threat_intel.push_to_cb(feed_id='WLFoE6chQwy8z7CQGCTG8A',
 ```
 
 Now, an attempt will be made to send your Reports. The Reports will be saved to a file called reports.json, which can be helpful if sending Reports fails.
+
+This is the full workflow in one code block:
+
+```python
+# import the relevant modules
+from examples.enterprise_edr.threat_intelligence.threatintel import ThreatIntel
+from examples.enterprise_edr.threat_intelligence.results import AnalysisResult
+
+# info extracted from the IOC, with description shortened for clarity
+title = "phish_domain: mncovidmasksewists.net"
+id = "threatstream:Observable-7e740bc2-eeb2-443e-9c61-57baba2627f8"
+description = "TS ID: 55474479396; iType: phish_domain; [...]"
+timestamp = 1586211305
+severity = 10
+field = "netconn_domain"
+value = "mncovidmasksewists.net"
+link = "https://www.domaintools.com/resources/blog/free-covid-19-threat-list-domain-risk-assessments-for-coronavirus-threats"
+
+# create a Report for the IOC
+my_report = AnalysisResult(title=title, analysis_name=id, description=description,
+                        timestamp=timestamp, score=severity)
+
+# attach the IOC info to the Report
+my_report.attach_ioc_v2(values=value, field=field, link=link)
+
+# keep track of the Report in report_list
+report_list = []
+report_list.append(my_report)
+
+# send the list of Reports to the Feed
+threat_intel = ThreatIntel()
+threat_intel.push_to_cb(feed_id='WLFoE6chQwy8z7CQGCTG8A',
+                        results=report_list)
+```
 
 ## Troubleshooting
 
