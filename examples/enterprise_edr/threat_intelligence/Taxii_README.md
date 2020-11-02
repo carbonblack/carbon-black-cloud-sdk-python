@@ -30,7 +30,7 @@ This script supports updating each TAXII configuration's `start_date`, the date 
 python3 stix_taxii.py --site_start_date my_site_name_1 '2019-11-05 00:00:00' my_site_name_2 '2019-11-05 00:00:00'
 ```
 
-This may be useful if the intention is to keep an up-to-date collection of STIX data in a Enterprise EDR Feed.
+This may be useful if the intention is to keep an up-to-date collection of STIX data in an Enterprise EDR Feed.
 
 ## Troubleshooting
 

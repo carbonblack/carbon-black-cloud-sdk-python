@@ -17,7 +17,7 @@ Throughout this document, there are references to Carbon Black Enterprise EDR Fe
 
 ## Example
 
-An example of implementing this ThreatIntel module is [available here](Taxii_README.md). The example uses cabby to connect to a TAXII server, collect threat intelligence, and send it to a Enterprise EDR Feed.
+An example of implementing this ThreatIntel module is [available here](Taxii_README.md). The example uses cabby to connect to a TAXII server, collect threat intelligence, and send it to an Enterprise EDR Feed.
 
 
 ## Usage
@@ -59,7 +59,7 @@ Report objects.
 
 Any improperly formatted report dictionaries are saved to a file called `malformed_reports.json`.
 
-Upon successful sending of reports to a Enterprise EDR Feed, you should
+Upon successful sending of reports to an Enterprise EDR Feed, you should
 see something similar to the following INFO message in the console:
 
 `INFO:threatintel:Appended 1000 reports to Enterprise EDR Feed AbCdEfGhIjKlMnOp`
@@ -87,7 +87,7 @@ Take the threat intelligence data from your source, and convert it into ``Analys
     myResults.append(result)
 ```
 
-Finally, push your threat intelligence data to a Enterprise EDR Feed.
+Finally, push your threat intelligence data to an Enterprise EDR Feed.
 ```python
   ti.push_to_cb(feed_id='AbCdEfGhIjKlMnOp', results=myResults)
 ```

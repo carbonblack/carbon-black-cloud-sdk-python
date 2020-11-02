@@ -1,4 +1,4 @@
-"""Validates result dictionaries, creates Enterprise EDR Reports, validates Enterprise EDR Reports, and sends them to a Enterprise EDR Feed.
+"""Validates result dictionaries, creates Reports, validates Reports, and sends them to an Enterprise EDR Feed.
 
 Also allows for conversion from result dictionaries into Enterprise EDR `Report` objects.
 """
@@ -28,6 +28,7 @@ class ThreatIntel:
             raise ApiError
 
     def push_to_cb(self, feed_id, results):
+        """Send result.AnalysisResult Reports to a Feed."""
         feed = self.verify_feed_exists(feed_id)  # will raise an ApiError if the feed cannot be found
         if not feed:
             return
