@@ -125,10 +125,10 @@ An example of a custom Threat Intel connector that uses the `ThreatIntel` Python
 
 Enterprise EDR Feeds contain Reports. A Report contains IOCs. To upload a batch of IOCs to a Feed, you will need to:
 
-1. Extract info from IOCs,
-1. Create Reports,
-3. Attach IOCs to Reports,
-4. Send Reports to a Feed using the Feed ID.
+[1. Extract info from IOCs](#1-extract-info-from-iocs),
+[2. Create Reports](#2-create-reports),
+[3. Attach IOCs to Reports](#3-attach-iocs-to-reports),
+[4. Send Reports to a Feed using the Feed ID](#4-send-reports-to-a-feed-using-the-feed-id).
 
 There are a couple approaches you can take to creating Reports and attaching IOCs: either create a Report for each IOC, or attach multiple IOCs to a Report. To retain the most threat intelligence possible, we will create a Report for each IOC.
 
@@ -170,16 +170,16 @@ For example, I have this STIX threat intelligence:
 
 This would be the extracted information:
 
-| Info | Value |
-| ---- | ----- |
-| Title | phish_domain: mncovidmasksewists.net |
-| ID | threatstream:Observable-7e740bc2-eeb2-443e-9c61-57baba2627f8 |
-| Description | TS ID: 55474479396; iType: phish_domain; [...] |
-| Timestamp | 1586211305 |
-| Severity | 10 |
-| Field | netconn_domain |
-| Value | mncovidmasksewists.net |
-| Link | https://www.domaintools.com/resources/blog/free-covid-19-threat-list-domain-risk-assessments-for-coronavirus-threats |
+```python
+title = "phish_domain: mncovidmasksewists.net"
+id = "threatstream:Observable-7e740bc2-eeb2-443e-9c61-57baba2627f8"
+description = "TS ID: 55474479396; iType: phish_domain; [...]"
+timestamp = 1586211305
+severity = 10
+field = "netconn_domain"
+value = "mncovidmasksewists.net"
+link = "https://www.domaintools.com/resources/blog/free-covid-19-threat-list-domain-risk-assessments-for-coronavirus-threats"
+```
 
 #### 2. Create Reports
 
@@ -198,8 +198,6 @@ Add each Report to a single list, to be sent to Enterprise EDR.
 report_list = []
 report_list.append(my_report)
 ```
-
-
 
 #### 3. Attach IOCs to Reports
 
