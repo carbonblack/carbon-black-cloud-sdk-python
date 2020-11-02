@@ -125,10 +125,10 @@ An example of a custom Threat Intel connector that uses the `ThreatIntel` Python
 
 Enterprise EDR Feeds contain Reports. A Report contains IOCs. To upload a batch of IOCs to a Feed, you will need to:
 
-[1. Extract info from IOCs](#1-extract-info-from-iocs),
-[2. Create Reports](#2-create-reports),
-[3. Attach IOCs to Reports](#3-attach-iocs-to-reports),
-[4. Send Reports to a Feed using the Feed ID](#4-send-reports-to-a-feed-using-the-feed-id).
+1. [Extract info from IOCs](#1-extract-info-from-iocs),
+2. [Create Reports](#2-create-reports),
+3. [Attach IOCs to Reports](#3-attach-iocs-to-reports),
+4. [Send Reports to a Feed using the Feed ID](#4-send-reports-to-a-feed-using-the-feed-id).
 
 There are a couple approaches you can take to creating Reports and attaching IOCs: either create a Report for each IOC, or attach multiple IOCs to a Report. To retain the most threat intelligence possible, we will create a Report for each IOC.
 
@@ -140,7 +140,7 @@ Extract or infer the following information from each of your IOCs:
 * ID
 * Description
 * Timestamp
-* Severity ([1, 10])
+* Severity (integer between 1 and 10, inclusive)
 * Field
 * Value(s)
 * Link
@@ -192,7 +192,7 @@ my_report = AnalysisResult(title=title, analysis_name=id, description=descriptio
                         timestamp=timestamp, score=severity)
 ```
 
-Add each Report to a single list, to be sent to Enterprise EDR.
+Keep track of your Reports in a list. This is what will be sent to the Feed.
 
 ```python
 report_list = []
