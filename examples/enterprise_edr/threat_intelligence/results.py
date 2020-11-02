@@ -1,3 +1,5 @@
+"""Defines models for Enterprise EDR IOC's and for Threat Intelligence AnalysisResults."""
+
 import enum
 import logging
 
@@ -59,11 +61,11 @@ class AnalysisResult():
         if self.severity <= 0 or self.severity > 10:
             logging.warning("normalizing OOB score: {}".format(self.severity))
             if self.severity > 10 and self.severity < 100:
-                #assume it's a percentage
+                # assume it's a percentage
                 self.severity = round(self.severity/10)
             else:
                 # any severity above 10 becomes 10, or below 1 becomes 1
-                # Report severity must be between 1 & 10, else CBC SDK throws 400 error
+                # Report severity must be between 1 & 10, else CBC backend throws 400 error
                 self.severity = max(1, min(self.severity, 10))
         return self
 

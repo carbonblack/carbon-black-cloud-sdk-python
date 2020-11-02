@@ -16,7 +16,6 @@ This connector allows for the importing of STIX data by querying one or more TAX
 ## Setup - TAXII Configuration File
 The TAXII connector uses the configuration file `config.yml`. An example configuration file is available [here.](config.yml) An explanation of each entry in the configuration file is provided in the example.
 
-
 ## Running the Connector
 The connector can be activated by running the Python3 file `stix_taxii.py`. The connector will attempt to connect to your TAXII service(s), poll the collection(s), retrieve the STIX data, and send it to the Enterprise EDR Feed specified in your `config.yml` file.
 

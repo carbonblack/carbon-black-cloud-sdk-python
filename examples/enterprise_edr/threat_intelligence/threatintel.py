@@ -9,8 +9,12 @@ from cbc_sdk import CBCloudAPI
 from cbc_sdk.enterprise_edr import Report
 from cbc_sdk.errors import ApiError
 from cbc_sdk.enterprise_edr import Feed
-from schemas import ReportSchema
 from schema import SchemaError
+try:
+    from schemas import ReportSchema
+# allow for using ThreatIntel on it's own
+except ImportError:
+    from .schemas import ReportSchema
 
 log = logging.getLogger(__name__)
 
@@ -53,7 +57,7 @@ class ThreatIntel:
                     report_list_to_send.append(report)
                     reports.append(report_dict)
                 except SchemaError as e:
-                    log.warning("Report Validation failed. Saving report to file for reference.")
+                    log.warning(f"Report Validation failed. Saving report to file for reference. Error: {e}")
                     malformed_reports.append(report_dict)
             except Exception as e:
                 log.error(f"Failed to create a report dictionary from result object. {e}")

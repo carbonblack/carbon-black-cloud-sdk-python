@@ -119,6 +119,114 @@ An example of a custom Threat Intel connector that uses the `ThreatIntel` Python
 
 `ThreatIntel.push_to_cb()` and `AnalysisResult` can be adapted to include other Enterprise EDR `Report` attributes like `link, tags, iocs, and visibility`.
 
+## FAQ
+
+### How do I use this to upload lots of IOCs to a Feed?
+
+Enterprise EDR Feeds contain Reports. A Report contains IOCs. To upload a batch of IOCs to a Feed, you will need to:
+
+1. Extract info from IOCs,
+1. Create Reports,
+3. Attach IOCs to Reports,
+4. Send Reports to a Feed using the Feed ID.
+
+There are a couple approaches you can take to creating Reports and attaching IOCs: either create a Report for each IOC, or attach multiple IOCs to a Report. To retain the most threat intelligence possible, we will create a Report for each IOC.
+
+#### 1. Extract info from IOCs
+
+Extract or infer the following information from each of your IOCs:
+
+* Title
+* ID
+* Description
+* Timestamp
+* Severity ([1, 10])
+* Field
+* Value(s)
+* Link
+
+For example, I have this STIX threat intelligence:
+
+```xml
+<stix:Indicator id="threatstream:indicator-916f9adc-9727-46e7-afc6-c22023e39d5e" timestamp="2020-11-02T22:32:17.346135+00:00" xsi:type="indicator:IndicatorType">
+    <indicator:Title>phish_domain: mncovidmasksewists.net</indicator:Title>
+    <indicator:Type xsi:type="stixVocabs:IndicatorTypeVocab-1.1">Domain Watchlist</indicator:Type>
+    <indicator:Description>TS ID: 55474479396; iType: phish_domain; Date First: 2020-04-06T12:55:17.492Z; State: active; Source: DT COVID-19; Detail: COVID-19,Coronavirus,Domain-Risk-Score:99,Domainsquatting,Reference:https://www.domaintools.com/resources/blog/free-covid-19-threat-list-domain-risk-assessments-for-coronavirus-threatsSource:-DomainToolsTyposquatting,Source:DomainTools,Typosquatting; MoreDetail: imported by user 668</indicator:Description>
+    <indicator:Observable id="threatstream:Observable-7e740bc2-eeb2-443e-9c61-57baba2627f8">
+        <cybox:Title>phish_domain: mncovidmasksewists.net</cybox:Title>
+        <cybox:Object id="threatstream:DomainName-d9e2a733-d692-4979-8438-2257def096ff">
+            <cybox:Properties xsi:type="DomainNameObj:DomainNameObjectType">
+                <DomainNameObj:Value>mncovidmasksewists.net</DomainNameObj:Value>
+            </cybox:Properties>
+        </cybox:Object>
+    </indicator:Observable>
+    <indicator:Producer>
+        <stixCommon:Time>
+            <cyboxCommon:Produced_Time>2020-04-06T22:15:05.389000+00:00</cyboxCommon:Produced_Time>
+        </stixCommon:Time>
+    </indicator:Producer>
+</stix:Indicator>
+```
+
+This would be the extracted information:
+
+| Info | Value |
+| ---- | ----- |
+| Title | phish_domain: mncovidmasksewists.net |
+| ID | threatstream:Observable-7e740bc2-eeb2-443e-9c61-57baba2627f8 |
+| Description | TS ID: 55474479396; iType: phish_domain; [...] |
+| Timestamp | 1586211305 |
+| Severity | 10 |
+| Field | netconn_domain |
+| Value | mncovidmasksewists.net |
+| Link | https://www.domaintools.com/resources/blog/free-covid-19-threat-list-domain-risk-assessments-for-coronavirus-threats |
+
+#### 2. Create Reports
+
+Use the extracted Title, ID, Description, Timestamp, and Severity to create a Report.
+
+```python
+import time
+from examples.enterprise_edr.threat_intelligence.results import AnalysisResult
+my_report = AnalysisResult(title=title, analysis_name=id, description=description,
+                        timestamp=timestamp, score=severity)
+```
+
+Add each Report to a single list, to be sent to Enterprise EDR.
+
+```python
+report_list = []
+report_list.append(my_report)
+```
+
+
+
+#### 3. Attach IOCs to Reports
+
+For each IOC, attach it to the corresponding Report.
+
+```python
+my_report.attach_ioc_v2(values=value, field=field, link=link)
+```
+
+Repeat Steps 1, 2, and 3 for each IOC.
+
+Alternatively, you can attach multiple IOCs to a single Report. IOCs do not support titles, descriptions, severities, or timestamps, so that approach is less informative than creating a Report for each IOC.
+
+IOCs can be IP addresses, domains, file hashes, and many other types. See [Platform Search Fields for Processes and Enriched Events](https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/platform-search-fields) for an idea of what field to assign to each IOC.
+
+#### 4. Send Reports to a Feed using the Feed ID
+
+Send your list of Reports to a Feed using the Feed ID.
+
+```python
+from examples.enterprise_edr.threat_intelligence.threatintel import ThreatIntel
+threat_intel = ThreatIntel()
+threat_intel.push_to_cb(feed_id='WLFoE6chQwy8z7CQGCTG8A',
+                        results=report_list)
+```
+
+Now, an attempt will be made to send your Reports. The Reports will be saved to a file called reports.json, which can be helpful if sending Reports fails.
 
 ## Troubleshooting
 
