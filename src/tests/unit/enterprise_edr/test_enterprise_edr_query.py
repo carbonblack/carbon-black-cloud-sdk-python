@@ -107,59 +107,61 @@ def test_query_validate_not_valid(cbcsdk_mock, get_process_search_response, guid
         process_query._validate(params)
 
 
-def test_query_update_fields_exception(cbcsdk_mock):
-    """Testing raising ApiError in Query.update_fields()."""
+def test_query_set_fields_exception(cbcsdk_mock):
+    """Testing raising ApiError in Query.set_fields()."""
     api = cbcsdk_mock.api
     event = api.select(Event)
     assert event._fields == ["*"]
-    event.update_fields(["event_type"])
+    event.set_fields(["event_type"])
     assert event._get_query_parameters()["fields"] == ["event_type"]
+    event.set_fields("another_field")
+    assert event._get_query_parameters()["fields"] == ["another_field"]
     with pytest.raises(ApiError):
-        event.update_fields("not_a_list")
+        event.set_fields(0)
 
 
-def test_query_update_start_exception(cbcsdk_mock):
-    """Testing raising ApiError in Query.update_start()."""
+def test_query_set_start_exception(cbcsdk_mock):
+    """Testing raising ApiError in Query.set_start()."""
     api = cbcsdk_mock.api
     event = api.select(Event)
     assert event._start == 0
-    event.update_start(5)
+    event.set_start(5)
     assert event._get_query_parameters()["start"] == 5
     with pytest.raises(ApiError):
-        event.update_start('not_an_integer')
+        event.set_start('not_an_integer')
 
 
-def test_query_update_rows(cbcsdk_mock):
-    """Testing raising ApiError in Query.update_rows()."""
+def test_query_set_rows(cbcsdk_mock):
+    """Testing raising ApiError in Query.set_rows()."""
     api = cbcsdk_mock.api
     event = api.select(Event)
     assert event._batch_size == 500
-    event.update_rows(10)
+    event.set_rows(10)
     assert event._get_query_parameters()["rows"] == 10
     with pytest.raises(ApiError):
-        event.update_rows("not_an_integer")
+        event.set_rows("not_an_integer")
 
 
-def test_query_update_time_range(cbcsdk_mock):
-    """Testing raising ApiError in Query.update_time_range()."""
+def test_query_set_time_range(cbcsdk_mock):
+    """Testing raising ApiError in Query.set_time_range()."""
     api = cbcsdk_mock.api
     event = api.select(Event)
     assert "time_range" not in event._get_query_parameters()
-    event.update_time_range(start="2020-10-30T20:34:07")
+    event.set_time_range(start="2020-10-30T20:34:07")
     assert event._get_query_parameters()["time_range"] == {"start": "2020-10-30T20:34:07"}
-    event.update_time_range(end="2020-10-31T20:34:07")
+    event.set_time_range(end="2020-10-31T20:34:07")
     assert event._get_query_parameters()["time_range"] == {"start": "2020-10-30T20:34:07",
                                                            "end": "2020-10-31T20:34:07"}
-    event.update_time_range(window="-4h")
+    event.set_time_range(window="-4h")
     assert event._get_query_parameters()["time_range"] == {"start": "2020-10-30T20:34:07",
                                                            "end": "2020-10-31T20:34:07",
                                                            "window": "-4h"}
     with pytest.raises(ApiError):
-        event.update_time_range(start=1)
+        event.set_time_range(start=1)
     with pytest.raises(ApiError):
-        event.update_time_range(end=9)
+        event.set_time_range(end=9)
     with pytest.raises(ApiError):
-        event.update_time_range(window=100)
+        event.set_time_range(window=100)
 
 
 def test_async_sort_by(cbcsdk_mock):

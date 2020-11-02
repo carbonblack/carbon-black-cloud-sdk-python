@@ -78,15 +78,17 @@ def test_process_events(cbcsdk_mock):
     assert events_query_params == expected_params
 
 def test_process_events_with_criteria_exclusions(cbcsdk_mock):
-    """Testing the update_criteria() method when selecting events."""
+    """Testing the add_criteria() method when selecting events."""
     api = cbcsdk_mock.api
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     process = api.select(Process, guid)
     assert isinstance(process.events(), Query)
     # create the events query object to compare
-    events = process.events(event_type="modload").update_criteria("crossproc_action", ["ACTION_PROCESS_API_CALL"]).update_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
+    events = process.events(event_type="modload").add_criteria("crossproc_action", ["ACTION_PROCESS_API_CALL"]).add_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
+    events.add_criteria("crossproc_action", "SOME_OTHER_CRIT")
     # emulate the manual select in Process.events()
-    query = api.select(Event).where(process_guid=guid).update_criteria("crossproc_action", ["ACTION_PROCESS_API_CALL"]).update_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
+    query = api.select(Event).where(process_guid=guid).add_criteria("crossproc_action", ["ACTION_PROCESS_API_CALL"]).add_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
+    query.add_criteria("crossproc_action", "SOME_OTHER_CRIT")
     assert [isinstance(q, Query) for q in [events, query]]
     # extract and compare the parameters from each Query
     events_query_params = events._get_query_parameters()
@@ -94,7 +96,8 @@ def test_process_events_with_criteria_exclusions(cbcsdk_mock):
     expected_params = {"query": "process_guid:WNEXFKQ7\\-0002b226\\-000015bd\\-00000000\\-"
                        "1d6225bbba74c00 AND event_type:modload",
                        "criteria": {
-                           "crossproc_action": ["ACTION_PROCESS_API_CALL"],
+                           "crossproc_action": ["ACTION_PROCESS_API_CALL",
+                                                "SOME_OTHER_CRIT"],
                        },
                        "exclusions": {
                            "crossproc_effective_reputation": ["REP_WHITE"]
@@ -106,25 +109,25 @@ def test_process_events_with_criteria_exclusions(cbcsdk_mock):
 
 
 def test_process_events_exceptions(cbcsdk_mock):
-    """Testing raising an Exception when using Query.update_criteria() and Query.update_exclusions()."""
+    """Testing raising an Exception when using Query.add_criteria() and Query.add_exclusions()."""
     api = cbcsdk_mock.api
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     process = api.select(Process, guid)
     assert isinstance(process.events(), Query)
-    # use a criteria value that's not a list
+    # use a criteria value that's not a string or list
     with pytest.raises(ApiError):
-        events = process.events(event_type="modload").update_criteria("crossproc_action", "ACTION_PROCESS_API_CALL")
-    # use an exclusion value that's not a list
+        events = process.events(event_type="modload").add_criteria("crossproc_action", 0)
+    # use an exclusion value that's not a string or list
     with pytest.raises(ApiError):
-        events = process.events().update_exclusions("crossproc_effective_reputation", "REP_WHITE")
+        events = process.events().add_exclusions("crossproc_effective_reputation", 0)
 
 
 def test_process_with_criteria_exclusions(cbcsdk_mock):
-    """Testing AsyncProcessQuery.update_criteria() and AsyncProcessQuery.update_exclusions()."""
+    """Testing AsyncProcessQuery.add_criteria() and AsyncProcessQuery.add_exclusions()."""
     api = cbcsdk_mock.api
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     # use the update methods
-    process = api.select(Process).where("event_type:modload").update_criteria("device_id", [1234]).update_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
+    process = api.select(Process).where("event_type:modload").add_criteria("device_id", [1234]).add_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
     # mock the search validation
     cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
                              GET_PROCESS_VALIDATION_RESP)
@@ -154,12 +157,12 @@ def test_process_with_criteria_exclusions(cbcsdk_mock):
 
 
 def test_process_fields(cbcsdk_mock):
-    """Testing AsyncProcessQuery.update_fields()."""
+    """Testing AsyncProcessQuery.set_fields()."""
     api = cbcsdk_mock.api
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     # use the update methods
-    process = api.select(Process).where("event_type:modload").update_criteria("device_id", [1234]).update_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
-    process = process.update_fields(["parent_hash", "device_policy"])
+    process = api.select(Process).where("event_type:modload").add_criteria("device_id", [1234]).add_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
+    process = process.set_fields(["parent_hash", "device_policy"])
 
     process_q_params = process._get_query_parameters()
     expected_params = {"query": "event_type:modload",
@@ -177,14 +180,14 @@ def test_process_fields(cbcsdk_mock):
 
 
 def test_process_time_range(cbcsdk_mock):
-    """Testing AsyncProcessQuery.update_fields()."""
+    """Testing AsyncProcessQuery.set_fields()."""
     api = cbcsdk_mock.api
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     # use the update methods
-    process = api.select(Process).where("event_type:modload").update_criteria("device_id", [1234]).update_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
-    process = process.update_time_range(start="2020-01-21T18:34:04Z")
-    process = process.update_time_range(end="2020-02-21T18:34:04Z")
-    process = process.update_time_range(window="-1w")
+    process = api.select(Process).where("event_type:modload").add_criteria("device_id", [1234]).add_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
+    process = process.set_time_range(start="2020-01-21T18:34:04Z")
+    process = process.set_time_range(end="2020-02-21T18:34:04Z")
+    process = process.set_time_range(window="-1w")
 
     process_q_params = process._get_query_parameters()
     expected_params = {"query": "event_type:modload",
@@ -203,13 +206,13 @@ def test_process_time_range(cbcsdk_mock):
 
 
 def test_process_start_rows(cbcsdk_mock):
-    """Testing AsyncProcessQuery.update_start() and AsyncProcessQuery.update_rows()."""
+    """Testing AsyncProcessQuery.set_start() and AsyncProcessQuery.set_rows()."""
     api = cbcsdk_mock.api
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     # use the update methods
-    process = api.select(Process).where("event_type:modload").update_criteria("device_id", [1234]).update_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
-    process = process.update_start(10)
-    process = process.update_rows(102)
+    process = api.select(Process).where("event_type:modload").add_criteria("device_id", [1234]).add_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
+    process = process.set_start(10)
+    process = process.set_rows(102)
 
     process_q_params = process._get_query_parameters()
     expected_params = {"query": "event_type:modload",
@@ -230,7 +233,7 @@ def test_process_sort(cbcsdk_mock):
     api = cbcsdk_mock.api
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     # use the update methods
-    process = api.select(Process).where("event_type:modload").update_criteria("device_id", [1234]).update_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
+    process = api.select(Process).where("event_type:modload").add_criteria("device_id", [1234]).add_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
     process = process.sort_by("process_pid", direction="DESC")
     process_q_params = process._get_query_parameters()
     expected_params = {"query": "event_type:modload",
