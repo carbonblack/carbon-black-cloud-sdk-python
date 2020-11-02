@@ -280,25 +280,30 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
         self._fields = ["*"]
         self._default_args = {}
 
-    def update_criteria(self, key, newlist):
-        """Update the criteria on this query with a custom criteria key.
+    def add_criteria(self, key, newlist):
+        """Add to the criteria on this query with a custom criteria key.
 
         Args:
             key (str): The key for the criteria item to be set.
-            newlist (list): List of values to be set for the criteria item.
+            newlist (str or list[str]): Value or list of values to be set for the criteria item.
 
         Returns:
             The ResultQuery with specified custom criteria.
 
         Example:
             query = api.select(Event).update_criteria("event_type", ["filemod", "scriptload"])
+            query = api.select(Event).update_criteria("event_type", "filemod")
         """
         if not isinstance(newlist, list):
-            raise ApiError(f"Criteria value(s) must be a list. {newlist} is a {type(newlist)}.")
-        self._update_criteria(key, newlist)
+            if not isinstance(newlist, str):
+                raise ApiError("Criteria value(s) must be a string or list of strings. "
+                               f"{newlist} is a {type(newlist)}.")
+            self._add_criteria(key, [newlist])
+        else:
+            self._add_criteria(key, newlist)
         return self
 
-    def _update_criteria(self, key, newlist):
+    def _add_criteria(self, key, newlist):
         """
         Updates a list of criteria being collected for a query, by setting or appending items.
 
@@ -309,25 +314,30 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
         oldlist = self._criteria.get(key, [])
         self._criteria[key] = oldlist + newlist
 
-    def update_exclusions(self, key, newlist):
-        """Update the criteria on this query with a custom exclusion key.
+    def add_exclusions(self, key, newlist):
+        """Add to the excluions on this query with a custom exclusion key.
 
         Args:
             key (str): The key for the exclusion item to be set.
-            newlist (list): List of values to be set for the exclusion item.
+            newlist (str or list[str]): Value or list of values to be set for the exclusion item.
 
         Returns:
             The ResultQuery with specified custom exclusion.
 
         Example:
             query = api.select(Event).update_exclusions("netconn_domain", ["www.google.com"])
+            query = api.select(Event).update_exclusions("netconn_domain", "www.google.com")
         """
         if not isinstance(newlist, list):
-            raise ApiError(f"Exclusion value(s) must be a list. {newlist} is a {type(newlist)}.")
-        self._update_exclusions(key, newlist)
+            if not isinstance(newlist, str):
+                raise ApiError("Exclusion value(s) must be a string or list of strings. "
+                               f"{newlist} is a {type(newlist)}.")
+            self._add_exclusions(key, [newlist])
+        else:
+            self._add_exclusions(key, newlist)
         return self
 
-    def _update_exclusions(self, key, newlist):
+    def _add_exclusions(self, key, newlist):
         """
         Updates a list of exclusion being collected for a query, by setting or appending items.
 
@@ -338,22 +348,25 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
         oldlist = self._exclusions.get(key, [])
         self._exclusions[key] = oldlist + newlist
 
-    def update_fields(self, fields):
+    def set_fields(self, fields):
         """
-        Overwrites the fields to be returned with the response.
+        Sets the fields to be returned with the response.
 
         Args:
-            fields (list[str]): List of fields to be returned.
+            fields (str or list[str]): Field or list of fields to be returned.
         """
         if not isinstance(fields, list):
-            raise ApiError(f"Fields must be a list of strings. {fields} is a {type(fields)}.")
-        self._fields = fields
+            if not isinstance(fields, str):
+                raise ApiError(f"Fields must be a string or list of strings. {fields} is a {type(fields)}.")
+            self._fields = [fields]
+        else:
+            self._fields = fields
         self._default_args["fields"] = self._fields
         return self
 
-    def update_start(self, start):
+    def set_start(self, start):
         """
-        Updates the 'start' query body parameter, determining where to begin retrieving results from.
+        Sets the 'start' query body parameter, determining where to begin retrieving results from.
 
         Args:
             start (int): Where to start results from.
@@ -364,9 +377,9 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
         self._default_args["start"] = self._start
         return self
 
-    def update_rows(self, rows):
+    def set_rows(self, rows):
         """
-        Updates the 'rows' query body parameter, determining how many rows of results to request.
+        Sets the 'rows' query body parameter, determining how many rows of results to request.
 
         Args:
             rows (int): How many rows to request.
@@ -377,9 +390,9 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
         self._default_args["rows"] = self._batch_size
         return self
 
-    def update_time_range(self, start=None, end=None, window=None):
+    def set_time_range(self, start=None, end=None, window=None):
         """
-        Update the 'time_range' query body parameter, determining a time window based on 'device_timestamp'.
+        Sets the 'time_range' query body parameter, determining a time window based on 'device_timestamp'.
 
         Args:
             start (str in ISO 8601 timestamp): When to start the result search.
@@ -391,9 +404,9 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
             - `window` will take precendent over `start` and `end` if provided.
 
         Examples:
-            query = api.select(Event).update_time_range(start="2020-10-20T20:34:07Z")
-            second_query = api.select(Event).update_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
-            third_query = api.select(Event).update_time_range(window='-3d')
+            query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z")
+            second_query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
+            third_query = api.select(Event).set_time_range(window='-3d')
         """
         if start:
             if not isinstance(start, str):
