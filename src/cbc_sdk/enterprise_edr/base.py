@@ -291,7 +291,7 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
             The ResultQuery with specified custom criteria.
 
         Example:
-            query = api.select(Event).update_criteria("my.criteria.key", ["criteria_value"])
+            query = api.select(Event).update_criteria("event_type", ["filemod", "scriptload"])
         """
         if not isinstance(newlist, list):
             raise ApiError(f"Criteria value(s) must be a list. {newlist} is a {type(newlist)}.")
@@ -320,7 +320,7 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
             The ResultQuery with specified custom exclusion.
 
         Example:
-            query = api.select(Event).update_exclusions("my.exclusion.key", ["exclusion_value"])
+            query = api.select(Event).update_exclusions("netconn_domain", ["www.google.com"])
         """
         if not isinstance(newlist, list):
             raise ApiError(f"Exclusion value(s) must be a list. {newlist} is a {type(newlist)}.")
@@ -487,15 +487,24 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
         if not validated.get("valid"):
             raise ApiError("Invalid query: {}: {}".format(args, validated["invalid_message"]))
 
-    def _search(self, start=None, rows=None):
-        # iterate over total result set, 500 at a time
+    def _search(self, start=0, rows=0):
+        """
+        Execute the query, iterating over results 500 rows at a time.
+
+        Args:
+            start (int): What index to begin retrieving results from.
+            rows (int): Total number of results to be retrieved.
+
+        If `start` is not specified, the default of 0 will be used.
+        If `rows` is not specified, the query will continue until all available results have
+            been retrieved, getting results in batches of 500.
+        """
         args = self._get_query_parameters()
         self._validate(args)
 
-        if start:
+        if start != 0:
             args['start'] = start
-        if rows:
-            args['rows'] = rows
+        args['rows'] = self._batch_size
 
         current = start
         numrows = 0
