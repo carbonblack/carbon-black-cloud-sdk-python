@@ -1,0 +1,102 @@
+{
+	"rules": [{
+			"action": "TERMINATE",
+			"application": {
+				"type": "NAME_PATH",
+				"value": "**\\rundll32.exe"
+			},
+			"operation": "RANSOM",
+			"required": true
+		},
+		{
+			"action": "TERMINATE",
+			"application": {
+				"type": "NAME_PATH",
+				"value": "**\\rundll32.exe"
+			},
+			"operation": "POL_INVOKE_NOT_TRUSTED",
+			"required": true
+		},
+		{
+			"action": "TERMINATE",
+			"application": {
+				"type": "NAME_PATH",
+				"value": "**\\rundll32.exe"
+			},
+			"operation": "CODE_INJECTION",
+			"required": true
+		},
+		{
+			"action": "DENY",
+			"application": {
+				"type": "NAME_PATH",
+				"value": "**\\rundll32.exe"
+			},
+			"operation": "NETWORK",
+			"required": true
+		},
+		{
+			"action": "TERMINATE",
+			"application": {
+				"type": "NAME_PATH",
+				"value": "**\\regsvr32.exe"
+			},
+			"operation": "RANSOM",
+			"required": true
+		},
+		{
+			"action": "TERMINATE",
+			"application": {
+				"type": "NAME_PATH",
+				"value": "**\\regsvr32.exe"
+			},
+			"operation": "POL_INVOKE_NOT_TRUSTED",
+			"required": true
+		},
+		{
+			"action": "TERMINATE",
+			"application": {
+				"type": "NAME_PATH",
+				"value": "**\\regsvr32.exe"
+			},
+			"operation": "CODE_INJECTION",
+			"required": true
+		},
+		{
+			"action": "DENY",
+			"application": {
+				"type": "NAME_PATH",
+				"value": "**\\regsvr32.exe"
+			},
+			"operation": "NETWORK",
+			"required": true
+		},
+		{
+			"action": "DENY",
+			"application": {
+				"type": "REPUTATION",
+				"value": "RESOLVING"
+			},
+			"operation": "NETWORK",
+			"required": true
+		},
+		{
+			"action": "TERMINATE",
+			"application": {
+				"type": "REPUTATION",
+				"value": "RESOLVING"
+			},
+			"operation": "CODE_INJECTION",
+			"required": true
+		},
+		{
+			"action": "TERMINATE",
+			"application": {
+				"type": "REPUTATION",
+				"value": "RESOLVING"
+			},
+			"operation": "RANSOM",
+			"required": true
+		}
+	]
+}

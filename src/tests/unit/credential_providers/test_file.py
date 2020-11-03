@@ -156,8 +156,19 @@ def test_read_single_file():
         sut.get_credentials("notexist")
     with pytest.raises(CredentialError):
         sut.get_credentials("")
-    with pytest.raises(CredentialError):
-        sut.get_credentials()
+
+    # Default behavior for empty file credential behavior should use 'default' profile to match existing CBAPI behavior
+    creds = sut.get_credentials()
+    assert creds.url == "http://example.com"
+    assert creds.token == "ABCDEFGH"
+    assert creds.org_key == "A1B2C3D4"
+    assert not creds.ssl_verify
+    assert not creds.ssl_verify_hostname
+    assert creds.ssl_cert_file == "foo.certs"
+    assert creds.ssl_force_tls_1_2
+    assert creds.proxy == "proxy.example"
+    assert creds.ignore_system_proxy
+    assert creds.integration == "Covax"
 
 
 def test_read_multiple_files():

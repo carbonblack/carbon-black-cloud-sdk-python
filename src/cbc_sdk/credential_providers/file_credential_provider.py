@@ -125,8 +125,8 @@ class FileCredentialProvider(CredentialProvider):
         Raises:
             CredentialError: If there is any error retrieving the credentials.
         """
-        if not section:
-            raise CredentialError("Section must be specified")
+        if section is None:
+            section = 'default'
         if self._cached_credentials is None:
             new_creds = {}
             cred_files = [p for p in self._search_path if self._security_check(p)]
