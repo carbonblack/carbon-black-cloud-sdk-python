@@ -291,8 +291,8 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
             The ResultQuery with specified custom criteria.
 
         Example:
-            query = api.select(Event).update_criteria("event_type", ["filemod", "scriptload"])
-            query = api.select(Event).update_criteria("event_type", "filemod")
+            query = api.select(Event).add_criteria("event_type", ["filemod", "scriptload"])
+            query = api.select(Event).add_criteria("event_type", "filemod")
         """
         if not isinstance(newlist, list):
             if not isinstance(newlist, str):
@@ -325,8 +325,8 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
             The ResultQuery with specified custom exclusion.
 
         Example:
-            query = api.select(Event).update_exclusions("netconn_domain", ["www.google.com"])
-            query = api.select(Event).update_exclusions("netconn_domain", "www.google.com")
+            query = api.select(Event).add_exclusions("netconn_domain", ["www.google.com"])
+            query = api.select(Event).add_exclusions("netconn_domain", "www.google.com")
         """
         if not isinstance(newlist, list):
             if not isinstance(newlist, str):
