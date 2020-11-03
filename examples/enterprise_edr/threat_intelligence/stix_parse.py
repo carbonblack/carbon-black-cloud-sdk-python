@@ -106,7 +106,7 @@ def sanitize_id(id):
     Ids may only contain a-z, A-Z, 0-9, - and must have one character.
 
     Args:
-        id: the ID to be sanitized.
+        id: The ID to be sanitized.
 
     Returns:
         A sanitized ID.
@@ -126,12 +126,15 @@ def validate_ip_address(ip_address):
 
 
 def cybox_parse_observable(observable, indicator, timestamp, score):
-    """Parses a cybox observable and returns a list containing a report dictionary.
+    """Parses a cybox observable and indicator, and returns a list containing a report dictionary.
 
     cybox is a open standard language encoding info about cyber observables.
 
     Args:
-        observable: the cybox obserable to parse.
+        observable: The cybox observable to parse.
+        indicator: The cybox indicator to parse.
+        timestamp: Time the observable was identified.
+        score: Severity score for the report.
 
     Returns:
         A report dictionary if the cybox observable has props of type:
@@ -174,6 +177,9 @@ def cybox_parse_observable(observable, indicator, timestamp, score):
     if not description and indicator and indicator.title:
         description = str(indicator.title)
 
+    if not description:
+        logger.debug("No description found. Using default message.")
+        description = "No description available."
     #
     # use the first reference as a link
     # This was added for RecordedFuture
@@ -200,7 +206,6 @@ def cybox_parse_observable(observable, indicator, timestamp, score):
                     link = token
                     break
 
-
     #
     # Sometimes the title is None, so generate a random UUID
     #
@@ -214,25 +219,38 @@ def cybox_parse_observable(observable, indicator, timestamp, score):
     id = str(uuid.uuid4())
 
     if type(props) == DomainName:
-        # go into domainname function
-        reports = parse_domain_name_observable(observable, props, id, description, title, timestamp, link, score)
+        reports = parse_domain_name(props, id, description, title, timestamp, link, score)
 
     elif type(props) == Address:
-        reports = parse_address_observable(observable, props, id, description, title, timestamp, link, score)
+        reports = parse_address(props, id, description, title, timestamp, link, score)
 
     elif type(props) == File:
-        reports = parse_file_observable(observable, props, id, description, title, timestamp, link, score)
+        reports = parse_file(props, id, description, title, timestamp, link, score)
 
     elif type(props) == URI:
-        reports = parse_uri_observable(observable, props, id, description, title, timestamp, link, score)
+        reports = parse_uri(props, id, description, title, timestamp, link, score)
 
     else:
         return reports
 
     return reports
 
-def parse_uri_observable(observable, props, id, description, title, timestamp, link, score):
 
+def parse_uri(props, id, description, title, timestamp, link, score):
+    """Parses URI properties and returns a list containing a report dictionary.
+
+    Args:
+        props: The cybox URI observable properties to parse.
+        id: The ID for the Report.
+        description: The description for the Report.
+        title: The title for the Report.
+        timestamp: The timestamp for the Report.
+        link: The link for the Report.
+        score: The severity score for the Report.
+
+    Returns:
+        A list containing a report dictionary.
+    """
     reports = []
 
     if props.value and props.value.value:
@@ -262,8 +280,21 @@ def parse_uri_observable(observable, props, id, description, title, timestamp, l
     return reports
 
 
-def parse_domain_name_observable(observable, props, id, description, title, timestamp, link, score):
+def parse_domain_name(props, id, description, title, timestamp, link, score):
+    """Parses DomainName properties and returns a list containing a report dictionary.
 
+    Args:
+        props: The cybox DomainName observable properties to parse.
+        id: The ID for the Report.
+        description: The description for the Report.
+        title: The title for the Report.
+        timestamp: The timestamp for the Report.
+        link: The link for the Report.
+        score: The severity score for the Report.
+
+    Returns:
+        A list containing a report dictionary.
+    """
     reports = []
     if props.value and props.value.value:
         iocs = {'netconn_domain': []}
@@ -291,8 +322,21 @@ def parse_domain_name_observable(observable, props, id, description, title, time
     return reports
 
 
-def parse_address_observable(observable, props, id, description, title, timestamp, link, score):
+def parse_address(props, id, description, title, timestamp, link, score):
+    """Parses Address properties and returns a list containing a report dictionary.
 
+    Args:
+        props: The cybox Address observable properties to parse.
+        id: The ID for the Report.
+        description: The description for the Report.
+        title: The title for the Report.
+        timestamp: The timestamp for the Report.
+        link: The link for the Report.
+        score: The severity score for the Report.
+
+    Returns:
+        A list containing a report dictionary.
+    """
     reports = []
     if props.category == 'ipv4-addr' and props.address_value:
         iocs = {'netconn_ipv4': []}
@@ -321,8 +365,21 @@ def parse_address_observable(observable, props, id, description, title, timestam
     return reports
 
 
-def parse_file_observable(observable, props, id, description, title, timestamp, link, score):
+def parse_file(props, id, description, title, timestamp, link, score):
+    """Parses File properties and returns a list containing a report dictionary.
 
+    Args:
+        props: The cybox File observable properties to parse.
+        id: The ID for the Report.
+        description: The description for the Report.
+        title: The title for the Report.
+        timestamp: The timestamp for the Report.
+        link: The link for the Report.
+        score: The severity score for the Report.
+
+    Returns:
+        A list containing a report dictionary.
+    """
     reports = []
     iocs = {'hash': []}
     if props.md5:
@@ -355,7 +412,6 @@ def get_stix_indicator_score(indicator, default_score):
 
     Converts from "high", "medium", or "low" into a digit, if necessary.
     """
-
     if not indicator.confidence:
         return default_score
 
@@ -375,6 +431,7 @@ def get_stix_indicator_score(indicator, default_score):
 
 
 def get_stix_indicator_timestamp(indicator):
+    """Extracts the timestamp from an indicator."""
     timestamp = 0
     if indicator.timestamp:
         if indicator.timestamp.tzinfo:
@@ -388,6 +445,7 @@ def get_stix_indicator_timestamp(indicator):
 
 
 def get_stix_package_timestamp(stix_package):
+    """Extracts the timestamp from a Stix Package."""
     timestamp = 0
     if not stix_package or not stix_package.timestamp:
         return timestamp
@@ -400,6 +458,7 @@ def get_stix_package_timestamp(stix_package):
 
 
 def parse_stix_indicators(stix_package, default_score):
+    """Extracts info from all indicators in a STIX Package."""
     reports = []
     if not stix_package.indicators:
         return reports
@@ -414,6 +473,7 @@ def parse_stix_indicators(stix_package, default_score):
 
 
 def parse_stix_observables(stix_package, default_score):
+    """Extracts info from all observables in a STIX Package."""
     reports = []
     if not stix_package.observables:
         return reports
@@ -427,6 +487,7 @@ def parse_stix_observables(stix_package, default_score):
 
 
 def sanitize_stix(stix_xml):
+    """Checks the STIX XML input for content, returning an empty bytes object if there is none."""
     ret_xml = b''
     try:
         xml_root = etree.fromstring(stix_xml)
@@ -448,11 +509,30 @@ def sanitize_stix(stix_xml):
 
 
 def parse_stix(stix_xml, default_score):
+    """Processes raw STIX XML into Enterprise EDR Reports."""
     reports = []
     try:
         stix_xml = sanitize_stix(stix_xml)
         bio = BytesIO(stix_xml)
         stix_package = STIXPackage.from_xml(bio)
+        if not stix_package:
+            logger.warning("Could not parse STIX xml")
+            return reports
+        if not stix_package.indicators and not stix_package.observables:
+            logger.info("No indicators or observables found in stix_xml")
+            return reports
+        yield from parse_stix_indicators(stix_package, default_score)
+        yield from parse_stix_observables(stix_package, default_score)
+    except etree.XMLSyntaxError as e:
+        logger.warning("Problem parsing stix: {}".format(e))
+        return reports
+
+
+def parse_stix_from_file(file_name, default_score=5):
+    """Processes STIX XML from a file into Enterprise EDR Reports."""
+    reports = []
+    try:
+        stix_package = STIXPackage.from_xml(file_name)
         if not stix_package:
             logger.warning("Could not parse STIX xml")
             return reports

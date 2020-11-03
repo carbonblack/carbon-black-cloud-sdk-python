@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from datetime import datetime
 try:
     from threatintel import ThreatIntel
-    from stix_parse import parse_stix, BINDING_CHOICES
+    from stix_parse import parse_stix, parse_stix_from_file, BINDING_CHOICES
     from feed_helper import FeedHelper
     from results import AnalysisResult
 # allow for using stix_taxii on its own
@@ -27,9 +27,10 @@ except ImportError:
 
 
 # logging.basicConfig(filename='stix.log', filemode='w', level=logging.DEBUG)
-logging.basicConfig(filename='stix.log', filemode='w', format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
-    datefmt='%Y-%m-%d:%H:%M:%S',
-    level=logging.DEBUG)
+logging.basicConfig(filename='stix.log', filemode='w',
+                    format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
+                    datefmt='%Y-%m-%d:%H:%M:%S',
+                    level=logging.DEBUG)
 handled_exceptions = (NoURIProvidedError, ClientException, ConnectionError)
 
 
@@ -356,7 +357,7 @@ class StixTaxii():
                     analysis_name="exception_format_report", error=True)
             yield result
 
-    def collect_and_send_reports(self):
+    def collect_and_send_reports(self, file_name=None):
         """Collects and sends formatted reports to ThreatIntel.push_to_cb for validation and dispatching to a feed."""
 
         self.configure_sites()
@@ -368,8 +369,13 @@ class StixTaxii():
             except ApiError as e:
                 logging.error(f"Couldn't find Enterprise EDR Feed {site_conn.config.feed_id}. Skipping {site_name}: {e}")
                 continue
-            logging.info(f"Talking to {site_name} server")
-            reports = site_conn.generate_reports()
+            if file_name:
+                # generate Reports from STIX XML file
+                reports = parse_stix_from_file(file_name, site_conn.config.default_score)
+            else:
+                # generate Reports by Polling a TAXII server
+                logging.info(f"Talking to {site_name} server")
+                reports = site_conn.generate_reports()
             if not reports:
                 logging.error(f"No reports generated for {site_name}")
                 continue
@@ -379,11 +385,15 @@ class StixTaxii():
                 except Exception as e:
                     logging.error(traceback.format_exc())
                     logging.error(f"Failed to push reports to feed {site_conn.config.feed_id}: {e}")
+
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description='Modify configuration values via command line.')
     parser.add_argument('--site_start_date', metavar='s', nargs='+',
                         help='the site name and desired start date to begin polling from')
+    parser.add_argument('--file', metavar='f', nargs='+',
+                        help='the filename to parse STIX XML from')
     args = parser.parse_args()
 
     config = load_config_from_file()
@@ -399,4 +409,7 @@ if __name__ == '__main__':
                 except ValueError as e:
                     logging.error(f"Failed to update start_date for {arg}: {e}")
     stix_taxii = StixTaxii(config)
-    stix_taxii.collect_and_send_reports()
+    if args.file:
+        stix_taxii.collect_and_send_reports(file_name=args.file)
+    else:
+        stix_taxii.collect_and_send_reports()
