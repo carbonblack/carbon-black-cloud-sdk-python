@@ -174,15 +174,18 @@ class TaxiiSiteConnector():
             logging.warning(f"problem polling taxii server: {e}")
         return content_blocks
 
-    def parse_collection_content(self, content_blocks):
+    def parse_collection_content(self, content_blocks, default_score=None):
         """Yields a formatted report dictionary for each STIX content_block.
 
         Args:
             content_block: A chunk of STIX data from the TAXII collection being polled.
         """
-
+        if default_score:
+            score = default_score
+        else:
+            score = self.config.default_score
         for block in content_blocks:
-            yield from parse_stix(block.content, self.config.default_score)
+            yield from parse_stix(block.content, score)
 
     def import_collection(self, collection):
         """Polls a single TAXII server collection.
