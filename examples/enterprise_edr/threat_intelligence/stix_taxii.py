@@ -3,20 +3,28 @@
 import argparse
 import logging
 import traceback
-from threatintel import ThreatIntel
+import urllib3
+import copy
+import yaml
+import os
 from cabby.exceptions import NoURIProvidedError, ClientException
 from requests.exceptions import ConnectionError
 from cbc_sdk.errors import ApiError
 from cabby import create_client
 from dataclasses import dataclass
-import yaml
-import os
-from stix_parse import parse_stix, BINDING_CHOICES
-from feed_helper import FeedHelper
 from datetime import datetime
-from results import AnalysisResult
-import urllib3
-import copy
+try:
+    from threatintel import ThreatIntel
+    from stix_parse import parse_stix, BINDING_CHOICES
+    from feed_helper import FeedHelper
+    from results import AnalysisResult
+# allow for using stix_taxii on its own
+except ImportError:
+    from .threatintel import ThreatIntel
+    from .stix_parse import parse_stix, BINDING_CHOICES
+    from .feed_helper import FeedHelper
+    from .results import AnalysisResult
+
 
 # logging.basicConfig(filename='stix.log', filemode='w', level=logging.DEBUG)
 logging.basicConfig(filename='stix.log', filemode='w', format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',

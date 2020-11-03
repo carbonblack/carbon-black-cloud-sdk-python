@@ -259,6 +259,56 @@ threat_intel.push_to_cb(feed_id='WLFoE6chQwy8z7CQGCTG8A',
                         results=report_list)
 ```
 
+### How do I import MISP data into a Feed?
+
+MISP is not directly supported with the ThreatIntel module, but an easy workaround is available. Use a MISP to STIX conversion tool, and follow the steps below.
+
+1. [Convert MISP to STIX](#1-convert-misp-to-stix)
+2. [Parse the STIX data](#2-parse-the-stix-data)
+3. [Format the STIX data into Reports](#3-format-the-stix-data)
+4. [Send the Reports to a Feed](#4-send-the-reports-to-a-feed)
+
+#### 1. Convert MISP to STIX
+
+Use an open-source tool like [MISP-STIX-Converter](https://github.com/MISP/MISP-STIX-Converter) to generate STIX data from your MISP data.
+
+```python
+python3 misp-to-stix.py -f MY_MISP_DATA.json --format XML -o MY_STIX_DATA.xml
+```
+
+There are multiple conversion tools available online.
+
+#### 2. Parse the STIX data
+
+First, read in the STIX XML.
+
+```python
+with open('MY_STIX_DATA.xml', 'r') as stix_file:
+  stix_data = stix_file.read()
+```
+
+Then, parse the data.
+
+```python
+from examples.enterprise_edr.threat_intelligence.stix_parse import parse_stix
+reports = parse_stix(stix_data, 5)
+```
+
+#### Format the STIX data into Reports
+
+```python
+from examples.enterprise_edr.threat_intelligence.stix_taxii import StixTaxii
+stix_taxii = StixTaxii(None)
+results = stix_taxii.format_report(reports)
+```
+
+Choose a default score to assign to the IOCs if one isn't available. Here, we use 5.
+
+
+
+
+reports = parse_stix(stix_xml, default_score)
+results = format_reports(reports)
 ## Troubleshooting
 
 ### Credential Error
