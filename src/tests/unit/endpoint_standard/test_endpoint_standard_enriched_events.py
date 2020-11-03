@@ -63,6 +63,21 @@ def test_enriched_event_query_implementation(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results", GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_2)
     api = cbcsdk_mock.api
     event_id = '27a278d5150911eb86f1011a55e73b72'
-    event = api.select(EnrichedEvent).where(f"event_id:{event_id}")
-    assert isinstance(event, AsyncEnrichedEventQuery)
-    assert event[0].event_id == '27a278d5150911eb86f1011a55e73b72'
+    events = api.select(EnrichedEvent).where(f"event_id:{event_id}")
+    assert isinstance(events, AsyncEnrichedEventQuery)
+    assert events[0].event_id == '27a278d5150911eb86f1011a55e73b72'
+
+def test_enriched_event_timeout(cbcsdk_mock):
+    """Testing EnrichedEventQuery.timeout()."""
+    api = cbcsdk_mock.api
+    query = api.select(EnrichedEvent).where("event_id:some_id")
+    assert query._timeout == 0
+    query.timeout(msecs=500)
+    assert query._timeout == 500
+
+def test_enriched_event_query_sort(cbcsdk_mock):
+    """Testing EnrichedEvent results sort."""
+    api = cbcsdk_mock.api
+    events = api.select(EnrichedEvent).where(process_pid=1000).or_(process_pid=1000).sort_by("process_pid", direction="DESC")
+    assert events._sort == [{"field": "process_pid", "order": "DESC"}]
+
