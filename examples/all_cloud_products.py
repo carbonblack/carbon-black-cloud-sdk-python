@@ -35,7 +35,7 @@ UNBOLD = "\033[0m"
 
 logging.basicConfig(filename="cloud_products_example_log.txt",
                     format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
-                    datefmt='%H:%M:%S',
+                    datefmt='%Y-%m-%d:%H:%M:%S',
                     level=logging.INFO)
 
 # API keys with relevant permissions
@@ -73,7 +73,7 @@ def platform():
 
     # Find Alerts associated with innocuous query
     harmless_query = "yahoo"
-    ioc_alerts = platform_api.select(PlatformAlert).where(harmless_query).set_create_time(range="-6d").set_group_results(True)
+    ioc_alerts = platform_api.select(PlatformAlert).where(harmless_query).set_create_time(range="-6d").set_group_results(True)    
 
     unresolved_alerts = set()
     dismissed_alerts = set()
@@ -149,6 +149,7 @@ def endpoint_standard_live_response(device_id, one_off=False):
           f"************************************************************{UNBOLD}\n")
     print(f"Using {BOLD}Endpoint Standard Live Response{UNBOLD} to investigate.\n")
     print(f"Establishing Live Response connection with Device ID {device_id}...\n")
+
     # Start a Live Response Session (using an example helper)
     command_line = CblrCli(live_response_api, connect_callback)
     # Connect to the Device
@@ -185,6 +186,7 @@ def endpoint_standard_policy(policy_id, rule_file):
     policy_modification_string = f"Added {len(rules['rules'])} rules from {rule_file} to Policy {policy.name}"
     logging.info(policy_modification_string)
     print(policy_modification_string + "\n")
+
 
 
 def create_eedr_report(iocs, title="", description="", severity=10):
@@ -258,7 +260,6 @@ def enterprise_edr():
     ransomware_query_report.save_watchlist()
 
     print("Creating an Engregor ransomware Watchlist.\n")
-
     # Create a new Watchlist to track ransomware Process hashes
     ransomware_watchlist = Watchlist(enterprise_edr_api, initial_data=
                                      {
@@ -310,6 +311,7 @@ def audit_remediation():
 
     print(f"Queries submitted. Monitor here: {audit_remediation_api.url}/livequery/history\n")
 
+
     return (chrome_ext_run.id, usb_devices_run.id)
 
 
@@ -344,6 +346,7 @@ def cleanup(policy_id, watchlist_id, run_ids, dismissed_alerts):
                 platform_api.select(PlatformAlert, id).update()
             except Exception as e:
                 logging.error(f"Failed to reset Alert {id}: {e}")
+
 
 
 def main():
