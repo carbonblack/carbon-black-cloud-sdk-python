@@ -2,11 +2,11 @@
 
 import pytest
 import logging
-from cbc_sdk.enterprise_edr import EnrichedEvent, Query, AsyncEventQuery
+from cbc_sdk.endpoint_standard import EnrichedEvent, AsyncEnrichedEventQuery
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ObjectNotFoundError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.enterprise_edr.mock_enriched_events import (POST_ENRICHED_EVENTS_SEARCH_JOB_RESP,
+from tests.unit.fixtures.endpoint_standard.mock_enriched_events import (POST_ENRICHED_EVENTS_SEARCH_JOB_RESP,
                                                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP,
                                                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_1,
                                                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_2)
@@ -58,7 +58,11 @@ def test_enriched_event_select_compound(cbcsdk_mock):
 
 def test_enriched_event_query_implementation(cbcsdk_mock):
     """Testing EnrichedEvent querying with where()."""
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/search_job", POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b", GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results", GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_2)
     api = cbcsdk_mock.api
     event_id = '27a278d5150911eb86f1011a55e73b72'
     event = api.select(EnrichedEvent).where(f"event_id:{event_id}")
-    assert isinstance(event, AsyncEventQuery)
+    assert isinstance(event, AsyncEnrichedEventQuery)
+    assert event[0].event_id == '27a278d5150911eb86f1011a55e73b72'
