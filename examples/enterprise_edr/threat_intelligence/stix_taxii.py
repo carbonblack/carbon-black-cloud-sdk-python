@@ -13,6 +13,7 @@ from cbc_sdk.errors import ApiError
 from cabby import create_client
 from dataclasses import dataclass
 from datetime import datetime
+from itertools import chain
 try:
     from threatintel import ThreatIntel
     from stix_parse import parse_stix, parse_stix_from_file, BINDING_CHOICES
@@ -357,9 +358,8 @@ class StixTaxii():
                     analysis_name="exception_format_report", error=True)
             yield result
 
-    def collect_and_send_reports(self, file_name=None):
+    def collect_and_send_reports(self, file_names=None):
         """Collects and sends formatted reports to ThreatIntel.push_to_cb for validation and dispatching to a feed."""
-
         self.configure_sites()
         ti = ThreatIntel()
         for site_name, site_conn in self.sites.items():
@@ -369,9 +369,15 @@ class StixTaxii():
             except ApiError as e:
                 logging.error(f"Couldn't find Enterprise EDR Feed {site_conn.config.feed_id}. Skipping {site_name}: {e}")
                 continue
-            if file_name:
-                # generate Reports from STIX XML file
-                reports = parse_stix_from_file(file_name, site_conn.config.default_score)
+            if file_names:
+                try:
+                    report_generators = []
+                    # generate Reports from STIX XML files
+                    for file in file_names:
+                        report_generators.append(parse_stix_from_file(file, site_conn.config.default_score))
+                    reports = chain(report_generators)
+                except Exception as e:
+                    logging.error(f"Failed to load STIX XML from file: {e}")
             else:
                 # generate Reports by Polling a TAXII server
                 logging.info(f"Talking to {site_name} server")
@@ -392,8 +398,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Modify configuration values via command line.')
     parser.add_argument('--site_start_date', metavar='s', nargs='+',
                         help='the site name and desired start date to begin polling from')
-    parser.add_argument('--file', metavar='f', nargs='+',
-                        help='the filename to parse STIX XML from')
+    parser.add_argument('--files', metavar='f', nargs='+',
+                        help='the filename(s) to parse STIX XML from')
     args = parser.parse_args()
 
     config = load_config_from_file()
@@ -409,7 +415,7 @@ if __name__ == '__main__':
                 except ValueError as e:
                     logging.error(f"Failed to update start_date for {arg}: {e}")
     stix_taxii = StixTaxii(config)
-    if args.file:
-        stix_taxii.collect_and_send_reports(file_name=args.file[0])
+    if args.files:
+        stix_taxii.collect_and_send_reports(file_names=args.file)
     else:
         stix_taxii.collect_and_send_reports()

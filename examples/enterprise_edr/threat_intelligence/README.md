@@ -264,51 +264,61 @@ threat_intel.push_to_cb(feed_id='WLFoE6chQwy8z7CQGCTG8A',
 MISP is not directly supported with the ThreatIntel module, but an easy workaround is available. Use a MISP to STIX conversion tool, and follow the steps below.
 
 1. [Convert MISP to STIX](#1-convert-misp-to-stix)
-2. [Parse the STIX data](#2-parse-the-stix-data)
-3. [Format the STIX data into Reports](#3-format-the-stix-data)
-4. [Send the Reports to a Feed](#4-send-the-reports-to-a-feed)
+2. [Call stix_taxii.py with the --file parameter](#2-call-stix-taxii-py-with-the-file-parameter)
 
 #### 1. Convert MISP to STIX
 
-Use an open-source tool like [MISP-STIX-Converter](https://github.com/MISP/MISP-STIX-Converter) to generate STIX data from your MISP data.
+Use open-source tools like [PyMISP](https://github.com/MISP/PyMISP) and [MISP-STIX-Converter](https://github.com/MISP/MISP-STIX-Converter) to generate STIX data from your MISP data.
 
 ```python
-python3 misp-to-stix.py -f MY_MISP_DATA.json --format XML -o MY_STIX_DATA.xml
+from pymisp.tools.stix import make_stix_package
+
+misp_event = {
+  "Event": {
+    "info": "Flash 0 Day In The Wild: Group 123 At The Controls",
+    "publish_timestamp": "1517829238",
+    "timestamp": "1517829211",
+    "analysis": "2",
+    "Attribute": [
+    {
+      "comment": "",
+      "category": "Payload delivery",
+      "uuid": "5a783be7-5d10-4f11-8fdb-69d8c0a8ab16",
+      "timestamp": "1517829095",
+      "to_ids": True,
+      "value": "fec71b8479f3a416fa58580ae76a8c731c2294c24663c601a1267e0e5c2678a0",
+      "object_relation": None,
+      "type": "sha256"
+    }],
+    "Tag": [{
+      "colour": "#00d622",
+      "exportable": True,
+      "name": "tlp:white"
+    }],
+    "published": True,
+    "date": "2018-02-05",
+    "Orgc": {
+      "uuid": "56c42374-fdb8-4544-a218-41ffc0a8ab16",
+      "name": "CUDESO"
+    },
+    "threat_level_id": "1",
+    "uuid": "5a783b7e-2404-4679-8178-69dcc0a8ab16"
+  }
+}
+
+stix_xml = make_stix_package(misp_event, to_xml=True)
+
+with open("misp_to_stix_data.xml", 'w') as f:
+    f.write(stix_xml.decode("utf-8"))
+
 ```
 
-There are multiple conversion tools available online.
+#### 2. Call stix_taxii.py with the --file parameter
 
-#### 2. Parse the STIX data
-
-First, read in the STIX XML.
-
-```python
-with open('MY_STIX_DATA.xml', 'r') as stix_file:
-  stix_data = stix_file.read()
+```bash
+>>> python3 stix_taxii.py --file misp_to_stix_data.xml
 ```
 
-Then, parse the data.
-
-```python
-from examples.enterprise_edr.threat_intelligence.stix_parse import parse_stix
-reports = parse_stix(stix_data, 5)
-```
-
-#### Format the STIX data into Reports
-
-```python
-from examples.enterprise_edr.threat_intelligence.stix_taxii import StixTaxii
-stix_taxii = StixTaxii(None)
-results = stix_taxii.format_report(reports)
-```
-
-Choose a default score to assign to the IOCs if one isn't available. Here, we use 5.
-
-
-
-
-reports = parse_stix(stix_xml, default_score)
-results = format_reports(reports)
 ## Troubleshooting
 
 ### Credential Error
