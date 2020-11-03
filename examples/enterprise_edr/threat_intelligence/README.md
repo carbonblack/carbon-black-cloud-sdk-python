@@ -273,50 +273,29 @@ Use open-source tools like [PyMISP](https://github.com/MISP/PyMISP) and [MISP-ST
 ```python
 from pymisp.tools.stix import make_stix_package
 
-misp_event = {
+misp_events = {
   "Event": {
     "info": "Flash 0 Day In The Wild: Group 123 At The Controls",
-    "publish_timestamp": "1517829238",
-    "timestamp": "1517829211",
-    "analysis": "2",
-    "Attribute": [
-    {
-      "comment": "",
-      "category": "Payload delivery",
-      "uuid": "5a783be7-5d10-4f11-8fdb-69d8c0a8ab16",
-      "timestamp": "1517829095",
-      "to_ids": True,
-      "value": "fec71b8479f3a416fa58580ae76a8c731c2294c24663c601a1267e0e5c2678a0",
-      "object_relation": None,
-      "type": "sha256"
-    }],
-    "Tag": [{
-      "colour": "#00d622",
-      "exportable": True,
-      "name": "tlp:white"
-    }],
-    "published": True,
-    "date": "2018-02-05",
-    "Orgc": {
-      "uuid": "56c42374-fdb8-4544-a218-41ffc0a8ab16",
-      "name": "CUDESO"
-    },
-    "threat_level_id": "1",
-    "uuid": "5a783b7e-2404-4679-8178-69dcc0a8ab16"
+    [...]
+  },
+  "Event": {
+    "info": "M2M -  GlobeImposter \"..doc\" 2017-12-15 : \"Scan\" -\n \"Scan_00123.7z\"",
+    [...]
   }
 }
 
-stix_xml = make_stix_package(misp_event, to_xml=True)
-
-with open("misp_to_stix_data.xml", 'w') as f:
-    f.write(stix_xml.decode("utf-8"))
-
+file_number = 0
+for event in misp_events:
+  stix_xml = make_stix_package(event, to_xml=True)
+  with open("misp_to_stix_data_{file_number}.xml", 'w') as f:
+      f.write(stix_xml.decode("utf-8"))
+  file_number += 1
 ```
 
-#### 2. Call stix_taxii.py with the --file parameter
+#### 2. Call stix_taxii.py with the --files parameter
 
 ```bash
->>> python3 stix_taxii.py --file misp_to_stix_data.xml
+>>> python3 stix_taxii.py --files misp_to_stix_data_0.xml misp_to_stix_data_1.xml
 ```
 
 ## Troubleshooting
