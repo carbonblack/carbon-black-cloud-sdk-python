@@ -77,6 +77,7 @@ def test_process_events(cbcsdk_mock):
     assert events_query_params == query_params
     assert events_query_params == expected_params
 
+
 def test_process_events_with_criteria_exclusions(cbcsdk_mock):
     """Testing the add_criteria() method when selecting events."""
     api = cbcsdk_mock.api
@@ -86,9 +87,11 @@ def test_process_events_with_criteria_exclusions(cbcsdk_mock):
     # create the events query object to compare
     events = process.events(event_type="modload").add_criteria("crossproc_action", ["ACTION_PROCESS_API_CALL"]).add_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
     events.add_criteria("crossproc_action", "SOME_OTHER_CRIT")
+    events.add_exclusions("exclusion_key", "exclusion_value")
     # emulate the manual select in Process.events()
     query = api.select(Event).where(process_guid=guid).add_criteria("crossproc_action", ["ACTION_PROCESS_API_CALL"]).add_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
     query.add_criteria("crossproc_action", "SOME_OTHER_CRIT")
+    query.add_exclusions("exclusion_key", "exclusion_value")
     assert [isinstance(q, Query) for q in [events, query]]
     # extract and compare the parameters from each Query
     events_query_params = events._get_query_parameters()
@@ -100,7 +103,8 @@ def test_process_events_with_criteria_exclusions(cbcsdk_mock):
                                                 "SOME_OTHER_CRIT"],
                        },
                        "exclusions": {
-                           "crossproc_effective_reputation": ["REP_WHITE"]
+                           "crossproc_effective_reputation": ["REP_WHITE"],
+                           "exclusion_key": ["exclusion_value"]
                        },
                        "process_guid": "WNEXFKQ7\\-0002b226\\-000015bd\\-00000000\\-1d6225bbba74c00"
                        }
