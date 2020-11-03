@@ -370,12 +370,15 @@ class StixTaxii():
                 logging.error(f"Couldn't find Enterprise EDR Feed {site_conn.config.feed_id}. Skipping {site_name}: {e}")
                 continue
             if file_names:
+                reports = []
                 try:
                     report_generators = []
                     # generate Reports from STIX XML files
                     for file in file_names:
                         report_generators.append(parse_stix_from_file(file, site_conn.config.default_score))
-                    reports = chain(report_generators)
+                    output = chain()
+                    for gen in report_generators:
+                      reports = chain(output, gen)
                 except Exception as e:
                     logging.error(f"Failed to load STIX XML from file: {e}")
             else:
@@ -416,6 +419,6 @@ if __name__ == '__main__':
                     logging.error(f"Failed to update start_date for {arg}: {e}")
     stix_taxii = StixTaxii(config)
     if args.files:
-        stix_taxii.collect_and_send_reports(file_names=args.file)
+        stix_taxii.collect_and_send_reports(file_names=args.files)
     else:
         stix_taxii.collect_and_send_reports()
