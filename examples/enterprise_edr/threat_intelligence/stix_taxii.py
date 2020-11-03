@@ -410,6 +410,6 @@ if __name__ == '__main__':
                     logging.error(f"Failed to update start_date for {arg}: {e}")
     stix_taxii = StixTaxii(config)
     if args.file:
-        stix_taxii.collect_and_send_reports(file_name=args.file)
+        stix_taxii.collect_and_send_reports(file_name=args.file[0])
     else:
         stix_taxii.collect_and_send_reports()
