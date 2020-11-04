@@ -26,6 +26,7 @@ def main():
     parser.add_argument("-P", "--priority", action="append", help="Target priority of device")
     parser.add_argument("-S", "--sort_by", help="Field to sort the output by")
     parser.add_argument("-R", "--reverse", action="store_true", help="Reverse order of sort")
+    parser.add_argument("-Y", "--asynchronous", action="store_true", help="Use asynchronous execution of query")
 
     args = parser.parse_args()
     cb = get_cb_cloud_object(args)
@@ -45,7 +46,11 @@ def main():
         direction = "DESC" if args.reverse else "ASC"
         query = query.sort_by(args.sort_by, direction)
 
-    devices = list(query)
+    if args.asynchronous:
+        future = query.execute_async()
+        devices = future.result()
+    else:
+        devices = list(query)
     print("{0:9} {1:40}{2:18}{3}".format("ID", "Hostname", "IP Address", "Last Checkin Time"))
     for device in devices:
         print("{0:9} {1:40s}{2:18s}{3}".format(device.id, device.name or "None",

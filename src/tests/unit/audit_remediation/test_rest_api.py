@@ -6,8 +6,17 @@ from tests.unit.fixtures.stubresponse import StubResponse, patch_cbapi
 
 
 def test_no_org_key():
+    """Test that a CredentialError is raised when no org key is present."""
     with pytest.raises(CredentialError):
         CBCloudAPI(url="https://example.com", token="ABCD/1234", ssl_verify=True)  # note: no org_key
+
+
+def test_async_submit():
+    """Test the functionality of _async_submit() in the CBCloudAPI object."""
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    future = api._async_submit(lambda arg, kwarg: list(range(arg[0])), 4)
+    result = future.result()
+    assert result == [0, 1, 2, 3]
 
 
 def test_simple_get(monkeypatch):
