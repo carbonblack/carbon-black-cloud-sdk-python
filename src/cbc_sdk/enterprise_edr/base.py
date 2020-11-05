@@ -19,7 +19,8 @@ from cbc_sdk.base import (UnrefreshableModel,
                           PaginatedQuery,
                           QueryBuilder,
                           QueryBuilderSupportMixin,
-                          IterableQueryMixin)
+                          IterableQueryMixin,
+                          AsyncQueryMixin)
 from cbc_sdk.errors import ApiError, TimeoutError
 
 import logging
@@ -558,8 +559,7 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
                 self._total_results = current
                 break
 
-
-class AsyncProcessQuery(Query):
+class AsyncProcessQuery(Query, AsyncQueryMixin):
     """Represents the query logic for an asychronous Process query.
 
     This class specializes `Query` to handle the particulars of
@@ -694,6 +694,30 @@ class AsyncProcessQuery(Query):
                 still_fetching = False
 
             log.debug("current: {}, total_results: {}".format(current, self._total_results))
+
+    def _init_async_query(self):
+        """
+        Initialize an async query and return a context for running in the background.
+
+        Returns:
+            object: Context for running in the background (the query token).
+        """
+        self._submit()
+        return self._query_token
+
+    def _run_async_query(self, context):
+        """
+        Executed in the background to run an asynchronous query.
+
+        Args:
+            context (object): The context (query token) returned by _init_async_query.
+
+        Returns:
+            Any: Result of the async query, which is then returned by the future.
+        """
+        if context != self._query_token:
+            raise ApiError("Async query not properly started")
+        return list(self._search())
 
 
 class TreeQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
