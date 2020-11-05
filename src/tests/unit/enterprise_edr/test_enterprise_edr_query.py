@@ -205,12 +205,12 @@ def test_async_submit(cbcsdk_mock):
         async_query._submit()
 
 
-@pytest.mark.parametrize('get_summary_response, get_process_search_response, guid', [
+@pytest.mark.parametrize('get_summary_response, get_process_search_response, guid, pid', [
     (GET_PROCESS_SUMMARY_RESP, GET_PROCESS_SEARCH_JOB_RESULTS_RESP,
-     "test-0002b226-000015bd-00000000-1d6225bbba74c00",),
+     "test-0002b226-000015bd-00000000-1d6225bbba74c00", 2976),
     (GET_PROCESS_SUMMARY_RESP_1, GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1,
-     "test-00340b06-00000314-00000000-1d686b9e4d74f52",)])
-def test_query_execute_async(cbcsdk_mock, get_summary_response, get_process_search_response, guid):
+     "test-00340b06-00000314-00000000-1d686b9e4d74f52", 3909)])
+def test_query_execute_async(cbcsdk_mock, get_summary_response, get_process_search_response, guid, pid):
     """Testing Process.process_pids property."""
     api = cbcsdk_mock.api
     # mock the GET of query parameter validation
@@ -231,3 +231,4 @@ def test_query_execute_async(cbcsdk_mock, get_summary_response, get_process_sear
     future = process_query.execute_async()
     results = future.result()
     assert len(results) == 1
+    assert results[0]['process_pid'][0] == pid

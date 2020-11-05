@@ -206,7 +206,7 @@ GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1 = {
             ],
             "process_name": "c:\\program files\\vmware\\vmware tools\\vmtoolsd.exe",
             "process_pid": [
-                2976
+                3909
             ],
             "process_reputation": "TRUSTED_WHITE_LIST",
             "process_username": [
