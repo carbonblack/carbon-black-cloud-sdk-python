@@ -2,7 +2,7 @@
 
 import pytest
 import logging
-from cbc_sdk.endpoint_standard import EnrichedEvent, AsyncEnrichedEventQuery
+from cbc_sdk.endpoint_standard import EnrichedEvent, EnrichedEventQuery
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ObjectNotFoundError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -64,7 +64,7 @@ def test_enriched_event_query_implementation(cbcsdk_mock):
     api = cbcsdk_mock.api
     event_id = '27a278d5150911eb86f1011a55e73b72'
     events = api.select(EnrichedEvent).where(f"event_id:{event_id}")
-    assert isinstance(events, AsyncEnrichedEventQuery)
+    assert isinstance(events, EnrichedEventQuery)
     assert events[0].event_id == '27a278d5150911eb86f1011a55e73b72'
 
 def test_enriched_event_timeout(cbcsdk_mock):

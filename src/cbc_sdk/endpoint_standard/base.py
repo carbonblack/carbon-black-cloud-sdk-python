@@ -245,7 +245,7 @@ class EnrichedEvent(UnrefreshableModel):
     @classmethod
     def _query_implementation(self, cb, **kwargs):
         # This will emulate a synchronous process query, for now.
-        return AsyncEnrichedEventQuery(self, cb)
+        return EnrichedEventQuery(self, cb)
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
         super(EnrichedEvent, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
@@ -385,14 +385,14 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
                 self._total_results = current
                 break
 
-class AsyncEnrichedEventQuery(Query):
+class EnrichedEventQuery(Query):
     """Represents the query logic for an asychronous Event query.
 
     This class specializes `Query` to handle the particulars of
     enriched events querying.
     """
     def __init__(self, doc_class, cb):
-        super(AsyncEnrichedEventQuery, self).__init__(doc_class, cb)
+        super(EnrichedEventQuery, self).__init__(doc_class, cb)
         self._sort_by = None
         self._group_by = None
         self._batch_size = 100
@@ -422,7 +422,7 @@ class AsyncEnrichedEventQuery(Query):
             direction (str): The sort order, either "ASC" or "DESC".
 
         Returns:
-            Query (AsyncEnrichedEventQuery: The query with sorting parameters.
+            Query (EnrichedEventQuery: The query with sorting parameters.
 
         Example:
 
@@ -449,7 +449,7 @@ class AsyncEnrichedEventQuery(Query):
             msecs (int): Timeout duration, in milliseconds.
 
         Returns:
-            Query (AsyncEnrichedEventQuery): The Query object with new milliseconds
+            Query (EnrichedEventQuery): The Query object with new milliseconds
                 parameter.
 
         Example:
