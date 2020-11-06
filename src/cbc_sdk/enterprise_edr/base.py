@@ -240,7 +240,7 @@ class Tree(UnrefreshableModel):
 """Queries"""
 
 
-class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
+class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin):
     """Represents a prepared query to the Cb Enterprise EDR backend.
 
     This object is returned as part of a `CbEnterpriseEDRAPI.select`
@@ -559,7 +559,19 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
                 self._total_results = current
                 break
 
-class AsyncProcessQuery(Query, AsyncQueryMixin):
+    def _run_async_query(self, context):
+        """
+        Executed in the background to run an asynchronous query.
+
+        Args:
+            context (object): The context (always None in this case).
+
+        Returns:
+            Any: Result of the async query, which is then returned by the future.
+        """
+        return list(self._search())
+
+class AsyncProcessQuery(Query):
     """Represents the query logic for an asychronous Process query.
 
     This class specializes `Query` to handle the particulars of
