@@ -403,6 +403,10 @@ class EnrichedEventQuery(Query):
         self._sort = []
 
     def or_(self, **kwargs):
+        """ or_ criteria are explicitly provided to EnrichedEvent queries although they are endpoint_standard.
+            This method overrides the base class in order to provide or_() functionality rather than
+            raising an exception
+        """ 
         self._query_builder.or_(None, **kwargs)
         return self
 
