@@ -401,6 +401,7 @@ class EnrichedEventQuery(Query):
         self._timeout = 0
         self._timed_out = False
         self._sort = []
+        self._time_range = {}
 
     def or_(self, **kwargs):
         """ or_ criteria are explicitly provided to EnrichedEvent queries although they are endpoint_standard.
@@ -417,6 +418,46 @@ class EnrichedEventQuery(Query):
 
         return args
 
+    def set_rows(self, rows):
+        """
+        Sets the 'rows' query body parameter, determining how many rows of results to request.
+        Args:
+            rows (int): How many rows to request.
+        """
+        if not isinstance(rows, int):
+            raise ApiError(f"Rows must be an integer. {rows} is a {type(rows)}.")
+        self._batch_size = rows
+        self._default_args["rows"] = self._batch_size
+        return self
+
+    def set_time_range(self, start=None, end=None, window=None):
+        """
+        Sets the 'time_range' query body parameter, determining a time window based on 'device_timestamp'.
+        Args:
+            start (str in ISO 8601 timestamp): When to start the result search.
+            end (str in ISO 8601 timestamp): When to end the result search.
+            window (str): Time window to execute the result search, ending on the current time.
+                Should be in the form "-2w", where y=year, w=week, d=day, h=hour, m=minute, s=second.
+        Note:
+            - `window` will take precendent over `start` and `end` if provided.
+        Examples:
+            query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z")
+            second_query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
+            third_query = api.select(Event).set_time_range(window='-3d')
+        """
+        if start:
+            if not isinstance(start, str):
+                raise ApiError(f"Start time must be a string in ISO 8601 format. {start} is a {type(start)}.")
+            self._time_range["start"] = start
+        if end:
+            if not isinstance(end, str):
+                raise ApiError(f"End time must be a string in ISO 8601 format. {end} is a {type(end)}.")
+            self._time_range["end"] = end
+        if window:
+            if not isinstance(window, str):
+                raise ApiError(f"Window must be a string. {window} is a {type(window)}.")
+            self._time_range["window"] = window
+        return self
 
     def sort_by(self, key, direction="ASC"):
         """Sets the sorting behavior on a query's results.
@@ -543,7 +584,7 @@ class EnrichedEventQuery(Query):
             result_url = '{}?start={}&rows={}'.format(
                 result_url_template,
                 current,
-                10  # Batch gets to reduce API calls
+                self._batch_size  # Batch gets to reduce API calls
             )
 
             result = self._cb.get_object(result_url, query_parameters=query_parameters)
