@@ -441,9 +441,9 @@ class EnrichedEventQuery(Query):
         Note:
             - `window` will take precendent over `start` and `end` if provided.
         Examples:
-            query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z")
-            second_query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
-            third_query = api.select(Event).set_time_range(window='-3d')
+            query = api.select(EnrichedEvent).set_time_range(start="2020-10-20T20:34:07Z")
+            second_query = api.select(EnrichedEvent).set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
+            third_query = api.select(EnrichedEvent).set_time_range(window='-3d')
         """
         if start:
             if not isinstance(start, str):
