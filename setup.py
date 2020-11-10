@@ -42,7 +42,7 @@ def read(fname):
 
 
 setup(
-    name='carbon_black_cloud_sdk',
+    name='carbon-black-cloud-sdk',
     version=read('VERSION'),
     url='https://github.com/carbonblack/carbon-black-cloud-sdk-python',
     license='MIT',
