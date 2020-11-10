@@ -415,6 +415,10 @@ class EnrichedEventQuery(Query):
         """Need to override base class implementation as it sets custom (invalid) fields"""
         args = self._default_args.copy()
         args['query'] = self._query_builder._collapse()
+        if self._time_range:
+            args["time_range"] = self._time_range
+        if self._time_range:
+            args["time_range"] = self._time_range
 
         return args
 
@@ -460,6 +464,7 @@ class EnrichedEventQuery(Query):
             if not isinstance(window, str):
                 raise ApiError(f"Window must be a string. {window} is a {type(window)}.")
             self._time_range["window"] = window
+
         return self
 
     def sort_by(self, key, direction="ASC"):
