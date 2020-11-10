@@ -560,7 +560,7 @@ class EnrichedEventQuery(Query):
 
         return self._total_results
 
-    def _search(self, start=0, rows=0):
+    def _search(self, start=0, rows=10):
         if not self._query_token:
             self._submit()
 
@@ -584,7 +584,7 @@ class EnrichedEventQuery(Query):
             result_url = '{}?start={}&rows={}'.format(
                 result_url_template,
                 current,
-                self._batch_size  # Batch gets to reduce API calls
+                rows  # Batch gets to reduce API calls
             )
 
             result = self._cb.get_object(result_url, query_parameters=query_parameters)
