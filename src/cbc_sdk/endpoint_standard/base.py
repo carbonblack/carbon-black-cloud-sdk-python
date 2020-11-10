@@ -417,8 +417,6 @@ class EnrichedEventQuery(Query):
         args['query'] = self._query_builder._collapse()
         if self._time_range:
             args["time_range"] = self._time_range
-        if self._time_range:
-            args["time_range"] = self._time_range
 
         return args
 
