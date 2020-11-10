@@ -426,6 +426,9 @@ class EnrichedEventQuery(Query):
         """
         if not isinstance(rows, int):
             raise ApiError(f"Rows must be an integer. {rows} is a {type(rows)}.")
+        if rows > 10000:
+            raise ApiError("Maximum allowed value for rows is 10000")
+
         self._batch_size = rows
         self._default_args["rows"] = self._batch_size
         return self
