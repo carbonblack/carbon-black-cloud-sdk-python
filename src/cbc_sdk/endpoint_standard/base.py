@@ -395,7 +395,8 @@ class EnrichedEventQuery(Query):
         super(EnrichedEventQuery, self).__init__(doc_class, cb)
         self._sort_by = None
         self._group_by = None
-        self._batch_size = 100
+        self._batch_size = 10
+        self._rows = 500
         self._default_args = {}
         self._query_token = None
         self._timeout = 0
@@ -422,7 +423,8 @@ class EnrichedEventQuery(Query):
 
     def set_rows(self, rows):
         """
-        Sets the 'rows' query body parameter, determining how many rows of results to request.
+        Sets the 'rows' query body parameter to the 'start search' API call,
+        determining how many rows of results to request.
         Args:
             rows (int): How many rows to request.
         """
@@ -431,9 +433,24 @@ class EnrichedEventQuery(Query):
         if rows > 10000:
             raise ApiError("Maximum allowed value for rows is 10000")
 
-        self._batch_size = rows
-        self._default_args["rows"] = self._batch_size
+        self._rows = rows
+        self._default_args["rows"] = self._rows
         return self
+
+    def set_batch_size(self, batch_size):
+        """
+        Sets the 'rows' query parameter to 'retrieve search results' API call, 
+        determining how many results per page to request.
+        Args:
+            batch_size (int): How many results to request.
+        """
+        if not isinstance(batch_size, int):
+            raise ApiError(f"Rows must be an integer. {rows} is a {type(rows)}.")
+
+        self._batch_size = batch_size
+
+        return self
+
 
     def set_time_range(self, start=None, end=None, window=None):
         """
@@ -566,7 +583,7 @@ class EnrichedEventQuery(Query):
 
         return self._total_results
 
-    def _search(self, start=0, rows=10):
+    def _search(self, start=0, rows=0):
         if not self._query_token:
             self._submit()
 
@@ -587,11 +604,15 @@ class EnrichedEventQuery(Query):
         )
         query_parameters = {}
         while still_fetching:
-            result_url = '{}?start={}&rows={}'.format(
+            result_url = '{}?start={}&rows='.format(
                 result_url_template,
                 current,
-                rows  # Batch gets to reduce API calls
             )
+
+            if rows == 0:
+                result_url += str(self._batch_size)
+            else:
+                result_url += str(rows)
 
             result = self._cb.get_object(result_url, query_parameters=query_parameters)
             self._total_results = result.get('num_available', 0)

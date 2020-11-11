@@ -84,8 +84,14 @@ def test_enriched_event_query_sort(cbcsdk_mock):
 def test_enriched_event_rows(cbcsdk_mock):
     """Testing EnrichedEvent results sort."""
     api = cbcsdk_mock.api
-    events = api.select(EnrichedEvent).where(process_pid=1000).set_rows(500)
-    assert events._default_args["rows"] == 500
+    events = api.select(EnrichedEvent).where(process_pid=1000).set_rows(1500)
+    assert events._rows == 1500
+
+def test_enriched_event_batch_size(cbcsdk_mock):
+    """Testing EnrichedEvent results sort."""
+    api = cbcsdk_mock.api
+    events = api.select(EnrichedEvent).where(process_pid=1000).set_batch_size(1500)
+    assert events._batch_size == 1500
     
 def test_enriched_event_time_range(cbcsdk_mock):
     """Testing EnrichedEvent results sort."""
