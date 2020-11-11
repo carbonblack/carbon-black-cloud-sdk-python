@@ -30,7 +30,7 @@ release = '1.0a'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.napoleon', 'sphinx.ext.autodoc']
+extensions = ['sphinx.ext.napoleon', 'sphinx.ext.autodoc', 'sphinx.ext.autosectionlabel']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -64,6 +64,7 @@ html_theme = 'sphinx_rtd_theme'
 html_theme_options = {
     'logo_only': True,
     'display_version': False,
+    'style_external_links': True,
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
@@ -73,7 +74,7 @@ html_static_path = ['_static']
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "_static/Cb-Python-API.png"
+html_logo = "_static/cbc-sdk-thumbnail.png"
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'CarbonBlackAPI-PythonBindingsdoc'

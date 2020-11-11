@@ -6,6 +6,9 @@
 CBC SDK: Carbon Black Cloud SDK for Python
 ==========================================
 
+In Alpha Development
+--------------------
+
 Release v\ |release|.
 
 The Carbon Black Cloud Python SDK provides an easy interface to connect with Carbon Black Cloud products,
@@ -37,7 +40,7 @@ which is explained in the `Developer Network Authentication Guide
 <https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/>`_.
 
 The SDK manages your API credentials for you. There are multiple ways to supply the SDK
-with your API credentials, which is explained in :ref:`getting-started`.
+with your API credentials, which is explained in :ref:`authentication`.
 
 User Guide
 ----------
@@ -45,23 +48,28 @@ User Guide
 Get started with Carbon Black Cloud Python SDK here. For detailed information on the objects and methods exposed by Carbon Black Cloud Python SDK, see the full API Documentation below.
 
 .. toctree::
+   :caption: User Guide
    :maxdepth: 2
 
 
    installation
-   getting-started
+   authentication
+   Getting Started <getting-started>
    concepts
+   porting-guide
    logging
    changelog
 
-API Documentation
+SDK Documentation
 -----------------
 
 .. toctree::
+   :caption: SDK Documentation
    :maxdepth: 2
 
    cbc_sdk.audit_remediation
    cbc_sdk.credential_providers
+   developing-credential-providers
    cbc_sdk.endpoint_standard
    cbc_sdk.enterprise_edr
    cbc_sdk.platform

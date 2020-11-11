@@ -22,8 +22,8 @@ import shutil
 import subprocess
 from optparse import OptionParser
 
-from cbc_sdk.example_helpers import build_cli_parser, get_cb_cloud_object
-from cbc_sdk.endpoint_standard.base import Device
+from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
+from cbc_sdk.endpoint_standard import Device
 
 log = logging.getLogger(__name__)
 

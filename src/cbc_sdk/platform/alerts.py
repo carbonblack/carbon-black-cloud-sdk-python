@@ -461,7 +461,7 @@ class BaseAlertSearchQuery(PlatformQueryBase, QueryBuilderSupportMixin, Iterable
 
     def set_device_os_versions(self, device_os_versions):
         """
-        Restricts the alerts that this query is performed on to the specified device operating system versions..
+        Restricts the alerts that this query is performed on to the specified device operating system versions.
 
         Args:
             device_os_versions (list): List of string operating system versions.
@@ -744,6 +744,8 @@ class BaseAlertSearchQuery(PlatformQueryBase, QueryBuilderSupportMixin, Iterable
         """
         request = {"criteria": self._build_criteria()}
         request["query"] = self._query_builder._collapse()
+        # Fetch 100 rows per page (instead of 10 by default) for better performance
+        request["rows"] = 100
         if from_row > 0:
             request["start"] = from_row
         if max_rows >= 0:

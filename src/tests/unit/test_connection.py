@@ -52,7 +52,7 @@ def test_initial_connection_error(cdata, msg_prefix):
 
 @pytest.mark.parametrize("adapter_raises, msg_prefix", [
     (ssl.SSLError, "This version of Python and OpenSSL do not support TLSv1.2"),
-    (ValueError, "Unknown error establishing cbapi session")
+    (ValueError, "Unknown error establishing CBC SDK session")
 ])
 def test_session_adapter_creation_failure(mox, adapter_raises, msg_prefix):
     """Test the failure cases that come from the failure to create the session adapter."""

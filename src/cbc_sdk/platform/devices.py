@@ -15,7 +15,7 @@
 
 from cbc_sdk.errors import ApiError
 from cbc_sdk.platform import PlatformModel, PlatformQueryBase
-from cbc_sdk.base import QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin
+from cbc_sdk.base import QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin
 
 import time
 
@@ -56,6 +56,15 @@ class Device(PlatformModel):
             DeviceSearchQuery: The query object for this alert type.
         """
         return DeviceSearchQuery(cls, cb)
+
+    @property
+    def deviceId(self):
+        """Warn user that Platform Devices use 'id', not 'device_id'.
+
+        Platform Device API's return 'id' in API responses, where Endpoint Standard
+        API's return 'deviceId'.
+        """
+        raise AttributeError("Platform Devices use .id property for device ID.")
 
     def _refresh(self):
         """
@@ -164,7 +173,7 @@ class Device(PlatformModel):
 """Device Queries"""
 
 
-class DeviceSearchQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
+class DeviceSearchQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin):
     """Represents a query that is used to locate Device objects."""
     VALID_OS = ["WINDOWS", "ANDROID", "MAC", "IOS", "LINUX", "OTHER"]
     VALID_STATUSES = ["PENDING", "REGISTERED", "UNINSTALLED", "DEREGISTERED",
@@ -496,6 +505,33 @@ class DeviceSearchQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQue
             if current >= self._total_results:
                 still_querying = False
                 break
+
+    def _run_async_query(self, context):
+        """
+        Executed in the background to run an asynchronous query. Must be implemented in any inheriting classes.
+
+        Args:
+            context (object): The context returned by _init_async_query. May be None.
+
+        Returns:
+            Any: Result of the async query, which is then returned by the future.
+        """
+        url = self._build_url("/_search")
+        self._total_results = 0
+        self._count_valid = False
+        output = []
+        while not self._count_valid or len(output) < self._total_results:
+            request = self._build_request(len(output), -1)
+            resp = self._cb.post_object(url, body=request)
+            result = resp.json()
+
+            if not self._count_valid:
+                self._total_results = result["num_found"]
+                self._count_valid = True
+
+            results = result.get("results", [])
+            output += [self._doc_class(self._cb, item["id"], item) for item in results]
+        return output
 
     def download(self):
         """

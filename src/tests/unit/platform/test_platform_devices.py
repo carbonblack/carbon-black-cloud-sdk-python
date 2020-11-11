@@ -58,3 +58,22 @@ def test_device_query_with_where_and(cbcsdk_mock):
     assert results[0]._info['id'] == platform_device_select_with_id._info['id']
     assert len(results[0]._info) == len(platform_device_select_with_id._info)
     assert len(results[0]._info) != 0
+
+
+def test_device_query_async(cbcsdk_mock):
+    """Testing a device query with execute_async()"""
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
+    cbcsdk_mock.mock_request("POST", "/appservices/v6/orgs/test/devices/_search", POST_DEVICE_SEARCH_RESP)
+    api = cbcsdk_mock.api
+    future = api.select(Device).where(deviceId='98765').and_(name='win7x64').execute_async()
+    results = future.result()
+    assert len(results) == 1
+    assert results[0].policy_id == 11200
+
+
+def test_device_id_property(cbcsdk_mock):
+    """Testing raising AttributeError on call to device.deviceId."""
+    with pytest.raises(AttributeError):
+        cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
+        a = Device(cbcsdk_mock.api, 98765)
+        a.deviceId

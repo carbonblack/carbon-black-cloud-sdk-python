@@ -138,3 +138,6 @@ env
 
 # IntelliJ
 .idea/
+
+# CBC credentials
+.carbonblack/

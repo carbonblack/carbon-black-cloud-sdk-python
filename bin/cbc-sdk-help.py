@@ -123,12 +123,12 @@ def configure(opts):
 command_map = {
     "configure": {
         "extra_args": {},
-        "help": "Configure CbAPI",
+        "help": "Configure CBC SDK",
         "method": configure
     },
     "configure-windows": {
         "extra_args": {},
-        "help": "Configure CbAPI for the Windows Registry",
+        "help": "Configure CBC SDK for the Windows Registry",
         "method": configure_windows
     }
 }
@@ -137,7 +137,7 @@ command_map = {
 def main(args):
     """Process command line input"""
     parser = argparse.ArgumentParser()
-    commands = parser.add_subparsers(dest="command_name", help="CbAPI subcommand")
+    commands = parser.add_subparsers(dest="command_name", help="CBC SDK subcommand")
 
     for cmd_name, cmd_config in iter(command_map.items()):
         cmd_parser = commands.add_parser(cmd_name, help=cmd_config.get("help", None))

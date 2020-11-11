@@ -547,9 +547,7 @@ class BaseQuery(object):
 
     def _perform_query(self):
         # This has the effect of generating an empty iterator.
-        # See http://stackoverflow.com/questions/13243766/python-empty-generator-function
-        return
-        yield
+        yield from ()
 
     def __len__(self):
         return 0
@@ -876,22 +874,22 @@ class QueryBuilder(object):
         elif self._query is not None:
             return str(self._query)
         else:
-            return "*:*"               # return everything
+            return ""               # return everything
 
 
 class QueryBuilderSupportMixin:
-    """
-    A mixin that supplies wrapper methods to access the _query_builder.
-    """
+    """A mixin that supplies wrapper methods to access the _query_builder."""
     def where(self, q=None, **kwargs):
-        """Add a filter to this query.
-
-        :param q: Query string, :py:class:`QueryBuilder`, or `solrq.Q` object
-        :param kwargs: Arguments to construct a `solrq.Q` with
-        :return: Query object
-        :rtype: :py:class:`Query`
         """
+        Add a filter to this query.
 
+        Args:
+            q (Any): Query string, :py:class:`QueryBuilder`, or `solrq.Q` object
+            **kwargs (dict): Arguments to construct a `solrq.Q` with
+
+        Returns:
+            Query: This Query object.
+        """
         if isinstance(q, QueryBuilder):
             self._query_builder = q
         else:
@@ -899,12 +897,15 @@ class QueryBuilderSupportMixin:
         return self
 
     def and_(self, q=None, **kwargs):
-        """Add a conjunctive filter to this query.
+        """
+        Add a conjunctive filter to this query.
 
-        :param q: Query string or `solrq.Q` object
-        :param kwargs: Arguments to construct a `solrq.Q` with
-        :return: Query object
-        :rtype: :py:class:`Query`
+        Args:
+            q (Any): Query string or `solrq.Q` object
+            **kwargs (dict): Arguments to construct a `solrq.Q` with
+
+        Returns:
+            Query: This Query object.
         """
         if not q and not kwargs:
             raise ApiError(".and_() expects a string, a solrq.Q, or kwargs")
@@ -913,12 +914,15 @@ class QueryBuilderSupportMixin:
         return self
 
     def or_(self, q=None, **kwargs):
-        """Add a disjunctive filter to this query.
+        """
+        Add a disjunctive filter to this query.
 
-        :param q: `solrq.Q` object
-        :param kwargs: Arguments to construct a `solrq.Q` with
-        :return: Query object
-        :rtype: :py:class:`Query`
+        Args:
+            q (solrq.Q): Query object.
+            **kwargs (dict): Arguments to construct a `solrq.Q` with.
+
+        Returns:
+            Query: This Query object.
         """
         if not q and not kwargs:
             raise ApiError(".or_() expects a solrq.Q or kwargs")
@@ -927,14 +931,16 @@ class QueryBuilderSupportMixin:
         return self
 
     def not_(self, q=None, **kwargs):
-        """Adds a negated filter to this query.
-
-        :param q: `solrq.Q` object
-        :param kwargs: Arguments to construct a `solrq.Q` with
-        :return: Query object
-        :rtype: :py:class:`Query`
         """
+        Adds a negated filter to this query.
 
+        Args:
+            q (solrq.Q): Query object.
+            **kwargs (dict): Arguments to construct a `solrq.Q` with.
+
+        Returns:
+            Query: This Query object.
+        """
         if not q and not kwargs:
             raise ApiError(".not_() expects a solrq.Q, or kwargs")
 
@@ -943,14 +949,13 @@ class QueryBuilderSupportMixin:
 
 
 class IterableQueryMixin:
-    """
-    A mix-in to provide iterability to a query.
-    """
+    """A mix-in to provide iterability to a query."""
     def all(self):
         """
         Returns all the items of a query as a list.
 
-        :return: List of query items
+        Returns:
+            list: List of query items
         """
         return self._perform_query()
 
@@ -958,7 +963,8 @@ class IterableQueryMixin:
         """
         Returns the first item that would be returned as the result of a query.
 
-        :return: First query item
+        Returns:
+            obj: First query item
         """
         allres = list(self)
         res = allres[:1]
@@ -970,8 +976,11 @@ class IterableQueryMixin:
         """
         Returns the only item that would be returned by a query.
 
-        :return: Sole query return item
-        :raises MoreThanOneResultError: If the query returns zero items, or more than one item
+        Returns:
+            obj: Sole query return item
+
+        Raises:
+            MoreThanOneResultError: If the query returns zero items, or more than one item
         """
         allres = list(self)
         res = allres[:2]
@@ -988,10 +997,65 @@ class IterableQueryMixin:
         return res[0]
 
     def __len__(self):
+        """
+        Return the number of objects this query returns.
+
+        Returns:
+            int: The number of objects this query returns.
+        """
         return self._count()
 
     def __getitem__(self, item):
+        """
+        Not implemented.
+
+        Args:
+            item (int): Unused.
+
+        Returns:
+            None
+        """
         return None
 
     def __iter__(self):
+        """
+        Returns the iterator for this query.
+
+        Returns:
+            Iterator: The iterator for this query.
+        """
         return self._perform_query()
+
+
+class AsyncQueryMixin:
+    """A mix-in which provides support for asynchronous queries."""
+    def _init_async_query(self):
+        """
+        Initialize an async query and return a context for running in the background. Optional.
+
+        Returns:
+            object: Context for running in the background.
+        """
+        return None
+
+    def _run_async_query(self, context):
+        """
+        Executed in the background to run an asynchronous query. Must be implemented in any inheriting classes.
+
+        Args:
+            context (object): The context returned by _init_async_query. May be None.
+
+        Returns:
+            Any: Result of the async query, which is then returned by the future.
+        """
+        raise NotImplementedError("must implement _run_async_query for AsyncQueryMixin support")
+
+    def execute_async(self):
+        """
+        Executes the current query in an asynchronous fashion.
+
+        Returns:
+            Future: A future representing the query and its results.
+        """
+        context = self._init_async_query()
+        return self._cb._async_submit(lambda arg, kwarg: arg[0]._run_async_query(arg[1]), self, context)
