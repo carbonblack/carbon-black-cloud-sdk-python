@@ -205,7 +205,7 @@ class Event(UnrefreshableModel):
 
     @classmethod
     def _query_implementation(self, cb, **kwargs):
-        return Query(self, cb)
+        return EventQuery(self, cb)
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
         super(Event, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
@@ -571,6 +571,7 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
         """
         return list(self._search())
 
+
 class AsyncProcessQuery(Query):
     """Represents the query logic for an asychronous Process query.
 
@@ -791,3 +792,55 @@ class TreeQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
             results["incomplete_results"] = result["incomplete_results"]
 
         return results
+
+
+class EventQuery(Query):
+    def _search(self, start=0, rows=0):
+        # iterate over total result set, 100 at a time
+        args = self._get_query_parameters()
+        self._validate(args)
+
+        if start != 0:
+            args['start'] = start
+        args['rows'] = self._batch_size
+
+        current = start
+        numrows = 0
+
+        still_querying = True
+
+        while still_querying:
+            url = self._doc_class.urlobject.format(
+                self._cb.credentials.org_key,
+                args["process_guid"]
+            )
+            resp = self._cb.post_object(url, body=args)
+            result = resp.json()
+
+            self._total_results = result.get("num_available", 0)
+            self._total_segments = result.get("total_segments", 0)
+            self._processed_segments = result.get("processed_segments", 0)
+            self._count_valid = True
+            if self._processed_segments != self._total_segments:
+                continue  # loop until we get all segments back
+
+            results = result.get('results', [])
+
+            for item in results:
+                yield item
+                current += 1
+                numrows += 1
+                if rows and numrows == rows:
+                    still_querying = False
+                    break
+
+            args['start'] = current + 1  # as of 6/2017, the indexing on the Cb Endpoint Standard backend is still 1-based
+
+            if current >= self._total_results:
+                break
+            if not results:
+                log.debug("server reported total_results overestimated the number of results for this query by {0}"
+                          .format(self._total_results - current))
+                log.debug("resetting total_results for this query to {0}".format(current))
+                self._total_results = current
+                break
