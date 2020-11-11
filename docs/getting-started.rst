@@ -7,8 +7,8 @@ authentication for it, and executing a simple example program that makes one API
 
 Installation
 ------------
-Make sure you are using Python 3.  Use the command ``pip install carbon_black_cloud_sdk`` to install the SDK and all its dependencies.
-(In some environments, the correct command will be ``pip3 install carbon_black_cloud_sdk`` to use Python 3.)
+Make sure you are using Python 3.  Use the command ``pip install carbon-black-cloud-sdk`` to install the SDK and all its dependencies.
+(In some environments, the correct command will be ``pip3 install carbon-black-cloud-sdk`` to use Python 3.)
 
 You can also access the SDK in development mode by cloning the GitHub repository, and then executing
 ``python setup.py develop`` (in some environments, ``python3 setup.py develop``) from the top-level directory.
