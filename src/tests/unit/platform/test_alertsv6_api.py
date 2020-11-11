@@ -23,6 +23,7 @@ def test_query_basealert_with_all_bells_and_whistles(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/alerts/_search"
         assert body == {"query": "Blort",
+                        "rows": 100,
                         "criteria": {"category": ["SERIOUS", "CRITICAL"], "device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
                                      "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
@@ -61,6 +62,7 @@ def test_query_basealert_with_create_time_as_start_end(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/alerts/_search"
         assert body == {"query": "Blort",
+                        "rows": 100,
                         "criteria": {"create_time": {"start": "2019-09-30T12:34:56", "end": "2019-10-01T12:00:12"}}}
         _was_called = True
         return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
@@ -84,7 +86,8 @@ def test_query_basealert_with_create_time_as_range(monkeypatch):
     def _run_query(url, body, **kwargs):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/alerts/_search"
-        assert body == {"query": "Blort", "criteria": {"create_time": {"range": "-3w"}}}
+        assert body == {"query": "Blort", "criteria": {"create_time": {"range": "-3w"}},
+                        "rows": 100}
         _was_called = True
         return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
                                           "workflow": {"state": "OPEN"}}], "num_found": 1})
@@ -176,6 +179,7 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/alerts/cbanalytics/_search"
         assert body == {"query": "Blort",
+                        "rows": 100,
                         "criteria": {"category": ["SERIOUS", "CRITICAL"], "device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
                                      "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
@@ -221,7 +225,8 @@ def test_query_cbanalyticsalert_facets(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/alerts/cbanalytics/_facet"
         assert body == {"query": "Blort", "criteria": {"workflow": ["OPEN"]},
-                        "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]}}
+                        "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]},
+                        "rows": 100}
         _was_called = True
         return StubResponse({"results": [{"field": {},
                                           "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
@@ -264,6 +269,7 @@ def test_query_vmwarealert_with_all_bells_and_whistles(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/alerts/vmware/_search"
         assert body == {"query": "Blort",
+                        "rows": 100,
                         "criteria": {"category": ["SERIOUS", "CRITICAL"], "device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
                                      "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
@@ -302,7 +308,8 @@ def test_query_vmwarealert_facets(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/alerts/vmware/_facet"
         assert body == {"query": "Blort", "criteria": {"workflow": ["OPEN"]},
-                        "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]}}
+                        "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]},
+                        "rows": 100}
         _was_called = True
         return StubResponse({"results": [{"field": {},
                                           "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
@@ -332,6 +339,7 @@ def test_query_watchlistalert_with_all_bells_and_whistles(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/alerts/watchlist/_search"
         assert body == {"query": "Blort",
+                        "rows": 100,
                         "criteria": {"category": ["SERIOUS", "CRITICAL"], "device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
                                      "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
@@ -371,7 +379,8 @@ def test_query_watchlistalert_facets(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/alerts/watchlist/_facet"
         assert body == {"query": "Blort", "criteria": {"workflow": ["OPEN"]},
-                        "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]}}
+                        "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]},
+                        "rows": 100}
         _was_called = True
         return StubResponse({"results": [{"field": {},
                                           "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
