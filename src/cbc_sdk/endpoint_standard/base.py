@@ -395,7 +395,6 @@ class EnrichedEventQuery(Query):
         super(EnrichedEventQuery, self).__init__(doc_class, cb)
         self._sort_by = None
         self._group_by = None
-        self._batch_size = 10
         self._rows = 500
         self._default_args = {}
         self._query_token = None
@@ -435,20 +434,6 @@ class EnrichedEventQuery(Query):
 
         self._rows = rows
         self._default_args["rows"] = self._rows
-        return self
-
-    def set_batch_size(self, batch_size):
-        """
-        Sets the 'rows' query parameter to 'retrieve search results' API call, 
-        determining how many results per page to request.
-        Args:
-            batch_size (int): How many results to request.
-        """
-        if not isinstance(batch_size, int):
-            raise ApiError(f"Rows must be an integer. {rows} is a {type(rows)}.")
-
-        self._batch_size = batch_size
-
         return self
 
 
@@ -604,15 +589,11 @@ class EnrichedEventQuery(Query):
         )
         query_parameters = {}
         while still_fetching:
-            result_url = '{}?start={}&rows='.format(
+            result_url = '{}?start={}&rows={}'.format(
                 result_url_template,
                 current,
+                self._batch_size
             )
-
-            if rows == 0:
-                result_url += str(self._batch_size)
-            else:
-                result_url += str(rows)
 
             result = self._cb.get_object(result_url, query_parameters=query_parameters)
             self._total_results = result.get('num_available', 0)
