@@ -6,7 +6,7 @@ from cbc_sdk.enterprise_edr import Event, Process
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.enterprise_edr.mock_events import (EVENT_SEARCH_VALIDATION_RESP,
-                                                            EVENT_SEARCH_RESP)
+                                                            EVENT_SEARCH_RESP_INTERIM, EVENT_SEARCH_RESP)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -39,6 +39,7 @@ def test_event_query_process_select_with_guid(cbcsdk_mock):
     search_validate_url = "/api/investigate/v1/orgs/test/events/search_validation"
     cbcsdk_mock.mock_request("GET", search_validate_url, EVENT_SEARCH_VALIDATION_RESP)
     url = r"/api/investigate/v2/orgs/test/events/J7G6DTLN\\-006633e3\\-00000334\\-00000000\\-1d677bedfbb1c2e/_search"
+    cbcsdk_mock.mock_request("POST", url, EVENT_SEARCH_RESP_INTERIM)
     cbcsdk_mock.mock_request("POST", url, EVENT_SEARCH_RESP)
 
     events = [event for event in process.events()]
@@ -87,3 +88,22 @@ def test_event_query_select_with_where(cbcsdk_mock):
     assert len(results) == 100
     first_result = results[0]
     assert first_result.process_guid == guid
+
+
+def test_event_query_select_asynchronous(cbcsdk_mock):
+    """Test Event Querying with where() clause as asynchronous"""
+    search_validate_url = "/api/investigate/v1/orgs/test/events/search_validation"
+    cbcsdk_mock.mock_request("GET", search_validate_url, EVENT_SEARCH_VALIDATION_RESP)
+
+    url = r"/api/investigate/v2/orgs/test/events/J7G6DTLN\\-006633e3\\-00000334\\-00000000\\-1d677bedfbb1c2e/_search"
+    cbcsdk_mock.mock_request("POST", url, EVENT_SEARCH_RESP)
+
+    api = cbcsdk_mock.api
+    guid = "J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e"
+
+    events = api.select(Event).where(process_guid=guid)
+    future = events.execute_async()
+    results = future.result()
+    assert len(results) == 250  # we get all of them when we run in background
+    first_event = results[0]
+    assert first_event['process_guid'] == guid

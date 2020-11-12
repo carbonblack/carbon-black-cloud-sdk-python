@@ -203,3 +203,32 @@ def test_async_submit(cbcsdk_mock):
     async_query._query_token = "the_job_id_because_this_query_was_already_submitted"
     with pytest.raises(ApiError):
         async_query._submit()
+
+
+@pytest.mark.parametrize('get_summary_response, get_process_search_response, guid, pid', [
+    (GET_PROCESS_SUMMARY_RESP, GET_PROCESS_SEARCH_JOB_RESULTS_RESP,
+     "test-0002b226-000015bd-00000000-1d6225bbba74c00", 2976),
+    (GET_PROCESS_SUMMARY_RESP_1, GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1,
+     "test-00340b06-00000314-00000000-1d686b9e4d74f52", 3909)])
+def test_query_execute_async(cbcsdk_mock, get_summary_response, get_process_search_response, guid, pid):
+    """Testing Process.process_pids property."""
+    api = cbcsdk_mock.api
+    # mock the GET of query parameter validation
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+                             GET_PROCESS_VALIDATION_RESP)
+    # mock the POST of a search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_job",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/search_jobs/"
+                                     "2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             get_process_search_response)
+    process_query = api.select(Process).where(f"process_guid:{guid}")
+    future = process_query.execute_async()
+    results = future.result()
+    assert len(results) == 1
+    assert results[0]['process_pid'][0] == pid
