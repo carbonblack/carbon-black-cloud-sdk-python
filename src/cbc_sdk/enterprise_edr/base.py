@@ -194,6 +194,13 @@ class Process(UnrefreshableModel):
         else:
             return None
 
+    def facets(self):
+        """Returns a FacetQuery for a Process.
+
+        This represents the search for a summary of results from a single field of a `Run`.
+        """
+        return self._cb.select(ProcessFacet).where(process_guid=self.process_guid)
+
 
 class Event(UnrefreshableModel):
     """Events can be queried for via `CBCloudAPI.select` or an already selected process with `Process.events`."""
@@ -234,6 +241,45 @@ class Tree(UnrefreshableModel):
             children ([Process]): List of children for the Tree's parent process.
         """
         return [Process(self._cb, initial_data=child) for child in self.nodes["children"]]
+
+
+class ProcessFacet(UnrefreshableModel):
+    """Represents the summary of results for a Process."""
+    primary_key = "field"
+    swagger_meta_file = "audit_remediation/models/facet.yaml"
+    urlobject = "/livequery/v1/orgs/{}/runs/{}/results/_facet"
+
+    class Values(UnrefreshableModel):
+        """Represents the values associated with a field."""
+        def __init__(self, cb, initial_data):
+            """Initialize a ProcessFacet Values object with initial_data."""
+            super(ProcessFacet.Values, self).__init__(
+                cb,
+                model_unique_id=None,
+                initial_data=initial_data,
+                force_init=False,
+                full_doc=True,
+            )
+
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
+        return FacetQuery(cls, cb)
+
+    def __init__(self, cb, initial_data):
+        """Initialize a ResultFacet object with initial_data."""
+        super(ProcessFacet, self).__init__(
+            cb,
+            model_unique_id=None,
+            initial_data=initial_data,
+            force_init=False,
+            full_doc=True
+        )
+        self._values = ProcessFacet.Values(cb, initial_data=initial_data["values"])
+
+    @property
+    def values_(self):
+        """Returns the reified `ProcessFacet.Values` for this result."""
+        return self._values
 
 
 """Queries"""
@@ -729,6 +775,10 @@ class TreeQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
         Returns:
             Query (TreeQuery): TreeQuery with added arguments.
         """
+
+
+
+
         self.where(**kwargs)
         return self
 
@@ -755,3 +805,188 @@ class TreeQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
             results["incomplete_results"] = result["incomplete_results"]
 
         return results
+
+
+class FacetQuery(Query):
+    """Represents a prepared query for Process Facets."""
+    def __init__(self, doc_class, cb):
+        """Initialize a FacetQuery object."""
+        super().__init__(doc_class, cb)
+        self._query_builder = QueryBuilder()
+        self._facet_fields = []
+        self._criteria = {}
+
+    def facet_field(self, field):
+        """Sets the facet fields to be received by this query.
+
+        Arguments:
+            field (str or [str]): Field(s) to be received.
+
+        Returns:
+            FacetQuery that will receive field(s) facet_field.
+
+        Example:
+
+        >>> cb.select(ResultFacet).run_id(my_run).facet_field(["device.policy_name", "device.os"])
+        """
+        if isinstance(field, str):
+            self._facet_fields.append(field)
+        else:
+            for name in field:
+                self._facet_fields.append(name)
+        return self
+
+    def update_criteria(self, key, newlist):
+        """Update the criteria on this query with a custom criteria key.
+
+        Args:
+            key (str): The key for the criteria item to be set.
+            newlist (list): List of values to be set for the criteria item.
+
+        Returns:
+            The FacetQuery with specified custom criteria.
+
+        Example:
+            query = api.select(ResultFacet).update_criteria("my.criteria.key", ["criteria_value"])
+
+        Note: Use this method if there is no implemented method for your desired criteria.
+        """
+        self._update_criteria(key, newlist)
+        return self
+
+    def _update_criteria(self, key, newlist):
+        """
+        Updates a list of criteria being collected for a query, by setting or appending items.
+
+        Args:
+            key (str): The key for the criteria item to be set.
+            newlist (list): List of values to be set for the criteria item.
+        """
+        oldlist = self._criteria.get(key, [])
+        self._criteria[key] = oldlist + newlist
+
+    def set_device_ids(self, device_ids):
+        """Sets the device.id criteria filter.
+
+        Arguments:
+            device_ids ([int]): Device IDs to filter on.
+
+        Returns:
+            The FacetQuery with specified device.id.
+        """
+        if not all(isinstance(device_id, int) for device_id in device_ids):
+            raise ApiError("One or more invalid device IDs")
+        self._update_criteria("device.id", device_ids)
+        return self
+
+    def set_device_names(self, device_names):
+        """Sets the device.name criteria filter.
+
+        Arguments:
+            device_names ([str]): Device names to filter on.
+
+        Returns:
+            The FacetQuery with specified device.name.
+        """
+        if not all(isinstance(name, str) for name in device_names):
+            raise ApiError("One or more invalid device names")
+        self._update_criteria("device.name", device_names)
+        return self
+
+    def set_device_os(self, device_os):
+        """Sets the device.os criteria.
+
+        Arguments:
+            device_os ([str]): Device OS's to filter on.
+
+        Returns:
+            The FacetQuery object with specified device_os.
+
+        Note:
+            Device OS's can be one or more of ["WINDOWS", "MAC", "LINUX"].
+        """
+        if not all(isinstance(os, str) for os in device_os):
+            raise ApiError("device_type must be a list of strings, including"
+                           " 'WINDOWS', 'MAC', and/or 'LINUX'")
+        self._update_criteria("device.os", device_os)
+        return self
+
+    def set_policy_ids(self, policy_ids):
+        """Sets the device.policy_id criteria.
+
+        Arguments:
+            policy_ids ([int]): Device policy ID's to filter on.
+
+        Returns:
+            The FacetQuery object with specified policy_ids.
+        """
+        if not all(isinstance(id, int) for id in policy_ids):
+            raise ApiError("policy_ids must be a list of integers.")
+        self._update_criteria("device.policy_id", policy_ids)
+        return self
+
+    def set_policy_names(self, policy_names):
+        """Sets the device.policy_name criteria.
+
+        Arguments:
+            policy_names ([str]): Device policy names to filter on.
+
+        Returns:
+            The FacetQuery object with specified policy_names.
+        """
+        if not all(isinstance(name, str) for name in policy_names):
+            raise ApiError("policy_names must be a list of strings.")
+        self._update_criteria("device.policy_name", policy_names)
+        return self
+
+    def set_statuses(self, statuses):
+        """Sets the status criteria.
+
+        Arguments:
+            statuses ([str]): Query statuses to filter on.
+
+        Returns:
+            The FacetQuery object with specified statuses.
+        """
+        if not all(isinstance(status, str) for status in statuses):
+            raise ApiError("statuses must be a list of strings.")
+        self._update_criteria("status", statuses)
+        return self
+
+    def run_id(self, run_id):
+        """Sets the run ID to query results for.
+
+        Arguments:
+            run_id (int): The run ID to retrieve results for.
+
+        Returns:
+            FacetQuery object with specified run_id.
+
+        Example:
+        >>> cb.select(ResultFacet).run_id(my_run)
+        """
+        self._run_id = run_id
+        return self
+
+    def _build_request(self, rows):
+        terms = {"fields": self._facet_fields}
+        if rows != 0:
+            terms["rows"] = rows
+        request = {"query": self._query_builder._collapse(), "terms": terms}
+        if self._criteria:
+            request["criteria"] = self._criteria
+        return request
+
+    def _perform_query(self, rows=0):
+        if self._run_id is None:
+            raise ApiError("Can't retrieve results without a run ID")
+
+        url = self._doc_class.urlobject.format(
+            self._cb.credentials.org_key, self._run_id
+        )
+        request = self._build_request(rows)
+        resp = self._cb.post_object(url, body=request)
+        result = resp.json()
+        results = result.get("terms", [])
+        for item in results:
+            yield self._doc_class(self._cb, item)
