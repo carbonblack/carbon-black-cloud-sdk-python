@@ -246,8 +246,8 @@ class Tree(UnrefreshableModel):
 class ProcessFacet(UnrefreshableModel):
     """Represents the summary of results for a Process."""
     primary_key = "field"
-    swagger_meta_file = "audit_remediation/models/facet.yaml"
-    urlobject = "/livequery/v1/orgs/{}/runs/{}/results/_facet"
+    swagger_meta_file = "enterprise_edr/models/process_facet.yaml"
+    urlobject = "/api/investigate/v2/orgs/{}/processes/facet_jobs"
 
     class Values(UnrefreshableModel):
         """Represents the values associated with a field."""
@@ -263,7 +263,7 @@ class ProcessFacet(UnrefreshableModel):
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
-        return FacetQuery(cls, cb)
+        return AsyncFacetQuery(cls, cb)
 
     def __init__(self, cb, initial_data):
         """Initialize a ResultFacet object with initial_data."""
@@ -807,186 +807,236 @@ class TreeQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
         return results
 
 
-class FacetQuery(Query):
+class AsyncFacetQuery(Query):
     """Represents a prepared query for Process Facets."""
     def __init__(self, doc_class, cb):
-        """Initialize a FacetQuery object."""
-        super().__init__(doc_class, cb)
-        self._query_builder = QueryBuilder()
-        self._facet_fields = []
-        self._criteria = {}
+        super(AsyncFacetQuery, self).__init__(doc_class, cb)
+        self._query_token = None
+        self._timeout = 0
+        self._timed_out = False
+        self._limit = None
 
-    def facet_field(self, field):
-        """Sets the facet fields to be received by this query.
+    def timeout(self, msecs):
+        """Sets the timeout on an ProcessFacet query.
 
         Arguments:
-            field (str or [str]): Field(s) to be received.
+            msecs (int): Timeout duration, in milliseconds.
 
         Returns:
-            FacetQuery that will receive field(s) facet_field.
+            Query (AsyncFacetQuery): The Query object with new milliseconds
+                parameter.
 
         Example:
 
-        >>> cb.select(ResultFacet).run_id(my_run).facet_field(["device.policy_name", "device.os"])
+        >>> cb.select(ProcessFacet).where(process_name="foo.exe").timeout(5000)
         """
-        if isinstance(field, str):
-            self._facet_fields.append(field)
+        self._timeout = msecs
+        return self
+
+    def limit(self, limit):
+        """Sets the maximum number of facets per category (i.e. any Process Search Fields in self._fields).
+
+        The default limit for Process Facet searches in the Carbon Black Cloud backend is 100.
+
+        Arguments:
+            limit (int): Maximum number of facets per category.
+
+        Returns:
+            Query (AsyncFacetQuery): The Query object with new limit parameter.
+
+        Example:
+
+        >>> cb.select(ProcessFacet).where(process_name="foo.exe").limit(50)
+        """
+        self._limit = limit
+        return self
+
+    def _submit(self):
+        if self._query_token:
+            raise ApiError(f"Query already submitted: token {self._query_token}")
+
+        args = self._get_query_parameters()
+        self._validate(args)
+
+        url = f"/api/investigate/v2/orgs/{self._cb.credentials.org_key}/processes/facet_jobs"
+        query_start = self._cb.post_object(url, body=args)
+
+        self._query_token = query_start.json().get("job_id")
+
+        self._timed_out = False
+        self._submit_time = time.time() * 1000
+
+    def _still_querying(self):
+        if not self._query_token:
+            self._submit()
+
+        result_url = (f"/api/investigate/v2/orgs/{self._cb.credentials.org_key}/processes"
+                      f"/facet_jobs/{self._query_token}/results")
+        result = self._cb.get_object(result_url)
+
+        searchers_contacted = result.get("contacted", 0)
+        searchers_completed = result.get("completed", 0)
+        log.debug("contacted = {}, completed = {}".format(searchers_contacted, searchers_completed))
+        if searchers_contacted == 0:
+            return True
+        if searchers_completed < searchers_contacted:
+            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:
+                self._timed_out = True
+                return False
+            return True
+
+        return False
+
+    def _count(self):
+        if self._count_valid:
+            return self._total_results
+
+        while self._still_querying():
+            time.sleep(.5)
+
+        if self._timed_out:
+            raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
+
+        result_url = (f"/api/investigate/v2/orgs/{self._cb.credentials.org_key}/processes"
+                      f"/facet_jobs/{self._query_token}/results")
+        result = self._cb.get_object(result_url)
+
+        self._total_results = result.get('num_found', 0)
+        self._count_valid = True
+
+        return self._total_results
+
+    def _search(self, start=0, rows=0):
+        """
+        Execute the query, iterating over results 500 rows at a time.
+
+        Args:
+            start (int): What index to begin retrieving results from.
+            rows (int): Total number of results to be retrieved.
+
+        If `start` is not specified, the default of 0 will be used.
+        If `rows` is not specified, the query will continue until all available results have
+            been retrieved, getting results in batches of 500.
+        """
+        if not self._query_token:
+            self._submit()
+
+        while self._still_querying():
+            time.sleep(.5)
+
+        if self._timed_out:
+            raise TimeoutError(message="User-specified timeout exceeded while waiting for results")
+
+        log.debug(f"Pulling results, timed_out={self._timed_out}")
+
+        current = start
+        rows_fetched = 0
+        still_fetching = True
+        result_url_template = (f"/api/investigate/v2/orgs/{self._cb.credentials.org_key}/processes"
+                               f"/facet_jobs/{self._query_token}/results")
+        if self._limit:
+            query_parameters = {"limit": self._limit}
         else:
-            for name in field:
-                self._facet_fields.append(name)
-        return self
+            query_parameters = {}
+        while still_fetching:
+            result_url = f"{result_url_template}?start={current}&rows={self._batch_size}"
 
-    def update_criteria(self, key, newlist):
-        """Update the criteria on this query with a custom criteria key.
+            result = self._cb.get_object(result_url, query_parameters=query_parameters)
+
+            self._total_results = result.get('num_found', 0)
+            self._count_valid = True
+
+            results = result.get('results', [])
+
+            for item in results:
+                yield item
+                current += 1
+                rows_fetched += 1
+
+                if rows and rows_fetched >= rows:
+                    still_fetching = False
+                    break
+
+            if current >= self._total_results:
+                still_fetching = False
+
+            log.debug("current: {}, total_results: {}".format(current, self._total_results))
+
+    def _init_async_query(self):
+        """Initialize an async query and return a context for running in the background.
+
+        Returns:
+            object: Context for running in the background (the query token).
+        """
+        self._submit()
+        return self._query_token
+
+    def _run_async_query(self, context):
+        """Executed in the background to run an asynchronous query.
 
         Args:
-            key (str): The key for the criteria item to be set.
-            newlist (list): List of values to be set for the criteria item.
+            context (object): The context (query token) returned by _init_async_query.
 
         Returns:
-            The FacetQuery with specified custom criteria.
-
-        Example:
-            query = api.select(ResultFacet).update_criteria("my.criteria.key", ["criteria_value"])
-
-        Note: Use this method if there is no implemented method for your desired criteria.
+            Any: Result of the async query, which is then returned by the future.
         """
-        self._update_criteria(key, newlist)
-        return self
+        if context != self._query_token:
+            raise ApiError("Async query not properly started")
+        return list(self._search())
 
-    def _update_criteria(self, key, newlist):
-        """
-        Updates a list of criteria being collected for a query, by setting or appending items.
-
-        Args:
-            key (str): The key for the criteria item to be set.
-            newlist (list): List of values to be set for the criteria item.
-        """
-        oldlist = self._criteria.get(key, [])
-        self._criteria[key] = oldlist + newlist
-
-    def set_device_ids(self, device_ids):
-        """Sets the device.id criteria filter.
-
-        Arguments:
-            device_ids ([int]): Device IDs to filter on.
-
-        Returns:
-            The FacetQuery with specified device.id.
-        """
-        if not all(isinstance(device_id, int) for device_id in device_ids):
-            raise ApiError("One or more invalid device IDs")
-        self._update_criteria("device.id", device_ids)
-        return self
-
-    def set_device_names(self, device_names):
-        """Sets the device.name criteria filter.
-
-        Arguments:
-            device_names ([str]): Device names to filter on.
-
-        Returns:
-            The FacetQuery with specified device.name.
-        """
-        if not all(isinstance(name, str) for name in device_names):
-            raise ApiError("One or more invalid device names")
-        self._update_criteria("device.name", device_names)
-        return self
-
-    def set_device_os(self, device_os):
-        """Sets the device.os criteria.
-
-        Arguments:
-            device_os ([str]): Device OS's to filter on.
-
-        Returns:
-            The FacetQuery object with specified device_os.
-
-        Note:
-            Device OS's can be one or more of ["WINDOWS", "MAC", "LINUX"].
-        """
-        if not all(isinstance(os, str) for os in device_os):
-            raise ApiError("device_type must be a list of strings, including"
-                           " 'WINDOWS', 'MAC', and/or 'LINUX'")
-        self._update_criteria("device.os", device_os)
-        return self
-
-    def set_policy_ids(self, policy_ids):
-        """Sets the device.policy_id criteria.
-
-        Arguments:
-            policy_ids ([int]): Device policy ID's to filter on.
-
-        Returns:
-            The FacetQuery object with specified policy_ids.
-        """
-        if not all(isinstance(id, int) for id in policy_ids):
-            raise ApiError("policy_ids must be a list of integers.")
-        self._update_criteria("device.policy_id", policy_ids)
-        return self
-
-    def set_policy_names(self, policy_names):
-        """Sets the device.policy_name criteria.
-
-        Arguments:
-            policy_names ([str]): Device policy names to filter on.
-
-        Returns:
-            The FacetQuery object with specified policy_names.
-        """
-        if not all(isinstance(name, str) for name in policy_names):
-            raise ApiError("policy_names must be a list of strings.")
-        self._update_criteria("device.policy_name", policy_names)
-        return self
-
-    def set_statuses(self, statuses):
-        """Sets the status criteria.
-
-        Arguments:
-            statuses ([str]): Query statuses to filter on.
-
-        Returns:
-            The FacetQuery object with specified statuses.
-        """
-        if not all(isinstance(status, str) for status in statuses):
-            raise ApiError("statuses must be a list of strings.")
-        self._update_criteria("status", statuses)
-        return self
-
-    def run_id(self, run_id):
-        """Sets the run ID to query results for.
-
-        Arguments:
-            run_id (int): The run ID to retrieve results for.
-
-        Returns:
-            FacetQuery object with specified run_id.
-
-        Example:
-        >>> cb.select(ResultFacet).run_id(my_run)
-        """
-        self._run_id = run_id
-        return self
-
-    def _build_request(self, rows):
-        terms = {"fields": self._facet_fields}
-        if rows != 0:
-            terms["rows"] = rows
-        request = {"query": self._query_builder._collapse(), "terms": terms}
-        if self._criteria:
-            request["criteria"] = self._criteria
-        return request
-
-    def _perform_query(self, rows=0):
-        if self._run_id is None:
-            raise ApiError("Can't retrieve results without a run ID")
-
-        url = self._doc_class.urlobject.format(
-            self._cb.credentials.org_key, self._run_id
-        )
-        request = self._build_request(rows)
-        resp = self._cb.post_object(url, body=request)
-        result = resp.json()
-        results = result.get("terms", [])
-        for item in results:
-            yield self._doc_class(self._cb, item)
+    # def _search(self, start=0, rows=0):
+    #     """
+    #     Execute the query, iterating over results 500 rows at a time.
+    #
+    #     Args:
+    #         start (int): What index to begin retrieving results from.
+    #         rows (int): Total number of results to be retrieved.
+    #
+    #     If `start` is not specified, the default of 0 will be used.
+    #     If `rows` is not specified, the query will continue until all available results have
+    #         been retrieved, getting results in batches of 500.
+    #     """
+    #     args = self._get_query_parameters()
+    #     self._validate(args)
+    #
+    #     if start != 0:
+    #         args['start'] = start
+    #     args['rows'] = self._batch_size
+    #
+    #     current = start
+    #     numrows = 0
+    #
+    #     still_querying = True
+    #
+    #     while still_querying:
+    #         url = self._doc_class.urlobject.format(
+    #             self._cb.credentials.org_key
+    #         )
+    #         resp = self._cb.post_object(url, body=args)
+    #         result = resp.json()
+    #
+    #         self._total_results = result.get("num_available", 0)
+    #         self._total_segments = result.get("total_segments", 0)
+    #         self._processed_segments = result.get("processed_segments", 0)
+    #         self._count_valid = True
+    #
+    #         results = result.get('results', [])
+    #
+    #         for item in results:
+    #             yield item
+    #             current += 1
+    #             numrows += 1
+    #             if rows and numrows == rows:
+    #                 still_querying = False
+    #                 break
+    #
+    #         args['start'] = current + 1  # as of 6/2017, the indexing on the Cb Endpoint Standard backend is still 1-based
+    #
+    #         if current >= self._total_results:
+    #             break
+    #         if not results:
+    #             log.debug("server reported total_results overestimated the number of results for this query by {0}"
+    #                       .format(self._total_results - current))
+    #             log.debug("resetting total_results for this query to {0}".format(current))
+    #             self._total_results = current
+    #             break
