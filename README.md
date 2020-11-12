@@ -74,6 +74,9 @@ If developing the SDK, you also need:
 
 Visit the [Getting Started Guide](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/getting-started.html) for an example of authenticating and making an API call using the SDK.
 
+### Setting the User-Agent
+
+The SDK supports custom User-Agent's when making API calls. This allows you to identify yourself when using the SDK. See [Setting the User-Agent](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/getting-started.html#setting-the-user-agent) section of the documentation for more information.
 
 ## Developing Improvements for the Carbon Black Cloud Python SDK
 
@@ -104,8 +107,14 @@ From the parent directory `carbon-black-cloud-sdk-python`, run the command `pyte
 
 ### Building the documentation
 
-ReadTheDocs hosts [the documentation for the SDK](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/). If you make changes to the SDK that require an update to the documentation,
-build the docs locally with the following commands:
+ReadTheDocs hosts [the documentation for the SDK](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/). If you make changes to the SDK that require an update to the documentation, first install the documentation packages from pip:
+
+```
+pip install sphinxcontrib-apidoc
+pip install sphinx_rtd_theme
+```
+
+Then, build the docs locally with the following commands:
 
 ```
 sphinx-apidoc -f -o docs src/cbc_sdk

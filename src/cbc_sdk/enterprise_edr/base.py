@@ -19,7 +19,8 @@ from cbc_sdk.base import (UnrefreshableModel,
                           PaginatedQuery,
                           QueryBuilder,
                           QueryBuilderSupportMixin,
-                          IterableQueryMixin)
+                          IterableQueryMixin,
+                          AsyncQueryMixin)
 from cbc_sdk.errors import ApiError, TimeoutError
 
 import logging
@@ -211,7 +212,7 @@ class Event(UnrefreshableModel):
 
     @classmethod
     def _query_implementation(self, cb, **kwargs):
-        return Query(self, cb)
+        return EventQuery(self, cb)
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
         super(Event, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
@@ -285,7 +286,7 @@ class ProcessFacet(UnrefreshableModel):
 """Queries"""
 
 
-class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
+class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin):
     """Represents a prepared query to the Cb Enterprise EDR backend.
 
     This object is returned as part of a `CbEnterpriseEDRAPI.select`
@@ -548,61 +549,28 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
 
     def _search(self, start=0, rows=0):
         """
-        Execute the query, iterating over results 500 rows at a time.
+           Execute the query, iterating over results 500 rows at a time.
+
+           Args:
+               start (int): What index to begin retrieving results from.
+               rows (int): Total number of results to be retrieved.
+                           If `start` is not specified, the default of 0 will be used.
+                           If `rows` is not specified, the query will continue until all available results have
+                           been retrieved, getting results in batches of 500.
+        """
+        raise NotImplementedError("_search() method must be implemented in subclass")
+
+    def _run_async_query(self, context):
+        """
+        Executed in the background to run an asynchronous query.
 
         Args:
-            start (int): What index to begin retrieving results from.
-            rows (int): Total number of results to be retrieved.
+            context (object): The context (always None in this case).
 
-        If `start` is not specified, the default of 0 will be used.
-        If `rows` is not specified, the query will continue until all available results have
-            been retrieved, getting results in batches of 500.
+        Returns:
+            Any: Result of the async query, which is then returned by the future.
         """
-        args = self._get_query_parameters()
-        self._validate(args)
-
-        if start != 0:
-            args['start'] = start
-        args['rows'] = self._batch_size
-
-        current = start
-        numrows = 0
-
-        still_querying = True
-
-        while still_querying:
-            url = self._doc_class.urlobject.format(
-                self._cb.credentials.org_key,
-                args["process_guid"]
-            )
-            resp = self._cb.post_object(url, body=args)
-            result = resp.json()
-
-            self._total_results = result.get("num_available", 0)
-            self._total_segments = result.get("total_segments", 0)
-            self._processed_segments = result.get("processed_segments", 0)
-            self._count_valid = True
-
-            results = result.get('results', [])
-
-            for item in results:
-                yield item
-                current += 1
-                numrows += 1
-                if rows and numrows == rows:
-                    still_querying = False
-                    break
-
-            args['start'] = current + 1  # as of 6/2017, the indexing on the Cb Endpoint Standard backend is still 1-based
-
-            if current >= self._total_results:
-                break
-            if not results:
-                log.debug("server reported total_results overestimated the number of results for this query by {0}"
-                          .format(self._total_results - current))
-                log.debug("resetting total_results for this query to {0}".format(current))
-                self._total_results = current
-                break
+        return list(self._search())
 
 
 class AsyncProcessQuery(Query):
@@ -694,6 +662,16 @@ class AsyncProcessQuery(Query):
         return self._total_results
 
     def _search(self, start=0, rows=0):
+        """
+           Execute the query, iterating over results 500 rows at a time.
+
+           Args:
+               start (int): What index to begin retrieving results from.
+               rows (int): Total number of results to be retrieved.
+                           If `start` is not specified, the default of 0 will be used.
+                           If `rows` is not specified, the query will continue until all available results have
+                           been retrieved, getting results in batches of 500.
+        """
         if not self._query_token:
             self._submit()
 
@@ -740,6 +718,30 @@ class AsyncProcessQuery(Query):
                 still_fetching = False
 
             log.debug("current: {}, total_results: {}".format(current, self._total_results))
+
+    def _init_async_query(self):
+        """
+        Initialize an async query and return a context for running in the background.
+
+        Returns:
+            object: Context for running in the background (the query token).
+        """
+        self._submit()
+        return self._query_token
+
+    def _run_async_query(self, context):
+        """
+        Executed in the background to run an asynchronous query.
+
+        Args:
+            context (object): The context (query token) returned by _init_async_query.
+
+        Returns:
+            Any: Result of the async query, which is then returned by the future.
+        """
+        if context != self._query_token:
+            raise ApiError("Async query not properly started")
+        return list(self._search())
 
 
 class TreeQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
@@ -807,236 +809,65 @@ class TreeQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
         return results
 
 
-class AsyncFacetQuery(Query):
-    """Represents a prepared query for Process Facets."""
-    def __init__(self, doc_class, cb):
-        super(AsyncFacetQuery, self).__init__(doc_class, cb)
-        self._query_token = None
-        self._timeout = 0
-        self._timed_out = False
-        self._limit = None
-
-    def timeout(self, msecs):
-        """Sets the timeout on an ProcessFacet query.
-
-        Arguments:
-            msecs (int): Timeout duration, in milliseconds.
-
-        Returns:
-            Query (AsyncFacetQuery): The Query object with new milliseconds
-                parameter.
-
-        Example:
-
-        >>> cb.select(ProcessFacet).where(process_name="foo.exe").timeout(5000)
+class EventQuery(Query):
+    """Represents the logic for an Event query."""
+    def _search(self, start=0, rows=0):
         """
-        self._timeout = msecs
-        return self
+           Execute the query, iterating over results 500 rows at a time.
 
-    def limit(self, limit):
-        """Sets the maximum number of facets per category (i.e. any Process Search Fields in self._fields).
-
-        The default limit for Process Facet searches in the Carbon Black Cloud backend is 100.
-
-        Arguments:
-            limit (int): Maximum number of facets per category.
-
-        Returns:
-            Query (AsyncFacetQuery): The Query object with new limit parameter.
-
-        Example:
-
-        >>> cb.select(ProcessFacet).where(process_name="foo.exe").limit(50)
+           Args:
+               start (int): What index to begin retrieving results from.
+               rows (int): Total number of results to be retrieved.
+                           If `start` is not specified, the default of 0 will be used.
+                           If `rows` is not specified, the query will continue until all available results have
+                           been retrieved, getting results in batches of 500.
         """
-        self._limit = limit
-        return self
-
-    def _submit(self):
-        if self._query_token:
-            raise ApiError(f"Query already submitted: token {self._query_token}")
-
+        # iterate over total result set, 100 at a time
         args = self._get_query_parameters()
         self._validate(args)
 
-        url = f"/api/investigate/v2/orgs/{self._cb.credentials.org_key}/processes/facet_jobs"
-        query_start = self._cb.post_object(url, body=args)
-
-        self._query_token = query_start.json().get("job_id")
-
-        self._timed_out = False
-        self._submit_time = time.time() * 1000
-
-    def _still_querying(self):
-        if not self._query_token:
-            self._submit()
-
-        result_url = (f"/api/investigate/v2/orgs/{self._cb.credentials.org_key}/processes"
-                      f"/facet_jobs/{self._query_token}/results")
-        result = self._cb.get_object(result_url)
-
-        searchers_contacted = result.get("contacted", 0)
-        searchers_completed = result.get("completed", 0)
-        log.debug("contacted = {}, completed = {}".format(searchers_contacted, searchers_completed))
-        if searchers_contacted == 0:
-            return True
-        if searchers_completed < searchers_contacted:
-            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:
-                self._timed_out = True
-                return False
-            return True
-
-        return False
-
-    def _count(self):
-        if self._count_valid:
-            return self._total_results
-
-        while self._still_querying():
-            time.sleep(.5)
-
-        if self._timed_out:
-            raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
-
-        result_url = (f"/api/investigate/v2/orgs/{self._cb.credentials.org_key}/processes"
-                      f"/facet_jobs/{self._query_token}/results")
-        result = self._cb.get_object(result_url)
-
-        self._total_results = result.get('num_found', 0)
-        self._count_valid = True
-
-        return self._total_results
-
-    def _search(self, start=0, rows=0):
-        """
-        Execute the query, iterating over results 500 rows at a time.
-
-        Args:
-            start (int): What index to begin retrieving results from.
-            rows (int): Total number of results to be retrieved.
-
-        If `start` is not specified, the default of 0 will be used.
-        If `rows` is not specified, the query will continue until all available results have
-            been retrieved, getting results in batches of 500.
-        """
-        if not self._query_token:
-            self._submit()
-
-        while self._still_querying():
-            time.sleep(.5)
-
-        if self._timed_out:
-            raise TimeoutError(message="User-specified timeout exceeded while waiting for results")
-
-        log.debug(f"Pulling results, timed_out={self._timed_out}")
+        if start != 0:
+            args['start'] = start
+        args['rows'] = self._batch_size
 
         current = start
-        rows_fetched = 0
-        still_fetching = True
-        result_url_template = (f"/api/investigate/v2/orgs/{self._cb.credentials.org_key}/processes"
-                               f"/facet_jobs/{self._query_token}/results")
-        if self._limit:
-            query_parameters = {"limit": self._limit}
-        else:
-            query_parameters = {}
-        while still_fetching:
-            result_url = f"{result_url_template}?start={current}&rows={self._batch_size}"
+        numrows = 0
 
-            result = self._cb.get_object(result_url, query_parameters=query_parameters)
+        still_querying = True
 
-            self._total_results = result.get('num_found', 0)
+        while still_querying:
+            url = self._doc_class.urlobject.format(
+                self._cb.credentials.org_key,
+                args["process_guid"]
+            )
+            resp = self._cb.post_object(url, body=args)
+            result = resp.json()
+
+            self._total_results = result.get("num_available", 0)
+            self._total_segments = result.get("total_segments", 0)
+            self._processed_segments = result.get("processed_segments", 0)
             self._count_valid = True
+            if self._processed_segments != self._total_segments:
+                continue  # loop until we get all segments back
 
             results = result.get('results', [])
 
             for item in results:
                 yield item
                 current += 1
-                rows_fetched += 1
 
-                if rows and rows_fetched >= rows:
-                    still_fetching = False
+                numrows += 1
+                if rows and numrows == rows:
+                    still_querying = False
                     break
 
+            args['start'] = current + 1  # as of 6/2017, the indexing on the Cb Endpoint Standard backend is still 1-based
+
             if current >= self._total_results:
-                still_fetching = False
-
-            log.debug("current: {}, total_results: {}".format(current, self._total_results))
-
-    def _init_async_query(self):
-        """Initialize an async query and return a context for running in the background.
-
-        Returns:
-            object: Context for running in the background (the query token).
-        """
-        self._submit()
-        return self._query_token
-
-    def _run_async_query(self, context):
-        """Executed in the background to run an asynchronous query.
-
-        Args:
-            context (object): The context (query token) returned by _init_async_query.
-
-        Returns:
-            Any: Result of the async query, which is then returned by the future.
-        """
-        if context != self._query_token:
-            raise ApiError("Async query not properly started")
-        return list(self._search())
-
-    # def _search(self, start=0, rows=0):
-    #     """
-    #     Execute the query, iterating over results 500 rows at a time.
-    #
-    #     Args:
-    #         start (int): What index to begin retrieving results from.
-    #         rows (int): Total number of results to be retrieved.
-    #
-    #     If `start` is not specified, the default of 0 will be used.
-    #     If `rows` is not specified, the query will continue until all available results have
-    #         been retrieved, getting results in batches of 500.
-    #     """
-    #     args = self._get_query_parameters()
-    #     self._validate(args)
-    #
-    #     if start != 0:
-    #         args['start'] = start
-    #     args['rows'] = self._batch_size
-    #
-    #     current = start
-    #     numrows = 0
-    #
-    #     still_querying = True
-    #
-    #     while still_querying:
-    #         url = self._doc_class.urlobject.format(
-    #             self._cb.credentials.org_key
-    #         )
-    #         resp = self._cb.post_object(url, body=args)
-    #         result = resp.json()
-    #
-    #         self._total_results = result.get("num_available", 0)
-    #         self._total_segments = result.get("total_segments", 0)
-    #         self._processed_segments = result.get("processed_segments", 0)
-    #         self._count_valid = True
-    #
-    #         results = result.get('results', [])
-    #
-    #         for item in results:
-    #             yield item
-    #             current += 1
-    #             numrows += 1
-    #             if rows and numrows == rows:
-    #                 still_querying = False
-    #                 break
-    #
-    #         args['start'] = current + 1  # as of 6/2017, the indexing on the Cb Endpoint Standard backend is still 1-based
-    #
-    #         if current >= self._total_results:
-    #             break
-    #         if not results:
-    #             log.debug("server reported total_results overestimated the number of results for this query by {0}"
-    #                       .format(self._total_results - current))
-    #             log.debug("resetting total_results for this query to {0}".format(current))
-    #             self._total_results = current
-    #             break
+                break
+            if not results:
+                log.debug("server reported total_results overestimated the number of results for this query by {0}"
+                          .format(self._total_results - current))
+                log.debug("resetting total_results for this query to {0}".format(current))
+                self._total_results = current
+                break
