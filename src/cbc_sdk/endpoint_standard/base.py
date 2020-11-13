@@ -396,6 +396,7 @@ class EnrichedEventQuery(Query):
         self._sort_by = None
         self._group_by = None
         self._rows = 500
+        self._default_args["rows"] = self._rows
         self._default_args = {}
         self._query_token = None
         self._timeout = 0
