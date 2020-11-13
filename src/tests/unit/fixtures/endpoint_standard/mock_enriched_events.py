@@ -23,6 +23,10 @@ GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP = {
 }
 
 GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_1 = {
+    'num_found': 808,
+    'num_available': 52,
+    'contacted': 6,
+    'completed': 6,
     'results': [
         {
             'backend_timestamp': '2020-10-23T08:25:24.797Z', 
@@ -56,6 +60,10 @@ GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_1 = {
 
 
 GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_2 = {
+    'num_found': 808,
+    'num_available': 52,
+    'contacted': 6,
+    'completed': 6,
     'results': [
         {
             'backend_timestamp': '2020-10-23T08:25:24.797Z', 

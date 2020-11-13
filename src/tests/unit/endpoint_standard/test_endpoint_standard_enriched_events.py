@@ -96,3 +96,34 @@ def test_enriched_event_time_range(cbcsdk_mock):
     assert events._time_range["start"] == "2020-10-10T20:34:07Z"
     assert events._time_range["end"] == "2020-10-20T20:34:07Z"
     assert events._time_range["window"] == "-1d"
+
+def test_enriched_events_submit(cbcsdk_mock):
+    """ Test _submit method of enrichedeventquery class """
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/search_job", POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
+    api = cbcsdk_mock.api
+    events = api.select(EnrichedEvent).where(process_pid=1000)
+    events._submit()
+    assert events._query_token == "08ffa932-b633-4107-ba56-8741e929e48b"
+
+def test_enriched_events_count(cbcsdk_mock):
+    """ Test _submit method of enrichedeventquery class """
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/search_job", POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b", GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results", GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_2)
+
+    api = cbcsdk_mock.api
+    events = api.select(EnrichedEvent).where(process_pid=1000)
+    events._count()
+    assert events._count() == 52
+
+def test_enriched_events_search(cbcsdk_mock):
+    """ Test _search method of enrichedeventquery class """
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/search_job", POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b", GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results", GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_2)
+
+    api = cbcsdk_mock.api
+    events = api.select(EnrichedEvent).where(process_pid=1000)
+    events._search()
+    assert events[0].process_pid[0] == 1000
+    
