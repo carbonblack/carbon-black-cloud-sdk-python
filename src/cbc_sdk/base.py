@@ -322,11 +322,11 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         lines.append("")
 
         try:
-            self._info = sorted(self._info)
-        except TypeError:
-            pass
+            attributes = sorted(self._info)
+        except:
+            attributes = self._info
 
-        for attr in self._info:
+        for attr in attributes:
             if isinstance(attr, str):
                 status = "   "
                 if attr in self._dirty_attributes:

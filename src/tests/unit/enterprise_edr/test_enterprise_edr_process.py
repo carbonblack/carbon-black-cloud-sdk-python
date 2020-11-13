@@ -2,7 +2,7 @@
 
 import pytest
 import logging
-from cbc_sdk.enterprise_edr import Process, Tree, Event, Query, AsyncProcessQuery
+from cbc_sdk.enterprise_edr import Process, ProcessFacet, Tree, Event, Query, AsyncProcessQuery
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ObjectNotFoundError, ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -14,7 +14,10 @@ from tests.unit.fixtures.enterprise_edr.mock_process import (GET_PROCESS_SUMMARY
                                                              POST_PROCESS_SEARCH_JOB_RESP,
                                                              GET_PROCESS_SEARCH_JOB_RESP,
                                                              GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1,
-                                                             GET_PROCESS_SEARCH_PARENT_JOB_RESULTS_RESP)
+                                                             GET_PROCESS_SEARCH_PARENT_JOB_RESULTS_RESP,
+                                                             GET_FACET_SEARCH_RESULTS_RESP,
+                                                             EXPECTED_PROCESS_FACETS,
+                                                             EXPECTED_PROCESS_RANGES_FACETS)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -77,6 +80,7 @@ def test_process_events(cbcsdk_mock):
     assert events_query_params == query_params
     assert events_query_params == expected_params
 
+
 def test_process_events_with_criteria_exclusions(cbcsdk_mock):
     """Testing the add_criteria() method when selecting events."""
     api = cbcsdk_mock.api
@@ -125,7 +129,6 @@ def test_process_events_exceptions(cbcsdk_mock):
 def test_process_with_criteria_exclusions(cbcsdk_mock):
     """Testing AsyncProcessQuery.add_criteria() and AsyncProcessQuery.add_exclusions()."""
     api = cbcsdk_mock.api
-    guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     # use the update methods
     process = api.select(Process).where("event_type:modload").add_criteria("device_id", [1234]).add_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
     # mock the search validation
@@ -159,7 +162,6 @@ def test_process_with_criteria_exclusions(cbcsdk_mock):
 def test_process_fields(cbcsdk_mock):
     """Testing AsyncProcessQuery.set_fields()."""
     api = cbcsdk_mock.api
-    guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     # use the update methods
     process = api.select(Process).where("event_type:modload").add_criteria("device_id", [1234]).add_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
     process = process.set_fields(["parent_hash", "device_policy"])
@@ -182,7 +184,6 @@ def test_process_fields(cbcsdk_mock):
 def test_process_time_range(cbcsdk_mock):
     """Testing AsyncProcessQuery.set_fields()."""
     api = cbcsdk_mock.api
-    guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     # use the update methods
     process = api.select(Process).where("event_type:modload").add_criteria("device_id", [1234]).add_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
     process = process.set_time_range(start="2020-01-21T18:34:04Z")
@@ -208,7 +209,6 @@ def test_process_time_range(cbcsdk_mock):
 def test_process_start_rows(cbcsdk_mock):
     """Testing AsyncProcessQuery.set_start() and AsyncProcessQuery.set_rows()."""
     api = cbcsdk_mock.api
-    guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     # use the update methods
     process = api.select(Process).where("event_type:modload").add_criteria("device_id", [1234]).add_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
     process = process.set_start(10)
@@ -231,7 +231,6 @@ def test_process_start_rows(cbcsdk_mock):
 def test_process_sort(cbcsdk_mock):
     """Testing AsyncProcessQuery.sort_by()."""
     api = cbcsdk_mock.api
-    guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     # use the update methods
     process = api.select(Process).where("event_type:modload").add_criteria("device_id", [1234]).add_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
     process = process.sort_by("process_pid", direction="DESC")
@@ -301,7 +300,6 @@ def test_process_events_exceptions(cbcsdk_mock):
 def test_process_with_criteria_exclusions(cbcsdk_mock):
     """Testing AsyncProcessQuery.add_criteria() and AsyncProcessQuery.add_exclusions()."""
     api = cbcsdk_mock.api
-    guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     # use the update methods
     process = api.select(Process).where("event_type:modload").add_criteria("device_id", [1234]).add_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
     # mock the search validation
@@ -335,7 +333,6 @@ def test_process_with_criteria_exclusions(cbcsdk_mock):
 def test_process_fields(cbcsdk_mock):
     """Testing AsyncProcessQuery.set_fields()."""
     api = cbcsdk_mock.api
-    guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     # use the update methods
     process = api.select(Process).where("event_type:modload").add_criteria("device_id", [1234]).add_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
     process = process.set_fields(["parent_hash", "device_policy"])
@@ -358,7 +355,6 @@ def test_process_fields(cbcsdk_mock):
 def test_process_time_range(cbcsdk_mock):
     """Testing AsyncProcessQuery.set_fields()."""
     api = cbcsdk_mock.api
-    guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     # use the update methods
     process = api.select(Process).where("event_type:modload").add_criteria("device_id", [1234]).add_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
     process = process.set_time_range(start="2020-01-21T18:34:04Z")
@@ -384,7 +380,6 @@ def test_process_time_range(cbcsdk_mock):
 def test_process_start_rows(cbcsdk_mock):
     """Testing AsyncProcessQuery.set_start() and AsyncProcessQuery.set_rows()."""
     api = cbcsdk_mock.api
-    guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     # use the update methods
     process = api.select(Process).where("event_type:modload").add_criteria("device_id", [1234]).add_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
     process = process.set_start(10)
@@ -407,7 +402,6 @@ def test_process_start_rows(cbcsdk_mock):
 def test_process_sort(cbcsdk_mock):
     """Testing AsyncProcessQuery.sort_by()."""
     api = cbcsdk_mock.api
-    guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     # use the update methods
     process = api.select(Process).where("event_type:modload").add_criteria("device_id", [1234]).add_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
     process = process.sort_by("process_pid", direction="DESC")
@@ -544,6 +538,34 @@ def test_process_select_where(cbcsdk_mock):
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     process = api.select(Process).where(f"process_guid:{guid}")
     assert isinstance(process, AsyncProcessQuery)
+
+
+def test_process_facet_select(cbcsdk_mock):
+    """Testing ProcessFacet select(), ranges_, terms_."""
+    api = cbcsdk_mock.api
+    facet_query = api.select(ProcessFacet).where("process_name:svchost.exe").add_range({"bucket_size": "+1DAY",
+                                                                                        "start": "2020-10-16T00:00:00Z",
+                                                                                        "end": "2020-11-12T00:00:00Z",
+                                                                                        "field": "backend_timestamp"})
+
+    facet_query.add_facet_field(["device_timestamp", "backend_timestamp"]).timeout(60000)
+    facet_query.set_time_range(start="2020-10-16T00:00:00Z", end="2020-11-12T00:00:00Z")
+    # mock the search request
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/facet_jobs", {"job_id": "the-job-id"})
+    # mock the result call
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/facet_jobs/the-job-id/results", GET_FACET_SEARCH_RESULTS_RESP)
+    future = facet_query.execute_async()
+    res = future.result()[0]
+    assert res.terms_.fields == ['backend_timestamp', 'device_timestamp']
+    assert res.terms_.facets == EXPECTED_PROCESS_FACETS
+    assert isinstance(res.terms_, ProcessFacet.Terms)
+    assert res.ranges_.fields == ['backend_timestamp']
+    assert res.ranges_.facets == EXPECTED_PROCESS_RANGES_FACETS
+    assert isinstance(res.ranges_, ProcessFacet.Ranges)
+    # if already, submitted, the query shouldn't be submitted again
+    with pytest.raises(ApiError):
+        future = facet_query.execute_async()
+        res = future.result()[0]
 
 
 def test_tree_select(cbcsdk_mock):
