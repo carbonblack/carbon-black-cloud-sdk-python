@@ -341,8 +341,6 @@ class ProcessFacet(UnrefreshableModel):
         return self._ranges
 
 
-
-
 """Queries"""
 
 
