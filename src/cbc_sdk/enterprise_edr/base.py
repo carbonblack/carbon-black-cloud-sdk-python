@@ -230,7 +230,7 @@ class Event(UnrefreshableModel):
 
     @classmethod
     def _query_implementation(self, cb, **kwargs):
-        return Query(self, cb)
+        return EventQuery(self, cb)
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
         super(Event, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
