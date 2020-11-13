@@ -245,7 +245,17 @@ class Tree(UnrefreshableModel):
 
 
 class ProcessFacet(UnrefreshableModel):
-    """Represents the results of an AsyncFacetQuery."""
+    """Represents the results of an AsyncFacetQuery.
+
+    ProcessFacet objects contain both Terms and Ranges. Each of those contain facet
+    fields and values.
+
+    Access all of the Terms facet data with ProcessFacet.terms_.facets or see just
+    the field names with ProcessFacet.terms_.fields.
+
+    Access all of the Ranges facet data with ProcessFacet.ranges_.facets or see just
+    the field names with ProcessFacet.ranges_.fields.
+    """
     primary_key = "job_id"
     swagger_meta_file = "enterprise_edr/models/process_facets.yaml"
     urlobject = "/api/investigate/v2/orgs/{}/processes/facet_jobs"
@@ -268,7 +278,7 @@ class ProcessFacet(UnrefreshableModel):
                 self._facets[field] = values
 
         @property
-        def facets_(self):
+        def facets(self):
             """Returns the terms' facets for this result."""
             return self._facets
 
@@ -295,12 +305,12 @@ class ProcessFacet(UnrefreshableModel):
                 self._facets[field] = values
 
         @property
-        def facets_(self):
+        def facets(self):
             """Returns the reified `ProcessFacet.Terms._facets` for this result."""
             return self._facets
 
         @property
-        def fields_(self):
+        def fields(self):
             """Returns the ranges fields for this result."""
             return [field for field in self._facets]
 
