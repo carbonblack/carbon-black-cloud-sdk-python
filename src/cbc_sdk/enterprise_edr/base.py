@@ -196,22 +196,6 @@ class Process(UnrefreshableModel):
             return None
 
 
-class Event(UnrefreshableModel):
-    """Events can be queried for via `CBCloudAPI.select` or an already selected process with `Process.events`."""
-    urlobject = '/api/investigate/v2/orgs/{}/events/{}/_search'
-    validation_url = '/api/investigate/v1/orgs/{}/events/search_validation'
-    default_sort = 'last_update desc'
-    primary_key = "process_guid"
-
-    @classmethod
-    def _query_implementation(self, cb, **kwargs):
-        return EventQuery(self, cb)
-
-    def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
-        super(Event, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
-                                    force_init=force_init, full_doc=full_doc)
-
-
 class Tree(UnrefreshableModel):
     """The preferred interface for interacting with Tree models is `Process.tree()`."""
     urlobject = '/api/investigate/v1/orgs/{}/processes/tree'
@@ -235,6 +219,22 @@ class Tree(UnrefreshableModel):
             children ([Process]): List of children for the Tree's parent process.
         """
         return [Process(self._cb, initial_data=child) for child in self.nodes["children"]]
+
+
+class Event(UnrefreshableModel):
+    """Events can be queried for via `CBCloudAPI.select` or an already selected process with `Process.events`."""
+    urlobject = '/api/investigate/v2/orgs/{}/events/{}/_search'
+    validation_url = '/api/investigate/v1/orgs/{}/events/search_validation'
+    default_sort = 'last_update desc'
+    primary_key = "process_guid"
+
+    @classmethod
+    def _query_implementation(self, cb, **kwargs):
+        return EventQuery(self, cb)
+
+    def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
+        super(Event, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
+                                    force_init=force_init, full_doc=full_doc)
 
 
 """Queries"""
