@@ -861,10 +861,10 @@ class AsyncFacetQuery(Query):
 
     def _get_query_parameters(self):
         args = self._default_args.copy()
-        if not self._fields:
+        if not self._facet_fields:
             raise ApiError("Process Facet Queries require at least one field to be requested."
                            "Use add_facet_field(['my_facet_field']) to add fields to the request.")
-        terms = {"fields": self._fields}
+        terms = {"fields": self._facet_fields}
         if self._facet_rows:
             terms["rows"] = self._facet_rows
         args["terms"] = terms
