@@ -321,20 +321,41 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         lines.append("-" * 79)
         lines.append("")
 
-        for attr in sorted(self._info):
-            status = "   "
-            if attr in self._dirty_attributes:
-                if self._dirty_attributes[attr] is None:
-                    status = "(+)"
-                else:
-                    status = "(*)"
-            try:
-                val = str(self._info[attr])
-            except UnicodeDecodeError:
-                val = repr(self._info[attr])
-            if len(val) > 50:
-                val = val[:47] + u"..."
-            lines.append(u"{0:s} {1:>20s}: {2:s}".format(status, attr, val))
+        try:
+            self._info = sorted(self._info)
+        except TypeError:
+            pass
+
+        for attr in self._info:
+            if isinstance(attr, str):
+                status = "   "
+                if attr in self._dirty_attributes:
+                    if self._dirty_attributes[attr] is None:
+                        status = "(+)"
+                    else:
+                        status = "(*)"
+                try:
+                    val = str(self._info[attr])
+                except UnicodeDecodeError:
+                    val = repr(self._info[attr])
+                if len(val) > 50:
+                    val = val[:47] + u"..."
+                lines.append(u"{0:s} {1:>20s}: {2:s}".format(status, attr, val))
+            elif isinstance(attr, dict):
+                for att in attr:
+                    status = "   "
+                    if att in self._dirty_attributes:
+                        if self._dirty_attributes[att] is None:
+                            status = "(+)"
+                        else:
+                            status = "(*)"
+                    try:
+                        val = str(attr[att])
+                    except UnicodeDecodeError:
+                        val = repr(attr[att])
+                    if len(val) > 50:
+                        val = val[:47] + u"..."
+                    lines.append(u"{0:s} {1:>20s}: {2:s}".format(status, att, val))
 
         return "\n".join(lines)
 
