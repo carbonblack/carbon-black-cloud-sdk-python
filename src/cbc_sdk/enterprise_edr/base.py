@@ -261,6 +261,21 @@ class ProcessFacet(UnrefreshableModel):
                 force_init=False,
                 full_doc=True,
             )
+            self._facets = {}
+            for facet_term_data in initial_data:
+                field = facet_term_data["field"]
+                values = facet_term_data["values"]
+                self._facets[field] = values
+
+        @property
+        def facets_(self):
+            """Returns the terms' facets for this result."""
+            return self._facets
+
+        @property
+        def fields(self):
+            """Returns the terms facets' fields for this result."""
+            return [field for field in self._facets]
 
     class Ranges(UnrefreshableModel):
         """Represents the range (bucketed) facet fields and values associated with a Process Facet query."""
@@ -273,6 +288,21 @@ class ProcessFacet(UnrefreshableModel):
                 force_init=False,
                 full_doc=True,
             )
+            self._facets = {}
+            for facet_range_data in initial_data:
+                field = facet_range_data["field"]
+                values = facet_range_data["values"]
+                self._facets[field] = values
+
+        @property
+        def facets_(self):
+            """Returns the reified `ProcessFacet.Terms._facets` for this result."""
+            return self._facets
+
+        @property
+        def fields_(self):
+            """Returns the ranges fields for this result."""
+            return [field for field in self._facets]
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -297,8 +327,10 @@ class ProcessFacet(UnrefreshableModel):
 
     @property
     def ranges_(self):
-        """Returns the reified `ProcessFacet.Terms` for this result."""
+        """Returns the reified `ProcessFacet.Ranges` for this result."""
         return self._ranges
+
+
 
 
 """Queries"""
@@ -849,8 +881,8 @@ class AsyncFacetQuery(Query):
 
         Examples:
         >>> cb.select(ProcessFacet).add_range({"bucket_size": 5, "start": 0, "end": 10, "field": "netconn_count"})
-        >>> cb.select(ProcessFacet).add_range({"bucket_size": "1DAY", "start": "2020-11-01T00:00:00",
-                                               "end": "2020-11-12T00:00:00", "field": "backend_timestamp"})
+        >>> cb.select(ProcessFacet).add_range({"bucket_size": "+1DAY", "start": "2020-11-01T00:00:00Z",
+                                               "end": "2020-11-12T00:00:00Z", "field": "backend_timestamp"})
         """
         if isinstance(range, dict):
             self._ranges.append(range)
@@ -960,7 +992,6 @@ class AsyncFacetQuery(Query):
             query_parameters = {}
 
         result = self._cb.get_object(result_url, query_parameters=query_parameters)
-        print(f"Initial data for the Facet obj: {result}")
         yield self._doc_class(self._cb, model_unique_id=self._query_token, initial_data=result)
 
     def _init_async_query(self):

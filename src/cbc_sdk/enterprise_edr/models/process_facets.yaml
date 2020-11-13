@@ -1,11 +1,10 @@
 type: object
-required: []
 properties:
   job_id:
     type: string
     description: The Job ID assigned to this query
   terms:
-    type: array
+    type: object
     description: Contains the Process Facet search results
     items:
       field:
