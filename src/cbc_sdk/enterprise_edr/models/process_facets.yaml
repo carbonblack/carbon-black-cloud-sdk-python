@@ -1,6 +1,9 @@
 type: object
 required: []
 properties:
+  job_id:
+    type: string
+    description: The Job ID assigned to this query
   terms:
     type: array
     description: Contains the Process Facet search results
@@ -47,14 +50,14 @@ properties:
         description: The name of the field being grouped
       values:
         type: array
-        description: The values of the field being grouped
+        description: The result values of the field being grouped
         items:
           name:
             type: string
             description: The name of the value being enumerated
           total:
             type: integer
-            description: The total number of times this value appears in the query output
+            description: The total number of times this value appears in the query bucket output
   num_found:
     type: integer
     descrption: The total number of results of the query

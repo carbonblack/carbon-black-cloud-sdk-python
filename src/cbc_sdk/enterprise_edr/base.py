@@ -245,16 +245,28 @@ class Tree(UnrefreshableModel):
 
 
 class ProcessFacet(UnrefreshableModel):
-    """Represents the summary of results for a Process."""
-    primary_key = "field"
-    swagger_meta_file = "enterprise_edr/models/process_facet.yaml"
+    """Represents the results of an AsyncFacetQuery."""
+    primary_key = "job_id"
+    swagger_meta_file = "enterprise_edr/models/process_facets.yaml"
     urlobject = "/api/investigate/v2/orgs/{}/processes/facet_jobs"
 
-    class Values(UnrefreshableModel):
-        """Represents the values associated with a field."""
+    class Terms(UnrefreshableModel):
+        """Represents the facet fields and values associated with a Process Facet query."""
         def __init__(self, cb, initial_data):
-            """Initialize a ProcessFacet Values object with initial_data."""
-            super(ProcessFacet.Values, self).__init__(
+            """Initialize a ProcessFacet Terms object with initial_data."""
+            super(ProcessFacet.Terms, self).__init__(
+                cb,
+                model_unique_id=None,
+                initial_data=initial_data,
+                force_init=False,
+                full_doc=True,
+            )
+
+    class Ranges(UnrefreshableModel):
+        """Represents the range (bucketed) facet fields and values associated with a Process Facet query."""
+        def __init__(self, cb, initial_data):
+            """Initialize a ProcessFacet Ranges object with initial_data."""
+            super(ProcessFacet.Ranges, self).__init__(
                 cb,
                 model_unique_id=None,
                 initial_data=initial_data,
@@ -266,21 +278,27 @@ class ProcessFacet(UnrefreshableModel):
     def _query_implementation(cls, cb, **kwargs):
         return AsyncFacetQuery(cls, cb)
 
-    def __init__(self, cb, initial_data):
+    def __init__(self, cb, model_unique_id, initial_data):
         """Initialize a ResultFacet object with initial_data."""
         super(ProcessFacet, self).__init__(
             cb,
-            model_unique_id=None,
+            model_unique_id=model_unique_id,
             initial_data=initial_data,
             force_init=False,
             full_doc=True
         )
-        self._values = ProcessFacet.Values(cb, initial_data=initial_data["values"])
+        self._terms = ProcessFacet.Terms(cb, initial_data=initial_data["terms"])
+        self._ranges = ProcessFacet.Ranges(cb, initial_data=initial_data["ranges"])
 
     @property
-    def values_(self):
-        """Returns the reified `ProcessFacet.Values` for this result."""
-        return self._values
+    def terms_(self):
+        """Returns the reified `ProcessFacet.Terms` for this result."""
+        return self._terms
+
+    @property
+    def ranges_(self):
+        """Returns the reified `ProcessFacet.Terms` for this result."""
+        return self._ranges
 
 
 """Queries"""
@@ -732,6 +750,230 @@ class AsyncProcessQuery(Query):
     def _run_async_query(self, context):
         """
         Executed in the background to run an asynchronous query.
+
+        Args:
+            context (object): The context (query token) returned by _init_async_query.
+
+        Returns:
+            Any: Result of the async query, which is then returned by the future.
+        """
+        if context != self._query_token:
+            raise ApiError("Async query not properly started")
+        return list(self._search())
+
+
+class AsyncFacetQuery(Query):
+    """Represents a prepared query for Process Facets."""
+    def __init__(self, doc_class, cb):
+        super(AsyncFacetQuery, self).__init__(doc_class, cb)
+        self._query_token = None
+        self._timeout = 0
+        self._timed_out = False
+        self._limit = None
+        self._facet_fields = []
+        self._ranges = []
+        self._facet_rows = None
+
+    def timeout(self, msecs):
+        """Sets the timeout on an ProcessFacet query.
+
+        Arguments:
+            msecs (int): Timeout duration, in milliseconds.
+
+        Returns:
+            Query (AsyncFacetQuery): The Query object with new milliseconds
+                parameter.
+
+        Example:
+
+        >>> cb.select(ProcessFacet).where(process_name="foo.exe").timeout(5000)
+        """
+        self._timeout = msecs
+        return self
+
+    def limit(self, limit):
+        """Sets the maximum number of facets per category (i.e. any Process Search Fields in self._fields).
+
+        The default limit for Process Facet searches in the Carbon Black Cloud backend is 100.
+
+        Arguments:
+            limit (int): Maximum number of facets per category.
+
+        Returns:
+            Query (AsyncFacetQuery): The Query object with new limit parameter.
+
+        Example:
+
+        >>> cb.select(ProcessFacet).where(process_name="foo.exe").limit(50)
+        """
+        self._limit = limit
+        return self
+
+    def add_facet_field(self, field):
+        """Sets the facet fields to be received by this query.
+
+        Arguments:
+            field (str or [str]): Field(s) to be received.
+
+        Returns:
+            Query (AsyncFacetQuery): The Query object that will receive the specified field(s).
+
+        Example:
+
+        >>> cb.select(ProcessFacet).add_facet_field(["process_name", "process_username"])
+        """
+        if isinstance(field, str):
+            self._facet_fields.append(field)
+        else:
+            for name in field:
+                self._facet_fields.append(name)
+        return self
+
+    def add_range(self, range):
+        """Sets the facet ranges to be received by this query.
+
+        Arguments:
+            range (dict or [dict]): Range(s) to be received.
+
+        Returns:
+            Query (AsyncFacetQuery): The Query object that will receive the specified range(s).
+
+        Note: The range parameter must be in this dictionary format:
+            {
+                "bucket_size": "<object>",
+                "start": "<object>",
+                "end": "<object>",
+                "field": "<string>"
+            },
+            where "bucket_size", "start", and "end" can be numbers or ISO 8601 timestamps.
+
+        Examples:
+        >>> cb.select(ProcessFacet).add_range({"bucket_size": 5, "start": 0, "end": 10, "field": "netconn_count"})
+        >>> cb.select(ProcessFacet).add_range({"bucket_size": "1DAY", "start": "2020-11-01T00:00:00",
+                                               "end": "2020-11-12T00:00:00", "field": "backend_timestamp"})
+        """
+        if isinstance(range, dict):
+            self._ranges.append(range)
+        else:
+            for r in range:
+                self._ranges.append(r)
+        return self
+
+    def _get_query_parameters(self):
+        args = self._default_args.copy()
+        if not self._fields:
+            raise ApiError("Process Facet Queries require at least one field to be requested."
+                           "Use add_facet_field(['my_facet_field']) to add fields to the request.")
+        terms = {"fields": self._fields}
+        if self._facet_rows:
+            terms["rows"] = self._facet_rows
+        args["terms"] = terms
+        if self._ranges:
+            args["ranges"] = self._ranges
+        if self._criteria:
+            args["criteria"] = self._criteria
+        if self._exclusions:
+            args["exclusions"] = self._exclusions
+        if self._time_range:
+            args["time_range"] = self._time_range
+        args['query'] = self._query_builder._collapse()
+        if self._query_builder._process_guid is not None:
+            args["process_guid"] = self._query_builder._process_guid
+        if 'process_guid:' in args['query']:
+            q = args['query'].split('process_guid:', 1)[1].split(' ', 1)[0]
+            args["process_guid"] = q
+        return args
+
+    def _submit(self):
+        if self._query_token:
+            raise ApiError(f"Query already submitted: token {self._query_token}")
+
+        args = self._get_query_parameters()
+        self._validate(args)
+
+        url = f"/api/investigate/v2/orgs/{self._cb.credentials.org_key}/processes/facet_jobs"
+        query_start = self._cb.post_object(url, body=args)
+
+        self._query_token = query_start.json().get("job_id")
+
+        self._timed_out = False
+        self._submit_time = time.time() * 1000
+
+    def _still_querying(self):
+        if not self._query_token:
+            self._submit()
+
+        result_url = (f"/api/investigate/v2/orgs/{self._cb.credentials.org_key}/processes"
+                      f"/facet_jobs/{self._query_token}/results")
+        result = self._cb.get_object(result_url)
+
+        searchers_contacted = result.get("contacted", 0)
+        searchers_completed = result.get("completed", 0)
+        log.debug("contacted = {}, completed = {}".format(searchers_contacted, searchers_completed))
+        if searchers_contacted == 0:
+            return True
+        if searchers_completed < searchers_contacted:
+            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:
+                self._timed_out = True
+                return False
+            return True
+
+        return False
+
+    def _count(self):
+        if self._count_valid:
+            return self._total_results
+
+        while self._still_querying():
+            time.sleep(.5)
+
+        if self._timed_out:
+            raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
+
+        result_url = (f"/api/investigate/v2/orgs/{self._cb.credentials.org_key}/processes"
+                      f"/facet_jobs/{self._query_token}/results")
+        result = self._cb.get_object(result_url)
+
+        self._total_results = result.get('num_found', 0)
+        self._count_valid = True
+
+        return self._total_results
+
+    def _search(self):
+        """Execute the query, iterating over results 500 rows at a time."""
+        if not self._query_token:
+            self._submit()
+
+        while self._still_querying():
+            time.sleep(.5)
+
+        if self._timed_out:
+            raise TimeoutError(message="User-specified timeout exceeded while waiting for results")
+
+        log.debug(f"Pulling results, timed_out={self._timed_out}")
+
+        result_url = (f"/api/investigate/v2/orgs/{self._cb.credentials.org_key}/processes"
+                      f"/facet_jobs/{self._query_token}/results")
+        if self._limit:
+            query_parameters = {"limit": self._limit}
+        else:
+            query_parameters = {}
+
+        result = self._cb.get_object(result_url, query_parameters=query_parameters)
+        print(f"Initial data for the Facet obj: {result}")
+        yield self._doc_class(self._cb, model_unique_id=self._query_token, initial_data=result)
+
+    def _init_async_query(self):
+        """Initialize an async query and return a context for running in the background.
+
+        Returns:
+            object: Context for running in the background (the query token).
+        """
+        self._submit()
+        return self._query_token
+
+    def _run_async_query(self, context):
+        """Executed in the background to run an asynchronous query.
 
         Args:
             context (object): The context (query token) returned by _init_async_query.
