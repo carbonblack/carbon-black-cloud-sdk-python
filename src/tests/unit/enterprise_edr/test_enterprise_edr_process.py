@@ -2,7 +2,7 @@
 
 import pytest
 import logging
-from cbc_sdk.enterprise_edr import Process, ProcessFacet, Tree, Event, Query, AsyncProcessQuery
+from cbc_sdk.enterprise_edr import Process, ProcessFacet, Tree, Event, Query, AsyncProcessQuery, AsyncFacetQuery
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ObjectNotFoundError, ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -567,6 +567,36 @@ def test_process_facet_select(cbcsdk_mock):
         future = facet_query.execute_async()
         res = future.result()[0]
 
+
+def test_process_facets(cbcsdk_mock):
+    """Testing Process.facets() method."""
+    # mock the search validation
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+                             GET_PROCESS_VALIDATION_RESP)
+    # mock the POST of a search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1)
+    # mock the search request
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/facet_jobs", {"job_id": "the-job-id"})
+    # mock the result call
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/facet_jobs/the-job-id/results", GET_FACET_SEARCH_RESULTS_RESP)
+    api = cbcsdk_mock.api
+    process = api.select(Process).where(process_guid="WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00")
+    results = [proc for proc in process]
+    process_facet_query = results[0].facets()
+    assert isinstance(process_facet_query, AsyncFacetQuery)
+    process_facet_query.add_facet_field(["backend_timestamp", "device_timestamp"])
+    future = process_facet_query.execute_async()
+    results = future.result()
+    assert results[0].terms_.fields == ['backend_timestamp', 'device_timestamp']
 
 def test_tree_select(cbcsdk_mock):
     """Testing Tree Querying"""

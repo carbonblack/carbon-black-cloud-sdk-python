@@ -919,7 +919,9 @@ class AsyncFacetQuery(Query):
         if not (self._facet_fields or self._ranges):
             raise ApiError("Process Facet Queries require at least one field or range to be requested. "
                            "Use add_facet_field(['my_facet_field']) to add fields to the request.")
-        terms = {"fields": self._facet_fields}
+        terms = {}
+        if self._facet_fields:
+            terms["fields"]: self._facet_fields
         if self._facet_rows:
             terms["rows"] = self._facet_rows
         args["terms"] = terms
