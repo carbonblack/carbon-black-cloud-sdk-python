@@ -271,8 +271,10 @@ MISP is not directly supported with the ThreatIntel module, but an easy workarou
 Use open-source tools like [PyMISP](https://github.com/MISP/PyMISP) and [MISP-STIX-Converter](https://github.com/MISP/MISP-STIX-Converter) to generate STIX data from your MISP data.
 
 ```python
+# Import the PyMISP function make_stix_package
 from pymisp.tools.stix import make_stix_package
 
+# List out your MISP events
 misp_events = {
   "Event": {
     "info": "Flash 0 Day In The Wild: Group 123 At The Controls",
@@ -284,10 +286,13 @@ misp_events = {
   }
 }
 
+# Keep an index of the number of files created
 file_number = 0
 for event in misp_events:
+  # Create a STIX Package for each MISP event
   stix_xml = make_stix_package(event, to_xml=True)
-  with open("misp_to_stix_data_{file_number}.xml", 'w') as f:
+  # Save each newly-created STIX Package to XML files
+  with open(f"misp_to_stix_data_{file_number}.xml", 'w') as f:
       f.write(stix_xml.decode("utf-8"))
   file_number += 1
 ```

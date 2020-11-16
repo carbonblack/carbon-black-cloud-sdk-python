@@ -14,13 +14,14 @@
 """Model and Query Classes for Endpoint Standard"""
 
 from cbc_sdk.base import (MutableBaseModel, CreatableModelMixin, NewBaseModel, PaginatedQuery,
-                          QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin)
+                          QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin, UnrefreshableModel)
 from cbc_sdk.platform import PlatformQueryBase
 from cbc_sdk.utils import convert_query_params
 from cbc_sdk.errors import ApiError
 from copy import deepcopy
 import logging
 import json
+import time
 
 from cbc_sdk.errors import ServerError
 
@@ -236,6 +237,21 @@ class Policy(EndpointStandardMutableModel, CreatableModelMixin):
         self.refresh()
 
 
+class EnrichedEvent(UnrefreshableModel):
+    """Represents an enriched event retrieved by one of the Enterprise EDR endpoints."""
+    default_sort = 'device_timestamp'
+    primary_key = "event_id"
+
+    @classmethod
+    def _query_implementation(self, cb, **kwargs):
+        # This will emulate a synchronous process query, for now.
+        return EnrichedEventQuery(self, cb)
+
+    def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
+        super(EnrichedEvent, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
+                                      force_init=force_init, full_doc=full_doc)
+
+
 """Endpoint Standard Queries"""
 
 
@@ -368,3 +384,235 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
                 log.debug("resetting total_results for this query to {0}".format(current))
                 self._total_results = current
                 break
+
+class EnrichedEventQuery(Query):
+    """Represents the query logic for an Enriched Event query.
+
+    This class specializes `Query` to handle the particulars of
+    enriched events querying.
+    """
+    def __init__(self, doc_class, cb):
+        super(EnrichedEventQuery, self).__init__(doc_class, cb)
+        self._sort_by = None
+        self._group_by = None
+        self._rows = 500
+        self._default_args = {}
+        self._default_args["rows"] = self._rows
+        self._query_token = None
+        self._timeout = 0
+        self._timed_out = False
+        self._sort = []
+        self._time_range = {}
+
+    def or_(self, **kwargs):
+        """ or_ criteria are explicitly provided to EnrichedEvent queries although they are endpoint_standard.
+            This method overrides the base class in order to provide or_() functionality rather than
+            raising an exception
+        """ 
+        self._query_builder.or_(None, **kwargs)
+        return self
+
+    def _get_query_parameters(self):
+        """Need to override base class implementation as it sets custom (invalid) fields"""
+        args = self._default_args.copy()
+        args['query'] = self._query_builder._collapse()
+        if self._time_range:
+            args["time_range"] = self._time_range
+
+        return args
+
+    def set_rows(self, rows):
+        """
+        Sets the 'rows' query body parameter to the 'start search' API call,
+        determining how many rows of results to request.
+        Args:
+            rows (int): How many rows to request.
+        """
+        if not isinstance(rows, int):
+            raise ApiError(f"Rows must be an integer. {rows} is a {type(rows)}.")
+        if rows > 10000:
+            raise ApiError("Maximum allowed value for rows is 10000")
+
+        self._rows = rows
+        self._default_args["rows"] = self._rows
+        return self
+
+
+    def set_time_range(self, start=None, end=None, window=None):
+        """
+        Sets the 'time_range' query body parameter, determining a time window based on 'device_timestamp'.
+        Args:
+            start (str in ISO 8601 timestamp): When to start the result search.
+            end (str in ISO 8601 timestamp): When to end the result search.
+            window (str): Time window to execute the result search, ending on the current time.
+                Should be in the form "-2w", where y=year, w=week, d=day, h=hour, m=minute, s=second.
+        Note:
+            - `window` will take precendent over `start` and `end` if provided.
+        Examples:
+            query = api.select(EnrichedEvent).set_time_range(start="2020-10-20T20:34:07Z")
+            second_query = api.select(EnrichedEvent).set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
+            third_query = api.select(EnrichedEvent).set_time_range(window='-3d')
+        """
+        if start:
+            if not isinstance(start, str):
+                raise ApiError(f"Start time must be a string in ISO 8601 format. {start} is a {type(start)}.")
+            self._time_range["start"] = start
+        if end:
+            if not isinstance(end, str):
+                raise ApiError(f"End time must be a string in ISO 8601 format. {end} is a {type(end)}.")
+            self._time_range["end"] = end
+        if window:
+            if not isinstance(window, str):
+                raise ApiError(f"Window must be a string. {window} is a {type(window)}.")
+            self._time_range["window"] = window
+
+        return self
+
+    def sort_by(self, key, direction="ASC"):
+        """Sets the sorting behavior on a query's results.
+
+        Arguments:
+            key (str): The key in the schema to sort by.
+            direction (str): The sort order, either "ASC" or "DESC".
+
+        Returns:
+            Query (EnrichedEventQuery: The query with sorting parameters.
+
+        Example:
+
+        >>> cb.select(EnrichedEvent).where(process_name="cmd.exe").sort_by("device_timestamp")
+        """
+        found = False
+
+        for sort_item in self._sort:
+            if sort_item['field'] == key:
+                sort_item['order'] = direction
+                found = True
+
+        if not found:
+            self._sort.append({'field': key, 'order': direction})
+
+        self._default_args['sort'] = self._sort
+
+        return self
+
+    def timeout(self, msecs):
+        """Sets the timeout on a event query.
+
+        Arguments:
+            msecs (int): Timeout duration, in milliseconds.
+
+        Returns:
+            Query (EnrichedEventQuery): The Query object with new milliseconds
+                parameter.
+
+        Example:
+
+        >>> cb.select(EnrichedEvent).where(process_name="foo.exe").timeout(5000)
+        """
+        self._timeout = msecs
+        return self
+
+    def _submit(self):
+        if self._query_token:
+            raise ApiError("Query already submitted: token {0}".format(self._query_token))
+
+        args = self._get_query_parameters()
+
+        url = "/api/investigate/v2/orgs/{}/enriched_events/search_jobs".format(self._cb.credentials.org_key)
+        query_start = self._cb.post_object(url, body=args)
+        self._query_token = query_start.json().get("job_id")
+
+        self._timed_out = False
+        self._submit_time = time.time() * 1000
+
+    def _still_querying(self):
+        if not self._query_token:
+            self._submit()
+
+        status_url = "/api/investigate/v1/orgs/{}/enriched_events/search_jobs/{}".format(
+            self._cb.credentials.org_key,
+            self._query_token,
+        )
+        result = self._cb.get_object(status_url)
+        searchers_contacted = result.get("contacted", 0)
+        searchers_completed = result.get("completed", 0)
+        log.debug("contacted = {}, completed = {}".format(searchers_contacted, searchers_completed))
+        if searchers_contacted == 0:
+            return True
+        if searchers_completed < searchers_contacted:
+            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:
+                self._timed_out = True
+                return False
+            return True
+
+        return False
+
+    def _count(self):
+        if self._count_valid:
+            return self._total_results
+
+        while self._still_querying():
+            time.sleep(.5)
+
+        if self._timed_out:
+            raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
+
+        result_url = "/api/investigate/v2/orgs/{}/enriched_events/search_jobs/{}/results".format(
+            self._cb.credentials.org_key,
+            self._query_token,
+        )
+        result = self._cb.get_object(result_url)
+
+        self._total_results = result.get('num_available', 0)
+        self._count_valid = True
+
+        return self._total_results
+
+    def _search(self, start=0, rows=0):
+        if not self._query_token:
+            self._submit()
+
+        while self._still_querying():
+            time.sleep(.5)
+
+        if self._timed_out:
+            raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
+
+        log.debug("Pulling results, timed_out={}".format(self._timed_out))
+
+        current = start
+        rows_fetched = 0
+        still_fetching = True
+        result_url_template = "/api/investigate/v2/orgs/{}/enriched_events/search_jobs/{}/results".format(
+            self._cb.credentials.org_key,
+            self._query_token
+        )
+        query_parameters = {}
+        while still_fetching:
+            result_url = '{}?start={}&rows={}'.format(
+                result_url_template,
+                current,
+                self._batch_size
+            )
+
+            result = self._cb.get_object(result_url, query_parameters=query_parameters)
+            self._total_results = result.get('num_available', 0)
+            self._count_valid = True
+
+            results = result.get('results', [])
+
+            for item in results:
+                yield item
+                current += 1
+                rows_fetched += 1
+
+                if rows and rows_fetched >= rows:
+                    still_fetching = False
+                    break
+
+            if current >= self._total_results:
+                still_fetching = False
+
+            log.debug("current: {}, total_results: {}".format(current, self._total_results))
+
