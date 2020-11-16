@@ -13,7 +13,7 @@
 
 """Model and Query Classes for Endpoint Standard"""
 
-from cbc_sdk.base import (MutableBaseModel, CreatableModelMixin, NewBaseModel, PaginatedQuery,
+from cbc_sdk.base import (MutableBaseModel, CreatableModelMixin, NewBaseModel, PaginatedQuery, AsyncQueryMixin,
                           QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin, UnrefreshableModel)
 from cbc_sdk.platform import PlatformQueryBase
 from cbc_sdk.utils import convert_query_params
@@ -244,7 +244,7 @@ class EnrichedEvent(UnrefreshableModel):
 
     @classmethod
     def _query_implementation(self, cb, **kwargs):
-        # This will emulate a synchronous process query, for now.
+        # This will emulate a synchronous enriched event query, for now.
         return EnrichedEventQuery(self, cb)
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
@@ -252,6 +252,87 @@ class EnrichedEvent(UnrefreshableModel):
                                       force_init=force_init, full_doc=full_doc)
 
 
+class EnrichedEventFacet(UnrefreshableModel):
+    """Represents an enriched event retrieved by one of the Enterprise EDR endpoints."""
+    primary_key = "job_id"
+    urlobject = "/api/investigate/v2/orgs/{}/enriched_events/facet_jobs"
+    swagger_meta_file = "endpoint_standard/models/enrichedEventFacet.yaml"
+
+    class Terms(UnrefreshableModel):
+        """Represents the facet fields and values associated with an Enriched Event Facet query."""
+        def __init__(self, cb,  initial_data):
+            """Initialize an EnrichedEventFacet Terms object with initial_data."""
+            super(EnrichedEventFacet.Terms, self).__init__(
+                cb,
+                model_unique_id=None,
+                initial_data=initial_data,
+                force_init=False,
+                full_doc=True,
+            )
+            self._facets = {}
+            for facet_term_data in initial_data:
+                field = facet_term_data["field"]
+                values = facet_term_data["values"]
+                self._facets[field] = values
+
+        @property
+        def facets(self):
+            """Returns the terms' facets for this result."""
+            return self._facets
+
+        @property
+        def fields(self):
+            """Returns the terms facets' fields for this result."""
+            return [field for field in self._facets]
+
+    class Ranges(UnrefreshableModel):
+        """Represents the range (bucketed) facet fields and values associated with an Enriched Event Facet query."""
+        def __init__(self, cb, initial_data):
+            """Initialize an EnrichedEventFacet Ranges object with initial_data."""
+            super(EnrichedEventFacet.Ranges, self).__init__(
+                cb,
+                model_unique_id=None,
+                initial_data=initial_data,
+                force_init=False,
+                full_doc=True,
+            )
+            self._facets = {}
+            for facet_range_data in initial_data:
+                field = facet_range_data["field"]
+                values = facet_range_data["values"]
+                self._facets[field] = values
+
+        @property
+        def facets(self):
+            """Returns the reified `EnrichedEventFacet.Terms._facets` for this result."""
+            return self._facets
+
+        @property
+        def fields(self):
+            """Returns the ranges fields for this result."""
+            return [field for field in self._facets]
+
+    @classmethod
+    def _query_implementation(self, cb, **kwargs):
+        # This will emulate a synchronous enricehd event facet query, for now.
+        return EnrichedEventFacetQuery(self, cb)
+
+    def __init__(self, cb, model_unique_id, initial_data):
+        super(EnrichedEventFacet, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
+                                      force_init=False, full_doc=True)
+        self._terms = EnrichedEventFacet.Terms(cb, initial_data=initial_data["terms"])
+        self._ranges = EnrichedEventFacet.Ranges(cb, initial_data=initial_data["ranges"])
+    @property
+    def terms_(self):
+        """Returns the reified `EnrichedEventFacet.Terms` for this result."""
+        return self._terms
+
+    @property
+    def ranges_(self):
+        """Returns the reified `EnrichedEventFacet.Ranges` for this result."""
+        return self._ranges
+    
+    
 """Endpoint Standard Queries"""
 
 
@@ -384,6 +465,7 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
                 log.debug("resetting total_results for this query to {0}".format(current))
                 self._total_results = current
                 break
+
 
 class EnrichedEventQuery(Query):
     """Represents the query logic for an Enriched Event query.
@@ -522,7 +604,6 @@ class EnrichedEventQuery(Query):
         url = "/api/investigate/v2/orgs/{}/enriched_events/search_jobs".format(self._cb.credentials.org_key)
         query_start = self._cb.post_object(url, body=args)
         self._query_token = query_start.json().get("job_id")
-
         self._timed_out = False
         self._submit_time = time.time() * 1000
 
@@ -616,3 +697,297 @@ class EnrichedEventQuery(Query):
 
             log.debug("current: {}, total_results: {}".format(current, self._total_results))
 
+
+class EnrichedEventFacetQuery(Query, AsyncQueryMixin):
+    """Represents the query logic for an Enriched Event Facet query.
+    This class specializes `Query` to handle the particulars of
+    enriched events faced querying.
+    """
+    def __init__(self, doc_class, cb):
+        super(EnrichedEventFacetQuery, self).__init__(doc_class, cb)
+        self._ranges = []
+        self._default_args = {}
+        self._query_token = None
+        self._timeout = 0
+        self._timed_out = False
+        self._time_range = {}
+        self._limit = 100
+        self._facet_fields = []
+        self._facet_rows = 100
+        self._query_builder = QueryBuilder()
+
+    def or_(self, **kwargs):
+        """ or_ criteria are explicitly provided to EnrichedEvent queries although they are endpoint_standard.
+            This method overrides the base class in order to provide or_() functionality rather than
+            raising an exception
+        """ 
+        self._query_builder.or_(None, **kwargs)
+        return self
+        
+
+    def _get_query_parameters(self):
+        """Need to override base class implementation as it sets custom (invalid) fields"""
+        args = self._default_args.copy()
+        if not self._facet_fields:
+            raise ApiError("Enriched Event Facet Queries require at least one field to be requested. "
+                           "Use add_facet_field(['my_facet_field']) to add fields to the request.")
+        terms = {"fields": self._facet_fields}
+        if self._facet_rows:
+            terms["rows"] = self._facet_rows
+        args["terms"] = terms
+        if self._ranges:
+            args["ranges"] = self._ranges
+        if self._time_range:
+            args["time_range"] = self._time_range
+
+        args['query'] = self._query_builder._collapse()
+        return args
+
+    def set_rows(self, rows):
+        """Sets the number of facet results to return with the query.
+        Args:
+            rows (int): Number of rows to return.
+        Returns:
+            Query (AsyncFacetQuery): The Query object with the new rows parameter.
+        Example:
+        >>> cb.select(EnrichedEventFacet).set_rows(50)
+        """
+        self._facet_rows = rows
+        return self
+
+    def limit(self, limit):
+        """Sets the maximum number of facets per category (i.e. any Enriched Event Search Fields in self._fields).
+        The default limit for Enriched Event Facet searches in the Carbon Black Cloud backend is 100.
+        Arguments:
+            limit (int): Maximum number of facets per category.
+        Returns:
+            Query (EnrichedEventFacetQuery): The Query object with new limit parameter.
+        Example:
+        >>> cb.select(EnrichedEventFacet).where(process_name="foo.exe").limit(50)
+        """
+        self._limit = limit
+        return self
+
+    def _check_range(self, range):
+        """ Checks if range is correct"""
+        if not "start" in range.keys():
+            raise ApiError("No 'start' parameter in range")
+        if not "end" in range.keys():
+            raise ApiError("No 'end' parameter in range")
+        if not "bucket_size" in range.keys():
+            raise ApiError("No 'bucket_size' parameter in range")
+        if not "field" in range.keys():
+            raise ApiError("No 'field' parameter in range")
+        
+        start = range["start"]
+        end = range["end"]
+        field = range["field"]
+        bucket_size = range["bucket_size"]
+        
+        if not isinstance(start, int) and not isinstance(start, str):
+            raise ApiError("start parameter should be either int or ISO8601 timestamp string")
+        if not isinstance(end, int) and not isinstance(end, str):
+            raise ApiError("end parameter should be either int or ISO8601 timestamp string")
+        if not isinstance(field, str):
+            raise ApiError("field parameter should be a string")
+        if not isinstance(bucket_size, int) and not isinstance(bucket_size, str):
+            raise ApiError("bucket_size should be int or ISO8601 string")
+
+    def add_range(self, range):
+        """Sets the facet ranges to be received by this query.
+        Arguments:
+            range (dict or [dict]): Range(s) to be received.
+        Returns:
+            Query (EnrichedEventFacetQuery): The Query object that will receive the specified range(s).
+        Note: The range parameter must be in this dictionary format:
+            {
+                "bucket_size": "<object>",
+                "start": "<object>",
+                "end": "<object>",
+                "field": "<string>"
+            },
+            where "bucket_size", "start", and "end" can be numbers or ISO 8601 timestamps.
+        Examples:
+        >>> cb.select(EnrichedEventFacet).add_range({"bucket_size": 5, "start": 0, "end": 10, "field": "netconn_count"})
+        >>> cb.select(EnrichedEventFacet).add_range({"bucket_size": "+1DAY", "start": "2020-11-01T00:00:00Z",
+                                               "end": "2020-11-12T00:00:00Z", "field": "backend_timestamp"})
+        """
+        if isinstance(range, dict):
+            self._check_range(range)
+            self._ranges.append(range)
+        else:
+            for r in range:
+                self._check_range(r)
+                self._ranges.append(r)
+        return self
+
+    def add_facet_field(self, field):
+        """Sets the facet fields to be received by this query.
+        Arguments:
+            field (str or [str]): Field(s) to be received.
+        Returns:
+            Query (EnrichedEventFacetQuery): The Query object that will receive the specified field(s).
+        Example:
+        >>> cb.select(EnrichedEventFacet).add_facet_field(["process_name", "process_username"])
+        """
+        if isinstance(field, str):
+            self._facet_fields.append(field)
+        else:
+            for name in field:
+                self._facet_fields.append(name)
+        return self
+
+
+    def set_time_range(self, start=None, end=None, window=None):
+        """
+        Sets the 'time_range' query body parameter, determining a time window based on 'device_timestamp'.
+        Args:
+            start (str in ISO 8601 timestamp): When to start the result search.
+            end (str in ISO 8601 timestamp): When to end the result search.
+            window (str): Time window to execute the result search, ending on the current time.
+                Should be in the form "-2w", where y=year, w=week, d=day, h=hour, m=minute, s=second.
+        Note:
+            - `window` will take precendent over `start` and `end` if provided.
+        Examples:
+            query = api.select(EnrichedEvent).set_time_range(start="2020-10-20T20:34:07Z")
+            second_query = api.select(EnrichedEvent).set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
+            third_query = api.select(EnrichedEvent).set_time_range(window='-3d')
+        """
+        if start:
+            if not isinstance(start, str):
+                raise ApiError(f"Start time must be a string in ISO 8601 format. {start} is a {type(start)}.")
+            self._time_range["start"] = start
+        if end:
+            if not isinstance(end, str):
+                raise ApiError(f"End time must be a string in ISO 8601 format. {end} is a {type(end)}.")
+            self._time_range["end"] = end
+        if window:
+            if not isinstance(window, str):
+                raise ApiError(f"Window must be a string. {window} is a {type(window)}.")
+            self._time_range["window"] = window
+
+        return self
+
+    def timeout(self, msecs):
+        """Sets the timeout on a event query.
+
+        Arguments:
+            msecs (int): Timeout duration, in milliseconds.
+
+        Returns:
+            Query (EnrichedEventQuery): The Query object with new milliseconds
+                parameter.
+
+        Example:
+
+        >>> cb.select(EnrichedEvent).where(process_name="foo.exe").timeout(5000)
+        """
+        self._timeout = msecs
+        return self
+
+    def _submit(self):
+        if self._query_token:
+            raise ApiError("Query already submitted: token {0}".format(self._query_token))
+
+        args = self._get_query_parameters()
+
+        url = "/api/investigate/v2/orgs/{}/enriched_events/facet_jobs".format(self._cb.credentials.org_key)
+        query_start = self._cb.post_object(url, body=args)
+        self._query_token = query_start.json().get("job_id")
+
+        self._timed_out = False
+        self._submit_time = time.time() * 1000
+
+    def _still_querying(self):
+        if not self._query_token:
+            self._submit()
+
+        status_url = "/api/investigate/v2/orgs/{}/enriched_events/facet_jobs/{}/results".format(
+            self._cb.credentials.org_key,
+            self._query_token,
+        )
+        result = self._cb.get_object(status_url)
+        searchers_contacted = result.get("contacted", 0)
+        searchers_completed = result.get("completed", 0)
+        log.debug("contacted = {}, completed = {}".format(searchers_contacted, searchers_completed))
+        if searchers_contacted == 0:
+            return True
+        if searchers_completed < searchers_contacted:
+            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:
+                self._timed_out = True
+                return False
+            return True
+
+        return False
+
+    def _count(self):
+        if self._count_valid:
+            return self._total_results
+
+        while self._still_querying():
+            time.sleep(.5)
+
+        if self._timed_out:
+            raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
+
+        result_url = "/api/investigate/v2/orgs/{}/enriched_events/facet_jobs/{}/results".format(
+            self._cb.credentials.org_key,
+            self._query_token,
+        )
+        result = self._cb.get_object(result_url)
+
+        self._total_results = result.get('num_found', 0)
+        self._count_valid = True
+
+        return self._total_results
+
+    def _search(self, start=0, rows=0):
+        if not self._query_token:
+            self._submit()
+
+        while self._still_querying():
+            time.sleep(.5)
+
+        if self._timed_out:
+            raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
+
+        log.debug("Pulling results, timed_out={}".format(self._timed_out))
+
+        result_url = "/api/investigate/v2/orgs/{}/enriched_events/facet_jobs/{}/results".format(
+            self._cb.credentials.org_key,
+            self._query_token
+        )
+        
+        if self._limit:
+            query_parameters = {"limit": self._limit}
+        else:
+            query_parameters = {}
+
+        result = self._cb.get_object(result_url, query_parameters=query_parameters) 
+        result["job_id"] = self._query_token        
+        yield result
+
+    def _search_async(self):
+        """ Not very pretty hack to incorporate both synchronous and async behavior """
+        for result in self._search():
+            result.pop("job_id", None)
+            yield self._doc_class(self._cb, model_unique_id=self._query_token, initial_data=result)
+
+    def _init_async_query(self):
+        """Initialize an async query and return a context for running in the background.
+        Returns:
+            object: Context for running in the background (the query token).
+        """
+        self._submit()
+        return self._query_token
+
+    def _run_async_query(self, context):
+        """Executed in the background to run an asynchronous query.
+        Args:
+            context (object): The context (query token) returned by _init_async_query.
+        Returns:
+            Any: Result of the async query, which is then returned by the future.
+        """
+        if context != self._query_token:
+            raise ApiError("Async query not properly started")
+        return list(self._search_async())
