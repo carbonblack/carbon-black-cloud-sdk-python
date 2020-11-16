@@ -884,6 +884,31 @@ class AsyncFacetQuery(Query):
                 self._facet_fields.append(name)
         return self
 
+    def _check_range(self, range):
+        """Checks if range has all required keys."""
+        if "start" not in range.keys():
+            raise ApiError("No 'start' parameter in range")
+        if "end" not in range.keys():
+            raise ApiError("No 'end' parameter in range")
+        if "bucket_size" not in range.keys():
+            raise ApiError("No 'bucket_size' parameter in range")
+        if "field" not in range.keys():
+            raise ApiError("No 'field' parameter in range")
+
+        start = range["start"]
+        end = range["end"]
+        field = range["field"]
+        bucket_size = range["bucket_size"]
+
+        if not isinstance(start, int) and not isinstance(start, str):
+            raise ApiError("start parameter should be either int or ISO8601 timestamp string")
+        if not isinstance(end, int) and not isinstance(end, str):
+            raise ApiError("end parameter should be either int or ISO8601 timestamp string")
+        if not isinstance(field, str):
+            raise ApiError("field parameter should be a string")
+        if not isinstance(bucket_size, int) and not isinstance(bucket_size, str):
+            raise ApiError("bucket_size should be either int or ISO8601 timestamp string")
+
     def add_range(self, range):
         """Sets the facet ranges to be received by this query.
 
@@ -908,9 +933,11 @@ class AsyncFacetQuery(Query):
                                                "end": "2020-11-12T00:00:00Z", "field": "backend_timestamp"})
         """
         if isinstance(range, dict):
+            self._check_range(range)
             self._ranges.append(range)
         else:
             for r in range:
+                self._check_range(r)
                 self._ranges.append(r)
         return self
 
