@@ -198,7 +198,9 @@ class Process(UnrefreshableModel):
     def facets(self):
         """Returns a FacetQuery for a Process.
 
-        This represents the search for a summary of results from a single field of a `Run`.
+        This represents the search for a summary of result groupings (facets).
+        The returned AsyncFacetQuery object must have facet fields or ranges specified
+        before it can be submitted, using the `add_facet_field()` or `add_range()` methods.
         """
         return self._cb.select(ProcessFacet).where(process_guid=self.process_guid)
 
@@ -914,8 +916,8 @@ class AsyncFacetQuery(Query):
 
     def _get_query_parameters(self):
         args = self._default_args.copy()
-        if not self._facet_fields:
-            raise ApiError("Process Facet Queries require at least one field to be requested. "
+        if not (self._facet_fields or self._ranges):
+            raise ApiError("Process Facet Queries require at least one field or range to be requested. "
                            "Use add_facet_field(['my_facet_field']) to add fields to the request.")
         terms = {"fields": self._facet_fields}
         if self._facet_rows:
