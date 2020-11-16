@@ -963,8 +963,8 @@ class EnrichedEventFacetQuery(Query, AsyncQueryMixin):
         else:
             query_parameters = {}
 
-        result = self._cb.get_object(result_url, query_parameters=query_parameters) 
-        result["job_id"] = self._query_token        
+        result = self._cb.get_object(result_url, query_parameters=query_parameters)
+        result["job_id"] = self._query_token
         yield result
 
     def _search_async(self):

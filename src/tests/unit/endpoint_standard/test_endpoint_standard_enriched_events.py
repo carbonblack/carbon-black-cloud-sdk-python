@@ -1,4 +1,4 @@
-"""Testing Process and Tree objects of cbc_sdk.enterprise_edr"""
+"""Testing EnrichedEvent objects of cbc_sdk.endpoint_standard"""
 
 import pytest
 import logging
