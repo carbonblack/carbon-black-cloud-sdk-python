@@ -598,6 +598,37 @@ def test_process_facets(cbcsdk_mock):
     results = future.result()
     assert results[0].terms_.fields == ['backend_timestamp', 'device_timestamp']
 
+
+@pytest.mark.parametrize("bucket_size, start, end, field", [
+    # empty values
+    ([], 0, 2, "some_field"),
+    (30, [], 2, "some_field"),
+    (30, 0, [], "some_field"),
+    (30, 0, 2, []),
+    # invalid types
+    (30.5, 0, 2, "some_field"),
+    (30, 0.5, 2, "some_field"),
+    (30, 0, 2.5, "some_field"),
+    (30, 0, 2, 1),
+    # more empty values
+    (None, 0, 2, "some_field"),
+    (30, None, 2, "some_field"),
+    (30, 0, None, "some_field"),
+    (30, 0, 2, None)
+])
+def test_process_facet_query_check_range(cbcsdk_mock, bucket_size, start, end, field):
+    """Testing AsyncFacetQuery._check_range()."""
+    api = cbcsdk_mock.api
+    range = {
+        "bucket_size": bucket_size,
+        "start": start,
+        "end": end,
+        "field": field
+    }
+    with pytest.raises(ApiError):
+        api.select(ProcessFacet)._check_range(range)
+
+
 def test_tree_select(cbcsdk_mock):
     """Testing Tree Querying"""
     cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/tree", GET_TREE_RESP)
