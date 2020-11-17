@@ -10,6 +10,11 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
+"""
+Command-line example that retrieves all processes within the last six hours from all active devices.
+Uses asynchronous querying to generate the queries for each device's processes so that they run in parallel.
+"""
+
 import sys
 import logging
 import concurrent.futures
