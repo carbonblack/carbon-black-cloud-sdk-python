@@ -26,7 +26,7 @@ def main():
     args = parser.parse_args()
     cb = get_cb_cloud_object(args)
 
-    query = cb.select(Device).where('1')
+    query = cb.select(Device).where('1').set_status(['ACTIVE'])
     devices = list(query)
     if args.verbose:
         print(f"Querying {len(devices)} device(s)...")
