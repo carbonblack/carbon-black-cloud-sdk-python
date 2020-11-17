@@ -728,7 +728,7 @@ class EnrichedEventFacetQuery(Query, AsyncQueryMixin):
     def _get_query_parameters(self):
         """Need to override base class implementation as it sets custom (invalid) fields"""
         args = self._default_args.copy()
-        if not self._facet_fields:
+        if not (self._facet_fields or self._ranges):
             raise ApiError("Enriched Event Facet Queries require at least one field to be requested. "
                            "Use add_facet_field(['my_facet_field']) to add fields to the request.")
         terms = {"fields": self._facet_fields}
@@ -970,7 +970,6 @@ class EnrichedEventFacetQuery(Query, AsyncQueryMixin):
     def _search_async(self):
         """ Not very pretty hack to incorporate both synchronous and async behavior """
         for result in self._search():
-            result.pop("job_id", None)
             yield self._doc_class(self._cb, model_unique_id=self._query_token, initial_data=result)
 
     def _init_async_query(self):
