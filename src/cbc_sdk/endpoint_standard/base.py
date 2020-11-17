@@ -769,6 +769,29 @@ class EnrichedEventFacetQuery(Query, AsyncQueryMixin):
         return self
 
     def _check_range(self, range):
+        """Checks if range has all required keys, and that they have non-empty values."""
+        start = range.get("start")
+        end = range.get("end")
+        field = range.get("field")
+        bucket_size = range.get("bucket_size")
+
+        if start is None or (start != 0 and not start):
+            raise ApiError("No 'start' parameter in range, or its value is None.")
+        if end is None or not end:
+            raise ApiError("No 'end' parameter in range, or its value is None.")
+        if bucket_size is None or not bucket_size:
+            raise ApiError("No 'bucket_size' parameter in range, or its value is None.")
+        if field is None or not field:
+            raise ApiError("No 'field' parameter in range, or its value is None.")
+
+        if type(start) not in [int, str]:
+            raise ApiError("`start` parameter should be either int or ISO8601 timestamp string")
+        if type(end) not in [int, str]:
+            raise ApiError("`end` parameter should be either int or ISO8601 timestamp string")
+        if type(field) not in [str]:
+            raise ApiError("`field` parameter should be a string")
+        if type(bucket_size) not in [int, str]:
+            raise ApiError("`bucket_size` should be either int or ISO8601 timestamp string")    
         """ Checks if range is correct"""
         if not "start" in range.keys():
             raise ApiError("No 'start' parameter in range")
@@ -778,20 +801,6 @@ class EnrichedEventFacetQuery(Query, AsyncQueryMixin):
             raise ApiError("No 'bucket_size' parameter in range")
         if not "field" in range.keys():
             raise ApiError("No 'field' parameter in range")
-        
-        start = range["start"]
-        end = range["end"]
-        field = range["field"]
-        bucket_size = range["bucket_size"]
-        
-        if not isinstance(start, int) and not isinstance(start, str):
-            raise ApiError("start parameter should be either int or ISO8601 timestamp string")
-        if not isinstance(end, int) and not isinstance(end, str):
-            raise ApiError("end parameter should be either int or ISO8601 timestamp string")
-        if not isinstance(field, str):
-            raise ApiError("field parameter should be a string")
-        if not isinstance(bucket_size, int) and not isinstance(bucket_size, str):
-            raise ApiError("bucket_size should be int or ISO8601 string")
 
     def add_range(self, range):
         """Sets the facet ranges to be received by this query.
@@ -819,6 +828,7 @@ class EnrichedEventFacetQuery(Query, AsyncQueryMixin):
             for r in range:
                 self._check_range(r)
                 self._ranges.append(r)
+
         return self
 
     def add_facet_field(self, field):
