@@ -86,11 +86,11 @@ def test_enriched_event_rows(cbcsdk_mock):
     api = cbcsdk_mock.api
     events = api.select(EnrichedEvent).where(process_pid=1000).set_rows(1500)
     assert events._rows == 1500
-    
+
 def test_enriched_event_time_range(cbcsdk_mock):
     """Testing EnrichedEvent results sort."""
     api = cbcsdk_mock.api
-    events = api.select(EnrichedEvent).where(process_pid=1000).set_time_range(start="2020-10-10T20:34:07Z", 
+    events = api.select(EnrichedEvent).where(process_pid=1000).set_time_range(start="2020-10-10T20:34:07Z",
                                                                               end="2020-10-20T20:34:07Z",
                                                                               window="-1d")
     assert events._time_range["start"] == "2020-10-10T20:34:07Z"
