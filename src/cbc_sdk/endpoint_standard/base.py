@@ -689,3 +689,4 @@ class EnrichedEventQuery(Query):
                 still_fetching = False
 
             log.debug("current: {}, total_results: {}".format(current, self._total_results))
+

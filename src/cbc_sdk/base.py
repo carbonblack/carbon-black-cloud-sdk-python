@@ -356,6 +356,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
                     if len(val) > 50:
                         val = val[:47] + u"..."
                     lines.append(u"{0:s} {1:>20s}: {2:s}".format(status, att, val))
+
         return "\n".join(lines)
 
     def _join(self, join_cls, field_name):
