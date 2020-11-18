@@ -834,8 +834,11 @@ class EnrichedEventFacetQuery(Query, AsyncQueryMixin):
         if isinstance(field, str):
             self._facet_fields.append(field)
         else:
-            for name in field:
-                self._facet_fields.append(name)
+            try:
+                for name in field:
+                    self._facet_fields.append(name)
+            except TypeError:
+                raise ApiError("Either a single string field argument or a list of field strings are allowed as argument")
         return self
 
 

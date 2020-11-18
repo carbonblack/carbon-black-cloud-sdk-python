@@ -34,35 +34,42 @@ def cbcsdk_mock(monkeypatch, cb):
 def test_enriched_event_facet_select_where(cbcsdk_mock):
     """Testing EnrichedEvent Querying with select()"""
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/facet_jobs", POST_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESP)
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/enriched_events/facet_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results", GET_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_1)
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/enriched_events/facet_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results", GET_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_2)
 
     api = cbcsdk_mock.api
     events = api.select(EnrichedEventFacet).where(process_name="chrome.exe").add_facet_field("process_name")
     for event in events:
         assert event.terms is not None
         assert event.ranges is not None
+        assert len(event.ranges) == 0
+        assert event.terms[0]["field"] == "process_name"
 
 def test_enriched_event_facet_select_async(cbcsdk_mock):
     """Testing EnrichedEvent Querying with select()"""
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/facet_jobs", POST_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESP)
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/enriched_events/facet_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results", GET_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_1)
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/enriched_events/facet_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results", GET_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_2)
 
     api = cbcsdk_mock.api
     future = api.select(EnrichedEventFacet).where(process_name="chrome.exe").add_facet_field("process_name").execute_async()
     event = future.result()[0]
     assert event.terms is not None
     assert event.ranges is not None
+    assert len(event.ranges) == 0
+    assert event.terms[0]["field"] == "process_name"
 
 def test_enriched_event_facet_select_compound(cbcsdk_mock):
     """Testing EnrichedEvent Querying with select() and more complex criteria"""
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/facet_jobs", POST_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESP)
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/enriched_events/facet_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results", GET_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_1)
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/enriched_events/facet_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results", GET_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_2)
 
     api = cbcsdk_mock.api
     events = api.select(EnrichedEventFacet).where(process_name="chrome.exe").or_(process_name="firefox.exe").add_facet_field("process_name")
     for event in events:
         assert event.terms is not None
         assert event.ranges is not None
+        assert len(event.ranges) == 0
+        assert event.terms[0]["field"] == "process_name"
+
 
 def test_enriched_event_facet_query_implementation(cbcsdk_mock):
     """Testing EnrichedEvent querying with where()."""
@@ -144,6 +151,19 @@ def test_enriched_event_facet_query_add_facet_field(cbcsdk_mock):
     events = api.select(EnrichedEventFacet).where(process_pid=1000).add_facet_field("process_name")
     assert events._facet_fields[0] == "process_name"
 
+def test_enriched_event_facet_query_add_facet_fields(cbcsdk_mock):
+    """Testing EnrichedEvent results sort."""
+    api = cbcsdk_mock.api
+    events = api.select(EnrichedEventFacet).where(process_pid=1000).add_facet_field(["process_name", "process_pid"])
+    assert "process_pid" in events._facet_fields
+    assert "process_name" in events._facet_fields
+
+def test_enriched_event_facet_query_add_facet_invalid_fields(cbcsdk_mock):
+    """Testing EnrichedEvent results sort."""
+    api = cbcsdk_mock.api
+    with pytest.raises(ApiError):
+        events = api.select(EnrichedEventFacet).where(process_pid=1000).add_facet_field(1337)
+
 
 def test_enriched_event_facet_limit(cbcsdk_mock):
     """Testing EnrichedEvent results sort."""
@@ -182,20 +202,24 @@ def test_enriched_events_facet_count(cbcsdk_mock):
 def test_enriched_events_search(cbcsdk_mock):
     """ Test _search method of enrichedeventquery class """
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/facet_jobs", POST_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESP)
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/enriched_events/facet_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results", GET_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_1)
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/enriched_events/facet_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results", GET_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_2)
 
     api = cbcsdk_mock.api
     events = api.select(EnrichedEventFacet).where(process_pid=1000).add_facet_field("process_name")
     events._search()
     assert events[0].terms is not None
+    assert len(events[0].ranges) == 0
+    assert events[0].terms[0]["field"] == "process_name"
+
 
 def test_enriched_events_search_async(cbcsdk_mock):
     """ Test _search method of enrichedeventquery class """
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/facet_jobs", POST_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESP)
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/enriched_events/facet_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results", GET_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_1)
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/enriched_events/facet_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results", GET_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_2)
 
     api = cbcsdk_mock.api
     events = api.select(EnrichedEventFacet).where(process_pid=1000).add_facet_field("process_name")
     events._search_async()
     assert events[0].terms is not None
-    
+    assert len(events[0].ranges) == 0
+    assert events[0].terms[0]["field"] == "process_name"
