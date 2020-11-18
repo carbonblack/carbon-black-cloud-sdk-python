@@ -261,7 +261,6 @@ class ProcessFacet(UnrefreshableModel):
     """
     primary_key = "job_id"
     swagger_meta_file = "enterprise_edr/models/process_facets.yaml"
-    urlobject = "/api/investigate/v2/orgs/{}/processes/facet_jobs"
     submit_url = "/api/investigate/v2/orgs/{}/processes/facet_jobs"
     result_url = "/api/investigate/v2/orgs/{}/processes/facet_jobs/{}/results"
 

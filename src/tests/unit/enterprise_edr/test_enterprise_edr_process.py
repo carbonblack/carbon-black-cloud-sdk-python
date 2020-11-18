@@ -2,7 +2,8 @@
 
 import pytest
 import logging
-from cbc_sdk.enterprise_edr import Process, ProcessFacet, Tree, Event, Query, AsyncProcessQuery, AsyncFacetQuery
+from cbc_sdk.enterprise_edr import Process, ProcessFacet, Tree, Event, Query, AsyncProcessQuery
+from cbc_sdk.base import FacetQuery
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ObjectNotFoundError, ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -592,7 +593,7 @@ def test_process_facets(cbcsdk_mock):
     process = api.select(Process).where(process_guid="WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00")
     results = [proc for proc in process]
     process_facet_query = results[0].facets()
-    assert isinstance(process_facet_query, AsyncFacetQuery)
+    assert isinstance(process_facet_query, FacetQuery)
     process_facet_query.add_facet_field(["backend_timestamp", "device_timestamp"])
     future = process_facet_query.execute_async()
     results = future.result()
