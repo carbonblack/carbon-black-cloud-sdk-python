@@ -256,7 +256,7 @@ class EnrichedEventFacet(UnrefreshableModel):
     """Represents an enriched event retrieved by one of the Enterprise EDR endpoints."""
     primary_key = "job_id"
     urlobject = "/api/investigate/v2/orgs/{}/enriched_events/facet_jobs"
-    swagger_meta_file = "endpoint_standard/models/enrichedEventFacet.yaml"
+    swagger_meta_file = "endpoint_standard/models/enriched_event_facet.yaml"
 
     class Terms(UnrefreshableModel):
         """Represents the facet fields and values associated with an Enriched Event Facet query."""
