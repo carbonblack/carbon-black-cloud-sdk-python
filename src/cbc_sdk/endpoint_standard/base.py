@@ -14,7 +14,7 @@
 """Model and Query Classes for Endpoint Standard"""
 
 from cbc_sdk.base import (MutableBaseModel, UnrefreshableModel, CreatableModelMixin, NewBaseModel, FacetQuery,
-                          PaginatedQuery, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin)
+                          PaginatedQuery, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
 from cbc_sdk.platform import PlatformQueryBase
 from cbc_sdk.utils import convert_query_params
 from cbc_sdk.errors import ApiError
@@ -469,7 +469,7 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
                 break
 
 
-class EnrichedEventQuery(Query):
+class EnrichedEventQuery(Query, AsyncQueryMixin):
     """Represents the query logic for an Enriched Event query.
     This class specializes `Query` to handle the particulars of
     enriched events querying.
@@ -690,3 +690,13 @@ class EnrichedEventQuery(Query):
 
             log.debug("current: {}, total_results: {}".format(current, self._total_results))
 
+    def _run_async_query(self, context):
+        """Executed in the background to run an asynchronous query.
+
+        Args:
+            context (object): The context (query token) returned by _init_async_query.
+
+        Returns:
+            Any: Result of the async query, which is then returned by the future.
+        """
+        return list(self._search())

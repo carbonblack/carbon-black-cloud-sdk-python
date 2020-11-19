@@ -44,6 +44,18 @@ def test_enriched_event_select_where(cbcsdk_mock):
         assert event.device_name is not None
         assert event.enriched is not None
 
+def test_enriched_event_select_async(cbcsdk_mock):
+    """Testing EnrichedEvent Querying with select() - asynchronous way"""
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/search_job", POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b", GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results", GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_2)
+
+    api = cbcsdk_mock.api
+    events = api.select(EnrichedEvent).where(event_id="27a278d5150911eb86f1011a55e73b72").execute_async()
+    for event in events.result():
+        assert event["device_name"] is not None
+        assert event["enriched"] is not None
+
 def test_enriched_event_select_compound(cbcsdk_mock):
     """Testing EnrichedEvent Querying with select() and more complex criteria"""
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/search_job", POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
