@@ -42,7 +42,7 @@ def test_enriched_event_facet_select_where(cbcsdk_mock):
     event = events.results
     assert event.terms is not None
     assert event.ranges is not None
-    assert len(event.ranges) == 0
+    assert event.ranges == []
     assert event.terms[0]["field"] == "process_name"
 
 def test_enriched_event_facet_select_async(cbcsdk_mock):
@@ -55,7 +55,7 @@ def test_enriched_event_facet_select_async(cbcsdk_mock):
     event = future.result()[0]
     assert event.terms is not None
     assert event.ranges is not None
-    assert len(event.ranges) == 0
+    assert event.ranges == []
     assert event.terms[0]["field"] == "process_name"
 
 def test_enriched_event_facet_select_compound(cbcsdk_mock):
@@ -67,7 +67,7 @@ def test_enriched_event_facet_select_compound(cbcsdk_mock):
     events = api.select(EnrichedEventFacet).where(process_name="chrome.exe").or_(process_name="firefox.exe").add_facet_field("process_name")
     event = events.results
     assert event.terms_.fields == ["process_name"]
-    assert len(event.ranges_) == 0
+    assert event.ranges == []
 
 def test_enriched_event_facet_query_implementation(cbcsdk_mock):
     """Testing EnrichedEvent querying with where()."""
@@ -160,7 +160,7 @@ def test_enriched_event_facet_query_add_facet_fields(cbcsdk_mock):
 def test_enriched_event_facet_query_add_facet_invalid_fields(cbcsdk_mock):
     """Testing EnrichedEvent results sort."""
     api = cbcsdk_mock.api
-    with pytest.raises(ApiError):
+    with pytest.raises(TypeError):
         events = api.select(EnrichedEventFacet).where(process_pid=1000).add_facet_field(1337)
 
 
