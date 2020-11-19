@@ -76,10 +76,15 @@ def test_enriched_event_facet_query_implementation(cbcsdk_mock):
 
     api = cbcsdk_mock.api
     field = 'process_name'
-    events = api.select(EnrichedEventFacet).where(process_name="tesst").add_facet_field("process_name")
+    events = api.select(EnrichedEventFacet).where(process_name="test").add_facet_field("process_name")
     assert isinstance(events, FacetQuery)
     event = events.results
     assert event.terms[0]["field"] == field
+    assert event.terms_.facets["process_name"] is not None
+    assert event.terms_.fields[0] == "process_name"
+    assert event.ranges_.facets is not None
+    assert event.ranges_.fields[0] == "device_timestamp"
+    assert isinstance(event._query_implementation(api),FacetQuery)
 
 def test_enriched_event_facet_timeout(cbcsdk_mock):
     """Testing EnrichedEventQuery.timeout()."""
