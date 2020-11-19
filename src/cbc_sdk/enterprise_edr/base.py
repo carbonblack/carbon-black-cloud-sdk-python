@@ -806,12 +806,6 @@ class AsyncProcessQuery(Query):
         return list(self._search())
 
 
-class AsyncFacetQuery(FacetQuery, QueryBuilderSupportMixin):
-    """Represents a prepared query for Process Facets."""
-    def __init__(self, doc_class, cb):
-        super(AsyncFacetQuery, self).__init__(doc_class, cb)
-
-
 class TreeQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
     """Represents the logic for a Tree query."""
     def __init__(self, doc_class, cb):
@@ -845,10 +839,6 @@ class TreeQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
         Returns:
             Query (TreeQuery): TreeQuery with added arguments.
         """
-
-
-
-
         self.where(**kwargs)
         return self
 

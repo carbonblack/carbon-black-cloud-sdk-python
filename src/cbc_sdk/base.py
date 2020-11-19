@@ -321,12 +321,15 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         lines.append("-" * 79)
         lines.append("")
 
+        # for dictionaries that can be sorted, sort them
         try:
             attributes = sorted(self._info)
+        # dictionaries containing dictionaries cannot be sorted, so leave as is
         except:
             attributes = self._info
 
         for attr in attributes:
+            # typical case, where the info dictionary value for this `attr` is a string
             if isinstance(attr, str):
                 status = "   "
                 if attr in self._dirty_attributes:
@@ -341,7 +344,9 @@ class NewBaseModel(object, metaclass=CbMetaModel):
                 if len(val) > 50:
                     val = val[:47] + u"..."
                 lines.append(u"{0:s} {1:>20s}: {2:s}".format(status, attr, val))
+            # edge case (seen in Facet searches) where the info dictionary value for this `attr` is a dictionary
             elif isinstance(attr, dict):
+                # go through each attribute in the `attr` dictionary
                 for att in attr:
                     status = "   "
                     if att in self._dirty_attributes:
@@ -1183,7 +1188,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         self._exclusions[key] = oldlist + newlist
 
     def timeout(self, msecs):
-        """Sets the timeout on an AsyncQuery.
+        """Sets the timeout on an AsyncQuery. By default, there is no timeout.
 
         Arguments:
             msecs (int): Timeout duration, in milliseconds.
