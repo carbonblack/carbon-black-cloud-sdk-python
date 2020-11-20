@@ -1,3 +1,5 @@
+"""Mock responses for threat intelligence queries."""
+
 WATCHLIST_GET_RESP = {
     "results": [
         {
@@ -175,7 +177,7 @@ WATCHLIST_GET_RESP = {
         },
         {
             "name": "Carbon Black AlienVault",
-            "description": "This watchlist contains intelligence provided by AlienVault's Open Threat Exchange (OTX). It leverages insights into attacks across the community and will show you hostile scanning hosts, malware hosts, and other targeting and security event information.",
+            "description": "This watchlist contains intelligence provided by AlienVault's Open Threat Exchange (OTX). It leverages insights into attacks across the community and will show you hostile scanning hosts, malware hosts, and other targeting and security event information.",  # noqa: E501
             "id": "VAZ6tp8mTeW2e8PN6iJug",
             "tags_enabled": True,
             "alerts_enabled": False,
@@ -189,7 +191,7 @@ WATCHLIST_GET_RESP = {
         },
         {
             "name": "Carbon Black Advanced Threats",
-            "description": "This watchlist is a list of high-confidence threat indicators, updated periodically. Generally, hits on this watchlist should be suitable for generating alerts.",
+            "description": "This watchlist is a list of high-confidence threat indicators, updated periodically. Generally, hits on this watchlist should be suitable for generating alerts.",  # noqa: E501
             "id": "iTVt8agFS8uvp8sJ7j1I5A",
             "tags_enabled": True,
             "alerts_enabled": False,
@@ -217,7 +219,7 @@ WATCHLIST_GET_RESP = {
         },
         {
             "name": "ATT&CK Framework",
-            "description": "This watchlist is a list of ATT&CK Framework queries designed to aid practitioners with threat hunting. Hits on this watchlist may or may not be indicative of malicious activity. As this watchlist may generate a large volume of hits, it is not recommended to be used for alert generation. MITRE's Adversarial Tactics, Techniques, and Common Knowledge (ATT&CK) is a curated knowledge base and model for cyber adversary behavior, reflecting the various phases of an adversary’s lifecycle and the platforms they are known to target. ATT&CK is useful for understanding security risk against known adversary behavior, for planning security improvements, and verifying defenses work as expected.",
+            "description": "This watchlist is a list of ATT&CK Framework queries designed to aid practitioners with threat hunting. Hits on this watchlist may or may not be indicative of malicious activity. As this watchlist may generate a large volume of hits, it is not recommended to be used for alert generation. MITRE's Adversarial Tactics, Techniques, and Common Knowledge (ATT&CK) is a curated knowledge base and model for cyber adversary behavior, reflecting the various phases of an adversary’s lifecycle and the platforms they are known to target. ATT&CK is useful for understanding security risk against known adversary behavior, for planning security improvements, and verifying defenses work as expected.",  # noqa: E501
             "id": "nFYPgLRpSMKI8ZsiiRHcuA",
             "tags_enabled": True,
             "alerts_enabled": False,
@@ -231,7 +233,7 @@ WATCHLIST_GET_RESP = {
         },
         {
             "name": "Carbon Black Early Access Indicators",
-            "description": "This watchlist is a list of beta queries that have not been fully tested and validated. Queries in this watchlist may generate many False positives, but should also be useful in identifying malicious activity. As these queries are beta, this watchlist may generate a large volume of hits and it is not recommended to be used for alert generation.",
+            "description": "This watchlist is a list of beta queries that have not been fully tested and validated. Queries in this watchlist may generate many False positives, but should also be useful in identifying malicious activity. As these queries are beta, this watchlist may generate a large volume of hits and it is not recommended to be used for alert generation.",  # noqa: E501
             "id": "GTxcj1nwTWemZKDXlDYQ",
             "tags_enabled": True,
             "alerts_enabled": False,
@@ -259,7 +261,7 @@ WATCHLIST_GET_RESP = {
         },
         {
             "name": "Carbon Black TOR",
-            "description": "This watchlist is a list of all Tor relay IP addresses, updated every 30 minutes. A subset of this watchlist are Tor exit relays.",
+            "description": "This watchlist is a list of all Tor relay IP addresses, updated every 30 minutes. A subset of this watchlist are Tor exit relays.",  # noqa: E501
             "id": "JMp8MnHUTaquaANmZl62w",
             "tags_enabled": True,
             "alerts_enabled": False,
@@ -287,7 +289,7 @@ WATCHLIST_GET_RESP = {
         },
         {
             "name": "Carbon Black SANS",
-            "description": "Know Abnormal...Find Evil. It's often impossible to know malicious behavior before you see it, but we do know what common behaviors are normal or benign. Spotting the difference between normal and abnormal is often the difference between success and failure. Use this watchlist as a reference to quickly identify behavior in Windows that falls outside the scope of 'normal', so you can cut through the noise and instantly investigate and disrupt potential threats. This watchlist is a great starting point for users looking to hone their threat hunting skills.",
+            "description": "Know Abnormal...Find Evil. It's often impossible to know malicious behavior before you see it, but we do know what common behaviors are normal or benign. Spotting the difference between normal and abnormal is often the difference between success and failure. Use this watchlist as a reference to quickly identify behavior in Windows that falls outside the scope of 'normal', so you can cut through the noise and instantly investigate and disrupt potential threats. This watchlist is a great starting point for users looking to hone their threat hunting skills.",  # noqa: E501
             "id": "KAPmWA9nR6CIzbOW2TGgfw",
             "tags_enabled": True,
             "alerts_enabled": True,
@@ -301,7 +303,7 @@ WATCHLIST_GET_RESP = {
         },
         {
             "name": "Carbon Black Endpoint Suspicious Indicators",
-            "description": "This watchlist is a list of queries designed to identify suspicious activities on endpoints. Hits on this watchlist may or may not be indicative of malicious activity, but are generally more suspicious in nature. As this watchlist may generate a large volume of hits, it is not recommended to be used for alert generation. These queries are recommended for threat hunting and profiling activity in your environment.",
+            "description": "This watchlist is a list of queries designed to identify suspicious activities on endpoints. Hits on this watchlist may or may not be indicative of malicious activity, but are generally more suspicious in nature. As this watchlist may generate a large volume of hits, it is not recommended to be used for alert generation. These queries are recommended for threat hunting and profiling activity in your environment.",  # noqa: E501
             "id": "IlYKZRlQ6iuoPedn1FCbg",
             "tags_enabled": True,
             "alerts_enabled": True,
@@ -315,7 +317,7 @@ WATCHLIST_GET_RESP = {
         },
         {
             "name": "Carbon Black Endpoint Visibility",
-            "description": "This watchlist is a list of queries designed to give further visibility into endpoint behavior. Hits on this watchlist may or may not be indicative of malicious activity. As this watchlist may generate a large volume of hits, it is not recommended to be used for alert generation.",
+            "description": "This watchlist is a list of queries designed to give further visibility into endpoint behavior. Hits on this watchlist may or may not be indicative of malicious activity. As this watchlist may generate a large volume of hits, it is not recommended to be used for alert generation.",  # noqa: E501
             "id": "2be8MLA1SxmWfHZVRd7zlw",
             "tags_enabled": True,
             "alerts_enabled": True,
@@ -329,7 +331,7 @@ WATCHLIST_GET_RESP = {
         },
         {
             "name": "Carbon Black Community",
-            "description": "This is a watchlist containing Carbon Black community produced detection queries. These queries have been publically posted to the Carbon Black User eXchange site in the Detection Exchange group.",
+            "description": "This is a watchlist containing Carbon Black community produced detection queries. These queries have been publically posted to the Carbon Black User eXchange site in the Detection Exchange group.",  # noqa: E501
             "id": "JBeEYzBcQpSMXu3lWoSv8w",
             "tags_enabled": True,
             "alerts_enabled": True,
@@ -399,7 +401,7 @@ WATCHLIST_GET_RESP = {
         },
         {
             "name": "Tor Exit Nodes",
-            "description": "This watchlist is a list of all Tor relay IP addresses, updated every 30 minutes. A subset of this watchlist are Tor exit relays.",
+            "description": "This watchlist is a list of all Tor relay IP addresses, updated every 30 minutes. A subset of this watchlist are Tor exit relays.",  # noqa: E501
             "id": "oGjL42ofThq1gBEwrmbJMA",
             "tags_enabled": True,
             "alerts_enabled": False,
@@ -413,7 +415,7 @@ WATCHLIST_GET_RESP = {
         },
         {
             "name": "Carbon Black Facebook ThreatExchange",
-            "description": "This is an exchange of maliciously labeled TLP White threat indicators including domain names, IPs and hashes. Facebook ThreatExchange provides this data, which is a subset of the data available to members.",
+            "description": "This is an exchange of maliciously labeled TLP White threat indicators including domain names, IPs and hashes. Facebook ThreatExchange provides this data, which is a subset of the data available to members.",  # noqa: E501
             "id": "4MvdluhGSdaZjEUNVVTXbQ",
             "tags_enabled": True,
             "alerts_enabled": False,
@@ -499,13 +501,13 @@ WATCHLIST_GET_SPECIFIC_INVALID_CLASSIFIER_RESP = {
 }
 
 CREATE_WATCHLIST_DATA = {
- "name": "myWatchlist",
- "description": "My Description.",
- "id": "watchlistId",
- "tags_enabled": True,
- "alerts_enabled": True,
- "create_timestamp": 1600197345,
- "last_update_timestamp": 1600197345,
+    "name": "myWatchlist",
+    "description": "My Description.",
+    "id": "watchlistId",
+    "tags_enabled": True,
+    "alerts_enabled": True,
+    "create_timestamp": 1600197345,
+    "last_update_timestamp": 1600197345,
 }
 
 REPORT_GET_RESP = {

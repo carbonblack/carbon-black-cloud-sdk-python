@@ -9,6 +9,8 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
+"""Tests of the devices v6 API."""
+
 import pytest
 from cbc_sdk.errors import ApiError
 from cbc_sdk.platform import Device
@@ -17,6 +19,7 @@ from tests.unit.fixtures.stubresponse import StubResponse, patch_cbapi
 
 
 def test_get_device(monkeypatch):
+    """Test simple retrieval of a Device object by ID."""
     _was_called = False
 
     def _get_device(url):
@@ -35,6 +38,7 @@ def test_get_device(monkeypatch):
 
 
 def test_device_background_scan(monkeypatch):
+    """Test setting the background scan status of a device."""
     _was_called = False
 
     def _call_background_scan(url, body, **kwargs):
@@ -51,6 +55,7 @@ def test_device_background_scan(monkeypatch):
 
 
 def test_device_bypass(monkeypatch):
+    """Test setting the bypass status of a device."""
     _was_called = False
 
     def _call_bypass(url, body, **kwargs):
@@ -67,6 +72,7 @@ def test_device_bypass(monkeypatch):
 
 
 def test_device_delete_sensor(monkeypatch):
+    """Test deleting the sensor for a device."""
     _was_called = False
 
     def _call_delete_sensor(url, body, **kwargs):
@@ -83,6 +89,7 @@ def test_device_delete_sensor(monkeypatch):
 
 
 def test_device_uninstall_sensor(monkeypatch):
+    """Test uninstalling the sensor for a device."""
     _was_called = False
 
     def _call_uninstall_sensor(url, body, **kwargs):
@@ -99,6 +106,7 @@ def test_device_uninstall_sensor(monkeypatch):
 
 
 def test_device_quarantine(monkeypatch):
+    """Test setting the quarantine status of a device."""
     _was_called = False
 
     def _call_quarantine(url, body, **kwargs):
@@ -115,6 +123,7 @@ def test_device_quarantine(monkeypatch):
 
 
 def test_device_update_policy(monkeypatch):
+    """Test updating the policy of a device."""
     _was_called = False
 
     def _call_update_policy(url, body, **kwargs):
@@ -131,6 +140,7 @@ def test_device_update_policy(monkeypatch):
 
 
 def test_device_update_sensor_version(monkeypatch):
+    """Test updating the sensor version of a device."""
     _was_called = False
 
     def _call_update_sensor_version(url, body, **kwargs):
@@ -148,6 +158,7 @@ def test_device_update_sensor_version(monkeypatch):
 
 
 def test_query_device_with_all_bells_and_whistles(monkeypatch):
+    """Test a device query with all options set."""
     _was_called = False
 
     def _run_query(url, body, **kwargs):
@@ -174,6 +185,7 @@ def test_query_device_with_all_bells_and_whistles(monkeypatch):
 
 
 def test_query_device_with_last_contact_time_as_start_end(monkeypatch):
+    """Test a device query with last_contact_time specified as starting and ending times."""
     _was_called = False
 
     def _run_query(url, body, **kwargs):
@@ -197,6 +209,7 @@ def test_query_device_with_last_contact_time_as_start_end(monkeypatch):
 
 
 def test_query_device_with_last_contact_time_as_range(monkeypatch):
+    """Test a device query with last_contact_time specified as a range."""
     _was_called = False
 
     def _run_query(url, body, **kwargs):
@@ -217,6 +230,7 @@ def test_query_device_with_last_contact_time_as_range(monkeypatch):
 
 
 def test_query_device_invalid_last_contact_time_combinations():
+    """Test handling of invalid value combinations for set_last_contact_time()."""
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     with pytest.raises(ApiError):
         api.select(Device).set_last_contact_time()
@@ -229,30 +243,32 @@ def test_query_device_invalid_last_contact_time_combinations():
         api.select(Device).set_last_contact_time(end="2019-10-01T12:00:12", range="-3w")
 
 
-def test_query_device_invalid_criteria_values():
-    tests = [
-        {"method": "set_ad_group_ids", "arg": ["Bogus"]},
-        {"method": "set_policy_ids", "arg": ["Bogus"]},
-        {"method": "set_os", "arg": ["COMMODORE_64"]},
-        {"method": "set_status", "arg": ["Bogus"]},
-        {"method": "set_target_priorities", "arg": ["Bogus"]},
-        {"method": "set_exclude_sensor_versions", "arg": [12703]}
-        ]
+@pytest.mark.parametrize("method, arg", [
+    ("set_ad_group_ids", ["Bogus"]),
+    ("set_policy_ids", ["Bogus"]),
+    ("set_os", ["COMMODORE_64"]),
+    ("set_status", ["Bogus"]),
+    ("set_target_priorities", ["Bogus"]),
+    ("set_exclude_sensor_versions", [12703])
+])
+def test_query_device_invalid_criteria_values(method, arg):
+    """Test setting invalid values for device query criteria."""
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     query = api.select(Device)
-    for t in tests:
-        meth = getattr(query, t["method"], None)
-        with pytest.raises(ApiError):
-            meth(t["arg"])
+    meth = getattr(query, method, None)
+    with pytest.raises(ApiError):
+        meth(arg)
 
 
 def test_query_device_invalid_sort_direction():
+    """Test an attempt to sort device query results in an invalid direction."""
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     with pytest.raises(ApiError):
         api.select(Device).sort_by("policy_name", "BOGUS")
 
 
 def test_query_device_download(monkeypatch):
+    """Test downloading the results of a device query as CSV."""
     _was_called = False
 
     def _run_download(url, query_params, **kwargs):
@@ -273,6 +289,7 @@ def test_query_device_download(monkeypatch):
 
 
 def test_query_device_do_background_scan(monkeypatch):
+    """Test setting the background scan status on devices matched by a query."""
     _was_called = False
 
     def _background_scan(url, body, **kwargs):
@@ -290,6 +307,7 @@ def test_query_device_do_background_scan(monkeypatch):
 
 
 def test_query_device_do_bypass(monkeypatch):
+    """Test setting the bypass status on devices matched by a query."""
     _was_called = False
 
     def _bypass(url, body, **kwargs):
@@ -307,6 +325,7 @@ def test_query_device_do_bypass(monkeypatch):
 
 
 def test_query_device_do_delete_sensor(monkeypatch):
+    """Test deleting the sensor on devices matched by a query."""
     _was_called = False
 
     def _delete_sensor(url, body, **kwargs):
@@ -324,6 +343,7 @@ def test_query_device_do_delete_sensor(monkeypatch):
 
 
 def test_query_device_do_uninstall_sensor(monkeypatch):
+    """Test uninstalling the sensor on devices matched by a query."""
     _was_called = False
 
     def _uninstall_sensor(url, body, **kwargs):
@@ -341,6 +361,7 @@ def test_query_device_do_uninstall_sensor(monkeypatch):
 
 
 def test_query_device_do_quarantine(monkeypatch):
+    """Test setting the quarantine status on devices matched by a query."""
     _was_called = False
 
     def _quarantine(url, body, **kwargs):
@@ -358,6 +379,7 @@ def test_query_device_do_quarantine(monkeypatch):
 
 
 def test_query_device_do_update_policy(monkeypatch):
+    """Test updating the policy on devices matched by a query."""
     _was_called = False
 
     def _update_policy(url, body, **kwargs):
@@ -376,6 +398,7 @@ def test_query_device_do_update_policy(monkeypatch):
 
 
 def test_query_device_do_update_sensor_version(monkeypatch):
+    """Test updating the sensor version on devices matched by a query."""
     _was_called = False
 
     def _update_sensor_version(url, body, **kwargs):
@@ -388,7 +411,7 @@ def test_query_device_do_update_sensor_version(monkeypatch):
         return StubResponse(None, 204)
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234",
-                       org_key="Z100", ssl_verify=True)
+                     org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_update_sensor_version)
     api.select(Device).where("foobar").update_sensor_version({"RHEL": "2.3.4.5"})
     assert _was_called

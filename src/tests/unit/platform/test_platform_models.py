@@ -9,6 +9,8 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
+"""Tests of the model object methods in the Platform API."""
+
 import pytest
 from cbc_sdk.platform import Device, BaseAlert, WorkflowStatus
 from cbc_sdk.rest_api import CBCloudAPI
@@ -16,18 +18,34 @@ from tests.unit.fixtures.stubresponse import StubResponse, patch_cbapi
 
 
 class StubScheduler:
+    """Stub for the LiveResponse scheduler."""
     def __init__(self, expected_id):
+        """
+        Initialize the stub scheduler object.
+
+        Args:
+            expected_id (int): The expected sensor ID to use on the request.
+        """
         self.expected_id = expected_id
         self.was_called = False
 
     def request_session(self, sensor_id):
+        """
+        Stub out the request_session call to the scheduler.
+
+        Args:
+            sensor_id (int): Sensor ID the session is being requested for.
+
+        Returns:
+            dict: Simple value to prove that this works.
+        """
         assert sensor_id == self.expected_id
         self.was_called = True
         return {"itworks": True}
 
 
 def test_Device_lr_session(monkeypatch):
-
+    """Test the call to set up a Live Response session for a device."""
     def _get_session(url, parms=None, default=None):
         assert url == "/appservices/v6/orgs/Z100/devices/6023"
         return {"id": 6023}
@@ -43,6 +61,7 @@ def test_Device_lr_session(monkeypatch):
 
 
 def test_Device_background_scan(monkeypatch):
+    """Test the call to set the background scan status for a device."""
     _was_called = False
 
     def _get_device(url, parms=None, default=None):
@@ -64,6 +83,7 @@ def test_Device_background_scan(monkeypatch):
 
 
 def test_Device_bypass(monkeypatch):
+    """Test the call to set the bypass status for a device."""
     _was_called = False
 
     def _get_device(url, parms=None, default=None):
@@ -85,6 +105,7 @@ def test_Device_bypass(monkeypatch):
 
 
 def test_Device_delete_sensor(monkeypatch):
+    """Test the call to delete the sensor for a device."""
     _was_called = False
 
     def _get_device(url, parms=None, default=None):
@@ -106,6 +127,7 @@ def test_Device_delete_sensor(monkeypatch):
 
 
 def test_Device_uninstall_sensor(monkeypatch):
+    """Test the call to uninstall the sensor for a device."""
     _was_called = False
 
     def _get_device(url, parms=None, default=None):
@@ -127,6 +149,7 @@ def test_Device_uninstall_sensor(monkeypatch):
 
 
 def test_Device_quarantine(monkeypatch):
+    """Test the call to set the quarantine status of a device."""
     _was_called = False
 
     def _get_device(url, parms=None, default=None):
@@ -148,6 +171,7 @@ def test_Device_quarantine(monkeypatch):
 
 
 def test_Device_update_policy(monkeypatch):
+    """Test the call to update policy for a device."""
     _was_called = False
 
     def _get_device(url, parms=None, default=None):
@@ -169,6 +193,7 @@ def test_Device_update_policy(monkeypatch):
 
 
 def test_Device_update_sensor_version(monkeypatch):
+    """Test the call to update the sensor version for a device."""
     _was_called = False
 
     def _get_device(url, parms=None, default=None):
@@ -191,6 +216,7 @@ def test_Device_update_sensor_version(monkeypatch):
 
 
 def test_BaseAlert_dismiss(monkeypatch):
+    """Test dismissal of an alert."""
     _was_called = False
 
     def _do_dismiss(url, body, **kwargs):
@@ -214,6 +240,7 @@ def test_BaseAlert_dismiss(monkeypatch):
 
 
 def test_BaseAlert_undismiss(monkeypatch):
+    """Test undismissal of an alert."""
     _was_called = False
 
     def _do_update(url, body, **kwargs):
@@ -237,6 +264,7 @@ def test_BaseAlert_undismiss(monkeypatch):
 
 
 def test_BaseAlert_dismiss_threat(monkeypatch):
+    """Test dismissal of a threat alert."""
     _was_called = False
 
     def _do_dismiss(url, body, **kwargs):
@@ -260,6 +288,7 @@ def test_BaseAlert_dismiss_threat(monkeypatch):
 
 
 def test_BaseAlert_undismiss_threat(monkeypatch):
+    """Test undismissal of a threat alert."""
     _was_called = False
 
     def _do_update(url, body, **kwargs):
@@ -283,6 +312,7 @@ def test_BaseAlert_undismiss_threat(monkeypatch):
 
 
 def test_WorkflowStatus(monkeypatch):
+    """Test retrieval of the workflow status."""
     _times_called = 0
 
     def _get_workflow(url, parms=None, default=None):

@@ -1,7 +1,9 @@
+"""Mock responses for event queries."""
+
 EVENT_SEARCH_VALIDATION_RESP = {
-  "invalid_message": "string",
-  "invalid_trigger_offset": 0,
-  "valid": True
+    "invalid_message": "string",
+    "invalid_trigger_offset": 0,
+    "valid": True
 }
 
 EVENT_SEARCH_RESP_INTERIM = {
