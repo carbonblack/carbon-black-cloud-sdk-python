@@ -284,7 +284,7 @@ Execute an asynchronous query
 
 Running asynchronous queries is done by invoking the ``execute_async()`` method, e.g:
 
-  >>> async_query = api.select(EnrichedEvent).where('process_name:chrome.exe')
+  >>> async_query = api.select(EnrichedEvent).where('process_name:chrome.exe').execute_async()
 
 The ``execute_async()`` method returns a python future object that can be later on waited for results.
 
