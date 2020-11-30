@@ -489,3 +489,90 @@ EVENT_SEARCH_RESP = {
     "total_segments": 7,
     "processed_segments": 7
 }
+
+EVENT_SEARCH_RESP_PART_ONE = {
+    "results": [
+        {
+            "backend_timestamp": "2020-08-26T21:39:42.695Z",
+            "created_timestamp": "2020-08-26T22:31:14.329Z",
+            "event_guid": "v1PSfkXGQAilYw5MYwoWQA",
+            "event_hash": "zo-g2PNTSo2ZH23N--07Zw",
+            "event_timestamp": "2020-08-26T21:38:17.090Z",
+            "event_type": "modload",
+            "legacy": False,
+            "modload_action": "ACTION_LOADED_MODULE_DISCOVERED",
+            "modload_effective_reputation": "REP_WHITE",
+            "modload_md5": "0d50f3c3d50b878ceae21b9be3f6a638",
+            "modload_name": "c:\\windows\\system32\\kernel.appcore.dll",
+            "modload_publisher": "Microsoft Windows",
+            "modload_publisher_state": [
+                "FILE_SIGNATURE_STATE_OS",
+                "FILE_SIGNATURE_STATE_SIGNED",
+                "FILE_SIGNATURE_STATE_TRUSTED",
+                "FILE_SIGNATURE_STATE_VERIFIED"
+            ],
+            "modload_sha256": "bf0b1a5d4cea656695ffb45d930f6add63519aeae9f8aed21e4e50708fe5e84c",
+            "process_guid": "J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e",
+            "process_pid": 820
+        }
+    ],
+    "num_found": 250,
+    "num_available": 3,
+    "total_segments": 7,
+    "processed_segments": 7
+}
+
+EVENT_SEARCH_RESP_PART_TWO = {
+    "results": [
+        {
+            "backend_timestamp": "2020-08-26T21:39:42.695Z",
+            "created_timestamp": "2020-08-26T22:31:14.329Z",
+            "event_guid": "bYd9BiyVRdSI47Can0LWwA",
+            "event_hash": "hg_Y48btT7K7As30HyJYVw",
+            "event_timestamp": "2020-08-26T21:38:17.106Z",
+            "event_type": "modload",
+            "legacy": False,
+            "modload_action": "ACTION_LOADED_MODULE_DISCOVERED",
+            "modload_effective_reputation": "REP_WHITE",
+            "modload_md5": "b83b06508cadbc204b3daeecc395a571",
+            "modload_name": "c:\\windows\\system32\\cryptbase.dll",
+            "modload_publisher": "Microsoft Windows",
+            "modload_publisher_state": [
+                "FILE_SIGNATURE_STATE_OS",
+                "FILE_SIGNATURE_STATE_SIGNED",
+                "FILE_SIGNATURE_STATE_TRUSTED",
+                "FILE_SIGNATURE_STATE_VERIFIED"
+            ],
+            "modload_sha256": "10045637aba4ef52f93602f5f78e8a50f2c2d9b2e646d0d0cc91e684c2ad1030",
+            "process_guid": "J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e",
+            "process_pid": 820
+        },
+        {
+            "backend_timestamp": "2020-08-26T21:39:42.695Z",
+            "created_timestamp": "2020-08-26T22:31:14.329Z",
+            "event_guid": "7ykrNX5pRTK85QHKnBtDng",
+            "event_hash": "DGCt_a2uRI-Jk-aTMMK-Lg",
+            "event_timestamp": "2020-08-26T21:38:17.106Z",
+            "event_type": "modload",
+            "legacy": False,
+            "modload_action": "ACTION_LOADED_MODULE_DISCOVERED",
+            "modload_effective_reputation": "REP_WHITE",
+            "modload_md5": "876a3e1a4db8720df66d653bdbad3e5d",
+            "modload_name": "c:\\windows\\system32\\bcryptprimitives.dll",
+            "modload_publisher": "Microsoft Windows",
+            "modload_publisher_state": [
+                "FILE_SIGNATURE_STATE_OS",
+                "FILE_SIGNATURE_STATE_SIGNED",
+                "FILE_SIGNATURE_STATE_TRUSTED",
+                "FILE_SIGNATURE_STATE_VERIFIED"
+            ],
+            "modload_sha256": "6ed5bdc432e5f351e01995d345d296ca67af24b84951268f239c631a544054a5",
+            "process_guid": "J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e",
+            "process_pid": 820
+        }
+    ],
+    "num_found": 250,
+    "num_available": 3,
+    "total_segments": 7,
+    "processed_segments": 7
+}
