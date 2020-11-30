@@ -113,7 +113,7 @@ def test_event_query_select_asynchronous(cbcsdk_mock):
 
 
 def test_event_query_with_multiple_fetches(cbcsdk_mock):
-    """Test Event Querying with GUID inside event.select()"""
+    """Test event query for multiple network requests"""
     http_request_count = 0
 
     def _fake_multiple_fetches(url, body, **kwargs):
