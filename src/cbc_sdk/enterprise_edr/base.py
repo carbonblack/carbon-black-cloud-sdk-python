@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from cbc_sdk.base import (UnrefreshableModel,
                           BaseQuery,
+                          FacetQuery,
                           PaginatedQuery,
                           QueryBuilder,
                           QueryBuilderSupportMixin,
@@ -195,6 +196,15 @@ class Process(UnrefreshableModel):
         else:
             return None
 
+    def facets(self):
+        """Returns a FacetQuery for a Process.
+
+        This represents the search for a summary of result groupings (facets).
+        The returned AsyncFacetQuery object must have facet fields or ranges specified
+        before it can be submitted, using the `add_facet_field()` or `add_range()` methods.
+        """
+        return self._cb.select(ProcessFacet).where(process_guid=self.process_guid)
+
 
 class Tree(UnrefreshableModel):
     """The preferred interface for interacting with Tree models is `Process.tree()`."""
@@ -219,6 +229,104 @@ class Tree(UnrefreshableModel):
             children ([Process]): List of children for the Tree's parent process.
         """
         return [Process(self._cb, initial_data=child) for child in self.nodes["children"]]
+
+
+class ProcessFacet(UnrefreshableModel):
+    """Represents the results of an AsyncFacetQuery.
+
+    ProcessFacet objects contain both Terms and Ranges. Each of those contain facet
+    fields and values.
+
+    Access all of the Terms facet data with ProcessFacet.terms_.facets or see just
+    the field names with ProcessFacet.terms_.fields.
+
+    Access all of the Ranges facet data with ProcessFacet.ranges_.facets or see just
+    the field names with ProcessFacet.ranges_.fields.
+    """
+    primary_key = "job_id"
+    swagger_meta_file = "enterprise_edr/models/process_facets.yaml"
+    submit_url = "/api/investigate/v2/orgs/{}/processes/facet_jobs"
+    result_url = "/api/investigate/v2/orgs/{}/processes/facet_jobs/{}/results"
+
+    class Terms(UnrefreshableModel):
+        """Represents the facet fields and values associated with a Process Facet query."""
+        def __init__(self, cb, initial_data):
+            """Initialize a ProcessFacet Terms object with initial_data."""
+            super(ProcessFacet.Terms, self).__init__(
+                cb,
+                model_unique_id=None,
+                initial_data=initial_data,
+                force_init=False,
+                full_doc=True,
+            )
+            self._facets = {}
+            for facet_term_data in initial_data:
+                field = facet_term_data["field"]
+                values = facet_term_data["values"]
+                self._facets[field] = values
+
+        @property
+        def facets(self):
+            """Returns the terms' facets for this result."""
+            return self._facets
+
+        @property
+        def fields(self):
+            """Returns the terms facets' fields for this result."""
+            return [field for field in self._facets]
+
+    class Ranges(UnrefreshableModel):
+        """Represents the range (bucketed) facet fields and values associated with a Process Facet query."""
+        def __init__(self, cb, initial_data):
+            """Initialize a ProcessFacet Ranges object with initial_data."""
+            super(ProcessFacet.Ranges, self).__init__(
+                cb,
+                model_unique_id=None,
+                initial_data=initial_data,
+                force_init=False,
+                full_doc=True,
+            )
+            self._facets = {}
+            for facet_range_data in initial_data:
+                field = facet_range_data["field"]
+                values = facet_range_data["values"]
+                self._facets[field] = values
+
+        @property
+        def facets(self):
+            """Returns the reified `ProcessFacet.Terms._facets` for this result."""
+            return self._facets
+
+        @property
+        def fields(self):
+            """Returns the ranges fields for this result."""
+            return [field for field in self._facets]
+
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
+        return FacetQuery(cls, cb)
+
+    def __init__(self, cb, model_unique_id, initial_data):
+        """Initialize a ResultFacet object with initial_data."""
+        super(ProcessFacet, self).__init__(
+            cb,
+            model_unique_id=model_unique_id,
+            initial_data=initial_data,
+            force_init=False,
+            full_doc=True
+        )
+        self._terms = ProcessFacet.Terms(cb, initial_data=initial_data["terms"])
+        self._ranges = ProcessFacet.Ranges(cb, initial_data=initial_data["ranges"])
+
+    @property
+    def terms_(self):
+        """Returns the reified `ProcessFacet.Terms` for this result."""
+        return self._terms
+
+    @property
+    def ranges_(self):
+        """Returns the reified `ProcessFacet.Ranges` for this result."""
+        return self._ranges
 
 
 class Event(UnrefreshableModel):
@@ -805,6 +913,7 @@ class EventQuery(Query):
             for item in results:
                 yield item
                 current += 1
+
                 numrows += 1
                 if rows and numrows == rows:
                     still_querying = False

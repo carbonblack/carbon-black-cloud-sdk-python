@@ -1,0 +1,68 @@
+type: object
+properties:
+  job_id:
+    type: string
+    description: The Job ID assigned to this query
+  terms:
+    type: object
+    description: Contains the Process Facet search results
+    items:
+      field:
+        type: string
+        description: The name of the field being summarized
+      values:
+        type: array
+        items:
+          type: object
+          properties:
+            total:
+              type: integer
+              format: int32
+              description: The total number of times this value appears in the query output
+            id:
+              type: string
+              description: The ID of the value being enumerated
+            name:
+              type: string
+              description: The name of the value being enumerated
+  ranges:
+    type: array
+    description: Groupings for search result properties that are ISO 8601 timestamps or numbers
+    items:
+      bucket_size:
+        oneOf:
+          - type: integer
+          - type: string
+        description: How large of a bucket to group results in. If grouping an ISO 8601 property, use a string like '-3DAYS'
+      start:
+        oneOf:
+          - type: integer
+          - type: string
+        description: What value to begin grouping at
+      end:
+        oneOf:
+          - type: integer
+          - type: string
+        description: What value to end grouping at
+      field:
+        type: string
+        description: The name of the field being grouped
+      values:
+        type: array
+        description: The result values of the field being grouped
+        items:
+          name:
+            type: string
+            description: The name of the value being enumerated
+          total:
+            type: integer
+            description: The total number of times this value appears in the query bucket output
+  num_found:
+    type: integer
+    descrption: The total number of results of the query
+  contacted:
+    type: integer
+    description: The number of searchers contacted for this query
+  completed:
+    type: integer
+    description: The number of searchers that have reported their results
