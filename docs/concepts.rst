@@ -300,11 +300,11 @@ This would block the main thread until the query completes.
 Modules with support for asynchronous queries
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-:mod:`Process <cbc_sdk.enterprise_edr.Process>`
+:mod:`Process <cbc_sdk.enterprise_edr.base.Process>`
 
-:mod:`EnrichedEvent <cbc_sdk.endpoint_standard.EnrichedEvent>`
+:mod:`EnrichedEvent <cbc_sdk.endpoint_standard.base.EnrichedEvent>`
 
-:mod:`EnrichedEventFacet <cbc_sdk.endpoint_standard.EnrichedEventFacet>`
+:mod:`EnrichedEventFacet <cbc_sdk.endpoint_standard.base.EnrichedEventFacet>`
 
 
 Facets
@@ -353,7 +353,7 @@ The query result for facet queries is a single object with two properties: ``ter
 Modules with support for facet searches
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-:mod:`ProcessFacet <cbc_sdk.enterprise_edr.ProcessFacet>`
+:mod:`ProcessFacet <cbc_sdk.enterprise_edr.base.ProcessFacet>`
 
-:mod:`EnrichedEventFacet <cbc_sdk.endpoint_standard.EnrichedEventFacet>`
+:mod:`EnrichedEventFacet <cbc_sdk.endpoint_standard.base.EnrichedEventFacet>`
 
