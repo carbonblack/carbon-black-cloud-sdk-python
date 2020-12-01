@@ -206,22 +206,6 @@ class Process(UnrefreshableModel):
         return self._cb.select(ProcessFacet).where(process_guid=self.process_guid)
 
 
-class Event(UnrefreshableModel):
-    """Events can be queried for via `CBCloudAPI.select` or an already selected process with `Process.events`."""
-    urlobject = '/api/investigate/v2/orgs/{}/events/{}/_search'
-    validation_url = '/api/investigate/v1/orgs/{}/events/search_validation'
-    default_sort = 'last_update desc'
-    primary_key = "process_guid"
-
-    @classmethod
-    def _query_implementation(self, cb, **kwargs):
-        return EventQuery(self, cb)
-
-    def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
-        super(Event, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
-                                    force_init=force_init, full_doc=full_doc)
-
-
 class Tree(UnrefreshableModel):
     """The preferred interface for interacting with Tree models is `Process.tree()`."""
     urlobject = '/api/investigate/v1/orgs/{}/processes/tree'
@@ -343,6 +327,22 @@ class ProcessFacet(UnrefreshableModel):
     def ranges_(self):
         """Returns the reified `ProcessFacet.Ranges` for this result."""
         return self._ranges
+
+
+class Event(UnrefreshableModel):
+    """Events can be queried for via `CBCloudAPI.select` or an already selected process with `Process.events`."""
+    urlobject = '/api/investigate/v2/orgs/{}/events/{}/_search'
+    validation_url = '/api/investigate/v1/orgs/{}/events/search_validation'
+    default_sort = 'last_update desc'
+    primary_key = "process_guid"
+
+    @classmethod
+    def _query_implementation(self, cb, **kwargs):
+        return EventQuery(self, cb)
+
+    def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
+        super(Event, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
+                                    force_init=force_init, full_doc=full_doc)
 
 
 """Queries"""
@@ -919,7 +919,7 @@ class EventQuery(Query):
                     still_querying = False
                     break
 
-            args['start'] = current + 1  # as of 6/2017, the indexing on the Cb Endpoint Standard backend is still 1-based
+            args['start'] = current
 
             if current >= self._total_results:
                 break
