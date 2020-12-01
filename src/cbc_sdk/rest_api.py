@@ -37,6 +37,13 @@ class CBCloudAPI(BaseAPI):
     >>> cb = CBCloudAPI(profile="production")
     """
     def __init__(self, *args, **kwargs):
+        """
+        Initialize the CBCloudAPI object.
+
+        Args:
+            *args (list): List of arguments to pass to the API object.
+            **kwargs (dict): Keyword arguments to pass to the API object.
+        """
         super(CBCloudAPI, self).__init__(*args, **kwargs)
         self._thread_pool_count = kwargs.pop('thread_pool_count', 1)
         self._lr_scheduler = None
@@ -44,7 +51,6 @@ class CBCloudAPI(BaseAPI):
 
         if not self.credentials.org_key:
             raise CredentialError("No organization key specified")
-
 
     def _perform_query(self, cls, **kwargs):
         if hasattr(cls, "_query_implementation"):
@@ -74,6 +80,12 @@ class CBCloudAPI(BaseAPI):
 
     @property
     def live_response(self):
+        """
+        Create and return the Live Response session manager.
+
+        Returns:
+            LiveResponseSessionManager: The session manager object.
+        """
         if self._lr_scheduler is None:
             self._lr_scheduler = LiveResponseSessionManager(self)
         return self._lr_scheduler
@@ -84,16 +96,35 @@ class CBCloudAPI(BaseAPI):
     # ---- Audit and Remediation
 
     def audit_remediation(self, sql):
+        """
+        Run an audit-remediation query.
+
+        Args:
+            sql (str): The SQL for the query.
+
+        Returns:
+            Query: The query object.
+        """
         return self.select(Run).where(sql=sql)
 
     def audit_remediation_history(self, query=None):
+        """
+        Run an audit-remediation history query.
+
+        Args:
+            query (str): The SQL for the query.
+
+        Returns:
+            Query: The query object.
+        """
         return self.select(RunHistory).where(query)
 
     # ---- Notifications
 
     def notification_listener(self, interval=60):
-        """Generator to continually poll the Cb Endpoint Standard server for notifications (alerts). Note that this can only
-        be used with a 'SIEM' key generated in the Cb Endpoint Standard console.
+        """Generator to continually poll the Cb Endpoint Standard server for notifications (alerts).
+
+        Note that this can only be used with a 'SIEM' key generated in the Cb Endpoint Standard console.
         """
         while True:
             for notification in self.get_notifications():
@@ -101,8 +132,9 @@ class CBCloudAPI(BaseAPI):
             time.sleep(interval)
 
     def get_notifications(self):
-        """Retrieve queued notifications (alerts) from the Cb Endpoint Standard server. Note that this can only be used
-        with a 'SIEM' key generated in the Cb Endpoint Standard console.
+        """Retrieve queued notifications (alerts) from the Cb Endpoint Standard server.
+
+        Note that this can only be used with a 'SIEM' key generated in the Cb Endpoint Standard console.
 
         :returns: list of dictionary objects representing the notifications, or an empty list if none available.
         """
@@ -251,8 +283,7 @@ class CBCloudAPI(BaseAPI):
 
     def bulk_threat_update(self, threat_ids, remediation=None, comment=None):
         """
-        Update the alert status of alerts associated with multiple threat IDs.
-        The alerts will be left in an OPEN state after this request.
+        Update the alert status of alerts associated with multiple threat IDs. The alerts will be left in an OPEN state
 
         :param threat_ids list: List of string threat IDs.
         :param remediation str: The remediation state to set for all alerts.
@@ -263,8 +294,7 @@ class CBCloudAPI(BaseAPI):
 
     def bulk_threat_dismiss(self, threat_ids, remediation=None, comment=None):
         """
-        Dismiss the alerts associated with multiple threat IDs.
-        The alerts will be left in a DISMISSED state after this request.
+        Dismiss the alerts associated with multiple threat IDs.  The alerts will be left in a DISMISSED state.
 
         :param threat_ids list: List of string threat IDs.
         :param remediation str: The remediation state to set for all alerts.
@@ -331,8 +361,7 @@ class CBCloudAPI(BaseAPI):
         return [self.create(ReportSeverity, item) for item in items]
 
     def fetch_process_queries(self):
-        """Retrieves a list of queries, active or complete, known by
-        the ThreatHunter server.
+        """Retrieves a list of queries, active or complete, known by the ThreatHunter server.
 
         :return: a list of query ids
         :rtype: list(str)

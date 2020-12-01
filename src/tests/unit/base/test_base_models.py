@@ -3,7 +3,6 @@
 import pytest
 import logging
 from cbc_sdk.base import MutableBaseModel, NewBaseModel
-from cbc_sdk.platform import Device
 from cbc_sdk.endpoint_standard import Device as EndpointStandardDevice
 from cbc_sdk.endpoint_standard import Policy, Event
 from cbc_sdk.rest_api import CBCloudAPI
@@ -11,13 +10,11 @@ from cbc_sdk.errors import ServerError, InvalidObjectError
 from cbc_sdk.enterprise_edr import Feed
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.endpoint_standard.mock_events import EVENT_GET_SPECIFIC_RESP
-from tests.unit.fixtures.endpoint_standard.mock_devices import (DEVICE_GET_SPECIFIC_RESP,
-                                                      ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP,
-                                                      ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_1,
-                                                      POLICY_GET_SPECIFIC_RESP,
-                                                      ENDPOINT_STANDARD_DEVICE_PATCH_RESP)
+from tests.unit.fixtures.endpoint_standard.mock_devices import (ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP,
+                                                                ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_1,
+                                                                POLICY_GET_SPECIFIC_RESP,
+                                                                ENDPOINT_STANDARD_DEVICE_PATCH_RESP)
 from tests.unit.fixtures.enterprise_edr.mock_threatintel import FEED_GET_SPECIFIC_RESP
-
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -209,7 +206,8 @@ def test_refresh_mbm(cbcsdk_mock):
     assert containsIdMutableBase._refresh() is True
 
     # _refresh() should return False if the primary_key has been modified
-    # cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/54321", ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP)
+    # cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/54321",
+    #                          ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP)
     containsIdMutableBase._set("deviceId", 54321)
     assert containsIdMutableBase._model_unique_id == 54321
     assert containsIdMutableBase.primary_key == "deviceId"
@@ -343,7 +341,8 @@ def test_delete_mbm(cbcsdk_mock):
     assert mutableBaseModelDevice.delete() is None
 
     # receiving a status code outside of (200,204) should raise a ServerError
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/54321", ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_1)
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/device/54321",
+                             ENDPOINT_STANDARD_DEVICE_GET_SPECIFIC_RESP_1)
     newDevice = EndpointStandardDevice(api, 54321)
     delete_resp = cbcsdk_mock.StubResponse(contents={"success": False}, scode=403,
                                            text="Failed to delete for some reason")

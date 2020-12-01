@@ -180,13 +180,13 @@ def test_async_sort_by(cbcsdk_mock):
     # add another key to sort by
     async_query.sort_by("key_to_sort_by", direction="DESC")
     assert async_query._sort_by == [{"field": "device_timestamp", "order": "ASC"},
-                                 {"field": "key_to_sort_by", "order": "DESC"}]
+                                    {"field": "key_to_sort_by", "order": "DESC"}]
     assert async_query._default_args == {"sort": [{"field": "device_timestamp", "order": "ASC"},
                                                   {"field": "key_to_sort_by", "order": "DESC"}]}
     # update the sort direction for a field
     async_query.sort_by("key_to_sort_by", direction="ASC")
     assert async_query._sort_by == [{"field": "device_timestamp", "order": "ASC"},
-                                 {"field": "key_to_sort_by", "order": "ASC"}]
+                                    {"field": "key_to_sort_by", "order": "ASC"}]
     assert async_query._default_args == {"sort": [{"field": "device_timestamp", "order": "ASC"},
                                                   {"field": "key_to_sort_by", "order": "ASC"}]}
 

@@ -2,7 +2,7 @@
 
 import pytest
 import logging
-from cbc_sdk.audit_remediation import Run, Result, ResultQuery, DeviceSummary, ResultFacet, RunHistoryQuery, RunHistory
+from cbc_sdk.audit_remediation import Run, Result, ResultQuery, DeviceSummary, ResultFacet, RunHistory
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ServerError, ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -10,7 +10,6 @@ from tests.unit.fixtures.audit_remediation.mock_runs import (GET_RUN_RESP,
                                                              GET_RUN_RESULTS_RESP,
                                                              GET_RUN_RESULTS_RESP_1,
                                                              GET_RUN_RESULTS_RESP_2,
-                                                             GET_RUN_RESULTS_RESP_3,
                                                              GET_DEVICE_SUMMARY_RESP_1,
                                                              GET_RESULTS_FACETS_RESP,
                                                              POST_RUN_HISTORY_RESP)
@@ -87,8 +86,8 @@ def test_result_fields_with_metrics(cbcsdk_mock):
 def test_result_query_criteria(cbcsdk_mock):
     """Testing set_* criteria methods for ResultQuery."""
     api = cbcsdk_mock.api
-    result_q = api.select(Result).run_id(1).set_device_os(["WINDOWS"]).set_device_ids([1, 2, 3])\
-        .set_device_names(["Win7x64", "Win10"]).set_policy_ids([1, 2]).set_policy_names(["default", "policy2"])\
+    result_q = api.select(Result).run_id(1).set_device_os(["WINDOWS"]).set_device_ids([1, 2, 3]) \
+        .set_device_names(["Win7x64", "Win10"]).set_policy_ids([1, 2]).set_policy_names(["default", "policy2"]) \
         .set_statuses(["not_started", "matched"])
     assert result_q._build_request(start=0, rows=100) == {"criteria": {
         "device.os": ["WINDOWS"],
@@ -112,14 +111,14 @@ def test_result_query_update_criteria(cbcsdk_mock):
 def test_facet_query_criteria(cbcsdk_mock):
     """Testing set_* criteria for FacetQuery."""
     api = cbcsdk_mock.api
-    facet_q = api.select(ResultFacet).run_id(1).set_device_os(["WINDOWS"]).set_device_ids([1,2,3])\
-                .set_device_names(["Win7x64", "Win10"]).set_policy_ids([1,2]).set_policy_names(["default", "policy2"])\
-                .set_statuses(["not_started", "matched"])
+    facet_q = api.select(ResultFacet).run_id(1).set_device_os(["WINDOWS"]).set_device_ids([1, 2, 3]) \
+        .set_device_names(["Win7x64", "Win10"]).set_policy_ids([1, 2]).set_policy_names(["default", "policy2"]) \
+        .set_statuses(["not_started", "matched"])
     assert facet_q._build_request(rows=100) == {"criteria": {
         "device.os": ["WINDOWS"],
-        "device.id": [1,2,3],
+        "device.id": [1, 2, 3],
         "device.name": ["Win7x64", "Win10"],
-        "device.policy_id": [1,2],
+        "device.policy_id": [1, 2],
         "device.policy_name": ["default", "policy2"],
         "status": ["not_started", "matched"]
     }, "query": "", "terms": {"fields": [], "rows": 100}}
@@ -128,7 +127,8 @@ def test_facet_query_criteria(cbcsdk_mock):
 def test_result_facet_query_update_criteria(cbcsdk_mock):
     """Testing the public update_criteria() function accessing private _update_criteria()."""
     api = cbcsdk_mock.api
-    query = api.select(ResultFacet).run_id(2).update_criteria("my.key.dot.notation", ["criteria_val_1", "criteria_val_2"])
+    query = api.select(ResultFacet).run_id(2).update_criteria("my.key.dot.notation",
+                                                              ["criteria_val_1", "criteria_val_2"])
     assert query._build_request(rows=100) == {"criteria": {
         "my.key.dot.notation": ["criteria_val_1", "criteria_val_2"]
     }, "query": "", "terms": {"fields": [], "rows": 100}}
@@ -141,7 +141,8 @@ def test_device_summary_metrics(cbcsdk_mock):
     results = api.select(Result).run_id("run_id")
     res0 = results.first()
     summaries = res0.query_device_summaries()
-    cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/runs/run_id/results/device_summaries/_search", GET_DEVICE_SUMMARY_RESP_1)
+    cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/runs/run_id/results/device_summaries/_search",
+                             GET_DEVICE_SUMMARY_RESP_1)
     for summary in summaries:
         metrics = summary.metrics_
         assert isinstance(metrics, DeviceSummary.Metrics)
@@ -168,7 +169,8 @@ def test_run_query_submit_exceptions(cbcsdk_mock):
     """Testing RunQuery.submit() raising ApiError."""
     api = cbcsdk_mock.api
     cbcsdk_mock.mock_request("GET", "/livequery/v1/orgs/test/runs/run_id", GET_RUN_RESP)
-    run_query = api.select(Run).where("SELECT path, DATETIME(atime,\"unixepoch\",\"localtime\") AS \"Last Accessed\", DATETIME(mtime,\"unixepoch\",\"localtime\") AS \"Last Modified\", DATETIME(ctime,\"unixepoch\",\"localtime\") AS \"Created\" FROM file WHERE path LIKE \"\\users\\%\\AppData\\%.exe\";")
+    run_query = api.select(Run).where(
+        "SELECT path, DATETIME(atime,\"unixepoch\",\"localtime\") AS \"Last Accessed\", DATETIME(mtime,\"unixepoch\",\"localtime\") AS \"Last Modified\", DATETIME(ctime,\"unixepoch\",\"localtime\") AS \"Created\" FROM file WHERE path LIKE \"\\users\\%\\AppData\\%.exe\";")  # noqa: E501
     cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/runs", GET_RUN_RESP)
     result = run_query.submit()
     assert run_query._query_token is not None
@@ -233,4 +235,4 @@ def test_result_query_no_run_id_exception(cbcsdk_mock):
         result_query._count()
     assert result_query._run_id is None
     with pytest.raises(ApiError):
-        results = [res for res in result_query._perform_query()]
+        result_query._perform_query()

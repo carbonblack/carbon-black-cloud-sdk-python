@@ -18,8 +18,10 @@ import re
 import copy
 import cbc_sdk
 
+
 class CBCSDKMock:
     """Mock framework for unit tests that need to fetch Carbon Black Cloud data"""
+
     def __init__(self, monkeypatch, api):
         """Initializes monkey patch for HTTP VERB requests"""
         self.mocks = {}
@@ -36,6 +38,7 @@ class CBCSDKMock:
 
     class StubResponse(object):
         """Stubbed response to object to support json function similar to requests package"""
+
         def __init__(self, contents, scode=200, text="", json_parsable=True):
             """Init default properties"""
             self.content = contents
@@ -87,10 +90,10 @@ class CBCSDKMock:
 
         """
         if verb == "GET" or verb == "RAW_GET" or \
-           callable(body) or \
-           isinstance(body, self.StubResponse) or \
-           body is Exception or body in Exception.__subclasses__() or \
-           (getattr(body, '__module__', None) == cbc_sdk.errors.__name__):
+                callable(body) or \
+                isinstance(body, self.StubResponse) or \
+                body is Exception or body in Exception.__subclasses__() or \
+                (getattr(body, '__module__', None) == cbc_sdk.errors.__name__):
             self.mocks["{}:{}".format(verb, url)] = body
         else:
             self.mocks["{}:{}".format(verb, url)] = self.StubResponse(body)
@@ -98,20 +101,21 @@ class CBCSDKMock:
     """
         Factories for mocked API requests
     """
+
     def _self_get_object(self):
         def _get_object(url, query_parameters=None, default=None):
             self._capture_data(query_parameters)
             matched = self.match_key(self.get_mock_key("GET", url))
             if matched:
-                if (self.mocks[matched] is Exception or
-                        self.mocks[matched] in Exception.__subclasses__() or
-                        getattr(self.mocks[matched], '__module__', None) == cbc_sdk.errors.__name__):
+                if (self.mocks[matched] is Exception or self.mocks[matched] in Exception.__subclasses__()
+                        or getattr(self.mocks[matched], '__module__', None) == cbc_sdk.errors.__name__):  # noqa: W503
                     raise self.mocks[matched]
                 elif callable(self.mocks[matched]):
                     return self.mocks[matched](url, query_parameters, default)
                 else:
                     return self.mocks[matched]
             pytest.fail("GET called for %s when it shouldn't be" % url)
+
         return _get_object
 
     def _self_post_object(self):
@@ -126,6 +130,7 @@ class CBCSDKMock:
                 else:
                     return self.mocks[matched]
             pytest.fail("POST called for %s when it shouldn't be" % url)
+
         return _post_object
 
     def _self_get_raw_data(self):
@@ -140,6 +145,7 @@ class CBCSDKMock:
                 else:
                     return self.mocks[matched]
             pytest.fail("Raw GET called for %s when it shouldn't be" % url)
+
         return _get_raw_data
 
     def _self_put_object(self):
@@ -157,6 +163,7 @@ class CBCSDKMock:
                     raise self.mocks[matched]
                 return response
             pytest.fail("PUT called for %s when it shouldn't be" % url)
+
         return _put_object
 
     def _self_delete_object(self):
@@ -171,6 +178,7 @@ class CBCSDKMock:
                 else:
                     return self.mocks[matched]
             pytest.fail("DELETE called for %s when it shouldn't be" % url)
+
         return _delete_object
 
     def _self_patch_object(self):
@@ -184,4 +192,5 @@ class CBCSDKMock:
                 else:
                     return self.mocks[matched]
             pytest.fail("PATCH called for %s when it shouldn't be" % url)
+
         return _patch_object

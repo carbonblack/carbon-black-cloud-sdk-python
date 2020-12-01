@@ -29,29 +29,34 @@ log = logging.getLogger(__name__)
 
 
 class QuitException(Exception):
+    """Exception raised when we want to quit the application."""
     pass
 
 
 class CliArgsException(Exception):
+    """Exception raised if there are errors in the arguments to a command."""
     pass
 
 
 class CliHelpException(Exception):
+    """Exception raised if we're invoking online help."""
     pass
 
 
 class CliAttachError(Exception):
+    """Exception raised if we're not attached to a session."""
     pass
 
 
 def split_cli(line):
-    '''
+    """
+    Split the command line into individual tokens.
+
     we'd like to use shlex.split() but that doesn't work well for
     windows types of things.  for now we'll take the easy approach
     and just split on space. We'll then cycle through and look for leading
     quotes and join those lines
-    '''
-
+    """
     parts = line.split(' ')
     final = []
 
@@ -73,16 +78,20 @@ def split_cli(line):
 
 
 class CliArgs (OptionParser):
+    """Command line arguments."""
     def __init__(self, usage=''):
+        """Initialize the CliArgs object."""
         OptionParser.__init__(self, add_help_option=False, usage=usage)
 
         self.add_option('-h', '--help', action='store_true', help='Display this help message.')
 
     def parse_line(self, line):
+        """Parse a command line entered from the input."""
         args = split_cli(line)
         return self.parse_args(args)
 
     def parse_args(self, args, values=None):
+        """Parse the arguments to a command."""
         (opts, args) = OptionParser.parse_args(self, args=args, values=values)
 
         if (opts.help):
@@ -92,10 +101,12 @@ class CliArgs (OptionParser):
         return (opts, args)
 
     def error(self, msg):
+        """Raise an error message."""
         raise CliArgsException(msg)
 
 
 class CblrCli(cmd.Cmd):
+    """The primary command-line interpreter class for the Live Response CLI."""
     def __init__(self, cb, connect_callback):
         """
         Create a CbLR Command Line class
@@ -120,15 +131,18 @@ class CblrCli(cmd.Cmd):
 
     @property
     def prompt(self):
+        """Display the command prompt."""
         if not self.lr_session:
             return "(unattached)> "
         else:
             return "{0}\\> ".format(self.cwd)
 
     def emptyline(self):
+        """Called when we get an empty line of input."""
         pass
 
     def cmdloop(self, intro=None):
+        """The main command loop of the application."""
         while True:
             try:
                 cmd.Cmd.cmdloop(self, intro)
@@ -175,7 +189,9 @@ class CblrCli(cmd.Cmd):
         return False
 
     def _file_path_fixup(self, path):
-        '''
+        """
+        Fix up a file path.
+
         We have a pseudo-cwd that we use to
         base off all commands.  This means we
         need to figure out if a given path is relative,
@@ -184,8 +200,7 @@ class CblrCli(cmd.Cmd):
 
         This function takes in a given file path arguemnt
         and performs the fixups.
-        '''
-
+        """
         if (self._is_path_absolute(path)):
             return path
         elif (self._is_path_drive_relative(path)):
@@ -194,14 +209,12 @@ class CblrCli(cmd.Cmd):
             return ntpath.join(self.cwd + '\\', path)
 
     def _stat(self, path):
-        '''
-        Look to see if a given path exists
-        on the sensor and whether that is a
-        file or directory.
+        """
+        Look to see if a given path exists on the sensor and whether that is a file or directory.
 
         :param path: a sensor path
         :return: None, "dir", or "file"
-        '''
+        """
         if path.endswith('\\'):
             path = path[:-1]
 
@@ -226,7 +239,7 @@ class CblrCli(cmd.Cmd):
             raise CliAttachError()
 
     def do_cd(self, line):
-        '''
+        """
         Pseudo Command: cd
 
         Description:
@@ -236,9 +249,9 @@ class CblrCli(cmd.Cmd):
         that allows the user to change directory without
         changing the directory of the working process on sensor.
 
-        Args:
+        Format:
         cd <Directory>
-        '''
+        """
         self._needs_attached()
 
         path = self._file_path_fixup(line)
@@ -257,12 +270,21 @@ class CblrCli(cmd.Cmd):
         log.info("Changed directory to {0}".format(self.cwd))
 
     def do_cat(self, line):
+        """
+        Pseudo Command: cat
+
+        Description:
+        Displays the contents of a remote file (writes them to stdout).
+
+        Format:
+        cat <filename>
+        """
         self._needs_attached()
         gfile = self._file_path_fixup(line)
         shutil.copyfileobj(self.lr_session.get_raw_file(gfile), sys.stdout)
 
     def do_pwd(self, line):
-        '''
+        """
         Pseudo Command: pwd
 
         Description:
@@ -272,11 +294,9 @@ class CblrCli(cmd.Cmd):
         that allows the user to change directory without
         changing the directory of the working process on sensor.
 
-        Args:
+        Format:
         pwd
-
-        '''
-
+        """
         self._needs_attached()
 
         if (len(self.cwd) == 2):
@@ -293,7 +313,7 @@ class CblrCli(cmd.Cmd):
         Description:
         Connect to a sensor given the sensor ID or the sensor hostname.
 
-        Args:
+        Format:
         connect SENSOR_ID | SENSOR_HOSTNAME
         """
         if not line:
@@ -312,9 +332,11 @@ class CblrCli(cmd.Cmd):
         log.info("Attached to sensor {0}".format(sensor._model_unique_id))
 
     def do_detach(self, line):
+        """Detaches the current Live Response connection."""
         self.reset()
 
     def reset(self):
+        """Closes the session and resets the idea of the current working directory."""
         self.cwd = "c:"
 
         if not self.lr_session:
@@ -330,23 +352,32 @@ class CblrCli(cmd.Cmd):
     ##############################
 
     def do_archive(self, line):
+        """
+        Command: archive
+
+        Description:
+        Save the session archive.
+
+        Format:
+        archive <filename>
+        """
         filename = line
         shutil.copyfileobj(self.lr_session.get_session_archive(), open(filename, "wb+"))
 
     def do_ps(self, line):
-        '''
+        """
         Command: ps
 
         Description:
         List the processes running on the sensor.
 
-        Args:
+        Format:
         ps [OPTIONS]
 
         OPTIONS:
         -v  - Display verbose info about each process
         -p <Pid> - Display only the given pid
-        '''
+        """
         self._needs_attached()
 
         p = CliArgs(usage='ps [OPTIONS]')
@@ -380,14 +411,14 @@ class CblrCli(cmd.Cmd):
             print("")
 
     def do_exec(self, line):
-        '''
+        """
         Command: exec
 
         Description:
         Execute a process on the sensor.  This assumes the executable is
         already on the sensor.
 
-        Args:
+        Format:
         exec [OPTS] [process command line and arguments]
 
         where OPTS are:
@@ -396,8 +427,7 @@ class CblrCli(cmd.Cmd):
          -d <WorkingDir> - Use the following directory as the process working
               directory
          -w - Wait for the process to complete execution before returning.
-        '''
-
+        """
         self._needs_attached()
         # note: option parsing is VERY specific to ensure command args are left
         # as untouched as possible
@@ -460,19 +490,19 @@ class CblrCli(cmd.Cmd):
             print(ret)
 
     def do_get(self, line):
-        '''
+        """
         Command: get
 
         Description:
         Get (copy) a file, or parts of file, from the sensor.
 
-        Args:
+        Format:
         get [OPTIONS] <RemotePath> <LocalPath>
 
         where OPTIONS are:
         -o, --offset : The offset to start getting the file at
         -b, --bytes : How many bytes of the file to get.  The default is all bytes.
-        '''
+        """
         self._needs_attached()
 
         p = CliArgs(usage='get [OPTIONS] <RemoteFile> <LocalFile>')
@@ -486,16 +516,15 @@ class CblrCli(cmd.Cmd):
             shutil.copyfileobj(self.lr_session.get_raw_file(gfile), fout)
 
     def do_del(self, line):
-        '''
+        """
         Command: del
 
         Description:
         Delete a file on the sensor
 
-        Args:
+        Format:
         del <FileToDelete>
-        '''
-
+        """
         self._needs_attached()
 
         if line is None or line == '':
@@ -505,16 +534,15 @@ class CblrCli(cmd.Cmd):
         self.lr_session.delete_file(path)
 
     def do_mkdir(self, line):
-        '''
+        """
         Command: mkdir
 
         Description:
         Create a directory on the sensor
 
-        Args:
-        mdkir <PathToCreate>
-        '''
-
+        Format:
+        mkdir <PathToCreate>
+        """
         self._needs_attached()
 
         if line is None or line == '':
@@ -524,15 +552,15 @@ class CblrCli(cmd.Cmd):
         self.lr_session.create_directory(path)
 
     def do_put(self, line):
-        '''
+        """
         Command: put
 
         Description
         Put a file onto the sensor
 
-        Args:
+        Format:
         put <LocalFile> <RemotePath>
-        '''
+        """
         self._needs_attached()
 
         argv = split_cli(line)
@@ -547,6 +575,15 @@ class CblrCli(cmd.Cmd):
         return time.strftime("%m/%d/%Y %I:%M:%S %p", time.gmtime(unixtime))
 
     def do_dir(self, line):
+        """
+        Command: dir
+
+        Description
+        List the contents of the current directory.
+
+        Format:
+        dir <Path>
+        """
         self._needs_attached()
 
         if line is None or line == '':
@@ -571,16 +608,15 @@ class CblrCli(cmd.Cmd):
         print("")
 
     def do_kill(self, line):
-        '''
+        """
         Command: kill
 
         Description:
         Kill a process on the sensor
 
-        Args:
+        Format:
         kill <Pid>
-        '''
-
+        """
         if line is None or line == '':
             raise CliArgsException("Invalid argument passed to kill (%s)" % line)
 
@@ -588,29 +624,33 @@ class CblrCli(cmd.Cmd):
 
     # call the system shell
     def do_shell(self, line):
-        '''
+        """
         Command: shell
 
         Description:
         Run a command locally and display the output
 
-        Args:
+        Format:
         shell <Arguments>
-        '''
+        """
         print(subprocess.Popen(line, shell=True, stdout=subprocess.PIPE).stdout.read())
 
     # quit handlers
     def do_exit(self, line):
+        """Quit the application."""
         return self._quit()
 
     def do_quit(self, line):
+        """Quit the application."""
         return self._quit()
 
     def do_EOF(self, line):
+        """Quit the application."""
         return self._quit()
 
 
 def connect_callback(cb, line):
+    """Called back when the Live Response connection is made; selects the sensor."""
     try:
         sensor_id = int(line)
     except ValueError:
@@ -626,6 +666,7 @@ def connect_callback(cb, line):
 
 
 def main():
+    """Main function for Live Response CLI script."""
     parser = build_cli_parser("Carbon Black Cloud Live Response CLI")
     parser.add_argument("--log", help="Log activity to a file", default='')
     args = parser.parse_args()

@@ -8,6 +8,7 @@ log = logging.getLogger(__name__)
 
 
 def get_feed_ids():
+    """Read and log all the feed IDs from the default server."""
     cb = CBCloudAPI()
     feeds = cb.select(Feed)
     if not feeds:

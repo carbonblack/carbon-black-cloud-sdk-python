@@ -52,7 +52,6 @@ def validate_domain_name(domain_name):
     Returns:
         True if checks pass, False otherwise.
     """
-
     if len(domain_name) > 255:
         logger.warn(
             "Excessively long domain name {} in IOC list".format(domain_name))
@@ -85,7 +84,6 @@ def validate_md5sum(md5):
     Returns:
         True if checks pass, False otherwise.
     """
-
     if 32 != len(md5):
         logger.warn("Invalid md5 length for md5 {}".format(md5))
         return False
@@ -111,13 +109,11 @@ def sanitize_id(id):
     Returns:
         A sanitized ID.
     """
-
     return id.replace(':', '-')
 
 
 def validate_ip_address(ip_address):
     """Validates an IPv4 address."""
-
     try:
         socket.inet_aton(ip_address)
         return True
@@ -200,7 +196,8 @@ def cybox_parse_observable(observable, indicator, timestamp, score):
             title_found = False
 
         if title_found:
-            url_pattern = re.compile("^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$")
+            url_pattern = re.compile(r"^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?"
+                                     r"[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$")
             for token in split_title:
                 if url_pattern.match(token):
                     link = token
@@ -355,7 +352,7 @@ def parse_address(props, id, description, title, timestamp, link, score):
 
         if len(iocs['netconn_ipv4']) > 0:
             reports.append({'iocs_v2': iocs,
-                            'id': sanitize_id(observable.id_),
+                            'id': sanitize_id(id),
                             'description': description,
                             'title': title,
                             'timestamp': timestamp,
@@ -415,7 +412,6 @@ def get_stix_indicator_score(indicator, default_score):
     if not indicator.confidence:
         return default_score
 
-
     confidence_val_str = indicator.confidence.value.__str__()
     if confidence_val_str.isdigit():
         score = int(confidence_val_str)
@@ -435,12 +431,10 @@ def get_stix_indicator_timestamp(indicator):
     timestamp = 0
     if indicator.timestamp:
         if indicator.timestamp.tzinfo:
-            timestamp = int((indicator.timestamp -
-                            datetime.datetime(1970, 1, 1).replace(
-                                tzinfo=dateutil.tz.tzutc())).total_seconds())
+            timestamp = int((indicator.timestamp - datetime.datetime(1970, 1, 1).replace(
+                tzinfo=dateutil.tz.tzutc())).total_seconds())
         else:
-            timestamp = int((indicator.timestamp -
-                            datetime.datetime(1970, 1, 1)).total_seconds())
+            timestamp = int((indicator.timestamp - datetime.datetime(1970, 1, 1)).total_seconds())
     return timestamp
 
 
@@ -498,7 +492,8 @@ def sanitize_stix(stix_xml):
             # So lets make sure we parse the xml text for content and
             # re-add it as valid XML so we can parse
             _content = xml_root.find(
-                "{http://taxii.mitre.org/messages/taxii_xml_binding-1.1}Content_Block/{http://taxii.mitre.org/messages/taxii_xml_binding-1.1}Content")
+                "{http://taxii.mitre.org/messages/taxii_xml_binding-1.1}Content_Block/"
+                "{http://taxii.mitre.org/messages/taxii_xml_binding-1.1}Content")
             if _content:
                 new_stix_package = etree.fromstring(_content.text)
                 content.append(new_stix_package)

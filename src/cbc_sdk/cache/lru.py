@@ -43,8 +43,10 @@ def lru_cache_function(max_size=1024, expiration=15 * 60):
     >>> f(3)
     3
     """
+
     def wrapper(func):
         return LRUCachedFunction(func, LRUCacheDict(max_size, expiration))
+
     return wrapper
 
 
@@ -55,12 +57,14 @@ def _lock_decorator(func):
     If the LRUCacheDict is concurrent, then we should lock in order to avoid
     conflicts with threading, or the ThreadTrigger.
     """
+
     def withlock(self, *args, **kwargs):
         if self.concurrent:
             with self._rlock:
                 return func(self, *args, **kwargs)
         else:
             return func(self, *args, **kwargs)
+
     withlock.__name__ == func.__name__
     return withlock
 
@@ -96,9 +100,18 @@ class LRUCacheDict(object):
     set to true. Note that the cache will always be concurrent if a background cleanup thread
     is used.
     """
-    def __init__(self, max_size=1024, expiration=15 * 60, thread_clear=False, thread_clear_min_check=60, concurrent=True):
+
+    def __init__(self, max_size=1024, expiration=15 * 60, thread_clear=False, thread_clear_min_check=60,
+                 concurrent=True):
         """
-        Initialize LRUCacheDict
+        Initialize the LRUCacheDict object.
+
+        Args:
+            max_size (int): Maximum number of elements in the cache.
+            expiration (int): Number of seconds an item can be in the cache before it expires.
+            thread_clear (bool): True if we want to use a background thread to keep the cache clear.
+            thread_clear_min_check (int): Unused.
+            concurrent (bool): True to make access to the cache thread-safe.
         """
         self.max_size = max_size
         self.expiration = expiration
@@ -115,9 +128,17 @@ class LRUCacheDict(object):
             t.start()
 
     class EmptyCacheThread(threading.Thread):
+        """Background thread that expires elements out of the cache."""
         daemon = True
 
         def __init__(self, cache, peek_duration=60):
+            """
+            Initialize the EmptyCacheThread.
+
+            Args:
+                cache (LRUCacheDict): The cache to be monitored.
+                peek_duration (int): The delay between "sweeps" of the cache.
+            """
             me = self
 
             def kill_self(o):
@@ -128,6 +149,7 @@ class LRUCacheDict(object):
             super(LRUCacheDict.EmptyCacheThread, self).__init__()
 
         def run(self):
+            """Execute the background cleanup."""
             while self.ref():
                 c = self.ref()
                 if c:
@@ -135,11 +157,17 @@ class LRUCacheDict(object):
                     if (next_expire is None):
                         time.sleep(self.peek_duration)
                     else:
-                        time.sleep(next_expire+1)
+                        time.sleep(next_expire + 1)
                 c = None
 
     @_lock_decorator
     def size(self):
+        """
+        Returns the number of values in the dictionary.
+
+        Returns:
+            int: The number of values in the dictionary.
+        """
         return len(self.__values)
 
     @_lock_decorator
@@ -162,11 +190,22 @@ class LRUCacheDict(object):
         self.__access_times.clear()
 
     def __contains__(self, key):
+        """
+        Tests if a key is in the dictionary.
+
+        Args:
+            key (Any): The key to be looked up.
+
+        Returns:
+            bool: True if the ke is in the dictionary, False if not.
+        """
         return key in self
 
     @_lock_decorator
     def has_key(self, key):
         """
+        Determines if a key exists in the cache dictionary.
+
         This method should almost NEVER be used. The reason is that between the time
         has_key is called, and the key is accessed, the key might vanish.
 
@@ -188,6 +227,13 @@ class LRUCacheDict(object):
 
     @_lock_decorator
     def __setitem__(self, key, value):
+        """
+        Store an item into the dictionary.
+
+        Args:
+            key (Any): The key of the item to store.
+            value (Any): The item to be stored.
+        """
         t = int(time.time())
         self.__delete__(key)
         self.__values[key] = value
@@ -197,6 +243,15 @@ class LRUCacheDict(object):
 
     @_lock_decorator
     def __getitem__(self, key):
+        """
+        Return an item stored in the dictionary.
+
+        Args:
+            key (Any): The key of the item to retrieve.
+
+        Returns:
+            Any: The item from the dictionary.
+        """
         t = int(time.time())
         del self.__access_times[key]
         self.__access_times[key] = t
@@ -205,6 +260,12 @@ class LRUCacheDict(object):
 
     @_lock_decorator
     def __delete__(self, key):
+        """
+        Delete an item from the dictionary.
+
+        Args:
+            key (Any): The key of the item to delete.
+        """
         if key in self.__values:
             del self.__values[key]
             del self.__expire_times[key]
@@ -212,6 +273,12 @@ class LRUCacheDict(object):
 
     @_lock_decorator
     def cleanup(self):
+        """
+        Clean up the cache dictionary, deleting items as required.
+
+        Returns:
+            int: The next expire time for an object in the cache. May be None.
+        """
         marked_for_deletion = set()
 
         if self.expiration is None:
@@ -280,7 +347,15 @@ class LRUCachedFunction(object):
     4
 
     """
+
     def __init__(self, function, cache=None):
+        """
+        Initialize the LRUCachedFunction object.
+
+        Args:
+            function (func): The function to be used to create new items in the cache.
+            cache (LRUCacheDict): The internal cache structure.
+        """
         if cache:
             self.cache = cache
         else:
@@ -289,6 +364,16 @@ class LRUCachedFunction(object):
         self.__name__ = self.function.__name__
 
     def __call__(self, *args, **kwargs):
+        """
+        Retrieve an item from the cache, creating it if necessary.
+
+        Args:
+            *args (list): Arguments for the function to initialize the cache item.
+            **kwargs (dict): Arguments for the function to initialize the cache item.
+
+        Returns:
+            Any: The object in the cache, which may have been created.
+        """
         key = repr((args, kwargs)) + "#" + self.__name__
         # In principle a python repr(...) should not return any # characters.
         try:
@@ -301,4 +386,5 @@ class LRUCachedFunction(object):
 
 if __name__ == "__main__":
     import doctest
+
     doctest.testmod()
