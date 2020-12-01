@@ -321,21 +321,21 @@ Setting ranges
 Ranges are configured via the ``add_range()`` method which accepts a dictionary of range settings:
 
     >>> range = {
-    ...                 "bucket_size": 30,
-    ...                 "start": "0",
-    ...                 "end": "2000",
+    ...                 "bucket_size": "+1DAY",
+    ...                 "start": "2020-10-16T00:00:00Z",
+    ...                 "end": "2020-11-16T00:00:00Z",
     ...                 "field": "device_timestamp"
     ...         }
     >>> query = api.select(EnrichedEventFacet).where(process_pid=1000).add_range(range)
     
 The range settings are as follows:
 
-* ``field`` - the field to return the range for, should be a discrete (integer or timestamp) one
-* ``start`` - the range minimum
-* ``end`` - the range maximum
-* ``bucket_size``- the bucket size
+* ``field`` - the field to return the range for, should be a discrete one (integer or ISO 8601 timestamp) 
+* ``start`` - the value to begin grouping at
+* ``end`` - the value to end grouping at
+* ``bucket_size``- how large of a bucket to group results in. If grouping an ISO 8601 property, use a string like '-3DAYS'
 
-Multiple ranges can be configured per query.
+Multiple ranges can be configured per query by passing a list of range dictionaries.
 
 Setting terms
 ^^^^^^^^^^^^^
@@ -343,6 +343,8 @@ Setting terms
 Terms are configured via the ``add_facet_field()`` method:
 
     >>> query = api.select(EnrichedEventFacet).where(process_pid=1000),add_facet_field("process_name")
+
+The argument to add_facet_field method is the name of the field to be summarized.
     
 Getting facet results
 ^^^^^^^^^^^^^^^^^^^^^
