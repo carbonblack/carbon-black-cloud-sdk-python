@@ -265,12 +265,14 @@ Modules with Support for Criteria
 
   - :meth:`cbc_sdk.platform.alerts.VMwareAlertSearchQuery.set_group_ids`
 
+:mod:`Event <cbc_sdk.enterprise_edr.base.Event>`
+
+:mod:`Process <cbc_sdk.enterprise_edr.base.Process>`
+
 Modules not yet Supported for Criteria
 """"""""""""""""""""""""""""""""""""""
 
 :mod:`RunHistory <cbc_sdk.audit_remediation.base.RunHistory>`
-:mod:`Event <cbc_sdk.enterprise_edr.base.Event>`
-:mod:`Process <cbc_sdk.enterprise_edr.base.Process>`
 
 
 Asynchronous queries
@@ -302,6 +304,8 @@ Modules with support for asynchronous queries
 
 :mod:`Process <cbc_sdk.enterprise_edr.base.Process>`
 
+:mod:`ProcessFacet <cbc_sdk.enterprise_edr.base.ProcessFacet>`
+
 :mod:`EnrichedEvent <cbc_sdk.endpoint_standard.base.EnrichedEvent>`
 
 :mod:`EnrichedEventFacet <cbc_sdk.endpoint_standard.base.EnrichedEventFacet>`
@@ -318,7 +322,7 @@ The other type is the ``term`` type which allow for one or more fields to use as
 Setting ranges
 ^^^^^^^^^^^^^^
 
-Ranges are configured via the ``add_range()`` method which accepts a dictionary of range settings:
+Ranges are configured via the ``add_range()`` method which accepts a dictionary of range settings or a list of range dictionaries:
 
     >>> range = {
     ...                 "bucket_size": "+1DAY",
