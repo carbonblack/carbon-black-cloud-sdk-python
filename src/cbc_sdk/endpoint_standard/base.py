@@ -13,8 +13,8 @@
 
 """Model and Query Classes for Endpoint Standard"""
 
-from cbc_sdk.base import (MutableBaseModel, CreatableModelMixin, NewBaseModel, PaginatedQuery,
-                          QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin, UnrefreshableModel)
+from cbc_sdk.base import (MutableBaseModel, UnrefreshableModel, CreatableModelMixin, NewBaseModel, FacetQuery,
+                          PaginatedQuery, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
 from cbc_sdk.platform import PlatformQueryBase
 from cbc_sdk.utils import convert_query_params
 from cbc_sdk.errors import ApiError
@@ -244,12 +244,95 @@ class EnrichedEvent(UnrefreshableModel):
 
     @classmethod
     def _query_implementation(self, cb, **kwargs):
-        # This will emulate a synchronous process query, for now.
+        # This will emulate a synchronous enriched event query, for now.
         return EnrichedEventQuery(self, cb)
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
         super(EnrichedEvent, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
                                       force_init=force_init, full_doc=full_doc)
+
+
+class EnrichedEventFacet(UnrefreshableModel):
+    """Represents an enriched event retrieved by one of the Enterprise EDR endpoints."""
+    primary_key = "job_id"
+    swagger_meta_file = "endpoint_standard/models/enriched_event_facet.yaml"
+    submit_url = "/api/investigate/v2/orgs/{}/enriched_events/facet_jobs"
+    result_url = "/api/investigate/v2/orgs/{}/enriched_events/facet_jobs/{}/results"
+
+    class Terms(UnrefreshableModel):
+        """Represents the facet fields and values associated with an Enriched Event Facet query."""
+        def __init__(self, cb, initial_data):
+            """Initialize an EnrichedEventFacet Terms object with initial_data."""
+            super(EnrichedEventFacet.Terms, self).__init__(
+                cb,
+                model_unique_id=None,
+                initial_data=initial_data,
+                force_init=False,
+                full_doc=True,
+            )
+            self._facets = {}
+            for facet_term_data in initial_data:
+                field = facet_term_data["field"]
+                values = facet_term_data["values"]
+                self._facets[field] = values
+
+        @property
+        def facets(self):
+            """Returns the terms' facets for this result."""
+            return self._facets
+
+        @property
+        def fields(self):
+            """Returns the terms facets' fields for this result."""
+            return [field for field in self._facets]
+
+    class Ranges(UnrefreshableModel):
+        """Represents the range (bucketed) facet fields and values associated with an Enriched Event Facet query."""
+        def __init__(self, cb, initial_data):
+            """Initialize an EnrichedEventFacet Ranges object with initial_data."""
+            super(EnrichedEventFacet.Ranges, self).__init__(
+                cb,
+                model_unique_id=None,
+                initial_data=initial_data,
+                force_init=False,
+                full_doc=True,
+            )
+            self._facets = {}
+            for facet_range_data in initial_data:
+                field = facet_range_data["field"]
+                values = facet_range_data["values"]
+                self._facets[field] = values
+
+        @property
+        def facets(self):
+            """Returns the reified `EnrichedEventFacet.Terms._facets` for this result."""
+            return self._facets
+
+        @property
+        def fields(self):
+            """Returns the ranges fields for this result."""
+            return [field for field in self._facets]
+
+    @classmethod
+    def _query_implementation(self, cb, **kwargs):
+        # This will emulate a synchronous enricehd event facet query, for now.
+        return FacetQuery(self, cb)
+
+    def __init__(self, cb, model_unique_id, initial_data):
+        super(EnrichedEventFacet, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
+                                      force_init=False, full_doc=True)
+        self._terms = EnrichedEventFacet.Terms(cb, initial_data=initial_data["terms"])
+        self._ranges = EnrichedEventFacet.Ranges(cb, initial_data=initial_data["ranges"])
+
+    @property
+    def terms_(self):
+        """Returns the reified `EnrichedEventFacet.Terms` for this result."""
+        return self._terms
+
+    @property
+    def ranges_(self):
+        """Returns the reified `EnrichedEventFacet.Ranges` for this result."""
+        return self._ranges
 
 
 """Endpoint Standard Queries"""
@@ -385,9 +468,9 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
                 self._total_results = current
                 break
 
-class EnrichedEventQuery(Query):
-    """Represents the query logic for an Enriched Event query.
 
+class EnrichedEventQuery(Query, AsyncQueryMixin):
+    """Represents the query logic for an Enriched Event query.
     This class specializes `Query` to handle the particulars of
     enriched events querying.
     """
@@ -408,7 +491,7 @@ class EnrichedEventQuery(Query):
         """ or_ criteria are explicitly provided to EnrichedEvent queries although they are endpoint_standard.
             This method overrides the base class in order to provide or_() functionality rather than
             raising an exception
-        """ 
+        """
         self._query_builder.or_(None, **kwargs)
         return self
 
@@ -470,16 +553,12 @@ class EnrichedEventQuery(Query):
 
     def sort_by(self, key, direction="ASC"):
         """Sets the sorting behavior on a query's results.
-
         Arguments:
             key (str): The key in the schema to sort by.
             direction (str): The sort order, either "ASC" or "DESC".
-
         Returns:
             Query (EnrichedEventQuery: The query with sorting parameters.
-
         Example:
-
         >>> cb.select(EnrichedEvent).where(process_name="cmd.exe").sort_by("device_timestamp")
         """
         found = False
@@ -498,16 +577,12 @@ class EnrichedEventQuery(Query):
 
     def timeout(self, msecs):
         """Sets the timeout on a event query.
-
         Arguments:
             msecs (int): Timeout duration, in milliseconds.
-
         Returns:
             Query (EnrichedEventQuery): The Query object with new milliseconds
                 parameter.
-
         Example:
-
         >>> cb.select(EnrichedEvent).where(process_name="foo.exe").timeout(5000)
         """
         self._timeout = msecs
@@ -522,7 +597,6 @@ class EnrichedEventQuery(Query):
         url = "/api/investigate/v2/orgs/{}/enriched_events/search_jobs".format(self._cb.credentials.org_key)
         query_start = self._cb.post_object(url, body=args)
         self._query_token = query_start.json().get("job_id")
-
         self._timed_out = False
         self._submit_time = time.time() * 1000
 
@@ -616,3 +690,13 @@ class EnrichedEventQuery(Query):
 
             log.debug("current: {}, total_results: {}".format(current, self._total_results))
 
+    def _run_async_query(self, context):
+        """Executed in the background to run an asynchronous query.
+
+        Args:
+            context (object): The context (query token) returned by _init_async_query.
+
+        Returns:
+            Any: Result of the async query, which is then returned by the future.
+        """
+        return list(self._search())

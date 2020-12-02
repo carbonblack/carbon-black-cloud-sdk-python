@@ -321,20 +321,46 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         lines.append("-" * 79)
         lines.append("")
 
-        for attr in sorted(self._info):
-            status = "   "
-            if attr in self._dirty_attributes:
-                if self._dirty_attributes[attr] is None:
-                    status = "(+)"
-                else:
-                    status = "(*)"
-            try:
-                val = str(self._info[attr])
-            except UnicodeDecodeError:
-                val = repr(self._info[attr])
-            if len(val) > 50:
-                val = val[:47] + u"..."
-            lines.append(u"{0:s} {1:>20s}: {2:s}".format(status, attr, val))
+        # for dictionaries that can be sorted, sort them
+        try:
+            attributes = sorted(self._info)
+        # dictionaries containing dictionaries cannot be sorted, so leave as is
+        except:
+            attributes = self._info
+
+        for attr in attributes:
+            # typical case, where the info dictionary value for this `attr` is a string
+            if isinstance(attr, str):
+                status = "   "
+                if attr in self._dirty_attributes:
+                    if self._dirty_attributes[attr] is None:
+                        status = "(+)"
+                    else:
+                        status = "(*)"
+                try:
+                    val = str(self._info[attr])
+                except UnicodeDecodeError:
+                    val = repr(self._info[attr])
+                if len(val) > 50:
+                    val = val[:47] + u"..."
+                lines.append(u"{0:s} {1:>20s}: {2:s}".format(status, attr, val))
+            # edge case (seen in Facet searches) where the info dictionary value for this `attr` is a dictionary
+            elif isinstance(attr, dict):
+                # go through each attribute in the `attr` dictionary
+                for att in attr:
+                    status = "   "
+                    if att in self._dirty_attributes:
+                        if self._dirty_attributes[att] is None:
+                            status = "(+)"
+                        else:
+                            status = "(*)"
+                    try:
+                        val = str(attr[att])
+                    except UnicodeDecodeError:
+                        val = repr(attr[att])
+                    if len(val) > 50:
+                        val = val[:47] + u"..."
+                    lines.append(u"{0:s} {1:>20s}: {2:s}".format(status, att, val))
 
         return "\n".join(lines)
 
@@ -731,6 +757,8 @@ class PaginatedQuery(BaseQuery):
         return nq
 
 
+
+
 class QueryBuilder(object):
     """
     Provides a flexible interface for building prepared queries for the CB
@@ -1059,3 +1087,412 @@ class AsyncQueryMixin:
         """
         context = self._init_async_query()
         return self._cb._async_submit(lambda arg, kwarg: arg[0]._run_async_query(arg[1]), self, context)
+
+
+class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
+    """Query class for asynchronous Facet API calls.
+
+    These API calls return one result, and are not paginated or iterable.
+    """
+    def __init__(self, cls, cb, query=None):
+        super(FacetQuery, self).__init__(query)
+        self._doc_class = cls
+        self._cb = cb
+        self._full_init = False
+        self._query_builder = QueryBuilder()
+
+        # unqiue identifier, typically a job id
+        self._query_token = None
+        # whether self._total_results is a valid value
+        self._count_valid = False
+        # seconds to wait for num_contacted == num_completed until timing out
+        self._timeout = 0
+        # whether the query timed-out
+        self._timed_out = False
+        # query body parameters
+        self._time_range = {}
+        self._limit = None
+        self._criteria = {}
+        self._exclusions = {}
+        self._facet_fields = []
+        self._facet_rows = None
+        self._ranges = []
+        self._default_args = {}
+
+    def add_criteria(self, key, newlist):
+        """Add to the criteria on this query with a custom criteria key.
+
+        Args:
+            key (str): The key for the criteria item to be set.
+            newlist (str or list[str]): Value or list of values to be set for the criteria item.
+
+        Returns:
+            The ResultQuery with specified custom criteria.
+
+        Example:
+            query = api.select(Event).add_criteria("event_type", ["filemod", "scriptload"])
+            query = api.select(Event).add_criteria("event_type", "filemod")
+        """
+        if not isinstance(newlist, list):
+            if not isinstance(newlist, str):
+                raise ApiError("Criteria value(s) must be a string or list of strings. "
+                               f"{newlist} is a {type(newlist)}.")
+            self._add_criteria(key, [newlist])
+        else:
+            self._add_criteria(key, newlist)
+        return self
+
+    def _add_criteria(self, key, newlist):
+        """
+        Updates a list of criteria being collected for a query, by setting or appending items.
+
+        Args:
+            key (str): The key for the criteria item to be set.
+            newlist (list): List of values to be set for the criteria item.
+        """
+        oldlist = self._criteria.get(key, [])
+        self._criteria[key] = oldlist + newlist
+
+    def add_exclusions(self, key, newlist):
+        """Add to the excluions on this query with a custom exclusion key.
+
+        Args:
+            key (str): The key for the exclusion item to be set.
+            newlist (str or list[str]): Value or list of values to be set for the exclusion item.
+
+        Returns:
+            The ResultQuery with specified custom exclusion.
+
+        Example:
+            query = api.select(Event).add_exclusions("netconn_domain", ["www.google.com"])
+            query = api.select(Event).add_exclusions("netconn_domain", "www.google.com")
+        """
+        if not isinstance(newlist, list):
+            if not isinstance(newlist, str):
+                raise ApiError("Exclusion value(s) must be a string or list of strings. "
+                               f"{newlist} is a {type(newlist)}.")
+            self._add_exclusions(key, [newlist])
+        else:
+            self._add_exclusions(key, newlist)
+        return self
+
+    def _add_exclusions(self, key, newlist):
+        """
+        Updates a list of exclusion being collected for a query, by setting or appending items.
+
+        Args:
+            key (str): The key for the exclusion item to be set.
+            newlist (list): List of values to be set for the exclusion item.
+        """
+        oldlist = self._exclusions.get(key, [])
+        self._exclusions[key] = oldlist + newlist
+
+    def timeout(self, msecs):
+        """Sets the timeout on an AsyncQuery. By default, there is no timeout.
+
+        Arguments:
+            msecs (int): Timeout duration, in milliseconds.
+
+        Returns:
+            Query (AsyncQuery): The Query object with new milliseconds
+                parameter.
+
+        Example:
+
+        >>> cb.select(ProcessFacet).where(process_name="foo.exe").timeout(5000)
+        """
+        self._timeout = msecs
+        return self
+
+    def limit(self, limit):
+        """Sets the maximum number of facets per category (i.e. any Process Search Fields in self._fields).
+
+        The default limit for Process Facet searches in the Carbon Black Cloud backend is 100.
+
+        Arguments:
+            limit (int): Maximum number of facets per category.
+
+        Returns:
+            Query (AsyncQuery): The Query object with new limit parameter.
+
+        Example:
+        >>> cb.select(ProcessFacet).where(process_name="foo.exe").limit(50)
+        """
+        self._limit = limit
+        return self
+
+    def set_rows(self, rows):
+        """Sets the number of facet results to return with the query.
+
+        Args:
+            rows (int): Number of rows to return.
+
+        Returns:
+            Query (AsyncQuery): The Query object with the new rows parameter.
+
+        Example:
+        >>> cb.select(ProcessFacet).set_rows(50)
+        """
+        self._facet_rows = rows
+        return self
+
+    def add_facet_field(self, field):
+        """Sets the facet fields to be received by this query.
+
+        Arguments:
+            field (str or [str]): Field(s) to be received.
+
+        Returns:
+            Query (AsyncQuery): The Query object that will receive the specified field(s).
+
+        Example:
+        >>> cb.select(ProcessFacet).add_facet_field(["process_name", "process_username"])
+        """
+        if isinstance(field, str):
+            self._facet_fields.append(field)
+        else:
+            for name in field:
+                self._facet_fields.append(name)
+        return self
+
+    def _check_range(self, range):
+        """Checks if range has all required keys, and that they have non-empty values."""
+        start = range.get("start")
+        end = range.get("end")
+        field = range.get("field")
+        bucket_size = range.get("bucket_size")
+
+        if start is None or (start != 0 and not start):
+            raise ApiError("No 'start' parameter in range, or its value is None.")
+        if end is None or not end:
+            raise ApiError("No 'end' parameter in range, or its value is None.")
+        if bucket_size is None or not bucket_size:
+            raise ApiError("No 'bucket_size' parameter in range, or its value is None.")
+        if field is None or not field:
+            raise ApiError("No 'field' parameter in range, or its value is None.")
+
+        if type(start) not in [int, str]:
+            raise ApiError("`start` parameter should be either int or ISO8601 timestamp string")
+        if type(end) not in [int, str]:
+            raise ApiError("`end` parameter should be either int or ISO8601 timestamp string")
+        if type(field) not in [str]:
+            raise ApiError("`field` parameter should be a string")
+        if type(bucket_size) not in [int, str]:
+            raise ApiError("`bucket_size` should be either int or ISO8601 timestamp string")
+
+    def add_range(self, range):
+        """Sets the facet ranges to be received by this query.
+
+        Arguments:
+            range (dict or [dict]): Range(s) to be received.
+
+        Returns:
+            Query (AsyncQuery): The Query object that will receive the specified range(s).
+
+        Note: The range parameter must be in this dictionary format:
+            {
+                "bucket_size": "<object>",
+                "start": "<object>",
+                "end": "<object>",
+                "field": "<string>"
+            },
+            where "bucket_size", "start", and "end" can be numbers or ISO 8601 timestamps.
+
+        Examples:
+        >>> cb.select(ProcessFacet).add_range({"bucket_size": 5, "start": 0, "end": 10, "field": "netconn_count"})
+        >>> cb.select(ProcessFacet).add_range({"bucket_size": "+1DAY", "start": "2020-11-01T00:00:00Z",
+                                               "end": "2020-11-12T00:00:00Z", "field": "backend_timestamp"})
+        """
+        if isinstance(range, dict):
+            self._check_range(range)
+            self._ranges.append(range)
+        else:
+            for r in range:
+                self._check_range(r)
+                self._ranges.append(r)
+        return self
+
+    def set_time_range(self, start=None, end=None, window=None):
+        """
+        Sets the 'time_range' query body parameter, determining a time window based on 'device_timestamp'.
+
+        Args:
+            start (str in ISO 8601 timestamp): When to start the result search.
+            end (str in ISO 8601 timestamp): When to end the result search.
+            window (str): Time window to execute the result search, ending on the current time.
+                Should be in the form "-2w", where y=year, w=week, d=day, h=hour, m=minute, s=second.
+
+        Note:
+            - `window` will take precendent over `start` and `end` if provided.
+
+        Examples:
+            query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z")
+            second_query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
+            third_query = api.select(Event).set_time_range(window='-3d')
+        """
+        if start:
+            if not isinstance(start, str):
+                raise ApiError(f"Start time must be a string in ISO 8601 format. {start} is a {type(start)}.")
+            self._time_range["start"] = start
+        if end:
+            if not isinstance(end, str):
+                raise ApiError(f"End time must be a string in ISO 8601 format. {end} is a {type(end)}.")
+            self._time_range["end"] = end
+        if window:
+            if not isinstance(window, str):
+                raise ApiError(f"Window must be a string. {window} is a {type(window)}.")
+            self._time_range["window"] = window
+        return self
+
+    def _get_query_parameters(self):
+        args = self._default_args.copy()
+        if not (self._facet_fields or self._ranges):
+            raise ApiError("Process Facet Queries require at least one field or range to be requested. "
+                           "Use add_facet_field(['my_facet_field']) to add fields to the request, "
+                           "or use add_range({}) to add ranges to the request.")
+        terms = {}
+        if self._facet_fields:
+            terms["fields"] = self._facet_fields
+        if self._facet_rows:
+            terms["rows"] = self._facet_rows
+        args["terms"] = terms
+        if self._ranges:
+            args["ranges"] = self._ranges
+        if self._criteria:
+            args["criteria"] = self._criteria
+        if self._exclusions:
+            args["exclusions"] = self._exclusions
+        if self._time_range:
+            args["time_range"] = self._time_range
+        query = self._query_builder._collapse()
+        if query:
+            args['query'] = query
+        return args
+
+    def _submit(self):
+        if self._query_token:
+            raise ApiError(f"Query already submitted: token {self._query_token}")
+
+        args = self._get_query_parameters()
+        self._validate(args)
+
+        submit_url = self._doc_class.submit_url.format(self._cb.credentials.org_key)
+        query_start = self._cb.post_object(submit_url, body=args)
+
+        self._query_token = query_start.json().get("job_id")
+
+        self._timed_out = False
+        self._submit_time = time.time() * 1000
+
+    def _still_querying(self):
+        if not self._query_token:
+            self._submit()
+
+        result_url = self._doc_class.result_url.format(self._cb.credentials.org_key, self._query_token)
+        result = self._cb.get_object(result_url)
+
+        searchers_contacted = result.get("contacted", 0)
+        searchers_completed = result.get("completed", 0)
+        log.debug("contacted = {}, completed = {}".format(searchers_contacted, searchers_completed))
+        if searchers_contacted == 0:
+            return True
+        if searchers_completed < searchers_contacted:
+            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:
+                self._timed_out = True
+                return False
+            return True
+
+        return False
+
+    def _count(self):
+        if self._count_valid:
+            return self._total_results
+
+        while self._still_querying():
+            time.sleep(.5)
+
+        if self._timed_out:
+            raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
+
+        result_url = self._doc_class.result_url.format(self._cb.credentials.org_key, self._query_token)
+        result = self._cb.get_object(result_url)
+
+        self._total_results = result.get('num_found', 0)
+        self._count_valid = True
+
+        return self._total_results
+
+    def _validate(self, args):
+        if not hasattr(self._doc_class, "validation_url"):
+            return
+
+        url = self._doc_class.validation_url.format(self._cb.credentials.org_key)
+
+        if args.get('query', False):
+            args['q'] = args['query']
+
+        # v2 search sort key does not work with v1 validation
+        args.pop('sort', None)
+
+        validated = self._cb.get_object(url, query_parameters=args)
+
+        if not validated.get("valid"):
+            raise ApiError("Invalid query: {}: {}".format(args, validated["invalid_message"]))
+
+    def _search(self, start=0, rows=0):
+        """Execute the query, with one expected result."""
+        if not self._query_token:
+            self._submit()
+
+        while self._still_querying():
+            time.sleep(.5)
+
+        if self._timed_out:
+            raise TimeoutError(message="User-specified timeout exceeded while waiting for results")
+
+        log.debug(f"Pulling results, timed_out={self._timed_out}")
+
+        result_url = self._doc_class.result_url.format(self._cb.credentials.org_key, self._query_token)
+        if self._limit:
+            query_parameters = {"limit": self._limit}
+        else:
+            query_parameters = {}
+
+        result = self._cb.get_object(result_url, query_parameters=query_parameters)
+        yield self._doc_class(self._cb, model_unique_id=self._query_token, initial_data=result)
+
+    def _perform_query(self):
+        for item in self.results:
+            yield item
+
+    @property
+    def results(self):
+        """Save query results to self._results with self._search() method."""
+        if not self._full_init:
+            for item in self._search():
+                self._results = item
+            self._full_init = True
+
+        return self._results
+
+    def _init_async_query(self):
+        """Initialize an async query and return a context for running in the background.
+
+        Returns:
+            object: Context for running in the background (the query token).
+        """
+        self._submit()
+        return self._query_token
+
+    def _run_async_query(self, context):
+        """Executed in the background to run an asynchronous query.
+
+        Args:
+            context (object): The context (query token) returned by _init_async_query.
+
+        Returns:
+            Any: Result of the async query, which is then returned by the future.
+        """
+        if context != self._query_token:
+            raise ApiError("Async query not properly started")
+        return list(self._search())

@@ -2,7 +2,8 @@
 
 import pytest
 import logging
-from cbc_sdk.enterprise_edr import Process, Event
+import time
+from cbc_sdk.enterprise_edr import Process, Event, ProcessFacet
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -13,7 +14,10 @@ from tests.unit.fixtures.enterprise_edr.mock_process import (GET_PROCESS_SUMMARY
                                                              POST_PROCESS_SEARCH_JOB_RESP,
                                                              GET_PROCESS_SEARCH_JOB_RESP,
                                                              GET_PROCESS_SEARCH_JOB_RESULTS_RESP,
-                                                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1)
+                                                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1,
+                                                             GET_FACET_SEARCH_RESULTS_RESP,
+                                                             GET_FACET_SEARCH_RESULTS_RESP_1,
+                                                             GET_FACET_SEARCH_RESULTS_RESP_NOT_COMPLETE)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -232,3 +236,117 @@ def test_query_execute_async(cbcsdk_mock, get_summary_response, get_process_sear
     results = future.result()
     assert len(results) == 1
     assert results[0]['process_pid'][0] == pid
+
+
+def test_async_facet_query_timeout(cbcsdk_mock):
+    """Testing AsyncFacetQuery timeout()"""
+    api = cbcsdk_mock.api
+    facet_query = api.select(ProcessFacet).where("process_name:svchost.exe")
+    assert facet_query._timeout == 0
+    facet_query.timeout(5000)
+    assert facet_query._timeout == 5000
+
+
+def test_async_facet_limit(cbcsdk_mock):
+    """Testing AsyncFacetQuery timeout()"""
+    api = cbcsdk_mock.api
+    facet_query = api.select(ProcessFacet).where("process_name:svchost.exe")
+    assert facet_query._limit == None
+    facet_query.limit(50)
+    assert facet_query._limit == 50
+
+
+def test_async_facet_field(cbcsdk_mock):
+    """Testing AsyncFacetQuery add_facet_field()"""
+    api = cbcsdk_mock.api
+    facet_query = api.select(ProcessFacet).where("process_name:svchost.exe")
+    assert facet_query._facet_fields == []
+    facet_query.add_facet_field("my_field")
+    assert facet_query._facet_fields == ["my_field"]
+    facet_query.add_facet_field(["another", "third_field"])
+    assert facet_query._facet_fields == ["my_field", "another", "third_field"]
+
+
+def test_async_facet_ranges(cbcsdk_mock):
+    """Testing AsyncFacetQuery add_range()"""
+    api = cbcsdk_mock.api
+    facet_query = api.select(ProcessFacet).where("process_name:svchost.exe")
+    assert facet_query._ranges == []
+    facet_query.add_range({"bucket_size": 5, "start": 0, "end": 10, "field": "netconn_count"})
+    assert facet_query._ranges == [{"bucket_size": 5, "start": 0, "end": 10, "field": "netconn_count"}]
+    facet_query.add_range([{"bucket_size": 50, "start": 10, "end": 100, "field": "second_field"}, {"bucket_size": 5, "start": 0, "end": 1000, "field": "another_field"}])
+    assert facet_query._ranges == [{"bucket_size": 5, "start": 0, "end": 10, "field": "netconn_count"}, {"bucket_size": 50, "start": 10, "end": 100, "field": "second_field"}, {"bucket_size": 5, "start": 0, "end": 1000, "field": "another_field"}]
+
+
+def test_async_facet_query_still_querying(cbcsdk_mock):
+    """Testing AsyncFacetQuery._still_querying()."""
+    api = cbcsdk_mock.api
+    facet_query = api.select(ProcessFacet).where("process_name:svchost.exe").add_facet_field("device_name")
+    # mock the search request
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/facet_jobs", {"job_id": "the-job-id"})
+    # mock the result call, with 0 contacted and 0 completed
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/facet_jobs/the-job-id/results", GET_FACET_SEARCH_RESULTS_RESP_1)
+    # with 0 searchers contacted, the query is still running
+    assert facet_query._still_querying() is True
+    # if a query hasn't timed out, and num_conacted != num_completed, the query is still running
+    facet_query.timeout(60000)
+    # mock another result call with num_conacted != num_completed
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/facet_jobs/the-job-id/results", GET_FACET_SEARCH_RESULTS_RESP_NOT_COMPLETE)
+    assert facet_query._still_querying() is True
+    # force a timeout, and the query should be over
+    facet_query.timeout(1)
+    time.sleep(0.5)
+    assert facet_query._timeout == 1
+    assert (time.time() * 1000) - facet_query._submit_time > facet_query._timeout
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/facet_jobs/the-job-id/results", GET_FACET_SEARCH_RESULTS_RESP_NOT_COMPLETE)
+    assert facet_query._still_querying() is False
+    assert facet_query._timed_out is True
+
+
+def test_async_facet_get_query_params(cbcsdk_mock):
+    """Testing AsyncFacetQuery._get_query_parameters()."""
+    api = cbcsdk_mock.api
+    # query without facet fields is invalid
+    facet_query = api.select(ProcessFacet).where("process_name:svchost.exe")
+    with pytest.raises(ApiError):
+        facet_query._get_query_parameters()
+    facet_query = api.select(ProcessFacet).add_facet_field("device_name")
+    # query with rows
+    facet_query.set_rows(500)
+    assert facet_query._get_query_parameters()["terms"]["rows"] == 500
+    # query with criteria
+    facet_query.add_criteria("device_name", "my_device_name")
+    assert facet_query._get_query_parameters()["criteria"] == {"device_name": ["my_device_name"]}
+    # query with exclusions
+    facet_query.add_exclusions("device_name", "my_device_name")
+    assert facet_query._get_query_parameters()["exclusions"] == {"device_name": ["my_device_name"]}
+    # query with process_guid in a where() stmt
+    facet_query.where("process_guid:myguid")
+    assert facet_query._get_query_parameters()["query"] == "process_guid:myguid"
+
+
+def test_async_facet_count(cbcsdk_mock):
+    """Testing AsyncFacetQuery._count()."""
+    api = cbcsdk_mock.api
+    facet_query = api.select(ProcessFacet).add_facet_field("device_name")
+    # mock the search request
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/facet_jobs", {"job_id": "the-job-id"})
+    # mock the result call, with 0 contacted and 0 completed
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/facet_jobs/the-job-id/results", GET_FACET_SEARCH_RESULTS_RESP)
+    assert facet_query._count() == 23753
+    assert facet_query._count_valid
+    assert facet_query._count() == facet_query._total_results
+
+
+def test_async_facet_query(cbcsdk_mock):
+    """Testing AsyncFacetQuery execution."""
+    api = cbcsdk_mock.api
+    facet_query = api.select(ProcessFacet).add_facet_field(["device_timestamp", "backend_timestamp"])
+    # mock the search request
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/facet_jobs", {"job_id": "the-job-id"})
+    # mock the result call, with 0 contacted and 0 completed
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/facet_jobs/the-job-id/results", GET_FACET_SEARCH_RESULTS_RESP)
+
+    results = facet_query.results
+    assert isinstance(results, ProcessFacet)
+    assert results.terms_.fields == ["backend_timestamp", "device_timestamp"]
