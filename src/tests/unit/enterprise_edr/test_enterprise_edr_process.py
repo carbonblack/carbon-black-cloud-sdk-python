@@ -572,7 +572,8 @@ def test_process_facet_select(cbcsdk_mock):
     # mock the search request
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/facet_jobs", {"job_id": "the-job-id"})
     # mock the result call
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/facet_jobs/the-job-id/results", GET_FACET_SEARCH_RESULTS_RESP)
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/facet_jobs/the-job-id/results",
+                             GET_FACET_SEARCH_RESULTS_RESP)
     future = facet_query.execute_async()
     res = future.result()[0]
     assert res.terms_.fields == ['backend_timestamp', 'device_timestamp']
@@ -606,7 +607,8 @@ def test_process_facets(cbcsdk_mock):
     # mock the search request
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/facet_jobs", {"job_id": "the-job-id"})
     # mock the result call
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/facet_jobs/the-job-id/results", GET_FACET_SEARCH_RESULTS_RESP)
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/facet_jobs/the-job-id/results",
+                             GET_FACET_SEARCH_RESULTS_RESP)
     api = cbcsdk_mock.api
     process = api.select(Process).where(process_guid="WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00")
     results = [proc for proc in process]

@@ -328,8 +328,9 @@ class EnrichedEventFacet(UnrefreshableModel):
         return FacetQuery(self, cb)
 
     def __init__(self, cb, model_unique_id, initial_data):
+        """Initialize the Terms object with initial data."""
         super(EnrichedEventFacet, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
-                                      force_init=False, full_doc=True)
+                                                 force_init=False, full_doc=True)
         self._terms = EnrichedEventFacet.Terms(cb, initial_data=initial_data["terms"])
         self._ranges = EnrichedEventFacet.Ranges(cb, initial_data=initial_data["ranges"])
 
@@ -478,10 +479,11 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
                 self._total_results = current
                 break
 
+
 class EnrichedEventQuery(Query, AsyncQueryMixin):
     """Represents the query logic for an Enriched Event query.
-    This class specializes `Query` to handle the particulars of
-    enriched events querying.
+
+    This class specializes `Query` to handle the particulars of enriched events querying.
     """
 
     def __init__(self, doc_class, cb):
@@ -574,11 +576,14 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
 
     def sort_by(self, key, direction="ASC"):
         """Sets the sorting behavior on a query's results.
+
         Arguments:
             key (str): The key in the schema to sort by.
             direction (str): The sort order, either "ASC" or "DESC".
+
         Returns:
             Query (EnrichedEventQuery: The query with sorting parameters.
+
         Example:
         >>> cb.select(EnrichedEvent).where(process_name="cmd.exe").sort_by("device_timestamp")
         """
@@ -598,11 +603,14 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
 
     def timeout(self, msecs):
         """Sets the timeout on a event query.
+
         Arguments:
             msecs (int): Timeout duration, in milliseconds.
+
         Returns:
             Query (EnrichedEventQuery): The Query object with new milliseconds
                 parameter.
+
         Example:
         >>> cb.select(EnrichedEvent).where(process_name="foo.exe").timeout(5000)
         """

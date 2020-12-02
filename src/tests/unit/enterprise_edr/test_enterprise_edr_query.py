@@ -251,7 +251,7 @@ def test_async_facet_limit(cbcsdk_mock):
     """Testing AsyncFacetQuery timeout()"""
     api = cbcsdk_mock.api
     facet_query = api.select(ProcessFacet).where("process_name:svchost.exe")
-    assert facet_query._limit == None
+    assert facet_query._limit is None
     facet_query.limit(50)
     assert facet_query._limit == 50
 
@@ -274,8 +274,11 @@ def test_async_facet_ranges(cbcsdk_mock):
     assert facet_query._ranges == []
     facet_query.add_range({"bucket_size": 5, "start": 0, "end": 10, "field": "netconn_count"})
     assert facet_query._ranges == [{"bucket_size": 5, "start": 0, "end": 10, "field": "netconn_count"}]
-    facet_query.add_range([{"bucket_size": 50, "start": 10, "end": 100, "field": "second_field"}, {"bucket_size": 5, "start": 0, "end": 1000, "field": "another_field"}])
-    assert facet_query._ranges == [{"bucket_size": 5, "start": 0, "end": 10, "field": "netconn_count"}, {"bucket_size": 50, "start": 10, "end": 100, "field": "second_field"}, {"bucket_size": 5, "start": 0, "end": 1000, "field": "another_field"}]
+    facet_query.add_range([{"bucket_size": 50, "start": 10, "end": 100, "field": "second_field"},
+                           {"bucket_size": 5, "start": 0, "end": 1000, "field": "another_field"}])
+    assert facet_query._ranges == [{"bucket_size": 5, "start": 0, "end": 10, "field": "netconn_count"},
+                                   {"bucket_size": 50, "start": 10, "end": 100, "field": "second_field"},
+                                   {"bucket_size": 5, "start": 0, "end": 1000, "field": "another_field"}]
 
 
 def test_async_facet_query_still_querying(cbcsdk_mock):
@@ -285,20 +288,23 @@ def test_async_facet_query_still_querying(cbcsdk_mock):
     # mock the search request
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/facet_jobs", {"job_id": "the-job-id"})
     # mock the result call, with 0 contacted and 0 completed
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/facet_jobs/the-job-id/results", GET_FACET_SEARCH_RESULTS_RESP_1)
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/facet_jobs/the-job-id/results",
+                             GET_FACET_SEARCH_RESULTS_RESP_1)
     # with 0 searchers contacted, the query is still running
     assert facet_query._still_querying() is True
     # if a query hasn't timed out, and num_conacted != num_completed, the query is still running
     facet_query.timeout(60000)
     # mock another result call with num_conacted != num_completed
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/facet_jobs/the-job-id/results", GET_FACET_SEARCH_RESULTS_RESP_NOT_COMPLETE)
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/facet_jobs/the-job-id/results",
+                             GET_FACET_SEARCH_RESULTS_RESP_NOT_COMPLETE)
     assert facet_query._still_querying() is True
     # force a timeout, and the query should be over
     facet_query.timeout(1)
     time.sleep(0.5)
     assert facet_query._timeout == 1
     assert (time.time() * 1000) - facet_query._submit_time > facet_query._timeout
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/facet_jobs/the-job-id/results", GET_FACET_SEARCH_RESULTS_RESP_NOT_COMPLETE)
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/facet_jobs/the-job-id/results",
+                             GET_FACET_SEARCH_RESULTS_RESP_NOT_COMPLETE)
     assert facet_query._still_querying() is False
     assert facet_query._timed_out is True
 
@@ -332,7 +338,8 @@ def test_async_facet_count(cbcsdk_mock):
     # mock the search request
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/facet_jobs", {"job_id": "the-job-id"})
     # mock the result call, with 0 contacted and 0 completed
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/facet_jobs/the-job-id/results", GET_FACET_SEARCH_RESULTS_RESP)
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/facet_jobs/the-job-id/results",
+                             GET_FACET_SEARCH_RESULTS_RESP)
     assert facet_query._count() == 23753
     assert facet_query._count_valid
     assert facet_query._count() == facet_query._total_results
@@ -345,7 +352,8 @@ def test_async_facet_query(cbcsdk_mock):
     # mock the search request
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/facet_jobs", {"job_id": "the-job-id"})
     # mock the result call, with 0 contacted and 0 completed
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/facet_jobs/the-job-id/results", GET_FACET_SEARCH_RESULTS_RESP)
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/facet_jobs/the-job-id/results",
+                             GET_FACET_SEARCH_RESULTS_RESP)
 
     results = facet_query.results
     assert isinstance(results, ProcessFacet)

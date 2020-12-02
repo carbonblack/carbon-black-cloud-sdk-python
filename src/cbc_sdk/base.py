@@ -1163,8 +1163,6 @@ class PaginatedQuery(BaseQuery):
         return nq
 
 
-
-
 class QueryBuilder(object):
     """
     Provides a flexible interface for building prepared queries for the CB Cloud backend.
@@ -1517,6 +1515,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
     These API calls return one result, and are not paginated or iterable.
     """
     def __init__(self, cls, cb, query=None):
+        """Initialize the FacetQuery object."""
         super(FacetQuery, self).__init__(query)
         self._doc_class = cls
         self._cb = cb
