@@ -156,7 +156,7 @@ class CbLRSessionBase(object):
         Args:
             file_name (str): Name of the file to be retrieved.
             timeout (int): Timeout for the operation.
-            delay (float): TBD
+            delay (float): Delay in seconds to wait before command complete.
 
         Returns:
             object: Contains the data of the file.
@@ -182,7 +182,7 @@ class CbLRSessionBase(object):
         Args:
             file_name (str): Name of the file to be retrieved.
             timeout (int): Timeout for the operation.
-            delay (float): TBD
+            delay (float): Delay in seconds to wait before command complete.
 
         Returns:
             str: Contents of the specified file.
@@ -1262,7 +1262,7 @@ class GetFileJob(object):
             session (CbLRSessionBase): The Live Response session being used.
 
         Returns:
-            TBD
+            str: The contents of the file being retrieved.
         """
         return session.get_file(self._file_name)
 

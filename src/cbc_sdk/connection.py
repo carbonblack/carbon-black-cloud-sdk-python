@@ -131,7 +131,7 @@ class CbAPISessionAdapter(HTTPAdapter):
             **pool_kwargs: Additional arguments for the connection pool.
 
         Returns:
-            object: TBD
+            None
         """
         if self._cbapi_force_tls_1_2 and REQUESTS_HAS_URLLIB_SSL_CONTEXT:
             # Force the use of TLS v1.2 when talking to this Cb Response server.
@@ -356,7 +356,7 @@ class BaseAPI(object):
         Initialize the base API information.
 
         Args:
-            *args: TBD
+            *args: Unused.
             **kwargs: Additional arguments.
         """
         integration_name = kwargs.pop("integration_name", None)
@@ -605,16 +605,16 @@ class BaseAPI(object):
 @lru_cache_function(max_size=1024, expiration=1 * 60)
 def select_instance(api, cls, unique_id, *args, **kwargs):
     """
-    Select a cached instance of an object.
+    Return a new instance of the specified class, given the unique id to fetch the data.
 
     Args:
-        api: TBD
-        cls: TBD
-        unique_id: TBD
-        *args:
-        **kwargs:
+        api (CBCloudAPI): Instance of the CBCloudAPI object.
+        cls (class): Class of the object being created.
+        unique_id (Any): Unique ID associated with that particular object.
+        *args (list): Additional arguments for creation.
+        **kwargs (dict): Additional arguments for creation.
 
     Returns:
-        TBD
+        object: New object instance.
     """
     return cls(api, unique_id, *args, **kwargs)

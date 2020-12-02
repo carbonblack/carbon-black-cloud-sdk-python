@@ -129,7 +129,7 @@ class FieldDescriptor(object):
 
         Args:
             instance (NewBaseModel): Instance of the object to retrieve the field value from.
-            instance_type: TBD
+            instance_type (class): Owning class type (not used).
 
         Returns:
             Any: Value of the field.
@@ -165,7 +165,7 @@ class ArrayFieldDescriptor(FieldDescriptor):
 
         Args:
             instance (NewBaseModel): Instance of the object to retrieve the field value from.
-            instance_type: TBD
+            instance_type (class): Owning class type (not used).
 
         Returns:
             Any: Value of the field.
@@ -183,7 +183,7 @@ class ObjectFieldDescriptor(FieldDescriptor):
 
         Args:
             instance (NewBaseModel): Instance of the object to retrieve the field value from.
-            instance_type: TBD
+            instance_type (class): Owning class type (not used).
 
         Returns:
             Any: Value of the field.
@@ -209,7 +209,7 @@ class IsoDateTimeFieldDescriptor(FieldDescriptor):
 
         Args:
             instance (NewBaseModel): Instance of the object to retrieve the field value from.
-            instance_type: TBD
+            instance_type (class): Owning class type (not used).
 
         Returns:
             Any: Value of the field.
@@ -248,7 +248,7 @@ class EpochDateTimeFieldDescriptor(FieldDescriptor):
 
         Args:
             instance (NewBaseModel): Instance of the object to retrieve the field value from.
-            instance_type: TBD
+            instance_type (class): Owning class type (not used).
 
         Returns:
             Any: Value of the field.
@@ -299,7 +299,7 @@ class ForeignKeyFieldDescriptor(FieldDescriptor):
 
         Args:
             instance (NewBaseModel): Instance of the object to retrieve the field value from.
-            instance_type: TBD
+            instance_type (class): Owning class type (not used).
 
         Returns:
             Any: Value of the field.
@@ -329,7 +329,7 @@ class BinaryFieldDescriptor(FieldDescriptor):
 
         Args:
             instance (NewBaseModel): Instance of the object to retrieve the field value from.
-            instance_type: TBD
+            instance_type (class): Owning class type (not used).
 
         Returns:
             Any: Value of the field.
