@@ -101,8 +101,7 @@ class LRUCacheDict(object):
     is used.
     """
 
-    def __init__(self, max_size=1024, expiration=15 * 60, thread_clear=False, thread_clear_min_check=60,
-                 concurrent=True):
+    def __init__(self, max_size=1024, expiration=15 * 60, thread_clear=False, concurrent=True):
         """
         Initialize the LRUCacheDict object.
 
@@ -110,7 +109,6 @@ class LRUCacheDict(object):
             max_size (int): Maximum number of elements in the cache.
             expiration (int): Number of seconds an item can be in the cache before it expires.
             thread_clear (bool): True if we want to use a background thread to keep the cache clear.
-            thread_clear_min_check (int): Unused.
             concurrent (bool): True to make access to the cache thread-safe.
         """
         self.max_size = max_size
@@ -162,12 +160,7 @@ class LRUCacheDict(object):
 
     @_lock_decorator
     def size(self):
-        """
-        Returns the number of values in the dictionary.
-
-        Returns:
-            int: The number of values in the dictionary.
-        """
+        """Returns the number of values in the dictionary."""
         return len(self.__values)
 
     @_lock_decorator
@@ -197,7 +190,7 @@ class LRUCacheDict(object):
             key (Any): The key to be looked up.
 
         Returns:
-            bool: True if the ke is in the dictionary, False if not.
+            bool: True if the key is in the dictionary, False if not.
         """
         return key in self
 

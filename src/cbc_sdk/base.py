@@ -684,10 +684,10 @@ class MutableBaseModel(NewBaseModel):
 
     def _refresh_if_needed(self, request_ret):
         """
-        Reload the object from the data returned by the server.
+        Reload the object with the data returned by the server.
 
         Args:
-            request_ret (): Return data from a request made to the server.
+            request_ret (Response): Return data from a request made to the server.
 
         Returns:
             Any: The unique ID of this object.
@@ -756,12 +756,7 @@ class MutableBaseModel(NewBaseModel):
 
     # TODO: How do we delete this object from our LRU cache?
     def delete(self):
-        """
-        Delete this object.
-
-        Returns:
-            TBD
-        """
+        """Delete this object."""
         return self._delete_object()
 
     def _delete_object(self):
@@ -797,12 +792,7 @@ class MutableBaseModel(NewBaseModel):
             raise InvalidObjectError("Missing fields: [%s]" % (", ".join(diff)))
 
     def __repr__(self):
-        """
-        Returns a string representation of this object.
-
-        Returns:
-            str: String representation of this object.
-        """
+        """Returns a string representation of this object."""
         r = super(MutableBaseModel, self).__repr__()
         if self.is_dirty():
             r += " (*)"
@@ -819,7 +809,7 @@ class BaseQuery(object):
         Initializes the BaseQuery object.
 
         Args:
-            query (BaseQuery): The parent query of this one.
+            query (solrq.Q): The parent query of this one.
         """
         self._query = query
 
@@ -912,7 +902,7 @@ class SimpleQuery(BaseQuery):
             cls (class): Class of the object to be returned by the query.
             cb (CBCloudAPI): Reference to the CBCloudAPI object.
             urlobject (str): URL to be used in making the query.
-            returns_fulldoc (bool): TBD
+            returns_fulldoc (bool): Whether the result of the Query yields objects that have been fully initialized.
         """
         super(SimpleQuery, self).__init__()
 

@@ -46,7 +46,7 @@ class Process(UnrefreshableModel):
 
         def __init__(self, cb, model_unique_id):
             """
-            Initialize the Process object.
+            Initialize the Summary object.
 
             Args:
                 cb (CBCloudAPI): A reference to the CBCloudAPI object.

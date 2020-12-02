@@ -39,7 +39,7 @@ class CliArgsException(Exception):
 
 
 class CliHelpException(Exception):
-    """Exception raised if we're invoking online help."""
+    """Exception raised if we're invoking help."""
     pass
 
 
