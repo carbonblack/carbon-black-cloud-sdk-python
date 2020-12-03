@@ -346,7 +346,7 @@ Setting terms
 
 Terms are configured via the ``add_facet_field()`` method:
 
-    >>> query = api.select(EnrichedEventFacet).where(process_pid=1000),add_facet_field("process_name")
+    >>> query = api.select(EnrichedEventFacet).where(process_pid=1000).add_facet_field("process_name")
 
 The argument to add_facet_field method is the name of the field to be summarized.
     
