@@ -1,7 +1,8 @@
 """Testing the Query objects of cbc_sdk.base"""
 
 from cbc_sdk.base import BaseQuery, SimpleQuery, PaginatedQuery
-from cbc_sdk.enterprise_edr import Feed, Process, FeedQuery
+from cbc_sdk.enterprise_edr import Feed, FeedQuery
+from cbc_sdk.platform import Process
 from cbc_sdk.endpoint_standard import Query, Device
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.stubresponse import patch_cbapi

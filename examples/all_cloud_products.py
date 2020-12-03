@@ -19,11 +19,12 @@ from endpoint_standard.live_response_cli import CblrCli, connect_callback
 from cbc_sdk.endpoint_standard import Policy
 
 # Enterprise EDR
-from cbc_sdk.enterprise_edr import Process, Watchlist, Report
+from cbc_sdk.enterprise_edr import Watchlist, Report
 
 # Platform Alerts and Devices
 from cbc_sdk.platform import BaseAlert as PlatformAlert
 from cbc_sdk.platform import Device as PlatformDevice
+from cbc_sdk.platform import Process
 
 # CBC SDK Base
 from cbc_sdk import CBCloudAPI
@@ -73,7 +74,7 @@ def platform():
 
     # Find Alerts associated with innocuous query
     harmless_query = "yahoo"
-    ioc_alerts = platform_api.select(PlatformAlert).where(harmless_query).set_create_time(range="-6d").set_group_results(True)    
+    ioc_alerts = platform_api.select(PlatformAlert).where(harmless_query).set_create_time(range="-6d").set_group_results(True)
 
     unresolved_alerts = set()
     dismissed_alerts = set()

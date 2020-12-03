@@ -1,13 +1,14 @@
-"""Testing Process and Tree objects of cbc_sdk.enterprise_edr"""
+"""Testing Process and Tree objects of cbc_sdk.platform"""
 
 import pytest
 import logging
-from cbc_sdk.enterprise_edr import Process, ProcessFacet, Tree, Event, Query, AsyncProcessQuery
+from cbc_sdk.platform import Process, ProcessFacet, Tree, Event, AsyncProcessQuery
+from cbc_sdk.enterprise_edr import Query
 from cbc_sdk.base import FacetQuery
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ObjectNotFoundError, ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.enterprise_edr.mock_process import (GET_PROCESS_SUMMARY_RESP,
+from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_SUMMARY_RESP,
                                                              GET_PROCESS_SUMMARY_RESP_1,
                                                              GET_PROCESS_SUMMARY_RESP_2,
                                                              GET_TREE_RESP,
