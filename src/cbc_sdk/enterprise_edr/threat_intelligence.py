@@ -44,6 +44,14 @@ class Watchlist(FeedModel):
         return WatchlistQuery(self, cb)
 
     def __init__(self, cb, model_unique_id=None, initial_data=None):
+        """
+        Initialize the Watchlist object.
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            model_unique_id (str): The unique ID of the watch list.
+            initial_data (dict): The initial data for the object.
+        """
         item = {}
 
         if initial_data:
@@ -259,6 +267,14 @@ class Feed(FeedModel):
         return FeedQuery(self, cb)
 
     def __init__(self, cb, model_unique_id=None, initial_data=None):
+        """
+        Initialize the Feed object.
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            model_unique_id (str): The unique ID of the feed.
+            initial_data (dict): The initial data for the object.
+        """
         item = {}
         reports = []
 
@@ -439,7 +455,16 @@ class Report(FeedModel):
 
     def __init__(self, cb, model_unique_id=None, initial_data=None,
                  feed_id=None, from_watchlist=False):
+        """
+        Initialize the ReportSeverity object.
 
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            model_unique_id (Any): Unused.
+            initial_data (dict): The initial data for the object.
+            feed_id (str): The ID of the feed this report is for.
+            from_watchlist (str): The ID of the watchlist this report is for.
+        """
         super(Report, self).__init__(cb, model_unique_id=initial_data.get("id"),
                                      initial_data=initial_data,
                                      force_init=False, full_doc=True)
@@ -732,6 +757,13 @@ class ReportSeverity(FeedModel):
     swagger_meta_file = "enterprise_edr/models/report_severity.yaml"
 
     def __init__(self, cb, initial_data=None):
+        """
+        Initialize the ReportSeverity object.
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            initial_data (dict): The initial data for the object.
+        """
         if not initial_data:
             raise ApiError("ReportSeverity can only be initialized from initial_data")
 
@@ -903,6 +935,13 @@ class FeedQuery(SimpleQuery):
     >>> cb.select(Feed).where(include_public=True)
     """
     def __init__(self, doc_class, cb):
+        """
+        Initialize the FeedQuery object.
+
+        Args:
+            doc_class (class): The class of the model this query returns.
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+        """
         super(FeedQuery, self).__init__(doc_class, cb)
         self._args = {}
 
@@ -932,6 +971,13 @@ class ReportQuery(SimpleQuery):
     >>> cb.select(Report).where(feed_id=id)
     """
     def __init__(self, doc_class, cb):
+        """
+        Initialize the ReportQuery object.
+
+        Args:
+            doc_class (class): The class of the model this query returns.
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+        """
         super(ReportQuery, self).__init__(doc_class, cb)
         self._args = {}
 
@@ -964,6 +1010,13 @@ class WatchlistQuery(SimpleQuery):
     >>> cb.select(Watchlist)
     """
     def __init__(self, doc_class, cb):
+        """
+        Initialize the WatchlistQuery object.
+
+        Args:
+            doc_class (class): The class of the model this query returns.
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+        """
         super(WatchlistQuery, self).__init__(doc_class, cb)
 
     @property

@@ -18,6 +18,7 @@ from cbc_sdk.platform import Device
 
 
 def main():
+    """Main function of the List Devices script."""
     parser = build_cli_parser("List devices")
     parser.add_argument("-q", "--query", help="Query string for looking for devices")
     parser.add_argument("-A", "--ad_group_id", action="append", type=int, help="Active Directory Group ID")

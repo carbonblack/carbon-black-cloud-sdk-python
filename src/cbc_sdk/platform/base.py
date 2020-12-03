@@ -23,14 +23,25 @@ import time
 
 log = logging.getLogger(__name__)
 
-
 """Platform Models"""
 
 
 class PlatformModel(NewBaseModel):
+    """Represents the base of all Platform API model classes."""
+
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
+        """
+        Initialize the PlatformModel object.
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            model_unique_id (Any): The unique ID for this particular instance of the model object.
+            initial_data (dict): The data to use when initializing the model object.
+            force_init (bool): True to force object initialization.
+            full_doc (bool): True to mark the object as fully initialized.
+        """
         super(PlatformModel, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
-                                           force_init=force_init, full_doc=full_doc)
+                                            force_init=force_init, full_doc=full_doc)
 
 
 class Process(UnrefreshableModel):
@@ -350,11 +361,16 @@ class Event(UnrefreshableModel):
 
 
 class PlatformQueryBase:
-    """
-    Represents the base of all LiveQuery query classes.
-    """
+    """Represents the base of all LiveQuery query classes."""
 
     def __init__(self, doc_class, cb):
+        """
+        Initialize the PlatformQueryBase object.
+
+        Args:
+            doc_class (class): The class of the model this query returns.
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+        """
         self._doc_class = doc_class
         self._cb = cb
         self._count_valid = False

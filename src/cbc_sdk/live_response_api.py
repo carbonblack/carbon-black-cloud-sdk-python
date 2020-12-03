@@ -156,7 +156,7 @@ class CbLRSessionBase(object):
         Args:
             file_name (str): Name of the file to be retrieved.
             timeout (int): Timeout for the operation.
-            delay (float): TBD
+            delay (float): Delay in seconds to wait before command complete.
 
         Returns:
             object: Contains the data of the file.
@@ -182,7 +182,7 @@ class CbLRSessionBase(object):
         Args:
             file_name (str): Name of the file to be retrieved.
             timeout (int): Timeout for the operation.
-            delay (float): TBD
+            delay (float): Delay in seconds to wait before command complete.
 
         Returns:
             str: Contents of the specified file.
@@ -1018,11 +1018,10 @@ class LiveResponseJobScheduler(threading.Thread):
 
         from cbc_sdk.endpoint_standard import Device
         devices = [s for s in self._cb.select(Device) if s.deviceId in self._unscheduled_jobs
-                   and s.deviceId not in self._job_workers
-                   and s.status == "Online"]
+                   and s.deviceId not in self._job_workers and s.status == "Online"]  # noqa: W503
         devices_to_schedule = sorted(devices, key=lambda x: (
             int(x.num_storefiles_bytes) + int(x.num_eventlog_bytes), x.next_checkin_time
-            ))[:schedule_max]
+        ))[:schedule_max]
 
         log.debug("Spawning new workers to handle these devices: {0}".format(devices_to_schedule))
         for device in devices_to_schedule:
@@ -1034,8 +1033,8 @@ class LiveResponseJobScheduler(threading.Thread):
 class CbLRManagerBase(object):
     """Live Response manager object."""
 
-    cblr_base = ""                        # override in subclass for each product
-    cblr_session_cls = NotImplemented     # override in subclass for each product
+    cblr_base = ""  # override in subclass for each product
+    cblr_session_cls = NotImplemented  # override in subclass for each product
 
     def __init__(self, cb, timeout=30, keepalive_sessions=False):
         """
@@ -1099,7 +1098,7 @@ class CbLRManagerBase(object):
                                   .format(session.session_id, session.device_id))
                         delete_list.append(session.device_id)
                     except Exception:
-                        log.debug(("Keepalive on session {0} (device {1}) failed with unknown error, " +
+                        log.debug(("Keepalive on session {0} (device {1}) failed with unknown error, "
                                    "removing from cache").format(session.session_id, session.device_id))
                         delete_list.append(session.device_id)
 
@@ -1116,6 +1115,7 @@ class CbLRManagerBase(object):
         log.debug("Ending Live Response scheduler cleanup task")
 
     def stop_keepalive_thread(self):
+        """Stops the keepalive thread."""
         if self._keepalive_sessions:
             self._cleanup_thread_running = False
             self._cleanup_thread_event.set()
@@ -1168,7 +1168,18 @@ class CbLRManagerBase(object):
 
 
 class LiveResponseSession(CbLRSessionBase):
+    """Public face of the Live Response session object."""
+
     def __init__(self, cblr_manager, session_id, device_id, session_data=None):
+        """
+        Initializes the LiveResponseSession.
+
+        Args:
+            cblr_manager (LiveResponseSessionManager): Reference to the session manager.
+            session_id (str): The ID of this session.
+            device_id (int): The ID of the device (remote machine) we're connected to.
+            session_data (dict): Additional session data.
+        """
         super(LiveResponseSession, self).__init__(cblr_manager, session_id, device_id, session_data=session_data)
         from cbc_sdk.endpoint_standard import Device
         device_info = self._cb.select(Device, self.device_id)
@@ -1176,10 +1187,21 @@ class LiveResponseSession(CbLRSessionBase):
 
 
 class LiveResponseSessionManager(CbLRManagerBase):
+    """Session manager for Live Response sessions."""
     cblr_base = "/integrationServices/v3/cblr"
     cblr_session_cls = LiveResponseSession
 
     def submit_job(self, job, device):
+        """
+        Submit a job for execution by the job scheduler.
+
+        Args:
+            job (func): The job function to be executed.
+            device (object): The device ID or Device object the job will be executed on.
+
+        Returns:
+            Future: A Future that will allow waiting until the job is complete.
+        """
         if self._job_scheduler is None:
             # spawn the scheduler thread
             self._job_scheduler = LiveResponseJobScheduler(self._cb)
@@ -1208,7 +1230,7 @@ class LiveResponseSessionManager(CbLRManagerBase):
 
     def _close_session(self, session_id):
         try:
-            self._cb.put_object("{cblr_base}/session".format(session_id, cblr_base=self.cblr_base),
+            self._cb.put_object("{cblr_base}/session".format(cblr_base=self.cblr_base),
                                 {"session_id": session_id, "status": "CLOSE"})
         except Exception:
             pass
@@ -1240,7 +1262,7 @@ class GetFileJob(object):
             session (CbLRSessionBase): The Live Response session being used.
 
         Returns:
-            TBD
+            str: The contents of the file being retrieved.
         """
         return session.get_file(self._file_name)
 
@@ -1287,7 +1309,9 @@ def poll_status(cb, url, desired_status="complete", timeout=None, delay=None):
 
 if __name__ == "__main__":
     from cbc_sdk import CBCloudAPI
+    from cbc_sdk.platform import Device
     import logging
+
     root = logging.getLogger()
     root.addHandler(logging.StreamHandler())
 

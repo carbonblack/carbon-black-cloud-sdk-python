@@ -27,7 +27,6 @@ from cbc_sdk.errors import ServerError
 
 log = logging.getLogger(__name__)
 
-
 """Endpoint Standard Models"""
 
 
@@ -62,7 +61,7 @@ class EndpointStandardMutableModel(MutableBaseModel):
             new_object_info = deepcopy(self._info)
             try:
                 if not self._new_object_needs_primary_key:
-                    del(new_object_info[self.__class__.primary_key])
+                    del (new_object_info[self.__class__.primary_key])
             except Exception:
                 pass
             log.debug("Creating a new {0:s} object".format(self.__class__.__name__))
@@ -248,8 +247,18 @@ class EnrichedEvent(UnrefreshableModel):
         return EnrichedEventQuery(self, cb)
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
+        """
+        Initialize the EnrichedEvent object.
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            model_unique_id (Any): The unique ID for this particular instance of the model object.
+            initial_data (dict): The data to use when initializing the model object.
+            force_init (bool): True to force object initialization.
+            full_doc (bool): True to mark the object as fully initialized.
+        """
         super(EnrichedEvent, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
-                                      force_init=force_init, full_doc=full_doc)
+                                            force_init=force_init, full_doc=full_doc)
 
 
 class EnrichedEventFacet(UnrefreshableModel):
@@ -319,8 +328,9 @@ class EnrichedEventFacet(UnrefreshableModel):
         return FacetQuery(self, cb)
 
     def __init__(self, cb, model_unique_id, initial_data):
+        """Initialize the Terms object with initial data."""
         super(EnrichedEventFacet, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
-                                      force_init=False, full_doc=True)
+                                                 force_init=False, full_doc=True)
         self._terms = EnrichedEventFacet.Terms(cb, initial_data=initial_data["terms"])
         self._ranges = EnrichedEventFacet.Ranges(cb, initial_data=initial_data["ranges"])
 
@@ -362,6 +372,7 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
           - Device Queries with multiple search parameters only support AND operations, not OR. Use of
           Query.or_(myParameter='myValue') will add 'AND myParameter:myValue' to the search query.
     """
+
     def __init__(self, doc_class, cb, query=None):
         """Initialize a Query object."""
         super(Query, self).__init__(doc_class, cb, query)
@@ -471,10 +482,18 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
 
 class EnrichedEventQuery(Query, AsyncQueryMixin):
     """Represents the query logic for an Enriched Event query.
-    This class specializes `Query` to handle the particulars of
-    enriched events querying.
+
+    This class specializes `Query` to handle the particulars of enriched events querying.
     """
+
     def __init__(self, doc_class, cb):
+        """
+        Initialize the EnrichedEventQuery object.
+
+        Args:
+            doc_class (class): The class of the model this query returns.
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+        """
         super(EnrichedEventQuery, self).__init__(doc_class, cb)
         self._sort_by = None
         self._group_by = None
@@ -488,9 +507,10 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
         self._time_range = {}
 
     def or_(self, **kwargs):
-        """ or_ criteria are explicitly provided to EnrichedEvent queries although they are endpoint_standard.
-            This method overrides the base class in order to provide or_() functionality rather than
-            raising an exception
+        """
+        or_ criteria are explicitly provided to EnrichedEvent queries although they are endpoint_standard.
+
+        This method overrides the base class in order to provide or_() functionality rather than raising an exception.
         """
         self._query_builder.or_(None, **kwargs)
         return self
@@ -506,8 +526,8 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
 
     def set_rows(self, rows):
         """
-        Sets the 'rows' query body parameter to the 'start search' API call,
-        determining how many rows of results to request.
+        Sets the 'rows' query body parameter to the 'start search' API call, determining how many rows to request.
+
         Args:
             rows (int): How many rows to request.
         """
@@ -520,20 +540,23 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
         self._default_args["rows"] = self._rows
         return self
 
-
     def set_time_range(self, start=None, end=None, window=None):
         """
         Sets the 'time_range' query body parameter, determining a time window based on 'device_timestamp'.
+
         Args:
             start (str in ISO 8601 timestamp): When to start the result search.
             end (str in ISO 8601 timestamp): When to end the result search.
             window (str): Time window to execute the result search, ending on the current time.
                 Should be in the form "-2w", where y=year, w=week, d=day, h=hour, m=minute, s=second.
+
         Note:
             - `window` will take precendent over `start` and `end` if provided.
+
         Examples:
             query = api.select(EnrichedEvent).set_time_range(start="2020-10-20T20:34:07Z")
-            second_query = api.select(EnrichedEvent).set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
+            second_query = api.select(EnrichedEvent).set_time_range(start="2020-10-20T20:34:07Z",
+                end="2020-10-30T20:34:07Z")
             third_query = api.select(EnrichedEvent).set_time_range(window='-3d')
         """
         if start:
@@ -553,11 +576,14 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
 
     def sort_by(self, key, direction="ASC"):
         """Sets the sorting behavior on a query's results.
+
         Arguments:
             key (str): The key in the schema to sort by.
             direction (str): The sort order, either "ASC" or "DESC".
+
         Returns:
             Query (EnrichedEventQuery: The query with sorting parameters.
+
         Example:
         >>> cb.select(EnrichedEvent).where(process_name="cmd.exe").sort_by("device_timestamp")
         """
@@ -577,11 +603,14 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
 
     def timeout(self, msecs):
         """Sets the timeout on a event query.
+
         Arguments:
             msecs (int): Timeout duration, in milliseconds.
+
         Returns:
             Query (EnrichedEventQuery): The Query object with new milliseconds
                 parameter.
+
         Example:
         >>> cb.select(EnrichedEvent).where(process_name="foo.exe").timeout(5000)
         """

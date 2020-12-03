@@ -1,8 +1,11 @@
+
+"""Mock data for runs of audit and remediation code."""
+
 GET_RUN_RESP = {
     "org_key": "ABCDEFGH",
     "name": "Find Programs Installed in Non-Standard Windows Locations",
     "id": "run_id",
-    "sql": "SELECT path, DATETIME(atime,\"unixepoch\",\"localtime\") AS \"Last Accessed\", DATETIME(mtime,\"unixepoch\",\"localtime\") AS \"Last Modified\", DATETIME(ctime,\"unixepoch\",\"localtime\") AS \"Created\" FROM file WHERE path LIKE \"\\users\\%\\AppData\\%.exe\" OR path LIKE \"\\users\\%\\AppData\\Roaming\\%.exe\" OR path LIKE \"\\ProgramData\\%.exe\";",
+    "sql": "SELECT path, DATETIME(atime,\"unixepoch\",\"localtime\") AS \"Last Accessed\", DATETIME(mtime,\"unixepoch\",\"localtime\") AS \"Last Modified\", DATETIME(ctime,\"unixepoch\",\"localtime\") AS \"Created\" FROM file WHERE path LIKE \"\\users\\%\\AppData\\%.exe\" OR path LIKE \"\\users\\%\\AppData\\Roaming\\%.exe\" OR path LIKE \"\\ProgramData\\%.exe\";",  # noqa: E501
     "created_by": "QZGH961F1B",
     "destinations": [
         "LQ"
@@ -68,7 +71,7 @@ GET_RUN_RESULTS_RESP = {
 }
 
 GET_RUN_RESULTS_RESP_1 = {
-	"id": "run_id",
+    "id": "run_id",
     "device": {
         "id": 1234567,
         "name": "WIN-A1B2C3D4",
@@ -199,7 +202,7 @@ GET_RUN_RESULTS_RESP_3 = {
                 "directory": "/Users/win",
                 "locale": "en",
                 "name": "Chrome Media Router",
-                "path": "/Users/bit9qa/Library/Application Support/Google/Chrome/Default/Extensions/pkedcjkdefgpdelpbcmbmeomcjbeemfm/7519.422.0.3_0/",
+                "path": "/Users/bit9qa/Library/Application Support/Google/Chrome/Default/Extensions/pkedcjkdefgpdelpbcmbmeomcjbeemfm/7519.422.0.3_0/",  # noqa: E501
                 "persistent": 0,
                 "shell": "/bin/bash",
                 "type": "",
@@ -225,7 +228,7 @@ GET_RUN_RESULTS_RESP_3 = {
                 "directory": "/Users/win",
                 "locale": "en",
                 "name": "Chrome Media Router",
-                "path": "/Users/bit9qa/Library/Application Support/Google/Chrome/Default/Extensions/pkedcjkdefgpdelpbcmbmeomcjbeemfm/7419.311.0.1_0/",
+                "path": "/Users/bit9qa/Library/Application Support/Google/Chrome/Default/Extensions/pkedcjkdefgpdelpbcmbmeomcjbeemfm/7419.311.0.1_0/",  # noqa: E501
                 "persistent": 0,
                 "shell": "/bin/bash",
                 "type": "",
@@ -251,7 +254,7 @@ GET_RUN_RESULTS_RESP_3 = {
                 "directory": "/Users/win",
                 "locale": "en",
                 "name": "Chrome Media Router",
-                "path": "/Users/bit9qa/Library/Application Support/Google/Chrome/Default/Extensions/pkedcjkdefgpdelpbcmbmeomcjbeemfm/7619.603.0.2_0/",
+                "path": "/Users/bit9qa/Library/Application Support/Google/Chrome/Default/Extensions/pkedcjkdefgpdelpbcmbmeomcjbeemfm/7619.603.0.2_0/",  # noqa: E501
                 "persistent": 0,
                 "shell": "/bin/bash",
                 "type": "",
@@ -370,10 +373,10 @@ GET_DEVICE_SUMMARY_RESP_1 = {
             },
             "error_description": None,
             "metrics": {
-          "average_system_memory_in_use": 70.0,
-          "osquery_creation_time_unix_ms": 1.600804383268E12,
-          "total_cpu_peak": 0.0
-      },
+                "average_system_memory_in_use": 70.0,
+                "osquery_creation_time_unix_ms": 1.600804383268E12,
+                "total_cpu_peak": 0.0
+            },
             "start_time": "2020-09-22T19:53:03.792Z",
             "finish_time": None,
             "update_time": "2020-09-22T19:53:03.799Z"
@@ -390,10 +393,10 @@ GET_DEVICE_SUMMARY_RESP_1 = {
             },
             "error_description": None,
             "metrics": {
-          "average_system_memory_in_use": 70.0,
-          "osquery_creation_time_unix_ms": 1.600804383268E12,
-          "total_cpu_peak": 0.0
-      },
+                "average_system_memory_in_use": 70.0,
+                "osquery_creation_time_unix_ms": 1.600804383268E12,
+                "total_cpu_peak": 0.0
+            },
             "start_time": "2020-09-22T19:52:58.204Z",
             "finish_time": None,
             "update_time": "2020-09-22T19:52:58.212Z"
@@ -410,10 +413,10 @@ GET_DEVICE_SUMMARY_RESP_1 = {
             },
             "error_description": None,
             "metrics": {
-          "average_system_memory_in_use": 70.0,
-          "osquery_creation_time_unix_ms": 1.600804383268E12,
-          "total_cpu_peak": 0.0
-      },
+                "average_system_memory_in_use": 70.0,
+                "osquery_creation_time_unix_ms": 1.600804383268E12,
+                "total_cpu_peak": 0.0
+            },
             "start_time": "2020-09-22T19:52:58.114Z",
             "finish_time": None,
             "update_time": "2020-09-22T19:52:58.124Z"
@@ -493,18 +496,18 @@ GET_DEVICE_SUMMARY_RESP_1 = {
 }
 
 GET_RESULTS_FACETS_RESP = {
-  "terms": [
-    {
-      "field": "device.policy_id",
-      "values": [
+    "terms": [
         {
-          "id": "idOfFieldBeingEnumerated",
-          "name": "policyId1",
-          "total": 1
+            "field": "device.policy_id",
+            "values": [
+                {
+                    "id": "idOfFieldBeingEnumerated",
+                    "name": "policyId1",
+                    "total": 1
+                }
+            ]
         }
-      ]
-    }
-  ]
+    ]
 }
 
 POST_RUN_HISTORY_RESP = {
@@ -515,7 +518,7 @@ POST_RUN_HISTORY_RESP = {
             "org_key": "test",
             "name": "Find Programs Installed in Non-Standard Windows Locations",
             "id": "9cpymo06omijuveboi3zomfigc8sosrd",
-            "sql": "SELECT path, DATETIME(atime,\"unixepoch\",\"localtime\") AS \"Last Accessed\", DATETIME(mtime,\"unixepoch\",\"localtime\") AS \"Last Modified\", DATETIME(ctime,\"unixepoch\",\"localtime\") AS \"Created\" FROM file WHERE path LIKE \"\\users\\%\\AppData\\%.exe\" OR path LIKE \"\\users\\%\\AppData\\Roaming\\%.exe\" OR path LIKE \"\\ProgramData\\%.exe\";",
+            "sql": "SELECT path, DATETIME(atime,\"unixepoch\",\"localtime\") AS \"Last Accessed\", DATETIME(mtime,\"unixepoch\",\"localtime\") AS \"Last Modified\", DATETIME(ctime,\"unixepoch\",\"localtime\") AS \"Created\" FROM file WHERE path LIKE \"\\users\\%\\AppData\\%.exe\" OR path LIKE \"\\users\\%\\AppData\\Roaming\\%.exe\" OR path LIKE \"\\ProgramData\\%.exe\";",  # noqa: E501
             "created_by": "A1B2C3",
             "destinations": [
                 "LQ"
@@ -562,7 +565,7 @@ POST_RUN_HISTORY_RESP = {
             "org_key": "test",
             "name": "Dell SafeBIOS Verification Status",
             "id": "2gm989gsbqx0hmplmbjoqntonbvmtdtx",
-            "sql": "WITH b1 AS\n  (SELECT COUNT(*) AS cnt,\n          1 AS one\n   FROM registry\n   WHERE PATH LIKE 'HKEY_LOCAL_MACHINE\\SOFTWARE\\DELL\\BIOSVerification\\%'\n     AND name = 'Result.json'\n     AND DATA LIKE '%\"biosVerification\":\"True\"%' ),\n     b2 AS\n  (SELECT COUNT(*) AS cnt,\n          1 AS one\n   FROM registry\n   WHERE PATH LIKE 'HKEY_LOCAL_MACHINE\\SOFTWARE\\DELL\\BIOSVerification\\%'\n     AND name = 'Result.json'\n     AND DATA LIKE '%\"biosVerification\":\"False\"%' ),\n     b3 AS\n  (SELECT COUNT (*) AS cnt,\n                1 AS one\n   FROM FILE\n   WHERE PATH LIKE '\\Program Files\\Dell\\TrustedDevice\\Dell.TrustedDevice.Service.Console.exe' ),\n     b4 AS\n  (SELECT COUNT (*) AS cnt,\n                1 AS one\n   FROM FILE\n   WHERE PATH like '\\Program Files\\Dell\\BIOSVerification\\Dell.SecurityCenter.Agent.Console.exe' ),\n     b5 AS\n  (SELECT count(*),\n          VERSION,\n          1 AS one\n   FROM programs\n   WHERE name LIKE '%BIOS Verification%'\n     OR name LIKE '%trusted device%' ),\n     b6 AS\n  (SELECT hardware_vendor,\n          hardware_model,\n          1 AS one\n   FROM system_info),\n     b7 AS\n  (SELECT count(*),\n          DATETIME(mtime, 'unixepoch') AS mtime,\n          1 AS one\n   FROM FILE\n   WHERE PATH = 'C:\\ProgramData\\Dell\\BIOSVerification\\result.json' )\nSELECT CASE\n           WHEN b1.cnt = 1 THEN \"PASSED\"\n           WHEN b2.cnt = 1 THEN \"FAILED\"\n           WHEN (b1.cnt = 0\n                 AND b2.cnt = 0) THEN \"NOT AVAILABLE\"\n       END \"BIOS_verification_status\",\n       CASE\n           WHEN b3.cnt = 1 THEN \"True\"\n           WHEN b4.cnt = 1 THEN \"True\"\n           WHEN (b3.cnt = 0\n                 AND b4.cnt = 0) THEN \"False\"\n       END \"Dell_TD_installed\",\n       CASE\n           WHEN b5.version IS NOT None THEN b5.version\n           WHEN b5.version IS None THEN \"N/A\"\n       END \"Dell_TD_version\",\n       CASE\n           WHEN b6.hardware_vendor like 'Dell%' THEN b6.hardware_model\n           WHEN b6.hardware_vendor not like 'Dell%' THEN \"UNSUPPORTED\"\n       END \"HARDWARE_MODEL\",\n       CASE\n           WHEN b7.mtime IS NOT None THEN b7.mtime\n           WHEN b7.mtime IS None THEN \"NOT AVAILABLE\"\n       END \"LAST_RUNTIME\"\nFROM b1\nJOIN b2 USING(one)\nJOIN b3 USING(one)\nJOIN b4 USING(one)\nJOIN b5 USING(one)\nJOIN b6 USING(one)\nJOIN b7 USING(one)\nWHERE b6.hardware_vendor like 'Dell%';",
+            "sql": "WITH b1 AS\n  (SELECT COUNT(*) AS cnt,\n          1 AS one\n   FROM registry\n   WHERE PATH LIKE 'HKEY_LOCAL_MACHINE\\SOFTWARE\\DELL\\BIOSVerification\\%'\n     AND name = 'Result.json'\n     AND DATA LIKE '%\"biosVerification\":\"True\"%' ),\n     b2 AS\n  (SELECT COUNT(*) AS cnt,\n          1 AS one\n   FROM registry\n   WHERE PATH LIKE 'HKEY_LOCAL_MACHINE\\SOFTWARE\\DELL\\BIOSVerification\\%'\n     AND name = 'Result.json'\n     AND DATA LIKE '%\"biosVerification\":\"False\"%' ),\n     b3 AS\n  (SELECT COUNT (*) AS cnt,\n                1 AS one\n   FROM FILE\n   WHERE PATH LIKE '\\Program Files\\Dell\\TrustedDevice\\Dell.TrustedDevice.Service.Console.exe' ),\n     b4 AS\n  (SELECT COUNT (*) AS cnt,\n                1 AS one\n   FROM FILE\n   WHERE PATH like '\\Program Files\\Dell\\BIOSVerification\\Dell.SecurityCenter.Agent.Console.exe' ),\n     b5 AS\n  (SELECT count(*),\n          VERSION,\n          1 AS one\n   FROM programs\n   WHERE name LIKE '%BIOS Verification%'\n     OR name LIKE '%trusted device%' ),\n     b6 AS\n  (SELECT hardware_vendor,\n          hardware_model,\n          1 AS one\n   FROM system_info),\n     b7 AS\n  (SELECT count(*),\n          DATETIME(mtime, 'unixepoch') AS mtime,\n          1 AS one\n   FROM FILE\n   WHERE PATH = 'C:\\ProgramData\\Dell\\BIOSVerification\\result.json' )\nSELECT CASE\n           WHEN b1.cnt = 1 THEN \"PASSED\"\n           WHEN b2.cnt = 1 THEN \"FAILED\"\n           WHEN (b1.cnt = 0\n                 AND b2.cnt = 0) THEN \"NOT AVAILABLE\"\n       END \"BIOS_verification_status\",\n       CASE\n           WHEN b3.cnt = 1 THEN \"True\"\n           WHEN b4.cnt = 1 THEN \"True\"\n           WHEN (b3.cnt = 0\n                 AND b4.cnt = 0) THEN \"False\"\n       END \"Dell_TD_installed\",\n       CASE\n           WHEN b5.version IS NOT None THEN b5.version\n           WHEN b5.version IS None THEN \"N/A\"\n       END \"Dell_TD_version\",\n       CASE\n           WHEN b6.hardware_vendor like 'Dell%' THEN b6.hardware_model\n           WHEN b6.hardware_vendor not like 'Dell%' THEN \"UNSUPPORTED\"\n       END \"HARDWARE_MODEL\",\n       CASE\n           WHEN b7.mtime IS NOT None THEN b7.mtime\n           WHEN b7.mtime IS None THEN \"NOT AVAILABLE\"\n       END \"LAST_RUNTIME\"\nFROM b1\nJOIN b2 USING(one)\nJOIN b3 USING(one)\nJOIN b4 USING(one)\nJOIN b5 USING(one)\nJOIN b6 USING(one)\nJOIN b7 USING(one)\nWHERE b6.hardware_vendor like 'Dell%';",  # noqa: E501
             "created_by": "test@email.com",
             "destinations": [
                 "LQ"
@@ -609,7 +612,7 @@ POST_RUN_HISTORY_RESP = {
             "org_key": "test",
             "name": "Detect sdelete.exe Execution",
             "id": "t7lknmp40tio2w45oxsxoayqb6j6saon",
-            "sql": "SELECT filename,\n       datetime(atime, \"unixepoch\", \"localtime\") AS atime,\n       datetime(ctime, \"unixepoch\", \"localtime\") AS ctime,\n       datetime(mtime, \"unixepoch\", \"localtime\") AS mtime\nFROM FILE\nWHERE PATH LIKE \"\\Windows\\prefetch\\sdelete.exe%\";",
+            "sql": "SELECT filename,\n       datetime(atime, \"unixepoch\", \"localtime\") AS atime,\n       datetime(ctime, \"unixepoch\", \"localtime\") AS ctime,\n       datetime(mtime, \"unixepoch\", \"localtime\") AS mtime\nFROM FILE\nWHERE PATH LIKE \"\\Windows\\prefetch\\sdelete.exe%\";",  # noqa: E501
             "created_by": "example@email.com",
             "destinations": [
                 "LQ"
@@ -656,7 +659,7 @@ POST_RUN_HISTORY_RESP = {
             "org_key": "test",
             "name": "Detect sdelete.exe Execution",
             "id": "ll7kypanfakakc3rvw0phdfdlldol0sp",
-            "sql": "SELECT filename,\n       datetime(atime, \"unixepoch\", \"localtime\") AS atime,\n       datetime(ctime, \"unixepoch\", \"localtime\") AS ctime,\n       datetime(mtime, \"unixepoch\", \"localtime\") AS mtime\nFROM FILE\nWHERE PATH LIKE \"\\Windows\\prefetch\\sdelete.exe%\";",
+            "sql": "SELECT filename,\n       datetime(atime, \"unixepoch\", \"localtime\") AS atime,\n       datetime(ctime, \"unixepoch\", \"localtime\") AS ctime,\n       datetime(mtime, \"unixepoch\", \"localtime\") AS mtime\nFROM FILE\nWHERE PATH LIKE \"\\Windows\\prefetch\\sdelete.exe%\";",  # noqa: E501
             "created_by": "example@email.com",
             "destinations": [
                 "LQ"
@@ -797,7 +800,7 @@ POST_RUN_HISTORY_RESP = {
             "org_key": "test",
             "name": None,
             "id": "coulq8iz842cwif9rjhnb1fh1uxehini",
-            "sql": "SELECT f.filename, f.path, u.username, h.sha256,\n   datetime(f.atime,\"unixepoch\",\"localtime\") AS atime,\n   datetime(f.ctime,\"unixepoch\",\"localtime\") AS ctime,\n   datetime(f.mtime,\"unixepoch\",\"localtime\") AS mtime\nFROM file as f\nJOIN users AS u USING(uid)\nJOIN hash AS h USING(path)\nWHERE ((filename like \"%passw%\") OR (filename like \"%pwd%\"));",
+            "sql": "SELECT f.filename, f.path, u.username, h.sha256,\n   datetime(f.atime,\"unixepoch\",\"localtime\") AS atime,\n   datetime(f.ctime,\"unixepoch\",\"localtime\") AS ctime,\n   datetime(f.mtime,\"unixepoch\",\"localtime\") AS mtime\nFROM file as f\nJOIN users AS u USING(uid)\nJOIN hash AS h USING(path)\nWHERE ((filename like \"%passw%\") OR (filename like \"%pwd%\"));",  # noqa: E501
             "created_by": "example@email.com",
             "destinations": [
                 "LQ"

@@ -102,8 +102,7 @@ def test_paginated_query(monkeypatch):
 
     patch_cbapi(monkeypatch, api, GET=_get_devices)
 
-    x = deviceQuery.__getitem__(1)
-    # assert x is not None
+    deviceQuery.__getitem__(1)
     assert _devices_was_called
 
     # Devices needs to be updated to v6 routes, this x test does nothing

@@ -30,19 +30,28 @@ import functools
 
 log = logging.getLogger(__name__)
 
-
 """Base Models"""
 
 
 class CreatableModelMixin(object):
+    """Mixin for all objects which are creatable."""
     pass
 
 
 class CbMetaModel(type):
+    """Meta-model for NewBaseModel and its subclasses."""
     model_base_directory = os.path.dirname(__file__)
     model_classes = []
 
     def __new__(mcs, name, bases, clsdict):
+        """
+        Creates a new instance of a class, setting up the field descriptors based on the metafile.
+
+        Args:
+            name (str): The name of the class.
+            bases (list): Base classes of the class to be created.
+            clsdict (dict): Elements defined in the new class.
+        """
         swagger_meta_file = clsdict.pop("swagger_meta_file", None)
         model_data = {}
         if swagger_meta_file:
@@ -100,12 +109,31 @@ class CbMetaModel(type):
 
 
 class FieldDescriptor(object):
+    """Object that describes a field within a model instance."""
     def __init__(self, field_name, coerce_to=None, default_value=None):
+        """
+        Initialize the FieldDescriptor object.
+
+        Args:
+            field_name (str): The name of the field.
+            coerce_to (class): The type to which the value should be coerced, or None.
+            default_value (Any): The default value of the field.
+        """
         self.att_name = field_name
         self.default_value = default_value
         self.coerce_to = coerce_to
 
     def __get__(self, instance, instance_type=None):
+        """
+        Retrieve the value of this field from an object.
+
+        Args:
+            instance (NewBaseModel): Instance of the object to retrieve the field value from.
+            instance_type (class): Owning class type (not used).
+
+        Returns:
+            Any: Value of the field.
+        """
         if instance is not None:
             if self.att_name not in instance._info and not instance._full_init:
                 instance.refresh()
@@ -117,51 +145,129 @@ class FieldDescriptor(object):
             return coerce_type(value)
 
     def __set__(self, instance, value):
+        """
+        Sets the value of this field on an object.
+
+        Args:
+            instance (NewBaseModel): Instance of the object to retrieve the field value from.
+            value (Any): New value for the field.
+        """
         coerce_type = self.coerce_to or type(value)
         value = coerce_type(value)
         instance._set(self.att_name, value)
 
 
 class ArrayFieldDescriptor(FieldDescriptor):
+    """Field descriptor for fields of 'array' type."""
     def __get__(self, instance, instance_type=None):
+        """
+        Retrieve the value of this field from an object.
+
+        Args:
+            instance (NewBaseModel): Instance of the object to retrieve the field value from.
+            instance_type (class): Owning class type (not used).
+
+        Returns:
+            Any: Value of the field.
+        """
         ret = super(ArrayFieldDescriptor, self).__get__(instance, instance_type)
         return ret or []
 
 
 # TODO: this is a kludge to avoid writing "small" models?
 class ObjectFieldDescriptor(FieldDescriptor):
+    """Field descriptor for fields of 'object' type."""
     def __get__(self, instance, instance_type=None):
+        """
+        Retrieve the value of this field from an object.
+
+        Args:
+            instance (NewBaseModel): Instance of the object to retrieve the field value from.
+            instance_type (class): Owning class type (not used).
+
+        Returns:
+            Any: Value of the field.
+        """
         ret = super(ObjectFieldDescriptor, self).__get__(instance, instance_type)
         return ret or {}
 
 
 class IsoDateTimeFieldDescriptor(FieldDescriptor):
+    """Field descriptor for fields of 'iso-date-time' type."""
     def __init__(self, field_name):
+        """
+        Initialize the IsoDateTimeFieldDescriptor object.
+
+        Args:
+            field_name (str): The name of the field.
+        """
         super(IsoDateTimeFieldDescriptor, self).__init__(field_name)
 
     def __get__(self, instance, instance_type=None):
+        """
+        Retrieve the value of this field from an object.
+
+        Args:
+            instance (NewBaseModel): Instance of the object to retrieve the field value from.
+            instance_type (class): Owning class type (not used).
+
+        Returns:
+            Any: Value of the field.
+        """
         d = super(IsoDateTimeFieldDescriptor, self).__get__(instance, instance_type)
         return convert_from_cb(d)
 
     def __set__(self, instance, value):
+        """
+        Sets the value of this field on an object.
+
+        Args:
+            instance (NewBaseModel): Instance of the object to retrieve the field value from.
+            value (Any): New value for the field.
+        """
         parsed_date = convert_to_cb(value)
         super(IsoDateTimeFieldDescriptor, self).__set__(instance, parsed_date)
 
 
 class EpochDateTimeFieldDescriptor(FieldDescriptor):
+    """Field descriptor for fields of 'epoch-ms-date-time' type."""
     def __init__(self, field_name, multiplier=1.0):
+        """
+        Initialize the EpochDateTimeFieldDescriptor object.
+
+        Args:
+            field_name (str): The name of the field.
+            multiplier(float): Unused.
+        """
         super(EpochDateTimeFieldDescriptor, self).__init__(field_name)
         self.multiplier = float(multiplier)
 
     def __get__(self, instance, instance_type=None):
+        """
+        Retrieve the value of this field from an object.
+
+        Args:
+            instance (NewBaseModel): Instance of the object to retrieve the field value from.
+            instance_type (class): Owning class type (not used).
+
+        Returns:
+            Any: Value of the field.
+        """
         d = super(EpochDateTimeFieldDescriptor, self).__get__(instance, instance_type)
         if type(d) is float or type(d) is int:
             epoch_seconds = d / self.multiplier
             return datetime.utcfromtimestamp(epoch_seconds)
         else:
-            return datetime.utcfromtimestamp(0)      # default to epoch time (1970-01-01) if we have a non-numeric type
+            return datetime.utcfromtimestamp(0)  # default to epoch time (1970-01-01) if we have a non-numeric type
 
     def __set__(self, instance, value):
+        """
+        Sets the value of this field on an object.
+
+        Args:
+            instance (NewBaseModel): Instance of the object to retrieve the field value from.
+            value (Any): New value for the field.
+        """
         if isinstance(value, datetime):
             new_value = (value - self.epoch).total_seconds() * self.multiplier
         else:
@@ -170,7 +276,16 @@ class EpochDateTimeFieldDescriptor(FieldDescriptor):
 
 
 class ForeignKeyFieldDescriptor(FieldDescriptor):
+    """Field descriptor for fields that are foreign keys."""
     def __init__(self, field_name, join_model, join_field=None):
+        """
+        Initialize the ForeignKeyFieldDescriptor object.
+
+        Args:
+            field_name (str): The name of the field.
+            join_model (class): The class for which this field value is a foreign key.
+            join_field (str): The name fo the field in the joined class for which this field value is a foreign key.
+        """
         super(ForeignKeyFieldDescriptor, self).__init__(field_name)
         self.join_model = join_model
         if join_field is None:
@@ -179,10 +294,27 @@ class ForeignKeyFieldDescriptor(FieldDescriptor):
             self.join_field = join_field
 
     def __get__(self, instance, instance_type=None):
+        """
+        Retrieve the value of this field from an object.
+
+        Args:
+            instance (NewBaseModel): Instance of the object to retrieve the field value from.
+            instance_type (class): Owning class type (not used).
+
+        Returns:
+            Any: Value of the field.
+        """
         foreign_id = getattr(instance, self.join_field)
         return instance._cb.select(self.join_model, foreign_id)
 
     def __set__(self, instance, value):
+        """
+        Sets the value of this field on an object.
+
+        Args:
+            instance (NewBaseModel): Instance of the object to retrieve the field value from.
+            value (Any): New value for the field.
+        """
         if type(value, NewBaseModel):
             setattr(self, self.join_field, getattr(value, "_model_unique_id"))
         else:
@@ -190,26 +322,46 @@ class ForeignKeyFieldDescriptor(FieldDescriptor):
 
 
 class BinaryFieldDescriptor(FieldDescriptor):
+    """Field descriptor for fields of 'byte' type."""
     def __get__(self, instance, instance_type=None):
+        """
+        Retrieve the value of this field from an object.
+
+        Args:
+            instance (NewBaseModel): Instance of the object to retrieve the field value from.
+            instance_type (class): Owning class type (not used).
+
+        Returns:
+            Any: Value of the field.
+        """
         d = super(BinaryFieldDescriptor, self).__get__(instance, instance_type)
         return base64.b64decode(d)
 
     def __set__(self, instance, value):
+        """
+        Sets the value of this field on an object.
+
+        Args:
+            instance (NewBaseModel): Instance of the object to retrieve the field value from.
+            value (Any): New value for the field.
+        """
         super(BinaryFieldDescriptor, self).__set__(instance, base64.b64encode(value))
 
 
 class NewBaseModel(object, metaclass=CbMetaModel):
+    """Base class of all model objects within the Carbon Black Cloud SDK."""
     primary_key = "id"
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
         """
-        Base model for
-        :param cb:
-        :param model_unique_id:
-        :param initial_data:
-        :param force_init:
-        :param full_doc:
-        :return:
+        Initialize the NewBaseModel object.
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            model_unique_id (Any): The unique ID for this particular instance of the model object.
+            initial_data (dict): The data to use when initializing the model object.
+            force_init (bool): True to force object initialization.
+            full_doc (bool): True to mark the object as fully initialized.
         """
         self._cb = cb
         self._last_refresh_time = 0
@@ -234,13 +386,36 @@ class NewBaseModel(object, metaclass=CbMetaModel):
 
     @classmethod
     def new_object(cls, cb, item, **kwargs):
+        """
+        Create a new object of a model class.
+
+        Args:
+            cb (CBCloudAPI): Reference to the CBCloudAPI object.
+            item (dict): Item data to use to create the object.
+            **kwargs (dict): Additional keyword arguments.
+
+        Returns:
+            object: The new object instance.
+        """
         return cb.select(cls, item[cls.primary_key], initial_data=item, **kwargs)
 
     def __getattr__(self, item):
+        """
+        Return an attribute of this object.
+
+        Args:
+            item (str): Name of the attribute to be returned.
+
+        Returns:
+            Any: The returned attribute value.
+
+        Raises:
+            AttributeError: If the object has no such attribute.
+        """
         try:
             super(NewBaseModel, self).__getattribute__(item)
         except AttributeError:
-            pass         # fall through to the rest of the logic...
+            pass  # fall through to the rest of the logic...
 
         # try looking up via self._info, if we already have it.
         if item in self._info:
@@ -258,18 +433,39 @@ class NewBaseModel(object, metaclass=CbMetaModel):
                                                                               item))
 
     def __setattr__(self, attrname, val):
+        """
+        Set an attribute of this object.
+
+        Args:
+            attrname (str): Name of the attribute to be changed.
+            val (Any): New value for the attribute.
+
+        Raises:
+            AttributeError: If the given attribute cannot be changed.
+        """
         if attrname.startswith("_"):
             super(NewBaseModel, self).__setattr__(attrname, val)
         else:
             raise AttributeError("Field {0:s} is immutable".format(attrname))
 
     def get(self, attrname, default_val=None):
+        """
+        Return an attribute of this object.
+
+        Args:
+            attrname (str): Name of the attribute to be returned.
+            default_val (Any): Default value to be used if the attribute is not set.
+
+        Returns:
+            Any: The returned attribute value, which may be defaulted.
+        """
         return getattr(self, attrname, default_val)
 
     def _set(self, attrname, new_value):
         pass
 
     def refresh(self):
+        """Reload this object from the server."""
         return self._refresh()
 
     def _refresh(self):
@@ -298,12 +494,24 @@ class NewBaseModel(object, metaclass=CbMetaModel):
 
     @property
     def original_document(self):
+        """
+        Returns the original meta-information about the object.
+
+        Returns:
+            object: The original meta-information about the object.
+        """
         if not self._full_init:
             self.refresh()
 
         return self._info
 
     def __repr__(self):
+        """
+        Returns a string representation of the object.
+
+        Returns:
+            str: A string representation of the object.
+        """
         if self._model_unique_id is not None:
             return "<%s.%s: id %s> @ %s" % (self.__class__.__module__, self.__class__.__name__, self._model_unique_id,
                                             self._cb.session.server)
@@ -312,6 +520,12 @@ class NewBaseModel(object, metaclass=CbMetaModel):
                                                   self._cb.session.server)
 
     def __str__(self):
+        """
+        Returns a string representation of the object.
+
+        Returns:
+            str: A string representation of the object.
+        """
         lines = []
         lines.append("{0:s} object, bound to {1:s}.".format(self.__class__.__name__, self._cb.session.server))
         if self._last_refresh_time:
@@ -377,19 +591,27 @@ class NewBaseModel(object, metaclass=CbMetaModel):
 
 
 class UnrefreshableModel(NewBaseModel):
-    """Represents a model that can't be refreshed, i.e. for which ``reset()``
-    is not a valid operation.
-    """
+    """Represents a model that can't be refreshed, i.e. for which ``reset()`` is not a valid operation."""
+
     def refresh(self):
+        """Reload this object from the server."""
         raise ApiError("refresh() called on an unrefreshable model")
 
 
 class MutableBaseModel(NewBaseModel):
+    """Base model for objects that can have properties changed and then saved back to the server."""
     _new_object_http_method = "POST"
     _change_object_http_method = "PUT"
     _new_object_needs_primary_key = False
 
     def __setattr__(self, attrname, val):
+        """
+        Set an attribute of this object.
+
+        Args:
+            attrname (str): Name of the attribute to be changed.
+            val (Any): New value for the attribute.
+        """
         # allow subclasses to define their own property setters
         propobj = getattr(self.__class__, attrname, None)
         if isinstance(propobj, property) and propobj.fset:
@@ -427,10 +649,17 @@ class MutableBaseModel(NewBaseModel):
         self._info[attrname] = new_value
 
     def refresh(self):
+        """Reload this object from the server."""
         if self._refresh():
             self._dirty_attributes = {}
 
     def is_dirty(self):
+        """
+        Returns whether or not any fields of this object have been changed.
+
+        Returns:
+            bool: True if any fields of this object have been changed, False if not.
+        """
         return len(self._dirty_attributes) > 0
 
     def _update_object(self):
@@ -438,7 +667,7 @@ class MutableBaseModel(NewBaseModel):
             new_object_info = copy.deepcopy(self._info)
             try:
                 if not self._new_object_needs_primary_key:
-                    del(new_object_info[self.__class__.primary_key])
+                    del (new_object_info[self.__class__.primary_key])
             except Exception:
                 pass
             log.debug("Creating a new {0:s} object".format(self.__class__.__name__))
@@ -454,6 +683,15 @@ class MutableBaseModel(NewBaseModel):
         return self._refresh_if_needed(ret)
 
     def _refresh_if_needed(self, request_ret):
+        """
+        Reload the object with the data returned by the server.
+
+        Args:
+            request_ret (Response): Return data from a request made to the server.
+
+        Returns:
+            Any: The unique ID of this object.
+        """
         refresh_required = False
 
         if request_ret.status_code not in range(200, 300):
@@ -493,6 +731,12 @@ class MutableBaseModel(NewBaseModel):
         return self._model_unique_id
 
     def save(self):
+        """
+        Save any changes made to this object's fields.
+
+        Returns:
+            MutableBaseModel: This object.
+        """
         if not self.is_dirty():
             return
 
@@ -501,6 +745,7 @@ class MutableBaseModel(NewBaseModel):
         return self
 
     def reset(self):
+        """Undo any changes made to this object's fields."""
         for k, v in iter(self._dirty_attributes.items()):
             if v is None:
                 del self._info[k]
@@ -511,6 +756,7 @@ class MutableBaseModel(NewBaseModel):
 
     # TODO: How do we delete this object from our LRU cache?
     def delete(self):
+        """Delete this object."""
         return self._delete_object()
 
     def _delete_object(self):
@@ -527,6 +773,15 @@ class MutableBaseModel(NewBaseModel):
             raise ServerError(ret.status_code, message, result="Did not delete {0:s}.".format(str(self)))
 
     def validate(self):
+        """
+        Validates this object.
+
+        Returns:
+            bool: True if the object is validated.
+
+        Raises:
+            InvalidObjectError: If the object has missing fields.
+        """
         if not self._full_init:
             self.refresh()
 
@@ -537,6 +792,7 @@ class MutableBaseModel(NewBaseModel):
             raise InvalidObjectError("Missing fields: [%s]" % (", ".join(diff)))
 
     def __repr__(self):
+        """Returns a string representation of this object."""
         r = super(MutableBaseModel, self).__repr__()
         if self.is_dirty():
             r += " (*)"
@@ -547,22 +803,50 @@ class MutableBaseModel(NewBaseModel):
 
 
 class BaseQuery(object):
+    """The base query for finding objects via the API."""
     def __init__(self, query=None):
+        """
+        Initializes the BaseQuery object.
+
+        Args:
+            query (solrq.Q): The parent query of this one.
+        """
         self._query = query
 
     def _clone(self):
         return self.__class__(self._query)
 
     def all(self):
+        """
+        Returns the objects that this query has located, all at once.
+
+        Returns:
+            list: The list of query objects.
+        """
         return self._perform_query()
 
     def first(self):
+        """
+        Returns the first result of this query.
+
+        Returns:
+            object: The first result of this query, or None if it has no results.
+        """
         res = self[:1]
         if not len(res):
             return None
         return res[0]
 
     def one(self):
+        """
+        Returns the single result of this query.
+
+        Returns:
+            object: The single result of this query.
+
+        Raises:
+            MoreThanOneResultError: If the query has any number of results other than 1.
+        """
         res = self[:2]
 
         if len(res) == 0 or len(res) > 1:
@@ -576,19 +860,50 @@ class BaseQuery(object):
         yield from ()
 
     def __len__(self):
+        """
+        Returns the number of items returned by this query.
+
+        Returns:
+            int: The number of items returned by this query.
+        """
         return 0
 
     def __getitem__(self, item):
+        """
+        Return a specific item or items from the query.
+
+        Args:
+            item (object): Indicates the item(s) to retrieve, either as an int or a slice.
+
+        Returns:
+            object: Either an item or a list of items.
+        """
         return None
 
     def __iter__(self):
+        """
+        Returns an iterator over the items returned by this query.
+
+        Returns:
+            Iterator: An iterator over the items returned by this query.
+        """
         return self._perform_query()
 
 
 class SimpleQuery(BaseQuery):
+    """A simple query object."""
     _multiple_where_clauses_accepted = False
 
     def __init__(self, cls, cb, urlobject=None, returns_fulldoc=True):
+        """
+        Initialize the SimpleQuery object.
+
+        Args:
+            cls (class): Class of the object to be returned by the query.
+            cb (CBCloudAPI): Reference to the CBCloudAPI object.
+            urlobject (str): URL to be used in making the query.
+            returns_fulldoc (bool): Whether the result of the Query yields objects that have been fully initialized.
+        """
         super(SimpleQuery, self).__init__()
 
         self._doc_class = cls
@@ -632,6 +947,12 @@ class SimpleQuery(BaseQuery):
 
     @property
     def results(self):
+        """
+        Collect and return the results of this query.
+
+        Returns:
+            list: The results of this query.
+        """
         if not self._full_init:
             self._results = []
             for item in self._cb.get_object(self._urlobject, default=[]):
@@ -644,9 +965,24 @@ class SimpleQuery(BaseQuery):
         return self._results
 
     def __len__(self):
+        """
+        Returns the number of items returned by this query.
+
+        Returns:
+            int: The number of items returned by this query.
+        """
         return len(self.results)
 
     def __getitem__(self, item):
+        """
+        Return a specific item or items from the query.
+
+        Args:
+            item (object): Indicates the item(s) to retrieve, either as an int or a slice.
+
+        Returns:
+            object: Either an item or a list of items.
+        """
         if isinstance(item, slice):
             return [self.results[ii] for ii in range(*item.indices(len(self)))]
         elif isinstance(item, int):
@@ -655,6 +991,15 @@ class SimpleQuery(BaseQuery):
             raise TypeError("Invalid argument type")
 
     def where(self, new_query):
+        """
+        Add a "where" clause to this query.
+
+        Args:
+            new_query (object): The "where" clause, as a string or solrq.Q object.
+
+        Returns:
+            SimpleQuery: A new query with the "where" clause specified.
+        """
         if self._query and not self._multiple_where_clauses_accepted:
             raise ApiError("Cannot have multiple 'where' clauses")
 
@@ -665,6 +1010,15 @@ class SimpleQuery(BaseQuery):
         return nq
 
     def and_(self, new_query):
+        """
+        Add an additional "where" clause to this query.
+
+        Args:
+            new_query (object): The additional "where" clause, as a string or solrq.Q object.
+
+        Returns:
+            SimpleQuery: A new query with the extra "where" clause specified.
+        """
         if not self._multiple_where_clauses_accepted:
             raise ApiError("Cannot have multiple 'where' clauses")
         return self.where(new_query)
@@ -674,13 +1028,31 @@ class SimpleQuery(BaseQuery):
             yield item
 
     def sort(self, new_sort):
+        """
+        Set the sorting for this query.
+
+        Args:
+            new_sort (object): The new sort criteria for this query.
+
+        Returns:
+            SimpleQuery: A new query with the sort parameter specified.
+        """
         nq = self._clone()
         nq._sort_by = new_sort
         return nq
 
 
 class PaginatedQuery(BaseQuery):
+    """A query that returns objects in a paginated fashion."""
     def __init__(self, cls, cb, query=None):
+        """
+        Initialize the PaginatedQuery object.
+
+        Args:
+            cls (class): The class of objects being returned by this query.
+            cb (CBCloudAPI): Reference to the CBCloudAPI object.
+            query (BaseQuery): The query that we are paginating.
+        """
         super(PaginatedQuery, self).__init__(query)
         self._doc_class = cls
         self._cb = cb
@@ -695,11 +1067,26 @@ class PaginatedQuery(BaseQuery):
         return nq
 
     def __len__(self):
+        """
+        Returns the number of items returned by this query.
+
+        Returns:
+            int: The number of items returned by this query.
+        """
         if self._count_valid:
             return self._total_results
         return self._count()
 
     def __getitem__(self, item):
+        """
+        Return a specific item or items from the query.
+
+        Args:
+            item (object): Indicates the item(s) to retrieve, either as an int or a slice.
+
+        Returns:
+            object: Either an item or a list of items.
+        """
         if isinstance(item, slice):
             if item.step and item.step != 1:
                 raise ValueError("steps not supported")
@@ -752,17 +1139,23 @@ class PaginatedQuery(BaseQuery):
             yield self._doc_class.new_object(self._cb, item)
 
     def batch_size(self, new_batch_size):
+        """
+        Set the batch size of the paginated query.
+
+        Args:
+            new_batch_size (int): The new batch size.
+
+        Returns:
+            PaginatedQuery: A new query with the updated batch size.
+        """
         nq = self._clone()
         nq._batch_size = new_batch_size
         return nq
 
 
-
-
 class QueryBuilder(object):
     """
-    Provides a flexible interface for building prepared queries for the CB
-    Cloud backend.
+    Provides a flexible interface for building prepared queries for the CB Cloud backend.
 
     This object can be instantiated directly, or can be managed implicitly
     through the :py:meth:`CBCloudAPI.select` API.
@@ -776,7 +1169,14 @@ class QueryBuilder(object):
     >>> query = QueryBuilder(device_os="WINDOWS").or_(process_username="root")
 
     """
+
     def __init__(self, **kwargs):
+        """
+        Initialize the QueryBuilder object.
+
+        Args:
+            **kwargs (dict): If present, these are used to construct a Solrq Query.
+        """
         if kwargs:
             self._query = Q(**kwargs)
         else:
@@ -785,10 +1185,12 @@ class QueryBuilder(object):
         self._process_guid = None
 
     def _guard_query_params(func):
-        """Decorates the query construction methods of *QueryBuilder*, preventing
-        them from being called with parameters that would result in an internally
+        """Decorates the query construction methods of *QueryBuilder*
+
+        Prevents them from being called with parameters that would result in an internally
         inconsistent query.
         """
+
         @functools.wraps(func)
         def wrap_guard_query_change(self, q, **kwargs):
             if self._raw_query is not None and (kwargs or isinstance(q, Q)):
@@ -796,6 +1198,7 @@ class QueryBuilder(object):
             if self._query is not None and isinstance(q, str):
                 raise ApiError("Cannot modify a structured query with a raw parameter")
             return func(self, q, **kwargs)
+
         return wrap_guard_query_change
 
     @_guard_query_params
@@ -891,22 +1294,27 @@ class QueryBuilder(object):
             raise ApiError(".not_() only accepts solrq.Q objects")
 
     def _collapse(self):
-        """The query can be represented by either an array of strings
+        """
+        Collapse the query.
+
+        The query can be represented by either an array of strings
         (_raw_query) which is concatenated and passed directly to Solr, or
         a solrq.Q object (_query) which is then converted into a string to
         pass to Solr. This function will perform the appropriate conversions to
         end up with the 'q' string sent into the POST request to the
-        Cloud API query endpoint."""
+        Cloud API query endpoint.
+        """
         if self._raw_query is not None:
             return " ".join(self._raw_query)
         elif self._query is not None:
             return str(self._query)
         else:
-            return ""               # return everything
+            return ""  # return everything
 
 
 class QueryBuilderSupportMixin:
     """A mixin that supplies wrapper methods to access the _query_builder."""
+
     def where(self, q=None, **kwargs):
         """
         Add a filter to this query.
@@ -978,6 +1386,7 @@ class QueryBuilderSupportMixin:
 
 class IterableQueryMixin:
     """A mix-in to provide iterability to a query."""
+
     def all(self):
         """
         Returns all the items of a query as a list.
@@ -1057,6 +1466,7 @@ class IterableQueryMixin:
 
 class AsyncQueryMixin:
     """A mix-in which provides support for asynchronous queries."""
+
     def _init_async_query(self):
         """
         Initialize an async query and return a context for running in the background. Optional.
@@ -1095,6 +1505,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
     These API calls return one result, and are not paginated or iterable.
     """
     def __init__(self, cls, cb, query=None):
+        """Initialize the FacetQuery object."""
         super(FacetQuery, self).__init__(query)
         self._doc_class = cls
         self._cb = cb
