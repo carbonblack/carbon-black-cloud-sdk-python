@@ -36,6 +36,13 @@ class Binary(UnrefreshableModel):
         urlobject_single = "/ubs/v1/orgs/{}/sha256/{}/summary/device"
 
         def __init__(self, cb, model_unique_id):
+            """
+            Initialize the Summary object.
+
+            Args:
+                cb (CBCloudAPI): A reference to the CBCloudAPI object.
+                model_unique_id (str): The SHA-256 of the binary being retrieved.
+            """
             if not validators.sha256(model_unique_id):
                 raise ApiError("model_unique_id must be a valid SHA256")
 
@@ -50,6 +57,13 @@ class Binary(UnrefreshableModel):
             return Query(self, cb, **kwargs)
 
     def __init__(self, cb, model_unique_id):
+        """
+        Initialize the Binary object.
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            model_unique_id (str): The SHA-256 of the binary being retrieved.
+        """
         if not validators.sha256(model_unique_id):
             raise ApiError("model_unique_id must be a valid SHA256")
 
@@ -104,6 +118,13 @@ class Downloads(UnrefreshableModel):
         primary_key = "sha256"
 
         def __init__(self, cb, item):
+            """
+            Initialize the FoundItem object.
+
+            Args:
+                cb (CBCloudAPI): A reference to the CBCloudAPI object.
+                item (dict): The values for a successfully-retrieved item.
+            """
             super(Downloads.FoundItem, self).__init__(cb, model_unique_id=item["sha256"],
                                                       initial_data=item, force_init=False,
                                                       full_doc=True)
@@ -112,6 +133,14 @@ class Downloads(UnrefreshableModel):
             raise NonQueryableModel("IOC does not support querying")
 
     def __init__(self, cb, shas, expiration_seconds=3600):
+        """
+        Initialize the Downloads object.
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            shas (list): A list of SHA hash values for binaries.
+            expiration_seconds (int): Number of seconds until this request expires.
+        """
         body = {
             "sha256": shas,
             "expiration_seconds": expiration_seconds,

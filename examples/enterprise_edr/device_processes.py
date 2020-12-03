@@ -12,13 +12,14 @@
 
 """
 Command-line example that retrieves all processes within the last six hours from all active devices.
+
 Uses asynchronous querying to generate the queries for each device's processes so that they run in parallel.
 """
 
 import sys
 import logging
 import concurrent.futures
-from cbc_sdk.helpers import eprint, build_cli_parser, get_cb_cloud_object
+from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
 from cbc_sdk.platform import Device
 from cbc_sdk.enterprise_edr import Process
 
@@ -26,6 +27,7 @@ log = logging.getLogger(__name__)
 
 
 def main():
+    """Main function for Device Processes script."""
     parser = build_cli_parser()
 
     args = parser.parse_args()
@@ -52,6 +54,7 @@ def main():
         for process in result:
             print("{0:16} {1:5} {2:60}".format(process['device_name'], process['process_pid'][0],
                                                process['process_name']))
+
 
 if __name__ == "__main__":
     sys.exit(main())

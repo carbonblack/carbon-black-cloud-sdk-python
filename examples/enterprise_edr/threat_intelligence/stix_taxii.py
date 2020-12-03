@@ -14,6 +14,7 @@ from cabby import create_client
 from dataclasses import dataclass
 from datetime import datetime
 from itertools import chain
+
 try:
     from threatintel import ThreatIntel
     from stix_parse import parse_stix, parse_stix_from_file, BINDING_CHOICES
@@ -26,7 +27,6 @@ except ImportError:
     from .feed_helper import FeedHelper
     from .results import AnalysisResult
 
-
 # logging.basicConfig(filename='stix.log', filemode='w', level=logging.DEBUG)
 logging.basicConfig(filename='stix.log', filemode='w',
                     format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
@@ -37,7 +37,6 @@ handled_exceptions = (NoURIProvidedError, ClientException, ConnectionError)
 
 def load_config_from_file():
     """Loads YAML formatted configuration from config.yml in working directory."""
-
     logging.debug("loading config from file")
     config_filename = os.path.join(os.path.dirname((os.path.abspath(__file__))), "config.yml")
     with open(config_filename, "r") as config_file:
@@ -78,19 +77,24 @@ class TaxiiSiteConfig:
     http_proxy_url: str = None
     https_proxy_url: str = None
     reports_limit: int = None
-    fail_limit: int = 10   # num attempts per collection for polling & parsing
+    fail_limit: int = 10  # num attempts per collection for polling & parsing
 
 
 class TaxiiSiteConnector():
     """Connects to and pulls data from a TAXII server."""
 
     def __init__(self, site_conf):
+        """
+        Initialize the TaxiiSiteConnector.
+
+        Args:
+            site_conf (dict): Site configuration information.
+        """
         self.config = TaxiiSiteConfig(**site_conf)
         self.client = None
 
     def create_taxii_client(self):
         """Connects to a TAXII server using cabby and configuration entries."""
-
         conf = self.config
         if not conf.start_date:
             logging.error(f"A start_date is required for site {conf.site}. Exiting.")
@@ -125,12 +129,12 @@ class TaxiiSiteConnector():
         """Formats a URI for discovery, collection, or polling of a TAXII server.
 
         Args:
-            config_path: A URI path to a TAXII server's discovery, collection, or polling service. Defined in config.yml configuration file.
+            config_path: A URI path to a TAXII server's discovery, collection, or polling service.
+                Defined in config.yml configuration file.
 
         Returns:
             A full URI to one of a TAXII server's service paths.
         """
-
         uri = None
         if self.config.site and config_path:
             if self.config.use_https:
@@ -142,7 +146,6 @@ class TaxiiSiteConnector():
 
     def query_collections(self):
         """Returns a list of STIX collections available to the user to poll."""
-
         collections = []
         try:
             uri = self.create_uri(self.config.collection_management_path)
@@ -151,17 +154,19 @@ class TaxiiSiteConnector():
             for collection in collections:
                 logging.info(f"Collection: {collection.name}, {collection.type}")
         except handled_exceptions as e:
-            logging.warning(f"Problem fetching collections from TAXII server. Check your TAXII Provider URL and username/password (if required to access TAXII server): {e}")
+            logging.warning(
+                "Problem fetching collections from TAXII server. Check your TAXII Provider URL and username/password "
+                f"(if required to access TAXII server): {e}")
         return collections
 
     def poll_server(self, collection, feed_helper):
-        """Returns a STIX content block for a specific TAXII collection.
+        """
+        Returns a STIX content block for a specific TAXII collection.
 
         Args:
             collection: Name of a TAXII collection to poll.
             feed_helper: FeedHelper object.
         """
-
         content_blocks = []
         uri = self.create_uri(self.config.poll_path)
         try:
@@ -177,10 +182,12 @@ class TaxiiSiteConnector():
         return content_blocks
 
     def parse_collection_content(self, content_blocks, default_score=None):
-        """Yields a formatted report dictionary for each STIX content_block.
+        """
+        Yields a formatted report dictionary for each STIX content_block.
 
         Args:
-            content_block: A chunk of STIX data from the TAXII collection being polled.
+            content_blocks: A chunk of STIX data from the TAXII collection being polled.
+            default_score: The default score for the data, or None.
         """
         if default_score:
             score = default_score
@@ -190,7 +197,8 @@ class TaxiiSiteConnector():
             yield from parse_stix(block.content, score)
 
     def import_collection(self, collection):
-        """Polls a single TAXII server collection.
+        """
+        Polls a single TAXII server collection.
 
         Starting at the start_date set in config.yml, a FeedHelper object will continue to grab chunks
         of data from a collection until the report limit is reached or we reach the current datetime.
@@ -202,7 +210,6 @@ class TaxiiSiteConnector():
             Formatted report dictionaries from parse_collection_content(content_blocks)
             for each content_block pulled from a single TAXII collection.
         """
-
         num_times_empty_content_blocks = 0
         advance = True
         reports_limit = self.config.reports_limit
@@ -243,7 +250,8 @@ class TaxiiSiteConnector():
                 reports_limit -= num_reports
 
     def import_collections(self, available_collections):
-        """Polls each desired collection specified in config.yml.
+        """
+        Polls each desired collection specified in config.yml.
 
         Args:
             available_collections: list of collections available to a TAXII server user.
@@ -251,7 +259,6 @@ class TaxiiSiteConnector():
         Yields:
             From import_collection(self, collection) for each desired collection.
         """
-
         if not self.config.collections:
             desired_collections = '*'
         else:
@@ -274,7 +281,6 @@ class TaxiiSiteConnector():
 
     def generate_reports(self):
         """Returns a list of report dictionaries for each desired collection specified in config.yml."""
-
         reports = []
 
         self.create_taxii_client()
@@ -304,18 +310,22 @@ class StixTaxii():
     """
 
     def __init__(self, site_confs):
+        """
+        Initialize the StixTaxii object.
+
+        Args:
+            site_confs (dict): Site configuration information.
+        """
         self.config = site_confs
         self.client = None
 
     def result(self, **kwargs):
         """Returns a new AnalysisResult with the given fields populated."""
-
         result = AnalysisResult(**kwargs).normalize()
         return result
 
     def configure_sites(self):
         """Creates a TaxiiSiteConnector for each site in config.yml"""
-
         self.sites = {}
         try:
             for site_name, site_conf in self.config['sites'].items():
@@ -326,15 +336,16 @@ class StixTaxii():
             logging.error(f"Error in parsing config file: {e}")
 
     def format_report(self, reports):
-        """Converts a dictionary into an AnalysisResult.
+        """
+        Converts a dictionary into an AnalysisResult.
 
         Args:
-            reports: list of report dictionaries containing an id, title, description, timestamp, score, link, and iocs_v2.
+            reports: list of report dictionaries containing an id, title, description, timestamp, score, link,
+                and iocs_v2.
 
         Yields:
             An AnalysisResult for each report dictionary.
         """
-
         for report in reports:
             try:
                 analysis_name = report['id']
@@ -345,11 +356,11 @@ class StixTaxii():
                 link = report['link']
                 ioc_dict = report['iocs_v2']
                 result = self.result(
-                                     analysis_name=analysis_name,
-                                     scan_time=scan_time,
-                                     score=score,
-                                     title=title,
-                                     description=description)
+                    analysis_name=analysis_name,
+                    scan_time=scan_time,
+                    score=score,
+                    title=title,
+                    description=description)
                 for ioc_key, ioc_val in ioc_dict.items():
                     result.attach_ioc_v2(values=ioc_val, field=ioc_key, link=link)
             except handled_exceptions as e:
@@ -367,7 +378,8 @@ class StixTaxii():
             try:
                 ti.verify_feed_exists(site_conn.config.feed_id)
             except ApiError as e:
-                logging.error(f"Couldn't find Enterprise EDR Feed {site_conn.config.feed_id}. Skipping {site_name}: {e}")
+                logging.error(
+                    f"Couldn't find Enterprise EDR Feed {site_conn.config.feed_id}. Skipping {site_name}: {e}")
                 continue
             if file_names:
                 reports = []
@@ -378,7 +390,7 @@ class StixTaxii():
                         report_generators.append(parse_stix_from_file(file, site_conn.config.default_score))
                     output = chain()
                     for gen in report_generators:
-                      reports = chain(output, gen)
+                        reports = chain(output, gen)
                 except Exception as e:
                     logging.error(f"Failed to load STIX XML from file: {e}")
             else:
@@ -412,7 +424,7 @@ if __name__ == '__main__':
             arg = args.site_start_date[index]
             if arg in config['sites']:  # if we see a name that matches a site Name
                 try:
-                    new_time = datetime.strptime(args.site_start_date[index+1], "%Y-%m-%d %H:%M:%S")
+                    new_time = datetime.strptime(args.site_start_date[index + 1], "%Y-%m-%d %H:%M:%S")
                     config['sites'][arg]['start_date'] = new_time
                     logging.info(f"Updated the start_date for {arg} to {new_time}")
                 except ValueError as e:
