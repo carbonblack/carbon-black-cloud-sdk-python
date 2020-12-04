@@ -51,13 +51,13 @@ Get started with Carbon Black Cloud Python SDK here. For detailed information on
    :caption: User Guide
    :maxdepth: 2
 
-
    installation
    authentication
    Getting Started <getting-started>
    concepts
    porting-guide
    logging
+   os_functional_testing
    changelog
 
 SDK Documentation
