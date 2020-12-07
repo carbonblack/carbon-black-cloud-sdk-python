@@ -13,7 +13,9 @@
 
 """Model and Query Classes for Platform"""
 
-from cbc_sdk.base import NewBaseModel, UnrefreshableModel, BaseQuery, FacetQuery, QueryBuilderSupportMixin, IterableQueryMixin
+from cbc_sdk.base import (NewBaseModel, UnrefreshableModel, BaseQuery, FacetQuery,
+                          QueryBuilderSupportMixin, QueryBuilder,
+                          AsyncQueryMixin)
 from cbc_sdk.enterprise_edr import Query
 from cbc_sdk.errors import ApiError
 
@@ -49,62 +51,102 @@ class Process(UnrefreshableModel):
     default_sort = 'last_update desc'
     primary_key = "process_guid"
     validation_url = "/api/investigate/v1/orgs/{}/processes/search_validation"
+    urlobject = ""
 
     class Summary(UnrefreshableModel):
-        """Represents a summary of organization-specific information for a process."""
+        """Represents a summary of organization-specific information for a process.
+
+        The preferred interface for interacting with Tree models is `Process.summary`.
+        """
+        urlobject = "/api/investigate/v2/orgs/{}/processes/summary_jobs"
+        result_url = '/api/investigate/v2/orgs/{}/processes/summary_jobs/{}/results'
+        summary_format = "summary"
         default_sort = "last_update desc"
         primary_key = "process_guid"
-        urlobject = "/api/investigate/v1/orgs/{}/processes/summary"
 
-        def __init__(self, cb, model_unique_id):
-            url = self.urlobject.format(cb.credentials.org_key)
+        def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
+            """
+            Initialize the Summary object.
 
-            summary = cb.get_object(url, query_parameters={"process_guid": model_unique_id})
-
+            Args:
+                cb (CBCloudAPI): A reference to the CBCloudAPI object.
+                model_unique_id (str): The unique ID for this particular instance of the model object.
+                initial_data (dict): The data to use when initializing the model object.
+                force_init (bool): True to force object initialization.
+                full_doc (bool): True to mark the object as fully initialized.
+            """
+            if model_unique_id is not None and initial_data is None:
+                initial_data = cb.select(Process.Tree).where(process_guid=model_unique_id).results._info
             super(Process.Summary, self).__init__(cb, model_unique_id=model_unique_id,
-                                                  initial_data=summary, force_init=False,
+                                                  initial_data=initial_data, force_init=False,
                                                   full_doc=True)
 
         @classmethod
         def _query_implementation(self, cb, **kwargs):
-            return Query(self, cb, **kwargs)
+            return SummaryQuery(self, cb, **kwargs)
+
+    class Tree(UnrefreshableModel):
+        """Represents a summary of organization-specific information for a process.
+
+        The preferred interface for interacting with Tree models is `Process.tree`.
+        """
+        urlobject = '/api/investigate/v2/orgs/{}/processes/summary_jobs'
+        result_url = '/api/investigate/v2/orgs/{}/processes/summary_jobs/{}/results'
+        summary_format = 'tree'
+        default_sort = "last_update desc"
+        primary_key = 'process_guid'
+
+        def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
+            """
+            Initialize the Tree object.
+
+            Args:
+                cb (CBCloudAPI): A reference to the CBCloudAPI object.
+                model_unique_id (str): The unique ID for this particular instance of the model object.
+                initial_data (dict): The data to use when initializing the model object.
+                force_init (bool): True to force object initialization.
+                full_doc (bool): True to mark the object as fully initialized.
+            """
+            if model_unique_id is not None and initial_data is None:
+                initial_data = cb.select(Process.Tree).where(process_guid=model_unique_id).results._info
+            super(Process.Tree, self).__init__(
+                cb, model_unique_id=model_unique_id, initial_data=initial_data,
+                force_init=force_init, full_doc=full_doc
+            )
+
+        @classmethod
+        def _query_implementation(self, cb, **kwargs):
+            return SummaryQuery(self, cb, **kwargs)
 
     @classmethod
     def _query_implementation(self, cb, **kwargs):
-        # This will emulate a synchronous process query, for now.
         return AsyncProcessQuery(self, cb)
 
-    def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
+    def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
+        """
+        Initialize the Process object.
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            model_unique_id (str): The unique ID (GUID) for this process.
+            initial_data (dict): The data to use when initializing the model object.
+            force_init (bool): True to force object initialization.
+            full_doc (bool): True to mark the object as fully initialized.
+        """
+        if model_unique_id is not None and initial_data is None:
+            process_future = cb.select(Process).where(process_guid=model_unique_id).execute_async()
+            result = process_future.result()
+            if len(result) == 1:
+                initial_data = result[0]
         super(Process, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
                                       force_init=force_init, full_doc=full_doc)
 
     @property
     def summary(self):
         """Returns organization-specific information about this process."""
-        return self._cb.select(Process.Summary, self.process_guid)
+        return self._cb.select(Process.Summary).where(process_guid=self.process_guid).results
 
-    def events(self, **kwargs):
-        """Returns a query for events associated with this process's process GUID.
-
-        Args:
-            kwargs: Arguments to filter the event query with.
-
-        Returns:
-            query (cbc_sdk.enterprise_edr.Query): Query object with the appropriate
-                search parameters for events
-
-        Example:
-
-        >>> [print(event) for event in process.events()]
-        >>> [print(event) for event in process.events(event_type="modload")]
-        """
-        query = self._cb.select(Event).where(process_guid=self.process_guid)
-
-        if kwargs:
-            query = query.and_(**kwargs)
-
-        return query
-
+    @property
     def tree(self):
         """Returns a Process Tree associated with this process.
 
@@ -113,10 +155,9 @@ class Process(UnrefreshableModel):
 
         Example:
 
-        >>> tree = process.tree()
+        >>> tree = process.tree
         """
-        data = self._cb.select(Tree).where(process_guid=self.process_guid).all()
-        return Tree(self._cb, initial_data=data)
+        return self._cb.select(Process.Tree).where(process_guid=self.process_guid).results
 
     @property
     def parents(self):
@@ -208,6 +249,28 @@ class Process(UnrefreshableModel):
         else:
             return None
 
+    def events(self, **kwargs):
+        """Returns a query for events associated with this process's process GUID.
+
+        Args:
+            kwargs: Arguments to filter the event query with.
+
+        Returns:
+            query (cbc_sdk.enterprise_edr.Query): Query object with the appropriate
+                search parameters for events
+
+        Example:
+
+        >>> [print(event) for event in process.events()]
+        >>> [print(event) for event in process.events(event_type="modload")]
+        """
+        query = self._cb.select(Event).where(process_guid=self.process_guid)
+
+        if kwargs:
+            query = query.and_(**kwargs)
+
+        return query
+
     def facets(self):
         """Returns a FacetQuery for a Process.
 
@@ -216,31 +279,6 @@ class Process(UnrefreshableModel):
         before it can be submitted, using the `add_facet_field()` or `add_range()` methods.
         """
         return self._cb.select(ProcessFacet).where(process_guid=self.process_guid)
-
-
-class Tree(UnrefreshableModel):
-    """The preferred interface for interacting with Tree models is `Process.tree()`."""
-    urlobject = '/api/investigate/v1/orgs/{}/processes/tree'
-    primary_key = 'process_guid'
-
-    @classmethod
-    def _query_implementation(self, cb, **kwargs):
-        return TreeQuery(self, cb)
-
-    def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
-        super(Tree, self).__init__(
-            cb, model_unique_id=model_unique_id, initial_data=initial_data,
-            force_init=force_init, full_doc=full_doc
-        )
-
-    @property
-    def children(self):
-        """Returns all of the children of the process that this tree is centered around.
-
-        Returns:
-            children ([Process]): List of children for the Tree's parent process.
-        """
-        return [Process(self._cb, initial_data=child) for child in self.nodes["children"]]
 
 
 class ProcessFacet(UnrefreshableModel):
@@ -256,7 +294,7 @@ class ProcessFacet(UnrefreshableModel):
     the field names with ProcessFacet.ranges_.fields.
     """
     primary_key = "job_id"
-    swagger_meta_file = "enterprise_edr/models/process_facets.yaml"
+    swagger_meta_file = "platform/models/process_facets.yaml"
     submit_url = "/api/investigate/v2/orgs/{}/processes/facet_jobs"
     result_url = "/api/investigate/v2/orgs/{}/processes/facet_jobs/{}/results"
 
@@ -353,6 +391,16 @@ class Event(UnrefreshableModel):
         return EventQuery(self, cb)
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
+        """
+        Initialize the Event object.
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            model_unique_id (str): The unique ID for this particular instance of the model object.
+            initial_data (dict): The data to use when initializing the model object.
+            force_init (bool): True to force object initialization.
+            full_doc (bool): True to mark the object as fully initialized.
+        """
         super(Event, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
                                     force_init=force_init, full_doc=full_doc)
 
@@ -383,6 +431,13 @@ class AsyncProcessQuery(Query):
     process querying.
     """
     def __init__(self, doc_class, cb):
+        """
+        Initialize the AsyncProcessQuery object.
+
+        Args:
+            doc_class (class): The class of the model this query returns.
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+        """
         super(AsyncProcessQuery, self).__init__(doc_class, cb)
         self._query_token = None
         self._timeout = 0
@@ -466,14 +521,14 @@ class AsyncProcessQuery(Query):
 
     def _search(self, start=0, rows=0):
         """
-           Execute the query, iterating over results 500 rows at a time.
+        Execute the query, iterating over results 500 rows at a time.
 
-           Args:
-               start (int): What index to begin retrieving results from.
-               rows (int): Total number of results to be retrieved.
-                           If `start` is not specified, the default of 0 will be used.
-                           If `rows` is not specified, the query will continue until all available results have
-                           been retrieved, getting results in batches of 500.
+        Args:
+           start (int): What index to begin retrieving results from.
+           rows (int): Total number of results to be retrieved.
+                       If `start` is not specified, the default of 0 will be used.
+                       If `rows` is not specified, the query will continue until all available results have
+                       been retrieved, getting results in batches of 500.
         """
         if not self._query_token:
             self._submit()
@@ -547,79 +602,223 @@ class AsyncProcessQuery(Query):
         return list(self._search())
 
 
-class TreeQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
-    """Represents the logic for a Tree query."""
+class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
+    """Represents the logic for a Process Summary or Process Tree query."""
     def __init__(self, doc_class, cb):
-        super(TreeQuery, self).__init__()
+        """
+        Initialize the SummaryQuery object.
+
+        Args:
+            doc_class (class): The class of the model this query returns.
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+        """
+        super(SummaryQuery, self).__init__()
         self._doc_class = doc_class
         self._cb = cb
-        self._args = {}
+        self._query_builder = QueryBuilder()
+        self._query_token = None
+        self._full_init = False
+        self._timeout = 0
+        self._timed_out = False
+        self._time_range = {}
 
-    def where(self, **kwargs):
-        """Adds a conjunctive filter to this TreeQuery.
+    def timeout(self, msecs):
+        """Sets the timeout on a process query.
 
         Arguments:
-            **kwargs: Arguments to invoke the TreeQuery with.
+            msecs (int): Timeout duration, in milliseconds.
 
         Returns:
-            Query (TreeQuery): TreeQuery with added arguments.
+            Query (AsyncProcessQuery): The Query object with new milliseconds
+                parameter.
 
         Example:
 
-        >>> cb.select(Tree).where(process_guid="...")
+        >>> cb.select(Process).where(process_name="foo.exe").timeout(5000)
         """
-        self._args = dict(self._args, **kwargs)
+        self._timeout = msecs
         return self
 
-    def and_(self, **kwargs):
-        """Adds a conjunctive filter to this TreeQuery.
-
-        Arguments:
-            **kwargs: Arguments to invoke the TreeQuery with.
-
-        Returns:
-            Query (TreeQuery): TreeQuery with added arguments.
+    def set_time_range(self, start=None, end=None, window=None):
         """
-        self.where(**kwargs)
+        Sets the 'time_range' query body parameter, determining a time window based on 'device_timestamp'.
+
+        Args:
+            start (str in ISO 8601 timestamp): When to start the result search.
+            end (str in ISO 8601 timestamp): When to end the result search.
+            window (str): Time window to execute the result search, ending on the current time.
+                Should be in the form "-2w", where y=year, w=week, d=day, h=hour, m=minute, s=second.
+
+        Note:
+            - `window` will take precendent over `start` and `end` if provided.
+
+        Examples:
+            query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z")
+            second_query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
+            third_query = api.select(Event).set_time_range(window='-3d')
+        """
+        if start:
+            if not isinstance(start, str):
+                raise ApiError(f"Start time must be a string in ISO 8601 format. {start} is a {type(start)}.")
+            self._time_range["start"] = start
+        if end:
+            if not isinstance(end, str):
+                raise ApiError(f"End time must be a string in ISO 8601 format. {end} is a {type(end)}.")
+            self._time_range["end"] = end
+        if window:
+            if not isinstance(window, str):
+                raise ApiError(f"Window must be a string. {window} is a {type(window)}.")
+            self._time_range["window"] = window
         return self
 
-    def or_(self, **kwargs):
-        """Unsupported. Will raise if called.
+    def _get_query_parameters(self):
+        args = {}
+        if self._time_range:
+            args["time_range"] = self._time_range
+        query = self._query_builder._collapse()
+        if self._query_builder._process_guid is not None:
+            args["process_guid"] = self._query_builder._process_guid
+        elif self._model_unique_id is not None:
+            args["process_guid"] = self._model_unique_id
+        if 'parent_guid:' in query:
+            # extract parent_guid from where() clause
+            parent_guid = query.split('parent_guid:', 1)[1].split(' ', 1)[0]
+            args["parent_guid"] = parent_guid
+        return args
 
-        Raises:
-            APIError: TreeQueries do not support _or() filters.
-        """
-        raise ApiError(".or_() cannot be called on Tree queries")
+    def _submit(self):
+        if self._query_token:
+            raise ApiError("Query already submitted: token {0}".format(self._query_token))
+
+        args = self._get_query_parameters()
+
+        url = "/api/investigate/v2/orgs/{}/processes/summary_jobs".format(self._cb.credentials.org_key)
+        query_start = self._cb.post_object(url, body=args)
+
+        self._query_token = query_start.json().get("job_id")
+
+        self._timed_out = False
+        self._submit_time = time.time() * 1000
+
+    def _still_querying(self):
+        if not self._query_token:
+            self._submit()
+
+        status_url = "/api/investigate/v2/orgs/{}/processes/summary_jobs/{}".format(
+            self._cb.credentials.org_key,
+            self._query_token,
+        )
+        result = self._cb.get_object(status_url)
+
+        searchers_contacted = result.get("contacted", 0)
+        searchers_completed = result.get("completed", 0)
+        log.debug("contacted = {}, completed = {}".format(searchers_contacted, searchers_completed))
+        if searchers_contacted == 0:
+            return True
+        if searchers_completed < searchers_contacted:
+            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:
+                self._timed_out = True
+                return False
+            return True
+
+        return False
+
+    def _count(self):
+        if self._count_valid:
+            return self._total_results
+
+        while self._still_querying():
+            time.sleep(.5)
+
+        if self._timed_out:
+            raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
+
+        result_url = "/api/investigate/v2/orgs/{}/processes/summary_jobs/{}/results".format(
+            self._cb.credentials.org_key,
+            self._query_token,
+        )
+        result = self._cb.get_object(result_url)
+
+        self._total_results = result.get('num_available', 0)
+        self._count_valid = True
+
+        return self._total_results
+
+    def _search(self, start=0, rows=0):
+        """Execute the query, with one expected result."""
+        if not self._query_token:
+            self._submit()
+
+        while self._still_querying():
+            time.sleep(.5)
+
+        if self._timed_out:
+            raise TimeoutError(message="User-specified timeout exceeded while waiting for results")
+
+        log.debug(f"Pulling results, timed_out={self._timed_out}")
+
+        result_url = self._doc_class.result_url.format(self._cb.credentials.org_key, self._query_token)
+
+        if self._doc_class.summary_format == "summary":
+            query_parameters = {"format": "summary"}
+            result = self._cb.get_object(result_url, query_parameters=query_parameters)
+            yield self._doc_class(self._cb, model_unique_id=self._query_token, initial_data=result["summary"])
+        else:
+            query_parameters = {"format": "tree"}
+            result = self._cb.get_object(result_url, query_parameters=query_parameters)
+            yield self._doc_class(self._cb, model_unique_id=self._query_token, initial_data=result["tree"])
 
     def _perform_query(self):
-        if "process_guid" not in self._args:
-            raise ApiError("required parameter process_guid missing")
+        for item in self.results:
+            yield item
 
-        log.debug("Fetching process tree")
+    @property
+    def results(self):
+        """Save query results to self._results with self._search() method."""
+        if not self._full_init:
+            for item in self._search():
+                self._results = item
+            self._full_init = True
 
-        url = self._doc_class.urlobject.format(self._cb.credentials.org_key)
-        results = self._cb.get_object(url, query_parameters=self._args)
+        return self._results
 
-        while results["incomplete_results"]:
-            result = self._cb.get_object(url, query_parameters=self._args)
-            results["nodes"]["children"].extend(result["nodes"]["children"])
-            results["incomplete_results"] = result["incomplete_results"]
+    def _init_async_query(self):
+        """
+        Initialize an async query and return a context for running in the background.
 
-        return results
+        Returns:
+            object: Context for running in the background (the query token).
+        """
+        self._submit()
+        return self._query_token
+
+    def _run_async_query(self, context):
+        """
+        Executed in the background to run an asynchronous query.
+
+        Args:
+            context (object): The context (query token) returned by _init_async_query.
+
+        Returns:
+            Any: Result of the async query, which is then returned by the future.
+        """
+        if context != self._query_token:
+            raise ApiError("Async query not properly started")
+        return list(self._search())
 
 
 class EventQuery(Query):
     """Represents the logic for an Event query."""
     def _search(self, start=0, rows=0):
         """
-           Execute the query, iterating over results 500 rows at a time.
+        Execute the query, iterating over results 500 rows at a time.
 
-           Args:
-               start (int): What index to begin retrieving results from.
-               rows (int): Total number of results to be retrieved.
-                           If `start` is not specified, the default of 0 will be used.
-                           If `rows` is not specified, the query will continue until all available results have
-                           been retrieved, getting results in batches of 500.
+        Args:
+           start (int): What index to begin retrieving results from.
+           rows (int): Total number of results to be retrieved.
+                       If `start` is not specified, the default of 0 will be used.
+                       If `rows` is not specified, the query will continue until all available results have
+                       been retrieved, getting results in batches of 500.
         """
         # iterate over total result set, 100 at a time
         args = self._get_query_parameters()

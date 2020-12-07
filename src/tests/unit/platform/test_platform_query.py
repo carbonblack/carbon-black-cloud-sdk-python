@@ -8,16 +8,16 @@ from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_SUMMARY_RESP,
-                                                             GET_PROCESS_SUMMARY_RESP_1,
-                                                             GET_PROCESS_VALIDATION_RESP,
-                                                             GET_PROCESS_VALIDATION_RESP_INVALID,
-                                                             POST_PROCESS_SEARCH_JOB_RESP,
-                                                             GET_PROCESS_SEARCH_JOB_RESP,
-                                                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP,
-                                                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1,
-                                                             GET_FACET_SEARCH_RESULTS_RESP,
-                                                             GET_FACET_SEARCH_RESULTS_RESP_1,
-                                                             GET_FACET_SEARCH_RESULTS_RESP_NOT_COMPLETE)
+                                                       GET_PROCESS_SUMMARY_RESP_1,
+                                                       GET_PROCESS_VALIDATION_RESP,
+                                                       GET_PROCESS_VALIDATION_RESP_INVALID,
+                                                       POST_PROCESS_SEARCH_JOB_RESP,
+                                                       GET_PROCESS_SEARCH_JOB_RESP,
+                                                       GET_PROCESS_SEARCH_JOB_RESULTS_RESP,
+                                                       GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1,
+                                                       GET_FACET_SEARCH_RESULTS_RESP,
+                                                       GET_FACET_SEARCH_RESULTS_RESP_1,
+                                                       GET_FACET_SEARCH_RESULTS_RESP_NOT_COMPLETE)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
