@@ -28,10 +28,7 @@ log = logging.getLogger(__name__)
 class CBCloudAPI(BaseAPI):
     """The main entry point into the CBCloudAPI.
 
-    :param str profile: (optional) Use the credentials in the named profile when connecting to the Carbon Black server.
-        Uses the profile named 'default' when not specified.
-
-    Usage::
+    Usage:
 
     >>> from cbc_sdk import CBCloudAPI
     >>> cb = CBCloudAPI(profile="production")
@@ -43,6 +40,10 @@ class CBCloudAPI(BaseAPI):
         Args:
             *args (list): List of arguments to pass to the API object.
             **kwargs (dict): Keyword arguments to pass to the API object.
+
+        Keyword Args:
+            profile (str): Use the credentials in the named profile when connecting to the Carbon Black server.
+                Uses the profile named 'default' when not specified.
         """
         super(CBCloudAPI, self).__init__(*args, **kwargs)
         self._thread_pool_count = kwargs.pop('thread_pool_count', 1)
