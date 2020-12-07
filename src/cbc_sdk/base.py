@@ -1158,10 +1158,9 @@ class QueryBuilder(object):
     Provides a flexible interface for building prepared queries for the CB Cloud backend.
 
     This object can be instantiated directly, or can be managed implicitly
-    through the :py:meth:`CBCloudAPI.select` API.
+    through the CBCloudAPI.select API.
 
     Examples:
-
     >>> from cbc_sdk.base import QueryBuilder
     >>> # build a query with chaining
     >>> query = QueryBuilder().where(process_name="malicious.exe").and_(device_name="suspect")
