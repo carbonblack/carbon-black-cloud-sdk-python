@@ -45,6 +45,13 @@ class Process(UnrefreshableModel):
         urlobject = "/api/investigate/v1/orgs/{}/processes/summary"
 
         def __init__(self, cb, model_unique_id):
+            """
+            Initialize the Summary object.
+
+            Args:
+                cb (CBCloudAPI): A reference to the CBCloudAPI object.
+                model_unique_id (str): The unique ID (GUID) for this process.
+            """
             url = self.urlobject.format(cb.credentials.org_key)
 
             summary = cb.get_object(url, query_parameters={"process_guid": model_unique_id})
@@ -63,6 +70,16 @@ class Process(UnrefreshableModel):
         return AsyncProcessQuery(self, cb)
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
+        """
+        Initialize the Process object.
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            model_unique_id (str): The unique ID (GUID) for this process.
+            initial_data (dict): The data to use when initializing the model object.
+            force_init (bool): True to force object initialization.
+            full_doc (bool): True to mark the object as fully initialized.
+        """
         super(Process, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
                                       force_init=force_init, full_doc=full_doc)
 
@@ -216,6 +233,16 @@ class Tree(UnrefreshableModel):
         return TreeQuery(self, cb)
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
+        """
+        Initialize the Tree object.
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            model_unique_id (str): The unique ID for this particular instance of the model object.
+            initial_data (dict): The data to use when initializing the model object.
+            force_init (bool): True to force object initialization.
+            full_doc (bool): True to mark the object as fully initialized.
+        """
         super(Tree, self).__init__(
             cb, model_unique_id=model_unique_id, initial_data=initial_data,
             force_init=force_init, full_doc=full_doc
@@ -341,6 +368,16 @@ class Event(UnrefreshableModel):
         return EventQuery(self, cb)
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
+        """
+        Initialize the Event object.
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            model_unique_id (str): The unique ID for this particular instance of the model object.
+            initial_data (dict): The data to use when initializing the model object.
+            force_init (bool): True to force object initialization.
+            full_doc (bool): True to mark the object as fully initialized.
+        """
         super(Event, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
                                     force_init=force_init, full_doc=full_doc)
 
@@ -376,6 +413,13 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
     """
 
     def __init__(self, doc_class, cb):
+        """
+        Initialize the Query object.
+
+        Args:
+            doc_class (class): The class of the model this query returns.
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+        """
         super(Query, self).__init__(doc_class, cb, None)
 
         self._query_builder = QueryBuilder()
@@ -611,14 +655,14 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
 
     def _search(self, start=0, rows=0):
         """
-           Execute the query, iterating over results 500 rows at a time.
+        Execute the query, iterating over results 500 rows at a time.
 
-           Args:
-               start (int): What index to begin retrieving results from.
-               rows (int): Total number of results to be retrieved.
-                           If `start` is not specified, the default of 0 will be used.
-                           If `rows` is not specified, the query will continue until all available results have
-                           been retrieved, getting results in batches of 500.
+        Args:
+           start (int): What index to begin retrieving results from.
+           rows (int): Total number of results to be retrieved.
+                       If `start` is not specified, the default of 0 will be used.
+                       If `rows` is not specified, the query will continue until all available results have
+                       been retrieved, getting results in batches of 500.
         """
         raise NotImplementedError("_search() method must be implemented in subclass")
 
@@ -641,7 +685,15 @@ class AsyncProcessQuery(Query):
     This class specializes `Query` to handle the particulars of
     process querying.
     """
+
     def __init__(self, doc_class, cb):
+        """
+        Initialize the AsyncProcessQuery object.
+
+        Args:
+            doc_class (class): The class of the model this query returns.
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+        """
         super(AsyncProcessQuery, self).__init__(doc_class, cb)
         self._query_token = None
         self._timeout = 0
@@ -725,14 +777,14 @@ class AsyncProcessQuery(Query):
 
     def _search(self, start=0, rows=0):
         """
-           Execute the query, iterating over results 500 rows at a time.
+        Execute the query, iterating over results 500 rows at a time.
 
-           Args:
-               start (int): What index to begin retrieving results from.
-               rows (int): Total number of results to be retrieved.
-                           If `start` is not specified, the default of 0 will be used.
-                           If `rows` is not specified, the query will continue until all available results have
-                           been retrieved, getting results in batches of 500.
+        Args:
+           start (int): What index to begin retrieving results from.
+           rows (int): Total number of results to be retrieved.
+                       If `start` is not specified, the default of 0 will be used.
+                       If `rows` is not specified, the query will continue until all available results have
+                       been retrieved, getting results in batches of 500.
         """
         if not self._query_token:
             self._submit()
@@ -808,7 +860,15 @@ class AsyncProcessQuery(Query):
 
 class TreeQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
     """Represents the logic for a Tree query."""
+
     def __init__(self, doc_class, cb):
+        """
+        Initialize the TreeQuery object.
+
+        Args:
+            doc_class (class): The class of the model this query returns.
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+        """
         super(TreeQuery, self).__init__()
         self._doc_class = doc_class
         self._cb = cb
@@ -869,16 +929,17 @@ class TreeQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
 
 class EventQuery(Query):
     """Represents the logic for an Event query."""
+
     def _search(self, start=0, rows=0):
         """
-           Execute the query, iterating over results 500 rows at a time.
+        Execute the query, iterating over results 500 rows at a time.
 
-           Args:
-               start (int): What index to begin retrieving results from.
-               rows (int): Total number of results to be retrieved.
-                           If `start` is not specified, the default of 0 will be used.
-                           If `rows` is not specified, the query will continue until all available results have
-                           been retrieved, getting results in batches of 500.
+        Args:
+           start (int): What index to begin retrieving results from.
+           rows (int): Total number of results to be retrieved.
+               If `start` is not specified, the default of 0 will be used.
+               If `rows` is not specified, the query will continue until all available results have
+               been retrieved, getting results in batches of 500.
         """
         # iterate over total result set, 100 at a time
         args = self._get_query_parameters()

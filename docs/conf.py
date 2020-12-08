@@ -1,3 +1,4 @@
+"""Sphinx configuration file"""
 # Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
@@ -131,4 +132,5 @@ autoclass_content = 'both'
 
 
 def setup(app):
+    """Setup Sphinx."""
     app.add_css_file('css/custom.css')

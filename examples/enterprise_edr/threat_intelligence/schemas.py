@@ -26,7 +26,7 @@ IOCSchema = Schema(
         Optional("ipv6"): And([str], len),
         Optional("dns"): And([str], len),
         Optional("query"): [QueryIOCSchema]
-     }
+    }
 )
 
 ReportSchema = Schema(

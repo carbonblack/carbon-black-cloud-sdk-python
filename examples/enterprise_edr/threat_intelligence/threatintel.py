@@ -22,7 +22,9 @@ log = logging.getLogger(__name__)
 
 
 class ThreatIntel:
+    """Object handling Threat Intelligence."""
     def __init__(self):
+        """Initialize the ThreatIntel class."""
         self.cb = CBCloudAPI(timeout=200)
 
     def verify_feed_exists(self, feed_id):
@@ -69,7 +71,6 @@ class ThreatIntel:
             except SchemaError as e:
                 log.warning(f"Report Validation failed. Saving report to file for reference. Error: {e}")
                 malformed_reports.append(report_dict)
-
 
         log.debug(f"Num Reports: {len(report_list_to_send)}")
         try:

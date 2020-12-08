@@ -1,3 +1,5 @@
+"""Mock responses for process queries."""
+
 GET_PROCESS_RESP = {}
 
 GET_PROCESS_VALIDATION_RESP = {
@@ -242,7 +244,7 @@ GET_PROCESS_SEARCH_JOB_RESP = {
         "cb.preview_results": 500,
         "cb.use_agg": True,
         "facet": False,
-        "fl": "*,parent_hash,parent_name,process_cmdline,backend_timestamp,device_external_ip,device_group,device_internal_ip,device_os,process_effective_reputation,process_reputation,ttp",
+        "fl": "*,parent_hash,parent_name,process_cmdline,backend_timestamp,device_external_ip,device_group,device_internal_ip,device_os,process_effective_reputation,process_reputation,ttp",  # noqa: E501
         "fq": "{!collapse field=process_collapse_id sort='max(0,legacy) asc,device_timestamp desc'}",
         "q": "(process_guid:test-0034d5f2-00000ba0-00000000-1d68709850fe521)",
         "rows": 500,
@@ -268,7 +270,7 @@ GET_PROCESS_SUMMARY_RESP = {
         "device_timestamp": "2020-08-26T20:29:20.731Z",
         "enriched": True,
         "enriched_event_type": "CREATE_PROCESS",
-        "event_description": "The application \"<share><link hash=\"5920199e4fbfa47c1717b863814722148a353e54f8c10912cf1f991a1c86309d\">/usr/lib/polkit-1/polkitd</link></share>\" invoked the application \"<share><link hash=\"949317971158c3ba88e19147d2e5c54466c9f665ce3809e38702de6f896cd0fa\">/usr/bin/pkla-check-authorization</link></share>\". ",
+        "event_description": "The application \"<share><link hash=\"5920199e4fbfa47c1717b863814722148a353e54f8c10912cf1f991a1c86309d\">/usr/lib/polkit-1/polkitd</link></share>\" invoked the application \"<share><link hash=\"949317971158c3ba88e19147d2e5c54466c9f665ce3809e38702de6f896cd0fa\">/usr/bin/pkla-check-authorization</link></share>\". ",  # noqa: E501
         "event_id": "f1d97afee7da11ea9affe54c85cd133a",
         "event_type": "childproc",
         "has_children": False,
@@ -318,7 +320,7 @@ GET_PROCESS_SUMMARY_RESP = {
             "device_timestamp": "2020-05-13T12:10:02.073Z",
             "enriched": True,
             "enriched_event_type": "CREATE_PROCESS",
-            "event_description": "The application \"<share><link hash=\"b9e3723553385b6e3d487bfae3878f9f8e57593ae4ec0a1ff4087f94b8e8368a\">/usr/sbin/crond</link></share>\" invoked the application \"<share><link hash=\"5975d972eea6b1c53ef9a69452797439ed5bf63fae72e1780761ea1c2cb6976a\">/usr/bin/bash</link></share>\". ",
+            "event_description": "The application \"<share><link hash=\"b9e3723553385b6e3d487bfae3878f9f8e57593ae4ec0a1ff4087f94b8e8368a\">/usr/sbin/crond</link></share>\" invoked the application \"<share><link hash=\"5975d972eea6b1c53ef9a69452797439ed5bf63fae72e1780761ea1c2cb6976a\">/usr/bin/bash</link></share>\". ",  # noqa: E501
             "event_id": "addca5e2951211eab71c3d5168eb0eaf",
             "event_type": "childproc",
             "has_children": False,
@@ -365,7 +367,7 @@ GET_PROCESS_SUMMARY_RESP = {
             "device_timestamp": "2020-08-11T14:35:30.497Z",
             "enriched": True,
             "enriched_event_type": "CREATE_PROCESS",
-            "event_description": "The application \"<share><link hash=\"2206d95e0a435aadad6c84b5bce370d076137efecf6adbbf6feddbe0515fb17e\">/usr/libexec/nm-dispatcher</link></share>\" invoked the application \"<share><link hash=\"9edd4a6490d43440da046535e8378894490fa0827a2b7101004fb776a0bd7092\">/etc/NetworkManager/dispatcher.d/20-chrony</link></share>\". ",
+            "event_description": "The application \"<share><link hash=\"2206d95e0a435aadad6c84b5bce370d076137efecf6adbbf6feddbe0515fb17e\">/usr/libexec/nm-dispatcher</link></share>\" invoked the application \"<share><link hash=\"9edd4a6490d43440da046535e8378894490fa0827a2b7101004fb776a0bd7092\">/etc/NetworkManager/dispatcher.d/20-chrony</link></share>\". ",  # noqa: E501
             "event_id": "ec9be172dbdf11eab3c8c1649f240e08",
             "event_type": "childproc",
             "has_children": True,
@@ -416,7 +418,7 @@ GET_PROCESS_SUMMARY_RESP = {
             "device_timestamp": "2020-08-11T14:54:40.064Z",
             "enriched": True,
             "enriched_event_type": "CREATE_PROCESS",
-            "event_description": "The application \"<share><link hash=\"2206d95e0a435aadad6c84b5bce370d076137efecf6adbbf6feddbe0515fb17e\">/usr/libexec/nm-dispatcher</link></share>\" invoked the application \"<share><link hash=\"9edd4a6490d43440da046535e8378894490fa0827a2b7101004fb776a0bd7092\">/etc/NetworkManager/dispatcher.d/20-chrony</link></share>\". ",
+            "event_description": "The application \"<share><link hash=\"2206d95e0a435aadad6c84b5bce370d076137efecf6adbbf6feddbe0515fb17e\">/usr/libexec/nm-dispatcher</link></share>\" invoked the application \"<share><link hash=\"9edd4a6490d43440da046535e8378894490fa0827a2b7101004fb776a0bd7092\">/etc/NetworkManager/dispatcher.d/20-chrony</link></share>\". ",  # noqa: E501
             "event_id": "9579a33cdbe211eab3c8c1649f240e08",
             "event_type": "childproc",
             "has_children": True,
@@ -467,7 +469,7 @@ GET_PROCESS_SUMMARY_RESP = {
         "device_timestamp": "2020-08-26T20:20:01.712Z",
         "enriched": True,
         "enriched_event_type": "CREATE_PROCESS",
-        "event_description": "The application \"<share><link hash=\"81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85\">/usr/lib/systemd/systemd</link></share>\" invoked the application \"<share><link hash=\"485750de49ee527061ef804def367bc21e8fed6eae6b8ea5261331e65a46e8bb\">/usr/lib/systemd/systemd-cgroups-agent</link></share>\". ",
+        "event_description": "The application \"<share><link hash=\"81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85\">/usr/lib/systemd/systemd</link></share>\" invoked the application \"<share><link hash=\"485750de49ee527061ef804def367bc21e8fed6eae6b8ea5261331e65a46e8bb\">/usr/lib/systemd/systemd-cgroups-agent</link></share>\". ",  # noqa: E501
         "event_id": "9cd2c752e7d911ea9affe54c85cd133a",
         "event_type": "childproc",
         "has_children": True,
@@ -577,7 +579,7 @@ GET_PROCESS_SUMMARY_RESP_1 = {
             "parent_pid": 680,
             "partition_id": 0,
             "process_cmdline": [
-                "%SystemRoot%\\system32\\csrss.exe ObjectDirectory=\\Windows SharedSection=1024,20480,768 Windows=On SubSystemType=Windows ServerDll=basesrv,1 ServerDll=winsrv:UserServerDllInitialization,3 ServerDll=sxssrv,4 ProfileControl=Off MaxRequestThreads=16"
+                "%SystemRoot%\\system32\\csrss.exe ObjectDirectory=\\Windows SharedSection=1024,20480,768 Windows=On SubSystemType=Windows ServerDll=basesrv,1 ServerDll=winsrv:UserServerDllInitialization,3 ServerDll=sxssrv,4 ProfileControl=Off MaxRequestThreads=16"  # noqa: E501 W505
             ],
             "process_effective_reputation": "TRUSTED_WHITE_LIST",
             "process_guid": "7DESJ9GN-00340b06-000002b0-00000000-1d686b9e4bdf819",
@@ -2591,106 +2593,106 @@ GET_PROCESS_SUMMARY_RESP_2 = {
         "scriptload_count": 0
     },
     "children": [
-            {
-                "_s3_location": "1zQ8BfT2QUeXYSUjbQjZkQ:1747e718a0f:1e258:125d:default:3",
-                "backend_timestamp": "2020-09-11T18:33:27.336Z",
-                "childproc_count": 0,
-                "crossproc_count": 19,
-                "device_external_ip": "52.56.32.175",
-                "device_group_id": 0,
-                "device_id": 3410694,
-                "device_internal_ip": "10.240.0.114",
-                "device_name": "win10-carbonblack",
-                "device_os": "WINDOWS",
-                "device_policy": "default",
-                "device_policy_id": 6525,
-                "device_timestamp": "2020-09-11T18:31:13.332Z",
-                "filemod_count": 0,
-                "has_children": False,
-                "index_class": "default",
-                "ingress_time": 1599849196001,
-                "modload_count": 0,
-                "netconn_count": 0,
-                "org_id": "7DESJ9GN",
-                "parent_guid": "7DESJ9GN-00340b06-00000314-00000000-1d686b9e4d74f52",
-                "parent_hash": [
-                    "d5e122606054fa0b03db3ee8cf9ea7701e523875e2bdb87581ad7232ffc9308e",
-                    "e83650f70459a027aa596e1a73c961a1"
-                ],
-                "parent_name": "c:\\windows\\system32\\wininit.exe",
-                "parent_pid": 788,
-                "partition_id": 0,
-                "process_cmdline": [
-                    "\"fontdrvhost.exe\""
-                ],
-                "process_effective_reputation": "TRUSTED_WHITE_LIST",
-                "process_guid": "7DESJ9GN-00340b06-00000288-00000000-1d686b9e55303cd",
-                "process_hash": [
-                    "87295b931a8811415c3e8e9db19eed93",
-                    "725ffd2bc38975251262e85335e2c68b67a6c645d1948e5c39d43fb976327625"
-                ],
-                "process_name": "c:\\windows\\system32\\fontdrvhost.exe",
-                "process_pid": [
-                    648
-                ],
-                "process_reputation": "TRUSTED_WHITE_LIST",
-                "process_start_time": "2020-09-09T15:00:02.850Z",
-                "process_username": [
-                    "Font Driver Host\\UMFD-0"
-                ],
-                "regmod_count": 0,
-                "scriptload_count": 0
-            },
-            {
-                "_s3_location": "FPzxTk8ORr2rGTrMkESxEg:1747ec36d68:17e08f:e23:default:3",
-                "backend_timestamp": "2020-09-11T20:03:23.737Z",
-                "childproc_count": 240,
-                "crossproc_count": 174,
-                "device_external_ip": "52.56.32.175",
-                "device_group_id": 0,
-                "device_id": 3410694,
-                "device_internal_ip": "10.240.0.114",
-                "device_name": "win10-carbonblack",
-                "device_os": "WINDOWS",
-                "device_policy": "default",
-                "device_policy_id": 6525,
-                "device_timestamp": "2020-09-11T20:00:03.353Z",
-                "filemod_count": 0,
-                "has_children": True,
-                "index_class": "default",
-                "ingress_time": 1599854555174,
-                "modload_count": 0,
-                "netconn_count": 0,
-                "org_id": "7DESJ9GN",
-                "parent_guid": "7DESJ9GN-00340b06-00000314-00000000-1d686b9e4d74f52",
-                "parent_hash": [
-                    "d5e122606054fa0b03db3ee8cf9ea7701e523875e2bdb87581ad7232ffc9308e",
-                    "e83650f70459a027aa596e1a73c961a1"
-                ],
-                "parent_name": "c:\\windows\\system32\\wininit.exe",
-                "parent_pid": 788,
-                "partition_id": 0,
-                "process_cmdline": [
-                    "C:\\WINDOWS\\system32\\services.exe"
-                ],
-                "process_effective_reputation": "TRUSTED_WHITE_LIST",
-                "process_guid": "7DESJ9GN-00340b06-0000038c-00000000-1d686b9e4ea6b5d",
-                "process_hash": [
-                    "bccc12eb2ef644e662a63a023fb83f9b",
-                    "9090e0e44e14709fb09b23b98572e0e61c810189e2de8f7156021bc81c3b1bb6"
-                ],
-                "process_name": "c:\\windows\\system32\\services.exe",
-                "process_pid": [
-                    908
-                ],
-                "process_reputation": "TRUSTED_WHITE_LIST",
-                "process_start_time": "2020-09-09T15:00:02.164Z",
-                "process_username": [
-                    "NT AUTHORITY\\SYSTEM"
-                ],
-                "regmod_count": 50,
-                "scriptload_count": 0
-            },
+        {
+            "_s3_location": "1zQ8BfT2QUeXYSUjbQjZkQ:1747e718a0f:1e258:125d:default:3",
+            "backend_timestamp": "2020-09-11T18:33:27.336Z",
+            "childproc_count": 0,
+            "crossproc_count": 19,
+            "device_external_ip": "52.56.32.175",
+            "device_group_id": 0,
+            "device_id": 3410694,
+            "device_internal_ip": "10.240.0.114",
+            "device_name": "win10-carbonblack",
+            "device_os": "WINDOWS",
+            "device_policy": "default",
+            "device_policy_id": 6525,
+            "device_timestamp": "2020-09-11T18:31:13.332Z",
+            "filemod_count": 0,
+            "has_children": False,
+            "index_class": "default",
+            "ingress_time": 1599849196001,
+            "modload_count": 0,
+            "netconn_count": 0,
+            "org_id": "7DESJ9GN",
+            "parent_guid": "7DESJ9GN-00340b06-00000314-00000000-1d686b9e4d74f52",
+            "parent_hash": [
+                "d5e122606054fa0b03db3ee8cf9ea7701e523875e2bdb87581ad7232ffc9308e",
+                "e83650f70459a027aa596e1a73c961a1"
+            ],
+            "parent_name": "c:\\windows\\system32\\wininit.exe",
+            "parent_pid": 788,
+            "partition_id": 0,
+            "process_cmdline": [
+                "\"fontdrvhost.exe\""
+            ],
+            "process_effective_reputation": "TRUSTED_WHITE_LIST",
+            "process_guid": "7DESJ9GN-00340b06-00000288-00000000-1d686b9e55303cd",
+            "process_hash": [
+                "87295b931a8811415c3e8e9db19eed93",
+                "725ffd2bc38975251262e85335e2c68b67a6c645d1948e5c39d43fb976327625"
+            ],
+            "process_name": "c:\\windows\\system32\\fontdrvhost.exe",
+            "process_pid": [
+                648
+            ],
+            "process_reputation": "TRUSTED_WHITE_LIST",
+            "process_start_time": "2020-09-09T15:00:02.850Z",
+            "process_username": [
+                "Font Driver Host\\UMFD-0"
+            ],
+            "regmod_count": 0,
+            "scriptload_count": 0
+        },
+        {
+            "_s3_location": "FPzxTk8ORr2rGTrMkESxEg:1747ec36d68:17e08f:e23:default:3",
+            "backend_timestamp": "2020-09-11T20:03:23.737Z",
+            "childproc_count": 240,
+            "crossproc_count": 174,
+            "device_external_ip": "52.56.32.175",
+            "device_group_id": 0,
+            "device_id": 3410694,
+            "device_internal_ip": "10.240.0.114",
+            "device_name": "win10-carbonblack",
+            "device_os": "WINDOWS",
+            "device_policy": "default",
+            "device_policy_id": 6525,
+            "device_timestamp": "2020-09-11T20:00:03.353Z",
+            "filemod_count": 0,
+            "has_children": True,
+            "index_class": "default",
+            "ingress_time": 1599854555174,
+            "modload_count": 0,
+            "netconn_count": 0,
+            "org_id": "7DESJ9GN",
+            "parent_guid": "7DESJ9GN-00340b06-00000314-00000000-1d686b9e4d74f52",
+            "parent_hash": [
+                "d5e122606054fa0b03db3ee8cf9ea7701e523875e2bdb87581ad7232ffc9308e",
+                "e83650f70459a027aa596e1a73c961a1"
+            ],
+            "parent_name": "c:\\windows\\system32\\wininit.exe",
+            "parent_pid": 788,
+            "partition_id": 0,
+            "process_cmdline": [
+                "C:\\WINDOWS\\system32\\services.exe"
+            ],
+            "process_effective_reputation": "TRUSTED_WHITE_LIST",
+            "process_guid": "7DESJ9GN-00340b06-0000038c-00000000-1d686b9e4ea6b5d",
+            "process_hash": [
+                "bccc12eb2ef644e662a63a023fb83f9b",
+                "9090e0e44e14709fb09b23b98572e0e61c810189e2de8f7156021bc81c3b1bb6"
+            ],
+            "process_name": "c:\\windows\\system32\\services.exe",
+            "process_pid": [
+                908
+            ],
+            "process_reputation": "TRUSTED_WHITE_LIST",
+            "process_start_time": "2020-09-09T15:00:02.164Z",
+            "process_username": [
+                "NT AUTHORITY\\SYSTEM"
+            ],
+            "regmod_count": 50,
+            "scriptload_count": 0
+        },
     ]
 }
 
@@ -2713,7 +2715,7 @@ GET_TREE_RESP = {
                 "device_timestamp": "2020-05-13T12:10:02.073Z",
                 "enriched": True,
                 "enriched_event_type": "CREATE_PROCESS",
-                "event_description": "The application \"<share><link hash=\"b9e3723553385b6e3d487bfae3878f9f8e57593ae4ec0a1ff4087f94b8e8368a\">/usr/sbin/crond</link></share>\" invoked the application \"<share><link hash=\"5975d972eea6b1c53ef9a69452797439ed5bf63fae72e1780761ea1c2cb6976a\">/usr/bin/bash</link></share>\". ",
+                "event_description": "The application \"<share><link hash=\"b9e3723553385b6e3d487bfae3878f9f8e57593ae4ec0a1ff4087f94b8e8368a\">/usr/sbin/crond</link></share>\" invoked the application \"<share><link hash=\"5975d972eea6b1c53ef9a69452797439ed5bf63fae72e1780761ea1c2cb6976a\">/usr/bin/bash</link></share>\". ",  # noqa: E501
                 "event_id": "addca5e2951211eab71c3d5168eb0eaf",
                 "event_type": "childproc",
                 "has_children": False,
@@ -2757,7 +2759,7 @@ GET_TREE_RESP = {
         "device_timestamp": "2020-08-26T23:01:01.754Z",
         "enriched": True,
         "enriched_event_type": "CREATE_PROCESS",
-        "event_description": "The application \"<share><link hash=\"81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85\">/usr/lib/systemd/systemd</link></share>\" invoked the application \"<share><link hash=\"485750de49ee527061ef804def367bc21e8fed6eae6b8ea5261331e65a46e8bb\">/usr/lib/systemd/systemd-cgroups-agent</link></share>\". ",
+        "event_description": "The application \"<share><link hash=\"81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85\">/usr/lib/systemd/systemd</link></share>\" invoked the application \"<share><link hash=\"485750de49ee527061ef804def367bc21e8fed6eae6b8ea5261331e65a46e8bb\">/usr/lib/systemd/systemd-cgroups-agent</link></share>\". ",  # noqa: E501
         "event_id": "10a46d36e7f011ea9759353269fbac39",
         "event_type": "childproc",
         "has_children": True,

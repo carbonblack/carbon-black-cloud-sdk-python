@@ -22,6 +22,7 @@ log = logging.getLogger(__name__)
 
 
 def get_feed(cb, feed_id=None, feed_name=None):
+    """Retrieve a feed by ID or name."""
     if feed_id:
         return cb.select(Feed, feed_id)
     elif feed_name:
@@ -40,6 +41,7 @@ def get_feed(cb, feed_id=None, feed_name=None):
 
 
 def get_report(feed, report_id=None, report_name=None):
+    """Get a specific report from a feed, by ID or name."""
     if report_id:
         reports = [report for report in feed.reports if report.id == report_id]
 
@@ -65,6 +67,7 @@ def get_report(feed, report_id=None, report_name=None):
 
 
 def list_feeds(cb, parser, args):
+    """List all feeds and their contents."""
     if args.iocs and not args.reports:
         eprint("--iocs specified without --reports")
         sys.exit(1)
@@ -82,6 +85,7 @@ def list_feeds(cb, parser, args):
 
 
 def list_iocs(cb, parser, args):
+    """List all IOCs within a feed."""
     feed = get_feed(cb, feed_id=args.id, feed_name=args.feedname)
 
     for report in feed.reports:
@@ -90,6 +94,7 @@ def list_iocs(cb, parser, args):
 
 
 def export_feed(cb, parser, args):
+    """Export a feed."""
     feed = get_feed(cb, feed_id=args.id, feed_name=args.feedname)
 
     exported = {}
@@ -100,6 +105,7 @@ def export_feed(cb, parser, args):
 
 
 def import_feed(cb, parser, args):
+    """Import a feed."""
     imported = json.loads(sys.stdin.read())
 
     if args.feedname:
@@ -110,11 +116,13 @@ def import_feed(cb, parser, args):
 
 
 def delete_feed(cb, parser, args):
+    """Delete a feed."""
     feed = get_feed(cb, feed_id=args.id, feed_name=args.feedname)
     feed.delete()
 
 
 def export_report(cb, parser, args):
+    """Export a report from a feed."""
     feed = get_feed(cb, feed_id=args.id, feed_name=args.feedname)
     report = get_report(feed, report_id=args.reportid, report_name=args.reportname)
 
@@ -122,6 +130,7 @@ def export_report(cb, parser, args):
 
 
 def import_report(cb, parser, args):
+    """Import a report to a feed."""
     feed = get_feed(cb, feed_id=args.id, feed_name=args.feedname)
 
     imp_dict = json.loads(sys.stdin.read())
@@ -140,12 +149,14 @@ def import_report(cb, parser, args):
 
 
 def delete_report(cb, parser, args):
+    """Delete a report from a feed."""
     feed = get_feed(cb, feed_id=args.id, feed_name=args.feedname)
     report = get_report(feed, report_id=args.reportid, report_name=args.reportname)
     report.delete()
 
 
 def replace_report(cb, parser, args):
+    """Replace a report in a feed."""
     feed = get_feed(cb, feed_id=args.id, feed_name=args.feedname)
 
     imported = json.loads(sys.stdin.read())
@@ -163,6 +174,7 @@ def replace_report(cb, parser, args):
 
 
 def main():
+    """Main function of the Feed Operations script."""
     parser = build_cli_parser()
     commands = parser.add_subparsers(help="Feed commands", dest="command_name")
 

@@ -1,3 +1,5 @@
+"""Tests for audit and remediation queries."""
+
 import pytest
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.audit_remediation import Run, RunQuery, RunHistoryQuery
@@ -20,6 +22,7 @@ def test_async_submit():
 
 
 def test_simple_get(monkeypatch):
+    """Test a simple "get" of a run status object."""
     _was_called = False
 
     def _get_run(url, parms=None, default=None):
@@ -38,6 +41,7 @@ def test_simple_get(monkeypatch):
 
 
 def test_audit_remediation(monkeypatch):
+    """Test a simple query run."""
     _was_called = False
 
     def _run_query(url, body, **kwargs):
@@ -59,6 +63,7 @@ def test_audit_remediation(monkeypatch):
 
 
 def test_audit_remediation_with_everything(monkeypatch):
+    """Test an audit remediation query with all possible options."""
     _was_called = False
 
     def _run_query(url, body, **kwargs):
@@ -72,8 +77,8 @@ def test_audit_remediation_with_everything(monkeypatch):
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, POST=_run_query)
-    query = api.audit_remediation("select * from whatever;").device_ids([1, 2, 3]).device_types(["Alpha", "Bravo", "Charlie"]) \
-        .policy_id(16).name("AmyWasHere").notify_on_finish()
+    query = api.audit_remediation("select * from whatever;").device_ids([1, 2, 3]) \
+        .device_types(["Alpha", "Bravo", "Charlie"]).policy_id(16).name("AmyWasHere").notify_on_finish()
     assert isinstance(query, RunQuery)
     run = query.submit()
     assert _was_called
@@ -83,6 +88,7 @@ def test_audit_remediation_with_everything(monkeypatch):
 
 
 def test_audit_remediation_device_ids_broken():
+    """Test submitting a bad device ID to a query."""
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     query = api.audit_remediation("select * from whatever;")
     with pytest.raises(ApiError):
@@ -90,6 +96,7 @@ def test_audit_remediation_device_ids_broken():
 
 
 def test_audit_remediation_device_types_broken():
+    """Test submitting a bad device type to a query."""
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     query = api.audit_remediation("select * from whatever;")
     with pytest.raises(ApiError):
@@ -97,6 +104,7 @@ def test_audit_remediation_device_types_broken():
 
 
 def test_audit_remediation_policy_id_broken():
+    """Test submitting a bad policy ID to a query."""
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     query = api.audit_remediation("select * from whatever;")
     with pytest.raises(ApiError):
@@ -104,6 +112,7 @@ def test_audit_remediation_policy_id_broken():
 
 
 def test_audit_remediation_history(monkeypatch):
+    """Test a query of run history."""
     _was_called = False
 
     def _run_query(url, body, **kwargs):
@@ -137,6 +146,7 @@ def test_audit_remediation_history(monkeypatch):
 
 
 def test_audit_remediation_history_with_everything(monkeypatch):
+    """Test a query of run history with all possible options."""
     _was_called = False
 
     def _run_query(url, body, **kwargs):

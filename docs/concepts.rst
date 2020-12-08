@@ -265,9 +265,101 @@ Modules with Support for Criteria
 
   - :meth:`cbc_sdk.platform.alerts.VMwareAlertSearchQuery.set_group_ids`
 
+:mod:`Event <cbc_sdk.enterprise_edr.base.Event>`
+
+:mod:`Process <cbc_sdk.enterprise_edr.base.Process>`
+
 Modules not yet Supported for Criteria
 """"""""""""""""""""""""""""""""""""""
 
 :mod:`RunHistory <cbc_sdk.audit_remediation.base.RunHistory>`
-:mod:`Event <cbc_sdk.enterprise_edr.base.Event>`
+
+
+Asynchronous queries
+--------------------
+
+A number of queries allow for asynchronous mode of operation. Those utilize python futures and the request itself is performed in a separate worker thread.
+An internal thread pool is utilized to support multiple CBC queries executing in an asynchronous manner without blocking the main thread.
+
+Execute an asynchronous query
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Running asynchronous queries is done by invoking the ``execute_async()`` method, e.g:
+
+  >>> async_query = api.select(EnrichedEvent).where('process_name:chrome.exe').execute_async()
+
+The ``execute_async()`` method returns a python future object that can be later on waited for results.
+
+Fetching asynchronous queries' results
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Results from asynchronous queries can be retrieved by using the result() method since they are actually futures:
+
+  >>> print(async_query.result())
+
+This would block the main thread until the query completes.
+
+Modules with support for asynchronous queries
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 :mod:`Process <cbc_sdk.enterprise_edr.base.Process>`
+
+:mod:`ProcessFacet <cbc_sdk.enterprise_edr.base.ProcessFacet>`
+
+:mod:`EnrichedEvent <cbc_sdk.endpoint_standard.base.EnrichedEvent>`
+
+:mod:`EnrichedEventFacet <cbc_sdk.endpoint_standard.base.EnrichedEventFacet>`
+
+
+Facets
+------
+
+Facet search queries return statistical information indicating the relative weighting of the requested values as per the specified criteria.
+There are two types of criteria that can be set, one is the ``range`` type which is used to specify discrete values (integers or timestamps - specified both as seconds since epoch and also as ISO 8601 strings).
+The results are then grouped by occurence within the specified range.
+The other type is the ``term`` type which allow for one or more fields to use as a criteria on which to return weighted results.
+
+Setting ranges
+^^^^^^^^^^^^^^
+
+Ranges are configured via the ``add_range()`` method which accepts a dictionary of range settings or a list of range dictionaries:
+
+    >>> range = {
+    ...                 "bucket_size": "+1DAY",
+    ...                 "start": "2020-10-16T00:00:00Z",
+    ...                 "end": "2020-11-16T00:00:00Z",
+    ...                 "field": "device_timestamp"
+    ...         }
+    >>> query = api.select(EnrichedEventFacet).where(process_pid=1000).add_range(range)
+    
+The range settings are as follows:
+
+* ``field`` - the field to return the range for, should be a discrete one (integer or ISO 8601 timestamp) 
+* ``start`` - the value to begin grouping at
+* ``end`` - the value to end grouping at
+* ``bucket_size``- how large of a bucket to group results in. If grouping an ISO 8601 property, use a string like '-3DAYS'
+
+Multiple ranges can be configured per query by passing a list of range dictionaries.
+
+Setting terms
+^^^^^^^^^^^^^
+
+Terms are configured via the ``add_facet_field()`` method:
+
+    >>> query = api.select(EnrichedEventFacet).where(process_pid=1000).add_facet_field("process_name")
+
+The argument to add_facet_field method is the name of the field to be summarized.
+    
+Getting facet results
+^^^^^^^^^^^^^^^^^^^^^
+
+The query result for facet queries is a single object with two properties: ``terms`` and ``ranges`` that contain the facet search result weighted as per the criteria provided
+
+
+Modules with support for facet searches
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+:mod:`ProcessFacet <cbc_sdk.enterprise_edr.base.ProcessFacet>`
+
+:mod:`EnrichedEventFacet <cbc_sdk.endpoint_standard.base.EnrichedEventFacet>`
+

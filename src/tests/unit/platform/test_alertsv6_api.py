@@ -9,6 +9,8 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
+"""Tests of the Alerts V6 API queries."""
+
 import pytest
 from cbc_sdk.errors import ApiError
 from cbc_sdk.platform import BaseAlert, CBAnalyticsAlert, VMwareAlert, WatchlistAlert, WorkflowStatus
@@ -17,6 +19,7 @@ from tests.unit.fixtures.stubresponse import StubResponse, patch_cbapi
 
 
 def test_query_basealert_with_all_bells_and_whistles(monkeypatch):
+    """Test an alert query with all options selected."""
     _was_called = False
 
     def _run_query(url, body, **kwargs):
@@ -56,6 +59,7 @@ def test_query_basealert_with_all_bells_and_whistles(monkeypatch):
 
 
 def test_query_basealert_with_create_time_as_start_end(monkeypatch):
+    """Test an alert query with the creation time specified as a start and end time."""
     _was_called = False
 
     def _run_query(url, body, **kwargs):
@@ -81,6 +85,7 @@ def test_query_basealert_with_create_time_as_start_end(monkeypatch):
 
 
 def test_query_basealert_with_create_time_as_range(monkeypatch):
+    """Test an alert query with the creation time specified as a range."""
     _was_called = False
 
     def _run_query(url, body, **kwargs):
@@ -104,6 +109,7 @@ def test_query_basealert_with_create_time_as_range(monkeypatch):
 
 
 def test_query_basealert_facets(monkeypatch):
+    """Test an alert facet query."""
     _was_called = False
 
     def _run_facet_query(url, body, **kwargs):
@@ -131,6 +137,7 @@ def test_query_basealert_facets(monkeypatch):
 
 
 def test_query_basealert_invalid_create_time_combinations():
+    """Test invalid create time combinations being supplied to alert queries."""
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     with pytest.raises(ApiError):
         api.select(BaseAlert).set_create_time()
@@ -143,36 +150,37 @@ def test_query_basealert_invalid_create_time_combinations():
         api.select(BaseAlert).set_create_time(end="2019-10-01T12:00:12", range="-3w")
 
 
-def test_query_basealert_invalid_criteria_values():
-    tests = [
-        {"method": "set_categories", "arg": ["DOUBLE_DARE"]},
-        {"method": "set_device_ids", "arg": ["Bogus"]},
-        {"method": "set_device_names", "arg": [42]},
-        {"method": "set_device_os", "arg": ["TI994A"]},
-        {"method": "set_device_os_versions", "arg": [8808]},
-        {"method": "set_device_username", "arg": [-1]},
-        {"method": "set_alert_ids", "arg": [9001]},
-        {"method": "set_legacy_alert_ids", "arg": [9001]},
-        {"method": "set_policy_ids", "arg": ["Bogus"]},
-        {"method": "set_policy_names", "arg": [323]},
-        {"method": "set_process_names", "arg": [7071]},
-        {"method": "set_process_sha256", "arg": [123456789]},
-        {"method": "set_reputations", "arg": ["MICROSOFT_FUDWARE"]},
-        {"method": "set_tags", "arg": [-1]},
-        {"method": "set_target_priorities", "arg": ["DOGWASH"]},
-        {"method": "set_threat_ids", "arg": [4096]},
-        {"method": "set_types", "arg": ["ERBOSOFT"]},
-        {"method": "set_workflows", "arg": ["IN_LIMBO"]},
-        ]
+@pytest.mark.parametrize("method, arg", [
+    ("set_categories", ["DOUBLE_DARE"]),
+    ("set_device_ids", ["Bogus"]),
+    ("set_device_names", [42]),
+    ("set_device_os", ["TI994A"]),
+    ("set_device_os_versions", [8808]),
+    ("set_device_username", [-1]),
+    ("set_alert_ids", [9001]),
+    ("set_legacy_alert_ids", [9001]),
+    ("set_policy_ids", ["Bogus"]),
+    ("set_policy_names", [323]),
+    ("set_process_names", [7071]),
+    ("set_process_sha256", [123456789]),
+    ("set_reputations", ["MICROSOFT_FUDWARE"]),
+    ("set_tags", [-1]),
+    ("set_target_priorities", ["DOGWASH"]),
+    ("set_threat_ids", [4096]),
+    ("set_types", ["ERBOSOFT"]),
+    ("set_workflows", ["IN_LIMBO"])
+])
+def test_query_basealert_invalid_criteria_values(method, arg):
+    """Test invalid values being supplied to alert queries."""
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     query = api.select(BaseAlert)
-    for t in tests:
-        meth = getattr(query, t["method"], None)
-        with pytest.raises(ApiError):
-            meth(t["arg"])
+    meth = getattr(query, method, None)
+    with pytest.raises(ApiError):
+        meth(arg)
 
 
 def test_query_cbanalyticsalert_with_all_bells_and_whistles(monkeypatch):
+    """Test a CB Analytics alert query with all options selected."""
     _was_called = False
 
     def _run_query(url, body, **kwargs):
@@ -219,6 +227,7 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(monkeypatch):
 
 
 def test_query_cbanalyticsalert_facets(monkeypatch):
+    """Test a CB Analytics alert facet query."""
     _was_called = False
 
     def _run_facet_query(url, body, **kwargs):
@@ -242,27 +251,28 @@ def test_query_cbanalyticsalert_facets(monkeypatch):
                  {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
 
 
-def test_query_cbanalyticsalert_invalid_criteria_values():
-    tests = [
-        {"method": "set_blocked_threat_categories", "arg": ["MINOR"]},
-        {"method": "set_device_locations", "arg": ["NARNIA"]},
-        {"method": "set_kill_chain_statuses", "arg": ["SPAWN_COPIES"]},
-        {"method": "set_not_blocked_threat_categories", "arg": ["MINOR"]},
-        {"method": "set_policy_applied", "arg": ["MAYBE"]},
-        {"method": "set_reason_code", "arg": [55]},
-        {"method": "set_run_states", "arg": ["MIGHT_HAVE"]},
-        {"method": "set_sensor_actions", "arg": ["FLIP_A_COIN"]},
-        {"method": "set_threat_cause_vectors", "arg": ["NETWORK"]}
-        ]
+@pytest.mark.parametrize("method, arg", [
+    ("set_blocked_threat_categories", ["MINOR"]),
+    ("set_device_locations", ["NARNIA"]),
+    ("set_kill_chain_statuses", ["SPAWN_COPIES"]),
+    ("set_not_blocked_threat_categories", ["MINOR"]),
+    ("set_policy_applied", ["MAYBE"]),
+    ("set_reason_code", [55]),
+    ("set_run_states", ["MIGHT_HAVE"]),
+    ("set_sensor_actions", ["FLIP_A_COIN"]),
+    ("set_threat_cause_vectors", ["NETWORK"])
+])
+def test_query_cbanalyticsalert_invalid_criteria_values(method, arg):
+    """Test invalid values being supplied to CB Analytics alert queries."""
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     query = api.select(CBAnalyticsAlert)
-    for t in tests:
-        meth = getattr(query, t["method"], None)
-        with pytest.raises(ApiError):
-            meth(t["arg"])
+    meth = getattr(query, method, None)
+    with pytest.raises(ApiError):
+        meth(arg)
 
 
 def test_query_vmwarealert_with_all_bells_and_whistles(monkeypatch):
+    """Test a VMware alert query with all options selected."""
     _was_called = False
 
     def _run_query(url, body, **kwargs):
@@ -302,6 +312,7 @@ def test_query_vmwarealert_with_all_bells_and_whistles(monkeypatch):
 
 
 def test_query_vmwarealert_facets(monkeypatch):
+    """Test a VMware alert facet query."""
     _was_called = False
 
     def _run_facet_query(url, body, **kwargs):
@@ -326,13 +337,14 @@ def test_query_vmwarealert_facets(monkeypatch):
 
 
 def test_query_vmwarealert_invalid_group_ids():
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234",
-                       org_key="Z100", ssl_verify=True)
+    """Test error message for invalid group IDs for VMware alert queries."""
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     with pytest.raises(ApiError):
         api.select(VMwareAlert).set_group_ids(["Bogus"])
 
 
 def test_query_watchlistalert_with_all_bells_and_whistles(monkeypatch):
+    """Test a watchlist alert query with all options selected."""
     _was_called = False
 
     def _run_query(url, body, **kwargs):
@@ -373,6 +385,7 @@ def test_query_watchlistalert_with_all_bells_and_whistles(monkeypatch):
 
 
 def test_query_watchlistalert_facets(monkeypatch):
+    """Test a watchlist alert facet query."""
     _was_called = False
 
     def _run_facet_query(url, body, **kwargs):
@@ -397,8 +410,8 @@ def test_query_watchlistalert_facets(monkeypatch):
 
 
 def test_query_watchlistalert_invalid_criteria_values():
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234",
-                       org_key="Z100", ssl_verify=True)
+    """Test error messages for invalid watchlist alert criteria values."""
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     with pytest.raises(ApiError):
         api.select(WatchlistAlert).set_watchlist_ids([888])
     with pytest.raises(ApiError):
@@ -406,6 +419,7 @@ def test_query_watchlistalert_invalid_criteria_values():
 
 
 def test_alerts_bulk_dismiss(monkeypatch):
+    """Test dismissing a batch of alerts."""
     _was_called = False
 
     def _do_dismiss(url, body, **kwargs):
@@ -425,6 +439,7 @@ def test_alerts_bulk_dismiss(monkeypatch):
 
 
 def test_alerts_bulk_undismiss(monkeypatch):
+    """Test undismissing a batch of alerts."""
     _was_called = False
 
     def _do_update(url, body, **kwargs):
@@ -444,6 +459,7 @@ def test_alerts_bulk_undismiss(monkeypatch):
 
 
 def test_alerts_bulk_dismiss_watchlist(monkeypatch):
+    """Test dismissing a batch of watchlist alerts."""
     _was_called = False
 
     def _do_dismiss(url, body, **kwargs):
@@ -463,6 +479,7 @@ def test_alerts_bulk_dismiss_watchlist(monkeypatch):
 
 
 def test_alerts_bulk_dismiss_cbanalytics(monkeypatch):
+    """Test dismissing a batch of CB Analytics alerts."""
     _was_called = False
 
     def _do_dismiss(url, body, **kwargs):
@@ -482,6 +499,7 @@ def test_alerts_bulk_dismiss_cbanalytics(monkeypatch):
 
 
 def test_alerts_bulk_dismiss_vmware(monkeypatch):
+    """Test dismissing a batch of VMware alerts."""
     _was_called = False
 
     def _do_dismiss(url, body, **kwargs):
@@ -501,6 +519,7 @@ def test_alerts_bulk_dismiss_vmware(monkeypatch):
 
 
 def test_alerts_bulk_dismiss_threat(monkeypatch):
+    """Test dismissing a batch of threat alerts."""
     _was_called = False
 
     def _do_dismiss(url, body, **kwargs):
@@ -519,6 +538,7 @@ def test_alerts_bulk_dismiss_threat(monkeypatch):
 
 
 def test_alerts_bulk_undismiss_threat(monkeypatch):
+    """Test undismissing a batch of threat alerts."""
     _was_called = False
 
     def _do_update(url, body, **kwargs):
@@ -537,6 +557,7 @@ def test_alerts_bulk_undismiss_threat(monkeypatch):
 
 
 def test_load_workflow(monkeypatch):
+    """Test loading a workflow status."""
     _was_called = False
 
     def _get_workflow(url, parms=None, default=None):
@@ -547,8 +568,7 @@ def test_load_workflow(monkeypatch):
                 "workflow": {"state": "DISMISSED", "remediation": "Fixed", "comment": "Yessir",
                              "changed_by": "Robocop", "last_update_time": "2019-10-31T16:03:13.951Z"}}
 
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234",
-                       org_key="Z100", ssl_verify=True)
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbapi(monkeypatch, api, GET=_get_workflow)
     workflow = api.select(WorkflowStatus, "497ABX")
     assert _was_called

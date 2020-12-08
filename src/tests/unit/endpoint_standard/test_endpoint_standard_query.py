@@ -89,6 +89,8 @@ def test_endpoint_standard_query_and(cbcsdk_mock):
     another_dev_query.and_(hostNameExact='Win7x64')
     another_dev_query.and_(ownerName='Dev')
     another_dev_query.and_(ownerNameExact='DeveloperRelations')
-    assert another_dev_query._query_builder._collapse() == '((hostName:Win7 AND hostNameExact:Win7x64) AND ownerName:Dev) AND ownerNameExact:DeveloperRelations'
+    assert another_dev_query._query_builder._collapse() == \
+           '((hostName:Win7 AND hostNameExact:Win7x64) AND ownerName:Dev) AND ownerNameExact:DeveloperRelations'
     request = another_dev_query.prepare_query({})
-    assert request == {'hostName': 'Win7', 'hostNameExact': 'Win7x64', 'ownerName': 'Dev', 'ownerNameExact': 'DeveloperRelations'}
+    assert request == {'hostName': 'Win7', 'hostNameExact': 'Win7x64', 'ownerName': 'Dev',
+                       'ownerNameExact': 'DeveloperRelations'}
