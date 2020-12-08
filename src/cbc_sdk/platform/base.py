@@ -76,7 +76,7 @@ class Process(UnrefreshableModel):
                 full_doc (bool): True to mark the object as fully initialized.
             """
             if model_unique_id is not None and initial_data is None:
-                initial_data = cb.select(Process.Tree).where(process_guid=model_unique_id).results._info
+                initial_data = cb.select(Process.Summary).where(process_guid=model_unique_id).results._info
             super(Process.Summary, self).__init__(cb, model_unique_id=model_unique_id,
                                                   initial_data=initial_data, force_init=False,
                                                   full_doc=True)
@@ -762,11 +762,17 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         if self._doc_class.summary_format == "summary":
             query_parameters = {"format": "summary"}
             result = self._cb.get_object(result_url, query_parameters=query_parameters)
-            yield self._doc_class(self._cb, model_unique_id=self._query_token, initial_data=result["summary"])
+            if result["exception"] == "":
+                yield self._doc_class(self._cb, model_unique_id=self._query_token, initial_data=result["summary"])
+            else:
+                raise ApiError(f"Failed to get Process Summary: {result['exception']}")
         else:
             query_parameters = {"format": "tree"}
             result = self._cb.get_object(result_url, query_parameters=query_parameters)
-            yield self._doc_class(self._cb, model_unique_id=self._query_token, initial_data=result["tree"])
+            if result["exception"] == "":
+                yield self._doc_class(self._cb, model_unique_id=self._query_token, initial_data=result["tree"])
+            else:
+                raise ApiError(f"Failed to get Process Tree: {result['exception']}")
 
     def _perform_query(self):
         for item in self.results:

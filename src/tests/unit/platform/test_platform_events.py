@@ -6,10 +6,14 @@ from cbc_sdk.platform import Event, Process
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_events import (EVENT_SEARCH_VALIDATION_RESP,
-                                                            EVENT_SEARCH_RESP_INTERIM,
-                                                            EVENT_SEARCH_RESP,
-                                                            EVENT_SEARCH_RESP_PART_ONE,
-                                                            EVENT_SEARCH_RESP_PART_TWO)
+                                                      EVENT_SEARCH_RESP_INTERIM,
+                                                      EVENT_SEARCH_RESP,
+                                                      EVENT_SEARCH_RESP_PART_ONE,
+                                                      EVENT_SEARCH_RESP_PART_TWO)
+from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_VALIDATION_RESP,
+                                                       POST_PROCESS_SEARCH_JOB_RESP,
+                                                       GET_PROCESS_SEARCH_JOB_RESP,
+                                                       GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -33,6 +37,20 @@ def cbcsdk_mock(monkeypatch, cb):
 
 def test_event_query_process_select_with_guid(cbcsdk_mock):
     """Test Event Querying with GUID inside process.select()"""
+    # mock the search validation
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+                             GET_PROCESS_VALIDATION_RESP)
+    # mock the POST of a search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_job",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
     api = cbcsdk_mock.api
     guid = "J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e"
     process = api.select(Process, guid)

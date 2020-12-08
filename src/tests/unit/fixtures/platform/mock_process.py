@@ -141,7 +141,7 @@ GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1 = {
             "process_guid": "test-003513bc-00000001-00000000-1d640200c9a61d7",
             "process_hash": [
                 "d5e122606054fa0b03db3ee8cf9ea7701e523875e2bdb87581ad7232ffc9308e",
-                "c7084336325dc8eadfb1e8ff876921c4"
+                "12384336325dc8eadfb1e8ff876921c4"
             ],
             "process_name": "c:\\program files\\vmware\\vmware tools\\vmtoolsd.exe",
             "process_pid": [
@@ -213,7 +213,7 @@ GET_PROCESS_SEARCH_JOB_RESULTS_RESP_2 = {
             "process_guid": "test-003513bc-00000001-00000000-1d640200c9a61d7",
             "process_hash": [
                 "63d423ea882264dbb157a965c200306212fc5e1c6ddb8cbbb0f1d3b51ecd82e6",
-                "c7084336325dc8eadfb1e8ff876921c4"
+                "45684336325dc8eadfb1e8ff876921c4"
             ],
             "process_name": "c:\\program files\\vmware\\vmware tools\\vmtoolsd.exe",
             "process_pid": [
@@ -315,6 +315,72 @@ GET_PROCESS_SEARCH_PARENT_JOB_RESULTS_RESP = {
     "completed": 45
 }
 
+
+GET_PROCESS_SEARCH_PARENT_JOB_RESULTS_RESP_1 = {
+    "results": [
+        {
+            "backend_timestamp": "2020-09-11T19:35:02.972Z",
+            "childproc_count": 0,
+            "crossproc_count": 787,
+            "device_external_ip": "192.168.0.1",
+            "device_group_id": 0,
+            "device_id": 1234567,
+            "device_internal_ip": "192.168.0.2",
+            "device_name": "Windows10Device",
+            "device_os": "WINDOWS",
+            "device_policy_id": 12345,
+            "device_timestamp": "2020-09-11T19:32:12.821Z",
+            "enriched": True,
+            "enriched_event_type": [
+                "INJECT_CODE",
+                "SYSTEM_API_CALL"
+            ],
+            "event_type": [
+                "crossproc"
+            ],
+            "filemod_count": 0,
+            "ingress_time": 1599852859660,
+            "legacy": True,
+            "modload_count": 1,
+            "netconn_count": 0,
+            "org_id": "test",
+            "process_cmdline": [
+                "\"C:\\Program Files\\VMware\\VMware Tools\\vmtoolsd.exe\""
+            ],
+            "process_effective_reputation": "TRUSTED_WHITE_LIST",
+            "process_guid": "test-0002b226-00000001-00000000-1d6225bbba74c01",
+            "process_hash": [
+                "5920199e4fbfa47c1717b863814722148a353e54f8c10912cf1f991a1c86309d",
+                "c7084336325dc8eadfb1e8ff876921c4"
+            ],
+            "process_name": "c:\\program files\\vmware\\vmware tools\\vmtoolsd.exe",
+            "process_pid": [
+                2976
+            ],
+            "process_reputation": "TRUSTED_WHITE_LIST",
+            "process_username": [
+                "Username"
+            ],
+            "regmod_count": 1,
+            "scriptload_count": 0,
+            "ttp": [
+                "ENUMERATE_PROCESSES",
+                "INJECT_CODE",
+                "MITRE_T1003_CREDENTIAL_DUMP",
+                "MITRE_T1005_DATA_FROM_LOCAL_SYS",
+                "MITRE_T1055_PROCESS_INJECT",
+                "MITRE_T1057_PROCESS_DISCOVERY",
+                "RAM_SCRAPING",
+                "READ_SECURITY_DATA"
+            ]
+        }
+    ],
+    "num_found": 6168,
+    "num_available": 1,
+    "contacted": 45,
+    "completed": 45
+}
+
 GET_PROCESS_SEARCH_JOB_RESP = {
     "contacted": 45,
     "completed": 45,
@@ -338,9 +404,111 @@ GET_PROCESS_SEARCH_JOB_RESP = {
 GET_PROCESS_SUMMARY_RESP = {
   "completed": 30,
   "contacted": 30,
-  "exception": "string",
+  "exception": "",
   "summary": {
-    "children": [],
+    "children": [
+        {
+            "_process_filename": "mpcmdrun.exe",
+            "backend_timestamp": "2020-12-03T20:33:19.002Z",
+            "childproc_count": 1,
+            "crossproc_count": 5,
+            "device_external_ip": "24.243.76.124",
+            "device_group_id": 0,
+            "device_id": 329219,
+            "device_internal_ip": "172.16.115.191",
+            "device_name": "desktop-8qonquj",
+            "device_os": "WINDOWS",
+            "device_policy": "default",
+            "device_policy_id": 2198,
+            "device_timestamp": "2020-12-03T20:31:13.097Z",
+            "filemod_count": 1,
+            "has_children": True,
+            "hits": False,
+            "ingress_time": 1607027590489,
+            "modload_count": 18,
+            "netconn_count": 0,
+            "org_id": "WNEXFKQ7",
+            "parent_guid": "WNEXFKQ7-00050603-00000b6c-00000000-1d6c86e29731218",
+            "parent_hash": [
+                "9520a99e77d6196d0d09833146424113",
+                "dd191a5b23df92e12a8852291f9fb5ed594b76a28a5a464418442584afd1e048"
+            ],
+            "parent_name": "c:\\windows\\system32\\svchost.exe",
+            "parent_pid": 2924,
+            "process_cmdline": [
+                "\"C:\\Program Files\\Windows Defender\\mpcmdrun.exe\" -wddisable"
+            ],
+            "process_effective_reputation": "TRUSTED_WHITE_LIST",
+            "process_guid": "WNEXFKQ7-00050603-0000157c-00000000-1d6c9b339b4a0cd",
+            "process_hash": [
+                "cc4f6cbde75f08afdcefb95087149a5d",
+                "885557be148de55f6a127ea26ac457b9415e3e3baf30266d82b9d19b89e78ee4"
+            ],
+            "process_name": "c:\\program files\\windows defender\\mpcmdrun.exe",
+            "process_pid": [
+                5500
+            ],
+            "process_reputation": "TRUSTED_WHITE_LIST",
+            "process_start_time": "2020-12-03T20:31:05.847Z",
+            "process_terminated": True,
+            "process_username": [
+                "NT AUTHORITY\\LOCAL SERVICE"
+            ],
+            "regmod_count": 0,
+            "scriptload_count": 0
+        },
+        {
+            "_process_filename": "mpcmdrun.exe",
+            "backend_timestamp": "2020-12-02T05:59:53.548Z",
+            "childproc_count": 1,
+            "crossproc_count": 4,
+            "device_external_ip": "24.243.76.124",
+            "device_group": "schumaker-test",
+            "device_group_id": 1706,
+            "device_id": 329219,
+            "device_internal_ip": "172.16.115.191",
+            "device_name": "desktop-8qonquj",
+            "device_os": "WINDOWS",
+            "device_policy": "default",
+            "device_policy_id": 2198,
+            "device_timestamp": "2020-12-02T05:45:15.950Z",
+            "filemod_count": 1,
+            "has_children": True,
+            "hits": False,
+            "ingress_time": 1606888776302,
+            "modload_count": 16,
+            "netconn_count": 0,
+            "org_id": "WNEXFKQ7",
+            "parent_guid": "WNEXFKQ7-00050603-00000b6c-00000000-1d6c86e29731218",
+            "parent_hash": [
+                "9520a99e77d6196d0d09833146424113",
+                "dd191a5b23df92e12a8852291f9fb5ed594b76a28a5a464418442584afd1e048"
+            ],
+            "parent_name": "c:\\windows\\system32\\svchost.exe",
+            "parent_pid": 2924,
+            "process_cmdline": [
+                "\"C:\\Program Files\\Windows Defender\\mpcmdrun.exe\" -wdenable"
+            ],
+            "process_effective_reputation": "TRUSTED_WHITE_LIST",
+            "process_guid": "WNEXFKQ7-00050603-00001d78-00000000-1d6c86e4f3c4a8f",
+            "process_hash": [
+                "cc4f6cbde75f08afdcefb95087149a5d",
+                "885557be148de55f6a127ea26ac457b9415e3e3baf30266d82b9d19b89e78ee4"
+            ],
+            "process_name": "c:\\program files\\windows defender\\mpcmdrun.exe",
+            "process_pid": [
+                7544
+            ],
+            "process_reputation": "TRUSTED_WHITE_LIST",
+            "process_start_time": "2020-12-02T05:45:15.531Z",
+            "process_terminated": True,
+            "process_username": [
+                "NT AUTHORITY\\LOCAL SERVICE"
+            ],
+            "regmod_count": 0,
+            "scriptload_count": 0
+        }
+    ],
     "parent": {
         "_process_filename": "systemd",
         "backend_timestamp": "2020-08-28T19:12:07.989Z",
@@ -579,14 +747,167 @@ GET_PROCESS_SUMMARY_RESP_1 = {
             }
         ],
         "parent": {},
-        "children": []
+        "children": [
+            {
+                "_process_filename": "mpcmdrun.exe",
+                "backend_timestamp": "2020-12-03T20:33:19.002Z",
+                "childproc_count": 1,
+                "crossproc_count": 5,
+                "device_external_ip": "24.243.76.124",
+                "device_group_id": 0,
+                "device_id": 329219,
+                "device_internal_ip": "172.16.115.191",
+                "device_name": "desktop-8qonquj",
+                "device_os": "WINDOWS",
+                "device_policy": "default",
+                "device_policy_id": 2198,
+                "device_timestamp": "2020-12-03T20:31:13.097Z",
+                "filemod_count": 1,
+                "has_children": True,
+                "hits": False,
+                "ingress_time": 1607027590489,
+                "modload_count": 18,
+                "netconn_count": 0,
+                "org_id": "WNEXFKQ7",
+                "parent_guid": "WNEXFKQ7-00050603-00000b6c-00000000-1d6c86e29731218",
+                "parent_hash": [
+                    "9520a99e77d6196d0d09833146424113",
+                    "dd191a5b23df92e12a8852291f9fb5ed594b76a28a5a464418442584afd1e048"
+                ],
+                "parent_name": "c:\\windows\\system32\\svchost.exe",
+                "parent_pid": 2924,
+                "process_cmdline": [
+                    "\"C:\\Program Files\\Windows Defender\\mpcmdrun.exe\" -wddisable"
+                ],
+                "process_effective_reputation": "TRUSTED_WHITE_LIST",
+                "process_guid": "WNEXFKQ7-00050603-0000157c-00000000-1d6c9b339b4a0cd",
+                "process_hash": [
+                    "cc4f6cbde75f08afdcefb95087149a5d",
+                    "885557be148de55f6a127ea26ac457b9415e3e3baf30266d82b9d19b89e78ee4"
+                ],
+                "process_name": "c:\\program files\\windows defender\\mpcmdrun.exe",
+                "process_pid": [
+                    5500
+                ],
+                "process_reputation": "TRUSTED_WHITE_LIST",
+                "process_start_time": "2020-12-03T20:31:05.847Z",
+                "process_terminated": True,
+                "process_username": [
+                    "NT AUTHORITY\\LOCAL SERVICE"
+                ],
+                "regmod_count": 0,
+                "scriptload_count": 0
+            },
+            {
+                "_process_filename": "mpcmdrun.exe",
+                "backend_timestamp": "2020-12-02T05:59:53.548Z",
+                "childproc_count": 1,
+                "crossproc_count": 4,
+                "device_external_ip": "24.243.76.124",
+                "device_group": "schumaker-test",
+                "device_group_id": 1706,
+                "device_id": 329219,
+                "device_internal_ip": "172.16.115.191",
+                "device_name": "desktop-8qonquj",
+                "device_os": "WINDOWS",
+                "device_policy": "default",
+                "device_policy_id": 2198,
+                "device_timestamp": "2020-12-02T05:45:15.950Z",
+                "filemod_count": 1,
+                "has_children": True,
+                "hits": False,
+                "ingress_time": 1606888776302,
+                "modload_count": 16,
+                "netconn_count": 0,
+                "org_id": "WNEXFKQ7",
+                "parent_guid": "WNEXFKQ7-00050603-00000b6c-00000000-1d6c86e29731218",
+                "parent_hash": [
+                    "9520a99e77d6196d0d09833146424113",
+                    "dd191a5b23df92e12a8852291f9fb5ed594b76a28a5a464418442584afd1e048"
+                ],
+                "parent_name": "c:\\windows\\system32\\svchost.exe",
+                "parent_pid": 2924,
+                "process_cmdline": [
+                    "\"C:\\Program Files\\Windows Defender\\mpcmdrun.exe\" -wdenable"
+                ],
+                "process_effective_reputation": "TRUSTED_WHITE_LIST",
+                "process_guid": "WNEXFKQ7-00050603-00001d78-00000000-1d6c86e4f3c4a8f",
+                "process_hash": [
+                    "cc4f6cbde75f08afdcefb95087149a5d",
+                    "885557be148de55f6a127ea26ac457b9415e3e3baf30266d82b9d19b89e78ee4"
+                ],
+                "process_name": "c:\\program files\\windows defender\\mpcmdrun.exe",
+                "process_pid": [
+                    7544
+                ],
+                "process_reputation": "TRUSTED_WHITE_LIST",
+                "process_start_time": "2020-12-02T05:45:15.531Z",
+                "process_terminated": True,
+                "process_username": [
+                    "NT AUTHORITY\\LOCAL SERVICE"
+                ],
+                "regmod_count": 0,
+                "scriptload_count": 0
+            },
+            {
+                "_process_filename": "mpcmdrun.exe",
+                "backend_timestamp": "2020-12-02T05:59:53.548Z",
+                "childproc_count": 1,
+                "crossproc_count": 4,
+                "device_external_ip": "24.243.76.124",
+                "device_group": "schumaker-test",
+                "device_group_id": 1706,
+                "device_id": 329219,
+                "device_internal_ip": "172.16.115.191",
+                "device_name": "desktop-8qonquj",
+                "device_os": "WINDOWS",
+                "device_policy": "default",
+                "device_policy_id": 2198,
+                "device_timestamp": "2020-12-02T05:45:15.950Z",
+                "filemod_count": 1,
+                "has_children": True,
+                "hits": False,
+                "ingress_time": 1606888776302,
+                "modload_count": 16,
+                "netconn_count": 0,
+                "org_id": "WNEXFKQ7",
+                "parent_guid": "WNEXFKQ7-00050603-00000b6c-00000000-1d6c86e29731218",
+                "parent_hash": [
+                    "9520a99e77d6196d0d09833146424113",
+                    "dd191a5b23df92e12a8852291f9fb5ed594b76a28a5a464418442584afd1e048"
+                ],
+                "parent_name": "c:\\windows\\system32\\svchost.exe",
+                "parent_pid": 2924,
+                "process_cmdline": [
+                    "\"C:\\Program Files\\Windows Defender\\mpcmdrun.exe\" -wdenable"
+                ],
+                "process_effective_reputation": "TRUSTED_WHITE_LIST",
+                "process_guid": "WNEXFKQ7-00050603-00001d78-00000000-1d6c86e4f3c4a8f",
+                "process_hash": [
+                    "cc4f6cbde75f08afdcefb95087149a5d",
+                    "885557be148de55f6a127ea26ac457b9415e3e3baf30266d82b9d19b89e78ee4"
+                ],
+                "process_name": "c:\\program files\\windows defender\\mpcmdrun.exe",
+                "process_pid": [
+                    7544
+                ],
+                "process_reputation": "TRUSTED_WHITE_LIST",
+                "process_start_time": "2020-12-02T05:45:15.531Z",
+                "process_terminated": True,
+                "process_username": [
+                    "NT AUTHORITY\\LOCAL SERVICE"
+                ],
+                "regmod_count": 0,
+                "scriptload_count": 0
+            }
+        ]
     },
     "contacted": 34,
     "completed": 34
 }
 
 GET_PROCESS_SUMMARY_RESP_2 = {
-    "exception": "NODE_LIMIT_HIT",
+    "exception": "",
     "summary": {
         "process": {
             "_process_filename": "svchost.exe",
@@ -888,57 +1209,6 @@ GET_PROCESS_SUMMARY_RESP_2 = {
                 ],
                 "regmod_count": 0,
                 "scriptload_count": 0
-            },
-            {
-                "_process_filename": "mpcmdrun.exe",
-                "backend_timestamp": "2020-12-02T05:58:52.326Z",
-                "childproc_count": 1,
-                "crossproc_count": 6,
-                "device_external_ip": "24.243.76.124",
-                "device_group": "schumaker-test",
-                "device_group_id": 1706,
-                "device_id": 329219,
-                "device_internal_ip": "172.16.115.191",
-                "device_name": "desktop-8qonquj",
-                "device_os": "WINDOWS",
-                "device_policy": "default",
-                "device_policy_id": 2198,
-                "device_timestamp": "2020-12-02T05:44:48.561Z",
-                "filemod_count": 1,
-                "has_children": True,
-                "hits": False,
-                "ingress_time": 1606888714925,
-                "modload_count": 18,
-                "netconn_count": 0,
-                "org_id": "WNEXFKQ7",
-                "parent_guid": "WNEXFKQ7-00050603-00000b6c-00000000-1d6c86e29731218",
-                "parent_hash": [
-                    "9520a99e77d6196d0d09833146424113",
-                    "dd191a5b23df92e12a8852291f9fb5ed594b76a28a5a464418442584afd1e048"
-                ],
-                "parent_name": "c:\\windows\\system32\\svchost.exe",
-                "parent_pid": 2924,
-                "process_cmdline": [
-                    "\"C:\\Program Files\\Windows Defender\\mpcmdrun.exe\" -wddisable"
-                ],
-                "process_effective_reputation": "TRUSTED_WHITE_LIST",
-                "process_guid": "WNEXFKQ7-00050603-00001370-00000000-1d6c86e34d57249",
-                "process_hash": [
-                    "cc4f6cbde75f08afdcefb95087149a5d",
-                    "885557be148de55f6a127ea26ac457b9415e3e3baf30266d82b9d19b89e78ee4"
-                ],
-                "process_name": "c:\\program files\\windows defender\\mpcmdrun.exe",
-                "process_pid": [
-                    4976
-                ],
-                "process_reputation": "TRUSTED_WHITE_LIST",
-                "process_start_time": "2020-12-02T05:44:31.236Z",
-                "process_terminated": True,
-                "process_username": [
-                    "NT AUTHORITY\\LOCAL SERVICE"
-                ],
-                "regmod_count": 0,
-                "scriptload_count": 0
             }
         ]
     },
@@ -1060,10 +1330,28 @@ GET_TREE_RESP = {
     "completed": 34
 }
 
-GET_SUMMARY_NOT_FOUND = {
-    "message": "Resource does not exist",
-    "translation_key": "threathunter_resource_does_not_exist",
-    "translation_format_values": None
+GET_PROCESS_NOT_FOUND = {
+    "exception": "NOT_FOUND",
+    "summary": {
+        "process": None,
+        "siblings": None,
+        "parent": None,
+        "children": None
+    },
+    "contacted": 33,
+    "completed": 33
+}
+
+GET_PROCESS_SUMMARY_NOT_FOUND = {
+    "exception": "NOT_FOUND",
+    "summary": {
+        "process": None,
+        "siblings": None,
+        "parent": None,
+        "children": None
+    },
+    "contacted": 33,
+    "completed": 33
 }
 
 GET_FACET_SEARCH_RESULTS_RESP = {
