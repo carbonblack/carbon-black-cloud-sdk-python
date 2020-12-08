@@ -1158,10 +1158,9 @@ class QueryBuilder(object):
     Provides a flexible interface for building prepared queries for the CB Cloud backend.
 
     This object can be instantiated directly, or can be managed implicitly
-    through the :py:meth:`CBCloudAPI.select` API.
+    through the CBCloudAPI.select API.
 
-    Examples::
-
+    Examples:
     >>> from cbc_sdk.base import QueryBuilder
     >>> # build a query with chaining
     >>> query = QueryBuilder().where(process_name="malicious.exe").and_(device_name="suspect")
@@ -1185,7 +1184,7 @@ class QueryBuilder(object):
         self._process_guid = None
 
     def _guard_query_params(func):
-        """Decorates the query construction methods of *QueryBuilder*
+        """Decorates the query construction methods of *QueryBuilder.*
 
         Prevents them from being called with parameters that would result in an internally
         inconsistent query.
@@ -1203,12 +1202,18 @@ class QueryBuilder(object):
 
     @_guard_query_params
     def where(self, q, **kwargs):
-        """Adds a conjunctive filter to a query.
+        """
+        Adds a conjunctive filter to a QueryBuilder.
 
-        :param q: string or `solrq.Q` object
-        :param kwargs: Arguments to construct a `solrq.Q` with
-        :return: QueryBuilder object
-        :rtype: :py:class:`QueryBuilder`
+        Args:
+            q (object): Either a string or solrq.Q object representing the query to be added.
+            **kwargs (dict): Arguments with which to construct a solrq.Q object.
+
+        Returns:
+            QueryBuilder: This object.
+
+        Raises:
+            ApiError: If the q parameter is of an invalid type.
         """
         if isinstance(q, str):
             if self._raw_query is None:
@@ -1228,12 +1233,18 @@ class QueryBuilder(object):
 
     @_guard_query_params
     def and_(self, q, **kwargs):
-        """Adds a conjunctive filter to a query.
+        """
+        Adds a conjunctive filter to a QueryBuilder.
 
-        :param q: string or `solrq.Q` object
-        :param kwargs: Arguments to construct a `solrq.Q` with
-        :return: QueryBuilder object
-        :rtype: :py:class:`QueryBuilder`
+        Args:
+            q (object): Either a string or solrq.Q object representing the query to be added.
+            **kwargs (dict): Arguments with which to construct a solrq.Q object.
+
+        Returns:
+            QueryBuilder: This object.
+
+        Raises:
+            ApiError: If the q parameter is of an invalid type.
         """
         if isinstance(q, str):
             self.where(q)
@@ -1252,12 +1263,18 @@ class QueryBuilder(object):
 
     @_guard_query_params
     def or_(self, q, **kwargs):
-        """Adds a disjunctive filter to a query.
+        """
+        Adds a disjunctive filter to a QueryBuilder.
 
-        :param q: `solrq.Q` object
-        :param kwargs: Arguments to construct a `solrq.Q` with
-        :return: QueryBuilder object
-        :rtype: :py:class:`QueryBuilder`
+        Args:
+            q (object): Either a string or solrq.Q object representing the query to be added.
+            **kwargs (dict): Arguments with which to construct a solrq.Q object.
+
+        Returns:
+            QueryBuilder: This object.
+
+        Raises:
+            ApiError: If the q parameter is of an invalid type.
         """
         if kwargs:
             self._process_guid = self._process_guid or kwargs.get("process_guid")
@@ -1275,12 +1292,18 @@ class QueryBuilder(object):
 
     @_guard_query_params
     def not_(self, q, **kwargs):
-        """Adds a negative filter to a query.
+        """
+        Adds a negative filter to a QueryBuilder.
 
-        :param q: `solrq.Q` object
-        :param kwargs: Arguments to construct a `solrq.Q` with
-        :return: QueryBuilder object
-        :rtype: :py:class:`QueryBuilder`
+        Args:
+            q (object): Either a string or solrq.Q object representing the query to be added.
+            **kwargs (dict): Arguments with which to construct a solrq.Q object.
+
+        Returns:
+            QueryBuilder: This object.
+
+        Raises:
+            ApiError: If the q parameter is of an invalid type.
         """
         if kwargs:
             q = ~Q(**kwargs)
@@ -1293,16 +1316,19 @@ class QueryBuilder(object):
         else:
             raise ApiError(".not_() only accepts solrq.Q objects")
 
+        return self
+
     def _collapse(self):
         """
-        Collapse the query.
+        Collapse the query into a single string.
 
-        The query can be represented by either an array of strings
-        (_raw_query) which is concatenated and passed directly to Solr, or
-        a solrq.Q object (_query) which is then converted into a string to
-        pass to Solr. This function will perform the appropriate conversions to
-        end up with the 'q' string sent into the POST request to the
-        Cloud API query endpoint.
+        The query can be represented by either an array of strings (_raw_query) which is concatenated and passed
+        directly to Solr, or a solrq.Q object (_query) which is then converted into a string to pass to Solr.
+        This function will perform the appropriate conversions to end up with the 'q' string sent into the
+        POST request to the Cloud API query endpoint.
+
+        Returns:
+            str: The collapsed query.
         """
         if self._raw_query is not None:
             return " ".join(self._raw_query)
