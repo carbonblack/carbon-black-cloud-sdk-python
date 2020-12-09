@@ -4,6 +4,7 @@ import pytest
 import logging
 from cbc_sdk.platform import Event, Process, EventFacet
 from cbc_sdk.rest_api import CBCloudAPI
+from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_events import (EVENT_SEARCH_VALIDATION_RESP,
                                                       EVENT_SEARCH_RESP_INTERIM,
@@ -169,3 +170,34 @@ def test_event_facet_query(cbcsdk_mock):
     event_facet_query.where("process_guid:J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e")
     facets = event_facet_query.results
     assert isinstance(facets, EventFacet)
+
+
+def test_event_facet_query_missing_field(cbcsdk_mock):
+    """Test raising ApiError when searching without a facet field set"""
+    api = cbcsdk_mock.api
+    event_facet_query = api.select(EventFacet)
+    event_facet_query.where("process_guid:J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e")
+    with pytest.raises(ApiError):
+        event_facet_query.results
+
+
+def test_event_facet_get_query_parameters(cbcsdk_mock):
+    """Testing EventFacet._get_query_parameters()."""
+    api = cbcsdk_mock.api
+    # query without facet fields is invalid
+    facet_query = api.select(EventFacet).where("process_name:svchost.exe")
+    with pytest.raises(ApiError):
+        facet_query._get_query_parameters()
+    facet_query = api.select(EventFacet).add_facet_field("device_name")
+    # query with rows
+    facet_query.set_rows(500)
+    assert facet_query._get_query_parameters()["terms"]["rows"] == 500
+    # query with criteria
+    facet_query.add_criteria("device_name", "my_device_name")
+    assert facet_query._get_query_parameters()["criteria"] == {"device_name": ["my_device_name"]}
+    # query with exclusions
+    facet_query.add_exclusions("device_name", "my_device_name")
+    assert facet_query._get_query_parameters()["exclusions"] == {"device_name": ["my_device_name"]}
+    # query with process_guid in a where() stmt
+    facet_query.where("process_guid:myguid")
+    assert facet_query._get_query_parameters()["query"] == "process_guid:myguid"

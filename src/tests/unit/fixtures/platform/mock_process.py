@@ -73,7 +73,8 @@ GET_PROCESS_SEARCH_JOB_RESULTS_RESP = {
             ],
             "process_name": "c:\\program files\\vmware\\vmware tools\\vmtoolsd.exe",
             "process_pid": [
-                2976
+                5653,
+                16139
             ],
             "process_reputation": "TRUSTED_WHITE_LIST",
             "process_username": [
@@ -140,7 +141,7 @@ GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1 = {
             "process_effective_reputation": "TRUSTED_WHITE_LIST",
             "process_guid": "test-003513bc-00000001-00000000-1d640200c9a61d7",
             "process_hash": [
-                "d5e122606054fa0b03db3ee8cf9ea7701e523875e2bdb87581ad7232ffc9308e",
+                "f2c7d894abe8ac0b4c2a597caa6b3efe7ad2bdb4226845798d954c5ab9c9bf15",
                 "12384336325dc8eadfb1e8ff876921c4"
             ],
             "process_name": "c:\\program files\\vmware\\vmware tools\\vmtoolsd.exe",
@@ -215,6 +216,74 @@ GET_PROCESS_SEARCH_JOB_RESULTS_RESP_2 = {
                 "63d423ea882264dbb157a965c200306212fc5e1c6ddb8cbbb0f1d3b51ecd82e6",
                 "45684336325dc8eadfb1e8ff876921c4"
             ],
+            "process_name": "c:\\program files\\vmware\\vmware tools\\vmtoolsd.exe",
+            "process_pid": [
+                788
+            ],
+            "process_reputation": "TRUSTED_WHITE_LIST",
+            "process_username": [
+                "Username"
+            ],
+            "regmod_count": 1,
+            "scriptload_count": 0,
+            "ttp": [
+                "ENUMERATE_PROCESSES",
+                "INJECT_CODE",
+                "MITRE_T1003_CREDENTIAL_DUMP",
+                "MITRE_T1005_DATA_FROM_LOCAL_SYS",
+                "MITRE_T1055_PROCESS_INJECT",
+                "MITRE_T1057_PROCESS_DISCOVERY",
+                "RAM_SCRAPING",
+                "READ_SECURITY_DATA"
+            ]
+        }
+    ],
+    "num_found": 6168,
+    "num_available": 1,
+    "contacted": 45,
+    "completed": 45
+}
+
+GET_PROCESS_SEARCH_JOB_RESULTS_RESP_3 = {
+    "results": [
+        {
+            "backend_timestamp": "2020-09-11T19:35:02.972Z",
+            "childproc_count": 0,
+            "crossproc_count": 787,
+            "device_external_ip": "192.168.0.1",
+            "device_group_id": 0,
+            "device_id": 1234567,
+            "device_internal_ip": "192.168.0.2",
+            "device_name": "Windows10Device",
+            "device_os": "WINDOWS",
+            "device_policy_id": 12345,
+            "device_timestamp": "2020-09-11T19:32:12.821Z",
+            "enriched": True,
+            "enriched_event_type": [
+                "INJECT_CODE",
+                "SYSTEM_API_CALL"
+            ],
+            "event_type": [
+                "crossproc"
+            ],
+            "filemod_count": 0,
+            "ingress_time": 1599852859660,
+            "legacy": True,
+            "modload_count": 1,
+            "netconn_count": 0,
+            "org_id": "test",
+            "parent_guid": "test-0034d5f2-00000284-00000000-1d687097e9cf7b5",
+            "parent_hash": [
+                "9090e0e44e14709fb09b23b98572e0e61c810189e2de8f7156021bc81c3b1bb6",
+                "bccc12eb2ef644e662a63a023fb83f9b"
+            ],
+            "parent_name": "c:\\windows\\system32\\services.exe",
+            "parent_pid": 644,
+            "process_cmdline": [
+                "\"C:\\Program Files\\VMware\\VMware Tools\\vmtoolsd.exe\""
+            ],
+            "process_effective_reputation": "TRUSTED_WHITE_LIST",
+            "process_guid": "test-003513bc-00000001-00000000-1d640200c9a61d7",
             "process_name": "c:\\program files\\vmware\\vmware tools\\vmtoolsd.exe",
             "process_pid": [
                 788
@@ -575,8 +644,8 @@ GET_PROCESS_SUMMARY_RESP = {
       "process_effective_reputation": "NOT_LISTED",
       "process_guid": "ABCD1234-0002b226-00001615-00000000-1d6225bbba75e5e",
       "process_hash": [
-          "285044ad8f8b9322d0cc5e929e2cc18c",
-          "5975d972eea6b1c53ef9a69452797439ed5bf63fae72e1780761ea1c2cb6976a"
+          "c7084336325dc8eadfb1e8ff876921c4",
+          "5920199e4fbfa47c1717b863814722148a353e54f8c10912cf1f991a1c86309d"
       ],
       "process_name": "/usr/bin/bash",
       "process_pid": [
@@ -680,13 +749,10 @@ GET_PROCESS_SUMMARY_RESP_1 = {
             "process_effective_reputation": "TRUSTED_WHITE_LIST",
             "process_guid": "WNEXFKQ7-00050603-00000204-00000000-1d6c86e2801cd1b",
             "process_hash": [
-                "23019322ffecb179746210be52d6de60",
+                "12384336325dc8eadfb1e8ff876921c4",
                 "f2c7d894abe8ac0b4c2a597caa6b3efe7ad2bdb4226845798d954c5ab9c9bf15"
             ],
             "process_name": "c:\\windows\\system32\\csrss.exe",
-            "process_pid": [
-                516
-            ],
             "process_reputation": "TRUSTED_WHITE_LIST",
             "process_start_time": "2020-12-02T05:44:09.717Z",
             "process_username": [
@@ -943,12 +1009,12 @@ GET_PROCESS_SUMMARY_RESP_2 = {
             "process_effective_reputation": "TRUSTED_WHITE_LIST",
             "process_guid": "WNEXFKQ7-00050603-00000b6c-00000000-1d6c86e29731218",
             "process_hash": [
-                "9520a99e77d6196d0d09833146424113",
+                "45684336325dc8eadfb1e8ff876921c4",
                 "dd191a5b23df92e12a8852291f9fb5ed594b76a28a5a464418442584afd1e048"
             ],
             "process_name": "c:\\windows\\system32\\svchost.exe",
             "process_pid": [
-                2924
+                788
             ],
             "process_reputation": "TRUSTED_WHITE_LIST",
             "process_start_time": "2020-12-02T05:44:12.137Z",
