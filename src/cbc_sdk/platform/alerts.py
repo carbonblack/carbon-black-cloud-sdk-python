@@ -44,10 +44,6 @@ class BaseAlert(PlatformModel):
         if model_unique_id is not None and initial_data is None:
             self._refresh()
 
-
-
-
-
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
         """
