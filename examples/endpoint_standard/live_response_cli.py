@@ -111,10 +111,9 @@ class CblrCli(cmd.Cmd):
         """
         Create a CbLR Command Line class
 
-        :param cb: Connection to the Carbon Black Cloud SDK
-        :param connect_callback: Callable to get a sensor object from the ``connect`` command
-        :type cb: CbCloudAPI
-        :return:
+        Args:
+            cb (CBCloudAPI): Connection to the Carbon Black Cloud SDK.
+            connect_callback (func): Callable to get a sensor object from the ``connect`` command.
         """
         cmd.Cmd.__init__(self)
 
@@ -124,7 +123,6 @@ class CblrCli(cmd.Cmd):
         self.connect_callback = connect_callback
 
         lr_session = None
-        """:type lr_session: LiveResponseSession"""
         self.lr_session = lr_session
 
         self.reset()
@@ -212,8 +210,11 @@ class CblrCli(cmd.Cmd):
         """
         Look to see if a given path exists on the sensor and whether that is a file or directory.
 
-        :param path: a sensor path
-        :return: None, "dir", or "file"
+        Args:
+            path (str): A sensor path.
+
+        Returns:
+            str: None, "dir", or "file".
         """
         if path.endswith('\\'):
             path = path[:-1]
