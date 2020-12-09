@@ -471,246 +471,246 @@ GET_PROCESS_SEARCH_JOB_RESP = {
 }
 
 GET_PROCESS_SUMMARY_RESP = {
-  "completed": 30,
-  "contacted": 30,
-  "exception": "",
-  "summary": {
-    "children": [
-        {
-            "_process_filename": "mpcmdrun.exe",
-            "backend_timestamp": "2020-12-03T20:33:19.002Z",
-            "childproc_count": 1,
-            "crossproc_count": 5,
-            "device_external_ip": "24.243.76.124",
+    "completed": 30,
+    "contacted": 30,
+    "exception": "",
+    "summary": {
+        "children": [
+            {
+                "_process_filename": "mpcmdrun.exe",
+                "backend_timestamp": "2020-12-03T20:33:19.002Z",
+                "childproc_count": 1,
+                "crossproc_count": 5,
+                "device_external_ip": "24.243.76.124",
+                "device_group_id": 0,
+                "device_id": 329219,
+                "device_internal_ip": "172.16.115.191",
+                "device_name": "desktop-8qonquj",
+                "device_os": "WINDOWS",
+                "device_policy": "default",
+                "device_policy_id": 2198,
+                "device_timestamp": "2020-12-03T20:31:13.097Z",
+                "filemod_count": 1,
+                "has_children": True,
+                "hits": False,
+                "ingress_time": 1607027590489,
+                "modload_count": 18,
+                "netconn_count": 0,
+                "org_id": "WNEXFKQ7",
+                "parent_guid": "WNEXFKQ7-00050603-00000b6c-00000000-1d6c86e29731218",
+                "parent_hash": [
+                    "9520a99e77d6196d0d09833146424113",
+                    "dd191a5b23df92e12a8852291f9fb5ed594b76a28a5a464418442584afd1e048"
+                ],
+                "parent_name": "c:\\windows\\system32\\svchost.exe",
+                "parent_pid": 2924,
+                "process_cmdline": [
+                    "\"C:\\Program Files\\Windows Defender\\mpcmdrun.exe\" -wddisable"
+                ],
+                "process_effective_reputation": "TRUSTED_WHITE_LIST",
+                "process_guid": "WNEXFKQ7-00050603-0000157c-00000000-1d6c9b339b4a0cd",
+                "process_hash": [
+                    "cc4f6cbde75f08afdcefb95087149a5d",
+                    "885557be148de55f6a127ea26ac457b9415e3e3baf30266d82b9d19b89e78ee4"
+                ],
+                "process_name": "c:\\program files\\windows defender\\mpcmdrun.exe",
+                "process_pid": [
+                    5500
+                ],
+                "process_reputation": "TRUSTED_WHITE_LIST",
+                "process_start_time": "2020-12-03T20:31:05.847Z",
+                "process_terminated": True,
+                "process_username": [
+                    "NT AUTHORITY\\LOCAL SERVICE"
+                ],
+                "regmod_count": 0,
+                "scriptload_count": 0
+            },
+            {
+                "_process_filename": "mpcmdrun.exe",
+                "backend_timestamp": "2020-12-02T05:59:53.548Z",
+                "childproc_count": 1,
+                "crossproc_count": 4,
+                "device_external_ip": "24.243.76.124",
+                "device_group": "schumaker-test",
+                "device_group_id": 1706,
+                "device_id": 329219,
+                "device_internal_ip": "172.16.115.191",
+                "device_name": "desktop-8qonquj",
+                "device_os": "WINDOWS",
+                "device_policy": "default",
+                "device_policy_id": 2198,
+                "device_timestamp": "2020-12-02T05:45:15.950Z",
+                "filemod_count": 1,
+                "has_children": True,
+                "hits": False,
+                "ingress_time": 1606888776302,
+                "modload_count": 16,
+                "netconn_count": 0,
+                "org_id": "WNEXFKQ7",
+                "parent_guid": "WNEXFKQ7-00050603-00000b6c-00000000-1d6c86e29731218",
+                "parent_hash": [
+                    "9520a99e77d6196d0d09833146424113",
+                    "dd191a5b23df92e12a8852291f9fb5ed594b76a28a5a464418442584afd1e048"
+                ],
+                "parent_name": "c:\\windows\\system32\\svchost.exe",
+                "parent_pid": 2924,
+                "process_cmdline": [
+                    "\"C:\\Program Files\\Windows Defender\\mpcmdrun.exe\" -wdenable"
+                ],
+                "process_effective_reputation": "TRUSTED_WHITE_LIST",
+                "process_guid": "WNEXFKQ7-00050603-00001d78-00000000-1d6c86e4f3c4a8f",
+                "process_hash": [
+                    "cc4f6cbde75f08afdcefb95087149a5d",
+                    "885557be148de55f6a127ea26ac457b9415e3e3baf30266d82b9d19b89e78ee4"
+                ],
+                "process_name": "c:\\program files\\windows defender\\mpcmdrun.exe",
+                "process_pid": [
+                    7544
+                ],
+                "process_reputation": "TRUSTED_WHITE_LIST",
+                "process_start_time": "2020-12-02T05:45:15.531Z",
+                "process_terminated": True,
+                "process_username": [
+                    "NT AUTHORITY\\LOCAL SERVICE"
+                ],
+                "regmod_count": 0,
+                "scriptload_count": 0
+            }
+        ],
+        "parent": {
+            "_process_filename": "systemd",
+            "backend_timestamp": "2020-08-28T19:12:07.989Z",
+            "childproc_count": 0,
+            "crossproc_count": 0,
+            "device_external_ip": "34.56.78.90",
             "device_group_id": 0,
-            "device_id": 329219,
-            "device_internal_ip": "172.16.115.191",
-            "device_name": "desktop-8qonquj",
-            "device_os": "WINDOWS",
-            "device_policy": "default",
-            "device_policy_id": 2198,
-            "device_timestamp": "2020-12-03T20:31:13.097Z",
-            "filemod_count": 1,
+            "device_id": 176678,
+            "device_name": "devr-dev",
+            "device_os": "LINUX",
+            "device_policy": "sm-restrictive",
+            "device_policy_id": 11200,
+            "device_timestamp": "2020-08-28T19:10:02.123Z",
+            "filemod_count": 0,
             "has_children": True,
             "hits": False,
-            "ingress_time": 1607027590489,
-            "modload_count": 18,
+            "ingress_time": 1598641901273,
+            "modload_count": 0,
             "netconn_count": 0,
-            "org_id": "WNEXFKQ7",
-            "parent_guid": "WNEXFKQ7-00050603-00000b6c-00000000-1d6c86e29731218",
-            "parent_hash": [
-                "9520a99e77d6196d0d09833146424113",
-                "dd191a5b23df92e12a8852291f9fb5ed594b76a28a5a464418442584afd1e048"
-            ],
-            "parent_name": "c:\\windows\\system32\\svchost.exe",
-            "parent_pid": 2924,
-            "process_cmdline": [
-                "\"C:\\Program Files\\Windows Defender\\mpcmdrun.exe\" -wddisable"
-            ],
-            "process_effective_reputation": "TRUSTED_WHITE_LIST",
-            "process_guid": "WNEXFKQ7-00050603-0000157c-00000000-1d6c9b339b4a0cd",
+            "org_id": "ABCD1234",
+            "process_effective_reputation": "NOT_LISTED",
+            "process_guid": "ABCD1234-0002b226-00000001-00000000-1d6225bbba75e43",
             "process_hash": [
-                "cc4f6cbde75f08afdcefb95087149a5d",
-                "885557be148de55f6a127ea26ac457b9415e3e3baf30266d82b9d19b89e78ee4"
+                "e4b9902024ac32b3ca37f6b4c9b841e8",
+                "81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85"
             ],
-            "process_name": "c:\\program files\\windows defender\\mpcmdrun.exe",
+            "process_name": "/usr/lib/systemd/systemd",
             "process_pid": [
-                5500
+                1
             ],
-            "process_reputation": "TRUSTED_WHITE_LIST",
-            "process_start_time": "2020-12-03T20:31:05.847Z",
-            "process_terminated": True,
+            "process_reputation": "NOT_LISTED",
+            "process_start_time": "2020-05-04T21:34:03.968Z",
+            "regmod_count": 0,
+            "scriptload_count": 0
+        },
+        "process": {
+            "_process_filename": "bash",
+            "backend_timestamp": "2020-08-28T19:16:11.959Z",
+            "childproc_count": 333580,
+            "crossproc_count": 0,
+            "device_external_ip": "34.56.78.90",
+            "device_group_id": 0,
+            "device_id": 176678,
+            "device_name": "devr-dev",
+            "device_os": "LINUX",
+            "device_policy": "sm-restrictive",
+            "device_policy_id": 11200,
+            "device_timestamp": "2020-08-28T19:14:41.231Z",
+            "filemod_count": 0,
+            "ingress_time": 1598642141411,
+            "modload_count": 0,
+            "netconn_count": 0,
+            "org_id": "ABCD1234",
+            "parent_guid": "ABCD1234-0002b226-00000001-00000000-1d6225bbba75e43",
+            "parent_hash": [
+                "81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85",
+                "e4b9902024ac32b3ca37f6b4c9b841e8"
+            ],
+            "parent_name": "/usr/lib/systemd/systemd",
+            "parent_pid": 1,
+            "process_cmdline": [
+                "/bin/bash /usr/sbin/ksmtuned"
+            ],
+            "process_effective_reputation": "NOT_LISTED",
+            "process_guid": "ABCD1234-0002b226-00001615-00000000-1d6225bbba75e5e",
+            "process_hash": [
+                "c7084336325dc8eadfb1e8ff876921c4",
+                "5920199e4fbfa47c1717b863814722148a353e54f8c10912cf1f991a1c86309d"
+            ],
+            "process_name": "/usr/bin/bash",
+            "process_pid": [
+                5653,
+                16139
+            ],
+            "process_reputation": "NOT_LISTED",
+            "process_start_time": "2020-05-04T21:34:03.968Z",
             "process_username": [
-                "NT AUTHORITY\\LOCAL SERVICE"
+                "root"
             ],
             "regmod_count": 0,
             "scriptload_count": 0
         },
-        {
-            "_process_filename": "mpcmdrun.exe",
-            "backend_timestamp": "2020-12-02T05:59:53.548Z",
-            "childproc_count": 1,
-            "crossproc_count": 4,
-            "device_external_ip": "24.243.76.124",
-            "device_group": "schumaker-test",
-            "device_group_id": 1706,
-            "device_id": 329219,
-            "device_internal_ip": "172.16.115.191",
-            "device_name": "desktop-8qonquj",
-            "device_os": "WINDOWS",
-            "device_policy": "default",
-            "device_policy_id": 2198,
-            "device_timestamp": "2020-12-02T05:45:15.950Z",
-            "filemod_count": 1,
-            "has_children": True,
-            "hits": False,
-            "ingress_time": 1606888776302,
-            "modload_count": 16,
-            "netconn_count": 0,
-            "org_id": "WNEXFKQ7",
-            "parent_guid": "WNEXFKQ7-00050603-00000b6c-00000000-1d6c86e29731218",
-            "parent_hash": [
-                "9520a99e77d6196d0d09833146424113",
-                "dd191a5b23df92e12a8852291f9fb5ed594b76a28a5a464418442584afd1e048"
-            ],
-            "parent_name": "c:\\windows\\system32\\svchost.exe",
-            "parent_pid": 2924,
-            "process_cmdline": [
-                "\"C:\\Program Files\\Windows Defender\\mpcmdrun.exe\" -wdenable"
-            ],
-            "process_effective_reputation": "TRUSTED_WHITE_LIST",
-            "process_guid": "WNEXFKQ7-00050603-00001d78-00000000-1d6c86e4f3c4a8f",
-            "process_hash": [
-                "cc4f6cbde75f08afdcefb95087149a5d",
-                "885557be148de55f6a127ea26ac457b9415e3e3baf30266d82b9d19b89e78ee4"
-            ],
-            "process_name": "c:\\program files\\windows defender\\mpcmdrun.exe",
-            "process_pid": [
-                7544
-            ],
-            "process_reputation": "TRUSTED_WHITE_LIST",
-            "process_start_time": "2020-12-02T05:45:15.531Z",
-            "process_terminated": True,
-            "process_username": [
-                "NT AUTHORITY\\LOCAL SERVICE"
-            ],
-            "regmod_count": 0,
-            "scriptload_count": 0
-        }
-    ],
-    "parent": {
-        "_process_filename": "systemd",
-        "backend_timestamp": "2020-08-28T19:12:07.989Z",
-        "childproc_count": 0,
-        "crossproc_count": 0,
-        "device_external_ip": "34.56.78.90",
-        "device_group_id": 0,
-        "device_id": 176678,
-        "device_name": "devr-dev",
-        "device_os": "LINUX",
-        "device_policy": "sm-restrictive",
-        "device_policy_id": 11200,
-        "device_timestamp": "2020-08-28T19:10:02.123Z",
-        "filemod_count": 0,
-        "has_children": True,
-        "hits": False,
-        "ingress_time": 1598641901273,
-        "modload_count": 0,
-        "netconn_count": 0,
-        "org_id": "ABCD1234",
-        "process_effective_reputation": "NOT_LISTED",
-        "process_guid": "ABCD1234-0002b226-00000001-00000000-1d6225bbba75e43",
-        "process_hash": [
-            "e4b9902024ac32b3ca37f6b4c9b841e8",
-            "81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85"
-        ],
-        "process_name": "/usr/lib/systemd/systemd",
-        "process_pid": [
-            1
-        ],
-        "process_reputation": "NOT_LISTED",
-        "process_start_time": "2020-05-04T21:34:03.968Z",
-        "regmod_count": 0,
-        "scriptload_count": 0
-    },
-    "process": {
-      "_process_filename": "bash",
-      "backend_timestamp": "2020-08-28T19:16:11.959Z",
-      "childproc_count": 333580,
-      "crossproc_count": 0,
-      "device_external_ip": "34.56.78.90",
-      "device_group_id": 0,
-      "device_id": 176678,
-      "device_name": "devr-dev",
-      "device_os": "LINUX",
-      "device_policy": "sm-restrictive",
-      "device_policy_id": 11200,
-      "device_timestamp": "2020-08-28T19:14:41.231Z",
-      "filemod_count": 0,
-      "ingress_time": 1598642141411,
-      "modload_count": 0,
-      "netconn_count": 0,
-      "org_id": "ABCD1234",
-      "parent_guid": "ABCD1234-0002b226-00000001-00000000-1d6225bbba75e43",
-      "parent_hash": [
-          "81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85",
-          "e4b9902024ac32b3ca37f6b4c9b841e8"
-      ],
-      "parent_name": "/usr/lib/systemd/systemd",
-      "parent_pid": 1,
-      "process_cmdline": [
-          "/bin/bash /usr/sbin/ksmtuned"
-      ],
-      "process_effective_reputation": "NOT_LISTED",
-      "process_guid": "ABCD1234-0002b226-00001615-00000000-1d6225bbba75e5e",
-      "process_hash": [
-          "c7084336325dc8eadfb1e8ff876921c4",
-          "5920199e4fbfa47c1717b863814722148a353e54f8c10912cf1f991a1c86309d"
-      ],
-      "process_name": "/usr/bin/bash",
-      "process_pid": [
-          5653,
-          16139
-      ],
-      "process_reputation": "NOT_LISTED",
-      "process_start_time": "2020-05-04T21:34:03.968Z",
-      "process_username": [
-          "root"
-      ],
-      "regmod_count": 0,
-      "scriptload_count": 0
-    },
-    "siblings": [
-      {
-        "_process_filename": "nm-dispatcher",
-        "backend_timestamp": "2020-08-19T20:55:33.446Z",
-        "childproc_count": 1,
-        "crossproc_count": 0,
-        "device_external_ip": "34.56.78.90",
-        "device_group_id": 0,
-        "device_id": 176678,
-        "device_name": "devr-dev",
-        "device_os": "LINUX",
-        "device_policy": "sm-restrictive",
-        "device_policy_id": 11200,
-        "device_timestamp": "2020-08-19T20:54:44.980Z",
-        "filemod_count": 0,
-        "has_children": True,
-        "hits": False,
-        "ingress_time": 1597870506825,
-        "modload_count": 0,
-        "netconn_count": 0,
-        "org_id": "ABCD1234",
-        "parent_guid": "ABCD1234-0002b226-00000001-00000000-1d6225bbba75e43",
-        "parent_hash": [
-            "81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85",
-            "e4b9902024ac32b3ca37f6b4c9b841e8"
-        ],
-        "parent_name": "/usr/lib/systemd/systemd",
-        "parent_pid": 1,
-        "process_cmdline": [
-            "/usr/libexec/nm-dispatcher"
-        ],
-        "process_effective_reputation": "NOT_LISTED",
-        "process_guid": "ABCD1234-0002b226-00005742-00000000-1d6766af7bedb39",
-        "process_hash": [
-            "04b2450579a663c964f3960cd0cf93a8",
-            "2206d95e0a435aadad6c84b5bce370d076137efecf6adbbf6feddbe0515fb17e"
-        ],
-        "process_name": "/usr/libexec/nm-dispatcher",
-        "process_pid": [
-            22338
-        ],
-        "process_reputation": "NOT_LISTED",
-        "process_start_time": "2020-08-19T20:54:44.909Z",
-        "process_username": [
-            "root"
-        ],
-        "regmod_count": 0,
-        "scriptload_count": 0
-      }
-    ]
-  }
+        "siblings": [
+            {
+                "_process_filename": "nm-dispatcher",
+                "backend_timestamp": "2020-08-19T20:55:33.446Z",
+                "childproc_count": 1,
+                "crossproc_count": 0,
+                "device_external_ip": "34.56.78.90",
+                "device_group_id": 0,
+                "device_id": 176678,
+                "device_name": "devr-dev",
+                "device_os": "LINUX",
+                "device_policy": "sm-restrictive",
+                "device_policy_id": 11200,
+                "device_timestamp": "2020-08-19T20:54:44.980Z",
+                "filemod_count": 0,
+                "has_children": True,
+                "hits": False,
+                "ingress_time": 1597870506825,
+                "modload_count": 0,
+                "netconn_count": 0,
+                "org_id": "ABCD1234",
+                "parent_guid": "ABCD1234-0002b226-00000001-00000000-1d6225bbba75e43",
+                "parent_hash": [
+                    "81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85",
+                    "e4b9902024ac32b3ca37f6b4c9b841e8"
+                ],
+                "parent_name": "/usr/lib/systemd/systemd",
+                "parent_pid": 1,
+                "process_cmdline": [
+                    "/usr/libexec/nm-dispatcher"
+                ],
+                "process_effective_reputation": "NOT_LISTED",
+                "process_guid": "ABCD1234-0002b226-00005742-00000000-1d6766af7bedb39",
+                "process_hash": [
+                    "04b2450579a663c964f3960cd0cf93a8",
+                    "2206d95e0a435aadad6c84b5bce370d076137efecf6adbbf6feddbe0515fb17e"
+                ],
+                "process_name": "/usr/libexec/nm-dispatcher",
+                "process_pid": [
+                    22338
+                ],
+                "process_reputation": "NOT_LISTED",
+                "process_start_time": "2020-08-19T20:54:44.909Z",
+                "process_username": [
+                    "root"
+                ],
+                "regmod_count": 0,
+                "scriptload_count": 0
+            }
+        ]
+    }
 }
 
 GET_PROCESS_SUMMARY_RESP_1 = {
@@ -744,7 +744,9 @@ GET_PROCESS_SUMMARY_RESP_1 = {
             "parent_name": "c:\\windows\\system32\\smss.exe",
             "parent_pid": 500,
             "process_cmdline": [
-                "%SystemRoot%\\system32\\csrss.exe ObjectDirectory=\\Windows SharedSection=1024,20480,768 Windows=On SubSystemType=Windows ServerDll=basesrv,1 ServerDll=winsrv:UserServerDllInitialization,3 ServerDll=sxssrv,4 ProfileControl=Off MaxRequestThreads=16"
+                "%SystemRoot%\\system32\\csrss.exe ObjectDirectory=\\Windows SharedSection="
+                "1024,20480,768 Windows=On SubSystemType=Windows ServerDll=basesrv,1 ServerDll"
+                "=winsrv:UserServerDllInitialization,3 ServerDll=sxssrv,4 ProfileControl=Off MaxRequestThreads=16"
             ],
             "process_effective_reputation": "TRUSTED_WHITE_LIST",
             "process_guid": "WNEXFKQ7-00050603-00000204-00000000-1d6c86e2801cd1b",
@@ -1324,7 +1326,8 @@ GET_TREE_RESP = {
                 "parent_name": "c:\\windows\\microsoft.net\\framework64\\v4.0.30319\\ngen.exe",
                 "parent_pid": 2208,
                 "process_cmdline": [
-                    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\mscorsvw.exe -StartupEvent 1b4 -InterruptEvent 0 -NGENProcess 168 -Pipe 174 -Comment \"NGen Worker Process\""
+                    "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\mscorsvw.exe"
+                    " -StartupEvent 1b4 -InterruptEvent 0 -NGENProcess 168 -Pipe 174 -Comment \"NGen Worker Process\""
                 ],
                 "process_effective_reputation": "TRUSTED_WHITE_LIST",
                 "process_guid": "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb",
@@ -1371,7 +1374,9 @@ GET_TREE_RESP = {
         "parent_name": "c:\\windows\\microsoft.net\\framework64\\v4.0.30319\\ngentask.exe",
         "parent_pid": 9212,
         "process_cmdline": [
-            "\"C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\ngen.exe\" install \"System.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089\" /NoDependencies /noroot /version:v4.0.30319 /LegacyServiceBehavior"
+            "\"C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319\\ngen.exe\" "
+            "install \"System.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken="
+            "b77a5c561934e089\" /NoDependencies /noroot /version:v4.0.30319 /LegacyServiceBehavior"
         ],
         "process_effective_reputation": "TRUSTED_WHITE_LIST",
         "process_guid": "WNEXFKQ7-00050603-000008a0-00000000-1d6c9acb438f08d",

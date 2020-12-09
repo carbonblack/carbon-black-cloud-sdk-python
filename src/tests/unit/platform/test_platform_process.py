@@ -644,9 +644,11 @@ def test_process_children(cbcsdk_mock, get_summary_response, guid, expected_num_
 @pytest.mark.parametrize('get_process_search_response, get_summary_response, guid, md5', [
     (GET_PROCESS_SEARCH_JOB_RESULTS_RESP, GET_PROCESS_SUMMARY_RESP, "test-0002b226-000015bd-00000000-1d6225bbba74c00",
      "c7084336325dc8eadfb1e8ff876921c4"),
-    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1, GET_PROCESS_SUMMARY_RESP_1, "test-00340b06-00000314-00000000-1d686b9e4d74f52",
+    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1, GET_PROCESS_SUMMARY_RESP_1,
+     "test-00340b06-00000314-00000000-1d686b9e4d74f52",
      "12384336325dc8eadfb1e8ff876921c4"),
-    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP_3, GET_PROCESS_SUMMARY_RESP_2, "test-003513bc-0000035c-00000000-1d640200c9a6205",
+    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP_3, GET_PROCESS_SUMMARY_RESP_2,
+     "test-003513bc-0000035c-00000000-1d640200c9a6205",
      "45684336325dc8eadfb1e8ff876921c4")])
 def test_process_md5(cbcsdk_mock, get_process_search_response, get_summary_response, guid, md5):
     """Testing Process.process_md5 property."""
@@ -718,11 +720,14 @@ def test_process_md5_not_found(cbcsdk_mock):
 
 
 @pytest.mark.parametrize('get_process_response, get_summary_response, guid, sha256', [
-    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP, GET_PROCESS_SUMMARY_RESP, "test-0002b226-000015bd-00000000-1d6225bbba74c00",
+    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP, GET_PROCESS_SUMMARY_RESP,
+     "test-0002b226-000015bd-00000000-1d6225bbba74c00",
      "5920199e4fbfa47c1717b863814722148a353e54f8c10912cf1f991a1c86309d"),
-    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1, GET_PROCESS_SUMMARY_RESP_1, "test-00340b06-00000314-00000000-1d686b9e4d74f52",
+    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1, GET_PROCESS_SUMMARY_RESP_1,
+     "test-00340b06-00000314-00000000-1d686b9e4d74f52",
      "d5e122606054fa0b03db3ee8cf9ea7701e523875e2bdb87581ad7232ffc9308e"),
-    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP_3, GET_PROCESS_SUMMARY_RESP_2, "test-003513bc-0000035c-00000000-1d640200c9a6205",
+    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP_3, GET_PROCESS_SUMMARY_RESP_2,
+     "test-003513bc-0000035c-00000000-1d640200c9a6205",
      "63d423ea882264dbb157a965c200306212fc5e1c6ddb8cbbb0f1d3b51ecd82e6")])
 def test_process_sha256(cbcsdk_mock, get_process_response, get_summary_response, guid, sha256):
     """Testing Process.process_sha256 property."""
@@ -761,9 +766,12 @@ def test_process_sha256(cbcsdk_mock, get_process_response, get_summary_response,
 
 
 @pytest.mark.parametrize('get_process_response, get_summary_response, guid, pids', [
-    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP, GET_PROCESS_SUMMARY_RESP, "test-0002b226-000015bd-00000000-1d6225bbba74c00", [5653, 16139]),
-    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1, GET_PROCESS_SUMMARY_RESP_1, "test-00340b06-00000314-00000000-1d686b9e4d74f52", [3909]),
-    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP_2, GET_PROCESS_SUMMARY_RESP_2, "test-003513bc-0000035c-00000000-1d640200c9a6205", [788])])
+    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP, GET_PROCESS_SUMMARY_RESP,
+     "test-0002b226-000015bd-00000000-1d6225bbba74c00", [5653, 16139]),
+    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1, GET_PROCESS_SUMMARY_RESP_1,
+     "test-00340b06-00000314-00000000-1d686b9e4d74f52", [3909]),
+    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP_2, GET_PROCESS_SUMMARY_RESP_2,
+     "test-003513bc-0000035c-00000000-1d640200c9a6205", [788])])
 def test_process_pids(cbcsdk_mock, get_process_response, get_summary_response, guid, pids):
     """Testing Process.process_pids property."""
     # mock the search validation

@@ -408,6 +408,15 @@ class Event(UnrefreshableModel):
 class EventFacet(UnrefreshableModel):
     """Represents the results of an EventFacetQuery.
 
+    Event Facets can be queried for via `CBCloudAPI.select(EventFacet). Specify
+    a Process GUID with `.where(process_guid="example_guid")`, and facet field(s)
+    with `.add_facet_field("my_facet_field")`.
+
+    Example:
+    >>> event_facet_query = cb.select(EventFacet).where(process_guid='abcd1234')
+    >>> event_facet_query.add_facet_field("event_type")
+    >>> facets = event_facet_query.results
+
     EventFacet objects contain both Terms and Ranges. Each of those contain facet
     fields and values.
 
