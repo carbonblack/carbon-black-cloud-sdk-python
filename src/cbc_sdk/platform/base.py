@@ -405,6 +405,102 @@ class Event(UnrefreshableModel):
                                     force_init=force_init, full_doc=full_doc)
 
 
+class EventFacet(UnrefreshableModel):
+    """Represents the results of an EventFacetQuery.
+
+    EventFacet objects contain both Terms and Ranges. Each of those contain facet
+    fields and values.
+
+    Access all of the Terms facet data with EventFacet.terms_.facets or see just
+    the field names with EventFacet.terms_.fields.
+
+    Access all of the Ranges facet data with EventFacet.ranges_.facets or see just
+    the field names with EventFacet.ranges_.fields.
+    """
+    primary_key = "process_guid"
+    urlobject = "/api/investigate/v2/orgs/{}/events/{}/_facet"
+
+    class Terms(UnrefreshableModel):
+        """Represents the facet fields and values associated with an Event Facet query."""
+        def __init__(self, cb, initial_data):
+            """Initialize a ProcessFacet Terms object with initial_data."""
+            super(EventFacet.Terms, self).__init__(
+                cb,
+                model_unique_id=None,
+                initial_data=initial_data,
+                force_init=False,
+                full_doc=True,
+            )
+            self._facets = {}
+            for facet_term_data in initial_data:
+                field = facet_term_data["field"]
+                values = facet_term_data["values"]
+                self._facets[field] = values
+
+        @property
+        def facets(self):
+            """Returns the terms' facets for this result."""
+            return self._facets
+
+        @property
+        def fields(self):
+            """Returns the terms facets' fields for this result."""
+            return [field for field in self._facets]
+
+    class Ranges(UnrefreshableModel):
+        """Represents the range (bucketed) facet fields and values associated with an Event Facet query."""
+        def __init__(self, cb, initial_data):
+            """Initialize a ProcessFacet Ranges object with initial_data."""
+            super(EventFacet.Ranges, self).__init__(
+                cb,
+                model_unique_id=None,
+                initial_data=initial_data,
+                force_init=False,
+                full_doc=True,
+            )
+            self._facets = {}
+            for facet_range_data in initial_data:
+                field = facet_range_data["field"]
+                values = facet_range_data["values"]
+                self._facets[field] = values
+
+        @property
+        def facets(self):
+            """Returns the reified `EventFacet.Terms._facets` for this result."""
+            return self._facets
+
+        @property
+        def fields(self):
+            """Returns the ranges fields for this result."""
+            return [field for field in self._facets]
+
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
+        return EventFacetQuery(cls, cb)
+
+    def __init__(self, cb, model_unique_id, initial_data):
+        """Initialize an EventFacet object with initial_data."""
+        super(EventFacet, self).__init__(
+            cb,
+            model_unique_id=model_unique_id,
+            initial_data=initial_data,
+            force_init=False,
+            full_doc=True
+        )
+        self._terms = EventFacet.Terms(cb, initial_data=initial_data["terms"])
+        self._ranges = EventFacet.Ranges(cb, initial_data=initial_data["ranges"])
+
+    @property
+    def terms_(self):
+        """Returns the reified `EventFacet.Terms` for this result."""
+        return self._terms
+
+    @property
+    def ranges_(self):
+        """Returns the reified `EventFacet.Ranges` for this result."""
+        return self._ranges
+
+
 """Platform Queries"""
 
 
@@ -875,3 +971,75 @@ class EventQuery(Query):
                 log.debug("resetting total_results for this query to {0}".format(current))
                 self._total_results = current
                 break
+
+
+class EventFacetQuery(FacetQuery):
+    """Represents the logic for an Event Facet query."""
+    def _get_query_parameters(self):
+        args = self._default_args.copy()
+        if not (self._facet_fields or self._ranges):
+            raise ApiError("Event Facet Queries require at least one field or range to be requested. "
+                           "Use add_facet_field(['my_facet_field']) to add fields to the request, "
+                           "or use add_range({}) to add ranges to the request.")
+        terms = {}
+        if self._facet_fields:
+            terms["fields"] = self._facet_fields
+        if self._facet_rows:
+            terms["rows"] = self._facet_rows
+        args["terms"] = terms
+        if self._ranges:
+            args["ranges"] = self._ranges
+        if self._criteria:
+            args["criteria"] = self._criteria
+        if self._exclusions:
+            args["exclusions"] = self._exclusions
+        if self._time_range:
+            args["time_range"] = self._time_range
+        args['query'] = self._query_builder._collapse()
+        if self._query_builder._process_guid is not None:
+            args["process_guid"] = self._query_builder._process_guid
+        if 'process_guid:' in args['query']:
+            q = args['query'].split('process_guid:', 1)[1].split(' ', 1)[0]
+            args["process_guid"] = q
+        return args
+
+    def _perform_query(self):
+        return self.results
+
+    def _submit(self):
+        args = self._get_query_parameters()
+        # args["process_guid"] is used in the URL but not the args
+        process_guid = args.pop("process_guid", None)
+        # a GUID is required for this API call
+        if process_guid is None:
+            raise ApiError("Specify a Process GUID to search Event Facets for "
+                           "with cb.select(EventFacet).where(process_guid='example_guid')")
+
+        url = self._doc_class.urlobject.format(
+            self._cb.credentials.org_key,
+            process_guid
+        )
+        resp = self._cb.post_object(url, body=args)
+        result = resp.json()
+
+        return result
+
+    def _search(self):
+        """Execute the query until 'processed_segments' == 'total_segments'"""
+        args = self._get_query_parameters()
+        self._validate(args)
+        still_querying = True
+        while still_querying:
+            result = self._submit()
+
+            self._total_results = result.get("num_available", 0)
+            self._total_segments = result.get("total_segments", 0)
+            self._processed_segments = result.get("processed_segments", 0)
+            self._count_valid = True
+            if self._processed_segments != self._total_segments:
+                continue  # loop until we get all segments back
+
+            yield self._doc_class(self._cb, model_unique_id=self._query_token, initial_data=result)
+
+            # processed_segments == total_segments, end the search
+            still_querying = False

@@ -2,14 +2,15 @@
 
 import pytest
 import logging
-from cbc_sdk.platform import Event, Process
+from cbc_sdk.platform import Event, Process, EventFacet
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_events import (EVENT_SEARCH_VALIDATION_RESP,
                                                       EVENT_SEARCH_RESP_INTERIM,
                                                       EVENT_SEARCH_RESP,
                                                       EVENT_SEARCH_RESP_PART_ONE,
-                                                      EVENT_SEARCH_RESP_PART_TWO)
+                                                      EVENT_SEARCH_RESP_PART_TWO,
+                                                      EVENT_FACETS_RESP)
 from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_VALIDATION_RESP,
                                                        POST_PROCESS_SEARCH_JOB_RESP,
                                                        GET_PROCESS_SEARCH_JOB_RESP,
@@ -155,3 +156,16 @@ def test_event_query_with_multiple_fetches(cbcsdk_mock):
     event_query = api.select(Event).where(process_guid=guid)
     events = [ev for ev in event_query]
     assert len(events) == 3
+
+
+def test_event_facet_query(cbcsdk_mock):
+    """Test event facet querying"""
+    # mock the POST of an event facet search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/events/"
+                             "J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e/_facet",
+                             EVENT_FACETS_RESP)
+    api = cbcsdk_mock.api
+    event_facet_query = api.select(EventFacet).add_facet_field("event_type")
+    event_facet_query.where("process_guid:J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e")
+    facets = event_facet_query.results
+    assert isinstance(facets, EventFacet)
