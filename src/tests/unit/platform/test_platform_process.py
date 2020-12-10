@@ -1,24 +1,33 @@
-"""Testing Process and Tree objects of cbc_sdk.enterprise_edr"""
+"""Testing Process and Tree objects of cbc_sdk.platform"""
 
 import pytest
 import logging
-from cbc_sdk.enterprise_edr import Process, ProcessFacet, Tree, Event, Query, AsyncProcessQuery
+from cbc_sdk.platform import Process, ProcessFacet, Event, AsyncProcessQuery, SummaryQuery
+from cbc_sdk.enterprise_edr import Query
 from cbc_sdk.base import FacetQuery
 from cbc_sdk.rest_api import CBCloudAPI
-from cbc_sdk.errors import ObjectNotFoundError, ApiError
+from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.enterprise_edr.mock_process import (GET_PROCESS_SUMMARY_RESP,
-                                                             GET_PROCESS_SUMMARY_RESP_1,
-                                                             GET_PROCESS_SUMMARY_RESP_2,
-                                                             GET_TREE_RESP,
-                                                             GET_PROCESS_VALIDATION_RESP,
-                                                             POST_PROCESS_SEARCH_JOB_RESP,
-                                                             GET_PROCESS_SEARCH_JOB_RESP,
-                                                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1,
-                                                             GET_PROCESS_SEARCH_PARENT_JOB_RESULTS_RESP,
-                                                             GET_FACET_SEARCH_RESULTS_RESP,
-                                                             EXPECTED_PROCESS_FACETS,
-                                                             EXPECTED_PROCESS_RANGES_FACETS)
+from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_SUMMARY_RESP,
+                                                       GET_PROCESS_SUMMARY_RESP_1,
+                                                       GET_PROCESS_SUMMARY_RESP_2,
+                                                       GET_TREE_RESP,
+                                                       GET_PROCESS_VALIDATION_RESP,
+                                                       POST_PROCESS_SEARCH_JOB_RESP,
+                                                       POST_TREE_SEARCH_JOB_RESP,
+                                                       GET_TREE_SEARCH_JOB_RESP,
+                                                       GET_PROCESS_NOT_FOUND,
+                                                       GET_PROCESS_SUMMARY_NOT_FOUND,
+                                                       GET_PROCESS_SEARCH_JOB_RESP,
+                                                       GET_PROCESS_SEARCH_JOB_RESULTS_RESP,
+                                                       GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1,
+                                                       GET_PROCESS_SEARCH_JOB_RESULTS_RESP_2,
+                                                       GET_PROCESS_SEARCH_JOB_RESULTS_RESP_3,
+                                                       GET_PROCESS_SEARCH_PARENT_JOB_RESULTS_RESP,
+                                                       GET_PROCESS_SEARCH_PARENT_JOB_RESULTS_RESP_1,
+                                                       GET_FACET_SEARCH_RESULTS_RESP,
+                                                       EXPECTED_PROCESS_FACETS,
+                                                       EXPECTED_PROCESS_RANGES_FACETS)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -42,9 +51,31 @@ def cbcsdk_mock(monkeypatch, cb):
 
 def test_process_select(cbcsdk_mock):
     """Testing Process Querying with select()"""
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/summary", GET_PROCESS_SUMMARY_RESP)
+    # mock the search validation
     cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
                              GET_PROCESS_VALIDATION_RESP)
+    # mock the POST of a search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_job",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
+    # mock the POST of a summary search (using same Job ID)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/summary_jobs",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check summary search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SUMMARY_RESP)
+    # mock the GET to get summary search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             GET_PROCESS_SUMMARY_RESP)
     api = cbcsdk_mock.api
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     process = api.select(Process, guid)
@@ -59,11 +90,25 @@ def test_summary_select(cbcsdk_mock):
     api = cbcsdk_mock.api
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     summary = api.select(Process.Summary).where(f"process_guid:{guid}")
-    assert isinstance(summary, Query)
+    assert isinstance(summary, SummaryQuery)
 
 
 def test_process_events(cbcsdk_mock):
     """Testing Process.events()."""
+    # mock the search validation
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+                             GET_PROCESS_VALIDATION_RESP)
+    # mock the POST of a search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_job",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
     api = cbcsdk_mock.api
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     process = api.select(Process, guid)
@@ -84,6 +129,20 @@ def test_process_events(cbcsdk_mock):
 
 def test_process_events_with_criteria_exclusions(cbcsdk_mock):
     """Testing the add_criteria() method when selecting events."""
+    # mock the search validation
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+                             GET_PROCESS_VALIDATION_RESP)
+    # mock the POST of a search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_job",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
     api = cbcsdk_mock.api
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     process = api.select(Process, guid)
@@ -119,6 +178,20 @@ def test_process_events_with_criteria_exclusions(cbcsdk_mock):
 
 def test_process_events_exceptions(cbcsdk_mock):
     """Testing raising an Exception when using Query.add_criteria() and Query.add_exclusions()."""
+    # mock the search validation
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+                             GET_PROCESS_VALIDATION_RESP)
+    # mock the POST of a search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_job",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
     api = cbcsdk_mock.api
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     process = api.select(Process, guid)
@@ -152,7 +225,7 @@ def test_process_with_criteria_exclusions(cbcsdk_mock):
                                      "2c292717-80ed-4f0d-845f-779e09470920/results"),
                              GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1)
     p = process[0]
-    assert p.process_md5 == 'c7084336325dc8eadfb1e8ff876921c4'
+    assert p.process_md5 == '12384336325dc8eadfb1e8ff876921c4'
 
     process_q_params = process._get_query_parameters()
     expected_params = {"query": "event_type:modload",
@@ -261,6 +334,20 @@ def test_process_sort(cbcsdk_mock):
 
 def test_process_events_query_with_criteria_exclusions(cbcsdk_mock):
     """Testing the add_criteria() method when selecting events."""
+    # mock the search validation
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+                             GET_PROCESS_VALIDATION_RESP)
+    # mock the POST of a search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_job",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
     api = cbcsdk_mock.api
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     process = api.select(Process, guid)
@@ -299,6 +386,20 @@ def test_process_events_query_with_criteria_exclusions(cbcsdk_mock):
 
 def test_process_events_raise_exceptions(cbcsdk_mock):
     """Testing raising an Exception when using Query.add_criteria() and Query.add_exclusions()."""
+    # mock the search validation
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+                             GET_PROCESS_VALIDATION_RESP)
+    # mock the POST of a search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_job",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
     api = cbcsdk_mock.api
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     process = api.select(Process, guid)
@@ -332,7 +433,7 @@ def test_process_query_with_criteria_exclusions(cbcsdk_mock):
                                      "2c292717-80ed-4f0d-845f-779e09470920/results"),
                              GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1)
     p = process[0]
-    assert p.process_md5 == 'c7084336325dc8eadfb1e8ff876921c4'
+    assert p.process_md5 == '12384336325dc8eadfb1e8ff876921c4'
 
     process_q_params = process._get_query_parameters()
     expected_params = {"query": "event_type:modload",
@@ -443,53 +544,91 @@ def test_process_sort_by(cbcsdk_mock):
                          [(GET_PROCESS_SUMMARY_RESP, "test-0002b226-000015bd-00000000-1d6225bbba74c00",
                            GET_PROCESS_SEARCH_PARENT_JOB_RESULTS_RESP, True),
                           (GET_PROCESS_SUMMARY_RESP_1, "test-00340b06-00000314-00000000-1d686b9e4d74f52",
-                           None, False),
+                           GET_PROCESS_SEARCH_PARENT_JOB_RESULTS_RESP_1, False),
                           (GET_PROCESS_SUMMARY_RESP_2, "test-003513bc-0000035c-00000000-1d640200c9a6205",
                            GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1, True)
                           ])
 def test_process_parents(cbcsdk_mock, get_summary_response, guid, process_search_results, has_parent_process):
     """Testing Process.parents property/method."""
     api = cbcsdk_mock.api
+    # mock the search validation
     cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
                              GET_PROCESS_VALIDATION_RESP)
+    # mock the POST of a search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_job",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             process_search_results)
+    # mock the POST of a summary search (using same Job ID)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/summary_jobs",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check summary search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SUMMARY_RESP)
+    # mock the GET to get summary search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             get_summary_response)
     # query for a Process
     process = api.select(Process, guid)
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/summary", get_summary_response)
     # the process has a parent process (manually flagged)
     if has_parent_process:
         # Process.parents property returns a Process object, or [] if None
         assert isinstance(process.parents, Process)
-
-        # mock the POST of a search
-        cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_job",
-                                 POST_PROCESS_SEARCH_JOB_RESP)
-        # mock the GET to check search status
-        cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
-                                         "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
-                                 GET_PROCESS_SEARCH_JOB_RESP)
-        # mock the GET to get search results
-        cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
-                                         "2c292717-80ed-4f0d-845f-779e09470920/results"),
-                                 process_search_results)
-
         # query for a Process that has a guid == the guid of the parent process
         parent_process = api.select(Process).where(process_guid=process.parents.process_guid)
 
-        parent_search_results = [process for process in parent_process._perform_query()]
+        parent_search_results = [process for process in parent_process]
 
         # check that the search for parent_process yields result consistent with the original process's parent
         assert parent_search_results[0].process_guid == process.parents.process_guid
+    elif process.summary.parent:
+        parent = process.summary.parent
+        assert isinstance(parent, Process)
+        assert process.parents == parent
     else:
         # the process has no parent
         assert process.parents == []
 
 
 @pytest.mark.parametrize('get_summary_response, guid, expected_num_children', [
-    (GET_PROCESS_SUMMARY_RESP, "test-0002b226-000015bd-00000000-1d6225bbba74c00", 0),
+    (GET_PROCESS_SUMMARY_RESP, "test-0002b226-000015bd-00000000-1d6225bbba74c00", 2),
     (GET_PROCESS_SUMMARY_RESP_1, "test-00340b06-00000314-00000000-1d686b9e4d74f52", 3),
     (GET_PROCESS_SUMMARY_RESP_2, "test-003513bc-0000035c-00000000-1d640200c9a6205", 2)])
 def test_process_children(cbcsdk_mock, get_summary_response, guid, expected_num_children):
     """Testing Process.children property."""
+    # mock the search validation
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+                             GET_PROCESS_VALIDATION_RESP)
+    # mock the POST of a process search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the POST of a summary search (using same Job ID)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/summary_jobs",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check process search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check summary search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SUMMARY_RESP)
+    # mock the GET to get process search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get summary search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             get_summary_response)
     api = cbcsdk_mock.api
     process = api.select(Process, guid)
     cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/summary", get_summary_response)
@@ -502,52 +641,168 @@ def test_process_children(cbcsdk_mock, get_summary_response, guid, expected_num_
     assert len(process.children) == expected_num_children
 
 
-@pytest.mark.parametrize('get_summary_response, guid, md5', [
-    (GET_PROCESS_SUMMARY_RESP, "test-0002b226-000015bd-00000000-1d6225bbba74c00", None),
-    (GET_PROCESS_SUMMARY_RESP_1, "test-00340b06-00000314-00000000-1d686b9e4d74f52", "e83650f70459a027aa596e1a73c961a1"),
-    (GET_PROCESS_SUMMARY_RESP_2, "test-003513bc-0000035c-00000000-1d640200c9a6205",
-     "708c8760385810080c4d17fa84d325ca")])
-def test_process_md5(cbcsdk_mock, get_summary_response, guid, md5):
+@pytest.mark.parametrize('get_process_search_response, get_summary_response, guid, md5', [
+    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP, GET_PROCESS_SUMMARY_RESP, "test-0002b226-000015bd-00000000-1d6225bbba74c00",
+     "c7084336325dc8eadfb1e8ff876921c4"),
+    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1, GET_PROCESS_SUMMARY_RESP_1,
+     "test-00340b06-00000314-00000000-1d686b9e4d74f52",
+     "12384336325dc8eadfb1e8ff876921c4"),
+    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP_3, GET_PROCESS_SUMMARY_RESP_2,
+     "test-003513bc-0000035c-00000000-1d640200c9a6205",
+     "45684336325dc8eadfb1e8ff876921c4")])
+def test_process_md5(cbcsdk_mock, get_process_search_response, get_summary_response, guid, md5):
     """Testing Process.process_md5 property."""
+    # mock the search validation
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+                             GET_PROCESS_VALIDATION_RESP)
+    # mock the POST of a process search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check process search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get process search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             get_process_search_response)
+    # mock the POST of a summary search (using same Job ID)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/summary_jobs",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check summary search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SUMMARY_RESP)
+    # mock the GET to get summary search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             get_summary_response)
     api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/summary", get_summary_response)
     process = api.select(Process, guid)
-    assert process.process_md5 == md5
+    if "process_hash" in process.summary._info["process"]:
+        md5_hash = next((hash for hash in process.summary._info["process"]["process_hash"] if len(hash) == 32), None)
+        assert process.process_md5 == md5_hash
+    else:
+        assert process.process_md5 == md5
 
 
 def test_process_md5_not_found(cbcsdk_mock):
     """Testing error raising when receiving 404 for a Process."""
+    # mock the search validation
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+                             GET_PROCESS_VALIDATION_RESP)
+    # mock the POST of a process search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the POST of a summary search (using same Job ID)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/summary_jobs",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check process search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check summary search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SUMMARY_RESP)
+    # mock the GET to get process search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             GET_PROCESS_NOT_FOUND)
+    # mock the GET to get summary search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             GET_PROCESS_SUMMARY_NOT_FOUND)
     api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/summary",
-                             ObjectNotFoundError(uri='uri_to_get_summ'))
     process = api.select(Process, "someNonexistantGuid")
-    with pytest.raises(ObjectNotFoundError):
+    with pytest.raises(ApiError):
         process.summary
 
 
-@pytest.mark.parametrize('get_summary_response, guid, sha256', [
-    (GET_PROCESS_SUMMARY_RESP, "test-0002b226-000015bd-00000000-1d6225bbba74c00",
+@pytest.mark.parametrize('get_process_response, get_summary_response, guid, sha256', [
+    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP, GET_PROCESS_SUMMARY_RESP,
+     "test-0002b226-000015bd-00000000-1d6225bbba74c00",
      "5920199e4fbfa47c1717b863814722148a353e54f8c10912cf1f991a1c86309d"),
-    (GET_PROCESS_SUMMARY_RESP_1, "test-00340b06-00000314-00000000-1d686b9e4d74f52",
+    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1, GET_PROCESS_SUMMARY_RESP_1,
+     "test-00340b06-00000314-00000000-1d686b9e4d74f52",
      "d5e122606054fa0b03db3ee8cf9ea7701e523875e2bdb87581ad7232ffc9308e"),
-    (GET_PROCESS_SUMMARY_RESP_2, "test-003513bc-0000035c-00000000-1d640200c9a6205", None)])
-def test_process_sha256(cbcsdk_mock, get_summary_response, guid, sha256):
+    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP_3, GET_PROCESS_SUMMARY_RESP_2,
+     "test-003513bc-0000035c-00000000-1d640200c9a6205",
+     "63d423ea882264dbb157a965c200306212fc5e1c6ddb8cbbb0f1d3b51ecd82e6")])
+def test_process_sha256(cbcsdk_mock, get_process_response, get_summary_response, guid, sha256):
     """Testing Process.process_sha256 property."""
+    # mock the search validation
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+                             GET_PROCESS_VALIDATION_RESP)
+    # mock the POST of a process search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check process search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get process search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             get_process_response)
+    # mock the POST of a summary search (using same Job ID)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/summary_jobs",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check summary search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SUMMARY_RESP)
+    # mock the GET to get summary search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             get_summary_response)
     api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/summary", get_summary_response)
     process = api.select(Process, guid)
-    assert process.process_sha256 == sha256
+    if "process_hash" in process.summary._info["process"]:
+        sha256_hash = next((hash for hash in process.summary._info["process"]["process_hash"] if len(hash) == 64), None)
+        assert process.process_sha256 == sha256_hash
+    else:
+        assert process.process_sha256 == sha256
 
 
-@pytest.mark.parametrize('get_summary_response, guid, pids', [
-    (GET_PROCESS_SUMMARY_RESP, "test-0002b226-000015bd-00000000-1d6225bbba74c00", [5565]),
-    (GET_PROCESS_SUMMARY_RESP_1, "test-00340b06-00000314-00000000-1d686b9e4d74f52", [788]),
-    (GET_PROCESS_SUMMARY_RESP_2, "test-003513bc-0000035c-00000000-1d640200c9a6205", [860])])
-def test_process_pids(cbcsdk_mock, get_summary_response, guid, pids):
+@pytest.mark.parametrize('get_process_response, get_summary_response, guid, pids', [
+    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP, GET_PROCESS_SUMMARY_RESP,
+     "test-0002b226-000015bd-00000000-1d6225bbba74c00", [5653, 16139]),
+    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1, GET_PROCESS_SUMMARY_RESP_1,
+     "test-00340b06-00000314-00000000-1d686b9e4d74f52", [3909]),
+    (GET_PROCESS_SEARCH_JOB_RESULTS_RESP_2, GET_PROCESS_SUMMARY_RESP_2,
+     "test-003513bc-0000035c-00000000-1d640200c9a6205", [788])])
+def test_process_pids(cbcsdk_mock, get_process_response, get_summary_response, guid, pids):
     """Testing Process.process_pids property."""
+    # mock the search validation
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+                             GET_PROCESS_VALIDATION_RESP)
+    # mock the POST of a process search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check process search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get process search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             get_process_response)
+    # mock the POST of a summary search (using same Job ID)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/summary_jobs",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check summary search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SUMMARY_RESP)
+    # mock the GET to get summary search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             get_summary_response)
     api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/summary", get_summary_response)
     process = api.select(Process, guid)
+    if "process_pid" in process.summary._info["process"]:
+        assert process.process_pids == process.summary._info["process"]["process_pid"]
     assert process.process_pids == pids
 
 
@@ -651,18 +906,43 @@ def test_process_facet_query_check_range(cbcsdk_mock, bucket_size, start, end, f
 
 
 def test_tree_select(cbcsdk_mock):
-    """Testing Tree Querying"""
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/tree", GET_TREE_RESP)
+    """Testing Process.Tree Querying"""
+    # mock the search validation
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+                             GET_PROCESS_VALIDATION_RESP)
+    # mock the POST of a search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1)
+    # mock the Tree search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/summary_jobs", POST_TREE_SEARCH_JOB_RESP)
+    # mock the GET to check search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/summary_jobs"
+                                     "/ee158f11-4dfb-4ae2-8f1a-7707b712226d"),
+                             GET_TREE_SEARCH_JOB_RESP)
+    # mock the GET to get search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/summary_jobs/"
+                                     "ee158f11-4dfb-4ae2-8f1a-7707b712226d/results"),
+                             GET_TREE_RESP)
+
     api = cbcsdk_mock.api
     guid = "WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00"
     process = api.select(Process, guid)
-    tree = process.tree()
-    children = tree.nodes["children"]
+    tree = process.tree
+    children = tree.children
     assert len(children) == len(tree.children)
     assert len(children) > 0
 
-    procTree = api.select(Tree).where(process_guid="WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00")
-    results = procTree._perform_query()
+    procTree = api.select(Process.Tree).where(process_guid="WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00")
+    future = procTree.execute_async()
+    results = future.result()[0]
     assert results is not None
-    assert results["nodes"]["children"] is not None
-    assert results["incomplete_results"] is False
+    assert results.children is not None
+    assert results.device_os is not None

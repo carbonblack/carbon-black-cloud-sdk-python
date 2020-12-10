@@ -578,3 +578,37 @@ EVENT_SEARCH_RESP_PART_TWO = {
     "total_segments": 7,
     "processed_segments": 7
 }
+
+EVENT_FACETS_RESP = {
+    "ranges": [],
+    "terms": [
+        {
+            "values": [
+                {
+                    "total": 6,
+                    "id": "modload",
+                    "name": "modload"
+                },
+                {
+                    "total": 3,
+                    "id": "crossproc",
+                    "name": "crossproc"
+                },
+                {
+                    "total": 2,
+                    "id": "filemod",
+                    "name": "filemod"
+                },
+                {
+                    "total": 1,
+                    "id": "childproc",
+                    "name": "childproc"
+                }
+            ],
+            "field": "event_type"
+        }
+    ],
+    "num_found": 12,
+    "total_segments": 3,
+    "processed_segments": 3
+}
