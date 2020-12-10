@@ -1,0 +1,132 @@
+type: object
+required:
+  - id
+  - sql
+  - name
+  - schedule
+properties:
+  org_key:
+    type: string
+    description: The organization key for this run
+  name:
+    type: string
+    description: The name of the Audit and Remediation run
+  id:
+    type: string
+    description: The run's unique ID
+  sql:
+    type: string
+    description: The Audit and Remediation query
+  created_by:
+    type: string
+    description: The user or API id that created the run
+  create_time:
+    type: string
+    description: When this run was created
+  status_update_time:
+    type: string
+    description: When the status of this run was last updated
+  timeout_time:
+    type: string
+    description: The time at which the query will stop requesting results from any devices who have not responded
+  cancellation_time:
+    type: string
+    description: The time at which a user or API id cancelled the run
+  cancelled_by:
+    type: string
+    description: The user or API id that cancelled the run
+  archive_time:
+    type: string
+    description: The time at which a user or API id cancelled the run
+  archived_by:
+    type: string
+    description: The user or API id that archived the run
+  notify_on_finish:
+    type: boolean
+    description: Whether or not to send an email on query completion
+  active_org_devices:
+    type: integer
+    format: int32
+    description: The number of devices active in the organization
+  status:
+    type: string
+    description: The run status
+  device_filter:
+    type: object
+    description: Any device filter rules associated with the run
+  last_result_time:
+    type: string
+    description: When the most recent result for this run was reported
+  total_results:
+    type: integer
+    format: int32
+    description: The number of results received
+  match_count:
+    type: integer
+    format: int32
+    description: The number of devices which received a match to the query
+  no_match_count:
+    type: integer
+    format: int32
+    description: The number of devices which did not received a match to the query
+  error_count:
+    type: integer
+    format: int32
+    description: The number of devices which errored
+  not_supported_count:
+    type: integer
+    format: int32
+    description: The number of devices which do not support a portion of the osquery
+  cancelled_count:
+    type: integer
+    format: int32
+    description: The number of devices which were cancelled before they ran the query
+  not_started_count:
+    type: integer
+    format: int32
+    description: The number of devices which have not run the query
+  success_count:
+    type: integer
+    format: int32
+    description: The number of devices which succeeded in running the query
+  in_progress_count:
+    type: integer
+    format: int32
+    description: The number of devices which were currently executing the query
+  recommended_query_id:
+    type: string
+    description: The id of a query from the recommendedation route
+  template_id:
+    type: string
+    description: The template that created the run
+  schedule:
+    type: object
+    description:
+    required:
+      - rrule
+      - timezone
+    properties:
+      status:
+        type: string
+        description: The state of the schedule either ACTIVE or CANCELLED
+      recurrence:
+        type: string
+        description: The frequency at which the schedule will repeat
+      timezone:
+        type: string
+        description: The timezone database name the schedule uses as a base
+      rrule:
+        type: string
+        description: Recurrence rule see https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/latest/livequery-api/#recurrence-rules
+      previous_run_time:
+        type: string
+        description: The last time the template created a run
+      next_run_time:
+        type: string
+        description: The next time the template will create a run
+      cancellation_time:
+        type: string
+        description: The time at which a user or API key cancelled the template
+      cancelled_by:
+        type: string
+        description: The user or API id that cancelled the template
