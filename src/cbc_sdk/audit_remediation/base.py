@@ -332,7 +332,6 @@ class RunQuery(PlatformQueryBase):
         self._query_token = None
         self._query_body = {"device_filter": {}}
         self._device_filter = self._query_body["device_filter"]
-        self._schedule = self._query_body["schedule"]
 
     def schedule(self, rrule, timezone):
         """
@@ -392,8 +391,9 @@ class RunQuery(PlatformQueryBase):
         Returns:
             The RunQuery with a recurrence schedule.
         """
-        self._schedule["rrule"] = rrule
-        self._schedule["timezone"] = timezone
+        self._query_body["schedule"] = {}
+        self._query_body["schedule"]["rrule"] = rrule
+        self._query_body["schedule"]["timezone"] = timezone
         return self
 
     def device_ids(self, device_ids):
@@ -1031,7 +1031,29 @@ class Template(Run):
         super(Template, self).__init__(
             cb,
             model_unique_id=model_unique_id,
-            initial_data=item,
-            force_init=False,
-            full_doc=True,
+            initial_data=item
         )
+
+    def stop(self):
+        """Stop a template.
+
+        Returns:
+            (bool): True if query was stopped successfully, False otherwise.
+
+        Raises:
+            ServerError: If the server response cannot be parsed as JSON.
+        """
+        if self._is_deleted:
+            raise ApiError("cannot stop a deleted query")
+        url = self.urlobject_single.format(self._cb.credentials.org_key, self.id)
+        self._info['schedule']['status'] = 'CANCELLED'
+
+        result = self._cb.put_object(url, self._info)
+        if (result.status_code == 200):
+            try:
+                self._info = result.json()
+                self._last_refresh_time = time.time()
+                return True
+            except Exception:
+                raise ServerError(result.status_code, "Cannot parse response as JSON: {0:s}".format(result.content))
+        return False
