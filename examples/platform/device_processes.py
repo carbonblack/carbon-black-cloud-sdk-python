@@ -21,7 +21,7 @@ import logging
 import concurrent.futures
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
 from cbc_sdk.platform import Device
-from cbc_sdk.enterprise_edr import Process
+from cbc_sdk.platform import Process
 
 log = logging.getLogger(__name__)
 

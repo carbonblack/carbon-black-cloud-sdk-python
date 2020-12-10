@@ -1,15 +1,21 @@
-"""Testing Event object of cbc_sdk.enterprise_edr"""
+"""Testing Event object of cbc_sdk.platform"""
 
 import pytest
 import logging
-from cbc_sdk.enterprise_edr import Event, Process
+from cbc_sdk.platform import Event, Process, EventFacet
 from cbc_sdk.rest_api import CBCloudAPI
+from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.enterprise_edr.mock_events import (EVENT_SEARCH_VALIDATION_RESP,
-                                                            EVENT_SEARCH_RESP_INTERIM,
-                                                            EVENT_SEARCH_RESP,
-                                                            EVENT_SEARCH_RESP_PART_ONE,
-                                                            EVENT_SEARCH_RESP_PART_TWO)
+from tests.unit.fixtures.platform.mock_events import (EVENT_SEARCH_VALIDATION_RESP,
+                                                      EVENT_SEARCH_RESP_INTERIM,
+                                                      EVENT_SEARCH_RESP,
+                                                      EVENT_SEARCH_RESP_PART_ONE,
+                                                      EVENT_SEARCH_RESP_PART_TWO,
+                                                      EVENT_FACETS_RESP)
+from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_VALIDATION_RESP,
+                                                       POST_PROCESS_SEARCH_JOB_RESP,
+                                                       GET_PROCESS_SEARCH_JOB_RESP,
+                                                       GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -33,6 +39,20 @@ def cbcsdk_mock(monkeypatch, cb):
 
 def test_event_query_process_select_with_guid(cbcsdk_mock):
     """Test Event Querying with GUID inside process.select()"""
+    # mock the search validation
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+                             GET_PROCESS_VALIDATION_RESP)
+    # mock the POST of a search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_job",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
     api = cbcsdk_mock.api
     guid = "J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e"
     process = api.select(Process, guid)
@@ -137,3 +157,47 @@ def test_event_query_with_multiple_fetches(cbcsdk_mock):
     event_query = api.select(Event).where(process_guid=guid)
     events = [ev for ev in event_query]
     assert len(events) == 3
+
+
+def test_event_facet_query(cbcsdk_mock):
+    """Test event facet querying"""
+    # mock the POST of an event facet search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/events/"
+                             "J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e/_facet",
+                             EVENT_FACETS_RESP)
+    api = cbcsdk_mock.api
+    event_facet_query = api.select(EventFacet).add_facet_field("event_type")
+    event_facet_query.where("process_guid:J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e")
+    facets = event_facet_query.results
+    assert isinstance(facets, EventFacet)
+
+
+def test_event_facet_query_missing_field(cbcsdk_mock):
+    """Test raising ApiError when searching without a facet field set"""
+    api = cbcsdk_mock.api
+    event_facet_query = api.select(EventFacet)
+    event_facet_query.where("process_guid:J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e")
+    with pytest.raises(ApiError):
+        event_facet_query.results
+
+
+def test_event_facet_get_query_parameters(cbcsdk_mock):
+    """Testing EventFacet._get_query_parameters()."""
+    api = cbcsdk_mock.api
+    # query without facet fields is invalid
+    facet_query = api.select(EventFacet).where("process_name:svchost.exe")
+    with pytest.raises(ApiError):
+        facet_query._get_query_parameters()
+    facet_query = api.select(EventFacet).add_facet_field("device_name")
+    # query with rows
+    facet_query.set_rows(500)
+    assert facet_query._get_query_parameters()["terms"]["rows"] == 500
+    # query with criteria
+    facet_query.add_criteria("device_name", "my_device_name")
+    assert facet_query._get_query_parameters()["criteria"] == {"device_name": ["my_device_name"]}
+    # query with exclusions
+    facet_query.add_exclusions("device_name", "my_device_name")
+    assert facet_query._get_query_parameters()["exclusions"] == {"device_name": ["my_device_name"]}
+    # query with process_guid in a where() stmt
+    facet_query.where("process_guid:myguid")
+    assert facet_query._get_query_parameters()["query"] == "process_guid:myguid"
