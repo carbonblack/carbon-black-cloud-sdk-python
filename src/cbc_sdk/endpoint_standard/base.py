@@ -257,8 +257,76 @@ class EnrichedEvent(UnrefreshableModel):
             force_init (bool): True to force object initialization.
             full_doc (bool): True to mark the object as fully initialized.
         """
+        self._details_timeout = 0
         super(EnrichedEvent, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
                                             force_init=force_init, full_doc=full_doc)
+
+    def get_details(self, timeout=0, async_mode=False):
+        """Requests detailed results.
+        
+        Args:
+            timeout (int): Event details request timeout in milliseconds.
+            async_mode (bool): True to request details in an asynchronous manner.
+        
+        Note:
+            - When using asynchronous mode, this method returns a python future.
+              You can call result() on the future object to wait for completion and get the results. 
+        """
+        self._details_timeout = timeout
+        if not self.event_id:
+            raise ApiError("Trying to get event details on an invalid event_id")
+        if async_mode:
+            return self._cb._async_submit(lambda arg, kwarg: self._get_detailed_results())
+        else:
+            return self._get_detailed_results()
+
+    def _get_detailed_results(self):
+        args = { "event_ids": [self.event_id] }
+        url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs".format(self._cb.credentials.org_key)
+        query_start = self._cb.post_object(url, body=args)
+        job_id = query_start.json().get("job_id")
+        timed_out = False
+        submit_time = time.time() * 1000
+
+        while True:        
+            status_url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs/{}".format(
+                self._cb.credentials.org_key,
+                job_id,
+            )
+            result = self._cb.get_object(status_url)
+            searchers_contacted = result.get("contacted", 0)
+            searchers_completed = result.get("completed", 0)
+            log.debug("Requesting details, contacted = {}, completed = {}".format(searchers_contacted, searchers_completed))
+            if searchers_contacted == 0:
+                time.sleep(.5)
+                continue
+            if searchers_completed < searchers_contacted:
+                if self._details_timeout != 0 and (time.time() * 1000) - submit_time > self._details_timeout:
+                    timed_out = True
+                    break
+            else:
+                break
+
+            time.sleep(.5)
+
+        if timed_out:
+            raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
+
+        log.debug("Pulling detailed results, timed_out={}".format(timed_out))
+
+        still_fetching = True
+        result_url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs/{}/results".format(
+            self._cb.credentials.org_key,
+            job_id
+        )
+        query_parameters = {}
+        while still_fetching:
+            result = self._cb.get_object(result_url, query_parameters=query_parameters)
+            total_results = result.get('num_available', 0)
+            if total_results != 0:
+                results = result.get('results', [])
+                return EnrichedEvent(self._cb, initial_data = results[0])
+
 
 
 class EnrichedEventFacet(UnrefreshableModel):
@@ -505,9 +573,6 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
         self._timed_out = False
         self._sort = []
         self._time_range = {}
-        self._request_details = False
-        self._event_ids = []
-        self._time_left = 0
 
     def or_(self, **kwargs):
         """
@@ -620,14 +685,6 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
         self._timeout = msecs
         return self
 
-    def get_details(self):
-        """Requests detailed results.
-        
-        Note:
-            - This involves additional REST API requests and may take longer
-        """
-        self._request_details = True
-        return self
 
     def _submit(self):
         if self._query_token:
@@ -660,8 +717,7 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
                 self._timed_out = True
                 return False
             return True
-        if self._timeout > 0:
-            self._time_left = self._timeout - ((time.time() * 1000) - self._submit_time)
+
         return False
 
     def _count(self):
@@ -717,13 +773,9 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
             self._count_valid = True
 
             results = result.get('results', [])
-            self.event_ids = []
 
             for item in results:
-                if self._request_details:
-                    self._event_ids.append(item["event_id"])
-                else:
-                    yield item
+                yield item
                 current += 1
                 rows_fetched += 1
 
@@ -734,71 +786,8 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
             if current >= self._total_results:
                 still_fetching = False
             
-            if not self._request_details:
-                log.debug("current: {}, total_results: {}".format(current, self._total_results))
-
-        if self._request_details:
-            for item in self._get_detailed_results():
-                yield item
+            log.debug("current: {}, total_results: {}".format(current, self._total_results))
         
-    def _get_detailed_results(self):
-        args = { "event_ids": self._event_ids }
-        url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs".format(self._cb.credentials.org_key)
-        query_start = self._cb.post_object(url, body=args)
-        job_id = query_start.json().get("job_id")
-        timed_out = False
-        submit_time = time.time() * 1000
-
-        while True:        
-            status_url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs/{}".format(
-                self._cb.credentials.org_key,
-                job_id,
-            )
-            result = self._cb.get_object(status_url)
-            searchers_contacted = result.get("contacted", 0)
-            searchers_completed = result.get("completed", 0)
-            log.debug("Requesting details, contacted = {}, completed = {}".format(searchers_contacted, searchers_completed))
-            if searchers_contacted == 0:
-                time.sleep(.5)
-                continue
-            if searchers_completed < searchers_contacted:
-                if self._time_left != 0 and (time.time() * 1000) - self._submit_time > self._time_left:
-                    timed_out = True
-                    break
-            else:
-                break
-
-            time.sleep(.5)
-
-        if timed_out:
-            raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
-
-        log.debug("Pulling detailed results, timed_out={}".format(timed_out))
-
-        current = 0
-        rows_fetched = 0
-        still_fetching = True
-        result_url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs/{}/results".format(
-            self._cb.credentials.org_key,
-            job_id
-        )
-        query_parameters = {}
-        while still_fetching:
-            result = self._cb.get_object(result_url, query_parameters=query_parameters)
-            total_results = result.get('num_available', 0)
-            count_valid = True
-
-            results = result.get('results', [])
-
-            for item in results:
-                yield item
-                current += 1
-
-            if current >= total_results:
-                still_fetching = False
-            
-            log.debug("Requesting details, current: {}, total_results: {}".format(current, self._total_results))
-
     def _run_async_query(self, context):
         """Executed in the background to run an asynchronous query.
 
