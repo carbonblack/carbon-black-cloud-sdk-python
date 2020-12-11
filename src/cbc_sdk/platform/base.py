@@ -1015,9 +1015,10 @@ class EventQuery(Query):
             self._count_valid = True
             if self._processed_segments != self._total_segments:
                 retry_counter = 0 if self._processed_segments > last_processed_segments else retry_counter + 1
-                last_processed_segments = self._processed_segments
+                last_processed_segments = max(last_processed_segments, self._processed_segments)
                 if retry_counter == MAX_EVENT_SEARCH_RETRIES:
                     raise TimeoutError(url, resp.status_code, "excessive number of retries in event query")
+                time.sleep(1 + retry_counter / 10)
                 continue  # loop until we get all segments back
 
             results = result.get('results', [])
@@ -1106,9 +1107,10 @@ class EventFacetQuery(FacetQuery):
             self._count_valid = True
             if self._processed_segments != self._total_segments:
                 retry_counter = 0 if self._processed_segments > last_processed_segments else retry_counter + 1
-                last_processed_segments = self._processed_segments
+                last_processed_segments = max(last_processed_segments, self._processed_segments)
                 if retry_counter == MAX_EVENT_SEARCH_RETRIES:
                     raise TimeoutError(url, code, "excessive number of retries in event facet query")
+                time.sleep(1 + retry_counter / 10)
                 continue  # loop until we get all segments back
 
             yield self._doc_class(self._cb, model_unique_id=self._query_token, initial_data=result)
