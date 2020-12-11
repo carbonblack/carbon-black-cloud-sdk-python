@@ -333,6 +333,69 @@ class RunQuery(PlatformQueryBase):
         self._query_body = {"device_filter": {}}
         self._device_filter = self._query_body["device_filter"]
 
+    def schedule(self, rrule, timezone):
+        """
+        Sets a schedule for the SQL Query to recur
+
+        A schedule requires an rrule and a timezone to determine the time to rerun the SQL query. rrule
+        is defined in RFC 2445 however only a subset of the functionality is supported here. If a Run
+        is created with a schedule then the Run will contain a template_id to the corresponding template
+        and a new Run will be created each time the schedule is met.
+
+        DAILY
+
+        | Field    | Values  |
+        | -------- | ------- |
+        | BYSECOND | 0       |
+        | BYMINUTE | 0 or 30 |
+        | BYHOUR   | 0 to 23 |
+
+        # Daily at 1:30PM
+        RRULE:FREQ=DAILY;BYHOUR=13;BYMINUTE=30;BYSECOND=0
+
+        WEEKLY
+
+        | Field    | Values                                  |
+        | -------- | --------------------------------------- |
+        | BYSECOND | 0                                       |
+        | BYMINUTE | 0 or 30                                 |
+        | BYHOUR   | 0 to 23                                 |
+        | BYDAY    | One or more: SU, MO, TU, WE, TH, FR, SA |
+
+        # Monday and Friday of the week at 2:30 AM
+        RRULE:FREQ=WEEKLY;BYDAY=MO,FR;BYHOUR=13;BYMINUTE=30;BYSECOND=0
+
+        MONTHLY
+
+        Note: Either (BYDAY and BYSETPOS) or BYMONTHDAY is required.
+
+        | Field      | Values                                  |
+        | ---------- | --------------------------------------- |
+        | BYSECOND   | 0                                       |
+        | BYMINUTE   | 0 or 30                                 |
+        | BYHOUR     | 0 to 23                                 |
+        | BYDAY      | One or more: SU, MO, TU, WE, TH, FR, SA |
+        | BYSETPOS   | -1, 1, 2, 3, 4                          |
+        | BYMONTHDAY | One or more: 1 to 28                    |
+
+        # Last Monday of the Month at 2:30 AM
+        RRULE:FREQ=MONTHLY;BYDAY=MO;BYSETPOS=-1;BYHOUR=2;BYMINUTE=30;BYSECOND=0
+
+        # 1st and 15th of the Month at 2:30 AM
+        RRULE:FREQ=DAILY;BYMONTHDAY=1,15;BYHOUR=2;BYMINUTE=30;BYSECOND=0
+
+        Arguments:
+            rrule (string): A recurrence rule (RFC 2445) specifying the frequency and time at which the query will recur
+            timezone (string): The timezone database name to use as a base for the rrule
+
+        Returns:
+            The RunQuery with a recurrence schedule.
+        """
+        self._query_body["schedule"] = {}
+        self._query_body["schedule"]["rrule"] = rrule
+        self._query_body["schedule"]["timezone"] = timezone
+        return self
+
     def device_ids(self, device_ids):
         """Restricts the devices that this Audit and Remediation run is performed on to the given IDs.
 
@@ -938,3 +1001,59 @@ class FacetQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin
         results = result.get("terms", [])
         for item in results:
             yield self._doc_class(self._cb, item)
+
+
+class Template(Run):
+    """Represents an Audit and Remediation Live Query Template .
+
+    Example:
+    >>> template = cb.select(Template, template_id)
+    >>> print(template.name, template.sql, template.create_time)
+    >>> print(template.status, template.match_count, template.schedule)
+    >>> template.refresh()
+    """
+    primary_key = "id"
+    swagger_meta_file = "audit_remediation/models/template.yaml"
+    urlobject = "/livequery/v1/orgs/{}/templates"
+    urlobject_single = "/livequery/v1/orgs/{}/templates/{}"
+    _is_deleted = False
+
+    def __init__(self, cb, model_unique_id=None, initial_data=None):
+        """Initialize a Template object with initial_data."""
+        if initial_data is not None:
+            item = initial_data
+        elif model_unique_id is not None:
+            url = self.urlobject_single.format(cb.credentials.org_key, model_unique_id)
+            item = cb.get_object(url)
+
+        model_unique_id = item.get("id")
+
+        super(Template, self).__init__(
+            cb,
+            model_unique_id=model_unique_id,
+            initial_data=item
+        )
+
+    def stop(self):
+        """Stop a template.
+
+        Returns:
+            (bool): True if query was stopped successfully, False otherwise.
+
+        Raises:
+            ServerError: If the server response cannot be parsed as JSON.
+        """
+        if self._is_deleted:
+            raise ApiError("cannot stop a deleted query")
+        url = self.urlobject_single.format(self._cb.credentials.org_key, self.id)
+        self._info['schedule']['status'] = 'CANCELLED'
+
+        result = self._cb.put_object(url, self._info)
+        if (result.status_code == 200):
+            try:
+                self._info = result.json()
+                self._last_refresh_time = time.time()
+                return True
+            except Exception:
+                raise ServerError(result.status_code, "Cannot parse response as JSON: {0:s}".format(result.content))
+        return False

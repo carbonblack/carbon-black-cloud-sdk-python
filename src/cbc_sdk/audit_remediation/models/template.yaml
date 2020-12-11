@@ -2,6 +2,8 @@ type: object
 required:
   - id
   - sql
+  - name
+  - schedule
 properties:
   org_key:
     type: string
@@ -33,6 +35,12 @@ properties:
   cancelled_by:
     type: string
     description: The user or API id that cancelled the run
+  archive_time:
+    type: string
+    description: The time at which a user or API id cancelled the run
+  archived_by:
+    type: string
+    description: The user or API id that archived the run
   notify_on_finish:
     type: boolean
     description: Whether or not to send an email on query completion
