@@ -1,10 +1,6 @@
 - name: Linters
-  type: parallel
-  steps:
-  - name: Linting step
-    tag: master
-    service: testingpython38
-    command: bin/linters.sh
+  service: testingpython38
+  command: bin/linters.sh
 
 - name: Tests
   type: parallel

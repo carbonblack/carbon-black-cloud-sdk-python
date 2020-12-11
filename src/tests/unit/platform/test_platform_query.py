@@ -3,21 +3,21 @@
 import pytest
 import logging
 import time
-from cbc_sdk.enterprise_edr import Process, Event, ProcessFacet
+from cbc_sdk.platform import Process, Event, ProcessFacet
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.enterprise_edr.mock_process import (GET_PROCESS_SUMMARY_RESP,
-                                                             GET_PROCESS_SUMMARY_RESP_1,
-                                                             GET_PROCESS_VALIDATION_RESP,
-                                                             GET_PROCESS_VALIDATION_RESP_INVALID,
-                                                             POST_PROCESS_SEARCH_JOB_RESP,
-                                                             GET_PROCESS_SEARCH_JOB_RESP,
-                                                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP,
-                                                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1,
-                                                             GET_FACET_SEARCH_RESULTS_RESP,
-                                                             GET_FACET_SEARCH_RESULTS_RESP_1,
-                                                             GET_FACET_SEARCH_RESULTS_RESP_NOT_COMPLETE)
+from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_SUMMARY_RESP,
+                                                       GET_PROCESS_SUMMARY_RESP_1,
+                                                       GET_PROCESS_VALIDATION_RESP,
+                                                       GET_PROCESS_VALIDATION_RESP_INVALID,
+                                                       POST_PROCESS_SEARCH_JOB_RESP,
+                                                       GET_PROCESS_SEARCH_JOB_RESP,
+                                                       GET_PROCESS_SEARCH_JOB_RESULTS_RESP,
+                                                       GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1,
+                                                       GET_FACET_SEARCH_RESULTS_RESP,
+                                                       GET_FACET_SEARCH_RESULTS_RESP_1,
+                                                       GET_FACET_SEARCH_RESULTS_RESP_NOT_COMPLETE)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -211,7 +211,7 @@ def test_async_submit(cbcsdk_mock):
 
 @pytest.mark.parametrize('get_summary_response, get_process_search_response, guid, pid', [
     (GET_PROCESS_SUMMARY_RESP, GET_PROCESS_SEARCH_JOB_RESULTS_RESP,
-     "test-0002b226-000015bd-00000000-1d6225bbba74c00", 2976),
+     "test-0002b226-000015bd-00000000-1d6225bbba74c00", 5653),
     (GET_PROCESS_SUMMARY_RESP_1, GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1,
      "test-00340b06-00000314-00000000-1d686b9e4d74f52", 3909)])
 def test_query_execute_async(cbcsdk_mock, get_summary_response, get_process_search_response, guid, pid):

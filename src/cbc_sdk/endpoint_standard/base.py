@@ -151,10 +151,11 @@ class Device(EndpointStandardMutableModel):
         """
         Retrieve a Live Response session object for this Device.
 
-        :return: Live Response session object
-        :rtype: :py:class:`cbc_sdk.endpoint_standard.cblr.LiveResponseSession`
-        :raises ApiError: if there is an error establishing a Live Response session for this Device
+        Returns:
+            LiveResponseSession: Live Response session object.
 
+        Raises:
+            ApiError: If there is an error establishing a Live Response session for this Device.
         """
         return self._cb._request_lr_session(self._model_unique_id)
 
@@ -620,7 +621,7 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
                 Should be in the form "-2w", where y=year, w=week, d=day, h=hour, m=minute, s=second.
 
         Note:
-            - `window` will take precendent over `start` and `end` if provided.
+            - `window` will take precedence over `start` and `end` if provided.
 
         Examples:
             query = api.select(EnrichedEvent).set_time_range(start="2020-10-20T20:34:07Z")
