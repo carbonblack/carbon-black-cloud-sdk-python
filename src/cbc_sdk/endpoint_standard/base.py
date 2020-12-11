@@ -264,14 +264,14 @@ class EnrichedEvent(UnrefreshableModel):
 
     def get_details(self, timeout=0, async_mode=False):
         """Requests detailed results.
-        
+
         Args:
             timeout (int): Event details request timeout in milliseconds.
             async_mode (bool): True to request details in an asynchronous manner.
-        
+
         Note:
             - When using asynchronous mode, this method returns a python future.
-              You can call result() on the future object to wait for completion and get the results. 
+              You can call result() on the future object to wait for completion and get the results.
         """
         self._details_timeout = timeout
         if not self.event_id:
@@ -283,14 +283,14 @@ class EnrichedEvent(UnrefreshableModel):
 
     def _get_detailed_results(self):
         """Actual search details implementation"""
-        args = { "event_ids": [self.event_id] }
+        args = {"event_ids": [self.event_id]}
         url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs".format(self._cb.credentials.org_key)
         query_start = self._cb.post_object(url, body=args)
         job_id = query_start.json().get("job_id")
         timed_out = False
         submit_time = time.time() * 1000
 
-        while True:        
+        while True:
             status_url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs/{}".format(
                 self._cb.credentials.org_key,
                 job_id,
@@ -298,7 +298,7 @@ class EnrichedEvent(UnrefreshableModel):
             result = self._cb.get_object(status_url)
             searchers_contacted = result.get("contacted", 0)
             searchers_completed = result.get("completed", 0)
-            log.debug("Requesting details, contacted = {}, completed = {}".format(searchers_contacted, searchers_completed))
+            log.debug("contacted = {}, completed = {}".format(searchers_contacted, searchers_completed))
             if searchers_contacted == 0:
                 time.sleep(.5)
                 continue
@@ -327,8 +327,7 @@ class EnrichedEvent(UnrefreshableModel):
             total_results = result.get('num_available', 0)
             if total_results != 0:
                 results = result.get('results', [])
-                return EnrichedEvent(self._cb, initial_data = results[0])
-
+                return EnrichedEvent(self._cb, initial_data=results[0])
 
 
 class EnrichedEventFacet(UnrefreshableModel):
@@ -687,7 +686,6 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
         self._timeout = msecs
         return self
 
-
     def _submit(self):
         if self._query_token:
             raise ApiError("Query already submitted: token {0}".format(self._query_token))
@@ -787,9 +785,9 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
 
             if current >= self._total_results:
                 still_fetching = False
-            
+
             log.debug("current: {}, total_results: {}".format(current, self._total_results))
-        
+
     def _run_async_query(self, context):
         """Executed in the background to run an asynchronous query.
 
