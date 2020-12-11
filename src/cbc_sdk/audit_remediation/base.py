@@ -337,8 +337,8 @@ class RunQuery(PlatformQueryBase):
         """
         Sets a schedule for the SQL Query to recur
 
-        A schedule requires a rrule and a timezone to determine the time to rerun the SQL query. A rrule
-        was defined in RFC 2445 however only a subset of the functionality is supported here. If a Run
+        A schedule requires an rrule and a timezone to determine the time to rerun the SQL query. rrule
+        is defined in RFC 2445 however only a subset of the functionality is supported here. If a Run
         is created with a schedule then the Run will contain a template_id to the corresponding template
         and a new Run will be created each time the schedule is met.
 
