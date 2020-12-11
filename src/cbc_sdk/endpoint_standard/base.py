@@ -281,6 +281,7 @@ class EnrichedEvent(UnrefreshableModel):
             return self._get_detailed_results()
 
     def _get_detailed_results(self):
+        """Actual search details implementation"""
         args = { "event_ids": [self.event_id] }
         url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs".format(self._cb.credentials.org_key)
         query_start = self._cb.post_object(url, body=args)
