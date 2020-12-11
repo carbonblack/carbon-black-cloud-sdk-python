@@ -21,7 +21,9 @@ A number of packages have new name equivalents in the CBC SDK.
 
 Code Changes
 ------------
-**Helper Functions:** Replace all calls to ``get_cb_defense_object()``, ``get_cb_livequery_object()``,
+**Helper Functions:**
+
+* Replace all calls to ``get_cb_defense_object()``, ``get_cb_livequery_object()``,
 ``get_cb_psc_object()``, and ``get_cb_threathunter_object()`` with ``get_cb_cloud_object()``.
 
 **Audit/Remediation Queries:**
@@ -30,7 +32,27 @@ Code Changes
 * Replace ``cb.query_history(query_string)`` with ``cb.select(RunHistory).where(query_string)``.
 * On a query object, use the ``policy_id()`` method instead of ``policy_ids()``.  Only one policy ID can be specified.
 
-**Base API Object**
+**Base API Object:**
 
 The different API objects, ``CbDefenseAPI``, ``CbLiveQueryAPI``, ``CbPSCBaseAPI``, and ``CbThreatHunterAPI`` are
 replaced with ``CBCloudAPI``.  Import this object from the ``cbc_sdk`` package, i.e. ``from cbc_sdk import CBCloudAPI``.
+
+**Enterprise EDR Process and Event Search:**
+
+CBAPI used the ``threathunter`` (Enterprise EDR) package for Process and Event searches. Platform search is replacing these APIs,
+so the SDK now uses the ``platform`` package to handle Process and Event searches.
+
+* ``threathunter.Process`` -> ``platform.Process``
+* ``threathunter.Event`` -> ``platform.Event``
+
+Additionally, Process Summaries and Trees now use the same API route, with the addition of a ``?format=tree``
+query parameter to differentiate the two. Therefore, Process Trees have been integrated into the Process class.
+
+* ``threathunter.Tree`` -> ``platform.Process.Tree``
+
+**Endpoint Standard Events replaced with Enriched Events**
+
+CBAPI used the ``defense.Event`` class for Event searches. With the coming deprecation of the ``/integrationServices/v3/event``
+API route, a new alert class called ``endpoint_standard.EnrichedEvent`` has been introduced.
+
+* ``defense.Event`` -> ``endpoint_standard.EnrichedEvent``
