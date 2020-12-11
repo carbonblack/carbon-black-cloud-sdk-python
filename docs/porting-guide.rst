@@ -34,3 +34,16 @@ Code Changes
 
 The different API objects, ``CbDefenseAPI``, ``CbLiveQueryAPI``, ``CbPSCBaseAPI``, and ``CbThreatHunterAPI`` are
 replaced with ``CBCloudAPI``.  Import this object from the ``cbc_sdk`` package, i.e. ``from cbc_sdk import CBCloudAPI``.
+
+**Enterprise EDR Process and Event Search replaced with Platform Search**
+
+CBAPI used the ``threathunter`` (Enterprise EDR) package for Process and Event searches. Platform search is replacing these APIs,
+so the SDK now uses the ``platform`` package to handle Process and Event searches.
+
+* ``threathunter.Process`` -> ``platform.Process``
+* ``threathunter.Event`` -> ``platform.Event``
+
+Additionally, Process Summaries and Trees now use the same API route, with the addition of a ``?format=tree``
+query parameter to differentiate the two. Therefore, Process Trees have been integrated into the Process class.
+
+* ``threathunter.Tree`` -> ``platform.Process.Tree``

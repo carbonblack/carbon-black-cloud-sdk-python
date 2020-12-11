@@ -47,7 +47,17 @@ class PlatformModel(NewBaseModel):
 
 
 class Process(UnrefreshableModel):
-    """Represents a process retrieved by one of the Enterprise EDR endpoints."""
+    """Represents a process retrieved by one of the Enterprise EDR endpoints.
+
+    Examples:
+        # use the Process GUID directly
+        >>> process = api.select(Process, "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb")
+        # use the Process GUID in a where() clause
+        >>> process_query = (api.select(Process).where(process_guid=
+                             "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb"))
+        >>> process_query_results = [proc for proc in process_query]
+        >>> process_2 = process_query_results[0]
+    """
     default_sort = 'last_update desc'
     primary_key = "process_guid"
     validation_url = "/api/investigate/v1/orgs/{}/processes/search_validation"
@@ -56,7 +66,11 @@ class Process(UnrefreshableModel):
     class Summary(UnrefreshableModel):
         """Represents a summary of organization-specific information for a process.
 
-        The preferred interface for interacting with Tree models is `Process.summary`.
+        The preferred interface for interacting with Summary models is `Process.summary`.
+
+        Example:
+            >>> process = api.select(Process, "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb")
+            >>> summary = process.summary
         """
         urlobject = "/api/investigate/v2/orgs/{}/processes/summary_jobs"
         result_url = '/api/investigate/v2/orgs/{}/processes/summary_jobs/{}/results'
@@ -89,6 +103,10 @@ class Process(UnrefreshableModel):
         """Represents a summary of organization-specific information for a process.
 
         The preferred interface for interacting with Tree models is `Process.tree`.
+
+        Example:
+            >>> process = api.select(Process, "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb")
+            >>> tree = process.tree
         """
         urlobject = '/api/investigate/v2/orgs/{}/processes/summary_jobs'
         result_url = '/api/investigate/v2/orgs/{}/processes/summary_jobs/{}/results'
@@ -292,6 +310,22 @@ class ProcessFacet(UnrefreshableModel):
 
     Access all of the Ranges facet data with ProcessFacet.ranges_.facets or see just
     the field names with ProcessFacet.ranges_.fields.
+
+    Process Facets can be queried for via `CBCloudAPI.select(ProcessFacet). Specify
+    a Process GUID with `.where(process_guid="example_guid")`, and facet field(s)
+    with `.add_facet_field("my_facet_field")`.
+
+    Examples:
+        >>> process_facet_query = (api.select(ProcessFacet).where(process_guid=
+                                   "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb"))
+        >>> process_facet_query.add_facet_field("device_name")
+        # retrieve results synchronously
+        >>> facet = process_facet_query.results
+        # retrieve results asynchronously
+        >>> future = process_facet_query.execute_async()
+        >>> result = future.result()
+        # result is a list with one item, so access the first item
+        >>> facet = result[0]
     """
     primary_key = "job_id"
     swagger_meta_file = "platform/models/process_facets.yaml"
@@ -380,7 +414,21 @@ class ProcessFacet(UnrefreshableModel):
 
 
 class Event(UnrefreshableModel):
-    """Events can be queried for via `CBCloudAPI.select` or an already selected process with `Process.events`."""
+    """Events can be queried for via `CBCloudAPI.select` or an already selected process with `Process.events()`.
+
+    Examples:
+        >>> events_query = (api.select(Event).where(process_guid=
+                            "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb"))
+        # retrieve results synchronously
+        >>> events = [event for event in events_query]
+        # retrieve results asynchronously
+        >>> future = events_query.execute_async()
+        >>> events = future.result()
+        # use an already selected process
+        >>> process = api.select(Process, "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb")
+        >>> events_query = process.events()
+        >>> events = [event for event in events_query]
+    """
     urlobject = '/api/investigate/v2/orgs/{}/events/{}/_search'
     validation_url = '/api/investigate/v1/orgs/{}/events/search_validation'
     default_sort = 'last_update desc'
@@ -408,15 +456,6 @@ class Event(UnrefreshableModel):
 class EventFacet(UnrefreshableModel):
     """Represents the results of an EventFacetQuery.
 
-    Event Facets can be queried for via `CBCloudAPI.select(EventFacet). Specify
-    a Process GUID with `.where(process_guid="example_guid")`, and facet field(s)
-    with `.add_facet_field("my_facet_field")`.
-
-    Example:
-    >>> event_facet_query = cb.select(EventFacet).where(process_guid='abcd1234')
-    >>> event_facet_query.add_facet_field("event_type")
-    >>> facets = event_facet_query.results
-
     EventFacet objects contain both Terms and Ranges. Each of those contain facet
     fields and values.
 
@@ -425,6 +464,22 @@ class EventFacet(UnrefreshableModel):
 
     Access all of the Ranges facet data with EventFacet.ranges_.facets or see just
     the field names with EventFacet.ranges_.fields.
+
+    Event Facets can be queried for via `CBCloudAPI.select(EventFacet). Specify
+    a Process GUID with `.where(process_guid="example_guid")`, and facet field(s)
+    with `.add_facet_field("my_facet_field")`.
+
+    Examples:
+        >>> event_facet_query = (api.select(EventFacet).where(process_guid=
+                                 "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb"))
+        >>> event_facet_query.add_facet_field("event_type")
+        # retrieve results synchronously
+        >>> facet = event_facet_query.results
+        # retrieve results asynchronously
+        >>> future = event_facet_query.execute_async()
+        >>> result = future.result()
+        # result is a list with one item, so access the first item
+        >>> facet = result[0]
     """
     primary_key = "process_guid"
     urlobject = "/api/investigate/v2/orgs/{}/events/{}/_facet"
