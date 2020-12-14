@@ -4,6 +4,7 @@ import pytest
 import logging
 from cbc_sdk.endpoint_standard import EnrichedEvent, EnrichedEventQuery
 from cbc_sdk.rest_api import CBCloudAPI
+from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.endpoint_standard.mock_enriched_events import (POST_ENRICHED_EVENTS_SEARCH_JOB_RESP,
                                                                         GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP,
@@ -174,12 +175,40 @@ def test_enriched_event_select_aggregation(cbcsdk_mock):
 
     api = cbcsdk_mock.api
     events = api.select(EnrichedEvent).where(process_pid=2000).aggregation("process_sha256")
-    assert events._aggregation is True
-    assert events._aggregation_field == "process_sha256"
     for event in events:
         assert event.device_name is not None
         assert event.enriched is not None
         assert event.process_pid[0] == 2000
+
+
+def test_enriched_event_select_aggregation_async(cbcsdk_mock):
+    """Testing EnrichedEvent Querying with select() and more complex criteria"""
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v1/orgs/test/enriched_events/aggregation_jobs/process_sha256",
+                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v1/orgs/test/enriched_events/aggregation_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
+                             GET_ENRICHED_EVENTS_AGG_JOB_RESULTS_RESP_1)
+
+    api = cbcsdk_mock.api
+    events = api.select(EnrichedEvent).where(process_pid=2000).aggregation("process_sha256").execute_async()
+    results = events.result()
+    for event in results:
+        assert event["device_name"] is not None
+        assert event["enriched"] is not None
+        assert event["process_pid"][0] == 2000
+
+
+def test_enriched_event_aggregation_setup(cbcsdk_mock):
+    api = cbcsdk_mock.api
+    event = api.select(EnrichedEvent).where(process_pid=2000).aggregation("device_id")
+    assert event._aggregation is True
+    assert event._aggregation_field == "device_id"
+
+
+def test_enriched_event_aggregation_wrong_field(cbcsdk_mock):
+    api = cbcsdk_mock.api
+    with pytest.raises(ApiError):
+        event = api.select(EnrichedEvent).where(process_pid=2000).aggregation("wrong_field")
 
 
 def test_enriched_event_query_implementation(cbcsdk_mock):
