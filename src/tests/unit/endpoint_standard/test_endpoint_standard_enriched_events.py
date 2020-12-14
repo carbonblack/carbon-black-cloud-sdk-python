@@ -9,7 +9,7 @@ from tests.unit.fixtures.endpoint_standard.mock_enriched_events import (POST_ENR
                                                                         GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP,
                                                                         GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_1,
                                                                         GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_2,
-                                                                        GET_ENRICHED_EVENTS_AGGREGATION_JOB_RESULTS_RESP_1)
+                                                                        GET_ENRICHED_EVENTS_AGG_JOB_RESULTS_RESP_1)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
