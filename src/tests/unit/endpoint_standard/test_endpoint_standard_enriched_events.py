@@ -91,7 +91,7 @@ def test_enriched_event_select_aggregation(cbcsdk_mock):
                              POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
     cbcsdk_mock.mock_request("GET",
                              "/api/investigate/v1/orgs/test/enriched_events/aggregation_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
-                             GET_ENRICHED_EVENTS_AGGREGATION_JOB_RESULTS_RESP_1)
+                             GET_ENRICHED_EVENTS_AGG_JOB_RESULTS_RESP_1)
 
     api = cbcsdk_mock.api
     events = api.select(EnrichedEvent).where(process_pid=2000).aggregation("process_sha256")
