@@ -93,6 +93,7 @@ def run_process_invalid_search(cb, print_detail=False):
         if print_detail:
             print(e)
     print(f"End: process_invalid_search")
+    print("----------------------------------------------------------")
 
 
 def run_process_event_invalid_search(cb, print_detail=False):
@@ -114,6 +115,7 @@ def run_process_event_invalid_search(cb, print_detail=False):
         if print_detail:
             print(e)
     print(f"End: run_process_event_invalid_search")
+    print("----------------------------------------------------------")
 
 
 def get_list_of_available_process_results(cb, print_details=False):
@@ -132,6 +134,7 @@ def get_list_of_available_process_results(cb, print_details=False):
     process_queries = cb.fetch_process_queries()
     print(f"there were {len(process_queries)} process queries found")
     print("called fetch_process_queries")
+    print("----------------------------------------------------------")
 
 
 def get_process_basic_window_enriched(cb, print_detail=False, window="-3d"):
@@ -144,6 +147,7 @@ def get_process_basic_window_enriched(cb, print_detail=False, window="-3d"):
     Returns:
         process_guid of the first process in the returned list
     """
+    print("\n----------------------------------------------------------")
     print(f"Executing get_process_basic_window_enriched")
     process_query = cb.select(Process).where("enriched:true")
     process_query.set_time_range(window=window)
@@ -154,6 +158,7 @@ def get_process_basic_window_enriched(cb, print_detail=False, window="-3d"):
             print("{0:16} {1:5} {2:20}".format(process.device_name, process.process_pids[0], process.process_guid))
 
     print(f"End: get_process_basic_window_enriched")
+    print("----------------------------------------------------------")
     # return the first process id for use in future tests
     return matching_processes[6].process_guid
 
@@ -187,7 +192,8 @@ def get_process_events_for_single_process(cb, print_detail, guid):
             print(
                 f"{event.event_guid},{event.event_hash},{event.process_guid},{event.backend_timestamp},{event.event_timestamp}")
 
-    print("End: get_process_events_for_single_process")
+    print("\nCompare results manually with Postman")
+    print("----------------------------------------------------------")
 
 
 def get_process_facet(cb, print_detail=False, window="-3d"):
@@ -223,6 +229,7 @@ def get_process_facet(cb, print_detail=False, window="-3d"):
     print(f"ranges fields = {results.ranges_.fields}")
 
     print(f"End: get_process_facet")
+    print("----------------------------------------------------------")
 
 
 def get_event_facet(cb, print_detail=False, window="-3d"):
@@ -259,6 +266,7 @@ def get_event_facet(cb, print_detail=False, window="-3d"):
     # print(f"ranges fields = {results.ranges_.fields}")
 
     print(f"End: get_event_facet")
+    print("----------------------------------------------------------")
 
 
 def get_enriched_events_for_single_process(cb, print_detail, guid):
@@ -278,6 +286,7 @@ def get_enriched_events_for_single_process(cb, print_detail, guid):
     print(f"enriched events_query has {len(enriched_events_query)} in len(enriched_events_query")
     print(f"enriched events_query has {enriched_events_query._total_results} in enriched_events_query._total_results")
     print("End: get_enriched_events_for_single_process")
+    print("----------------------------------------------------------")
 
 
 def get_enriched_event_facet(cb, print_detail=False, window="-3d"):
@@ -313,6 +322,7 @@ def get_enriched_event_facet(cb, print_detail=False, window="-3d"):
     print(f"ranges fields = {results.ranges_.fields}")
 
     print(f"End: get_enriched_event_facet")
+    print("----------------------------------------------------------")
 
 
 def main():
@@ -331,25 +341,16 @@ def main():
     cb = get_cb_cloud_object(args)
     if do_process:
         process_guid = get_process_basic_window_enriched(cb, print_detail, window)
-        print(f"process guid being used is {process_guid}")
-        print("----------------------------------------------------------")
         get_process_events_for_single_process(cb, print_detail, process_guid)
-        print("----------------------------------------------------------")
         run_process_invalid_search(cb, print_detail)
-        print("----------------------------------------------------------")
         run_process_event_invalid_search(cb, print_detail)
-        print("----------------------------------------------------------")
         get_process_facet(cb, print_detail, window)
-        print("----------------------------------------------------------")
         get_list_of_available_process_results(cb, print_detail)
-        print("----------------------------------------------------------")
     if do_enriched_events:
         if not process_guid:
             process_guid = get_process_basic_window_enriched(cb, print_detail, window)
         get_enriched_events_for_single_process(cb, print_detail, process_guid)
-        print("----------------------------------------------------------")
         get_enriched_event_facet(cb, print_detail, window)
-        print("----------------------------------------------------------")
 
 
 if __name__ == "__main__":
