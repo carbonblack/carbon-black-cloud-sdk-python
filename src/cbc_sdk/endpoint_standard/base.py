@@ -480,7 +480,6 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
                 self._total_results = current
                 break
 
-
 class EnrichedEventQuery(Query, AsyncQueryMixin):
     """Represents the query logic for an Enriched Event query.
 
@@ -506,6 +505,8 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
         self._timed_out = False
         self._sort = []
         self._time_range = {}
+        self._aggregation = False
+        self._aggregation_field = None
 
     def or_(self, **kwargs):
         """
@@ -514,6 +515,11 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
         This method overrides the base class in order to provide or_() functionality rather than raising an exception.
         """
         self._query_builder.or_(None, **kwargs)
+        return self
+
+    def aggregation(self, field):
+        self._aggregation = True
+        self._aggregation_field = field
         return self
 
     def _get_query_parameters(self):
@@ -624,8 +630,13 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
 
         args = self._get_query_parameters()
 
-        url = "/api/investigate/v2/orgs/{}/enriched_events/search_jobs".format(self._cb.credentials.org_key)
+        if self._aggregation:
+            url = "/api/investigate/v1/orgs/{}/enriched_events/aggregation_jobs/{}"
+            url = url.format(self._cb.credentials.org_key, self._aggregation_field)
+        else:
+            url = "/api/investigate/v2/orgs/{}/enriched_events/search_jobs".format(self._cb.credentials.org_key)
         query_start = self._cb.post_object(url, body=args)
+        print(args)
         self._query_token = query_start.json().get("job_id")
         self._timed_out = False
         self._submit_time = time.time() * 1000
@@ -633,6 +644,9 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
     def _still_querying(self):
         if not self._query_token:
             self._submit()
+
+        if self._aggregation:
+            return False
 
         status_url = "/api/investigate/v1/orgs/{}/enriched_events/search_jobs/{}".format(
             self._cb.credentials.org_key,
@@ -662,10 +676,16 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
         if self._timed_out:
             raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
 
-        result_url = "/api/investigate/v2/orgs/{}/enriched_events/search_jobs/{}/results".format(
-            self._cb.credentials.org_key,
-            self._query_token,
-        )
+        if self._aggregation:
+            result_url = "/api/investigate/v1/orgs/{}/enriched_events/aggregation_jobs/{}/results".format(
+                self._cb.credentials.org_key,
+                self._query_token,
+            )
+        else:
+            result_url = "/api/investigate/v2/orgs/{}/enriched_events/search_jobs/{}/results".format(
+                self._cb.credentials.org_key,
+                self._query_token,
+            )
         result = self._cb.get_object(result_url)
 
         self._total_results = result.get('num_available', 0)
@@ -694,31 +714,49 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
         )
         query_parameters = {}
         while still_fetching:
-            result_url = '{}?start={}&rows={}'.format(
-                result_url_template,
-                current,
-                self._batch_size
-            )
+            if self._aggregation:
+                result_url = "/api/investigate/v2/orgs/{}/enriched_events/search_jobs/{}/results".format(
+                    self._cb.credentials.org_key,
+                    self._query_token,
+                )
+            else:
+                result_url = '{}?start={}&rows={}'.format(
+                    result_url_template,
+                    current,
+                    self._batch_size
+                )
 
             result = self._cb.get_object(result_url, query_parameters=query_parameters)
-            self._total_results = result.get('num_available', 0)
-            self._count_valid = True
+            if self._aggregation:
+                contacted = result.get('contacted',0)
+                completed = result.get('completed',0)
+                print(result)
+                if contacted != completed:
+                    still_fetching = True
+                    continue
+                else:
+                    results = result.get('results', [])
+                    for item in results:
+                        yield item
+            else:
+                self._total_results = result.get('num_available', 0)
+                self._count_valid = True
 
-            results = result.get('results', [])
+                results = result.get('results', [])
 
-            for item in results:
-                yield item
-                current += 1
-                rows_fetched += 1
+                for item in results:
+                    yield item
+                    current += 1
+                    rows_fetched += 1
 
-                if rows and rows_fetched >= rows:
+                    if rows and rows_fetched >= rows:
+                        still_fetching = False
+                        break
+
+                if current >= self._total_results:
                     still_fetching = False
-                    break
 
-            if current >= self._total_results:
-                still_fetching = False
-
-            log.debug("current: {}, total_results: {}".format(current, self._total_results))
+                log.debug("current: {}, total_results: {}".format(current, self._total_results))
 
     def _run_async_query(self, context):
         """Executed in the background to run an asynchronous query.
