@@ -252,7 +252,7 @@ def get_process_facet(cb, print_detail, window):
 
     results = future.result()[0]
     print(f"terms facets = ")
-    pprint.pprint(results.terms_.facets)
+    pprint(results.terms_.facets)
     print(f"terms fields = {results.terms_.fields}")
     print(f"ranges facets = {results.ranges_.facets}")
     print(f"ranges fields = {results.ranges_.fields}")
@@ -289,7 +289,7 @@ def get_event_facet(cb, print_detail, window):
     #
     # results = future.result()[0]
     # print(f"terms facets = ")
-    # pprint.pprint(results.terms_.facets)
+    # pprint(results.terms_.facets)
     # print(f"terms fields = {results.terms_.fields}")
     # print(f"ranges facets = {results.ranges_.facets}")
     # print(f"ranges fields = {results.ranges_.fields}")
@@ -345,7 +345,7 @@ def get_enriched_event_facet(cb, print_detail, window):
 
     results = future.result()[0]
     print(f"terms facets = ")
-    pprint.pprint(results.terms_.facets)
+    pprint(results.terms_.facets)
     print(f"terms fields = {results.terms_.fields}")
     print(f"ranges facets = {results.ranges_.facets}")
     print(f"ranges fields = {results.ranges_.fields}")
