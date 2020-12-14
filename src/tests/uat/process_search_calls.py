@@ -64,7 +64,7 @@ If there is customer demand, this can be reviewed.
 import pprint
 import sys
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object, CBCloudAPI
-from cbc_sdk.enterprise_edr import Process, Event, ProcessFacet  # , EventFacet
+from cbc_sdk.platform import Process, Event, ProcessFacet  # , EventFacet
 from cbc_sdk.endpoint_standard import EnrichedEvent, EnrichedEventFacet
 from cbc_sdk.errors import ApiError
 
@@ -314,9 +314,11 @@ def main():
     parser = build_cli_parser()  # args on command line will be applied to all tests called
     args = parser.parse_args()
     print_detail = args.verbose
+    window = '-' + args.window
+
     do_process = True
     do_enriched_events = True
-    window = "-3d"
+
     cb = get_cb_cloud_object(args)
     if print_detail:
         print(f"profile being used is {args.__dict__}")
