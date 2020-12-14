@@ -69,7 +69,7 @@ from pprint import pprint
 # Internal library imports
 from pprint import pprint
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object, CBCloudAPI
-from cbc_sdk.platform import Process, Event, ProcessFacet  # , EventFacet
+from cbc_sdk.platform import Process, Event, ProcessFacet, EventFacet
 from cbc_sdk.endpoint_standard import EnrichedEvent, EnrichedEventFacet
 from cbc_sdk.errors import ApiError
 
@@ -84,7 +84,8 @@ def run_process_invalid_search(cb, print_detail):
 
     Returns:
     """
-    print(f"Executing process_invalid_search")
+    print("API Call: Process Search Validation (v1)")
+    print("Executing request with Invalid Search field\n")
     process_query = cb.select(Process).where("enrichedBADFIELD:true")
     try:
         matching_processes = [process for process in process_query]
@@ -106,7 +107,8 @@ def run_process_event_invalid_search(cb, print_detail):
 
     Returns:
     """
-    print(f"Executing run_process_event_invalid_search")
+    print("API Call Get Validation for Event Search (v1)")
+    print("Executing request with Invalid Search field\n")
     event_query = cb.select(Event).where("enrichedBADFIELD:true")
     try:
         matching_events = [e for e in event_query]
@@ -131,6 +133,7 @@ def get_list_of_available_process_results(cb, print_details):
     Returns:
 
     """
+    print("API Call: Get a List of All Available Process Result Sets (v1)\n")
     process_queries = cb.fetch_process_queries()
     print(f"there were {len(process_queries)} process queries found")
     print("called fetch_process_queries")
@@ -177,7 +180,10 @@ def get_process_basic_window_enriched(cb, print_detail, window):
         process_guid of the first process in the returned list
     """
     print("\n----------------------------------------------------------")
-    print(f"Executing get_process_basic_window_enriched")
+    print("API Calls:")
+    print("Start a Process Search (v2)")
+    print("Get the Status of a Process Search (v1)")
+    print("Retrieve Results for a Process Search (v2)\n")
     process_query = cb.select(Process).where("enriched:true")
     process_query.set_time_range(window=window)
     matching_processes = [process for process in process_query]
@@ -203,7 +209,7 @@ def get_process_events_for_single_process(cb, print_detail, guid):
     Returns:
 
     """
-    print("Start: get_process_events_for_single_process")
+    print("API Call: Get Events Associated with a Given Process (v2)\n")
     events_query = cb.select(Event).where(process_guid=guid)
     events_query.sort_by("backend_timestamp", direction="ASC")
     events = [ev for ev in events_query]
@@ -236,7 +242,10 @@ def get_process_facet(cb, print_detail, window):
 
     Returns:
     """
-    print(f"Start: get_process_facet")
+    print("API Calls:")
+    print("Start a Facet Search on Processes (v2)")
+    print("Retrieve Results for a Process Facets Search (v2)\n")
+
     facet_query = cb.select(ProcessFacet).where("process_name:chrome.exe")
     facet_query.add_range({"bucket_size": "+1DAY",
                            "start": "2020-11-01T00:00:00Z",
@@ -309,7 +318,10 @@ def get_enriched_events_for_single_process(cb, print_detail, guid):
     Returns:
 
     """
-    print("Start: get_enriched_events_for_single_process")
+    print("API Calls:")
+    print("Start an Enriched Events Search (v2)")
+    print("Get the Enriched Events Search Status (v1)")
+    print("Retrieve Results for an Enriched Events Search (v2)\n")
     enriched_events_query = cb.select(EnrichedEvent).where(process_guid=guid)
     events = [ev for ev in enriched_events_query]
     print(f"enriched events_query has {len(enriched_events_query)} in len(enriched_events_query")
@@ -329,7 +341,9 @@ def get_enriched_event_facet(cb, print_detail, window):
 
     Returns:
     """
-    print(f"Start: get_enriched_event_facet")
+    print("API Calls:")
+    print("Start a Facet Search on Enriched Events (v2)")
+    print("Retrieve Results for an Enriched Events Facet Search (v2)\n")
     facet_query = cb.select(EnrichedEventFacet).where("process_name:chrome.exe")
     facet_query.add_range({"bucket_size": "+1DAY",
                            "start": "2020-11-01T00:00:00Z",
