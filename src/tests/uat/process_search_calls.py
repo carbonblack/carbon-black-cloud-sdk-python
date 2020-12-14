@@ -67,8 +67,7 @@ import sys
 from pprint import pprint
 
 # Internal library imports
-from pprint import pprint
-from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object, CBCloudAPI
+from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object#, CBCloudAPI
 from cbc_sdk.platform import Process, Event, ProcessFacet, EventFacet
 from cbc_sdk.endpoint_standard import EnrichedEvent, EnrichedEventFacet
 from cbc_sdk.errors import ApiError
@@ -328,7 +327,7 @@ def get_enriched_events_for_single_process(cb, print_detail, guid):
     print("Get the Enriched Events Search Status (v1)")
     print("Retrieve Results for an Enriched Events Search (v2)\n")
     enriched_events_query = cb.select(EnrichedEvent).where(process_guid=guid)
-    events = [ev for ev in enriched_events_query]
+    #events = [ev for ev in enriched_events_query]
     print(f"enriched events_query has {len(enriched_events_query)} in len(enriched_events_query")
     print(f"enriched events_query has {enriched_events_query._total_results} in enriched_events_query._total_results")
     print("\nCompare results manually with Postman")
