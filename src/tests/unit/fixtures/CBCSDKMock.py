@@ -154,11 +154,11 @@ class CBCSDKMock:
             matched = self.match_key(self.get_mock_key("PUT", url))
             if matched:
                 response = self.mocks[matched]
-                if response.content is None:
+                if callable(self.mocks[matched]):
+                    return self.StubResponse(self.mocks[matched](url, body, **kwargs))
+                elif response.content is None:
                     response = copy.deepcopy(self.mocks[matched])
                     response.content = body
-                elif callable(self.mocks[matched]):
-                    return self.StubResponse(self.mocks[matched](url, body, **kwargs))
                 elif self.mocks[matched] is Exception or self.mocks[matched] in Exception.__subclasses__():
                     raise self.mocks[matched]
                 return response
