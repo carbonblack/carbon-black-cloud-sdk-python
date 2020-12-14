@@ -199,7 +199,7 @@ def test_enriched_event_select_aggregation_async(cbcsdk_mock):
 
 
 def test_enriched_event_aggregation_setup(cbcsdk_mock):
-    """ Testing whether aggregation-related properties are setup correctly"""
+    """Testing whether aggregation-related properties are setup correctly"""
     api = cbcsdk_mock.api
     event = api.select(EnrichedEvent).where(process_pid=2000).aggregation("device_id")
     assert event._aggregation is True
@@ -207,7 +207,7 @@ def test_enriched_event_aggregation_setup(cbcsdk_mock):
 
 
 def test_enriched_event_aggregation_wrong_field(cbcsdk_mock):
-    """ Testing passing wrong aggregation_field"""
+    """Testing passing wrong aggregation_field"""
     api = cbcsdk_mock.api
     with pytest.raises(ApiError):
         api.select(EnrichedEvent).where(process_pid=2000).aggregation("wrong_field")
