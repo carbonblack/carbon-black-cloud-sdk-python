@@ -132,7 +132,7 @@ def get_list_of_available_process_results(cb):
     print("----------------------------------------------------------")
 
 
-def get_events_facet_associated_with_a_process(cb, print_detail, process_guid):
+def get_events_facet_associated_with_a_process(cb, process_guid):
     """
     Text
 
@@ -232,7 +232,7 @@ def get_process_events_for_single_process(cb, print_detail, guid):
     print("----------------------------------------------------------")
 
 
-def get_process_facet(cb, print_detail, window):
+def get_process_facet(cb, window):
     """
     Exercises Process Facet search; start and get results.
 
@@ -270,7 +270,7 @@ def get_process_facet(cb, print_detail, window):
     print("----------------------------------------------------------")
 
 
-def get_event_facet(cb, print_detail, window):
+def get_event_facet():
     """
     Exercises Process Facet search; start and get results.
 
@@ -304,7 +304,7 @@ def get_event_facet(cb, print_detail, window):
     print("----------------------------------------------------------")
 
 
-def get_enriched_events_for_single_process(cb, print_detail, guid):
+def get_enriched_events_for_single_process(cb, guid):
     """
     Text
 
@@ -381,13 +381,13 @@ def main():
         get_process_events_for_single_process(cb, print_detail, process_guid)
         run_process_invalid_search(cb, print_detail)
         run_process_event_invalid_search(cb, print_detail)
-        get_process_facet(cb, print_detail, window)
+        get_process_facet(cb, window)
         get_list_of_available_process_results(cb)
-        get_events_facet_associated_with_a_process(cb, print_detail, process_guid)
+        get_events_facet_associated_with_a_process(cb, process_guid)
     if do_enriched_events:
         if not process_guid:
             process_guid = get_process_basic_window_enriched(cb, print_detail, window)
-        get_enriched_events_for_single_process(cb, print_detail, process_guid)
+        get_enriched_events_for_single_process(cb, process_guid)
         get_enriched_event_facet(cb, print_detail, window)
 
 
