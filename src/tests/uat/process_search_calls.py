@@ -12,6 +12,7 @@
 
 """
 The following API calls are tested in this script.
+
 Validation is manual; either from information in the console or running an equivalent API call from postman
 
 To execute, a profile must be provided using the standard CBC Credentials.
@@ -67,7 +68,7 @@ import sys
 from pprint import pprint
 
 # Internal library imports
-from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object#, CBCloudAPI
+from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
 from cbc_sdk.platform import Process, Event, ProcessFacet, EventFacet
 from cbc_sdk.endpoint_standard import EnrichedEvent, EnrichedEventFacet
 from cbc_sdk.errors import ApiError
@@ -80,8 +81,6 @@ def run_process_invalid_search(cb, print_detail):
     Args:
         cb (CBCloudAPI): API object
         print_detail (bool): whether to print full info to the console, useful for debugging
-
-    Returns:
     """
     print("API Call: Process Search Validation (v1)")
     print("Executing request with Invalid Search field\n")
@@ -104,8 +103,6 @@ def run_process_event_invalid_search(cb, print_detail):
     Args:
         cb (CBCloudAPI): API object
         print_detail (bool): whether to print full info to the console, useful for debugging
-
-    Returns:
     """
     print("API Call Get Validation for Event Search (v1)")
     print("Executing request with Invalid Search field\n")
@@ -121,18 +118,12 @@ def run_process_event_invalid_search(cb, print_detail):
     print("----------------------------------------------------------")
 
 
-def get_list_of_available_process_results(cb, print_details):
+def get_list_of_available_process_results(cb):
     """
-    Executes Get a List of All Available Process Result Sets
-    Compare to results of this route, no body, no parameters.
-    {{base_url}}/api/investigate/v1/orgs/{{org_key}}/processes/search_jobs
+    Executes Get a List of All Available Process Result Sets.
 
     Args:
-        cb:
-        print_details:
-
-    Returns:
-
+        cb (CBCloudAPI): API object
     """
     print("API Call: Get a List of All Available Process Result Sets (v1)\n")
     process_queries = cb.fetch_process_queries()
@@ -143,11 +134,12 @@ def get_list_of_available_process_results(cb, print_details):
 
 def get_events_facet_associated_with_a_process(cb, print_detail, process_guid):
     """
+    Text
+
     Args:
         cb (CBCloudAPI): API object
         print_detail (bool): whether to print full info to the console, useful for debugging
-
-    Returns:
+        process_guid (string): process_guid
     """
     print("API Call: Get Events Facet Associated with a Process (v2)\n")
     facet_query = cb.select(EventFacet).where(process_guid=process_guid)
@@ -160,10 +152,10 @@ def get_events_facet_associated_with_a_process(cb, print_detail, process_guid):
 
     results = future.result()[0]
     pretty_response = {"ranges": results.ranges,
-                        "terms": results.terms,
-                        "num_found": results.num_found,
-                        "total_segments": results.total_segments,
-                        "processed_segments": results.processed_segments}
+                       "terms": results.terms,
+                       "num_found": results.num_found,
+                       "total_segments": results.total_segments,
+                       "processed_segments": results.processed_segments}
     pprint(pretty_response, sort_dicts=False)
 
     print("\nCompare results manually with Postman")
@@ -172,6 +164,8 @@ def get_events_facet_associated_with_a_process(cb, print_detail, process_guid):
 
 def get_process_basic_window_enriched(cb, print_detail, window):
     """
+    Text
+
     Args:
         cb (CBCloudAPI): API object
         print_detail (bool): whether to print full info to the console, useful for debugging
@@ -205,6 +199,8 @@ def get_process_basic_window_enriched(cb, print_detail, window):
 
 def get_process_events_for_single_process(cb, print_detail, guid):
     """
+    Text
+
     Args:
         cb (CBCloudAPI): API object
         print_detail (bool): whether to print full info to the console, useful for debugging
@@ -216,20 +212,21 @@ def get_process_events_for_single_process(cb, print_detail, guid):
 
     events = [ev for ev in events_query]
     pretty_response = {"num_found": len(events_query),
-                        "num_available": events_query._total_results,
-                        "total_segments": events_query._total_segments,
-                        "processed_segments": events_query._processed_segments}
+                       "num_available": events_query._total_results,
+                       "total_segments": events_query._total_segments,
+                       "processed_segments": events_query._processed_segments}
     pprint(pretty_response, sort_dicts=False)
-    print(
-        f"\nThere are {len(events)} to print. First timestamp = {events[0].event_timestamp}.  Last timestamp = {events[len(events) - 1].event_timestamp}")
+    print(f"\nThere are {len(events)} to print.")
+    print(f"First timestamp = {events[0].event_timestamp}")
+    print(f"Last timestamp = {events[len(events) - 1].event_timestamp}")
 
     if print_detail:
         print(f"input process guid = {guid}")
         print("event.event_guid,event.event_hash,event.process_guid,event.backend_timestamp,event.event_timestamp")
         print("=========--=============")
         for event in events:
-            print(
-                f"{event.event_guid},{event.event_hash},{event.process_guid},{event.backend_timestamp},{event.event_timestamp}")
+            print(f"{event.event_guid}, {event.event_hash}, {event.process_guid}, \
+                    {event.backend_timestamp}, {event.event_timestamp}")
 
     print("\nCompare results manually with Postman")
     print("----------------------------------------------------------")
@@ -243,8 +240,6 @@ def get_process_facet(cb, print_detail, window):
         cb (CBCloudAPI): API object
         print_detail (bool): whether to print full info to the console, useful for debugging
         window (str): period to search
-
-    Returns:
     """
     print("API Calls:")
     print("Start a Facet Search on Processes (v2)")
@@ -265,10 +260,10 @@ def get_process_facet(cb, print_detail, window):
 
     results = future.result()[0]
     pretty_response = {"ranges": results.ranges,
-                        "terms": results.terms,
-                        "num_found": results.num_found,
-                        "contacted": results.contacted,
-                        "completed": results.completed}
+                       "terms": results.terms,
+                       "num_found": results.num_found,
+                       "contacted": results.contacted,
+                       "completed": results.completed}
     pprint(pretty_response, sort_dicts=False)
 
     print("\ncompare results manually with postman")
@@ -283,10 +278,8 @@ def get_event_facet(cb, print_detail, window):
         cb (CBCloudAPI): API object
         print_detail (bool): whether to print full info to the console, useful for debugging
         window (str): period to search
-
-    Returns:
     """
-    print(f"Start: get_event_facet")
+    print("Start: get_event_facet")
     print("Not implemented in SDK")
     # facet_query = cb.select(EventFacet).where("process_name:chrome.exe")
     # facet_query.add_range({"bucket_size": "+1DAY",
@@ -313,21 +306,18 @@ def get_event_facet(cb, print_detail, window):
 
 def get_enriched_events_for_single_process(cb, print_detail, guid):
     """
+    Text
 
     Args:
         cb (CBCloudAPI): API object
         print_detail (bool): whether to print full info to the console, useful for debugging
         guid: All enriched events retrieved for this process guid
-
-    Returns:
-
     """
     print("API Calls:")
     print("Start an Enriched Events Search (v2)")
     print("Get the Enriched Events Search Status (v1)")
     print("Retrieve Results for an Enriched Events Search (v2)\n")
     enriched_events_query = cb.select(EnrichedEvent).where(process_guid=guid)
-    #events = [ev for ev in enriched_events_query]
     print(f"enriched events_query has {len(enriched_events_query)} in len(enriched_events_query")
     print(f"enriched events_query has {enriched_events_query._total_results} in enriched_events_query._total_results")
     print("\nCompare results manually with Postman")
@@ -342,8 +332,6 @@ def get_enriched_event_facet(cb, print_detail, window):
         cb (CBCloudAPI): API object
         print_detail (bool): whether to print full info to the console, useful for debugging
         window (str): period to search
-
-    Returns:
     """
     print("API Calls:")
     print("Start a Facet Search on Enriched Events (v2)")
@@ -363,10 +351,10 @@ def get_enriched_event_facet(cb, print_detail, window):
 
     results = future.result()[0]
     pretty_response = {"ranges": results.ranges,
-                        "terms": results.terms,
-                        "num_found": results.num_found,
-                        "contacted": results.contacted,
-                        "completed": results.completed}
+                       "terms": results.terms,
+                       "num_found": results.num_found,
+                       "contacted": results.contacted,
+                       "completed": results.completed}
     pprint(pretty_response, sort_dicts=False)
 
     print("\nCompare results manually with Postman")
@@ -374,6 +362,7 @@ def get_enriched_event_facet(cb, print_detail, window):
 
 
 def main():
+    """Script entry point"""
     parser = build_cli_parser()  # args on command line will be applied to all tests called
     args = parser.parse_args()
     print_detail = args.verbose
@@ -393,7 +382,7 @@ def main():
         run_process_invalid_search(cb, print_detail)
         run_process_event_invalid_search(cb, print_detail)
         get_process_facet(cb, print_detail, window)
-        get_list_of_available_process_results(cb, print_detail)
+        get_list_of_available_process_results(cb)
         get_events_facet_associated_with_a_process(cb, print_detail, process_guid)
     if do_enriched_events:
         if not process_guid:
