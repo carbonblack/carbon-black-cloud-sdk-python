@@ -324,10 +324,11 @@ def main():
     do_process = True
     do_enriched_events = True
 
-    cb = get_cb_cloud_object(args)
     if print_detail:
         print(f"profile being used is {args.__dict__}")
+
     process_guid = ""
+    cb = get_cb_cloud_object(args)
     if do_process:
         process_guid = get_process_basic_window_enriched(cb, print_detail, window)
         print(f"process guid being used is {process_guid}")
@@ -343,8 +344,8 @@ def main():
         get_list_of_available_process_results(cb, print_detail)
         print("----------------------------------------------------------")
     if do_enriched_events:
-        if process_guid == "":
-            process_guid = "WNEXFKQ7-00050603-00000270-00000000-1d6c86e280fbff8"
+        if not process_guid:
+            process_guid = get_process_basic_window_enriched(cb, print_detail, window)
         get_enriched_events_for_single_process(cb, print_detail, process_guid)
         print("----------------------------------------------------------")
         get_enriched_event_facet(cb, print_detail, window)
