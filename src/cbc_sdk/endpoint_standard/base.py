@@ -259,6 +259,7 @@ class EnrichedEvent(UnrefreshableModel):
             full_doc (bool): True to mark the object as fully initialized.
         """
         self._details_timeout = 0
+        self._info = None
         super(EnrichedEvent, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
                                             force_init=force_init, full_doc=full_doc)
 
@@ -277,9 +278,9 @@ class EnrichedEvent(UnrefreshableModel):
         if not self.event_id:
             raise ApiError("Trying to get event details on an invalid event_id")
         if async_mode:
-            return self._cb._async_submit(lambda arg, kwarg: self._get_detailed_results())
+            return self._cb._async_submit(lambda arg, kwarg: self._get_detailed_results()._info)
         else:
-            return self._get_detailed_results()
+            return self._get_detailed_results()._info
 
     def _get_detailed_results(self):
         """Actual search details implementation"""
@@ -327,7 +328,8 @@ class EnrichedEvent(UnrefreshableModel):
             total_results = result.get('num_available', 0)
             if total_results != 0:
                 results = result.get('results', [])
-                return EnrichedEvent(self._cb, initial_data=results[0])
+                self._info = results[0]
+                return self
 
 
 class EnrichedEventFacet(UnrefreshableModel):
