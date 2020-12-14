@@ -74,7 +74,7 @@ from cbc_sdk.endpoint_standard import EnrichedEvent, EnrichedEventFacet
 from cbc_sdk.errors import ApiError
 
 
-def run_process_invalid_search(cb, print_detail=False):
+def run_process_invalid_search(cb, print_detail):
     """
     Tests that Process Search Validation is being called by putting an invalid field name in the where clause
 
@@ -96,7 +96,7 @@ def run_process_invalid_search(cb, print_detail=False):
     print("----------------------------------------------------------")
 
 
-def run_process_event_invalid_search(cb, print_detail=False):
+def run_process_event_invalid_search(cb, print_detail):
     """
     Tests that Event Search Validation is being called by putting an invalid field name in the where clause
 
@@ -118,7 +118,7 @@ def run_process_event_invalid_search(cb, print_detail=False):
     print("----------------------------------------------------------")
 
 
-def get_list_of_available_process_results(cb, print_details=False):
+def get_list_of_available_process_results(cb, print_details):
     """
     Executes Get a List of All Available Process Result Sets
     Compare to results of this route, no body, no parameters.
@@ -146,7 +146,6 @@ def get_events_facet_associated_with_a_process(cb, print_detail, process_guid):
     Returns:
     """
     print("API Call: Get Events Facet Associated with a Process (v2)\n")
-    #print("Start: get_events_facet_associated_with_a_process")
     facet_query = cb.select(EventFacet).where(process_guid=process_guid)
     facet_query.add_facet_field(["event_type"]).timeout(60000)
     facet_query.set_rows(10)
@@ -167,7 +166,7 @@ def get_events_facet_associated_with_a_process(cb, print_detail, process_guid):
     print("----------------------------------------------------------")
 
 
-def get_process_basic_window_enriched(cb, print_detail=False, window="-3d"):
+def get_process_basic_window_enriched(cb, print_detail, window):
     """
     Args:
         cb (CBCloudAPI): API object
@@ -226,7 +225,7 @@ def get_process_events_for_single_process(cb, print_detail, guid):
     print("----------------------------------------------------------")
 
 
-def get_process_facet(cb, print_detail=False, window="-3d"):
+def get_process_facet(cb, print_detail, window):
     """
     Exercises Process Facet search; start and get results.
 
@@ -262,7 +261,7 @@ def get_process_facet(cb, print_detail=False, window="-3d"):
     print("----------------------------------------------------------")
 
 
-def get_event_facet(cb, print_detail=False, window="-3d"):
+def get_event_facet(cb, print_detail, window):
     """
     Exercises Process Facet search; start and get results.
 
@@ -319,7 +318,7 @@ def get_enriched_events_for_single_process(cb, print_detail, guid):
     print("----------------------------------------------------------")
 
 
-def get_enriched_event_facet(cb, print_detail=False, window="-3d"):
+def get_enriched_event_facet(cb, print_detail, window):
     """
     Exercises Process Facet search; start and get results.
 
