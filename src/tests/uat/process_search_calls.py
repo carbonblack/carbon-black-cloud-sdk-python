@@ -137,6 +137,36 @@ def get_list_of_available_process_results(cb, print_details=False):
     print("----------------------------------------------------------")
 
 
+def get_events_facet_associated_with_a_process(cb, print_detail, process_guid):
+    """
+    Args:
+        cb (CBCloudAPI): API object
+        print_detail (bool): whether to print full info to the console, useful for debugging
+
+    Returns:
+    """
+    print("API Call: Get Events Facet Associated with a Process (v2)\n")
+    #print("Start: get_events_facet_associated_with_a_process")
+    facet_query = cb.select(EventFacet).where(process_guid=process_guid)
+    facet_query.add_facet_field(["event_type"]).timeout(60000)
+    facet_query.set_rows(10)
+
+    future = facet_query.execute_async()
+    while not future.done():
+        pass
+
+    results = future.result()[0]
+    pretty_response = {"ranges": results.ranges,
+                        "terms": results.terms,
+                        "num_found": results.num_found,
+                        "total_segments": results.total_segments,
+                        "processed_segments": results.processed_segments}
+    pprint(pretty_response, sort_dicts=False)
+
+    print("\nCompare results manually with Postman")
+    print("----------------------------------------------------------")
+
+
 def get_process_basic_window_enriched(cb, print_detail=False, window="-3d"):
     """
     Args:
@@ -346,6 +376,7 @@ def main():
         run_process_event_invalid_search(cb, print_detail)
         get_process_facet(cb, print_detail, window)
         get_list_of_available_process_results(cb, print_detail)
+        get_events_facet_associated_with_a_process(cb, print_detail, process_guid)
     if do_enriched_events:
         if not process_guid:
             process_guid = get_process_basic_window_enriched(cb, print_detail, window)
