@@ -95,6 +95,7 @@ def run_process_invalid_search(cb, print_detail):
         if print_detail:
             print(err)
         print("Test PASSED")
+    print("----------------------------------------------------------")
 
 
 def run_process_event_invalid_search(cb, print_detail):
@@ -137,6 +138,7 @@ def get_list_of_available_process_results(cb, print_details):
     print("API Call: Get a List of All Available Process Result Sets (v1)\n")
     process_queries = cb.fetch_process_queries()
     print(f"there were {len(process_queries)} process queries found")
+    print("\nCompare results manually with Postman")
     print("----------------------------------------------------------")
 
 
@@ -204,25 +206,24 @@ def get_process_basic_window_enriched(cb, print_detail, window):
 
 def get_process_events_for_single_process(cb, print_detail, guid):
     """
-
     Args:
         cb (CBCloudAPI): API object
         print_detail (bool): whether to print full info to the console, useful for debugging
         guid: All events retrieved for this process guid
-
-    Returns:
-
     """
     print("API Call: Get Events Associated with a Given Process (v2)\n")
     events_query = cb.select(Event).where(process_guid=guid)
     events_query.sort_by("backend_timestamp", direction="ASC")
+
     events = [ev for ev in events_query]
-    print(f"events_query has {len(events_query)} in len(events_query)")
-    print(f"events_query has {events_query._total_results} in events_query._total_results")
+    pretty_response = {"num_found": len(events_query),
+                        "num_available": events_query._total_results,
+                        "total_segments": events_query._total_segments,
+                        "processed_segments": events_query._processed_segments}
+    pprint(pretty_response, sort_dicts=False)
     print(
-        f"events_query._total_segments = {events_query._total_segments} and events_query._processed_segments = {events_query._processed_segments}")
-    print(
-        f"There are {len(events)} to print. First timestamp = {events[0].event_timestamp}.  Last timestamp = {events[len(events) - 1].event_timestamp}")
+        f"\nThere are {len(events)} to print. First timestamp = {events[0].event_timestamp}.  Last timestamp = {events[len(events) - 1].event_timestamp}")
+
     if print_detail:
         print(f"input process guid = {guid}")
         print("event.event_guid,event.event_hash,event.process_guid,event.backend_timestamp,event.event_timestamp")
@@ -258,18 +259,20 @@ def get_process_facet(cb, print_detail, window):
     facet_query.add_facet_field(["alert_category", "device_external_ip", "backend_timestamp"]).timeout(60000)
     facet_query.set_time_range(window=window)
     facet_query.set_rows(5)
+
     future = facet_query.execute_async()
     while not future.done():
-        if print_detail:
-            print(f"{future.done()} - looping")
+        pass
 
     results = future.result()[0]
-    print(f"terms facets = ")
-    pprint(results.terms_.facets)
-    print(f"terms fields = {results.terms_.fields}")
-    print(f"ranges facets = {results.ranges_.facets}")
-    print(f"ranges fields = {results.ranges_.fields}")
+    pretty_response = {"ranges": results.ranges,
+                        "terms": results.terms,
+                        "num_found": results.num_found,
+                        "contacted": results.contacted,
+                        "completed": results.completed}
+    pprint(pretty_response, sort_dicts=False)
 
+    print("\ncompare results manually with postman")
     print("----------------------------------------------------------")
 
 
@@ -328,6 +331,7 @@ def get_enriched_events_for_single_process(cb, print_detail, guid):
     events = [ev for ev in enriched_events_query]
     print(f"enriched events_query has {len(enriched_events_query)} in len(enriched_events_query")
     print(f"enriched events_query has {enriched_events_query._total_results} in enriched_events_query._total_results")
+    print("\nCompare results manually with Postman")
     print("----------------------------------------------------------")
 
 
@@ -356,15 +360,17 @@ def get_enriched_event_facet(cb, print_detail, window):
     future = facet_query.execute_async()
     while not future.done():
         if print_detail:
-            print(f"{future.done()} - looping")
+            pass
 
     results = future.result()[0]
-    print(f"terms facets = ")
-    pprint(results.terms_.facets)
-    print(f"terms fields = {results.terms_.fields}")
-    print(f"ranges facets = {results.ranges_.facets}")
-    print(f"ranges fields = {results.ranges_.fields}")
+    pretty_response = {"ranges": results.ranges,
+                        "terms": results.terms,
+                        "num_found": results.num_found,
+                        "contacted": results.contacted,
+                        "completed": results.completed}
+    pprint(pretty_response, sort_dicts=False)
 
+    print("\nCompare results manually with Postman")
     print("----------------------------------------------------------")
 
 
