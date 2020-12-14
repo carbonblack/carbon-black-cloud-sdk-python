@@ -17,13 +17,15 @@ from cbc_sdk.base import (NewBaseModel, UnrefreshableModel, BaseQuery, FacetQuer
                           QueryBuilderSupportMixin, QueryBuilder,
                           AsyncQueryMixin)
 from cbc_sdk.enterprise_edr import Query
-from cbc_sdk.errors import ApiError
+from cbc_sdk.errors import ApiError, TimeoutError
 
 
 import logging
 import time
 
 log = logging.getLogger(__name__)
+
+MAX_EVENT_SEARCH_RETRIES = 10
 
 """Platform Models"""
 
@@ -997,7 +999,7 @@ class EventQuery(Query):
         current = start
         numrows = 0
 
-        still_querying = True
+        still_querying, last_processed_segments, retry_counter = (True, -1, 0)
 
         while still_querying:
             url = self._doc_class.urlobject.format(
@@ -1012,6 +1014,11 @@ class EventQuery(Query):
             self._processed_segments = result.get("processed_segments", 0)
             self._count_valid = True
             if self._processed_segments != self._total_segments:
+                retry_counter = 0 if self._processed_segments > last_processed_segments else retry_counter + 1
+                last_processed_segments = max(last_processed_segments, self._processed_segments)
+                if retry_counter == MAX_EVENT_SEARCH_RETRIES:
+                    raise TimeoutError(url, resp.status_code, "excessive number of retries in event query")
+                time.sleep(1 + retry_counter / 10)
                 continue  # loop until we get all segments back
 
             results = result.get('results', [])
@@ -1084,23 +1091,26 @@ class EventFacetQuery(FacetQuery):
             process_guid
         )
         resp = self._cb.post_object(url, body=args)
-        result = resp.json()
-
-        return result
+        return url, resp.status_code, resp.json()
 
     def _search(self):
         """Execute the query until 'processed_segments' == 'total_segments'"""
         args = self._get_query_parameters()
         self._validate(args)
-        still_querying = True
+        still_querying, last_processed_segments, retry_counter = (True, -1, 0)
         while still_querying:
-            result = self._submit()
+            url, code, result = self._submit()
 
             self._total_results = result.get("num_available", 0)
             self._total_segments = result.get("total_segments", 0)
             self._processed_segments = result.get("processed_segments", 0)
             self._count_valid = True
             if self._processed_segments != self._total_segments:
+                retry_counter = 0 if self._processed_segments > last_processed_segments else retry_counter + 1
+                last_processed_segments = max(last_processed_segments, self._processed_segments)
+                if retry_counter == MAX_EVENT_SEARCH_RETRIES:
+                    raise TimeoutError(url, code, "excessive number of retries in event facet query")
+                time.sleep(1 + retry_counter / 10)
                 continue  # loop until we get all segments back
 
             yield self._doc_class(self._cb, model_unique_id=self._query_token, initial_data=result)
