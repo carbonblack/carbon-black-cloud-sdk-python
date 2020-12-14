@@ -480,6 +480,7 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
                 self._total_results = current
                 break
 
+
 class EnrichedEventQuery(Query, AsyncQueryMixin):
     """Represents the query logic for an Enriched Event query.
 
@@ -736,8 +737,8 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
 
             result = self._cb.get_object(result_url, query_parameters=query_parameters)
             if self._aggregation:
-                contacted = result.get('contacted',0)
-                completed = result.get('completed',0)
+                contacted = result.get('contacted', 0)
+                completed = result.get('completed', 0)
                 if contacted < completed:
                     time.sleep(.5)
                     still_fetching = True
