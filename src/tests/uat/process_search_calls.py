@@ -88,12 +88,13 @@ def run_process_invalid_search(cb, print_detail):
     print("Executing request with Invalid Search field\n")
     process_query = cb.select(Process).where("enrichedBADFIELD:true")
     try:
-        matching_processes = [process for process in process_query]
-    except ApiError as e:
+        [process for process in process_query]
+        print("Test FAILED")
+    except ApiError as err:
         print("Expected result: APIError generated")
         if print_detail:
-            print(e)
-    print("----------------------------------------------------------")
+            print(err)
+        print("Test PASSED")
 
 
 def run_process_event_invalid_search(cb, print_detail):
@@ -110,11 +111,13 @@ def run_process_event_invalid_search(cb, print_detail):
     print("Executing request with Invalid Search field\n")
     event_query = cb.select(Event).where("enrichedBADFIELD:true")
     try:
-        matching_events = [e for e in event_query]
-    except ApiError as e:
+        [event for event in event_query]
+        print("Test FAILED")
+    except ApiError as err:
         print("Expected result: APIError generated")
         if print_detail:
-            print(e)
+            print(err)
+        print("Test PASSED")
     print("----------------------------------------------------------")
 
 
@@ -189,8 +192,13 @@ def get_process_basic_window_enriched(cb, print_detail, window):
         for process in matching_processes:
             print("{0:16} {1:5} {2:20}".format(process.device_name, process.process_pids[0], process.process_guid))
 
+    try:
+        print(f"process guid being used is {matching_processes[6].process_guid}")
+        print("Test PASSED")
+    except IndexError:
+        print("Test FAILED")
     print("----------------------------------------------------------")
-    # return the first process id for use in future tests
+
     return matching_processes[6].process_guid
 
 
