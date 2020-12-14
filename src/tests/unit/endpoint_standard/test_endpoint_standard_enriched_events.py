@@ -8,7 +8,8 @@ from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.endpoint_standard.mock_enriched_events import (POST_ENRICHED_EVENTS_SEARCH_JOB_RESP,
                                                                         GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP,
                                                                         GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_1,
-                                                                        GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_2)
+                                                                        GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_2,
+                                                                        GET_ENRICHED_EVENTS_AGGREGATION_JOB_RESULTS_RESP_1)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -82,6 +83,24 @@ def test_enriched_event_select_compound(cbcsdk_mock):
     for event in events:
         assert event.device_name is not None
         assert event.enriched is not None
+
+
+def test_enriched_event_select_aggregation(cbcsdk_mock):
+    """Testing EnrichedEvent Querying with select() and more complex criteria"""
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v1/orgs/test/enriched_events/aggregation_jobs/process_sha256",
+                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v1/orgs/test/enriched_events/aggregation_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
+                             GET_ENRICHED_EVENTS_AGGREGATION_JOB_RESULTS_RESP_1)
+
+    api = cbcsdk_mock.api
+    events = api.select(EnrichedEvent).where(process_pid=2000).aggregation("process_sha256")
+    assert events._aggregation is True
+    assert events._aggregation_field == "process_sha256"
+    for event in events:
+        assert event.device_name is not None
+        assert event.enriched is not None
+        assert event.process_pid[0] == 2000
 
 
 def test_enriched_event_query_implementation(cbcsdk_mock):

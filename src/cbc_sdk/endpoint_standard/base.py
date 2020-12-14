@@ -518,6 +518,15 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
         return self
 
     def aggregation(self, field):
+        """
+        Performs an aggregation search where results are grouped by an aggregation field
+
+        Args:
+            field (str): The aggregation field, either 'process_sha256' or 'device_id'
+        """
+        if field not in ['process_sha256', 'device_id']:
+            raise ApiError("Aggregation field must be either 'device_id' or 'process_sha256'")
+
         self._aggregation = True
         self._aggregation_field = field
         return self
@@ -636,7 +645,6 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
         else:
             url = "/api/investigate/v2/orgs/{}/enriched_events/search_jobs".format(self._cb.credentials.org_key)
         query_start = self._cb.post_object(url, body=args)
-        print(args)
         self._query_token = query_start.json().get("job_id")
         self._timed_out = False
         self._submit_time = time.time() * 1000
@@ -715,7 +723,7 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
         query_parameters = {}
         while still_fetching:
             if self._aggregation:
-                result_url = "/api/investigate/v2/orgs/{}/enriched_events/search_jobs/{}/results".format(
+                result_url = "/api/investigate/v1/orgs/{}/enriched_events/aggregation_jobs/{}/results".format(
                     self._cb.credentials.org_key,
                     self._query_token,
                 )
@@ -730,11 +738,12 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
             if self._aggregation:
                 contacted = result.get('contacted',0)
                 completed = result.get('completed',0)
-                print(result)
-                if contacted != completed:
+                if contacted < completed:
+                    time.sleep(.5)
                     still_fetching = True
                     continue
                 else:
+                    still_fetching = False
                     results = result.get('results', [])
                     for item in results:
                         yield item
