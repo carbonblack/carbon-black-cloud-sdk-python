@@ -93,7 +93,6 @@ def run_process_invalid_search(cb, print_detail):
         print("Expected result: APIError generated")
         if print_detail:
             print(e)
-    print(f"End: process_invalid_search")
     print("----------------------------------------------------------")
 
 
@@ -116,7 +115,6 @@ def run_process_event_invalid_search(cb, print_detail):
         print("Expected result: APIError generated")
         if print_detail:
             print(e)
-    print(f"End: run_process_event_invalid_search")
     print("----------------------------------------------------------")
 
 
@@ -136,7 +134,6 @@ def get_list_of_available_process_results(cb, print_details):
     print("API Call: Get a List of All Available Process Result Sets (v1)\n")
     process_queries = cb.fetch_process_queries()
     print(f"there were {len(process_queries)} process queries found")
-    print("called fetch_process_queries")
     print("----------------------------------------------------------")
 
 
@@ -192,7 +189,6 @@ def get_process_basic_window_enriched(cb, print_detail, window):
         for process in matching_processes:
             print("{0:16} {1:5} {2:20}".format(process.device_name, process.process_pids[0], process.process_guid))
 
-    print(f"End: get_process_basic_window_enriched")
     print("----------------------------------------------------------")
     # return the first process id for use in future tests
     return matching_processes[6].process_guid
@@ -266,7 +262,6 @@ def get_process_facet(cb, print_detail, window):
     print(f"ranges facets = {results.ranges_.facets}")
     print(f"ranges fields = {results.ranges_.fields}")
 
-    print(f"End: get_process_facet")
     print("----------------------------------------------------------")
 
 
@@ -303,7 +298,6 @@ def get_event_facet(cb, print_detail, window):
     # print(f"ranges facets = {results.ranges_.facets}")
     # print(f"ranges fields = {results.ranges_.fields}")
 
-    print(f"End: get_event_facet")
     print("----------------------------------------------------------")
 
 
@@ -326,7 +320,6 @@ def get_enriched_events_for_single_process(cb, print_detail, guid):
     events = [ev for ev in enriched_events_query]
     print(f"enriched events_query has {len(enriched_events_query)} in len(enriched_events_query")
     print(f"enriched events_query has {enriched_events_query._total_results} in enriched_events_query._total_results")
-    print("End: get_enriched_events_for_single_process")
     print("----------------------------------------------------------")
 
 
@@ -364,7 +357,6 @@ def get_enriched_event_facet(cb, print_detail, window):
     print(f"ranges facets = {results.ranges_.facets}")
     print(f"ranges fields = {results.ranges_.fields}")
 
-    print(f"End: get_enriched_event_facet")
     print("----------------------------------------------------------")
 
 
