@@ -265,9 +265,9 @@ Modules with Support for Criteria
 
   - :meth:`cbc_sdk.platform.alerts.VMwareAlertSearchQuery.set_group_ids`
 
-:mod:`Event <cbc_sdk.enterprise_edr.base.Event>`
+:mod:`Event <cbc_sdk.platform.base.Event>`
 
-:mod:`Process <cbc_sdk.enterprise_edr.base.Process>`
+:mod:`Process <cbc_sdk.platform.base.Process>`
 
 Modules not yet Supported for Criteria
 """"""""""""""""""""""""""""""""""""""
@@ -302,9 +302,9 @@ This would block the main thread until the query completes.
 Modules with support for asynchronous queries
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-:mod:`Process <cbc_sdk.enterprise_edr.base.Process>`
+:mod:`Process <cbc_sdk.platform.base.Process>`
 
-:mod:`ProcessFacet <cbc_sdk.enterprise_edr.base.ProcessFacet>`
+:mod:`ProcessFacet <cbc_sdk.platform.base.ProcessFacet>`
 
 :mod:`EnrichedEvent <cbc_sdk.endpoint_standard.base.EnrichedEvent>`
 
@@ -331,10 +331,10 @@ Ranges are configured via the ``add_range()`` method which accepts a dictionary 
     ...                 "field": "device_timestamp"
     ...         }
     >>> query = api.select(EnrichedEventFacet).where(process_pid=1000).add_range(range)
-    
+
 The range settings are as follows:
 
-* ``field`` - the field to return the range for, should be a discrete one (integer or ISO 8601 timestamp) 
+* ``field`` - the field to return the range for, should be a discrete one (integer or ISO 8601 timestamp)
 * ``start`` - the value to begin grouping at
 * ``end`` - the value to end grouping at
 * ``bucket_size``- how large of a bucket to group results in. If grouping an ISO 8601 property, use a string like '-3DAYS'
@@ -349,17 +349,66 @@ Terms are configured via the ``add_facet_field()`` method:
     >>> query = api.select(EnrichedEventFacet).where(process_pid=1000).add_facet_field("process_name")
 
 The argument to add_facet_field method is the name of the field to be summarized.
-    
+
 Getting facet results
 ^^^^^^^^^^^^^^^^^^^^^
 
-The query result for facet queries is a single object with two properties: ``terms`` and ``ranges`` that contain the facet search result weighted as per the criteria provided
+Facet results can be retrieved synchronously with the ``.results`` property, or asynchronously with the ``.execute_async()` and ``.result()`` methods.
+
+Create the query:
+
+    >>> event_facet_query = api.select(EventFacet).add_facet_field("event_type")
+    >>> event_facet_query.where(process_guid="WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb")
+    >>> range = {
+    ...                 "bucket_size": "+1DAY",
+    ...                 "start": "2020-10-16T00:00:00Z",
+    ...                 "end": "2020-11-16T00:00:00Z",
+    ...                 "field": "device_timestamp"
+    ...         }
+    >>> event_facet_query.add_range(range)
+
+1. With the ``.results`` property:
+
+    >>> synchronous_results = event_facet_query.results
+    >>> print(synchronous_results)
+    EventFacet object, bound to https://defense-eap01.conferdeploy.net.
+    -------------------------------------------------------------------------------
+
+               num_found: 16
+      processed_segments: 1
+                  ranges: [{'start': '2020-10-16T00:00:00Z', 'end': '2020...
+                   terms: [{'values': [{'total': 14, 'id': 'modload', 'na...
+          total_segments: 1
+
+2. With the ``.execute_async()`` and ``.result()`` methods:
+
+    >>> asynchronous_future = event_facet_query.execute_async()
+    >>> asynchronous_results = asynchronous_future.result()
+    # asynchronous results is a list with one item, so we access the first item
+    >>> print(asynchronous_results[0])
+    EventFacet object, bound to https://defense-eap01.conferdeploy.net.
+    -------------------------------------------------------------------------------
+
+               num_found: 16
+      processed_segments: 1
+                  ranges: [{'start': '2020-10-16T00:00:00Z', 'end': '2020...
+                   terms: [{'values': [{'total': 14, 'id': 'modload', 'na...
+          total_segments: 1
+
+
+The result for facet queries is a single object with two properties: ``terms`` and ``ranges`` that contain the facet search result weighted as per the criteria provided.
+
+    >>> print(synchronous_results.terms)
+    [{'values': [{'total': 14, 'id': 'modload', 'name': 'modload'}, {'total': 2, 'id': 'crossproc', 'name': 'crossproc'}], 'field': 'event_type'}]
+    >>> print(synchronous_results.ranges)
+    [{'start': '2020-10-16T00:00:00Z', 'end': '2020-11-16T00:00:00Z', 'bucket_size': '+1DAY', 'field': 'device_timestamp', 'values': None}]
 
 
 Modules with support for facet searches
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-:mod:`ProcessFacet <cbc_sdk.enterprise_edr.base.ProcessFacet>`
+:mod:`ProcessFacet <cbc_sdk.platform.base.ProcessFacet>`
+
+:mod:`EventFacet <cbc_sdk.platform.base.EventFacet>`
 
 :mod:`EnrichedEventFacet <cbc_sdk.endpoint_standard.base.EnrichedEventFacet>`
-
