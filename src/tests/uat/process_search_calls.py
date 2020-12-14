@@ -61,8 +61,13 @@ If there is customer demand, this can be reviewed.
 * Get Report Hits (v1)
 
 """
-import pprint
+
+# Standard library imports
 import sys
+from pprint import pprint
+
+# Internal library imports
+from pprint import pprint
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object, CBCloudAPI
 from cbc_sdk.platform import Process, Event, ProcessFacet  # , EventFacet
 from cbc_sdk.endpoint_standard import EnrichedEvent, EnrichedEventFacet
@@ -347,4 +352,7 @@ def main():
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        print("\nInterrupted by user")
