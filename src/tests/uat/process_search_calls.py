@@ -266,7 +266,7 @@ def get_process_facet(cb, window):
                        "completed": results.completed}
     pprint(pretty_response, sort_dicts=False)
 
-    print("\ncompare results manually with postman")
+    print("\nCompare results manually with postman")
     print("----------------------------------------------------------")
 
 
@@ -320,8 +320,13 @@ def get_enriched_events_for_single_process(cb, guid):
     enriched_events_query = cb.select(EnrichedEvent).where(process_guid=guid)
     print(f"enriched events_query has {len(enriched_events_query)} in len(enriched_events_query")
     print(f"enriched events_query has {enriched_events_query._total_results} in enriched_events_query._total_results")
+
     print("\nCompare results manually with Postman")
     print("----------------------------------------------------------")
+
+    events = [_ for _ in enriched_events_query]
+
+    return events[0].event_id
 
 
 def get_enriched_event_facet(cb, print_detail, window):
@@ -361,6 +366,22 @@ def get_enriched_event_facet(cb, print_detail, window):
     print("----------------------------------------------------------")
 
 
+def enriched_events_details(cb, event_id):
+    """
+    """
+    print("API Calls:")
+    print("Request Details for Enriched Events (v2)")
+    print("Retrieve Results for an Enriched Event Detail Search (v2)")
+    print(f"event_id: {event_id}\n")
+
+    events = cb.select(EnrichedEvent).where(event_id=event_id)
+    event = events[0]
+    pprint(event.get_details())
+
+    print("\nCompare results manually with Postman")
+    print("----------------------------------------------------------")
+
+
 def main():
     """Script entry point"""
     parser = build_cli_parser()  # args on command line will be applied to all tests called
@@ -387,8 +408,9 @@ def main():
     if do_enriched_events:
         if not process_guid:
             process_guid = get_process_basic_window_enriched(cb, print_detail, window)
-        get_enriched_events_for_single_process(cb, process_guid)
+        event_id = get_enriched_events_for_single_process(cb, process_guid)
         get_enriched_event_facet(cb, print_detail, window)
+        enriched_events_details(cb, event_id)
 
 
 if __name__ == "__main__":
