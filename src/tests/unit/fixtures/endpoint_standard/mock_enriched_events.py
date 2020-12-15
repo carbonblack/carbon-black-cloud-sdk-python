@@ -120,6 +120,47 @@ GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_2 = {
     ]
 }
 
+GET_ENRICHED_EVENTS_AGG_JOB_RESULTS_RESP_1 = {
+    'results': [
+        {
+            'alert_id': ['null/99FI049P'],
+            'backend_timestamp': '2020-06-25T21:05:10.787Z',
+            'device_id': 195940,
+            'device_name': 'desktop-8qonquj',
+            'device_os': 'WINDOWS',
+            'device_policy': 'default',
+            'device_policy_id': 2198,
+            'device_timestamp': '2020-06-25T20:36:06.608Z',
+            'enriched': True,
+            'enriched_event_type': 'CREATE_PROCESS',
+            'event_description': 'test',
+            'event_id': '8ff185c2b72311eaab6d9f3b90c54099',
+            'event_type': 'childproc',
+            'ingress_time': 1593117428851,
+            'legacy': True,
+            'num_devices': 1,
+            'num_events': 2,
+            'org_id': 'WNEXFKQ7',
+            'parent_guid': 'WNEXFKQ7-0002fd64-00001ffc-00000000-1d64b3039bb7130',
+            'parent_pid': 8188,
+            'process_effective_reputation': 'LOCAL_WHITE',
+            'process_guid': 'WNEXFKQ7-0002fd64-000007d0-00000000-1d64b30404d93d8',
+            'process_hash': [
+                '0dde659f0854d78f137119e13e1368ef',
+                'de74b04a291133b8c6c5a30bff6b2cef8ad4141cd1813d063c8c62f2671652e8'
+            ],
+            'process_name': 'c:\\users\\dragon\\.rustup\\toolchains\\stable-x86_64-pc-windows-msvc\\bin\\rustc.exe',
+            'process_pid': [2000],
+            'process_sha256': 'de74b04a291133b8c6c5a30bff6b2cef8ad4141cd1813d063c8c62f2671652e8',
+            'process_username': ['DESKTOP-8QONQUJ\\dragon']
+        }
+    ],
+    'num_found': 1,
+    'num_available': 1,
+    'contacted': 32,
+    'completed': 32
+}
+
 
 GET_ENRICHED_EVENTS_DETAIL_JOB_RESULTS_RESP_1 = {
     'results': [
