@@ -36,7 +36,7 @@ Carbon Black Cloud product names have been updated in the SDK.
 +----------------------------+-------------------------------+
 | ``cbapi.psc.threathunter`` | ``cbc_sdk.enterprise_edr``    |
 +----------------------------+-------------------------------+
-| Does not exist in CBAPI    | ``cbc_sdk.platform``          |
+| ``cbapi.psc``              | ``cbc_sdk.platform``          |
 +----------------------------+-------------------------------+
 
 Import statements will need to change:
@@ -80,9 +80,9 @@ Some modules have been moved to a more appropriate location.
 +=============================+==============================+
 | ``cbapi.example_helpers``   | ``cbc_sdk.helpers``          |
 +-----------------------------+------------------------------+
-| ``cbapi.psc.alerts_query``  | ``cbc_sdk.platform.alerts``  |
+| ``cbapi.psc.alerts_query``  | ``cbc_sdk.platform``  |
 +-----------------------------+------------------------------+
-| ``cbapi.psc.devices_query`` | ``cbc_sdk.platform.devices`` |
+| ``cbapi.psc.devices_query`` | ``cbc_sdk.platform`` |
 +-----------------------------+------------------------------+
 
 Import statements will need to change:
