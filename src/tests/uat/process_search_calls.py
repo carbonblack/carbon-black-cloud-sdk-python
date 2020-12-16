@@ -151,12 +151,7 @@ def get_events_facet_associated_with_a_process(cb, process_guid):
         pass
 
     results = future.result()[0]
-    pretty_response = {"ranges": results.ranges,
-                       "terms": results.terms,
-                       "num_found": results.num_found,
-                       "total_segments": results.total_segments,
-                       "processed_segments": results.processed_segments}
-    pprint(pretty_response, sort_dicts=False)
+    pprint(results._info, sort_dicts=False)
 
     print("\nCompare results manually with Postman")
     print("----------------------------------------------------------")
@@ -259,12 +254,7 @@ def get_process_facet(cb, window):
         pass
 
     results = future.result()[0]
-    pretty_response = {"ranges": results.ranges,
-                       "terms": results.terms,
-                       "num_found": results.num_found,
-                       "contacted": results.contacted,
-                       "completed": results.completed}
-    pprint(pretty_response, sort_dicts=False)
+    pprint(results._info, sort_dicts=False)
 
     print("\nCompare results manually with postman")
     print("----------------------------------------------------------")
@@ -306,7 +296,7 @@ def get_event_facet():
 
 def get_enriched_events_for_single_process(cb, guid):
     """
-    Text
+    Start SDK call and print out response
 
     Args:
         cb (CBCloudAPI): API object
@@ -355,28 +345,39 @@ def get_enriched_event_facet(cb, print_detail, window):
             pass
 
     results = future.result()[0]
-    pretty_response = {"ranges": results.ranges,
-                       "terms": results.terms,
-                       "num_found": results.num_found,
-                       "contacted": results.contacted,
-                       "completed": results.completed}
-    pprint(pretty_response, sort_dicts=False)
+    pprint(results._info, sort_dicts=False)
 
     print("\nCompare results manually with Postman")
     print("----------------------------------------------------------")
 
 
 def enriched_events_details(cb, event_id):
-    """
-    """
+    """Start SDK call and print out response"""
     print("API Calls:")
     print("Request Details for Enriched Events (v2)")
     print("Retrieve Results for an Enriched Event Detail Search (v2)")
     print(f"event_id: {event_id}\n")
 
     events = cb.select(EnrichedEvent).where(event_id=event_id)
-    event = events[0]
-    pprint(event.get_details())
+    pprint(events[0].get_details())
+
+    print("\nCompare results manually with Postman")
+    print("----------------------------------------------------------")
+
+
+def enriched_events_aggregation(cb):
+    """Start SDK call and print out response"""
+    print("API Calls:")
+    print("Start Aggregation Search on Enriched Events (v1)")
+    print("Retrieve Results for an Enriched Event Aggregation Search (v1)\n")
+
+    query = cb.select(EnrichedEvent).where("process_name:svchost.exe").aggregation("device_id")
+
+    pretty_response = {"results": []}
+    for event in query:
+        pretty_response["results"].append(event._info)
+
+    pprint(pretty_response)
 
     print("\nCompare results manually with Postman")
     print("----------------------------------------------------------")
@@ -384,7 +385,7 @@ def enriched_events_details(cb, event_id):
 
 def main():
     """Script entry point"""
-    parser = build_cli_parser()  # args on command line will be applied to all tests called
+    parser = build_cli_parser()
     args = parser.parse_args()
     print_detail = args.verbose
     window = '-' + args.window
@@ -411,6 +412,7 @@ def main():
         event_id = get_enriched_events_for_single_process(cb, process_guid)
         get_enriched_event_facet(cb, print_detail, window)
         enriched_events_details(cb, event_id)
+        enriched_events_aggregation(cb)
 
 
 if __name__ == "__main__":
