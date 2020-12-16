@@ -17,6 +17,7 @@ from cbc_sdk.audit_remediation import Run, RunHistory
 
 
 def create_run(cb, args):
+    """Create a new query and run it."""
     query = cb.select(Run).where(sql=args.sql)
 
     if args.device_ids:
@@ -35,11 +36,13 @@ def create_run(cb, args):
 
 
 def run_status(cb, args):
+    """Get the status of a running query."""
     run = cb.select(Run, args.id)
     print(run)
 
 
 def run_stop(cb, args):
+    """Stop a query that's in progress."""
     run = cb.select(Run, args.id)
     if run.stop():
         print("Run {} has been stopped.".format(run.id))
@@ -49,6 +52,7 @@ def run_stop(cb, args):
 
 
 def run_delete(cb, args):
+    """Delete a query."""
     run = cb.select(Run, args.id)
     if run.delete():
         print("Run {} has been deleted.".format(run.id))
@@ -57,6 +61,7 @@ def run_delete(cb, args):
 
 
 def run_history(cb, args):
+    """Get a list of all queries that have been made."""
     results = cb.select(RunHistory).where(args.query)
     if args.sort_by:
         dir = "DESC" if args.descending_results else "ASC"
@@ -66,6 +71,7 @@ def run_history(cb, args):
 
 
 def main():
+    """Main function for the LiveQuery runs manager."""
     parser = build_cli_parser("Create and manage LiveQuery runs")
     commands = parser.add_subparsers(help="Commands", dest="command_name")
 

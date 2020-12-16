@@ -18,6 +18,18 @@ from cbc_sdk.platform import Device
 
 
 def toggle_value(args):
+    """
+    Determine whether a value is to be toggled on or off.
+
+    Args:
+        args (Namespace): The command line arguments.
+
+    Returns:
+        True if toggled on, False if toggled off.
+
+    Raises:
+        Exception: If the toggle value is unknown.
+    """
     if args.on:
         return True
     if args.off:
@@ -26,6 +38,7 @@ def toggle_value(args):
 
 
 def main():
+    """Main function for Device Actions script."""
     parser = build_cli_parser("Send control messages to device")
     parser.add_argument("-d", "--device_id", type=int, required=True, help="The ID of the device to be controlled")
     subparsers = parser.add_subparsers(dest="command", help="Device command help")

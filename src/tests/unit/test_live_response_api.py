@@ -15,7 +15,6 @@ import mox as pymox
 import pytest
 import copy
 import io
-import sys
 from cbc_sdk.errors import ApiError, ObjectNotFoundError, ServerError, TimeoutError
 from cbc_sdk.live_response_api import LiveResponseError, LiveResponseSessionManager
 from cbc_sdk.winerror import HRESULT_FROM_WIN32, Win32Error

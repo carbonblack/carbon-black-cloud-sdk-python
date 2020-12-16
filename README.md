@@ -1,13 +1,12 @@
 # VMware Carbon Black Cloud Python SDK
 
-This is currently an Alpha Release.  Feedback is encouraged.
-
-**Latest Version:** 1.0.0a1
+**Latest Version:** 1.0.0
 <br>
-**Release Date:** 15 October 2020
+**Release Date:** 15 December 2020
 
-[![Coverage Status](https://coveralls.io/repos/github/carbonblack/carbon-black-cloud-sdk-python/badge.svg?t=cwMaub)](https://coveralls.io/github/carbonblack/carbon-black-cloud-sdk-python)
+[![Coverage Status](https://coveralls.io/repos/github/carbonblack/carbon-black-cloud-sdk-python/badge.svg?t=Id6Baf)](https://coveralls.io/github/carbonblack/carbon-black-cloud-sdk-python)
 [![Codeship Status for carbonblack/carbon-black-cloud-sdk-python](https://app.codeship.com/projects/9e55a370-a772-0138-aae4-129773225755/status?branch=develop)](https://app.codeship.com/projects/402767)
+
 
 
 ## Recent updates
@@ -25,11 +24,15 @@ Use of the Carbon Black Cloud Python SDK is governed by the license found in [LI
 2. Use the [Developer Community Forum](https://community.carbonblack.com/) to discuss issues and get answers from other API developers in the Carbon Black Community.
 3. Create a github issue for bugs and change requests. Formal [Carbon Black Support](http://carbonblack.com/resources/support/) coming with v1.0.
 
+## Documentation
+
+Visit [ReadTheDocs](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/) for this project's documentation.
+
 ## Requirements
 
 The Carbon Black Cloud Python SDK is design to work on Python 3.6 and above.
 
-All requirements are installed as part of `pip install cbc_sdk`. If you're planning on pushing changes to the Carbon Black Cloud Python SDK, the following can be used after cloning the repo `pip install -r requirements.txt`
+All requirements are installed as part of `pip install carbon-black-cloud-sdk`. If you're planning on pushing changes to the Carbon Black Cloud Python SDK, the following can be used after cloning the repo `pip install -r requirements.txt`
 
 ### Carbon Black Cloud
 
@@ -69,6 +72,9 @@ If developing the SDK, you also need:
 
 Visit the [Getting Started Guide](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/getting-started.html) for an example of authenticating and making an API call using the SDK.
 
+### Setting the User-Agent
+
+The SDK supports custom User-Agent's when making API calls. This allows you to identify yourself when using the SDK. See [Setting the User-Agent](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/getting-started.html#setting-the-user-agent) section of the documentation for more information.
 
 ## Developing Improvements for the Carbon Black Cloud Python SDK
 
@@ -99,8 +105,14 @@ From the parent directory `carbon-black-cloud-sdk-python`, run the command `pyte
 
 ### Building the documentation
 
-ReadTheDocs hosts [the documentation for the SDK](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/). If you make changes to the SDK that require an update to the documentation,
-build the docs locally with the following commands:
+ReadTheDocs hosts [the documentation for the SDK](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/). If you make changes to the SDK that require an update to the documentation, first install the documentation packages from pip:
+
+```
+pip install sphinxcontrib-apidoc
+pip install sphinx_rtd_theme
+```
+
+Then, build the docs locally with the following commands:
 
 ```
 sphinx-apidoc -f -o docs src/cbc_sdk

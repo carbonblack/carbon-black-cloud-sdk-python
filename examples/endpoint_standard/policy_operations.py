@@ -24,6 +24,7 @@ log = logging.getLogger(__name__)
 
 
 def get_policy_by_name_or_id(cb, policy_id=None, name=None, return_all_if_none=False):
+    """Get a policy, looking it up by name or ID."""
     policies = []
 
     try:
@@ -51,6 +52,7 @@ def get_policy_by_name_or_id(cb, policy_id=None, name=None, return_all_if_none=F
 
 
 def list_policies(cb, parser, args):
+    """List all policies and their rules."""
     for p in cb.select(Policy):
         print(u"Policy id {0}: {1} {2}".format(p.id, p.name, "({0})".format(p.description) if p.description else ""))
         print("Rules:")
@@ -61,6 +63,7 @@ def list_policies(cb, parser, args):
 
 
 def import_policy(cb, parser, args):
+    """Import a policy."""
     p = cb.create(Policy)
 
     p.policy = json.load(open(args.policyfile, "r"))
@@ -80,6 +83,7 @@ def import_policy(cb, parser, args):
 
 
 def delete_policy(cb, parser, args):
+    """Delete a policy."""
     policies = get_policy_by_name_or_id(cb, args.id, args.name)
     if len(policies) == 0:
         return
@@ -99,6 +103,7 @@ def delete_policy(cb, parser, args):
 
 
 def export_policy(cb, parser, args):
+    """Export a policy."""
     policies = get_policy_by_name_or_id(cb, args.id, args.name, return_all_if_none=True)
 
     for p in policies:
@@ -107,11 +112,12 @@ def export_policy(cb, parser, args):
 
 
 def add_rule(cb, parser, args):
+    """Add a rule to one or more policies."""
     policies = get_policy_by_name_or_id(cb, args.id, args.name)
 
     num_matching_policies = len(policies)
     if num_matching_policies < 1:
-        print("No policies match. No action taken.".format(num_matching_policies))
+        print("No policies match. No action taken.")
 
     for policy in policies:
         policy.add_rule(json.load(open(args.rulefile, "r")))
@@ -119,6 +125,7 @@ def add_rule(cb, parser, args):
 
 
 def del_rule(cb, parser, args):
+    """Delete a rule from a policy."""
     policies = get_policy_by_name_or_id(cb, args.id, args.name)
 
     num_matching_policies = len(policies)
@@ -132,6 +139,7 @@ def del_rule(cb, parser, args):
 
 
 def replace_rule(cb, parser, args):
+    """Replace a rule within a policy."""
     policies = get_policy_by_name_or_id(cb, args.id, args.name)
 
     num_matching_policies = len(policies)
@@ -146,6 +154,7 @@ def replace_rule(cb, parser, args):
 
 
 def main():
+    """Main function for the Policy Operations script."""
     parser = build_cli_parser("Policy operations")
     commands = parser.add_subparsers(help="Policy commands", dest="command_name")
 

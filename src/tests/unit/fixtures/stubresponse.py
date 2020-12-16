@@ -46,7 +46,7 @@ def _failing_delete_object(url):
     pytest.fail("DELETE called for %s when it shouldn't be" % url)
 
 
-def patch_cbapi(monkeypatch, api, **kwargs):
+def patch_cbc_sdk_api(monkeypatch, api, **kwargs):
     """Patch an API instance with our "failing" stub functions."""
     monkeypatch.setattr(api, "get_object", kwargs.get('GET', _failing_get_object))
     monkeypatch.setattr(api, "get_raw_data", kwargs.get('RAW_GET', _failing_get_raw_data))
