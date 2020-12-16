@@ -80,9 +80,9 @@ Some modules have been moved to a more appropriate location.
 +=============================+==============================+
 | ``cbapi.example_helpers``   | ``cbc_sdk.helpers``          |
 +-----------------------------+------------------------------+
-| ``cbapi.psc.alerts_query``  | ``cbc_sdk.platform``  |
+| ``cbapi.psc.alerts_query``  | ``cbc_sdk.platform``         |
 +-----------------------------+------------------------------+
-| ``cbapi.psc.devices_query`` | ``cbc_sdk.platform`` |
+| ``cbapi.psc.devices_query`` | ``cbc_sdk.platform``         |
 +-----------------------------+------------------------------+
 
 Import statements will need to change:
@@ -162,7 +162,7 @@ Enterprise EDR Processes and Events have been removed and replaced with Platform
     from cbc_sdk.platform import Process, Event
 
 Folder Structure Changes
-^^^^^^^^^^^^^^^^^^^^^^^^
+------------------------
 The directory structure for the SDK has been refined compared to CBAPI.
 
 * Addition of the Platform folder
@@ -173,7 +173,7 @@ The directory structure for the SDK has been refined compared to CBAPI.
   * ``from cbapi.psc.threathunter import CbThreatHunterAPI`` becomes ``from cbc_sdk import CBCloudAPI``, etc.
 
 Directory Tree Changes
-""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^
 
 In general, each module's ``models.py`` and ``query.py`` files were combined into their respective ``base.py`` files.
 
@@ -274,7 +274,7 @@ Now, each product has either a ``base.py`` file with all of its objects, or cate
 The package level ``rest_api.py`` replaced each product-specific ``rest_api.py`` file.
 
 Function Changes
-^^^^^^^^^^^^^^^^
+----------------
 
 **Helper Functions:**
 
