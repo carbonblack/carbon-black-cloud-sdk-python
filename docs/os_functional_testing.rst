@@ -6,8 +6,8 @@ for the CBC Python SDK in Linux and Windows platforms.
 These instructions assume you already have the CBC SDK sources present
 locally.  If not, they can be checked out from GitHub using the URL
 https://github.com/carbonblack/carbon-black-cloud-sdk-python; doing so will require you to
-either have Git installed or download the source tree packed as a zip archive from GitHub 
-and then unarchive it
+either have Git installed or download the source tree packed as a zip archive from GitHub
+and then unarchive it.
 
 
 Running the tests on Microsoft Windows
@@ -16,7 +16,7 @@ Running the tests on Microsoft Windows
 Install Python
 ^^^^^^^^^^^^^^
 From http://python.org, download the installer for the most recent Python 3.8 version
-(as of this writing, version 3.8.6 is the latest). 
+(as of this writing, version 3.8.6 is the latest).
 
 Fix the Execution PATH
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -24,10 +24,11 @@ Go to the Environment Variables dialog (System Control Panel or Properties page
 for My Computer/This PC, then select **Advanced system settings** and then the
 **Environment Variables** button). Ensure that the first two components of
 the user PATH environment variable are *%USERPROFILE%\\AppData\\Local\\Programs\\Python\\Python38*
-and *%USERPROFILE%\\AppData\\Local\\Programs\\Python\\Python38\\Scripts*. 
+and *%USERPROFILE%\\AppData\\Local\\Programs\\Python\\Python38\\Scripts*.
 
 To test this, open a command window and use the command:
 ``python --version``
+
 It should run Python and show that you are running Python 3.8.
 
 Install CBC Python SDK Requirements
@@ -52,7 +53,7 @@ Running the tests on Linux
 Carbon Black Cloud Python SDK provides a number of Dockerfiles inside the docker folder
 of the source root. Those contain the necessary instructions to build docker images
 containing a number of distributions with CBC Python SDK preinstalled in /app directory
-(relative to image root)
+(relative to image root).
 
 Build the docker image
 ^^^^^^^^^^^^^^^^^^^^^^

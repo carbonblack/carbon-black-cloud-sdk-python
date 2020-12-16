@@ -78,7 +78,7 @@ def check_python_tls_compatibility():
         str: The maximum level of TLS/SSL that this version is compatible with.
     """
     try:
-        CbAPISessionAdapter(force_tls_1_2=True)
+        CBCSDKSessionAdapter(force_tls_1_2=True)
     except Exception:
         ret = "TLSv1.1"
 
@@ -96,12 +96,12 @@ def check_python_tls_compatibility():
     return ret
 
 
-class CbAPISessionAdapter(HTTPAdapter):
+class CBCSDKSessionAdapter(HTTPAdapter):
     """Adapter object used to handle TLS connections to the CB server."""
 
     def __init__(self, verify_hostname=True, force_tls_1_2=False, max_retries=DEFAULT_RETRIES, **pool_kwargs):
         """
-        Initialize the CbAPISessionManager.
+        Initialize the CBCSDKSessionManager.
 
         Args:
             verify_hostname (boolean): True if we want to verify the hostname.
@@ -112,13 +112,13 @@ class CbAPISessionAdapter(HTTPAdapter):
         Raises:
             ApiError: If the library versions are too old to force the use of TLS 1.2.
         """
-        self._cbapi_verify_hostname = verify_hostname
-        self._cbapi_force_tls_1_2 = force_tls_1_2
+        self._cbc_sdk_verify_hostname = verify_hostname
+        self._cbc_sdk_force_tls_1_2 = force_tls_1_2
 
         if force_tls_1_2 and not REQUESTS_HAS_URLLIB_SSL_CONTEXT:
             raise ApiError("Cannot force the use of TLS1.2: Python, urllib3, and requests versions are too old.")
 
-        super(CbAPISessionAdapter, self).__init__(max_retries=max_retries, **pool_kwargs)
+        super(CBCSDKSessionAdapter, self).__init__(max_retries=max_retries, **pool_kwargs)
 
     def init_poolmanager(self, connections, maxsize, block=DEFAULT_POOLBLOCK, **pool_kwargs):
         """
@@ -133,7 +133,7 @@ class CbAPISessionAdapter(HTTPAdapter):
         Returns:
             None
         """
-        if self._cbapi_force_tls_1_2 and REQUESTS_HAS_URLLIB_SSL_CONTEXT:
+        if self._cbc_sdk_force_tls_1_2 and REQUESTS_HAS_URLLIB_SSL_CONTEXT:
             # Force the use of TLS v1.2 when talking to this Cb Response server.
             context = create_urllib3_context(ciphers=('TLSv1.2:!aNULL:!eNULL:!MD5'))
             context.options |= ssl.OP_NO_SSLv2
@@ -142,13 +142,13 @@ class CbAPISessionAdapter(HTTPAdapter):
             context.options |= ssl.OP_NO_TLSv1_1
             pool_kwargs['ssl_context'] = context
 
-        if not self._cbapi_verify_hostname:
+        if not self._cbc_sdk_verify_hostname:
             # Provide the ability to validate a Carbon Black server's SSL certificate without validating the hostname
             # (by default Carbon Black certificates are "issued" as CN=Self-signed Carbon Black Enterprise Server
             # HTTPS Certificate)
             pool_kwargs["assert_hostname"] = False
 
-        return super(CbAPISessionAdapter, self).init_poolmanager(connections, maxsize, block, **pool_kwargs)
+        return super(CBCSDKSessionAdapter, self).init_poolmanager(connections, maxsize, block, **pool_kwargs)
 
 
 class Connection(object):
@@ -203,8 +203,8 @@ class Connection(object):
             max_retries = MAX_RETRIES
 
         try:
-            tls_adapter = CbAPISessionAdapter(max_retries=max_retries, force_tls_1_2=credentials.ssl_force_tls_1_2,
-                                              verify_hostname=credentials.ssl_verify_hostname, **pool_kwargs)
+            tls_adapter = CBCSDKSessionAdapter(max_retries=max_retries, force_tls_1_2=credentials.ssl_force_tls_1_2,
+                                               verify_hostname=credentials.ssl_verify_hostname, **pool_kwargs)
         except ssl.SSLError as e:
             raise ApiError("This version of Python and OpenSSL do not support TLSv1.2: {}".format(e),
                            original_exception=e)

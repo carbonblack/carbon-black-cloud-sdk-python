@@ -14,7 +14,7 @@
 import pytest
 from cbc_sdk.platform import Device, BaseAlert, WorkflowStatus
 from cbc_sdk.rest_api import CBCloudAPI
-from tests.unit.fixtures.stubresponse import StubResponse, patch_cbapi
+from tests.unit.fixtures.stubresponse import StubResponse, patch_cbc_sdk_api
 
 
 class StubScheduler:
@@ -53,7 +53,7 @@ def test_Device_lr_session(monkeypatch):
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     sked = StubScheduler(6023)
     api._lr_scheduler = sked
-    patch_cbapi(monkeypatch, api, GET=_get_session)
+    patch_cbc_sdk_api(monkeypatch, api, GET=_get_session)
     dev = Device(api, 6023, {"id": 6023})
     sess = dev.lr_session()
     assert sess["itworks"]
@@ -76,7 +76,7 @@ def test_Device_background_scan(monkeypatch):
         return StubResponse(None, 204)
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, GET=_get_device, POST=_background_scan)
+    patch_cbc_sdk_api(monkeypatch, api, GET=_get_device, POST=_background_scan)
     dev = Device(api, 6023, {"id": 6023})
     dev.background_scan(True)
     assert _was_called
@@ -98,7 +98,7 @@ def test_Device_bypass(monkeypatch):
         return StubResponse(None, 204)
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, GET=_get_device, POST=_bypass)
+    patch_cbc_sdk_api(monkeypatch, api, GET=_get_device, POST=_bypass)
     dev = Device(api, 6023, {"id": 6023})
     dev.bypass(False)
     assert _was_called
@@ -120,7 +120,7 @@ def test_Device_delete_sensor(monkeypatch):
         return StubResponse(None, 204)
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, GET=_get_device, POST=_delete_sensor)
+    patch_cbc_sdk_api(monkeypatch, api, GET=_get_device, POST=_delete_sensor)
     dev = Device(api, 6023, {"id": 6023})
     dev.delete_sensor()
     assert _was_called
@@ -142,7 +142,7 @@ def test_Device_uninstall_sensor(monkeypatch):
         return StubResponse(None, 204)
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, GET=_get_device, POST=_uninstall_sensor)
+    patch_cbc_sdk_api(monkeypatch, api, GET=_get_device, POST=_uninstall_sensor)
     dev = Device(api, 6023, {"id": 6023})
     dev.uninstall_sensor()
     assert _was_called
@@ -164,7 +164,7 @@ def test_Device_quarantine(monkeypatch):
         return StubResponse(None, 204)
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, GET=_get_device, POST=_quarantine)
+    patch_cbc_sdk_api(monkeypatch, api, GET=_get_device, POST=_quarantine)
     dev = Device(api, 6023, {"id": 6023})
     dev.quarantine(True)
     assert _was_called
@@ -186,7 +186,7 @@ def test_Device_update_policy(monkeypatch):
         return StubResponse(None, 204)
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, GET=_get_device, POST=_update_policy)
+    patch_cbc_sdk_api(monkeypatch, api, GET=_get_device, POST=_update_policy)
     dev = Device(api, 6023, {"id": 6023})
     dev.update_policy(8675309)
     assert _was_called
@@ -209,7 +209,7 @@ def test_Device_update_sensor_version(monkeypatch):
         return StubResponse(None, 204)
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, GET=_get_device, POST=_update_sensor_version)
+    patch_cbc_sdk_api(monkeypatch, api, GET=_get_device, POST=_update_sensor_version)
     dev = Device(api, 6023, {"id": 6023})
     dev.update_sensor_version({"RHEL": "2.3.4.5"})
     assert _was_called
@@ -228,7 +228,7 @@ def test_BaseAlert_dismiss(monkeypatch):
                              "changed_by": "Robocop", "last_update_time": "2019-10-31T16:03:13.951Z"})
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, POST=_do_dismiss)
+    patch_cbc_sdk_api(monkeypatch, api, POST=_do_dismiss)
     alert = BaseAlert(api, "ESD14U2C", {"id": "ESD14U2C", "workflow": {"state": "OPEN"}})
     alert.dismiss("Fixed", "Yessir")
     assert _was_called
@@ -252,7 +252,7 @@ def test_BaseAlert_undismiss(monkeypatch):
                              "changed_by": "Robocop", "last_update_time": "2019-10-31T16:03:13.951Z"})
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, POST=_do_update)
+    patch_cbc_sdk_api(monkeypatch, api, POST=_do_update)
     alert = BaseAlert(api, "ESD14U2C", {"id": "ESD14U2C", "workflow": {"state": "DISMISS"}})
     alert.update("Fixed", "NoSir")
     assert _was_called
@@ -276,7 +276,7 @@ def test_BaseAlert_dismiss_threat(monkeypatch):
                              "changed_by": "Robocop", "last_update_time": "2019-10-31T16:03:13.951Z"})
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, POST=_do_dismiss)
+    patch_cbc_sdk_api(monkeypatch, api, POST=_do_dismiss)
     alert = BaseAlert(api, "ESD14U2C", {"id": "ESD14U2C", "threat_id": "B0RG", "workflow": {"state": "OPEN"}})
     wf = alert.dismiss_threat("Fixed", "Yessir")
     assert _was_called
@@ -300,7 +300,7 @@ def test_BaseAlert_undismiss_threat(monkeypatch):
                              "changed_by": "Robocop", "last_update_time": "2019-10-31T16:03:13.951Z"})
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, POST=_do_update)
+    patch_cbc_sdk_api(monkeypatch, api, POST=_do_update)
     alert = BaseAlert(api, "ESD14U2C", {"id": "ESD14U2C", "threat_id": "B0RG", "workflow": {"state": "OPEN"}})
     wf = alert.update_threat("Fixed", "NoSir")
     assert _was_called
@@ -332,7 +332,7 @@ def test_WorkflowStatus(monkeypatch):
                              "changed_by": "Robocop", "last_update_time": "2019-10-31T16:03:13.951Z"}}
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, GET=_get_workflow)
+    patch_cbc_sdk_api(monkeypatch, api, GET=_get_workflow)
     wfstat = WorkflowStatus(api, "W00K13")
     assert wfstat.workflow_.changed_by == "Robocop"
     assert wfstat.workflow_.state == "DISMISSED"

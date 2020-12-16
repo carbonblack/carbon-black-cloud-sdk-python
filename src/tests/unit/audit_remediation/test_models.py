@@ -4,7 +4,7 @@ import pytest
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.audit_remediation import Run, Result, ResultQuery, FacetQuery
 from cbc_sdk.errors import ApiError
-from tests.unit.fixtures.stubresponse import StubResponse, patch_cbapi
+from tests.unit.fixtures.stubresponse import StubResponse, patch_cbc_sdk_api
 
 
 def test_run_refresh(monkeypatch):
@@ -18,7 +18,7 @@ def test_run_refresh(monkeypatch):
         return {"org_key": "Z100", "name": "FoobieBletch", "id": "abcdefg", "status": "COMPLETE"}
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, GET=_get_run)
+    patch_cbc_sdk_api(monkeypatch, api, GET=_get_run)
     run = Run(api, "abcdefg", {"org_key": "Z100", "name": "FoobieBletch", "id": "abcdefg", "status": "ACTIVE"})
     rc = run.refresh()
     assert _was_called
@@ -41,7 +41,7 @@ def test_run_stop(monkeypatch):
         return StubResponse({"org_key": "Z100", "name": "FoobieBletch", "id": "abcdefg", "status": "CANCELLED"})
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, PUT=_execute_stop)
+    patch_cbc_sdk_api(monkeypatch, api, PUT=_execute_stop)
     run = Run(api, "abcdefg", {"org_key": "Z100", "name": "FoobieBletch", "id": "abcdefg", "status": "ACTIVE"})
     rc = run.stop()
     assert _was_called
@@ -64,7 +64,7 @@ def test_run_stop_failed(monkeypatch):
         return StubResponse({"error_message": "The query is not presently running."}, 409)
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, PUT=_execute_stop)
+    patch_cbc_sdk_api(monkeypatch, api, PUT=_execute_stop)
     run = Run(api, "abcdefg", {"org_key": "Z100", "name": "FoobieBletch", "id": "abcdefg", "status": "CANCELLED"})
     rc = run.stop()
     assert _was_called
@@ -84,7 +84,7 @@ def test_run_delete(monkeypatch):
         return StubResponse(None)
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, DELETE=_execute_delete)
+    patch_cbc_sdk_api(monkeypatch, api, DELETE=_execute_delete)
     run = Run(api, "abcdefg", {"org_key": "Z100", "name": "FoobieBletch", "id": "abcdefg", "status": "ACTIVE"})
     rc = run.delete()
     assert _was_called
@@ -111,7 +111,7 @@ def test_run_delete_failed(monkeypatch):
         return StubResponse(None, 403)
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, DELETE=_execute_delete)
+    patch_cbc_sdk_api(monkeypatch, api, DELETE=_execute_delete)
     run = Run(api, "abcdefg", {"org_key": "Z100", "name": "FoobieBletch", "id": "abcdefg", "status": "ACTIVE"})
     rc = run.delete()
     assert _was_called
@@ -138,7 +138,7 @@ def test_result_device_summaries(monkeypatch):
                                           "metrics": [{"key": "aaa", "value": 0.0}, {"key": "bbb", "value": 0.0}]}]})
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, POST=_run_summaries)
+    patch_cbc_sdk_api(monkeypatch, api, POST=_run_summaries)
     result = Result(api, {"id": "abcdefg", "device": {"id": "abcdefg"}, "fields": {}, "metrics": {}})
     query = result.query_device_summaries().where("foo").set_device_names(["AxCx", "A7X"]).sort_by("device_name")
     assert isinstance(query, ResultQuery)
@@ -179,7 +179,7 @@ def test_result_query_result_facets(monkeypatch):
                                                                         "name": "charlie2"}]}]})
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, POST=_run_facets)
+    patch_cbc_sdk_api(monkeypatch, api, POST=_run_facets)
     result = Result(api, {"id": "abcdefg", "device": {"id": "abcdefg"}, "fields": {}, "metrics": {}})
     query = result.query_result_facets().where("xyzzy").facet_field("alpha").facet_field(["bravo", "charlie"]) \
         .set_device_names(["AxCx", "A7X"])
@@ -223,7 +223,7 @@ def test_result_query_device_summary_facets(monkeypatch):
                                                                         "name": "charlie2"}]}]})
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, POST=_run_facets)
+    patch_cbc_sdk_api(monkeypatch, api, POST=_run_facets)
     result = Result(api, {"id": "abcdefg", "device": {"id": "abcdefg"}, "fields": {}, "metrics": {}})
     query = result.query_device_summary_facets().where("xyzzy").facet_field("alpha") \
         .facet_field(["bravo", "charlie"]).set_device_names(["AxCx", "A7X"])

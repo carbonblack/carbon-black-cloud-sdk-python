@@ -81,7 +81,7 @@ def get_cb_cloud_object(args):
     """
     if args.verbose:
         logging.basicConfig()
-        logging.getLogger("cbapi").setLevel(logging.DEBUG)
+        logging.getLogger("cbc_sdk").setLevel(logging.DEBUG)
         logging.getLogger("__main__").setLevel(logging.DEBUG)
 
     if args.cburl and args.apitoken:

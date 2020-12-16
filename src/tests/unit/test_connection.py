@@ -58,8 +58,8 @@ def test_session_adapter_creation_failure(mox, adapter_raises, msg_prefix):
     """Test the failure cases that come from the failure to create the session adapter."""
     creds = Credentials({'url': 'https://example.com', 'token': 'ABCDEFGH'})
     import cbc_sdk.connection
-    mox.StubOutWithMock(cbc_sdk.connection, 'CbAPISessionAdapter', use_mock_anything=True)
-    cbc_sdk.connection.CbAPISessionAdapter(force_tls_1_2=False, max_retries=IgnoreArg(), verify_hostname=True)\
+    mox.StubOutWithMock(cbc_sdk.connection, 'CBCSDKSessionAdapter', use_mock_anything=True)
+    cbc_sdk.connection.CBCSDKSessionAdapter(force_tls_1_2=False, max_retries=IgnoreArg(), verify_hostname=True)\
         .AndRaise(adapter_raises)
     mox.ReplayAll()
     with pytest.raises(ApiError) as excinfo:
