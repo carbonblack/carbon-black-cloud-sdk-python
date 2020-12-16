@@ -4,7 +4,7 @@ import pytest
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.audit_remediation import Run, RunQuery, RunHistoryQuery
 from cbc_sdk.errors import ApiError, CredentialError
-from tests.unit.fixtures.stubresponse import StubResponse, patch_cbapi
+from tests.unit.fixtures.stubresponse import StubResponse, patch_cbc_sdk_api
 
 
 def test_no_org_key():
@@ -32,7 +32,7 @@ def test_simple_get(monkeypatch):
         return {"org_key": "Z100", "name": "FoobieBletch", "id": "abcdefg"}
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, GET=_get_run)
+    patch_cbc_sdk_api(monkeypatch, api, GET=_get_run)
     run = api.select(Run, "abcdefg")
     assert _was_called
     assert run.org_key == "Z100"
@@ -52,7 +52,7 @@ def test_audit_remediation(monkeypatch):
         return StubResponse({"org_key": "Z100", "name": "FoobieBletch", "id": "abcdefg"})
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, POST=_run_query)
+    patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
     query = api.audit_remediation("select * from whatever;")
     assert isinstance(query, RunQuery)
     run = query.submit()
@@ -76,7 +76,7 @@ def test_audit_remediation_with_everything(monkeypatch):
         return StubResponse({"org_key": "Z100", "name": "FoobieBletch", "id": "abcdefg"})
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, POST=_run_query)
+    patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
     query = api.audit_remediation("select * from whatever;").device_ids([1, 2, 3]) \
         .device_types(["Alpha", "Bravo", "Charlie"]).policy_id(16).name("AmyWasHere").notify_on_finish()
     assert isinstance(query, RunQuery)
@@ -126,7 +126,7 @@ def test_audit_remediation_history(monkeypatch):
                                          {"org_key": "Z100", "name": "Read_Me", "id": "efghijk"}]})
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, POST=_run_query)
+    patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
     query = api.audit_remediation_history("xyzzy")
     assert isinstance(query, RunHistoryQuery)
     count = 0
@@ -160,7 +160,7 @@ def test_audit_remediation_history_with_everything(monkeypatch):
                                          {"org_key": "Z100", "name": "Read_Me", "id": "efghijk"}]})
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, POST=_run_query)
+    patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
     query = api.audit_remediation_history("xyzzy").sort_by("id")
     assert isinstance(query, RunHistoryQuery)
     count = 0

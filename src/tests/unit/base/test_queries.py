@@ -5,7 +5,7 @@ from cbc_sdk.enterprise_edr import Feed, FeedQuery
 from cbc_sdk.platform import Process
 from cbc_sdk.endpoint_standard import Query, Device
 from cbc_sdk.rest_api import CBCloudAPI
-from tests.unit.fixtures.stubresponse import patch_cbapi
+from tests.unit.fixtures.stubresponse import patch_cbc_sdk_api
 
 
 def test_base_query():
@@ -42,7 +42,7 @@ def test_simple_query(monkeypatch):
                 }]}
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="WNEX", ssl_verify=True)
-    patch_cbapi(monkeypatch, api, GET=_get_results)
+    patch_cbc_sdk_api(monkeypatch, api, GET=_get_results)
     feed = api.select(Feed).where(include_public=True)
 
     assert isinstance(feed, SimpleQuery)
@@ -100,7 +100,7 @@ def test_paginated_query(monkeypatch):
     assert isinstance(deviceQuery, PaginatedQuery)
     assert isinstance(deviceQuery, Query)
 
-    patch_cbapi(monkeypatch, api, GET=_get_devices)
+    patch_cbc_sdk_api(monkeypatch, api, GET=_get_devices)
 
     deviceQuery.__getitem__(1)
     assert _devices_was_called

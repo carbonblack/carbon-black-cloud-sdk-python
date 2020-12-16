@@ -1315,7 +1315,7 @@ if __name__ == "__main__":
     root = logging.getLogger()
     root.addHandler(logging.StreamHandler())
 
-    logging.getLogger("cbapi").setLevel(logging.DEBUG)
+    logging.getLogger("cbc_sdk").setLevel(logging.DEBUG)
 
     c = CBCloudAPI()
     j = GetFileJob(r"c:\test.txt")
