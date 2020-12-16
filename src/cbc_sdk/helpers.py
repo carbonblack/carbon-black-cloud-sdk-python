@@ -58,6 +58,7 @@ def build_cli_parser(description="Cb Example Script"):
                         default=False)
     parser.add_argument("--profile", help="profile to connect", default="default")
     parser.add_argument("--verbose", help="enable debug logging", default=False, action='store_true')
+    parser.add_argument("--window", help="Define search window", default='3d')
 
     return parser
 
