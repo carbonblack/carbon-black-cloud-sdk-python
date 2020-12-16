@@ -204,7 +204,7 @@ class Connection(object):
 
         try:
             tls_adapter = CBCSDKSessionAdapter(max_retries=max_retries, force_tls_1_2=credentials.ssl_force_tls_1_2,
-                                              verify_hostname=credentials.ssl_verify_hostname, **pool_kwargs)
+                                               verify_hostname=credentials.ssl_verify_hostname, **pool_kwargs)
         except ssl.SSLError as e:
             raise ApiError("This version of Python and OpenSSL do not support TLSv1.2: {}".format(e),
                            original_exception=e)
