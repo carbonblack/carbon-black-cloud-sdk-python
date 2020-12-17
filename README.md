@@ -22,7 +22,7 @@ Use of the Carbon Black Cloud Python SDK is governed by the license found in [LI
 
 1. View all API and integration offerings on the [Developer Network](https://developer.carbonblack.com) along with reference documentation, video tutorials, and how-to guides.
 2. Use the [Developer Community Forum](https://community.carbonblack.com/) to discuss issues and get answers from other API developers in the Carbon Black Community.
-3. Create a github issue for bugs and change requests. Formal [Carbon Black Support](http://carbonblack.com/resources/support/) coming with v1.0.
+3. Create a github issue for bugs and change requests or create a ticket with [Carbon Black Support](http://carbonblack.com/resources/support/).
 
 ## Documentation
 
@@ -43,6 +43,7 @@ At least one Carbon Black Cloud product is required to use this SDK:
 * [Audit and Remediation](https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/)
 * [Enterprise EDR](https://developer.carbonblack.com/reference/carbon-black-cloud/cb-threathunter/)
 
+_Note: Support for the latest products such as Workloads and Containers are planned for early 2021_
 
 ### Python Packages
 
