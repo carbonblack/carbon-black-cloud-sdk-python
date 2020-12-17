@@ -52,7 +52,7 @@ cbc\_sdk.errors module
 cbc\_sdk.example\_helpers module
 --------------------------------
 
-.. automodule:: cbc_sdk.example_helpers
+.. automodule:: cbc_sdk.helpers
    :members:
    :undoc-members:
    :show-inheritance:

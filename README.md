@@ -1,8 +1,8 @@
 # VMware Carbon Black Cloud Python SDK
 
-**Latest Version:** 1.0.0
+**Latest Version:** 1.0.1
 <br>
-**Release Date:** 15 December 2020
+**Release Date:** 17 December 2020
 
 [![Coverage Status](https://coveralls.io/repos/github/carbonblack/carbon-black-cloud-sdk-python/badge.svg?t=Id6Baf)](https://coveralls.io/github/carbonblack/carbon-black-cloud-sdk-python)
 [![Codeship Status for carbonblack/carbon-black-cloud-sdk-python](https://app.codeship.com/projects/9e55a370-a772-0138-aae4-129773225755/status?branch=develop)](https://app.codeship.com/projects/402767)
@@ -16,13 +16,13 @@ View the latest release notes [here](https://github.com/carbonblack/carbon-black
 
 ## License
 
-Use of the Carbon Black Cloud Python SDK is governed by the license found in [LICENSE](LICENSE).
+Use of the Carbon Black Cloud Python SDK is governed by the license found in [LICENSE](https://github.com/carbonblack/carbon-black-cloud-sdk-python/blob/develop/LICENSE).
 
 ## Support
 
 1. View all API and integration offerings on the [Developer Network](https://developer.carbonblack.com) along with reference documentation, video tutorials, and how-to guides.
 2. Use the [Developer Community Forum](https://community.carbonblack.com/) to discuss issues and get answers from other API developers in the Carbon Black Community.
-3. Create a github issue for bugs and change requests. Formal [Carbon Black Support](http://carbonblack.com/resources/support/) coming with v1.0.
+3. Create a github issue for bugs and change requests or create a ticket with [Carbon Black Support](http://carbonblack.com/resources/support/).
 
 ## Documentation
 
@@ -43,6 +43,7 @@ At least one Carbon Black Cloud product is required to use this SDK:
 * [Audit and Remediation](https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/)
 * [Enterprise EDR](https://developer.carbonblack.com/reference/carbon-black-cloud/cb-threathunter/)
 
+_Note: Support for the latest products such as Workloads and Containers are planned for early 2021_
 
 ### Python Packages
 
@@ -70,11 +71,11 @@ If developing the SDK, you also need:
 
 ## Getting Started
 
-Visit the [Getting Started Guide](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/getting-started.html) for an example of authenticating and making an API call using the SDK.
+Visit the [Getting Started Guide](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/getting-started) for an example of authenticating and making an API call using the SDK.
 
 ### Setting the User-Agent
 
-The SDK supports custom User-Agent's when making API calls. This allows you to identify yourself when using the SDK. See [Setting the User-Agent](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/getting-started.html#setting-the-user-agent) section of the documentation for more information.
+The SDK supports custom User-Agent's when making API calls. This allows you to identify yourself when using the SDK. See [Setting the User-Agent](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/getting-started#setting-the-user-agent) section of the documentation for more information.
 
 ## Developing Improvements for the Carbon Black Cloud Python SDK
 
@@ -141,4 +142,4 @@ git checkout {branch-name}
 git rebase develop
 ```
 
-**Note:** if your develop branch is out of sync with the CarbonBlack repo then you will need to sync your fork. For information on syncing your fork, see [here](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/syncing-a-fork).
+**Note:** if your develop branch is out of sync with the Carbon Black repo then you will need to sync your fork. For information on syncing your fork, see [here](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/syncing-a-fork).

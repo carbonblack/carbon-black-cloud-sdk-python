@@ -275,7 +275,7 @@ Modules not yet Supported for Criteria
 :mod:`RunHistory <cbc_sdk.audit_remediation.base.RunHistory>`
 
 
-Asynchronous queries
+Asynchronous Queries
 --------------------
 
 A number of queries allow for asynchronous mode of operation. Those utilize python futures and the request itself is performed in a separate worker thread.

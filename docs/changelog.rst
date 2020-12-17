@@ -1,6 +1,13 @@
 Changelog
 ================================
 
+CBC SDK 1.0.1 - Released December 17, 2020
+------------------------------------
+
+Bug Fixes
+
+* Fix readme links
+* Few ReadTheDocs fixes
 
 CBC SDK 1.0.0 - Released December 16, 2020
 ------------------------------------
