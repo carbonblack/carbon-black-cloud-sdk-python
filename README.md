@@ -16,7 +16,7 @@ View the latest release notes [here](https://github.com/carbonblack/carbon-black
 
 ## License
 
-Use of the Carbon Black Cloud Python SDK is governed by the license found in [LICENSE](LICENSE).
+Use of the Carbon Black Cloud Python SDK is governed by the license found in [LICENSE](https://github.com/carbonblack/carbon-black-cloud-sdk-python/blob/develop/LICENSE).
 
 ## Support
 
@@ -142,4 +142,4 @@ git checkout {branch-name}
 git rebase develop
 ```
 
-**Note:** if your develop branch is out of sync with the CarbonBlack repo then you will need to sync your fork. For information on syncing your fork, see [here](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/syncing-a-fork).
+**Note:** if your develop branch is out of sync with the Carbon Black repo then you will need to sync your fork. For information on syncing your fork, see [here](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/syncing-a-fork).
