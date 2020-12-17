@@ -2,7 +2,7 @@ Porting Applications from CBAPI to Carbon Black Cloud SDK
 =========================================================
 This guide will help you migrate from CBAPI to the Carbon Black Cloud Python SDK.
 
-Note: CBAPI applications using Carbon Black EDR (Protection) or Carbon Black App Control (Response) cannot be ported, as support for on-premise products is not present in
+Note: CBAPI applications using Carbon Black EDR (Response) or Carbon Black App Control (Protection) cannot be ported, as support for on-premise products is not present in
 the CBC SDK. Continue to use CBAPI for these applications.
 
 Overview
