@@ -70,11 +70,11 @@ If developing the SDK, you also need:
 
 ## Getting Started
 
-Visit the [Getting Started Guide](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/getting-started.html) for an example of authenticating and making an API call using the SDK.
+Visit the [Getting Started Guide](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/getting-started) for an example of authenticating and making an API call using the SDK.
 
 ### Setting the User-Agent
 
-The SDK supports custom User-Agent's when making API calls. This allows you to identify yourself when using the SDK. See [Setting the User-Agent](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/getting-started.html#setting-the-user-agent) section of the documentation for more information.
+The SDK supports custom User-Agent's when making API calls. This allows you to identify yourself when using the SDK. See [Setting the User-Agent](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/getting-started#setting-the-user-agent) section of the documentation for more information.
 
 ## Developing Improvements for the Carbon Black Cloud Python SDK
 
