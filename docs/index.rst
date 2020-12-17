@@ -39,8 +39,8 @@ which is explained in the `Developer Network Authentication Guide
 The SDK manages your API credentials for you. There are multiple ways to supply the SDK
 with your API credentials, which is explained in :ref:`authentication`.
 
-Get Started
------------
+Getting Started
+---------------
 
 Get started with Carbon Black Cloud Python SDK here. For detailed information on the objects and methods exposed by Carbon Black Cloud Python SDK, see the full SDK Documentation below.
 
