@@ -4,14 +4,6 @@ Enterprise EDR
 Submodules
 ----------
 
-cbc\_sdk.enterprise\_edr.base module
-------------------------------------
-
-.. automodule:: cbc_sdk.enterprise_edr.base
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 cbc\_sdk.enterprise\_edr.threat\_intelligence module
 ----------------------------------------------------
 
