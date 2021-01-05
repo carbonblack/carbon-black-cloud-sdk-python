@@ -14,8 +14,8 @@
 """Model and Query Classes for Audit and Remediation"""
 
 from __future__ import absolute_import
-from cbc_sdk.base import UnrefreshableModel, NewBaseModel, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin
-from cbc_sdk.platform import PlatformQueryBase
+from cbc_sdk.base import (UnrefreshableModel, NewBaseModel, QueryBuilder,
+                          QueryBuilderSupportMixin, IterableQueryMixin, BaseQuery)
 from cbc_sdk.errors import ApiError, ServerError
 import logging
 import time
@@ -323,12 +323,16 @@ class DeviceSummaryFacet(ResultFacet):
 """Audit and Remediation Queries"""
 
 
-class RunQuery(PlatformQueryBase):
+class RunQuery(BaseQuery):
     """Represents a query that either creates or retrieves the status of a LiveQuery run."""
 
     def __init__(self, doc_class, cb):
         """Initialize a RunQuery object."""
-        super().__init__(doc_class, cb)
+        self._doc_class = doc_class
+        self._cb = cb
+        self._count_valid = False
+        super(RunQuery, self).__init__()
+
         self._query_token = None
         self._query_body = {"device_filter": {}}
         self._device_filter = self._query_body["device_filter"]
@@ -507,11 +511,14 @@ class RunQuery(PlatformQueryBase):
         return self._doc_class(self._cb, initial_data=resp.json())
 
 
-class RunHistoryQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
+class RunHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
     """Represents a query that retrieves historic LiveQuery runs."""
     def __init__(self, doc_class, cb):
         """Initialize a RunHistoryQuery object."""
-        super().__init__(doc_class, cb)
+        self._doc_class = doc_class
+        self._cb = cb
+        self._count_valid = False
+        super(RunHistoryQuery, self).__init__()
         self._query_builder = QueryBuilder()
         self._sort = {}
 
@@ -591,11 +598,15 @@ class RunHistoryQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQuery
                 break
 
 
-class ResultQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
+class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
     """Represents a query that retrieves results from a LiveQuery run."""
     def __init__(self, doc_class, cb):
         """Initialize a ResultQuery object."""
-        super().__init__(doc_class, cb)
+        self._doc_class = doc_class
+        self._cb = cb
+        self._count_valid = False
+        super(ResultQuery, self).__init__()
+
         self._query_builder = QueryBuilder()
         self._criteria = {}
         self._sort = {}
@@ -817,11 +828,15 @@ class ResultQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixi
                 break
 
 
-class FacetQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
+class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
     """Represents a query that receives facet information from a LiveQuery run."""
     def __init__(self, doc_class, cb):
         """Initialize a FacetQuery object."""
-        super().__init__(doc_class, cb)
+        self._doc_class = doc_class
+        self._cb = cb
+        self._count_valid = False
+        super(FacetQuery, self).__init__()
+
         self._query_builder = QueryBuilder()
         self._facet_fields = []
         self._criteria = {}

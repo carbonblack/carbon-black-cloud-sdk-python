@@ -14,8 +14,9 @@
 """Model and Query Classes for Platform Devices"""
 
 from cbc_sdk.errors import ApiError
-from cbc_sdk.platform import PlatformModel, PlatformQueryBase
-from cbc_sdk.base import QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin
+from cbc_sdk.platform import PlatformModel
+from cbc_sdk.base import (BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
+                          IterableQueryMixin, AsyncQueryMixin)
 
 import time
 
@@ -173,7 +174,7 @@ class Device(PlatformModel):
 """Device Queries"""
 
 
-class DeviceSearchQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin):
+class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin):
     """Represents a query that is used to locate Device objects."""
     VALID_OS = ["WINDOWS", "ANDROID", "MAC", "IOS", "LINUX", "OTHER"]
     VALID_STATUSES = ["PENDING", "REGISTERED", "UNINSTALLED", "DEREGISTERED",
@@ -191,7 +192,11 @@ class DeviceSearchQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQue
             doc_class (class): The model class that will be returned by this query.
             cb (BaseAPI): Reference to API object used to communicate with the server.
         """
-        super().__init__(doc_class, cb)
+        self._doc_class = doc_class
+        self._cb = cb
+        self._count_valid = False
+        super(DeviceSearchQuery, self).__init__()
+
         self._query_builder = QueryBuilder()
         self._criteria = {}
         self._time_filter = {}

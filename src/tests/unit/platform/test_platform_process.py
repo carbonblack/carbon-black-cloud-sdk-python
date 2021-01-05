@@ -3,8 +3,7 @@
 import pytest
 import logging
 from cbc_sdk.platform import Process, ProcessFacet, Event, AsyncProcessQuery, SummaryQuery
-from cbc_sdk.enterprise_edr import Query
-from cbc_sdk.base import FacetQuery
+from cbc_sdk.base import FacetQuery, Query
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock

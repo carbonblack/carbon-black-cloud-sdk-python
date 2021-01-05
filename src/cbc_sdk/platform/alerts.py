@@ -14,8 +14,9 @@
 """Model and Query Classes for Platform Alerts and Workflows"""
 
 from cbc_sdk.errors import ApiError
-from cbc_sdk.platform import PlatformModel, PlatformQueryBase
-from cbc_sdk.base import UnrefreshableModel, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin
+from cbc_sdk.platform import PlatformModel
+from cbc_sdk.base import (BaseQuery, UnrefreshableModel, QueryBuilder,
+                          QueryBuilderSupportMixin, IterableQueryMixin)
 from cbc_sdk.platform.devices import DeviceSearchQuery
 
 import time
@@ -54,7 +55,7 @@ class BaseAlert(PlatformModel):
             **kwargs (dict): Not used, retained for compatibility.
 
         Returns:
-            PlatformQueryBase: The query object for this alert type.
+            BaseAlertSearchQuery: The query object for this alert type.
         """
         return BaseAlertSearchQuery(cls, cb)
 
@@ -176,7 +177,7 @@ class WatchlistAlert(BaseAlert):
             **kwargs (dict): Not used, retained for compatibility.
 
         Returns:
-            PlatformQueryBase: The query object for this alert type.
+            WatchlistAlertSearchQuery: The query object for this alert type.
         """
         return WatchlistAlertSearchQuery(cls, cb)
 
@@ -195,28 +196,9 @@ class CBAnalyticsAlert(BaseAlert):
             **kwargs (dict): Not used, retained for compatibility.
 
         Returns:
-            PlatformQueryBase: The query object for this alert type.
+            CBAnalyticsAlertSearchQuery: The query object for this alert type.
         """
         return CBAnalyticsAlertSearchQuery(cls, cb)
-
-
-class VMwareAlert(BaseAlert):
-    """Represents VMware alerts."""
-    urlobject = "/appservices/v6/orgs/{0}/alerts/vmware"
-
-    @classmethod
-    def _query_implementation(cls, cb, **kwargs):
-        """
-        Returns the appropriate query object for this alert type.
-
-        Args:
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-            **kwargs (dict): Not used, retained for compatibility.
-
-        Returns:
-            PlatformQueryBase: The query object for this alert type.
-        """
-        return VMwareAlertSearchQuery(cls, cb)
 
 
 class Workflow(UnrefreshableModel):
@@ -326,12 +308,12 @@ class WorkflowStatus(PlatformModel):
 """Alert Queries"""
 
 
-class BaseAlertSearchQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
+class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
     """Represents a query that is used to locate BaseAlert objects."""
     VALID_CATEGORIES = ["THREAT", "MONITORED", "INFO", "MINOR", "SERIOUS", "CRITICAL"]
     VALID_REPUTATIONS = ["KNOWN_MALWARE", "SUSPECT_MALWARE", "PUP", "NOT_LISTED", "ADAPTIVE_WHITE_LIST",
                          "COMMON_WHITE_LIST", "TRUSTED_WHITE_LIST", "COMPANY_BLACK_LIST"]
-    VALID_ALERT_TYPES = ["CB_ANALYTICS", "VMWARE", "WATCHLIST"]
+    VALID_ALERT_TYPES = ["CB_ANALYTICS", "WATCHLIST"]
     VALID_WORKFLOW_VALS = ["OPEN", "DISMISSED"]
     VALID_FACET_FIELDS = ["ALERT_TYPE", "CATEGORY", "REPUTATION", "WORKFLOW", "TAG", "POLICY_ID",
                           "POLICY_NAME", "DEVICE_ID", "DEVICE_NAME", "APPLICATION_HASH",
@@ -346,7 +328,11 @@ class BaseAlertSearchQuery(PlatformQueryBase, QueryBuilderSupportMixin, Iterable
             doc_class (class): The model class that will be returned by this query.
             cb (BaseAPI): Reference to API object used to communicate with the server.
         """
-        super().__init__(doc_class, cb)
+        self._doc_class = doc_class
+        self._cb = cb
+        self._count_valid = False
+        super(BaseAlertSearchQuery, self).__init__()
+
         self._query_builder = QueryBuilder()
         self._criteria = {}
         self._time_filter = {}
@@ -673,7 +659,7 @@ class BaseAlertSearchQuery(PlatformQueryBase, QueryBuilderSupportMixin, Iterable
         Restricts the alerts that this query is performed on to the specified alert type values.
 
         Args:
-            alerttypes (list): List of string alert type values.  Valid values are "CB_ANALYTICS", "VMWARE",
+            alerttypes (list): List of string alert type values.  Valid values are "CB_ANALYTICS",
                                and "WATCHLIST".
 
         Returns:
@@ -1112,33 +1098,4 @@ class CBAnalyticsAlertSearchQuery(BaseAlertSearchQuery):
                    for vector in vectors):
             raise ApiError("One or more invalid threat cause vectors")
         self._update_criteria("threat_cause_vector", vectors)
-        return self
-
-
-class VMwareAlertSearchQuery(BaseAlertSearchQuery):
-    """Represents a query that is used to locate VMwareAlert objects."""
-    def __init__(self, doc_class, cb):
-        """
-        Initialize the VMwareAlertSearchQuery.
-
-        Args:
-            doc_class (class): The model class that will be returned by this query.
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-        """
-        super().__init__(doc_class, cb)
-        self._bulkupdate_url = "/appservices/v6/orgs/{0}/alerts/vmware/workflow/_criteria"
-
-    def set_group_ids(self, groupids):
-        """
-        Restricts the alerts that this query is performed on to the specified AppDefense-assigned alarm group IDs.
-
-        Args:
-            groupids (list): List of (integer) AppDefense-assigned alarm group IDs.
-
-        Returns:
-            VMwareAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(groupid, int) for groupid in groupids):
-            raise ApiError("One or more invalid alarm group IDs")
-        self._update_criteria("group_id", groupids)
         return self
