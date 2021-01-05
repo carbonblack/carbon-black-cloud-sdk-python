@@ -816,61 +816,72 @@ class BaseQuery(object):
     def _clone(self):
         return self.__class__(self._query)
 
+    def _perform_query(self):
+        # This has the effect of generating an empty iterator.
+        yield from ()
+
+
+class IterableQueryMixin:
+    """A mix-in to provide iterability to a query."""
+
     def all(self):
         """
-        Returns the objects that this query has located, all at once.
+        Returns all the items of a query as a list.
 
         Returns:
-            list: The list of query objects.
+            list: List of query items
         """
         return self._perform_query()
 
     def first(self):
         """
-        Returns the first result of this query.
+        Returns the first item that would be returned as the result of a query.
 
         Returns:
-            object: The first result of this query, or None if it has no results.
+            obj: First query item
         """
         res = self[:1]
-        if not len(res):
+        if res is None or not len(res):
             return None
         return res[0]
 
     def one(self):
         """
-        Returns the single result of this query.
+        Returns the only item that would be returned by a query.
 
         Returns:
-            object: The single result of this query.
+            obj: Sole query return item
 
         Raises:
-            MoreThanOneResultError: If the query has any number of results other than 1.
+            MoreThanOneResultError: If the query returns zero items, or more than one item
         """
         res = self[:2]
-
-        if len(res) == 0 or len(res) > 1:
-            raise MoreThanOneResultError(message="{0:d} results found for query {1:s}"
-                                         .format(len(self), str(self._query)))
-
+        if res is None:
+            return None
+        if len(res) == 0:
+            raise MoreThanOneResultError(
+                message="0 results for query {0:s}".format(self._query)
+            )
+        if len(res) > 1:
+            raise MoreThanOneResultError(
+                message="{0:d} results found for query {1:s}".format(
+                    len(self), self._query
+                )
+            )
         return res[0]
-
-    def _perform_query(self):
-        # This has the effect of generating an empty iterator.
-        yield from ()
 
     def __len__(self):
         """
-        Returns the number of items returned by this query.
+        Return the number of objects this query returns.
 
         Returns:
-            int: The number of items returned by this query.
+            int: The number of objects this query returns.
         """
-        return 0
+        return self._count()
 
     def __getitem__(self, item):
         """
-        Return a specific item or items from the query.
+        Implements list index fetching for a query
 
         Args:
             item (object): Indicates the item(s) to retrieve, either as an int or a slice.
@@ -878,7 +889,13 @@ class BaseQuery(object):
         Returns:
             object: Either an item or a list of items.
         """
-        return None
+        results = list(self)
+        if isinstance(item, slice):
+            return [results[ii] for ii in range(*item.indices(len(results)))]
+        elif isinstance(item, int):
+            return results[item]
+        else:
+            raise TypeError("Invalid argument type")
 
     def __iter__(self):
         """
@@ -890,7 +907,7 @@ class BaseQuery(object):
         return self._perform_query()
 
 
-class SimpleQuery(BaseQuery):
+class SimpleQuery(BaseQuery, IterableQueryMixin):
     """A simple query object."""
     _multiple_where_clauses_accepted = False
 
@@ -1042,7 +1059,7 @@ class SimpleQuery(BaseQuery):
         return nq
 
 
-class PaginatedQuery(BaseQuery):
+class PaginatedQuery(BaseQuery, IterableQueryMixin):
     """A query that returns objects in a paginated fashion."""
     def __init__(self, cls, cb, query=None):
         """
@@ -1408,86 +1425,6 @@ class QueryBuilderSupportMixin:
 
         self._query_builder.not_(q, **kwargs)
         return self
-
-
-class IterableQueryMixin:
-    """A mix-in to provide iterability to a query."""
-
-    def all(self):
-        """
-        Returns all the items of a query as a list.
-
-        Returns:
-            list: List of query items
-        """
-        return self._perform_query()
-
-    def first(self):
-        """
-        Returns the first item that would be returned as the result of a query.
-
-        Returns:
-            obj: First query item
-        """
-        allres = list(self)
-        res = allres[:1]
-        if not len(res):
-            return None
-        return res[0]
-
-    def one(self):
-        """
-        Returns the only item that would be returned by a query.
-
-        Returns:
-            obj: Sole query return item
-
-        Raises:
-            MoreThanOneResultError: If the query returns zero items, or more than one item
-        """
-        allres = list(self)
-        res = allres[:2]
-        if len(res) == 0:
-            raise MoreThanOneResultError(
-                message="0 results for query {0:s}".format(self._query)
-            )
-        if len(res) > 1:
-            raise MoreThanOneResultError(
-                message="{0:d} results found for query {1:s}".format(
-                    len(self), self._query
-                )
-            )
-        return res[0]
-
-    def __len__(self):
-        """
-        Return the number of objects this query returns.
-
-        Returns:
-            int: The number of objects this query returns.
-        """
-        return self._count()
-
-    def __getitem__(self, item):
-        """
-        Not implemented.
-
-        Args:
-            item (int): Unused.
-
-        Returns:
-            None
-        """
-        return None
-
-    def __iter__(self):
-        """
-        Returns the iterator for this query.
-
-        Returns:
-            Iterator: The iterator for this query.
-        """
-        return self._perform_query()
 
 
 class AsyncQueryMixin:
@@ -2191,20 +2128,17 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
             query_parameters = {}
 
         result = self._cb.get_object(result_url, query_parameters=query_parameters)
-        yield self._doc_class(self._cb, model_unique_id=self._query_token, initial_data=result)
+        return self._doc_class(self._cb, model_unique_id=self._query_token, initial_data=result)
 
     def _perform_query(self):
-        for item in self.results:
-            yield item
+        return self.results
 
     @property
     def results(self):
         """Save query results to self._results with self._search() method."""
         if not self._full_init:
-            for item in self._search():
-                self._results = item
+            self._results = self._search()
             self._full_init = True
-
         return self._results
 
     def _init_async_query(self):
@@ -2227,4 +2161,4 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         """
         if context != self._query_token:
             raise ApiError("Async query not properly started")
-        return list(self._search())
+        return self._search()

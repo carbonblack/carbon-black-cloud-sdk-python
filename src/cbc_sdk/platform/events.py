@@ -317,7 +317,5 @@ class EventFacetQuery(FacetQuery):
                 time.sleep(1 + retry_counter / 10)
                 continue  # loop until we get all segments back
 
-            yield self._doc_class(self._cb, model_unique_id=self._query_token, initial_data=result)
-
             # processed_segments == total_segments, end the search
-            still_querying = False
+            return self._doc_class(self._cb, model_unique_id=self._query_token, initial_data=result)

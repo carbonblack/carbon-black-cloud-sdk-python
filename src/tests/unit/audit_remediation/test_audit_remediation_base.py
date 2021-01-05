@@ -139,7 +139,6 @@ def test_device_summary_metrics(cbcsdk_mock):
     api = cbcsdk_mock.api
     cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/runs/run_id/results/_search", GET_RUN_RESULTS_RESP_2)
     results = api.select(Result).run_id("run_id")
-    breakpoint()
     res0 = results.first()
     summaries = res0.query_device_summaries()
     cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/runs/run_id/results/device_summaries/_search",
