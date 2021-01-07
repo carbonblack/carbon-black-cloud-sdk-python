@@ -23,6 +23,8 @@ import time
 
 log = logging.getLogger(__name__)
 
+MAX_RESULTS_LIMIT = 10000
+
 
 """Audit and Remediation Models"""
 
@@ -810,6 +812,8 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
             result = resp.json()
 
             self._total_results = result["num_found"]
+            if self._total_results > MAX_RESULTS_LIMIT:
+                self._total_results = MAX_RESULTS_LIMIT
             self._count_valid = True
 
             results = result.get("results", [])

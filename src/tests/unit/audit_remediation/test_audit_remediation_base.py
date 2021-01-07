@@ -12,7 +12,8 @@ from tests.unit.fixtures.audit_remediation.mock_runs import (GET_RUN_RESP,
                                                              GET_RUN_RESULTS_RESP_2,
                                                              GET_DEVICE_SUMMARY_RESP_1,
                                                              GET_RESULTS_FACETS_RESP,
-                                                             POST_RUN_HISTORY_RESP)
+                                                             POST_RUN_HISTORY_RESP,
+                                                             GET_RUN_RESULTS_RESP_OVER_10k)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -241,3 +242,15 @@ def test_result_query_no_run_id_exception(cbcsdk_mock):
     with pytest.raises(ApiError):
         results = [res for res in result_query._perform_query()]
     assert results is None
+
+
+def test_result_query_over_10k(cbcsdk_mock):
+    """Testing Result._count() and ._perform_query() raising ApiError when a run_id is not supplied."""
+    api = cbcsdk_mock.api
+    cbcsdk_mock.mock_request("POST",
+                             "/livequery/v1/orgs/test/runs/run_id/results/_search",
+                             GET_RUN_RESULTS_RESP_OVER_10k)
+    result_query = api.select(Result).run_id("run_id")
+
+    list(result_query._perform_query())
+    assert result_query._total_results == 10000

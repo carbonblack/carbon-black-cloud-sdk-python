@@ -833,3 +833,24 @@ POST_RUN_HISTORY_RESP = {
         }
     ]
 }
+
+GET_RUN_RESULTS_RESP_OVER_10k = {
+    "org_key": "A1B2C3D4E5",
+    "num_found": 10001,
+    "results": [
+        {
+            "id": "run_id",
+            "device": {
+                "id": 12345,
+                "name": "deviceName0",
+                "policy_id": 98765,
+                "policy_name": "device0policy",
+                "os": "WINDOWS"
+            },
+            "status": "not_matched",
+            "time_received": "2020-09-22T09:53:48.313Z",
+            "device_message": "",
+            "fields": {}
+        }
+    ]
+}
