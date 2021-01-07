@@ -60,7 +60,7 @@ def test_enriched_event_facet_select_async(cbcsdk_mock):
     api = cbcsdk_mock.api
     future = api.select(EnrichedEventFacet).where(process_name="chrome.exe").add_facet_field(
         "process_name").execute_async()
-    event = future.result()[0]
+    event = future.result()
     assert event.terms is not None
     assert event.ranges is not None
     assert event.ranges == []
@@ -245,10 +245,10 @@ def test_enriched_events_search(cbcsdk_mock):
     api = cbcsdk_mock.api
     events = api.select(EnrichedEventFacet).where(process_pid=1000).add_facet_field("process_name")
     future = events.execute_async()
-    results = future.result()
-    assert results[0].terms is not None
-    assert len(results[0].ranges) == 0
-    assert results[0].terms[0]["field"] == "process_name"
+    result = future.result()
+    assert result.terms is not None
+    assert len(result.ranges) == 0
+    assert result.terms[0]["field"] == "process_name"
 
 
 def test_enriched_events_search_async(cbcsdk_mock):
@@ -262,7 +262,7 @@ def test_enriched_events_search_async(cbcsdk_mock):
     api = cbcsdk_mock.api
     events = api.select(EnrichedEventFacet).where(process_pid=1000).add_facet_field("process_name")
     future = events.execute_async()
-    results = future.result()
-    assert results[0].terms is not None
-    assert len(results[0].ranges) == 0
-    assert results[0].terms[0]["field"] == "process_name"
+    result = future.result()
+    assert result.terms is not None
+    assert len(result.ranges) == 0
+    assert result.terms[0]["field"] == "process_name"

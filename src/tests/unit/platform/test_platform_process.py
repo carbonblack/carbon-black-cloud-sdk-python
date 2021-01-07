@@ -3,8 +3,7 @@
 import pytest
 import logging
 from cbc_sdk.platform import Process, ProcessFacet, Event, AsyncProcessQuery, SummaryQuery
-from cbc_sdk.enterprise_edr import Query
-from cbc_sdk.base import FacetQuery
+from cbc_sdk.base import FacetQuery, Query
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -830,7 +829,7 @@ def test_process_facet_select(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", "/api/investigate/v2/orgs/test/processes/facet_jobs/the-job-id/results",
                              GET_FACET_SEARCH_RESULTS_RESP)
     future = facet_query.execute_async()
-    res = future.result()[0]
+    res = future.result()
     assert res.terms_.fields == ['backend_timestamp', 'device_timestamp']
     assert res.terms_.facets == EXPECTED_PROCESS_FACETS
     assert isinstance(res.terms_, ProcessFacet.Terms)
@@ -840,7 +839,7 @@ def test_process_facet_select(cbcsdk_mock):
     # if already, submitted, the query shouldn't be submitted again
     with pytest.raises(ApiError):
         future = facet_query.execute_async()
-        res = future.result()[0]
+        res = future.result()
 
 
 def test_process_facets(cbcsdk_mock):
@@ -871,8 +870,8 @@ def test_process_facets(cbcsdk_mock):
     assert isinstance(process_facet_query, FacetQuery)
     process_facet_query.add_facet_field(["backend_timestamp", "device_timestamp"])
     future = process_facet_query.execute_async()
-    results = future.result()
-    assert results[0].terms_.fields == ['backend_timestamp', 'device_timestamp']
+    result = future.result()
+    assert result.terms_.fields == ['backend_timestamp', 'device_timestamp']
 
 
 @pytest.mark.parametrize("bucket_size, start, end, field", [

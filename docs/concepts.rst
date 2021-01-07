@@ -261,10 +261,6 @@ Modules with Support for Criteria
   - :meth:`cbc_sdk.platform.alerts.CBAnalyticsAlertSearchQuery.set_sensor_actions`
   - :meth:`cbc_sdk.platform.alerts.CBAnalyticsAlertSearchQuery.set_threat_cause_vectors`
 
-:mod:`VMwareAlert <cbc_sdk.platform.alerts.VMwareAlert>`
-
-  - :meth:`cbc_sdk.platform.alerts.VMwareAlertSearchQuery.set_group_ids`
-
 :mod:`Event <cbc_sdk.platform.base.Event>`
 
 :mod:`Process <cbc_sdk.platform.base.Process>`
@@ -383,9 +379,8 @@ Create the query:
 2. With the ``.execute_async()`` and ``.result()`` methods:
 
     >>> asynchronous_future = event_facet_query.execute_async()
-    >>> asynchronous_results = asynchronous_future.result()
-    # asynchronous results is a list with one item, so we access the first item
-    >>> print(asynchronous_results[0])
+    >>> asynchronous_result = asynchronous_future.result()
+    >>> print(asynchronous_result)
     EventFacet object, bound to https://defense-eap01.conferdeploy.net.
     -------------------------------------------------------------------------------
 
@@ -398,9 +393,9 @@ Create the query:
 
 The result for facet queries is a single object with two properties: ``terms`` and ``ranges`` that contain the facet search result weighted as per the criteria provided.
 
-    >>> print(synchronous_results.terms)
+    >>> print(synchronous_result.terms)
     [{'values': [{'total': 14, 'id': 'modload', 'name': 'modload'}, {'total': 2, 'id': 'crossproc', 'name': 'crossproc'}], 'field': 'event_type'}]
-    >>> print(synchronous_results.ranges)
+    >>> print(synchronous_result.ranges)
     [{'start': '2020-10-16T00:00:00Z', 'end': '2020-11-16T00:00:00Z', 'bucket_size': '+1DAY', 'field': 'device_timestamp', 'values': None}]
 
 

@@ -28,6 +28,22 @@ cbc\_sdk.platform.devices module
    :undoc-members:
    :show-inheritance:
 
+cbc\_sdk.platform.events module
+--------------------------------
+
+.. automodule:: cbc_sdk.platform.events
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+cbc\_sdk.platform.processes module
+--------------------------------
+
+.. automodule:: cbc_sdk.platform.processes
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 

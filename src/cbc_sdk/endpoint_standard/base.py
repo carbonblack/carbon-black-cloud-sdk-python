@@ -15,7 +15,6 @@
 
 from cbc_sdk.base import (MutableBaseModel, UnrefreshableModel, CreatableModelMixin, NewBaseModel, FacetQuery,
                           PaginatedQuery, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
-from cbc_sdk.platform import PlatformQueryBase
 from cbc_sdk.utils import convert_query_params
 from cbc_sdk.errors import ApiError
 from copy import deepcopy
@@ -419,7 +418,7 @@ class EnrichedEventFacet(UnrefreshableModel):
 """Endpoint Standard Queries"""
 
 
-class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
+class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
     """Represents a prepared query to the Cb Endpoint Standard server.
 
     This object is returned as part of a `CBCloudAPI.select`
@@ -446,6 +445,9 @@ class Query(PaginatedQuery, PlatformQueryBase, QueryBuilderSupportMixin, Iterabl
 
     def __init__(self, doc_class, cb, query=None):
         """Initialize a Query object."""
+        self._doc_class = doc_class
+        self._cb = cb
+        self._count_valid = False
         super(Query, self).__init__(doc_class, cb, query)
 
         # max batch_size is 5000

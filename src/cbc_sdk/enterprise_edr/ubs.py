@@ -15,8 +15,7 @@
 
 from __future__ import absolute_import
 from cbc_sdk.errors import ApiError, InvalidObjectError, NonQueryableModel
-from cbc_sdk.base import UnrefreshableModel
-from cbc_sdk.enterprise_edr.base import Query
+from cbc_sdk.base import UnrefreshableModel, Query
 
 import logging
 import validators
