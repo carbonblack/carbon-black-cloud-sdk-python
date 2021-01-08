@@ -321,6 +321,7 @@ class DeviceSummaryFacet(ResultFacet):
         """Initialize a DeviceSummaryFacet object with initial_data."""
         super(DeviceSummaryFacet, self).__init__(cb, initial_data)
 
+
 class Template(Run):
     """Represents an Audit and Remediation Live Query Template .
 
