@@ -421,47 +421,49 @@ class RunQuery(BaseQuery):
         is created with a schedule then the Run will contain a template_id to the corresponding template
         and a new Run will be created each time the schedule is met.
 
-        DAILY
+        Example RRule:
 
-        | Field    | Values  |
-        | -------- | ------- |
-        | BYSECOND | 0       |
-        | BYMINUTE | 0 or 30 |
-        | BYHOUR   | 0 to 23 |
+            DAILY
 
-        # Daily at 1:30PM
-        RRULE:FREQ=DAILY;BYHOUR=13;BYMINUTE=30;BYSECOND=0
+            | Field    | Values  |
+            | -------- | ------- |
+            | BYSECOND | 0       |
+            | BYMINUTE | 0 or 30 |
+            | BYHOUR   | 0 to 23 |
 
-        WEEKLY
+            # Daily at 1:30PM
+            RRULE:FREQ=DAILY;BYHOUR=13;BYMINUTE=30;BYSECOND=0
 
-        | Field    | Values                                  |
-        | -------- | --------------------------------------- |
-        | BYSECOND | 0                                       |
-        | BYMINUTE | 0 or 30                                 |
-        | BYHOUR   | 0 to 23                                 |
-        | BYDAY    | One or more: SU, MO, TU, WE, TH, FR, SA |
+            WEEKLY
 
-        # Monday and Friday of the week at 2:30 AM
-        RRULE:FREQ=WEEKLY;BYDAY=MO,FR;BYHOUR=13;BYMINUTE=30;BYSECOND=0
+            | Field    | Values                                  |
+            | -------- | --------------------------------------- |
+            | BYSECOND | 0                                       |
+            | BYMINUTE | 0 or 30                                 |
+            | BYHOUR   | 0 to 23                                 |
+            | BYDAY    | One or more: SU, MO, TU, WE, TH, FR, SA |
 
-        MONTHLY
+            # Monday and Friday of the week at 2:30 AM
+            RRULE:FREQ=WEEKLY;BYDAY=MO,FR;BYHOUR=13;BYMINUTE=30;BYSECOND=0
 
-        Note: Either (BYDAY and BYSETPOS) or BYMONTHDAY is required.
+            MONTHLY
 
-        | Field      | Values                                  |
-        | ---------- | --------------------------------------- |
-        | BYSECOND   | 0                                       |
-        | BYMINUTE   | 0 or 30                                 |
-        | BYHOUR     | 0 to 23                                 |
-        | BYDAY      | One or more: SU, MO, TU, WE, TH, FR, SA |
-        | BYSETPOS   | -1, 1, 2, 3, 4                          |
-        | BYMONTHDAY | One or more: 1 to 28                    |
+            Note: Either (BYDAY and BYSETPOS) or BYMONTHDAY is required.
 
-        # Last Monday of the Month at 2:30 AM
-        RRULE:FREQ=MONTHLY;BYDAY=MO;BYSETPOS=-1;BYHOUR=2;BYMINUTE=30;BYSECOND=0
+            | Field      | Values                                  |
+            | ---------- | --------------------------------------- |
+            | BYSECOND   | 0                                       |
+            | BYMINUTE   | 0 or 30                                 |
+            | BYHOUR     | 0 to 23                                 |
+            | BYDAY      | One or more: SU, MO, TU, WE, TH, FR, SA |
+            | BYSETPOS   | -1, 1, 2, 3, 4                          |
+            | BYMONTHDAY | One or more: 1 to 28                    |
 
-        # 1st and 15th of the Month at 2:30 AM
-        RRULE:FREQ=DAILY;BYMONTHDAY=1,15;BYHOUR=2;BYMINUTE=30;BYSECOND=0
+            # Last Monday of the Month at 2:30 AM
+            RRULE:FREQ=MONTHLY;BYDAY=MO;BYSETPOS=-1;BYHOUR=2;BYMINUTE=30;BYSECOND=0
+
+            # 1st and 15th of the Month at 2:30 AM
+            RRULE:FREQ=DAILY;BYMONTHDAY=1,15;BYHOUR=2;BYMINUTE=30;BYSECOND=0
 
         Arguments:
             rrule (string): A recurrence rule (RFC 2445) specifying the frequency and time at which the query will recur
