@@ -523,6 +523,50 @@ class RunHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
         super(RunHistoryQuery, self).__init__()
         self._query_builder = QueryBuilder()
         self._sort = {}
+        self._criteria = {}
+
+    def set_template_ids(self, template_ids):
+        """Sets the template_id criteria filter.
+
+        Arguments:
+            template_ids ([str]): Template IDs to filter on.
+
+        Returns:
+            The ResultQuery with specified template_id.
+        """
+        if not all(isinstance(template_id, str) for template_id in template_ids):
+            raise ApiError("One or more invalid template IDs")
+        self._update_criteria("template_id", template_ids)
+        return self
+
+    def update_criteria(self, key, newlist):
+        """Update the criteria on this query with a custom criteria key.
+
+        Args:
+            key (str): The key for the criteria item to be set.
+            newlist (list): List of values to be set for the criteria item.
+
+        Returns:
+            The ResultQuery with specified custom criteria.
+
+        Example:
+            query = api.select(Alert).update_criteria("my.criteria.key", ["criteria_value"])
+
+        Note: Use this method if there is no implemented method for your desired criteria.
+        """
+        self._update_criteria(key, newlist)
+        return self
+
+    def _update_criteria(self, key, newlist):
+        """
+        Updates a list of criteria being collected for a query, by setting or appending items.
+
+        Args:
+            key (str): The key for the criteria item to be set.
+            newlist (list): List of values to be set for the criteria item.
+        """
+        oldlist = self._criteria.get(key, [])
+        self._criteria[key] = oldlist + newlist
 
     def sort_by(self, key, direction="ASC"):
         """Sets the sorting behavior on a query's results.
@@ -548,6 +592,8 @@ class RunHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
             request["query"] = self._query_builder._collapse()
         if rows != 0:
             request["rows"] = rows
+        if self._criteria:
+            request["criteria"] = self._criteria
         if self._sort:
             request["sort"] = [self._sort]
 
