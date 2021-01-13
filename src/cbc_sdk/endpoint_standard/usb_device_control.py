@@ -13,9 +13,8 @@
 
 """Model and Query Classes for USB Device Control"""
 
-from cbc_sdk.platform import PlatformQueryBase
-from cbc_sdk.base import (NewBaseModel, MutableBaseModel, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin,
-                          AsyncQueryMixin)
+from cbc_sdk.base import (NewBaseModel, MutableBaseModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
+                          IterableQueryMixin, AsyncQueryMixin)
 from cbc_sdk.errors import ApiError, ServerError
 from cbc_sdk.platform.devices import DeviceSearchQuery
 import logging
@@ -301,7 +300,7 @@ class USBDevice(NewBaseModel):
 """USB Device Control queries"""
 
 
-class USBDeviceApprovalQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin):
+class USBDeviceApprovalQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin):
     """Represents a query that is used to locate USBDeviceApproval objects."""
 
     def __init__(self, doc_class, cb):
@@ -312,10 +311,12 @@ class USBDeviceApprovalQuery(PlatformQueryBase, QueryBuilderSupportMixin, Iterab
             doc_class (class): The model class that will be returned by this query.
             cb (BaseAPI): Reference to API object used to communicate with the server.
         """
-        super().__init__(doc_class, cb)
+        self._doc_class = doc_class
+        self._cb = cb
+        self._count_valid = False
+        super(BaseQuery, self).__init__()
         self._query_builder = QueryBuilder()
         self._criteria = {}
-        self._count_valid = False
         self._total_results = 0
 
     def _update_criteria(self, key, newlist):
@@ -482,7 +483,7 @@ class USBDeviceApprovalQuery(PlatformQueryBase, QueryBuilderSupportMixin, Iterab
         return [self._doc_class(self._cb, item["id"], item) for item in results]
 
 
-class USBDeviceBlockQuery(PlatformQueryBase, IterableQueryMixin, AsyncQueryMixin):
+class USBDeviceBlockQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
     """Represents a query that is used to locate USBDeviceBlock objects."""
 
     def __init__(self, doc_class, cb):
@@ -493,8 +494,10 @@ class USBDeviceBlockQuery(PlatformQueryBase, IterableQueryMixin, AsyncQueryMixin
             doc_class (class): The model class that will be returned by this query.
             cb (BaseAPI): Reference to API object used to communicate with the server.
         """
-        super().__init__(doc_class, cb)
+        self._doc_class = doc_class
+        self._cb = cb
         self._count_valid = False
+        super(BaseQuery, self).__init__()
         self._total_results = 0
 
     def _count(self):
@@ -552,7 +555,7 @@ class USBDeviceBlockQuery(PlatformQueryBase, IterableQueryMixin, AsyncQueryMixin
         return [self._doc_class(self._cb, item["id"], item) for item in results]
 
 
-class USBDeviceQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin):
+class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin):
     """Represents a query that is used to locate USBDevice objects."""
     VALID_STATUSES = ["APPROVED", "UNAPPROVED"]
     VALID_FACET_FIELDS = ["vendor_name", "product_name", "endpoint.endpoint_name", "status"]
@@ -565,11 +568,13 @@ class USBDeviceQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryM
             doc_class (class): The model class that will be returned by this query.
             cb (BaseAPI): Reference to API object used to communicate with the server.
         """
-        super().__init__(doc_class, cb)
+        self._doc_class = doc_class
+        self._cb = cb
+        self._count_valid = False
+        super(BaseQuery, self).__init__()
         self._query_builder = QueryBuilder()
         self._criteria = {}
         self._sortcriteria = {}
-        self._count_valid = False
         self._total_results = 0
 
     def _update_criteria(self, key, newlist):
