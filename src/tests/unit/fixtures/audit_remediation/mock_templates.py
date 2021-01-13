@@ -101,3 +101,9 @@ EXAMPLE_TEMPLATE_STOPPED = {
     'schema': None,
     'destinations': ['LQ']
 }
+
+EXAMPLE_TEMPLATE_HISTORY = {
+    "org_key": "TEST",
+    "num_found": 1,
+    "results": [EXAMPLE_TEMPLATE]
+}

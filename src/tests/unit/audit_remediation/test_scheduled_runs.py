@@ -2,12 +2,13 @@
 
 import pytest
 import logging
-from cbc_sdk.audit_remediation import Template
+from cbc_sdk.audit_remediation import Template, TemplateHistory
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.audit_remediation.mock_templates import (EXAMPLE_TEMPLATE,
                                                                   EXAMPLE_TEMPLATE_REFRESH,
-                                                                  EXAMPLE_TEMPLATE_STOPPED)
+                                                                  EXAMPLE_TEMPLATE_STOPPED,
+                                                                  EXAMPLE_TEMPLATE_HISTORY)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -97,3 +98,18 @@ def test_template_delete(cbcsdk_mock):
 
     template.delete()
     assert template._is_deleted
+
+
+def test_template_history(cbcsdk_mock):
+    """Testing search of existing templates"""
+
+    def _search_template(url, body, **kwargs):
+        assert body["query"] == "CBC SDK"
+        return EXAMPLE_TEMPLATE_HISTORY
+
+    api = cbcsdk_mock.api
+    cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/templates/_search", _search_template)
+
+    template = api.select(TemplateHistory).where("CBC SDK").first()
+
+    assert template.id == "xzllqfvlie2bzghqqfkxk9xizqniwcvr"

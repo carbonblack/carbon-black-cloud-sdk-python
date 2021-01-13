@@ -254,3 +254,16 @@ def test_result_query_over_10k(cbcsdk_mock):
 
     list(result_query._perform_query())
     assert result_query._total_results == 10000
+
+
+def test_run_history_criteria(cbcsdk_mock):
+    """Testing RunHistory criteria"""
+    def _test_request(url, body, **kwargs):
+        assert body["template_id"][0] == "TEST_ID"
+        assert body["custom"][0] == "values"
+
+    api = cbcsdk_mock.api
+    cbcsdk_mock.mock_request("POST",
+                             "/livequery/v1/orgs/test/runs//_search",
+                             _test_request)
+    api.select(RunHistory).set_template_ids(["TEST_ID"]).update_criteria("custom", ["values"])
