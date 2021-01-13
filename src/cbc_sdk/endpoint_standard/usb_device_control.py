@@ -14,12 +14,13 @@
 """Model and Query Classes for USB Device Control"""
 
 from cbc_sdk.platform import PlatformQueryBase
-from cbc_sdk.base import NewBaseModel, MutableBaseModel, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin, \
-                         AsyncQueryMixin
+from cbc_sdk.base import (NewBaseModel, MutableBaseModel, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin,
+                          AsyncQueryMixin)
 from cbc_sdk.errors import ApiError, ServerError
 from cbc_sdk.platform.devices import DeviceSearchQuery
 import logging
 import time
+import json
 
 log = logging.getLogger(__name__)
 
