@@ -13,10 +13,10 @@
 
 """Model and Query Classes for USB Device Control"""
 
-from cbc_sdk import (NewBaseModel, MutableBaseModel)
 from cbc_sdk.platform import PlatformQueryBase
-from cbc_sdk.base import QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin
-from cbc_sdk.errors import ApiError
+from cbc_sdk.base import NewBaseModel, MutableBaseModel, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin, \
+                         AsyncQueryMixin
+from cbc_sdk.errors import ApiError, ServerError
 from cbc_sdk.platform.devices import DeviceSearchQuery
 import logging
 import time
@@ -60,6 +60,18 @@ class USBDeviceApproval(MutableBaseModel):
         """
         return USBDeviceApprovalQuery(cls, cb)
 
+    def _build_api_request_uri(self, http_method="GET"):
+        """
+        Build the unique URL used to make requests for this object.
+
+        Args:
+            http_method (str): Not used; retained for compatibility.
+
+        Returns:
+            str: The URL used to make requests for this object.
+        """
+        return self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id)
+
     def _refresh(self):
         """
         Rereads the object data from the server.
@@ -67,11 +79,56 @@ class USBDeviceApproval(MutableBaseModel):
         Returns:
             bool: True if refresh was successful, False if not.
         """
-        url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id)
-        resp = self._cb.get_object(url)
+        resp = self._cb.get_object(self._build_api_request_uri())
         self._info = resp
         self._last_refresh_time = time.time()
         return True
+
+    def _update_object(self):
+        """
+        Updates the object data on the server.
+
+        Returns:
+            str: The unique ID of this object.
+        """
+        ret = self._cb.put_object(self._build_api_request_uri(), self._info)
+        return self._refresh_if_needed(ret)
+
+    @classmethod
+    def bulk_create(cls, cb, approvals):
+        """
+        Creates multiple approvals and returns the USBDeviceApproval objects.  Data is supplied as a list of dicts.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            approvals (list): List of dicts containing approval data to be created.
+
+        Returns:
+            list: A list of USBDeviceApproval objects representing the approvals that were created.
+        """
+        url = cls.urlobject.format(cb.credentials.org_key) + "/_bulk"
+        resp = cb.post_object(url, body=approvals)
+        result = resp.json()
+        item_list = result.get("results", [])
+        return [cls(cb, item["id"], item) for item in item_list]
+
+    @classmethod
+    def bulk_create_csv(cls, cb, approval_data):
+        """
+        Creates multiple approvals and returns the USBDeviceApproval objects.  Data is supplied as text in CSV format.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            approval_data (str): CSV data for the approvals to be created.
+
+        Returns:
+            list: A list of USBDeviceApproval objects representing the approvals that were created.
+        """
+        url = cls.urlobject.format(cb.credentials.org_key) + "/_bulk"
+        resp = cb.post_object(url, body=approval_data, headers={"Content-Type": "text/csv"})
+        result = resp.json()
+        item_list = result.get("results", [])
+        return [cls(cb, item["id"], item) for item in item_list]
 
 
 class USBDeviceBlock(NewBaseModel):
@@ -108,6 +165,18 @@ class USBDeviceBlock(NewBaseModel):
         """
         return USBDeviceBlockQuery(cls, cb)
 
+    def _build_api_request_uri(self, http_method="GET"):
+        """
+        Build the unique URL used to make requests for this object.
+
+        Args:
+            http_method (str): Not used; retained for compatibility.
+
+        Returns:
+            str: The URL used to make requests for this object.
+        """
+        return self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id)
+
     def _refresh(self):
         """
         Rereads the object data from the server.
@@ -115,17 +184,13 @@ class USBDeviceBlock(NewBaseModel):
         Returns:
             bool: True if refresh was successful, False if not.
         """
-        url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id)
-        resp = self._cb.get_object(url)
+        resp = self._cb.get_object(self._build_api_request_uri())
         self._info = resp
         self._last_refresh_time = time.time()
         return True
 
     def delete(self):
         """Delete this object."""
-        return self._delete_object()
-
-    def _delete_object(self):
         if self._model_unique_id:
             ret = self._cb.delete_object(self._build_api_request_uri())
         else:
@@ -137,6 +202,26 @@ class USBDeviceBlock(NewBaseModel):
             except Exception:
                 message = ret.text
             raise ServerError(ret.status_code, message, result="Did not delete {0:s}.".format(str(self)))
+
+    @classmethod
+    def bulk_create(cls, cb, policy_ids):
+        """
+        Creates multiple blocks and returns the USBDeviceBlocks that were created.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            policy_ids (list): List of policy IDs to have blocks created for.
+
+        Returns:
+            list: A list of USBDeviceBlock objects representing the approvals that were created.
+        """
+        request = [{"policy_id": s} for s in policy_ids]
+        url = cls.urlobject.format(cb.credentials.org_key) + "/_bulk"
+        resp = cb.post_object(url, body=request)
+        result = resp.json()
+        item_list = result.get("results", [])
+        return [cls(cb, item["id"], item) for item in item_list]
+
 
 class USBDevice(NewBaseModel):
     """Represents a USB device."""
@@ -196,6 +281,21 @@ class USBDevice(NewBaseModel):
         resp = self._cb.get_object(url)
         return resp.get("results", [])
 
+    @classmethod
+    def get_vendors_and_products_seen(cls, cb):
+        """
+        Returns all vendors and products that have been seen for the organization.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+
+        Returns:
+            list: A list of vendors and products seen for the organization, each vendor being represented by a dict.
+        """
+        url = "/device_control/v3/orgs/{0}/products".format(cb.credentials.org_key)
+        resp = cb.get_object(url)
+        return resp.get("results", [])
+
 
 """USB Device Control queries"""
 
@@ -241,6 +341,7 @@ class USBDeviceApprovalQuery(PlatformQueryBase, QueryBuilderSupportMixin, Iterab
         if not all(isinstance(device_id, str) for device_id in device_ids):
             raise ApiError("One or more invalid device IDs")
         self._update_criteria("device.id", device_ids)
+        return self
 
     def set_product_names(self, product_names):
         """
@@ -255,6 +356,7 @@ class USBDeviceApprovalQuery(PlatformQueryBase, QueryBuilderSupportMixin, Iterab
         if not all(isinstance(product_name, str) for product_name in product_names):
             raise ApiError("One or more invalid product names")
         self._update_criteria("product_name", product_names)
+        return self
 
     def set_vendor_names(self, vendor_names):
         """
@@ -269,6 +371,7 @@ class USBDeviceApprovalQuery(PlatformQueryBase, QueryBuilderSupportMixin, Iterab
         if not all(isinstance(vendor_name, str) for vendor_name in vendor_names):
             raise ApiError("One or more invalid vendor names")
         self._update_criteria("vendor_name", vendor_names)
+        return self
 
     def _build_request(self, from_row, max_rows):
         """
@@ -281,7 +384,7 @@ class USBDeviceApprovalQuery(PlatformQueryBase, QueryBuilderSupportMixin, Iterab
         Returns:
             dict: The complete request body.
         """
-        request = {"criteria": self._criteria, "query": self._query_builder.collapse(), "rows": 100}
+        request = {"criteria": self._criteria, "query": self._query_builder._collapse(), "rows": 100}
         # Fetch 100 rows per page (instead of 10 by default) for better performance
         if from_row > 0:
             request["start"] = from_row
@@ -403,7 +506,7 @@ class USBDeviceBlockQuery(PlatformQueryBase, IterableQueryMixin, AsyncQueryMixin
         if self._count_valid:
             return self._total_results
 
-        result = self._cb.get_object(self._doc_class.urlobject)
+        result = self._cb.get_object(self._doc_class.urlobject.format(self._cb.credentials.org_key))
         results = result.get("results", [])
 
         self._total_results = len(results)
@@ -422,7 +525,7 @@ class USBDeviceBlockQuery(PlatformQueryBase, IterableQueryMixin, AsyncQueryMixin
         Returns:
             Iterable: The iterated query.
         """
-        result = self._cb.get_object(self._doc_class.urlobject)
+        result = self._cb.get_object(self._doc_class.urlobject.format(self._cb.credentials.org_key))
         results = result.get("results", [])
 
         self._total_results = len(results)
@@ -441,7 +544,7 @@ class USBDeviceBlockQuery(PlatformQueryBase, IterableQueryMixin, AsyncQueryMixin
         Returns:
             list: Result of the async query, which is then returned by the future.
         """
-        result = self._cb.get_object(self._doc_class.urlobject)
+        result = self._cb.get_object(self._doc_class.urlobject.format(self._cb.credentials.org_key))
         results = result.get("results", [])
         self._total_results = len(results)
         self._count_valid = True
@@ -492,6 +595,7 @@ class USBDeviceQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryM
         if not all(isinstance(endpoint_name, str) for endpoint_name in endpoint_names):
             raise ApiError("One or more invalid endpoint names")
         self._update_criteria("endpoint.endpoint_name", endpoint_names)
+        return self
 
     def set_product_names(self, product_names):
         """
@@ -506,6 +610,7 @@ class USBDeviceQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryM
         if not all(isinstance(product_name, str) for product_name in product_names):
             raise ApiError("One or more invalid product names")
         self._update_criteria("product_name", product_names)
+        return self
 
     def set_serial_numbers(self, serial_numbers):
         """
@@ -520,6 +625,7 @@ class USBDeviceQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryM
         if not all(isinstance(serial_number, str) for serial_number in serial_numbers):
             raise ApiError("One or more invalid serial numbers")
         self._update_criteria("serial_number", serial_numbers)
+        return self
 
     def set_statuses(self, statuses):
         """
@@ -534,6 +640,7 @@ class USBDeviceQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryM
         if not all((s in USBDeviceQuery.VALID_STATUSES) for s in statuses):
             raise ApiError("One or more invalid status values")
         self._update_criteria("status", statuses)
+        return self
 
     def set_vendor_names(self, vendor_names):
         """
@@ -548,6 +655,7 @@ class USBDeviceQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryM
         if not all(isinstance(vendor_name, str) for vendor_name in vendor_names):
             raise ApiError("One or more invalid vendor names")
         self._update_criteria("vendor_name", vendor_names)
+        return self
 
     def sort_by(self, key, direction="ASC"):
         """
@@ -580,7 +688,7 @@ class USBDeviceQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryM
         Returns:
             dict: The complete request body.
         """
-        request = {"criteria": self._criteria, "query": self._query_builder.collapse(), "rows": 100}
+        request = {"criteria": self._criteria, "query": self._query_builder._collapse(), "rows": 100}
         # Fetch 100 rows per page (instead of 10 by default) for better performance
         if from_row > 0:
             request["start"] = from_row
