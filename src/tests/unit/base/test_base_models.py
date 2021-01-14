@@ -5,6 +5,7 @@ import logging
 from cbc_sdk.base import MutableBaseModel, NewBaseModel
 from cbc_sdk.endpoint_standard import Device as EndpointStandardDevice
 from cbc_sdk.endpoint_standard import Policy, Event
+from cbc_sdk.platform import Process
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ServerError, InvalidObjectError
 from cbc_sdk.enterprise_edr import Feed
@@ -15,6 +16,10 @@ from tests.unit.fixtures.endpoint_standard.mock_devices import (ENDPOINT_STANDAR
                                                                 POLICY_GET_SPECIFIC_RESP,
                                                                 ENDPOINT_STANDARD_DEVICE_PATCH_RESP)
 from tests.unit.fixtures.enterprise_edr.mock_threatintel import FEED_GET_SPECIFIC_RESP
+from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_VALIDATION_RESP,
+                                                       POST_PROCESS_SEARCH_JOB_RESP,
+                                                       GET_PROCESS_SEARCH_JOB_RESP,
+                                                       GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -363,3 +368,27 @@ def test_validate_mbm(cbcsdk_mock):
 
     with pytest.raises(InvalidObjectError):
         assert policyMissingFields.validate() is None
+
+
+def test_print_unrefreshablemodel(cbcsdk_mock):
+    """Test printing an UnrefreshableModel"""
+    # mock the search validation
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+                             GET_PROCESS_VALIDATION_RESP)
+    # mock the POST of a search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_job",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
+
+    api = cbcsdk_mock.api
+    guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
+    proc = api.select(Process, guid)
+    proc_str = proc.__str__()
+    assert "Partially initialized" not in proc_str

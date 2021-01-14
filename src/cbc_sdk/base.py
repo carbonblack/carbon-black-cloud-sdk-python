@@ -528,10 +528,11 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         """
         lines = []
         lines.append("{0:s} object, bound to {1:s}.".format(self.__class__.__name__, self._cb.session.server))
-        if self._last_refresh_time:
-            lines.append(" Last refreshed at {0:s}".format(time.ctime(self._last_refresh_time)))
-        if not self._full_init:
-            lines.append(" Partially initialized. Use .refresh() to load all attributes")
+        if not issubclass(type(self), UnrefreshableModel):
+            if self._last_refresh_time:
+                lines.append(" Last refreshed at {0:s}".format(time.ctime(self._last_refresh_time)))
+            if not self._full_init:
+                lines.append(" Partially initialized. Use .refresh() to load all attributes")
         lines.append("-" * 79)
         lines.append("")
 
