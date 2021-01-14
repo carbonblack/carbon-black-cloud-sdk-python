@@ -45,6 +45,7 @@ class USBDeviceApproval(MutableBaseModel):
         super(USBDeviceApproval, self).__init__(cb, model_unique_id, initial_data)
         if model_unique_id is not None and initial_data is None:
             self._refresh()
+        self._full_init = True
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -101,7 +102,18 @@ class USBDeviceApproval(MutableBaseModel):
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
-            approvals (list): List of dicts containing approval data to be created.
+            approvals (list): List of dicts containing approval data to be created, formatted as shown below.
+
+        Example:
+            [
+              {
+                "approval_name": "string",
+                "notes": "string",
+                "product_id": "string",
+                "serial_number": "string",
+                "vendor_id": "string"
+              }
+            ]
 
         Returns:
             list: A list of USBDeviceApproval objects representing the approvals that were created.
@@ -119,7 +131,12 @@ class USBDeviceApproval(MutableBaseModel):
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
-            approval_data (str): CSV data for the approvals to be created.
+            approval_data (str): CSV data for the approvals to be created.  Header line MUST be included
+                                 as shown below.
+
+        Example:
+            vendor_id,product_id,serial_number,approval_name,notes
+            string,string,string,string,string
 
         Returns:
             list: A list of USBDeviceApproval objects representing the approvals that were created.
@@ -328,7 +345,8 @@ class USBDeviceApprovalQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryM
             newlist (list): List of values to be set for the criteria item.
         """
         oldlist = self._criteria.get(key, [])
-        self._criteria[key] = oldlist + newlist
+        oldlist.extend(newlist)
+        self._criteria[key] = oldlist
 
     def set_device_ids(self, device_ids):
         """
@@ -586,7 +604,8 @@ class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, As
             newlist (list): List of values to be set for the criteria item.
         """
         oldlist = self._criteria.get(key, [])
-        self._criteria[key] = oldlist + newlist
+        oldlist.extend(newlist)
+        self._criteria[key] = oldlist
 
     def set_endpoint_names(self, endpoint_names):
         """
