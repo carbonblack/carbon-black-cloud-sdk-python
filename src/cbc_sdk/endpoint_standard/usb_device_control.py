@@ -56,7 +56,7 @@ class USBDeviceApproval(MutableBaseModel):
             **kwargs (dict): Not used, retained for compatibility.
 
         Returns:
-            PlatformQueryBase: The query object for this alert type.
+            USBDeviceApprovalQuery: The query object for this alert type.
         """
         return USBDeviceApprovalQuery(cls, cb)
 
@@ -161,7 +161,7 @@ class USBDeviceBlock(NewBaseModel):
             **kwargs (dict): Not used, retained for compatibility.
 
         Returns:
-            PlatformQueryBase: The query object for this alert type.
+            USBDeviceBlockQuery: The query object for this alert type.
         """
         return USBDeviceBlockQuery(cls, cb)
 
@@ -253,7 +253,7 @@ class USBDevice(NewBaseModel):
             **kwargs (dict): Not used, retained for compatibility.
 
         Returns:
-            PlatformQueryBase: The query object for this alert type.
+            USBDeviceQuery: The query object for this alert type.
         """
         return USBDeviceQuery(cls, cb)
 
