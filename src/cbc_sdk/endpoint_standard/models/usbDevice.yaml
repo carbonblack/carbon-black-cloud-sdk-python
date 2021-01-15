@@ -1,0 +1,75 @@
+type: object
+properties:
+  created_at:
+    description: the UTC date the external USB device configuration was created in ISO 8601 format
+    format: date-time
+    type: string
+  device_friendly_name:
+    description: human readable name for the external USB device
+    type: string
+  device_name:
+    description: name of the external USB device
+    type: string
+  device_type:
+    description: type of external USB device
+    type: string
+  endpoint_count:
+    description: number of endpoints that the external USB device has connected to
+    format: int64
+    type: integer
+  first_seen:
+    description: first timestamp that the external USB device was seen
+    format: date-time
+    type: string
+  id:
+    description: the id for this external USB device
+    format: uint64
+    type: integer
+  interface_type:
+    description: type of interface used by external USB device
+    type: string
+  last_endpoint_id:
+    description: ID of the last endpoint the device accessed
+    format: int64
+    type: integer
+  last_endpoint_name:
+    description: name of the last endpoint the device accessed
+    type: string
+  last_policy_id:
+    description: ID of the last policy associated with the device
+    format: int64
+    type: integer
+  last_seen:
+    description: last timestamp that the external USB device was seen
+    format: date-time
+    type: string
+  org_key:
+    description: unique org key of the organization that the external USB device was connected to
+    type: string
+  product_id:
+    description: product ID of the external USB device in decimal form
+    format: uint32
+    type: integer
+  product_name:
+    description: product name of the external USB device
+    type: string
+  serial_number:
+    description: serial number of external device
+    type: string
+  status:
+    description: Calculated status of device
+    enum:
+      - APPROVED
+      - UNAPPROVED
+    type: string
+  updated_at:
+    description: the UTC date the external USB device configuration was updated in ISO 8601 format
+    format: date-time
+    type: string
+  vendor_id:
+    description: ID of the Vendor for the external USB device in decimal form
+    format: uint32
+    type: integer
+  vendor_name:
+    description: vendor name of the external USB device
+    type: string

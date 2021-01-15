@@ -1,0 +1,37 @@
+type: object
+properties:
+  approval_name:
+    description: the name of the approval
+    type: string
+  created_at:
+    description: the UTC date the approval was created in ISO 8601 format
+    format: date-time
+    type: string
+  id:
+    description: the id for this approval
+    type: string
+  notes:
+    description: the notes for the approval
+    type: string
+  product_id:
+    description: product ID of the approval's external USB device in hex form
+    type: string
+  product_name:
+    description: product name of the approval's external USB device
+    type: string
+  serial_number:
+    description: serial number of the approval's external device
+    type: string
+  updated_at:
+    description: the UTC date the approval was updated in ISO 8601 format
+    format: date-time
+    type: string
+  updated_by:
+    description: the user who updated the record last
+    type: string
+  vendor_id:
+    description: ID of the Vendor for the approval's external USB device in hex form
+    type: string
+  vendor_name:
+    description: vendor name of the approval's external USB device
+    type: string

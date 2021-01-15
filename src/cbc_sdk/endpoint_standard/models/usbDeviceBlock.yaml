@@ -1,0 +1,16 @@
+type: object
+properties:
+  created_at:
+    description: the UTC date the block was created in ISO 8601 format
+    format: date-time
+    type: string
+  id:
+    description: the id for this block
+    type: string
+  policy_id:
+    description: policy id which is blocked
+    type: string
+  updated_at:
+    description: the UTC date the block was updated in ISO 8601 format
+    format: date-time
+    type: string
