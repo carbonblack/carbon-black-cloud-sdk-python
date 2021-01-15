@@ -155,7 +155,7 @@ def test_approval_bulk_create(cbcsdk_mock):
                              USBDEVICE_APPROVAL_BULK_CREATE_RESP)
     api = cbcsdk_mock.api
     results = USBDeviceApproval.bulk_create(api, USBDEVICE_APPROVAL_BULK_CREATE_REQ)
-    assert len(results) == 1
+    assert len(results) == 2
     approval = results[0]
     assert approval._model_unique_id == "10373"
     assert approval.vendor_id == "0x0781"
@@ -163,12 +163,20 @@ def test_approval_bulk_create(cbcsdk_mock):
     assert approval.product_id == "0x5581"
     assert approval.product_name == "Ultra"
     assert approval.approval_name == "Example Approval"
+    approval = results[1]
+    assert approval._model_unique_id == "10444"
+    assert approval.vendor_id == "0x0666"
+    assert approval.vendor_name == "Sirius Cybernetics Corp."
+    assert approval.product_id == "0x6969"
+    assert approval.product_name == "Happy Hard Drive"
+    assert approval.approval_name == "Example Approval2"
 
 
 def test_approval_bulk_create_csv(cbcsdk_mock):
     """Test the bulk_create_csv function."""
     req = "vendor_id,product_id,serial_number,approval_name,notes\n" \
-          "0x0781,0x5581,4C531001331122115172,Example Approval,A few notes"
+          "0x0781,0x5581,4C531001331122115172,Example Approval,A few notes\n" \
+          "0x0666,0x6969,4Q2123456789,Example Approval2,Whatever"
 
     def post_validate(url, body, **kwargs):
         assert body == req
@@ -179,7 +187,7 @@ def test_approval_bulk_create_csv(cbcsdk_mock):
     cbcsdk_mock.mock_request("POST", "/device_control/v3/orgs/test/approvals/_bulk", post_validate)
     api = cbcsdk_mock.api
     results = USBDeviceApproval.bulk_create_csv(api, req)
-    assert len(results) == 1
+    assert len(results) == 2
     approval = results[0]
     assert approval._model_unique_id == "10373"
     assert approval.vendor_id == "0x0781"
@@ -187,3 +195,10 @@ def test_approval_bulk_create_csv(cbcsdk_mock):
     assert approval.product_id == "0x5581"
     assert approval.product_name == "Ultra"
     assert approval.approval_name == "Example Approval"
+    approval = results[1]
+    assert approval._model_unique_id == "10444"
+    assert approval.vendor_id == "0x0666"
+    assert approval.vendor_name == "Sirius Cybernetics Corp."
+    assert approval.product_id == "0x6969"
+    assert approval.product_name == "Happy Hard Drive"
+    assert approval.approval_name == "Example Approval2"

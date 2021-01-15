@@ -54,6 +54,13 @@ USBDEVICE_APPROVAL_BULK_CREATE_REQ = [
         "serial_number": "4C531001331122115172",
         "notes": "A few notes",
         "approval_name": "Example Approval"
+    },
+    {
+        "vendor_id": "0x0666",
+        "product_id": "0x6969",
+        "serial_number": "4Q2123456789",
+        "notes": "Whatever",
+        "approval_name": "Example Approval2"
     }
 ]
 
@@ -70,6 +77,18 @@ USBDEVICE_APPROVAL_BULK_CREATE_RESP = {
             "updated_at": "2020-11-11T23:05:42.048625Z",
             "notes": "A few notes",
             "approval_name": "Example Approval"
+        },
+        {
+            "id": "10444",
+            "vendor_id": "0x0666",
+            "vendor_name": "Sirius Cybernetics Corp.",
+            "product_id": "0x6969",
+            "product_name": "Happy Hard Drive",
+            "serial_number": "4Q2123456789",
+            "created_at": "2020-11-05T23:51:56.396425Z",
+            "updated_at": "2020-11-11T23:05:42.048625Z",
+            "notes": "Whatever",
+            "approval_name": "Example Approval2"
         }
     ]
 }
@@ -98,6 +117,12 @@ USBDEVICE_BLOCK_BULK_CREATE_RESP = {
             "created_at": "2020-11-12T16:24:46.226Z",
             "id": 55,
             "policy_id": "6997287",
+            "updated_at": "2020-11-12T16:24:46.226Z"
+        },
+        {
+            "created_at": "2020-11-12T16:24:46.226Z",
+            "id": 65,
+            "policy_id": "6998088",
             "updated_at": "2020-11-12T16:24:46.226Z"
         }
     ]

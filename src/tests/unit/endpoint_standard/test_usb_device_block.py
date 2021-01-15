@@ -90,8 +90,11 @@ def test_block_bulk_create(cbcsdk_mock):
     cbcsdk_mock.mock_request("POST", "/device_control/v3/orgs/test/blocks/_bulk",
                              USBDEVICE_BLOCK_BULK_CREATE_RESP)
     api = cbcsdk_mock.api
-    results = USBDeviceBlock.bulk_create(api, ["6997287"])
-    assert len(results) == 1
+    results = USBDeviceBlock.bulk_create(api, ["6997287", "6998088"])
+    assert len(results) == 2
     block = results[0]
     assert block._model_unique_id == 55
     assert block.policy_id == "6997287"
+    block = results[1]
+    assert block._model_unique_id == 65
+    assert block.policy_id == "6998088"

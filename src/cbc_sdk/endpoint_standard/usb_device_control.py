@@ -167,6 +167,7 @@ class USBDeviceBlock(NewBaseModel):
         super(USBDeviceBlock, self).__init__(cb, model_unique_id, initial_data)
         if model_unique_id is not None and initial_data is None:
             self._refresh()
+        self._full_init = True
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -259,6 +260,7 @@ class USBDevice(NewBaseModel):
         super(USBDevice, self).__init__(cb, model_unique_id, initial_data)
         if model_unique_id is not None and initial_data is None:
             self._refresh()
+        self._full_init = True
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
