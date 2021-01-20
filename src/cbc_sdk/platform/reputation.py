@@ -91,6 +91,16 @@ class ReputationOverride(PlatformModel):
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
+            initial_data (Object): The initial data for a ReputationOverride
+
+        Example:
+            {
+                "description": "Banned as known malware",
+                "override_list": "BLACK_LIST",
+                "override_type": "SHA256",
+                "sha256_hash": "dd191a5b23df92e13a8852291f9fb5ed594b76a28a5a464418442584afd1e048",
+                "filename": "foo.exe"
+            }
 
         Returns:
             ReputationOverride: The created ReputationOverride object based on the specified properties
