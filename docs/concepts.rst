@@ -343,11 +343,11 @@ Modules with support for asynchronous queries
 
 :mod:`EnrichedEventFacet <cbc_sdk.endpoint_standard.base.EnrichedEventFacet>`
 
-:mod:`USBDeviceApprovalQuery <cbc_sdk.endpoint_standard.usb_device_control.USBDeviceApprovalQuery`
+:mod:`USBDeviceApprovalQuery <cbc_sdk.endpoint_standard.usb_device_control.USBDeviceApprovalQuery>`
 
-:mod:`USBDeviceBlockQuery <cbc_sdk.endpoint_standard.usb_device_control.USBDeviceBlockQuery`
+:mod:`USBDeviceBlockQuery <cbc_sdk.endpoint_standard.usb_device_control.USBDeviceBlockQuery>`
 
-:mod:`USBDeviceQuery <cbc_sdk.endpoint_standard.usb_device_control.USBDeviceQuery`
+:mod:`USBDeviceQuery <cbc_sdk.endpoint_standard.usb_device_control.USBDeviceQuery>`
 
 Facets
 ------
