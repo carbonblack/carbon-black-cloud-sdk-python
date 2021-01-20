@@ -1,0 +1,46 @@
+type: object
+properties:
+  id:
+    type: string
+    description: An identifier for a reputation override
+  created_by:
+    type: string
+    description: Creator of the override
+  create_time:
+    type: string
+    format: date
+    description: Time the override was created
+  description:
+    type: string
+    description: Justification for override
+  override_list:
+    type: string
+    description: The override list to add a new reputation (BLACK_LIST only valid for SHA256)
+    enum:
+      - BLACK_LIST
+      - WHITE_LIST
+  override_type:
+    type: string
+    description: Process property match when applying override
+    enum:
+      - SHA256
+      - CERT
+      - IT_TOOL
+  sha256_hash:
+    type: string
+    description: A hexadecimal string of length 64 characters representing the SHA-256 hash of the application
+  filename:
+    type: string
+    description: An application name for the hash
+  signed_by:
+    type: string
+    description: Name of the signer for the application
+  certificate_authority:
+    type: string
+    description: Certificate authority that authorizes the validity of the certificate
+  path:
+    type: string
+    description: The absolute path to file or directory where tool exists on disk
+  include_child_processes:
+    type: boolean
+    description: Include tool’s child processes on approved list

@@ -11,3 +11,5 @@ from cbc_sdk.platform.events import Event, EventFacet
 
 from cbc_sdk.platform.processes import (Process, ProcessFacet,
                                         AsyncProcessQuery, SummaryQuery)
+
+from cbc_sdk.platform.reputation import ReputationOverride
