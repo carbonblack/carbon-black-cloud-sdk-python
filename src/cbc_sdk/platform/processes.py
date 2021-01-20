@@ -16,11 +16,12 @@
 from cbc_sdk.base import (UnrefreshableModel, BaseQuery, Query, FacetQuery,
                           QueryBuilderSupportMixin, QueryBuilder,
                           AsyncQueryMixin, IterableQueryMixin)
-from cbc_sdk.platform.events import Event
+from cbc_sdk.platform import Event, ReputationOverride
 from cbc_sdk.errors import ApiError, TimeoutError
 
 import logging
 import time
+import os
 
 log = logging.getLogger(__name__)
 
@@ -276,6 +277,40 @@ class Process(UnrefreshableModel):
         before it can be submitted, using the `add_facet_field()` or `add_range()` methods.
         """
         return self._cb.select(ProcessFacet).where(process_guid=self.process_guid)
+
+    def ban_process_sha256(self, description=""):
+        """Bans the application by adding the process_sha256 to the BLACK_LIST
+
+        Args:
+            description: The justification for why the application was added to the BLACK_LIST
+
+        Returns:
+            ReputationOverride (cbc_sdk.platform.ReputationOverride): ReputationOverride object
+                created in the Carbon Black Cloud
+        """
+        return ReputationOverride.create(self._cb, {
+            "description": description,
+            "override_list": "BLACK_LIST",
+            "override_type": "SHA256",
+            "sha256_hash": self.process_sha256,
+            "filename": os.path.basename(self.process_name)})
+
+    def approve_process_sha256(self, description=""):
+        """Approves the application by adding the process_sha256 to the WHITE_LIST
+
+        Args:
+            description: The justification for why the application was added to the WHITE_LIST
+
+        Returns:
+            ReputationOverride (cbc_sdk.platform.ReputationOverride): ReputationOverride object
+                created in the Carbon Black Cloud
+        """
+        return ReputationOverride.create(self._cb, {
+            "description": description,
+            "override_list": "WHITE_LIST",
+            "override_type": "SHA256",
+            "sha256_hash": self.process_sha256,
+            "filename": os.path.basename(self.process_name)})
 
 
 class ProcessFacet(UnrefreshableModel):

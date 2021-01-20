@@ -17,10 +17,13 @@ from cbc_sdk.base import (MutableBaseModel, UnrefreshableModel, CreatableModelMi
                           PaginatedQuery, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
 from cbc_sdk.utils import convert_query_params
 from cbc_sdk.errors import ApiError
+from cbc_sdk.platform import ReputationOverride
 from copy import deepcopy
+
 import logging
 import json
 import time
+import os
 
 from cbc_sdk.errors import ServerError
 
@@ -329,6 +332,40 @@ class EnrichedEvent(UnrefreshableModel):
                 results = result.get('results', [])
                 self._info = results[0]
                 return self
+
+    def ban_process_sha256(self, description=""):
+        """Bans the application by adding the process_sha256 to the BLACK_LIST
+
+        Args:
+            description: The justification for why the application was added to the BLACK_LIST
+
+        Returns:
+            ReputationOverride (cbc_sdk.platform.ReputationOverride): ReputationOverride object
+                created in the Carbon Black Cloud
+        """
+        return ReputationOverride.create(self._cb, {
+            "description": description,
+            "override_list": "BLACK_LIST",
+            "override_type": "SHA256",
+            "sha256_hash": self.process_sha256,
+            "filename": os.path.basename(self.process_name)})
+
+    def approve_process_sha256(self, description=""):
+        """Approves the application by adding the process_sha256 to the WHITE_LIST
+
+        Args:
+            description: The justification for why the application was added to the WHITE_LIST
+
+        Returns:
+            ReputationOverride (cbc_sdk.platform.ReputationOverride): ReputationOverride object
+                created in the Carbon Black Cloud
+        """
+        return ReputationOverride.create(self._cb, {
+            "description": description,
+            "override_list": "WHITE_LIST",
+            "override_type": "SHA256",
+            "sha256_hash": self.process_sha256,
+            "filename": os.path.basename(self.process_name)})
 
 
 class EnrichedEventFacet(UnrefreshableModel):
