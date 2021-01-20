@@ -18,19 +18,29 @@ For the validation CBC API requests are used.
 To execute, a profile must be provided using the standard CBC Credentials.
 
 Processes:
+Approvals
 * Bulk Create Approvals
+* Get Approval by ID
 * Search Approvals
 * Update Approval
 * Delete Approval by ID
 
+Blocks
 * Bulk Create Blocks
+* Get Block by ID
 * Get Blocks
 * Delete Block by ID
 
+USB Devices
 * Search USB Devices
 * Facet USB Devices
 
+Products
 * Get USB Device Vendors and Products Seen
+
+The following API calls were not covered:
+* Get USB Device by ID
+* Get Endpoints associated with a USB device
 """
 
 # Standard library imports
@@ -60,9 +70,11 @@ SYMBOLS = 48
 """
     API Helper Requests:
     1. Get USB Device Vendors and Products Seen
-    2. Search Approvals
-    3. Get Blocks
-    4. Search USB Devices
+    2. Get Approval by ID
+    3. Search Approvals
+    4. Get Block by ID
+    5. Get Blocks
+    6. Search USB Devices
 """
 
 
@@ -72,11 +84,25 @@ def get_products_n_vendors_api():
     return requests.get(url, headers=HEADERS)
 
 
+def get_usb_device_approval_by_id_api(approval_id):
+    """Get Approval by ID"""
+    url = USB_DEVICE_APPROVAL.format(HOSTNAME, ORG_KEY)
+    url += '/' + approval_id
+    return requests.get(url, headers=HEADERS)
+
+
 def search_usb_device_approval():
     """Search USB Device Approval"""
     usb_url = USB_DEVICE_APPROVAL.format(HOSTNAME, ORG_KEY)
     usb_url += '/_search'
     return requests.post(usb_url, json={}, headers=HEADERS)
+
+
+def get_usb_device_block_by_id_api(block_id):
+    """Get Block by ID"""
+    url = USB_DEVICE_BLOCKS.format(HOSTNAME, ORG_KEY)
+    url += '/' + block_id
+    return requests.get(url, headers=HEADERS)
 
 
 def search_usb_device_blocks():
@@ -167,17 +193,6 @@ def main():
     ORG_KEY = cb.credentials.org_key
     HOSTNAME = cb.credentials.url
 
-    # vendors and products
-    print('Testing Get USB Device Vendors and Products Seen')
-    print(SYMBOLS * DELIMITER)
-    api_result = get_products_n_vendors_api()
-    sdk_result = USBDevice.get_vendors_and_products_seen(cb)
-    api_results = api_result.json()['results']
-    assert api_results == sdk_result, 'Get USB Device Vendors and Products '\
-        'Failed - Expected: {}, Actual: {}'.format(api_results, sdk_result)
-    print('Get USB Device Vendors and Products Seen......OK')
-    print(NEWLINES * '\n')
-
     # USB Device Approvals
     """USB Device Control Approval"""
     print('USB Device Control Approvals')
@@ -192,6 +207,13 @@ def main():
         "approval_name": "Example Approval"}]
     sdk_result = USBDeviceApproval.bulk_create(cb, data)
     sdk_created_obj = sdk_result[0]
+
+    sdk_obj = USBDeviceApproval(cb, sdk_created_obj.id)
+    api_result = get_usb_device_approval_by_id_api(sdk_created_obj.id).json()
+    dict_sdk_obj = format_usb_approval_data(sdk_obj)
+    assert api_result == dict_sdk_obj, 'Get Approval by ID Failed - ' \
+           'Expected: {}, Actual: {}'.format(api_result, dict_sdk_obj)
+    print('Get Approval by ID............................OK')
 
     # get the USB Device Approval
     query = cb.select(USBDeviceApproval)
@@ -235,6 +257,12 @@ def main():
     sdk_result = USBDeviceBlock.bulk_create(cb, data)
     sdk_created_obj = sdk_result[0]
 
+    api_result = get_usb_device_block_by_id_api(sdk_created_obj.id).json()
+    block_obj = USBDeviceBlock(cb, sdk_created_obj.id)
+    dict_block_obj = format_usb_block_data(block_obj)
+    assert dict_block_obj == api_result, 'Get Block by ID Failed - Expected: '\
+        '{}, Actual: {}'.format(api_result, dict_block_obj)
+    print('Get Block by ID...............................OK')
     # get the USB Device Block
     query = cb.select(USBDeviceBlock)
     sdk_results = []
@@ -278,6 +306,17 @@ def main():
     assert query == api_search['terms'], 'Facet USB Devices Failed - Expected'\
         ': {}, Actual: {}'.format(api_search['terms'], query)
     print('Facet USB Devices.............................OK')
+    print(NEWLINES * '\n')
+
+    # vendors and products
+    print('Testing Get USB Device Vendors and Products Seen')
+    print(SYMBOLS * DELIMITER)
+    api_result = get_products_n_vendors_api()
+    sdk_result = USBDevice.get_vendors_and_products_seen(cb)
+    api_results = api_result.json()['results']
+    assert api_results == sdk_result, 'Get USB Device Vendors and Products '\
+        'Failed - Expected: {}, Actual: {}'.format(api_results, sdk_result)
+    print('Get USB Device Vendors and Products Seen......OK')
 
 
 if __name__ == "__main__":
