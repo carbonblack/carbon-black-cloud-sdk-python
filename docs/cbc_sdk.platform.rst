@@ -44,6 +44,14 @@ cbc\_sdk.platform.processes module
    :undoc-members:
    :show-inheritance:
 
+cbc\_sdk.platform.reputation module
+--------------------------------
+
+.. automodule:: cbc_sdk.platform.reputation
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
 Module contents
 ---------------
 
