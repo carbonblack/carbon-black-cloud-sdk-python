@@ -16,8 +16,10 @@
 from cbc_sdk.base import (UnrefreshableModel, BaseQuery, Query, FacetQuery,
                           QueryBuilderSupportMixin, QueryBuilder,
                           AsyncQueryMixin, IterableQueryMixin)
-from cbc_sdk.platform import Event, ReputationOverride
+from cbc_sdk.platform import Event
+from cbc_sdk.platform.reputation import ReputationOverride
 from cbc_sdk.errors import ApiError, TimeoutError
+from pathlib import Path
 
 import logging
 import time
@@ -293,7 +295,7 @@ class Process(UnrefreshableModel):
             "override_list": "BLACK_LIST",
             "override_type": "SHA256",
             "sha256_hash": self.process_sha256,
-            "filename": os.path.basename(self.process_name)})
+            "filename": Path(self.process_name.replace('\\', os.sep)).name})
 
     def approve_process_sha256(self, description=""):
         """Approves the application by adding the process_sha256 to the WHITE_LIST
@@ -310,7 +312,7 @@ class Process(UnrefreshableModel):
             "override_list": "WHITE_LIST",
             "override_type": "SHA256",
             "sha256_hash": self.process_sha256,
-            "filename": os.path.basename(self.process_name)})
+            "filename": Path(self.process_name.replace('\\', os.sep)).name})
 
 
 class ProcessFacet(UnrefreshableModel):

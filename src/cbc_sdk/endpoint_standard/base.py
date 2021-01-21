@@ -17,8 +17,9 @@ from cbc_sdk.base import (MutableBaseModel, UnrefreshableModel, CreatableModelMi
                           PaginatedQuery, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
 from cbc_sdk.utils import convert_query_params
 from cbc_sdk.errors import ApiError
-from cbc_sdk.platform import ReputationOverride
+from cbc_sdk.platform.reputation import ReputationOverride
 from copy import deepcopy
+from pathlib import Path
 
 import logging
 import json
@@ -262,8 +263,25 @@ class EnrichedEvent(UnrefreshableModel):
         """
         self._details_timeout = 0
         self._info = None
+        if model_unique_id is not None and initial_data is None:
+            enriched_event_future = cb.select(EnrichedEvent).where(event_id=model_unique_id).execute_async()
+            result = enriched_event_future.result()
+            if len(result) == 1:
+                initial_data = result[0]
         super(EnrichedEvent, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
                                             force_init=force_init, full_doc=full_doc)
+
+    @property
+    def process_sha256(self):
+        """Returns a string representation of the SHA256 hash for this process.
+
+        Returns:
+            hash (str): SHA256 hash of the process.
+        """
+        if "process_hash" in self._info:
+            return next((hsh for hsh in self.process_hash if len(hsh) == 64), None)
+        else:
+            return None
 
     def get_details(self, timeout=0, async_mode=False):
         """Requests detailed results.
@@ -348,7 +366,7 @@ class EnrichedEvent(UnrefreshableModel):
             "override_list": "BLACK_LIST",
             "override_type": "SHA256",
             "sha256_hash": self.process_sha256,
-            "filename": os.path.basename(self.process_name)})
+            "filename": Path(self.process_name.replace('\\', os.sep)).name})
 
     def approve_process_sha256(self, description=""):
         """Approves the application by adding the process_sha256 to the WHITE_LIST
@@ -365,7 +383,7 @@ class EnrichedEvent(UnrefreshableModel):
             "override_list": "WHITE_LIST",
             "override_type": "SHA256",
             "sha256_hash": self.process_sha256,
-            "filename": os.path.basename(self.process_name)})
+            "filename": Path(self.process_name.replace('\\', os.sep)).name})
 
 
 class EnrichedEventFacet(UnrefreshableModel):

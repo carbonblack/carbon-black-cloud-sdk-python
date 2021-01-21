@@ -26,10 +26,11 @@ import json
 
 class ReputationOverride(PlatformModel):
     """Represents a reputation override."""
-    urlobject = "/appservices/v6/orgs/{org_key}/reputations/overrides"
-    urlobject_single = "/appservices/v6/orgs/{org_key}/reputations/overrides/{id}"
+    urlobject = "/appservices/v6/orgs/{0}/reputations/overrides"
+    urlobject_single = "/appservices/v6/orgs/{0}/reputations/overrides/{1}"
     primary_key = "id"
     swagger_meta_file = "platform/models/reputation_override.yaml"
+    _is_deleted = False
 
     def __init__(self, cb, model_unique_id, initial_data=None):
         """
@@ -65,6 +66,8 @@ class ReputationOverride(PlatformModel):
         Returns:
             bool: True if refresh was successful, False if not.
         """
+        if self._is_deleted:
+            raise ApiError("Cannot refresh a deleted ReputationOverride")
         url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id)
         resp = self._cb.get_object(url)
         self._info = resp
@@ -83,6 +86,7 @@ class ReputationOverride(PlatformModel):
             except Exception:
                 message = resp.text
             raise ServerError(resp.status_code, message, result="Did not delete {0:s}.".format(str(self)))
+        self._is_deleted = True
 
     @classmethod
     def create(cls, cb, initial_data):
@@ -105,13 +109,14 @@ class ReputationOverride(PlatformModel):
         Returns:
             ReputationOverride: The created ReputationOverride object based on the specified properties
         """
-        resp = cb.post_object(cls.urlobject.format(cls._cb.credentials.org_key), body=initial_data)
-        return cls(cb, resp["id"], resp)
+        resp = cb.post_object(cls.urlobject.format(cb.credentials.org_key), body=initial_data)
+        resp_json = resp.json()
+        return cls(cb, resp_json["id"], resp_json)
 
 
 class ReputationOverrideQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin):
     """Represents a query that is used to locate ReputationOverride objects."""
-    VALID_DIRECTIONS = ["ASC", "DESC"]
+    VALID_DIRECTIONS = ["ASC", "DESC", "asc", "desc"]
 
     def __init__(self, doc_class, cb):
         """
@@ -200,7 +205,7 @@ class ReputationOverrideQuery(BaseQuery, QueryBuilderSupportMixin, IterableQuery
         if max_rows >= 0:
             request["rows"] = max_rows
         if self._sortcriteria != {}:
-            request["sort"].update(self._sortcriteria)
+            request.update(self._sortcriteria)
         return request
 
     def _build_url(self, tail_end):
