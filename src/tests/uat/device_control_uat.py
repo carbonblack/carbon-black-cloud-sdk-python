@@ -123,58 +123,6 @@ def search_usb_devices_facets():
     return requests.post(usb_url, json=data, headers=HEADERS)
 
 
-""" Format Helper Functions """
-
-
-def format_usb_approval_data(obj):
-    """Format Approval Data Helper Function"""
-    return {
-        'id': obj.id,
-        'vendor_id': obj.vendor_id,
-        'vendor_name': obj.vendor_name,
-        'product_id': obj.product_id,
-        'product_name': obj.product_name,
-        'serial_number': obj.serial_number,
-        'notes': obj.notes,
-        'approval_name': obj.approval_name,
-        'created_at': obj.created_at,
-        'updated_at': obj.updated_at
-    }
-
-
-def format_usb_block_data(obj):
-    """Format Block Data Helper Function"""
-    return {
-        'id': obj.id,
-        'policy_id': obj.policy_id,
-        'created_at': obj.created_at,
-        'updated_at': obj.updated_at
-    }
-
-
-def format_usb_device(obj):
-    """Format Device Helper Function"""
-    return {
-        'id': obj.id,
-        'first_seen': obj.first_seen,
-        'last_seen': obj.last_seen,
-        'vendor_name': obj.vendor_name,
-        'vendor_id': obj.vendor_id,
-        'product_name': obj.product_name,
-        'product_id': obj.product_id,
-        'serial_number': obj.serial_number,
-        'last_endpoint_name': obj.last_endpoint_name,
-        'last_endpoint_id': obj.last_endpoint_id,
-        'last_policy_id': obj.last_policy_id,
-        'endpoint_count': obj.endpoint_count,
-        'device_friendly_name': obj.device_friendly_name,
-        'device_name': obj.device_name,
-        'created_at': obj.created_at,
-        'updated_at': obj.updated_at,
-        'status': obj.status
-    }
-
-
 def main():
     """Script entry point"""
     global ORG_KEY
@@ -208,7 +156,7 @@ def main():
 
     sdk_obj = USBDeviceApproval(cb, sdk_created_obj.id)
     api_result = get_usb_device_approval_by_id_api(sdk_created_obj.id).json()
-    dict_sdk_obj = format_usb_approval_data(sdk_obj)
+    dict_sdk_obj = sdk_obj._info
     assert api_result == dict_sdk_obj, 'Get Approval by ID Failed - ' \
            'Expected: {}, Actual: {}'.format(api_result, dict_sdk_obj)
     print('Get Approval by ID............................OK')
@@ -219,7 +167,7 @@ def main():
     for approval in query:
         if approval.id == sdk_created_obj.id:
             print('Bulk Create Test..............................OK')
-        sdk_results.append(format_usb_approval_data(approval))
+        sdk_results.append(approval._info)
     api_search = search_usb_device_approval().json()['results']
     assert sdk_results == api_search, 'Search Test Failed Expected: {}, ' \
         'Actual: {}'.format(api_search, sdk_results)
@@ -233,8 +181,8 @@ def main():
     sdk_created_new = query[0]
     assert sdk_created_new.approval_name == 'Changed Approval', 'Update Test '\
         'Failed - Excepted: {}, Actual: {}'.format(
-            format_usb_approval_data(sdk_created_obj),
-            format_usb_approval_data(sdk_created_new))
+            sdk_created_obj._info,
+            sdk_created_new._info)
     print('Update Test...................................OK')
 
     # delete the usb approval
@@ -257,7 +205,7 @@ def main():
 
     api_result = get_usb_device_block_by_id_api(sdk_created_obj.id).json()
     block_obj = USBDeviceBlock(cb, sdk_created_obj.id)
-    dict_block_obj = format_usb_block_data(block_obj)
+    dict_block_obj = block_obj._info
     assert dict_block_obj == api_result, 'Get Block by ID Failed - Expected: '\
         '{}, Actual: {}'.format(api_result, dict_block_obj)
     print('Get Block by ID...............................OK')
@@ -267,7 +215,7 @@ def main():
     for block in query:
         if block.id == sdk_created_obj.id:
             print('Bulk Create Test..............................OK')
-        sdk_results.append(format_usb_block_data(block))
+        sdk_results.append(block._info)
     api_search = search_usb_device_blocks().json()['results']
     assert sdk_results == api_search, 'Search Test Failed Expected: {}, ' \
         'Actual: {}'.format(api_search.json()['results'], sdk_results)
@@ -289,7 +237,7 @@ def main():
     query = cb.select(USBDevice)
     sdk_results = []
     for device in query:
-        sdk_results.append(format_usb_device(device))
+        sdk_results.append(device._info)
     api_search = search_usb_devices().json()
     assert api_search['num_found'] == query._total_results, 'Device Search ' \
            'Failed - Expected: {}, Actual: {}'.format(api_search['num_found'],
