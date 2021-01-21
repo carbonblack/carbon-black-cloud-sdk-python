@@ -33,6 +33,29 @@ then you must use Endpoint Standard Devices and a Live Response API Key.
   url: /integrationServices/v3/cblr/session/428:1234 -> status: PENDING
   [...]
 
+USB Devices
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Note that ``USBDevice`` is distinct from either the Platform API ``Device`` or the Endpoint Standard ``Device``. Access
+to USB devices is through Endpoint Standard.
+
+::
+
+  # USB device information is accessible with Endpoint Standard
+  >>> api = CBCloudAPI(profile='endpoint_standard')
+  >>> usb_devices = api.select(USBDevice).set_statuses(['APPROVED'])
+  >>> for usb in usb_devices:
+  ...   print(f'''
+              USB Device ID: {usb.id}
+              USB Device: {usb.vendor_name} {usb.product_name}
+
+              ''')
+  USB Device ID: 774
+  USB Device: SanDisk Ultra
+
+  USB Device ID: 778
+  USB Device: SanDisk Cruzer Mini
+
 Queries
 ----------------------------------------
 
@@ -220,6 +243,20 @@ Modules with Support for Criteria
   - :meth:`cbc_sdk.audit_remediation.base.FacetQuery.set_policy_names`
   - :meth:`cbc_sdk.audit_remediation.base.FacetQuery.set_status`
 
+:mod:`USBDeviceApprovalQuery <cbc_sdk.endpoint_standard.usb_device_control.USBDeviceApprovalQuery`
+
+  - :meth:`cbc_sdk.endpoint_standard.usb_device_control.USBDeviceApprovalQuery.set_device_ids`
+  - :meth:`cbc_sdk.endpoint_standard.usb_device_control.USBDeviceApprovalQuery.set_product_names`
+  - :meth:`cbc_sdk.endpoint_standard.usb_device_control.USBDeviceApprovalQuery.set_vendor_names`
+
+:mod:`USBDeviceQuery <cbc_sdk.endpoint_standard.usb_device_control.USBDeviceQuery`
+
+  - :meth:`cbc_sdk.endpoint_standard.usb_device_control.USBDeviceQuery.set_endpoint_names`
+  - :meth:`cbc_sdk.endpoint_standard.usb_device_control.USBDeviceQuery.set_product_names`
+  - :meth:`cbc_sdk.endpoint_standard.usb_device_control.USBDeviceQuery.set_serial_numbers`
+  - :meth:`cbc_sdk.endpoint_standard.usb_device_control.USBDeviceQuery.set_statuses`
+  - :meth:`cbc_sdk.endpoint_standard.usb_device_control.USBDeviceQuery.set_vendor_names`
+
 :mod:`Alert <cbc_sdk.platform.alerts.BaseAlert>`
 
   - :meth:`cbc_sdk.platform.alerts.BaseAlertSearchQuery.set_categories`
@@ -306,6 +343,11 @@ Modules with support for asynchronous queries
 
 :mod:`EnrichedEventFacet <cbc_sdk.endpoint_standard.base.EnrichedEventFacet>`
 
+:mod:`USBDeviceApprovalQuery <cbc_sdk.endpoint_standard.usb_device_control.USBDeviceApprovalQuery>`
+
+:mod:`USBDeviceBlockQuery <cbc_sdk.endpoint_standard.usb_device_control.USBDeviceBlockQuery>`
+
+:mod:`USBDeviceQuery <cbc_sdk.endpoint_standard.usb_device_control.USBDeviceQuery>`
 
 Facets
 ------
