@@ -84,9 +84,7 @@ def get_cb_cloud_object(args):
         logging.getLogger("cbc_sdk").setLevel(logging.DEBUG)
         logging.getLogger("__main__").setLevel(logging.DEBUG)
 
-    if args.cburl and args.apitoken:
-        cb = CBCloudAPI(url=args.cburl, token=args.apitoken, ssl_verify=(not args.no_ssl_verify))
-    elif args.cburl and args.apitoken and args.orgkey:
+    if args.cburl and args.apitoken and args.orgkey:
         cb = CBCloudAPI(url=args.cburl, token=args.apitoken, org_key=args.orgkey, ssl_verify=(not args.no_ssl_verify))
     else:
         cb = CBCloudAPI(profile=args.profile)
