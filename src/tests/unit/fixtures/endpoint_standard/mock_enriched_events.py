@@ -26,7 +26,7 @@ GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP = {
 
 GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_1 = {
     'num_found': 808,
-    'num_available': 52,
+    'num_available': 1,
     'contacted': 6,
     'completed': 6,
     'results': [
