@@ -17,7 +17,7 @@ from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
 def test_argument_parser_default_values():
     """Tests the default credential values."""
     parser = build_cli_parser("Test helpers.py")
-    args, extra = parser.parse_known_args()
+    args = parser.parse_known_args()[0]
 
     assert args.cburl is None
     assert args.apitoken is None
@@ -28,26 +28,26 @@ def test_argument_parser_default_values():
     assert args.window == '3d'
 
 
-def test_cbcloudapi_object_with_command_line_arguments():
+def test_apicloudapi_object_with_command_line_arguments():
     """Tests the CBCloudAPI object with command line arguments."""
     parser = build_cli_parser("Test helpers.py")
-    args, extra = parser.parse_known_args()
+    args = parser.parse_known_args()[0]
 
     args.cburl = 'https://example.com'
     args.apitoken = 'ABCDEFGH'
     args.orgkey = 'A1B2C3D4'
     args.no_ssl_verify = 'false'
 
-    cb = get_cb_cloud_object(args)
+    api = get_cb_cloud_object(args)
 
-    assert cb.credential_profile_name is None
+    assert api.credential_profile_name is None
 
 
-def test_cbcloudapi_object_with_default_arguments():
+def test_apicloudapi_object_with_default_arguments():
     """Tests the CBCloudAPI object with default arguments."""
     parser = build_cli_parser("Test helpers.py")
-    args, extra = parser.parse_known_args()
+    args = parser.parse_known_args()[0]
 
-    cb = get_cb_cloud_object(args)
+    api = get_cb_cloud_object(args)
 
-    assert cb.credential_profile_name == 'default'
+    assert api.credential_profile_name == 'default'
