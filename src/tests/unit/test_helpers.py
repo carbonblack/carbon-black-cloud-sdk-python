@@ -51,4 +51,4 @@ def test_apicloudapi_object_with_default_arguments():
     print('DUMP', args.profile)
     api = get_cb_cloud_object(args)
 
-    # assert api.credential_profile_name == 'default'
+    assert api.credential_profile_name == 'default', print(args.profile)
