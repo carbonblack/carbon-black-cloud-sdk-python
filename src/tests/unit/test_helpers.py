@@ -48,7 +48,4 @@ def test_apicloudapi_object_with_default_arguments():
     parser = build_cli_parser("Test helpers.py")
     args = parser.parse_known_args()[0]
 
-    print('DUMP', args.profile)
-    api = get_cb_cloud_object(args)
-
-    assert api.credential_profile_name == 'default', print(args.profile)
+    assert args.profile == 'default'
