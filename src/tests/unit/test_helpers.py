@@ -43,7 +43,7 @@ def test_apicloudapi_object_with_command_line_arguments():
     assert api.credential_profile_name is None
 
 
-#def test_apicloudapi_object_with_default_arguments():
+# def test_apicloudapi_object_with_default_arguments():
 #    """Tests the CBCloudAPI object with default arguments."""
 #    parser = build_cli_parser("Test helpers.py")
 #    args = parser.parse_known_args()[0]
