@@ -1428,6 +1428,41 @@ class QueryBuilderSupportMixin:
         return self
 
 
+class CriteriaBuilderSupportMixin:
+    """A mixin that supplies wrapper methods to access the _crtieria."""
+
+    def update_criteria(self, key, newlist):
+        """Update the criteria on this query with a custom criteria key.
+
+        Args:
+            key (str): The key for the criteria item to be set.
+            newlist (list): List of values to be set for the criteria item.
+
+        Returns:
+            The query object with specified custom criteria.
+
+        Example:
+            query = api.select(Alert).update_criteria("my.criteria.key", ["criteria_value"])
+
+        Note: Use this method if there is no implemented method for your desired criteria.
+        """
+        self._update_criteria(key, newlist)
+        return self
+
+    def _update_criteria(self, key, newlist):
+        """
+        Updates a list of criteria being collected for a query, by setting or appending items.
+
+        Args:
+            key (str): The key for the criteria item to be set.
+            newlist (list): List of values to be set for the criteria item.
+        """
+        if self._criteria.get(key, None) is None:
+            self._criteria[key] = newlist
+        else:
+            self._criteria[key].extend(newlist)
+
+
 class AsyncQueryMixin:
     """A mix-in which provides support for asynchronous queries."""
 

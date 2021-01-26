@@ -14,7 +14,7 @@
 """Model and Query Classes for USB Device Control"""
 
 from cbc_sdk.base import (NewBaseModel, MutableBaseModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
-                          IterableQueryMixin, AsyncQueryMixin)
+                          IterableQueryMixin, AsyncQueryMixin, CriteriaBuilderSupportMixin)
 from cbc_sdk.errors import ApiError, ServerError
 from cbc_sdk.platform.devices import DeviceSearchQuery
 import logging
@@ -319,7 +319,8 @@ class USBDevice(NewBaseModel):
 """USB Device Control queries"""
 
 
-class USBDeviceApprovalQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin):
+class USBDeviceApprovalQuery(BaseQuery, QueryBuilderSupportMixin,
+                             IterableQueryMixin, AsyncQueryMixin, CriteriaBuilderSupportMixin):
     """Represents a query that is used to locate USBDeviceApproval objects."""
 
     def __init__(self, doc_class, cb):
@@ -337,18 +338,6 @@ class USBDeviceApprovalQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryM
         self._query_builder = QueryBuilder()
         self._criteria = {}
         self._total_results = 0
-
-    def _update_criteria(self, key, newlist):
-        """
-        Updates a list of criteria being collected for a query, by setting or appending items.
-
-        Args:
-            key (str): The key for the criteria item to be set.
-            newlist (list): List of values to be set for the criteria item.
-        """
-        oldlist = self._criteria.get(key, [])
-        oldlist.extend(newlist)
-        self._criteria[key] = oldlist
 
     def set_device_ids(self, device_ids):
         """
@@ -575,7 +564,7 @@ class USBDeviceBlockQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
         return [self._doc_class(self._cb, item["id"], item) for item in results]
 
 
-class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin):
+class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin, CriteriaBuilderSupportMixin):
     """Represents a query that is used to locate USBDevice objects."""
     VALID_STATUSES = ["APPROVED", "UNAPPROVED"]
     VALID_FACET_FIELDS = ["vendor_name", "product_name", "endpoint.endpoint_name", "status"]
@@ -596,18 +585,6 @@ class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, As
         self._criteria = {}
         self._sortcriteria = {}
         self._total_results = 0
-
-    def _update_criteria(self, key, newlist):
-        """
-        Updates a list of criteria being collected for a query, by setting or appending items.
-
-        Args:
-            key (str): The key for the criteria item to be set.
-            newlist (list): List of values to be set for the criteria item.
-        """
-        oldlist = self._criteria.get(key, [])
-        oldlist.extend(newlist)
-        self._criteria[key] = oldlist
 
     def set_endpoint_names(self, endpoint_names):
         """

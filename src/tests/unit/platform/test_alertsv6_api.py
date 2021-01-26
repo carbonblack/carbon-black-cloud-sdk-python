@@ -108,6 +108,30 @@ def test_query_basealert_with_create_time_as_range(monkeypatch):
     assert a.workflow_.state == "OPEN"
 
 
+def test_query_basealert_with_time_range(monkeypatch):
+    """Test an alert query with the last_update_time specified as a range."""
+    _was_called = False
+
+    def _run_query(url, body, **kwargs):
+        nonlocal _was_called
+        assert url == "/appservices/v6/orgs/Z100/alerts/_search"
+        assert body == {"query": "Blort", "criteria": {"last_update_time": {"range": "-3w"}},
+                        "rows": 100}
+        _was_called = True
+        return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
+                                          "workflow": {"state": "OPEN"}}], "num_found": 1})
+
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
+    query = api.select(BaseAlert).where("Blort").set_time_range("last_update_time", range="-3w")
+    a = query.one()
+    assert _was_called
+    assert a.id == "S0L0"
+    assert a.org_key == "Z100"
+    assert a.threat_id == "B0RG"
+    assert a.workflow_.state == "OPEN"
+
+
 def test_query_basealert_facets(monkeypatch):
     """Test an alert facet query."""
     _was_called = False

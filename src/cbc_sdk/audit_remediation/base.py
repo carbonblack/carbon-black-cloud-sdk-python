@@ -15,7 +15,8 @@
 
 from __future__ import absolute_import
 from cbc_sdk.base import (UnrefreshableModel, NewBaseModel, QueryBuilder,
-                          QueryBuilderSupportMixin, IterableQueryMixin, BaseQuery)
+                          QueryBuilderSupportMixin, IterableQueryMixin, BaseQuery,
+                          CriteriaBuilderSupportMixin)
 from cbc_sdk.errors import ApiError, ServerError
 import logging
 import time
@@ -588,7 +589,7 @@ class RunQuery(BaseQuery):
         return self._doc_class(self._cb, initial_data=resp.json())
 
 
-class RunHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
+class RunHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin):
     """Represents a query that retrieves historic LiveQuery runs."""
     def __init__(self, doc_class, cb):
         """Initialize a RunHistoryQuery object."""
@@ -613,35 +614,6 @@ class RunHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
             raise ApiError("One or more invalid template IDs")
         self._update_criteria("template_id", template_ids)
         return self
-
-    def update_criteria(self, key, newlist):
-        """Update the criteria on this query with a custom criteria key.
-
-        Args:
-            key (str): The key for the criteria item to be set.
-            newlist (list): List of values to be set for the criteria item.
-
-        Returns:
-            The ResultQuery with specified custom criteria.
-
-        Example:
-            query = api.select(Alert).update_criteria("my.criteria.key", ["criteria_value"])
-
-        Note: Use this method if there is no implemented method for your desired criteria.
-        """
-        self._update_criteria(key, newlist)
-        return self
-
-    def _update_criteria(self, key, newlist):
-        """
-        Updates a list of criteria being collected for a query, by setting or appending items.
-
-        Args:
-            key (str): The key for the criteria item to be set.
-            newlist (list): List of values to be set for the criteria item.
-        """
-        oldlist = self._criteria.get(key, [])
-        self._criteria[key] = oldlist + newlist
 
     def sort_by(self, key, direction="ASC"):
         """Sets the sorting behavior on a query's results.
@@ -721,7 +693,7 @@ class RunHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
                 break
 
 
-class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
+class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin):
     """Represents a query that retrieves results from a LiveQuery run."""
     def __init__(self, doc_class, cb):
         """Initialize a ResultQuery object."""
@@ -735,35 +707,6 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
         self._sort = {}
         self._batch_size = 100
         self._run_id = None
-
-    def update_criteria(self, key, newlist):
-        """Update the criteria on this query with a custom criteria key.
-
-        Args:
-            key (str): The key for the criteria item to be set.
-            newlist (list): List of values to be set for the criteria item.
-
-        Returns:
-            The ResultQuery with specified custom criteria.
-
-        Example:
-            query = api.select(Alert).update_criteria("my.criteria.key", ["criteria_value"])
-
-        Note: Use this method if there is no implemented method for your desired criteria.
-        """
-        self._update_criteria(key, newlist)
-        return self
-
-    def _update_criteria(self, key, newlist):
-        """
-        Updates a list of criteria being collected for a query, by setting or appending items.
-
-        Args:
-            key (str): The key for the criteria item to be set.
-            newlist (list): List of values to be set for the criteria item.
-        """
-        oldlist = self._criteria.get(key, [])
-        self._criteria[key] = oldlist + newlist
 
     def set_device_ids(self, device_ids):
         """Sets the device.id criteria filter.
@@ -953,7 +896,7 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
                 break
 
 
-class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
+class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin):
     """Represents a query that receives facet information from a LiveQuery run."""
     def __init__(self, doc_class, cb):
         """Initialize a FacetQuery object."""
@@ -986,35 +929,6 @@ class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
             for name in field:
                 self._facet_fields.append(name)
         return self
-
-    def update_criteria(self, key, newlist):
-        """Update the criteria on this query with a custom criteria key.
-
-        Args:
-            key (str): The key for the criteria item to be set.
-            newlist (list): List of values to be set for the criteria item.
-
-        Returns:
-            The FacetQuery with specified custom criteria.
-
-        Example:
-            query = api.select(ResultFacet).update_criteria("my.criteria.key", ["criteria_value"])
-
-        Note: Use this method if there is no implemented method for your desired criteria.
-        """
-        self._update_criteria(key, newlist)
-        return self
-
-    def _update_criteria(self, key, newlist):
-        """
-        Updates a list of criteria being collected for a query, by setting or appending items.
-
-        Args:
-            key (str): The key for the criteria item to be set.
-            newlist (list): List of values to be set for the criteria item.
-        """
-        oldlist = self._criteria.get(key, [])
-        self._criteria[key] = oldlist + newlist
 
     def set_device_ids(self, device_ids):
         """Sets the device.id criteria filter.
@@ -1143,7 +1057,7 @@ class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
             yield self._doc_class(self._cb, item)
 
 
-class TemplateHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
+class TemplateHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin):
     """Represents a query that retrieves historic LiveQuery templates."""
     def __init__(self, doc_class, cb):
         """Initialize a TemplateHistoryQuery object."""
@@ -1154,35 +1068,6 @@ class TemplateHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
         self._query_builder = QueryBuilder()
         self._sort = {}
         self._criteria = {}
-
-    def update_criteria(self, key, newlist):
-        """Update the criteria on this query with a custom criteria key.
-
-        Args:
-            key (str): The key for the criteria item to be set.
-            newlist (list): List of values to be set for the criteria item.
-
-        Returns:
-            The ResultQuery with specified custom criteria.
-
-        Example:
-            query = api.select(Alert).update_criteria("my.criteria.key", ["criteria_value"])
-
-        Note: Use this method if there is no implemented method for your desired criteria.
-        """
-        self._update_criteria(key, newlist)
-        return self
-
-    def _update_criteria(self, key, newlist):
-        """
-        Updates a list of criteria being collected for a query, by setting or appending items.
-
-        Args:
-            key (str): The key for the criteria item to be set.
-            newlist (list): List of values to be set for the criteria item.
-        """
-        oldlist = self._criteria.get(key, [])
-        self._criteria[key] = oldlist + newlist
 
     def sort_by(self, key, direction="ASC"):
         """Sets the sorting behavior on a query's results.

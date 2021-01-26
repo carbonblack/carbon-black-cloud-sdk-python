@@ -16,7 +16,8 @@
 from cbc_sdk.errors import ApiError
 from cbc_sdk.platform import PlatformModel
 from cbc_sdk.base import (BaseQuery, UnrefreshableModel, QueryBuilder,
-                          QueryBuilderSupportMixin, IterableQueryMixin)
+                          QueryBuilderSupportMixin, IterableQueryMixin,
+                          CriteriaBuilderSupportMixin)
 from cbc_sdk.platform.devices import DeviceSearchQuery
 
 import time
@@ -308,7 +309,7 @@ class WorkflowStatus(PlatformModel):
 """Alert Queries"""
 
 
-class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin):
+class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin):
     """Represents a query that is used to locate BaseAlert objects."""
     VALID_CATEGORIES = ["THREAT", "MONITORED", "INFO", "MINOR", "SERIOUS", "CRITICAL"]
     VALID_REPUTATIONS = ["KNOWN_MALWARE", "SUSPECT_MALWARE", "PUP", "NOT_LISTED", "ADAPTIVE_WHITE_LIST",
@@ -335,22 +336,11 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
 
         self._query_builder = QueryBuilder()
         self._criteria = {}
-        self._time_filter = {}
+        self._time_filters = {}
         self._sortcriteria = {}
         self._bulkupdate_url = "/appservices/v6/orgs/{0}/alerts/workflow/_criteria"
         self._count_valid = False
         self._total_results = 0
-
-    def _update_criteria(self, key, newlist):
-        """
-        Updates a list of criteria being collected for a query, by setting or appending items.
-
-        Args:
-            key (str): The key for the criteria item to be set.
-            newlist (list): List of values to be set for the criteria item.
-        """
-        oldlist = self._criteria.get(key, [])
-        self._criteria[key] = oldlist + newlist
 
     def set_categories(self, categories):
         """
@@ -390,11 +380,11 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
             etime = kwargs["end"]
             if not isinstance(etime, str):
                 etime = etime.isoformat()
-            self._time_filter = {"start": stime, "end": etime}
+            self._time_filters["create_time"] = {"start": stime, "end": etime}
         elif kwargs.get("range", None):
             if kwargs.get("start", None) or kwargs.get("end", None):
                 raise ApiError("cannot specify start= or end= in addition to range=")
-            self._time_filter = {"range": kwargs["range"]}
+            self._time_filters["create_time"] = {"range": kwargs["range"]}
         else:
             raise ApiError("must specify either start= and end= or range=")
         return self
@@ -654,6 +644,40 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
         self._update_criteria("threat_id", threats)
         return self
 
+    def set_time_range(self, key, **kwargs):
+        """
+        Restricts the alerts that this query is performed on to the specified time range.
+
+        The time may either be specified as a start and end point or as a range.
+
+        Args:
+            key (str): The key to use for criteria one of create_time,
+                       first_event_time, last_event_time, or last_update_time
+            **kwargs (dict): Used to specify start= for start time, end= for end time, and range= for range.
+
+        Returns:
+            BaseAlertSearchQuery: This instance.
+        """
+        if key not in ["create_time", "first_event_time", "last_event_time", "last_update_time"]:
+            raise ApiError("key must be one of create_time, first_event_time, last_event_time, or last_update_time")
+        if kwargs.get("start", None) and kwargs.get("end", None):
+            if kwargs.get("range", None):
+                raise ApiError("cannot specify range= in addition to start= and end=")
+            stime = kwargs["start"]
+            if not isinstance(stime, str):
+                stime = stime.isoformat()
+            etime = kwargs["end"]
+            if not isinstance(etime, str):
+                etime = etime.isoformat()
+            self._time_filters[key] = {"start": stime, "end": etime}
+        elif kwargs.get("range", None):
+            if kwargs.get("start", None) or kwargs.get("end", None):
+                raise ApiError("cannot specify start= or end= in addition to range=")
+            self._time_filters[key] = {"range": kwargs["range"]}
+        else:
+            raise ApiError("must specify either start= and end= or range=")
+        return self
+
     def set_types(self, alerttypes):
         """
         Restricts the alerts that this query is performed on to the specified alert type values.
@@ -693,8 +717,8 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
             dict: The criteria object.
         """
         mycrit = self._criteria
-        if self._time_filter:
-            mycrit["create_time"] = self._time_filter
+        if self._time_filters:
+            mycrit.update(self._time_filters)
         return mycrit
 
     def sort_by(self, key, direction="ASC"):
