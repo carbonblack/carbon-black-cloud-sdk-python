@@ -113,6 +113,30 @@ class ReputationOverride(PlatformModel):
         resp_json = resp.json()
         return cls(cb, resp_json["id"], resp_json)
 
+    @classmethod
+    def bulk_delete(cls, cb, overrides):
+        """
+        Deletes reputation overrides in bulk by id.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            overrides (List): List if reputation override ids
+
+        Example:
+            [
+                "e9410b754ea011ebbfd0db2585a41b07"
+            ]
+        """
+        resp = cb.post_object(cls.urlobject.format(cb.credentials.org_key) + "/_delete", overrides)
+        if resp.status_code not in (200, 204):
+            try:
+                message = json.loads(resp.text)[0]
+            except Exception:
+                message = resp.text
+            raise ServerError(resp.status_code, message, result="Did not delete overrides.")
+
+        return resp.json()
+
 
 class ReputationOverrideQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin):
     """Represents a query that is used to locate ReputationOverride objects."""

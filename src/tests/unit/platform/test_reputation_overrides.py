@@ -160,6 +160,24 @@ def test_reputation_override_delete(cbcsdk_mock):
     assert reputation_override._is_deleted
 
 
+def test_reputation_override_bulk_delete(cbcsdk_mock):
+    """Testing Reputation Override with .bulk_delete()"""
+    def _test_request(url, body, **kwargs):
+        assert body == ["ID_1", "ID_2"]
+        return {
+            "results": body,
+            "errors": []
+        }
+
+    cbcsdk_mock.mock_request("POST",
+                             "/appservices/v6/orgs/test/reputations/overrides/_delete",
+                             _test_request)
+
+    api = cbcsdk_mock.api
+    response = ReputationOverride.bulk_delete(api, ["ID_1", "ID_2"])
+    response["results"] == ["ID_1", "ID_2"]
+
+
 def test_reputation_override_process_ban_process_sha256(cbcsdk_mock):
     """Testing Reputation Override creation from process"""
     # mock the search validation
