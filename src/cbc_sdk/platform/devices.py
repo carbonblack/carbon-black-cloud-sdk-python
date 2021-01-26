@@ -15,8 +15,8 @@
 
 from cbc_sdk.errors import ApiError
 from cbc_sdk.platform import PlatformModel
-from cbc_sdk.base import (BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
-                          IterableQueryMixin, AsyncQueryMixin, CriteriaBuilderSupportMixin)
+from cbc_sdk.base import (BaseQuery, QueryBuilder, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
+                          IterableQueryMixin, AsyncQueryMixin)
 
 import time
 
@@ -174,7 +174,8 @@ class Device(PlatformModel):
 """Device Queries"""
 
 
-class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin, CriteriaBuilderSupportMixin):
+class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
+                        IterableQueryMixin, AsyncQueryMixin):
     """Represents a query that is used to locate Device objects."""
     VALID_OS = ["WINDOWS", "ANDROID", "MAC", "IOS", "LINUX", "OTHER"]
     VALID_STATUSES = ["PENDING", "REGISTERED", "UNINSTALLED", "DEREGISTERED",

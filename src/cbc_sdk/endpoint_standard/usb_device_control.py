@@ -14,7 +14,7 @@
 """Model and Query Classes for USB Device Control"""
 
 from cbc_sdk.base import (NewBaseModel, MutableBaseModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
-                          IterableQueryMixin, AsyncQueryMixin, CriteriaBuilderSupportMixin)
+                          CriteriaBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
 from cbc_sdk.errors import ApiError, ServerError
 from cbc_sdk.platform.devices import DeviceSearchQuery
 import logging
@@ -319,8 +319,8 @@ class USBDevice(NewBaseModel):
 """USB Device Control queries"""
 
 
-class USBDeviceApprovalQuery(BaseQuery, QueryBuilderSupportMixin,
-                             IterableQueryMixin, AsyncQueryMixin, CriteriaBuilderSupportMixin):
+class USBDeviceApprovalQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
+                             IterableQueryMixin, AsyncQueryMixin):
     """Represents a query that is used to locate USBDeviceApproval objects."""
 
     def __init__(self, doc_class, cb):
@@ -564,7 +564,8 @@ class USBDeviceBlockQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
         return [self._doc_class(self._cb, item["id"], item) for item in results]
 
 
-class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin, CriteriaBuilderSupportMixin):
+class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
+                     IterableQueryMixin, AsyncQueryMixin):
     """Represents a query that is used to locate USBDevice objects."""
     VALID_STATUSES = ["APPROVED", "UNAPPROVED"]
     VALID_FACET_FIELDS = ["vendor_name", "product_name", "endpoint.endpoint_name", "status"]
