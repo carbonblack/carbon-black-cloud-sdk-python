@@ -367,16 +367,14 @@ def test_process_events_query_with_criteria_exclusions(cbcsdk_mock):
     process = api.select(Process, guid)
     assert isinstance(process.events(), Query)
     # create the events query object to compare
-    events = process.events(event_type="modload").add_criteria("crossproc_action",
-                                                               ["ACTION_PROCESS_API_CALL"]).add_exclusions(
-        "crossproc_effective_reputation", ["REP_WHITE"])
-    events.add_criteria("crossproc_action", "SOME_OTHER_CRIT")
+    events = process.events(event_type="modload").add_criteria("crossproc_action", ["ACTION_PROCESS_API_CALL"]) \
+                                                 .add_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
+    events.update_criteria("crossproc_action", "SOME_OTHER_CRIT")
     events.add_exclusions("exclusion_key", "exclusion_value")
     # emulate the manual select in Process.events()
-    query = api.select(Event).where(process_guid=guid).add_criteria("crossproc_action",
-                                                                    ["ACTION_PROCESS_API_CALL"]).add_exclusions(
-        "crossproc_effective_reputation", ["REP_WHITE"])
-    query.add_criteria("crossproc_action", "SOME_OTHER_CRIT")
+    query = api.select(Event).where(process_guid=guid).add_criteria("crossproc_action", ["ACTION_PROCESS_API_CALL"]) \
+                                                      .add_exclusions("crossproc_effective_reputation", ["REP_WHITE"])
+    query.update_criteria("crossproc_action", "SOME_OTHER_CRIT")
     query.add_exclusions("exclusion_key", "exclusion_value")
     assert [isinstance(q, Query) for q in [events, query]]
     # extract and compare the parameters from each Query
