@@ -33,12 +33,6 @@ from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
 from cbc_sdk.platform import ReputationOverride
 from cbc_sdk.errors import ObjectNotFoundError
 
-# Formatters
-NEWLINES = 1
-DELIMITER = '-'
-SYMBOLS = 48
-
-
 def main():
     """Script entry point"""
     global ORG_KEY
