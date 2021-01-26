@@ -37,7 +37,7 @@ USB Devices
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Note that ``USBDevice`` is distinct from either the Platform API ``Device`` or the Endpoint Standard ``Device``. Access
-to USB devices is through Endpoint Standard.
+to USB devices is through the Endpoint Standard package ``from cbc_sdk.endpoint_standard import from cbc_sdk.endpoint_standard``
 
 ::
 
