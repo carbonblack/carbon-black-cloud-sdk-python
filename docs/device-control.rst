@@ -36,7 +36,7 @@ We can create one or more approvals for a specific USB device by using the `USBD
 ::
 
     >>> from cbc_sdk import CBCloudAPI
-    >>> api = CBCloudAPI(profile='test03-dc')
+    >>> api = CBCloudAPI(profile='sample')
     >>> from cbc_sdk.endpoint_standard import USBDevice
     >>> query = api.select(USBDevice).where('1').set_statuses(['UNAPPROVED'])
     >>> usb_list = list(query)
