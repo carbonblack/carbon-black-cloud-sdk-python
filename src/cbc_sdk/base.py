@@ -1431,6 +1431,31 @@ class QueryBuilderSupportMixin:
 class CriteriaBuilderSupportMixin:
     """A mixin that supplies wrapper methods to access the _crtieria."""
 
+    def add_criteria(self, key, newlist):
+        """Add to the criteria on this query with a custom criteria key.
+
+        Will overwrite any existing criteria for the specified key.
+
+        Args:
+            key (str): The key for the criteria item to be set.
+            newlist (str or list[str]): Value or list of values to be set for the criteria item.
+
+        Returns:
+            The query object with specified custom criteria.
+
+        Example:
+            query = api.select(Event).add_criteria("event_type", ["filemod", "scriptload"])
+            query = api.select(Event).add_criteria("event_type", "filemod")
+        """
+        if not isinstance(newlist, list):
+            if not isinstance(newlist, str):
+                raise ApiError("Criteria value(s) must be a string or list of strings. "
+                               f"{newlist} is a {type(newlist)}.")
+            self._update_criteria(key, [newlist], overwrite=True)
+        else:
+            self._update_criteria(key, newlist, overwrite=True)
+        return self
+
     def update_criteria(self, key, newlist):
         """Update the criteria on this query with a custom criteria key.
 
@@ -1446,18 +1471,25 @@ class CriteriaBuilderSupportMixin:
 
         Note: Use this method if there is no implemented method for your desired criteria.
         """
-        self._update_criteria(key, newlist)
+        if not isinstance(newlist, list):
+            if not isinstance(newlist, str):
+                raise ApiError("Criteria value(s) must be a string or list of strings. "
+                               f"{newlist} is a {type(newlist)}.")
+            self._update_criteria(key, [newlist])
+        else:
+            self._update_criteria(key, newlist)
         return self
 
-    def _update_criteria(self, key, newlist):
+    def _update_criteria(self, key, newlist, overwrite=False):
         """
         Updates a list of criteria being collected for a query, by setting or appending items.
 
         Args:
             key (str): The key for the criteria item to be set.
             newlist (list): List of values to be set for the criteria item.
+            overwrite (bool): Overwrite the existing criteria for specified key
         """
-        if self._criteria.get(key, None) is None:
+        if self._criteria.get(key, None) is None or overwrite:
             self._criteria[key] = newlist
         else:
             self._criteria[key].extend(newlist)
@@ -1498,7 +1530,7 @@ class AsyncQueryMixin:
         return self._cb._async_submit(lambda arg, kwarg: arg[0]._run_async_query(arg[1]), self, context)
 
 
-class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin):
+class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin, CriteriaBuilderSupportMixin):
     """Represents a prepared query to the Cb Enterprise EDR backend.
 
     This object is returned as part of a `CbEnterpriseEDRAPI.select`
@@ -1546,40 +1578,6 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
         self._time_range = {}
         self._fields = ["*"]
         self._default_args = {}
-
-    def add_criteria(self, key, newlist):
-        """Add to the criteria on this query with a custom criteria key.
-
-        Args:
-            key (str): The key for the criteria item to be set.
-            newlist (str or list[str]): Value or list of values to be set for the criteria item.
-
-        Returns:
-            The ResultQuery with specified custom criteria.
-
-        Example:
-            query = api.select(Event).add_criteria("event_type", ["filemod", "scriptload"])
-            query = api.select(Event).add_criteria("event_type", "filemod")
-        """
-        if not isinstance(newlist, list):
-            if not isinstance(newlist, str):
-                raise ApiError("Criteria value(s) must be a string or list of strings. "
-                               f"{newlist} is a {type(newlist)}.")
-            self._add_criteria(key, [newlist])
-        else:
-            self._add_criteria(key, newlist)
-        return self
-
-    def _add_criteria(self, key, newlist):
-        """
-        Updates a list of criteria being collected for a query, by setting or appending items.
-
-        Args:
-            key (str): The key for the criteria item to be set.
-            newlist (list): List of values to be set for the criteria item.
-        """
-        oldlist = self._criteria.get(key, [])
-        self._criteria[key] = oldlist + newlist
 
     def add_exclusions(self, key, newlist):
         """Add to the excluions on this query with a custom exclusion key.
@@ -1793,7 +1791,7 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
         return list(self._search())
 
 
-class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
+class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin):
     """Query class for asynchronous Facet API calls.
 
     These API calls return one result, and are not paginated or iterable.
@@ -1823,40 +1821,6 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         self._facet_rows = None
         self._ranges = []
         self._default_args = {}
-
-    def add_criteria(self, key, newlist):
-        """Add to the criteria on this query with a custom criteria key.
-
-        Args:
-            key (str): The key for the criteria item to be set.
-            newlist (str or list[str]): Value or list of values to be set for the criteria item.
-
-        Returns:
-            The ResultQuery with specified custom criteria.
-
-        Example:
-            query = api.select(Event).add_criteria("event_type", ["filemod", "scriptload"])
-            query = api.select(Event).add_criteria("event_type", "filemod")
-        """
-        if not isinstance(newlist, list):
-            if not isinstance(newlist, str):
-                raise ApiError("Criteria value(s) must be a string or list of strings. "
-                               f"{newlist} is a {type(newlist)}.")
-            self._add_criteria(key, [newlist])
-        else:
-            self._add_criteria(key, newlist)
-        return self
-
-    def _add_criteria(self, key, newlist):
-        """
-        Updates a list of criteria being collected for a query, by setting or appending items.
-
-        Args:
-            key (str): The key for the criteria item to be set.
-            newlist (list): List of values to be set for the criteria item.
-        """
-        oldlist = self._criteria.get(key, [])
-        self._criteria[key] = oldlist + newlist
 
     def add_exclusions(self, key, newlist):
         """Add to the excluions on this query with a custom exclusion key.
