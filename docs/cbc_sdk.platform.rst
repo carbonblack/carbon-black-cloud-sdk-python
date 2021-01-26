@@ -37,7 +37,7 @@ cbc\_sdk.platform.events module
   :show-inheritance:
 
 cbc\_sdk.platform.processes module
---------------------------------
+----------------------------------
 
 .. automodule:: cbc_sdk.platform.processes
    :members:
@@ -45,7 +45,7 @@ cbc\_sdk.platform.processes module
    :show-inheritance:
 
 cbc\_sdk.platform.reputation module
---------------------------------
+-----------------------------------
 
 .. automodule:: cbc_sdk.platform.reputation
   :members:

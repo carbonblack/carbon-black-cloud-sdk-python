@@ -1972,6 +1972,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         >>> cb.select(ProcessFacet).add_range({"bucket_size": 5, "start": 0, "end": 10, "field": "netconn_count"})
         >>> cb.select(ProcessFacet).add_range({"bucket_size": "+1DAY", "start": "2020-11-01T00:00:00Z",
                                                "end": "2020-11-12T00:00:00Z", "field": "backend_timestamp"})
+
         """
         if isinstance(range, dict):
             self._check_range(range)
