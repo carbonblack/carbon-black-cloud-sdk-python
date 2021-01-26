@@ -47,7 +47,7 @@ We can create one or more approvals for a specific USB device by using the `USBD
     SanDisk Cruzer Dial 4C530000110722114075
     PNY USB 2.0 FD 07189613DD84E242
 
-Now we'll select one of these devices and crrate an approval for it.
+Now we'll select one of these devices and create an approval for it.
 
 ::
 
