@@ -103,7 +103,8 @@ def test_result_query_criteria(cbcsdk_mock):
 def test_result_query_update_criteria(cbcsdk_mock):
     """Testing the public update_criteria() function accessing private _update_criteria()."""
     api = cbcsdk_mock.api
-    query = api.select(Result).run_id(2).update_criteria("my.key.dot.notation", ["criteria_val_1", "criteria_val_2"])
+    query = api.select(Result).run_id(2).update_criteria("my.key.dot.notation", ["criteria_val_1"])
+    query = query.update_criteria("my.key.dot.notation", ["criteria_val_2"])
     assert query._build_request(start=0, rows=100) == {"criteria": {
         "my.key.dot.notation": ["criteria_val_1", "criteria_val_2"]
     }, "start": 0, "rows": 100, "query": ""}
