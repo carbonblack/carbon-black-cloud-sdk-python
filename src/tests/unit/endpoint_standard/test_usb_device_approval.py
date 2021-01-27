@@ -15,7 +15,7 @@
 
 import pytest
 import logging
-from cbc_sdk.endpoint_standard import USBDevice
+from cbc_sdk.endpoint_standard import USBDeviceApproval, USBDevice
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
