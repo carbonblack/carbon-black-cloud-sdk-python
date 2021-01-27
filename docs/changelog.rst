@@ -1,6 +1,24 @@
 Changelog
 ================================
 
+CBC SDK 1.1.0 - Released January 27, 2021
+------------------------------------
+
+New Features
+
+* Reputation Overrides for Endpoint Standard with Enterprise EDR support coming soon
+* Device Control for Endpoint Standard
+* Live Query Templates/Scheduled Runs and Template History
+* Add set_time_range for Alert query
+
+Bug Fixes
+
+* Refactored code base to reduce query inheritance complexity
+* Limit Live Query results to 10k cap to prevent 400 Bad Request
+* Add missing criteria for Live Query RunHistory to search on template ids
+* Add missing args.orgkey to get_cb_cloud_object to prevent exception from being thrown
+* Refactor add and update criteria to use CriteriaBuilderSupportMixin
+
 CBC SDK 1.0.1 - Released December 17, 2020
 ------------------------------------
 
