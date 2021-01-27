@@ -92,8 +92,33 @@ class USBDeviceApproval(MutableBaseModel):
         Returns:
             str: The unique ID of this object.
         """
-        ret = self._cb.put_object(self._build_api_request_uri(), self._info)
-        return self._refresh_if_needed(ret)
+        if self._model_unique_id is None:
+            approval_in = {key: self._info[key]
+                           for key in ['serial_number', 'vendor_id', 'product_id', 'approval_name', 'notes']
+                           if key in self._info}
+            output = USBDeviceApproval.bulk_create(self._cb, [approval_in])
+            new_approval = output[0]
+            self._info = new_approval._info
+            self._last_refresh_time = time.time()
+            return new_approval.id
+        else:
+            ret = self._cb.put_object(self._build_api_request_uri(), self._info)
+            return self._refresh_if_needed(ret)
+
+    @classmethod
+    def create_from_usb_device(cls, usb_device):
+        """
+        Creates a new, unsaved approval object from a USBDeviceObject, filling in its basic fields.
+
+        Args:
+            usb_device (USBDevice): The USB device to create the approval from.
+
+        Returns:
+            USBDeviceApproval: The new approval object.
+        """
+        return USBDeviceApproval(usb_device._cb, None, {key: usb_device._info[key]
+                                                        for key in ['serial_number', 'vendor_id', 'product_id']
+                                                        if key in usb_device._info})
 
     @classmethod
     def bulk_create(cls, cb, approvals):
@@ -222,6 +247,21 @@ class USBDeviceBlock(NewBaseModel):
             raise ServerError(ret.status_code, message, result="Did not delete {0:s}.".format(str(self)))
 
     @classmethod
+    def create(cls, cb, policy_id):
+        """
+        Creates a USBDeviceBlock for a given policy ID.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            policy_id (str/int): Policy ID to create a USBDeviceBlock for.
+
+        Returns:
+            USBDeviceBlock: New USBDeviceBlock object representing the block.
+        """
+        output = USBDeviceBlock.bulk_create(cb, [str(policy_id)])
+        return output[0]
+
+    @classmethod
     def bulk_create(cls, cb, policy_ids):
         """
         Creates multiple blocks and returns the USBDeviceBlocks that were created.
@@ -261,6 +301,24 @@ class USBDevice(NewBaseModel):
         if model_unique_id is not None and initial_data is None:
             self._refresh()
         self._full_init = True
+
+    def approve(self, approval_name, notes):
+        """
+        Creates and saves an approval for this USB device, allowing it to be treated as approved from now on.
+
+        Args:
+            approval_name (str): The name for this new approval.
+            notes (str): Notes to be added to this approval.
+
+        Returns:
+            USBDeviceApproval: The new approval.
+        """
+        new_approval = USBDeviceApproval.create_from_usb_device(self)
+        new_approval.approval_name = approval_name
+        new_approval.notes = notes
+        new_approval.save()
+        self._refresh()
+        return new_approval
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
