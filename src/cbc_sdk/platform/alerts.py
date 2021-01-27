@@ -14,8 +14,10 @@
 """Model and Query Classes for Platform Alerts and Workflows"""
 
 from cbc_sdk.errors import ApiError
-from cbc_sdk.platform import PlatformModel, PlatformQueryBase
-from cbc_sdk.base import UnrefreshableModel, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin
+from cbc_sdk.platform import PlatformModel
+from cbc_sdk.base import (BaseQuery, UnrefreshableModel, QueryBuilder,
+                          QueryBuilderSupportMixin, IterableQueryMixin,
+                          CriteriaBuilderSupportMixin)
 from cbc_sdk.platform.devices import DeviceSearchQuery
 
 import time
@@ -54,7 +56,7 @@ class BaseAlert(PlatformModel):
             **kwargs (dict): Not used, retained for compatibility.
 
         Returns:
-            PlatformQueryBase: The query object for this alert type.
+            BaseAlertSearchQuery: The query object for this alert type.
         """
         return BaseAlertSearchQuery(cls, cb)
 
@@ -176,7 +178,7 @@ class WatchlistAlert(BaseAlert):
             **kwargs (dict): Not used, retained for compatibility.
 
         Returns:
-            PlatformQueryBase: The query object for this alert type.
+            WatchlistAlertSearchQuery: The query object for this alert type.
         """
         return WatchlistAlertSearchQuery(cls, cb)
 
@@ -195,28 +197,9 @@ class CBAnalyticsAlert(BaseAlert):
             **kwargs (dict): Not used, retained for compatibility.
 
         Returns:
-            PlatformQueryBase: The query object for this alert type.
+            CBAnalyticsAlertSearchQuery: The query object for this alert type.
         """
         return CBAnalyticsAlertSearchQuery(cls, cb)
-
-
-class VMwareAlert(BaseAlert):
-    """Represents VMware alerts."""
-    urlobject = "/appservices/v6/orgs/{0}/alerts/vmware"
-
-    @classmethod
-    def _query_implementation(cls, cb, **kwargs):
-        """
-        Returns the appropriate query object for this alert type.
-
-        Args:
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-            **kwargs (dict): Not used, retained for compatibility.
-
-        Returns:
-            PlatformQueryBase: The query object for this alert type.
-        """
-        return VMwareAlertSearchQuery(cls, cb)
 
 
 class Workflow(UnrefreshableModel):
@@ -326,12 +309,12 @@ class WorkflowStatus(PlatformModel):
 """Alert Queries"""
 
 
-class BaseAlertSearchQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
+class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin):
     """Represents a query that is used to locate BaseAlert objects."""
     VALID_CATEGORIES = ["THREAT", "MONITORED", "INFO", "MINOR", "SERIOUS", "CRITICAL"]
     VALID_REPUTATIONS = ["KNOWN_MALWARE", "SUSPECT_MALWARE", "PUP", "NOT_LISTED", "ADAPTIVE_WHITE_LIST",
                          "COMMON_WHITE_LIST", "TRUSTED_WHITE_LIST", "COMPANY_BLACK_LIST"]
-    VALID_ALERT_TYPES = ["CB_ANALYTICS", "VMWARE", "WATCHLIST"]
+    VALID_ALERT_TYPES = ["CB_ANALYTICS", "WATCHLIST"]
     VALID_WORKFLOW_VALS = ["OPEN", "DISMISSED"]
     VALID_FACET_FIELDS = ["ALERT_TYPE", "CATEGORY", "REPUTATION", "WORKFLOW", "TAG", "POLICY_ID",
                           "POLICY_NAME", "DEVICE_ID", "DEVICE_NAME", "APPLICATION_HASH",
@@ -346,25 +329,18 @@ class BaseAlertSearchQuery(PlatformQueryBase, QueryBuilderSupportMixin, Iterable
             doc_class (class): The model class that will be returned by this query.
             cb (BaseAPI): Reference to API object used to communicate with the server.
         """
-        super().__init__(doc_class, cb)
+        self._doc_class = doc_class
+        self._cb = cb
+        self._count_valid = False
+        super(BaseAlertSearchQuery, self).__init__()
+
         self._query_builder = QueryBuilder()
         self._criteria = {}
-        self._time_filter = {}
+        self._time_filters = {}
         self._sortcriteria = {}
         self._bulkupdate_url = "/appservices/v6/orgs/{0}/alerts/workflow/_criteria"
         self._count_valid = False
         self._total_results = 0
-
-    def _update_criteria(self, key, newlist):
-        """
-        Updates a list of criteria being collected for a query, by setting or appending items.
-
-        Args:
-            key (str): The key for the criteria item to be set.
-            newlist (list): List of values to be set for the criteria item.
-        """
-        oldlist = self._criteria.get(key, [])
-        self._criteria[key] = oldlist + newlist
 
     def set_categories(self, categories):
         """
@@ -404,11 +380,11 @@ class BaseAlertSearchQuery(PlatformQueryBase, QueryBuilderSupportMixin, Iterable
             etime = kwargs["end"]
             if not isinstance(etime, str):
                 etime = etime.isoformat()
-            self._time_filter = {"start": stime, "end": etime}
+            self._time_filters["create_time"] = {"start": stime, "end": etime}
         elif kwargs.get("range", None):
             if kwargs.get("start", None) or kwargs.get("end", None):
                 raise ApiError("cannot specify start= or end= in addition to range=")
-            self._time_filter = {"range": kwargs["range"]}
+            self._time_filters["create_time"] = {"range": kwargs["range"]}
         else:
             raise ApiError("must specify either start= and end= or range=")
         return self
@@ -668,12 +644,46 @@ class BaseAlertSearchQuery(PlatformQueryBase, QueryBuilderSupportMixin, Iterable
         self._update_criteria("threat_id", threats)
         return self
 
+    def set_time_range(self, key, **kwargs):
+        """
+        Restricts the alerts that this query is performed on to the specified time range.
+
+        The time may either be specified as a start and end point or as a range.
+
+        Args:
+            key (str): The key to use for criteria one of create_time,
+                       first_event_time, last_event_time, or last_update_time
+            **kwargs (dict): Used to specify start= for start time, end= for end time, and range= for range.
+
+        Returns:
+            BaseAlertSearchQuery: This instance.
+        """
+        if key not in ["create_time", "first_event_time", "last_event_time", "last_update_time"]:
+            raise ApiError("key must be one of create_time, first_event_time, last_event_time, or last_update_time")
+        if kwargs.get("start", None) and kwargs.get("end", None):
+            if kwargs.get("range", None):
+                raise ApiError("cannot specify range= in addition to start= and end=")
+            stime = kwargs["start"]
+            if not isinstance(stime, str):
+                stime = stime.isoformat()
+            etime = kwargs["end"]
+            if not isinstance(etime, str):
+                etime = etime.isoformat()
+            self._time_filters[key] = {"start": stime, "end": etime}
+        elif kwargs.get("range", None):
+            if kwargs.get("start", None) or kwargs.get("end", None):
+                raise ApiError("cannot specify start= or end= in addition to range=")
+            self._time_filters[key] = {"range": kwargs["range"]}
+        else:
+            raise ApiError("must specify either start= and end= or range=")
+        return self
+
     def set_types(self, alerttypes):
         """
         Restricts the alerts that this query is performed on to the specified alert type values.
 
         Args:
-            alerttypes (list): List of string alert type values.  Valid values are "CB_ANALYTICS", "VMWARE",
+            alerttypes (list): List of string alert type values.  Valid values are "CB_ANALYTICS",
                                and "WATCHLIST".
 
         Returns:
@@ -707,8 +717,8 @@ class BaseAlertSearchQuery(PlatformQueryBase, QueryBuilderSupportMixin, Iterable
             dict: The criteria object.
         """
         mycrit = self._criteria
-        if self._time_filter:
-            mycrit["create_time"] = self._time_filter
+        if self._time_filters:
+            mycrit.update(self._time_filters)
         return mycrit
 
     def sort_by(self, key, direction="ASC"):
@@ -1112,33 +1122,4 @@ class CBAnalyticsAlertSearchQuery(BaseAlertSearchQuery):
                    for vector in vectors):
             raise ApiError("One or more invalid threat cause vectors")
         self._update_criteria("threat_cause_vector", vectors)
-        return self
-
-
-class VMwareAlertSearchQuery(BaseAlertSearchQuery):
-    """Represents a query that is used to locate VMwareAlert objects."""
-    def __init__(self, doc_class, cb):
-        """
-        Initialize the VMwareAlertSearchQuery.
-
-        Args:
-            doc_class (class): The model class that will be returned by this query.
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-        """
-        super().__init__(doc_class, cb)
-        self._bulkupdate_url = "/appservices/v6/orgs/{0}/alerts/vmware/workflow/_criteria"
-
-    def set_group_ids(self, groupids):
-        """
-        Restricts the alerts that this query is performed on to the specified AppDefense-assigned alarm group IDs.
-
-        Args:
-            groupids (list): List of (integer) AppDefense-assigned alarm group IDs.
-
-        Returns:
-            VMwareAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(groupid, int) for groupid in groupids):
-            raise ApiError("One or more invalid alarm group IDs")
-        self._update_criteria("group_id", groupids)
         return self

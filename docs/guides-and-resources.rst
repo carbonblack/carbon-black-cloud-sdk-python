@@ -1,0 +1,23 @@
+Guides and Resources
+====================
+
+Here we've listed a collection of tutorials, recorded demonstrations and other resources we think will be useful
+to get the most out of the Carbon Black Cloud Python SDK.
+
+Recordings
+----------
+
+Demonstrations are found on our `YouTube channel <https://www.youtube.com/channel/UCz0s1WuJAe7rt_dA1v-dN9g/featured>`_.
+
+A recent highlight shows how to schedule Audit and Remediation Tasks.
+
+Guides
+------
+
+* :doc:`device-control` - Control the blocking of USB devices on endpoints.
+
+Examples
+--------
+
+The `GitHub repository <https://github.com/carbonblack/carbon-black-cloud-sdk-python/tree/develop/examples>`_ also has
+some example scripts which will help you get started using the SDK.

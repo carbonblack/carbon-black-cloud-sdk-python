@@ -144,6 +144,17 @@ class CBCloudAPI(BaseAPI):
         res = self.get_object("/integrationServices/v3/notification")
         return res.get("notifications", [])
 
+    def get_auditlogs(self):
+        """
+        Retrieve queued audit logs from the Carbon Black Cloud Endpoint Standard server.
+
+        Note that this can only be used with a 'API' key generated in the CBC console.
+
+        :returns: list of dictionary objects representing the audit logs, or an empty list if none available.
+        """
+        res = self.get_object("/integrationServices/v3/auditlogs")
+        return res.get("notifications", [])
+
     # ---- Device API
 
     def _raw_device_action(self, request):

@@ -14,14 +14,17 @@
 """Model and Query Classes for Audit and Remediation"""
 
 from __future__ import absolute_import
-from cbc_sdk.base import UnrefreshableModel, NewBaseModel, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin
-from cbc_sdk.platform import PlatformQueryBase
+from cbc_sdk.base import (UnrefreshableModel, NewBaseModel, QueryBuilder,
+                          QueryBuilderSupportMixin, IterableQueryMixin, BaseQuery,
+                          CriteriaBuilderSupportMixin)
 from cbc_sdk.errors import ApiError, ServerError
 import logging
 import time
 
 
 log = logging.getLogger(__name__)
+
+MAX_RESULTS_LIMIT = 10000
 
 
 """Audit and Remediation Models"""
@@ -320,15 +323,92 @@ class DeviceSummaryFacet(ResultFacet):
         super(DeviceSummaryFacet, self).__init__(cb, initial_data)
 
 
+class Template(Run):
+    """Represents an Audit and Remediation Live Query Template .
+
+    Example:
+    >>> template = cb.select(Template, template_id)
+    >>> print(template.name, template.sql, template.create_time)
+    >>> print(template.status, template.match_count, template.schedule)
+    >>> template.refresh()
+    """
+    primary_key = "id"
+    swagger_meta_file = "audit_remediation/models/template.yaml"
+    urlobject = "/livequery/v1/orgs/{}/templates"
+    urlobject_single = "/livequery/v1/orgs/{}/templates/{}"
+    _is_deleted = False
+
+    def __init__(self, cb, model_unique_id=None, initial_data=None):
+        """Initialize a Template object with initial_data."""
+        if initial_data is not None:
+            item = initial_data
+        elif model_unique_id is not None:
+            url = self.urlobject_single.format(cb.credentials.org_key, model_unique_id)
+            item = cb.get_object(url)
+
+        model_unique_id = item.get("id")
+
+        super(Template, self).__init__(
+            cb,
+            model_unique_id=model_unique_id,
+            initial_data=item
+        )
+
+    def stop(self):
+        """Stop a template.
+
+        Returns:
+            (bool): True if query was stopped successfully, False otherwise.
+
+        Raises:
+            ServerError: If the server response cannot be parsed as JSON.
+        """
+        if self._is_deleted:
+            raise ApiError("cannot stop a deleted query")
+        url = self.urlobject_single.format(self._cb.credentials.org_key, self.id)
+        self._info['schedule']['status'] = 'CANCELLED'
+
+        result = self._cb.put_object(url, self._info)
+        if (result.status_code == 200):
+            try:
+                self._info = result.json()
+                self._last_refresh_time = time.time()
+                return True
+            except Exception:
+                raise ServerError(result.status_code, "Cannot parse response as JSON: {0:s}".format(result.content))
+        return False
+
+
+class TemplateHistory(Template):
+    """Represents a historical Audit and Remediation `Template`."""
+    urlobject_history = "/livequery/v1/orgs/{}/templates/_search"
+
+    def __init__(self, cb, initial_data=None):
+        """Initialize a TemplateHistory object with initial_data."""
+        item = initial_data
+        model_unique_id = item.get("id")
+        super(Run, self).__init__(cb,
+                                  model_unique_id, initial_data=item,
+                                  force_init=False, full_doc=True)
+
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
+        return TemplateHistoryQuery(cls, cb)
+
+
 """Audit and Remediation Queries"""
 
 
-class RunQuery(PlatformQueryBase):
+class RunQuery(BaseQuery):
     """Represents a query that either creates or retrieves the status of a LiveQuery run."""
 
     def __init__(self, doc_class, cb):
         """Initialize a RunQuery object."""
-        super().__init__(doc_class, cb)
+        self._doc_class = doc_class
+        self._cb = cb
+        self._count_valid = False
+        super(RunQuery, self).__init__()
+
         self._query_token = None
         self._query_body = {"device_filter": {}}
         self._device_filter = self._query_body["device_filter"]
@@ -342,47 +422,49 @@ class RunQuery(PlatformQueryBase):
         is created with a schedule then the Run will contain a template_id to the corresponding template
         and a new Run will be created each time the schedule is met.
 
-        DAILY
+        Example RRule:
 
-        | Field    | Values  |
-        | -------- | ------- |
-        | BYSECOND | 0       |
-        | BYMINUTE | 0 or 30 |
-        | BYHOUR   | 0 to 23 |
+            DAILY
 
-        # Daily at 1:30PM
-        RRULE:FREQ=DAILY;BYHOUR=13;BYMINUTE=30;BYSECOND=0
+            | Field    | Values  |
+            | -------- | ------- |
+            | BYSECOND | 0       |
+            | BYMINUTE | 0 or 30 |
+            | BYHOUR   | 0 to 23 |
 
-        WEEKLY
+            # Daily at 1:30PM
+            RRULE:FREQ=DAILY;BYHOUR=13;BYMINUTE=30;BYSECOND=0
 
-        | Field    | Values                                  |
-        | -------- | --------------------------------------- |
-        | BYSECOND | 0                                       |
-        | BYMINUTE | 0 or 30                                 |
-        | BYHOUR   | 0 to 23                                 |
-        | BYDAY    | One or more: SU, MO, TU, WE, TH, FR, SA |
+            WEEKLY
 
-        # Monday and Friday of the week at 2:30 AM
-        RRULE:FREQ=WEEKLY;BYDAY=MO,FR;BYHOUR=13;BYMINUTE=30;BYSECOND=0
+            | Field    | Values                                  |
+            | -------- | --------------------------------------- |
+            | BYSECOND | 0                                       |
+            | BYMINUTE | 0 or 30                                 |
+            | BYHOUR   | 0 to 23                                 |
+            | BYDAY    | One or more: SU, MO, TU, WE, TH, FR, SA |
 
-        MONTHLY
+            # Monday and Friday of the week at 2:30 AM
+            RRULE:FREQ=WEEKLY;BYDAY=MO,FR;BYHOUR=13;BYMINUTE=30;BYSECOND=0
 
-        Note: Either (BYDAY and BYSETPOS) or BYMONTHDAY is required.
+            MONTHLY
 
-        | Field      | Values                                  |
-        | ---------- | --------------------------------------- |
-        | BYSECOND   | 0                                       |
-        | BYMINUTE   | 0 or 30                                 |
-        | BYHOUR     | 0 to 23                                 |
-        | BYDAY      | One or more: SU, MO, TU, WE, TH, FR, SA |
-        | BYSETPOS   | -1, 1, 2, 3, 4                          |
-        | BYMONTHDAY | One or more: 1 to 28                    |
+            Note: Either (BYDAY and BYSETPOS) or BYMONTHDAY is required.
 
-        # Last Monday of the Month at 2:30 AM
-        RRULE:FREQ=MONTHLY;BYDAY=MO;BYSETPOS=-1;BYHOUR=2;BYMINUTE=30;BYSECOND=0
+            | Field      | Values                                  |
+            | ---------- | --------------------------------------- |
+            | BYSECOND   | 0                                       |
+            | BYMINUTE   | 0 or 30                                 |
+            | BYHOUR     | 0 to 23                                 |
+            | BYDAY      | One or more: SU, MO, TU, WE, TH, FR, SA |
+            | BYSETPOS   | -1, 1, 2, 3, 4                          |
+            | BYMONTHDAY | One or more: 1 to 28                    |
 
-        # 1st and 15th of the Month at 2:30 AM
-        RRULE:FREQ=DAILY;BYMONTHDAY=1,15;BYHOUR=2;BYMINUTE=30;BYSECOND=0
+            # Last Monday of the Month at 2:30 AM
+            RRULE:FREQ=MONTHLY;BYDAY=MO;BYSETPOS=-1;BYHOUR=2;BYMINUTE=30;BYSECOND=0
+
+            # 1st and 15th of the Month at 2:30 AM
+            RRULE:FREQ=DAILY;BYMONTHDAY=1,15;BYHOUR=2;BYMINUTE=30;BYSECOND=0
 
         Arguments:
             rrule (string): A recurrence rule (RFC 2445) specifying the frequency and time at which the query will recur
@@ -507,13 +589,31 @@ class RunQuery(PlatformQueryBase):
         return self._doc_class(self._cb, initial_data=resp.json())
 
 
-class RunHistoryQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
+class RunHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin):
     """Represents a query that retrieves historic LiveQuery runs."""
     def __init__(self, doc_class, cb):
         """Initialize a RunHistoryQuery object."""
-        super().__init__(doc_class, cb)
+        self._doc_class = doc_class
+        self._cb = cb
+        self._count_valid = False
+        super(RunHistoryQuery, self).__init__()
         self._query_builder = QueryBuilder()
         self._sort = {}
+        self._criteria = {}
+
+    def set_template_ids(self, template_ids):
+        """Sets the template_id criteria filter.
+
+        Arguments:
+            template_ids ([str]): Template IDs to filter on.
+
+        Returns:
+            The ResultQuery with specified template_id.
+        """
+        if not all(isinstance(template_id, str) for template_id in template_ids):
+            raise ApiError("One or more invalid template IDs")
+        self._update_criteria("template_id", template_ids)
+        return self
 
     def sort_by(self, key, direction="ASC"):
         """Sets the sorting behavior on a query's results.
@@ -539,6 +639,8 @@ class RunHistoryQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQuery
             request["query"] = self._query_builder._collapse()
         if rows != 0:
             request["rows"] = rows
+        if self._criteria:
+            request["criteria"] = self._criteria
         if self._sort:
             request["sort"] = [self._sort]
 
@@ -591,45 +693,20 @@ class RunHistoryQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQuery
                 break
 
 
-class ResultQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
+class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin):
     """Represents a query that retrieves results from a LiveQuery run."""
     def __init__(self, doc_class, cb):
         """Initialize a ResultQuery object."""
-        super().__init__(doc_class, cb)
+        self._doc_class = doc_class
+        self._cb = cb
+        self._count_valid = False
+        super(ResultQuery, self).__init__()
+
         self._query_builder = QueryBuilder()
         self._criteria = {}
         self._sort = {}
         self._batch_size = 100
         self._run_id = None
-
-    def update_criteria(self, key, newlist):
-        """Update the criteria on this query with a custom criteria key.
-
-        Args:
-            key (str): The key for the criteria item to be set.
-            newlist (list): List of values to be set for the criteria item.
-
-        Returns:
-            The ResultQuery with specified custom criteria.
-
-        Example:
-            query = api.select(Alert).update_criteria("my.criteria.key", ["criteria_value"])
-
-        Note: Use this method if there is no implemented method for your desired criteria.
-        """
-        self._update_criteria(key, newlist)
-        return self
-
-    def _update_criteria(self, key, newlist):
-        """
-        Updates a list of criteria being collected for a query, by setting or appending items.
-
-        Args:
-            key (str): The key for the criteria item to be set.
-            newlist (list): List of values to be set for the criteria item.
-        """
-        oldlist = self._criteria.get(key, [])
-        self._criteria[key] = oldlist + newlist
 
     def set_device_ids(self, device_ids):
         """Sets the device.id criteria filter.
@@ -799,6 +876,8 @@ class ResultQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixi
             result = resp.json()
 
             self._total_results = result["num_found"]
+            if self._total_results > MAX_RESULTS_LIMIT:
+                self._total_results = MAX_RESULTS_LIMIT
             self._count_valid = True
 
             results = result.get("results", [])
@@ -817,11 +896,15 @@ class ResultQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixi
                 break
 
 
-class FacetQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin):
+class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin):
     """Represents a query that receives facet information from a LiveQuery run."""
     def __init__(self, doc_class, cb):
         """Initialize a FacetQuery object."""
-        super().__init__(doc_class, cb)
+        self._doc_class = doc_class
+        self._cb = cb
+        self._count_valid = False
+        super(FacetQuery, self).__init__()
+
         self._query_builder = QueryBuilder()
         self._facet_fields = []
         self._criteria = {}
@@ -846,35 +929,6 @@ class FacetQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin
             for name in field:
                 self._facet_fields.append(name)
         return self
-
-    def update_criteria(self, key, newlist):
-        """Update the criteria on this query with a custom criteria key.
-
-        Args:
-            key (str): The key for the criteria item to be set.
-            newlist (list): List of values to be set for the criteria item.
-
-        Returns:
-            The FacetQuery with specified custom criteria.
-
-        Example:
-            query = api.select(ResultFacet).update_criteria("my.criteria.key", ["criteria_value"])
-
-        Note: Use this method if there is no implemented method for your desired criteria.
-        """
-        self._update_criteria(key, newlist)
-        return self
-
-    def _update_criteria(self, key, newlist):
-        """
-        Updates a list of criteria being collected for a query, by setting or appending items.
-
-        Args:
-            key (str): The key for the criteria item to be set.
-            newlist (list): List of values to be set for the criteria item.
-        """
-        oldlist = self._criteria.get(key, [])
-        self._criteria[key] = oldlist + newlist
 
     def set_device_ids(self, device_ids):
         """Sets the device.id criteria filter.
@@ -1003,57 +1057,91 @@ class FacetQuery(PlatformQueryBase, QueryBuilderSupportMixin, IterableQueryMixin
             yield self._doc_class(self._cb, item)
 
 
-class Template(Run):
-    """Represents an Audit and Remediation Live Query Template .
+class TemplateHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin):
+    """Represents a query that retrieves historic LiveQuery templates."""
+    def __init__(self, doc_class, cb):
+        """Initialize a TemplateHistoryQuery object."""
+        self._doc_class = doc_class
+        self._cb = cb
+        self._count_valid = False
+        super(TemplateHistoryQuery, self).__init__()
+        self._query_builder = QueryBuilder()
+        self._sort = {}
+        self._criteria = {}
 
-    Example:
-    >>> template = cb.select(Template, template_id)
-    >>> print(template.name, template.sql, template.create_time)
-    >>> print(template.status, template.match_count, template.schedule)
-    >>> template.refresh()
-    """
-    primary_key = "id"
-    swagger_meta_file = "audit_remediation/models/template.yaml"
-    urlobject = "/livequery/v1/orgs/{}/templates"
-    urlobject_single = "/livequery/v1/orgs/{}/templates/{}"
-    _is_deleted = False
+    def sort_by(self, key, direction="ASC"):
+        """Sets the sorting behavior on a query's results.
 
-    def __init__(self, cb, model_unique_id=None, initial_data=None):
-        """Initialize a Template object with initial_data."""
-        if initial_data is not None:
-            item = initial_data
-        elif model_unique_id is not None:
-            url = self.urlobject_single.format(cb.credentials.org_key, model_unique_id)
-            item = cb.get_object(url)
-
-        model_unique_id = item.get("id")
-
-        super(Template, self).__init__(
-            cb,
-            model_unique_id=model_unique_id,
-            initial_data=item
-        )
-
-    def stop(self):
-        """Stop a template.
+        Arguments:
+            key (str): The key in the schema to sort by.
+            direction (str): The sort order, either "ASC" or "DESC".
 
         Returns:
-            (bool): True if query was stopped successfully, False otherwise.
+            RunHistoryQuery object with specified sorting key and order.
 
-        Raises:
-            ServerError: If the server response cannot be parsed as JSON.
+        Example:
+
+        >>> cb.select(Result).run_id(my_run).where(username="foobar").sort_by("uid")
         """
-        if self._is_deleted:
-            raise ApiError("cannot stop a deleted query")
-        url = self.urlobject_single.format(self._cb.credentials.org_key, self.id)
-        self._info['schedule']['status'] = 'CANCELLED'
+        self._sort.update({"field": key, "order": direction})
+        return self
 
-        result = self._cb.put_object(url, self._info)
-        if (result.status_code == 200):
-            try:
-                self._info = result.json()
-                self._last_refresh_time = time.time()
-                return True
-            except Exception:
-                raise ServerError(result.status_code, "Cannot parse response as JSON: {0:s}".format(result.content))
-        return False
+    def _build_request(self, start, rows):
+        request = {"start": start}
+
+        if self._query_builder:
+            request["query"] = self._query_builder._collapse()
+        if rows != 0:
+            request["rows"] = rows
+        if self._criteria:
+            request["criteria"] = self._criteria
+        if self._sort:
+            request["sort"] = [self._sort]
+
+        return request
+
+    def _count(self):
+        if self._count_valid:
+            return self._total_results
+
+        url = self._doc_class.urlobject_history.format(
+            self._cb.credentials.org_key
+        )
+        request = self._build_request(start=0, rows=0)
+        resp = self._cb.post_object(url, body=request)
+        result = resp.json()
+
+        self._total_results = result["num_found"]
+        self._count_valid = True
+
+        return self._total_results
+
+    def _perform_query(self, start=0, rows=0):
+        url = self._doc_class.urlobject_history.format(
+            self._cb.credentials.org_key
+        )
+        current = start
+        numrows = 0
+        still_querying = True
+        while still_querying:
+            request = self._build_request(start, rows)
+            resp = self._cb.post_object(url, body=request)
+            result = resp.json()
+
+            self._total_results = result["num_found"]
+            self._count_valid = True
+
+            results = result.get("results", [])
+            for item in results:
+                yield self._doc_class(self._cb, item)
+                current += 1
+                numrows += 1
+
+                if rows and numrows == rows:
+                    still_querying = False
+                    break
+
+            start = current
+            if current >= self._total_results:
+                still_querying = False
+                break

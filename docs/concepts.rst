@@ -33,6 +33,29 @@ then you must use Endpoint Standard Devices and a Live Response API Key.
   url: /integrationServices/v3/cblr/session/428:1234 -> status: PENDING
   [...]
 
+USB Devices
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Note that ``USBDevice`` is distinct from either the Platform API ``Device`` or the Endpoint Standard ``Device``. Access
+to USB devices is through the Endpoint Standard package ``from cbc_sdk.endpoint_standard import from cbc_sdk.endpoint_standard``.
+
+::
+
+  # USB device information is accessible with Endpoint Standard
+  >>> api = CBCloudAPI(profile='endpoint_standard')
+  >>> usb_devices = api.select(USBDevice).set_statuses(['APPROVED'])
+  >>> for usb in usb_devices:
+  ...   print(f'''
+              USB Device ID: {usb.id}
+              USB Device: {usb.vendor_name} {usb.product_name}
+
+              ''')
+  USB Device ID: 774
+  USB Device: SanDisk Ultra
+
+  USB Device ID: 778
+  USB Device: SanDisk Cruzer Mini
+
 Queries
 ----------------------------------------
 
@@ -220,6 +243,20 @@ Modules with Support for Criteria
   - :meth:`cbc_sdk.audit_remediation.base.FacetQuery.set_policy_names`
   - :meth:`cbc_sdk.audit_remediation.base.FacetQuery.set_status`
 
+:mod:`USBDeviceApprovalQuery <cbc_sdk.endpoint_standard.usb_device_control.USBDeviceApprovalQuery`
+
+  - :meth:`cbc_sdk.endpoint_standard.usb_device_control.USBDeviceApprovalQuery.set_device_ids`
+  - :meth:`cbc_sdk.endpoint_standard.usb_device_control.USBDeviceApprovalQuery.set_product_names`
+  - :meth:`cbc_sdk.endpoint_standard.usb_device_control.USBDeviceApprovalQuery.set_vendor_names`
+
+:mod:`USBDeviceQuery <cbc_sdk.endpoint_standard.usb_device_control.USBDeviceQuery`
+
+  - :meth:`cbc_sdk.endpoint_standard.usb_device_control.USBDeviceQuery.set_endpoint_names`
+  - :meth:`cbc_sdk.endpoint_standard.usb_device_control.USBDeviceQuery.set_product_names`
+  - :meth:`cbc_sdk.endpoint_standard.usb_device_control.USBDeviceQuery.set_serial_numbers`
+  - :meth:`cbc_sdk.endpoint_standard.usb_device_control.USBDeviceQuery.set_statuses`
+  - :meth:`cbc_sdk.endpoint_standard.usb_device_control.USBDeviceQuery.set_vendor_names`
+
 :mod:`Alert <cbc_sdk.platform.alerts.BaseAlert>`
 
   - :meth:`cbc_sdk.platform.alerts.BaseAlertSearchQuery.set_categories`
@@ -260,10 +297,6 @@ Modules with Support for Criteria
   - :meth:`cbc_sdk.platform.alerts.CBAnalyticsAlertSearchQuery.set_run_states`
   - :meth:`cbc_sdk.platform.alerts.CBAnalyticsAlertSearchQuery.set_sensor_actions`
   - :meth:`cbc_sdk.platform.alerts.CBAnalyticsAlertSearchQuery.set_threat_cause_vectors`
-
-:mod:`VMwareAlert <cbc_sdk.platform.alerts.VMwareAlert>`
-
-  - :meth:`cbc_sdk.platform.alerts.VMwareAlertSearchQuery.set_group_ids`
 
 :mod:`Event <cbc_sdk.platform.base.Event>`
 
@@ -310,6 +343,11 @@ Modules with support for asynchronous queries
 
 :mod:`EnrichedEventFacet <cbc_sdk.endpoint_standard.base.EnrichedEventFacet>`
 
+:mod:`USBDeviceApprovalQuery <cbc_sdk.endpoint_standard.usb_device_control.USBDeviceApprovalQuery>`
+
+:mod:`USBDeviceBlockQuery <cbc_sdk.endpoint_standard.usb_device_control.USBDeviceBlockQuery>`
+
+:mod:`USBDeviceQuery <cbc_sdk.endpoint_standard.usb_device_control.USBDeviceQuery>`
 
 Facets
 ------
@@ -383,9 +421,8 @@ Create the query:
 2. With the ``.execute_async()`` and ``.result()`` methods:
 
     >>> asynchronous_future = event_facet_query.execute_async()
-    >>> asynchronous_results = asynchronous_future.result()
-    # asynchronous results is a list with one item, so we access the first item
-    >>> print(asynchronous_results[0])
+    >>> asynchronous_result = asynchronous_future.result()
+    >>> print(asynchronous_result)
     EventFacet object, bound to https://defense-eap01.conferdeploy.net.
     -------------------------------------------------------------------------------
 
@@ -398,9 +435,9 @@ Create the query:
 
 The result for facet queries is a single object with two properties: ``terms`` and ``ranges`` that contain the facet search result weighted as per the criteria provided.
 
-    >>> print(synchronous_results.terms)
+    >>> print(synchronous_result.terms)
     [{'values': [{'total': 14, 'id': 'modload', 'name': 'modload'}, {'total': 2, 'id': 'crossproc', 'name': 'crossproc'}], 'field': 'event_type'}]
-    >>> print(synchronous_results.ranges)
+    >>> print(synchronous_result.ranges)
     [{'start': '2020-10-16T00:00:00Z', 'end': '2020-11-16T00:00:00Z', 'bucket_size': '+1DAY', 'field': 'device_timestamp', 'values': None}]
 
 

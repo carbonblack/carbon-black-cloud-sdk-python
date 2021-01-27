@@ -52,6 +52,7 @@ Get started with Carbon Black Cloud Python SDK here. For detailed information on
    authentication
    Getting Started <getting-started>
    concepts
+   guides-and-resources
    porting-guide
    logging
    os_functional_testing

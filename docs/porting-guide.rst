@@ -257,12 +257,12 @@ CBC SDK has the following abbreviated folder structure:
         │   ├── alerts.py
         │   │    ├── WatchlistAlert
         │   │    ├── CBAnalyticsAlert
-        │   │    ├── VMwareAlert
         │   │    ├── Workflow
         │   │    └── WorkflowStatus
-        │   ├── base.py
+        │   ├── processes.py
         │   │    ├── Process
         │   │    ├── ProcessFacet
+        │   ├── events.py
         │   │    ├── Event
         │   │    └── EventFacet
         │   └── devices.py

@@ -16,8 +16,9 @@ def test_base_query():
     clonedQuery = queryObject._clone()
     assert clonedQuery._query == queryObject._query
 
-    assert list(queryObject.all()) == []
-    assert queryObject[:1] is None
+    for item in clonedQuery._perform_query():
+        # Won't execute since this will perform an empty iterator
+        raise Exception("BaseQuery object is not iterable is not raised")
 
 
 def test_simple_query(monkeypatch):

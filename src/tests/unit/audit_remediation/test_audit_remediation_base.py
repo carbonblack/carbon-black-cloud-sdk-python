@@ -12,7 +12,8 @@ from tests.unit.fixtures.audit_remediation.mock_runs import (GET_RUN_RESP,
                                                              GET_RUN_RESULTS_RESP_2,
                                                              GET_DEVICE_SUMMARY_RESP_1,
                                                              GET_RESULTS_FACETS_RESP,
-                                                             POST_RUN_HISTORY_RESP)
+                                                             POST_RUN_HISTORY_RESP,
+                                                             GET_RUN_RESULTS_RESP_OVER_10k)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -102,7 +103,8 @@ def test_result_query_criteria(cbcsdk_mock):
 def test_result_query_update_criteria(cbcsdk_mock):
     """Testing the public update_criteria() function accessing private _update_criteria()."""
     api = cbcsdk_mock.api
-    query = api.select(Result).run_id(2).update_criteria("my.key.dot.notation", ["criteria_val_1", "criteria_val_2"])
+    query = api.select(Result).run_id(2).update_criteria("my.key.dot.notation", ["criteria_val_1"])
+    query = query.update_criteria("my.key.dot.notation", ["criteria_val_2"])
     assert query._build_request(start=0, rows=100) == {"criteria": {
         "my.key.dot.notation": ["criteria_val_1", "criteria_val_2"]
     }, "start": 0, "rows": 100, "query": ""}
@@ -241,3 +243,28 @@ def test_result_query_no_run_id_exception(cbcsdk_mock):
     with pytest.raises(ApiError):
         results = [res for res in result_query._perform_query()]
     assert results is None
+
+
+def test_result_query_over_10k(cbcsdk_mock):
+    """Testing Result._count() and ._perform_query() raising ApiError when a run_id is not supplied."""
+    api = cbcsdk_mock.api
+    cbcsdk_mock.mock_request("POST",
+                             "/livequery/v1/orgs/test/runs/run_id/results/_search",
+                             GET_RUN_RESULTS_RESP_OVER_10k)
+    result_query = api.select(Result).run_id("run_id")
+
+    list(result_query._perform_query())
+    assert result_query._total_results == 10000
+
+
+def test_run_history_criteria(cbcsdk_mock):
+    """Testing RunHistory criteria"""
+    def _test_request(url, body, **kwargs):
+        assert body["template_id"][0] == "TEST_ID"
+        assert body["custom"][0] == "values"
+
+    api = cbcsdk_mock.api
+    cbcsdk_mock.mock_request("POST",
+                             "/livequery/v1/orgs/test/runs//_search",
+                             _test_request)
+    api.select(RunHistory).set_template_ids(["TEST_ID"]).update_criteria("custom", ["values"])

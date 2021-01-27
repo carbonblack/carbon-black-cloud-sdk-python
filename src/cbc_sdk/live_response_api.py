@@ -256,6 +256,7 @@ class CbLRSessionBase(object):
 
         Returns:
             list: A list of dicts, each one describing a directory entry.
+
         """
         data = {"name": "directory list", "object": dir_name}
         resp = self._lr_post_command(data).json()
