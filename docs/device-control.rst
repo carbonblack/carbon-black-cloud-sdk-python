@@ -97,8 +97,6 @@ Platform API components.
     >>> from cbc_sdk.platform import DeviceControlAlert
     >>> query = api.select(DeviceControlAlert).where('1')
     >>> alerts_list = list(query)
-    >>> print(len(alerts_list))
-    7
     >>> for alert in alerts_list:
     ...   print(f"{alert.vendor_name} {alert.product_name} {alert.serial_number}")
     ...
