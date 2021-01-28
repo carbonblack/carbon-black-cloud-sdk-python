@@ -111,6 +111,17 @@ USBDEVICE_BLOCK_GET_ALL_RESP = {
     ]
 }
 
+USBDEVICE_BLOCK_CREATE_RESP = {
+    "results": [
+        {
+            "created_at": "2020-11-12T16:24:46.226Z",
+            "id": 44,
+            "policy_id": "9686969",
+            "updated_at": "2020-11-12T16:24:46.226Z"
+        }
+    ]
+}
+
 USBDEVICE_BLOCK_BULK_CREATE_RESP = {
     "results": [
         {
@@ -173,6 +184,63 @@ USBDEVICE_GET_ENDPOINTS_RESP = {
             "updated_at": "2020-10-21T16:36:01Z"
         }
     ]
+}
+
+USBDEVICE_GET_RESP_BEFORE_APPROVE = {
+    "id": "808",
+    "first_seen": "2020-10-20T19:47:02Z",
+    "last_seen": "2020-10-21T18:00:59Z",
+    "vendor_name": "SanDisk",
+    "vendor_id": "0x0781",
+    "product_name": "Ultra",
+    "product_id": "0x5581",
+    "serial_number": "4C531001331122115172",
+    "last_endpoint_name": "DESKTOP-IL2ON7C",
+    "last_endpoint_id": 7590378,
+    "last_policy_id": 6997287,
+    "endpoint_count": 2,
+    "device_friendly_name": "SanDisk Ultra USB Device",
+    "device_name": "\\Device\\HarddiskVolume30",
+    "created_at": "2020-10-20T19:59:06Z",
+    "updated_at": "2020-10-21T18:00:59Z",
+    "status": "UNAPPROVED"
+}
+
+USBDEVICE_APPROVE_RESP = {
+    "results": [
+        {
+            "id": "12703",
+            "vendor_id": "0x0781",
+            "vendor_name": "SanDisk",
+            "product_id": "0x5581",
+            "product_name": "Ultra",
+            "serial_number": "4C531001331122115172",
+            "created_at": "2020-11-05T23:51:56.396425Z",
+            "updated_at": "2020-11-11T23:05:42.048625Z",
+            "notes": "Approval notes",
+            "approval_name": "ApproveTest"
+        },
+    ]
+}
+
+USBDEVICE_GET_RESP_AFTER_APPROVE = {
+    "id": "808",
+    "first_seen": "2020-10-20T19:47:02Z",
+    "last_seen": "2020-10-21T18:00:59Z",
+    "vendor_name": "SanDisk",
+    "vendor_id": "0x0781",
+    "product_name": "Ultra",
+    "product_id": "0x5581",
+    "serial_number": "4C531001331122115172",
+    "last_endpoint_name": "DESKTOP-IL2ON7C",
+    "last_endpoint_id": 7590378,
+    "last_policy_id": 6997287,
+    "endpoint_count": 2,
+    "device_friendly_name": "SanDisk Ultra USB Device",
+    "device_name": "\\Device\\HarddiskVolume30",
+    "created_at": "2020-10-20T19:59:06Z",
+    "updated_at": "2020-10-21T18:00:59Z",
+    "status": "APPROVED"
 }
 
 USBDEVICE_QUERY_RESP = {

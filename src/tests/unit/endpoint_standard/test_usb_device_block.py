@@ -21,6 +21,7 @@ from cbc_sdk.errors import ServerError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.endpoint_standard.mock_usb_devices import (USBDEVICE_BLOCK_GET_RESP,
                                                                     USBDEVICE_BLOCK_GET_ALL_RESP,
+                                                                    USBDEVICE_BLOCK_CREATE_RESP,
                                                                     USBDEVICE_BLOCK_BULK_CREATE_RESP)
 
 
@@ -83,6 +84,15 @@ def test_block_get_all_async(cbcsdk_mock):
     block = results[0]
     assert block._model_unique_id == 55
     assert block.policy_id == "6997287"
+
+
+def test_block_create(cbcsdk_mock):
+    """Tests the create function."""
+    cbcsdk_mock.mock_request("POST", "/device_control/v3/orgs/test/blocks/_bulk", USBDEVICE_BLOCK_CREATE_RESP)
+    api = cbcsdk_mock.api
+    block = USBDeviceBlock.create(api, "9686969")
+    assert block._model_unique_id == 44
+    assert block.policy_id == "9686969"
 
 
 def test_block_bulk_create(cbcsdk_mock):
