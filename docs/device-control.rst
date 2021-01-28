@@ -82,3 +82,34 @@ Device approvals may be removed via the API as well. Starting from the end of th
 
 The ``delete()`` method is what causes the approval to be removed.  We then use ``refresh()`` on the actual
 ``USBDevice`` object to allow its ``status`` to be updated.
+
+Device Control Alerts
+---------------------
+
+When an endpoint attempts to access a blocked USB device (the endpoint has USB device blocking configured and the USB
+device is not approved), a ``DeviceControlAlert`` is generated.  These alerts may be queried using the standard
+Platform API components.
+
+::
+
+    >>> from cbc_sdk import CBCloudAPI
+    >>> api = CBCloudAPI(profile='sample')
+    >>> from cbc_sdk.platform import DeviceControlAlert
+    >>> query = api.select(DeviceControlAlert).where('1')
+    >>> alerts_list = list(query)
+    >>> print(len(alerts_list))
+    7
+    >>> for alert in alerts_list:
+    ...   print(f"{alert.vendor_name} {alert.product_name} {alert.serial_number}")
+    ...
+    USB Flash Disk FBI1305031200020
+    USB Flash Disk FBI1305031200020
+    USB Flash Disk FBI1305031200020
+    USB Flash Disk FBI1305031200020
+    PNY USB 2.0 FD 07189613DD84E242
+    PNY USB 2.0 FD 07189613DD84E242
+    PNY USB 2.0 FD 07189613DD84E242
+
+There are a number of fields supported by ``DeviceControlAlert`` over and above the standard alert fields; see
+`the developer documentation <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alerts-api/#device-control-alert>`_
+for details.
