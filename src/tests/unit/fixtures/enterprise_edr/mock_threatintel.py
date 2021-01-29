@@ -529,7 +529,7 @@ REPORT_GET_RESP = {
                         "b2e5665591b2118ca13709f61b60d700"
                     ],
                     "field": "md5",
-                    "link": "www.yahoo.com"
+                    "link": "https://www.yahoo.com"
                 }
             ],
             "visibility": None
