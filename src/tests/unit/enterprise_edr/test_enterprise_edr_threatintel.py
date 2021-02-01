@@ -266,6 +266,7 @@ def test_report_query(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", f"/threathunter/feedmgr/v2/orgs/test/feeds/{feed_id}/reports", REPORT_GET_RESP)
 
     def _test_request(url, body, **kwargs):
+        assert len(body["iocs_v2"]) == 1
         return body
 
     cbcsdk_mock.mock_request("PUT",
