@@ -384,7 +384,9 @@ class BaseAPI(object):
                 integration_name = self.credentials.integration
 
         timeout = kwargs.pop("timeout", DEFAULT_POOL_TIMEOUT)
-        max_retries = kwargs.pop("max_retries", DEFAULT_RETRIES)
+
+        # must be None to use MAX_RETRIES in Connection __init__
+        max_retries = kwargs.pop("max_retries", None)
         pool_connections = kwargs.pop("pool_connections", 1)
         pool_maxsize = kwargs.pop("pool_maxsize", DEFAULT_POOLSIZE)
         pool_block = kwargs.pop("pool_block", DEFAULT_POOLBLOCK)
