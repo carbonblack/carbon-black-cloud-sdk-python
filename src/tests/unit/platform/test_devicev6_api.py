@@ -441,5 +441,5 @@ def test_query_deployment_type(monkeypatch):
 
     patch_cbc_sdk_api(monkeypatch, api, POST=_valid_deployment_type)
     query = api.select(Device).set_deployment_type(["ENDPOINT"])
-    type = query.one()
-    assert type.deployment_type[0] in ["ENDPOINT", "WORKLOAD"]
+    d = query.one()
+    assert d.deployment_type[0] in ["ENDPOINT", "WORKLOAD"]
