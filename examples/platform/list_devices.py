@@ -28,6 +28,7 @@ def main():
     parser.add_argument("-S", "--sort_by", help="Field to sort the output by")
     parser.add_argument("-R", "--reverse", action="store_true", help="Reverse order of sort")
     parser.add_argument("-Y", "--asynchronous", action="store_true", help="Use asynchronous execution of query")
+    parser.add_argument("-d", "--deployment_type", action="append", help="Deployment Type")
 
     args = parser.parse_args()
     cb = get_cb_cloud_object(args)
@@ -46,6 +47,8 @@ def main():
     if args.sort_by:
         direction = "DESC" if args.reverse else "ASC"
         query = query.sort_by(args.sort_by, direction)
+    if args.deployment_type:
+        query = query.set_deployment_type(args.deployment_type)
 
     if args.asynchronous:
         future = query.execute_async()
