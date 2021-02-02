@@ -61,7 +61,7 @@ from pprint import pprint
 
 # Internal library imports
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
-from cbc_sdk.platform import Process, Event, ProcessFacet, EventFacet, Device
+from cbc_sdk.platform import Process, Event, ProcessFacet, EventFacet
 from cbc_sdk.endpoint_standard import EnrichedEvent, EnrichedEventFacet
 from cbc_sdk.errors import ApiError
 

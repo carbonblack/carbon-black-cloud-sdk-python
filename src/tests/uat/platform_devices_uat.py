@@ -30,7 +30,6 @@ from pprint import pprint
 # Internal library imports
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
 from cbc_sdk.platform import Device
-from cbc_sdk.errors import ApiError
 
 
 def search_devices(cb):
