@@ -13,7 +13,7 @@
 
 import pytest
 from cbc_sdk.errors import ApiError
-from cbc_sdk.platform import BaseAlert, CBAnalyticsAlert, WatchlistAlert, WorkflowStatus
+from cbc_sdk.platform import BaseAlert, CBAnalyticsAlert, WatchlistAlert, DeviceControlAlert, WorkflowStatus
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.stubresponse import StubResponse, patch_cbc_sdk_api
 
@@ -290,6 +290,95 @@ def test_query_cbanalyticsalert_invalid_criteria_values(method, arg):
     """Test invalid values being supplied to CB Analytics alert queries."""
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     query = api.select(CBAnalyticsAlert)
+    meth = getattr(query, method, None)
+    with pytest.raises(ApiError):
+        meth(arg)
+
+
+def test_query_devicecontrolalert_with_all_bells_and_whistles(monkeypatch):
+    """Test a device control alert query with all options selected."""
+    _was_called = False
+
+    def _run_query(url, body, **kwargs):
+        nonlocal _was_called
+        assert url == "/appservices/v6/orgs/Z100/alerts/devicecontrol/_search"
+        assert body == {"query": "Blort",
+                        "rows": 100,
+                        "criteria": {"category": ["SERIOUS", "CRITICAL"], "device_id": [6023], "device_name": ["HAL"],
+                                     "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
+                                     "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
+                                     "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
+                                     "policy_name": ["Strict"], "process_name": ["IEXPLORE.EXE"],
+                                     "process_sha256": ["0123456789ABCDEF0123456789ABCDEF"],
+                                     "reputation": ["SUSPECT_MALWARE"], "tag": ["Frood"], "target_value": ["HIGH"],
+                                     "threat_id": ["B0RG"], "type": ["WATCHLIST"], "workflow": ["OPEN"],
+                                     "external_device_friendly_name": ["/dev/ice"], "external_device_id": ["626"],
+                                     "product_id": ["0x5581"], "product_name": ["Ultra"],
+                                     "serial_number": ["4C531001331122115172"], "vendor_id": ["0x0781"],
+                                     "vendor_name": ["SanDisk"]},
+                        "sort": [{"field": "name", "order": "DESC"}]}
+        _was_called = True
+        return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
+                                          "workflow": {"state": "OPEN"}}], "num_found": 1})
+
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
+    query = api.select(DeviceControlAlert).where("Blort").set_categories(["SERIOUS", "CRITICAL"]) \
+        .set_device_ids([6023]).set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
+        .set_device_username(["JRN"]).set_group_results(True).set_alert_ids(["S0L0"]) \
+        .set_legacy_alert_ids(["S0L0_1"]).set_minimum_severity(6).set_policy_ids([8675309]) \
+        .set_policy_names(["Strict"]).set_process_names(["IEXPLORE.EXE"]) \
+        .set_process_sha256(["0123456789ABCDEF0123456789ABCDEF"]).set_reputations(["SUSPECT_MALWARE"]) \
+        .set_tags(["Frood"]).set_target_priorities(["HIGH"]).set_threat_ids(["B0RG"]).set_types(["WATCHLIST"]) \
+        .set_workflows(["OPEN"]).set_external_device_friendly_names(["/dev/ice"]).set_external_device_ids(["626"]) \
+        .set_product_ids(["0x5581"]).set_product_names(["Ultra"]).set_serial_numbers(["4C531001331122115172"]) \
+        .set_vendor_ids(["0x0781"]).set_vendor_names(["SanDisk"]).sort_by("name", "DESC")
+    a = query.one()
+    assert _was_called
+    assert a.id == "S0L0"
+    assert a.org_key == "Z100"
+    assert a.threat_id == "B0RG"
+    assert a.workflow_.state == "OPEN"
+
+
+def test_query_devicecontrolalert_facets(monkeypatch):
+    """Test a Device Control alert facet query."""
+    _was_called = False
+
+    def _run_facet_query(url, body, **kwargs):
+        nonlocal _was_called
+        assert url == "/appservices/v6/orgs/Z100/alerts/devicecontrol/_facet"
+        assert body == {"query": "Blort", "criteria": {"workflow": ["OPEN"]},
+                        "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]},
+                        "rows": 100}
+        _was_called = True
+        return StubResponse({"results": [{"field": {},
+                                          "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
+                                         {"field": {},
+                                          "values": [{"id": "status", "name": "statusX", "total": 9}]}]})
+
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    patch_cbc_sdk_api(monkeypatch, api, POST=_run_facet_query)
+    query = api.select(DeviceControlAlert).where("Blort").set_workflows(["OPEN"])
+    f = query.facets(["REPUTATION", "STATUS"])
+    assert _was_called
+    assert f == [{"field": {}, "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
+                 {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
+
+
+@pytest.mark.parametrize("method, arg", [
+    ("set_external_device_friendly_names", [12345]),
+    ("set_external_device_ids", [12345]),
+    ("set_product_ids", [12345]),
+    ("set_product_names", [12345]),
+    ("set_serial_numbers", [12345]),
+    ("set_vendor_ids", [12345]),
+    ("set_vendor_names", [12345])
+])
+def test_query_devicecontrolalert_invalid_criteria_values(method, arg):
+    """Test invalid values being supplied to DeviceControl alert queries."""
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    query = api.select(DeviceControlAlert)
     meth = getattr(query, method, None)
     with pytest.raises(ApiError):
         meth(arg)

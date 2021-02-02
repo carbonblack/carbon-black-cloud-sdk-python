@@ -7,7 +7,7 @@ the blocking of such devices from access by your endpoints.
 Retrieving the List of Known USB Devices
 ----------------------------------------
 
-Using a query of the `USBDevice` object, you can see which USB devices have been used on any endpoint in your
+Using a query of the ``USBDevice`` object, you can see which USB devices have been used on any endpoint in your
 organization.
 
 ::
@@ -24,14 +24,14 @@ organization.
     PNY USB 2.0 FD 07189613DD84E242 UNAPPROVED
     USB Flash Disk FBI1305031200020 APPROVED
 
-Note that individual USB devices may be `APPROVED` or `UNAPPROVED`. USB devices which are `UNAPPROVED` cannot be read
-on any endpoint with a policy that blocks unknown USB devices.
+Note that individual USB devices may be ``APPROVED`` or ``UNAPPROVED``. USB devices which are ``UNAPPROVED`` cannot
+be read on any endpoint with a policy that blocks unknown USB devices.
 
 Approving A Specific Device
 ---------------------------
 
-We can create one or more approvals for a specific USB device by using the `USBDeviceApproval` object and its
-`bulk_create` method.  First, we'll get a list of all unapproved USB devices.
+We can create an approval for a USB device by using the device's ``approve()`` method.  First, we'll get a list of all
+unapproved USB devices.
 
 ::
 
@@ -47,20 +47,67 @@ We can create one or more approvals for a specific USB device by using the `USBD
     SanDisk Cruzer Dial 4C530000110722114075
     PNY USB 2.0 FD 07189613DD84E242
 
-Now we'll select one of these devices and create an approval for it.
+Now we'll select one of these devices and approve it.
 
 ::
 
     >>> usb = usb_list[1]
-    >>> from cbc_sdk.endpoint_standard import USBDeviceApproval
-    >>> my_approval = {'serial_number': usb.serial_number, 'vendor_id': usb.vendor_id, 'product_id': usb.product_id,
-    ...                'approval_name': 'Test1', 'notes': 'API testing'}
-    >>> output = USBDeviceApproval.bulk_create(api, [my_approval])
-    >>> print(output[0].approval_name)
+    >>> print(usb.status)
+    UNAPPROVED
+    >>> approval = usb.approve('Test1', 'API Testing')
+    >>> print(approval.approval_name)
     Test1
-    >>> print(output[0].notes)
-    API testing
-    >>> print(output[0].id)
-    7c034be7-7386-3ef3-877d-e712bda803d6
+    >>> print(approval.notes)
+    API Testing
+    >>> print(approval.serial_number)
+    4C530000110722114075
+    >>> print(approval.id)
+    1ffd0a16-28ad-3fba-981d-d1c29c2903da
+    >>> print(usb.status)
+    APPROVED
 
-The `bulk_create` method returns a list of `USBDeviceApproval` objects representing the approvals created.
+The ``approve()`` method creates a ``USBDeviceApproval`` representing that particular device's approval, and
+also reloads the ``USBDevice`` so its ``status`` reflects the fact that it's been approved.
+
+Removing A Device's Approval
+----------------------------
+
+Device approvals may be removed via the API as well. Starting from the end of the previous example:
+
+    >>> approval.delete()
+    >>> usb.refresh()
+    True
+    >>> print(usb.status)
+    UNAPPROVED
+
+The ``delete()`` method is what causes the approval to be removed.  We then use ``refresh()`` on the actual
+``USBDevice`` object to allow its ``status`` to be updated.
+
+Device Control Alerts
+---------------------
+
+When an endpoint attempts to access a blocked USB device (the endpoint has USB device blocking configured and the USB
+device is not approved), a ``DeviceControlAlert`` is generated.  These alerts may be queried using the standard
+Platform API components.
+
+::
+
+    >>> from cbc_sdk import CBCloudAPI
+    >>> api = CBCloudAPI(profile='sample')
+    >>> from cbc_sdk.platform import DeviceControlAlert
+    >>> query = api.select(DeviceControlAlert).where('1')
+    >>> alerts_list = list(query)
+    >>> for alert in alerts_list:
+    ...   print(f"{alert.vendor_name} {alert.product_name} {alert.serial_number}")
+    ...
+    USB Flash Disk FBI1305031200020
+    USB Flash Disk FBI1305031200020
+    USB Flash Disk FBI1305031200020
+    USB Flash Disk FBI1305031200020
+    PNY USB 2.0 FD 07189613DD84E242
+    PNY USB 2.0 FD 07189613DD84E242
+    PNY USB 2.0 FD 07189613DD84E242
+
+There are a number of fields supported by ``DeviceControlAlert`` over and above the standard alert fields; see
+`the developer documentation <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alerts-api/#device-control-alert>`_
+for details.

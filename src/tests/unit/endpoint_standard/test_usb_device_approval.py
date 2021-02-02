@@ -15,7 +15,7 @@
 
 import pytest
 import logging
-from cbc_sdk.endpoint_standard import USBDeviceApproval
+from cbc_sdk.endpoint_standard import USBDeviceApproval, USBDevice
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -23,7 +23,8 @@ from tests.unit.fixtures.endpoint_standard.mock_usb_devices import (USBDEVICE_AP
                                                                     USBDEVICE_APPROVAL_PUT_RESP,
                                                                     USBDEVICE_APPROVAL_QUERY_RESP,
                                                                     USBDEVICE_APPROVAL_BULK_CREATE_REQ,
-                                                                    USBDEVICE_APPROVAL_BULK_CREATE_RESP)
+                                                                    USBDEVICE_APPROVAL_BULK_CREATE_RESP,
+                                                                    USBDEVICE_GET_RESP)
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -74,6 +75,27 @@ def test_approval_get_and_modify(cbcsdk_mock):
     assert approval.product_name == "Ultra"
     assert approval.notes == "Altered state"
     assert approval.approval_name == "Altered Approval"
+
+
+def test_approval_create_and_save(cbcsdk_mock):
+    """Tests a new approval being created and saved."""
+    cbcsdk_mock.mock_request("POST", "/device_control/v3/orgs/test/approvals/_bulk",
+                             USBDEVICE_APPROVAL_BULK_CREATE_RESP)
+    api = cbcsdk_mock.api
+    approval = USBDeviceApproval(api, None)
+    approval.vendor_id = "0x0781"
+    approval.product_id = "0x5581"
+    approval.serial_number = "4C531001331122115172"
+    approval.notes = "A few notes"
+    approval.approval_name = "Example Approval"
+    approval.save()
+    assert approval._model_unique_id == "10373"
+    assert approval.vendor_id == "0x0781"
+    assert approval.vendor_name == "SanDisk"
+    assert approval.product_id == "0x5581"
+    assert approval.product_name == "Ultra"
+    assert approval.approval_name == "Example Approval"
+    assert approval.notes == "A few notes"
 
 
 def test_approval_query_and_delete(cbcsdk_mock):
@@ -147,6 +169,16 @@ def test_approval_query_parameters_validate_fail(cbcsdk_mock):
         query.set_vendor_names([2])
     with pytest.raises(ApiError):
         query.set_product_names([3])
+
+
+def test_approval_create_from_usb_device(cbcsdk_mock):
+    """Test the create_from_usb_device function."""
+    api = cbcsdk_mock.api
+    usb = USBDevice(api, USBDEVICE_GET_RESP["id"], USBDEVICE_GET_RESP)
+    approval = USBDeviceApproval.create_from_usb_device(usb)
+    assert approval.serial_number == "4C531001331122115172"
+    assert approval.vendor_id == "0x0781"
+    assert approval.product_id == "0x5581"
 
 
 def test_approval_bulk_create(cbcsdk_mock):

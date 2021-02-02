@@ -111,7 +111,7 @@ properties:
     description: Type of the alert
     enum:
     - CB_ANALYTICS
-    - VMWARE
+    - DEVICE_CONTROL
     - WATCHLIST
   workflow:
     description: User-updatable status of the alert

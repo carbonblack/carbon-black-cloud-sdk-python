@@ -184,6 +184,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
                       "DELETED", "LIVE"]
     VALID_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "MISSION_CRITICAL"]
     VALID_DIRECTIONS = ["ASC", "DESC"]
+    VALID_DEPLOYMENT_TYPES = ["ENDPOINT", "WORKLOAD"]
 
     def __init__(self, doc_class, cb):
         """
@@ -401,6 +402,24 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         if direction not in DeviceSearchQuery.VALID_DIRECTIONS:
             raise ApiError("invalid sort direction specified")
         self._sortcriteria = {"field": key, "order": direction}
+        return self
+
+    def set_deployment_type(self, deployment_type):
+        """
+        Restricts the devices that this query is performed on to the specified deployment types.
+
+        Args:
+            deployment_type (list): List of deployment types to restrict search to.
+
+        Returns:
+            DeviceSearchQuery: This instance.
+
+        Raises:
+            ApiError: If invalid deployment type values are passed in the list.
+        """
+        if not all((type in DeviceSearchQuery.VALID_DEPLOYMENT_TYPES) for type in deployment_type):
+            raise ApiError("invalid deployment_type specified")
+        self._update_criteria("deployment_type", deployment_type)
         return self
 
     def _build_request(self, from_row, max_rows):

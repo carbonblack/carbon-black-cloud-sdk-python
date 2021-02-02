@@ -20,6 +20,9 @@ from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.endpoint_standard.mock_usb_devices import (USBDEVICE_GET_RESP, USBDEVICE_GET_ENDPOINTS_RESP,
+                                                                    USBDEVICE_GET_RESP_BEFORE_APPROVE,
+                                                                    USBDEVICE_APPROVE_RESP,
+                                                                    USBDEVICE_GET_RESP_AFTER_APPROVE,
                                                                     USBDEVICE_QUERY_RESP, USBDEVICE_FACET_RESP,
                                                                     USBDEVICE_GET_PRODUCTS_RESP)
 
@@ -62,6 +65,49 @@ def test_usb_get_and_get_endpoints(cbcsdk_mock):
     assert endpoints[1]["id"] == "50"
     assert endpoints[1]["endpoint_id"] == 7579317
     assert endpoints[1]["policy_id"] == 6997287
+
+
+def test_usb_get_and_approve(cbcsdk_mock):
+    """Tests getting a USB device by ID and approving it, checking the resulting USBDeviceApproval as well."""
+    approval_saved = False
+    get_calls = 0
+
+    def getter_func(url, query_parameters, default):
+        nonlocal approval_saved, get_calls
+        get_calls = get_calls + 1
+        if approval_saved:
+            return USBDEVICE_GET_RESP_AFTER_APPROVE
+        else:
+            return USBDEVICE_GET_RESP_BEFORE_APPROVE
+
+    def approval_call(url, body, **kwargs):
+        assert len(body) == 1
+        request = body[0]
+        assert request["vendor_id"] == "0x0781"
+        assert request['product_id'] == "0x5581"
+        assert request['serial_number'] == "4C531001331122115172"
+        assert request['approval_name'] == 'ApproveTest'
+        assert request['notes'] == 'Approval notes'
+        nonlocal approval_saved
+        approval_saved = True
+        return USBDEVICE_APPROVE_RESP
+
+    cbcsdk_mock.mock_request("GET", "/device_control/v3/orgs/test/devices/808", getter_func)
+    cbcsdk_mock.mock_request("POST", "/device_control/v3/orgs/test/approvals/_bulk", approval_call)
+    api = cbcsdk_mock.api
+    usb = USBDevice(api, "808")
+    assert usb.vendor_name == "SanDisk"
+    assert usb.product_name == "Ultra"
+    assert usb.status == 'UNAPPROVED'
+    approval = usb.approve('ApproveTest', 'Approval notes')
+    assert approval.id == "12703"
+    assert approval.vendor_id == usb.vendor_id
+    assert approval.product_id == usb.product_id
+    assert approval.serial_number == usb.serial_number
+    assert approval.approval_name == 'ApproveTest'
+    assert approval.notes == 'Approval notes'
+    assert usb.status == 'APPROVED'
+    assert get_calls == 2
 
 
 def test_usb_query_with_all_bells_and_whistles(cbcsdk_mock):

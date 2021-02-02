@@ -36,14 +36,6 @@ Enriched Events
 * Retrieve Results for an Enriched Events Search (v2)
 * Retrieve Results for an Enriched Events Facet Search (v2)
 
-The following calls will be added soon.  Work on the SDK is in progress.
-* Get Events Facet Associated with a Process (v2)
-* Start Aggregation Search on Enriched Events (v1)
-* Retrieve Results for an Enriched Event Aggregation Search (v1)
-* Request Details for Enriched Events (v2)
-* Get the Enriched Events Detail Search Status (v2)
-* Retrieve Results for an Enriched Event Detail Search (v2)
-
 The following calls will be added when the API on CBC is complete
 * Request Details of Processes (v2)
 * Get the Status of a Process Detail Search (v2)
@@ -150,7 +142,7 @@ def get_events_facet_associated_with_a_process(cb, process_guid):
     while not future.done():
         pass
 
-    results = future.result()[0]
+    results = future.result()
     pprint(results._info, sort_dicts=False)
 
     print("\nCompare results manually with Postman")
@@ -253,7 +245,7 @@ def get_process_facet(cb, window):
     while not future.done():
         pass
 
-    results = future.result()[0]
+    results = future.result()
     pprint(results._info, sort_dicts=False)
 
     print("\nCompare results manually with postman")
@@ -344,7 +336,7 @@ def get_enriched_event_facet(cb, print_detail, window):
         if print_detail:
             pass
 
-    results = future.result()[0]
+    results = future.result()
     pprint(results._info, sort_dicts=False)
 
     print("\nCompare results manually with Postman")

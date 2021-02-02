@@ -202,6 +202,25 @@ class CBAnalyticsAlert(BaseAlert):
         return CBAnalyticsAlertSearchQuery(cls, cb)
 
 
+class DeviceControlAlert(BaseAlert):
+    """Represents Device Control alerts."""
+    urlobject = "/appservices/v6/orgs/{0}/alerts/devicecontrol"
+
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
+        """
+        Returns the appropriate query object for this alert type.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            DeviceControlAlertSearchQuery: The query object for this alert type.
+        """
+        return DeviceControlAlertSearchQuery(cls, cb)
+
+
 class Workflow(UnrefreshableModel):
     """Represents the workflow associated with alerts."""
     swagger_meta_file = "platform/models/workflow.yaml"
@@ -314,7 +333,7 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
     VALID_CATEGORIES = ["THREAT", "MONITORED", "INFO", "MINOR", "SERIOUS", "CRITICAL"]
     VALID_REPUTATIONS = ["KNOWN_MALWARE", "SUSPECT_MALWARE", "PUP", "NOT_LISTED", "ADAPTIVE_WHITE_LIST",
                          "COMMON_WHITE_LIST", "TRUSTED_WHITE_LIST", "COMPANY_BLACK_LIST"]
-    VALID_ALERT_TYPES = ["CB_ANALYTICS", "WATCHLIST"]
+    VALID_ALERT_TYPES = ["CB_ANALYTICS", "DEVICE_CONTROL", "WATCHLIST"]
     VALID_WORKFLOW_VALS = ["OPEN", "DISMISSED"]
     VALID_FACET_FIELDS = ["ALERT_TYPE", "CATEGORY", "REPUTATION", "WORKFLOW", "TAG", "POLICY_ID",
                           "POLICY_NAME", "DEVICE_ID", "DEVICE_NAME", "APPLICATION_HASH",
@@ -1122,4 +1141,124 @@ class CBAnalyticsAlertSearchQuery(BaseAlertSearchQuery):
                    for vector in vectors):
             raise ApiError("One or more invalid threat cause vectors")
         self._update_criteria("threat_cause_vector", vectors)
+        return self
+
+
+class DeviceControlAlertSearchQuery(BaseAlertSearchQuery):
+    """Represents a query that is used to locate DeviceControlAlert objects."""
+
+    def __init__(self, doc_class, cb):
+        """
+        Initialize the CBAnalyticsAlertSearchQuery.
+
+        Args:
+            doc_class (class): The model class that will be returned by this query.
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+        """
+        super().__init__(doc_class, cb)
+        self._bulkupdate_url = "/appservices/v6/orgs/{0}/alerts/cbanalytics/devicecontrol/_criteria"
+
+    def set_external_device_friendly_names(self, names):
+        """
+        Restricts the alerts that this query is performed on to the specified external device friendly names.
+
+        Args:
+            names (list): List of external device friendly names to look for.
+
+        Returns:
+            DeviceControlAlertSearchQuery: This instance.
+        """
+        if not all(isinstance(n, str) for n in names):
+            raise ApiError("One or more invalid device name values")
+        self._update_criteria("external_device_friendly_name", names)
+        return self
+
+    def set_external_device_ids(self, ids):
+        """
+        Restricts the alerts that this query is performed on to the specified external device IDs.
+
+        Args:
+            ids (list): List of external device IDs to look for.
+
+        Returns:
+            DeviceControlAlertSearchQuery: This instance.
+        """
+        if not all(isinstance(n, str) for n in ids):
+            raise ApiError("One or more invalid device ID values")
+        self._update_criteria("external_device_id", ids)
+        return self
+
+    def set_product_ids(self, ids):
+        """
+        Restricts the alerts that this query is performed on to the specified product IDs.
+
+        Args:
+            ids (list): List of product IDs to look for.
+
+        Returns:
+            DeviceControlAlertSearchQuery: This instance.
+        """
+        if not all(isinstance(n, str) for n in ids):
+            raise ApiError("One or more invalid product ID values")
+        self._update_criteria("product_id", ids)
+        return self
+
+    def set_product_names(self, names):
+        """
+        Restricts the alerts that this query is performed on to the specified product names.
+
+        Args:
+            names (list): List of product names to look for.
+
+        Returns:
+            DeviceControlAlertSearchQuery: This instance.
+        """
+        if not all(isinstance(n, str) for n in names):
+            raise ApiError("One or more invalid product name values")
+        self._update_criteria("product_name", names)
+        return self
+
+    def set_serial_numbers(self, serial_numbers):
+        """
+        Restricts the alerts that this query is performed on to the specified serial numbers.
+
+        Args:
+            serial_numbers (list): List of serial numbers to look for.
+
+        Returns:
+            DeviceControlAlertSearchQuery: This instance.
+        """
+        if not all(isinstance(n, str) for n in serial_numbers):
+            raise ApiError("One or more invalid serial number values")
+        self._update_criteria("serial_number", serial_numbers)
+        return self
+
+    def set_vendor_ids(self, ids):
+        """
+        Restricts the alerts that this query is performed on to the specified vendor IDs.
+
+        Args:
+            ids (list): List of vendor IDs to look for.
+
+        Returns:
+            DeviceControlAlertSearchQuery: This instance.
+        """
+        if not all(isinstance(n, str) for n in ids):
+            raise ApiError("One or more invalid vendor ID values")
+        self._update_criteria("vendor_id", ids)
+        return self
+
+    def set_vendor_names(self, names):
+        """
+        Restricts the alerts that this query is performed on to the specified vendor names.
+
+        Args:
+            names (list): List of vendor names to look for.
+
+        Returns:
+            DeviceControlAlertSearchQuery: This instance.
+        """
+        if not all(isinstance(n, str) for n in names):
+            raise ApiError("One or more invalid vendor name values")
+        self._update_criteria("vendor_name", names)
         return self

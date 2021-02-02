@@ -264,12 +264,31 @@ def test_report_query(cbcsdk_mock):
     """Testing Report Querying"""
     feed_id = "rEVxDoWRAucNZI8utPRrQ"
     cbcsdk_mock.mock_request("GET", f"/threathunter/feedmgr/v2/orgs/test/feeds/{feed_id}/reports", REPORT_GET_RESP)
+
+    def _test_request(url, body, **kwargs):
+        assert len(body["iocs_v2"]) == 1
+        return body
+
+    cbcsdk_mock.mock_request("PUT",
+                             f"/threathunter/feedmgr/v2/orgs/test/feeds/{feed_id}/"
+                             "reports/109027d1-064c-477d-aa34-528606ef72a9", _test_request)
     api = cbcsdk_mock.api
     reports = api.select(Report).where(feed_id="rEVxDoWRAucNZI8utPRrQ")
     results = [res for res in reports._perform_query()]
     assert results is not None
     assert isinstance(results[0], Report)
-    assert reports[0].iocs_ is not None
+    assert reports[0].iocs_ is not [] or reports[0].iocs_ is not None
+
+    reports[0].update(iocs_v2=[{
+        "id": "109027d2-064c-477d-aa34-528606ef72a1",
+        "match_type": "equality",
+        "values": [
+            "test"
+        ],
+        "field": "md5"
+    }])
+
+    assert reports[0].iocs_v2[0]["values"][0] == "test"
 
 
 def test_feed_query_all(cbcsdk_mock):
