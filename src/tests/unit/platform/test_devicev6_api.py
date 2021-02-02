@@ -166,7 +166,7 @@ def test_query_device_with_all_bells_and_whistles(monkeypatch):
         assert url == "/appservices/v6/orgs/Z100/devices/_search"
         assert body == {"query": "foobar",
                         "criteria": {"ad_group_id": [14, 25], "os": ["LINUX"], "policy_id": [8675309],
-                                     "status": ["ALL"], "target_priority": ["HIGH"]},
+                                     "status": ["ALL"], "target_priority": ["HIGH"], "deployment_type": ["ENDPOINT"]},
                         "exclusions": {"sensor_version": ["0.1"]},
                         "sort": [{"field": "name", "order": "DESC"}]}
         _was_called = True
@@ -177,7 +177,7 @@ def test_query_device_with_all_bells_and_whistles(monkeypatch):
     patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
     query = api.select(Device).where("foobar").set_ad_group_ids([14, 25]).set_os(["LINUX"]) \
         .set_policy_ids([8675309]).set_status(["ALL"]).set_target_priorities(["HIGH"]) \
-        .set_exclude_sensor_versions(["0.1"]).sort_by("name", "DESC")
+        .set_exclude_sensor_versions(["0.1"]).sort_by("name", "DESC").set_deployment_type(["ENDPOINT"])
     d = query.one()
     assert _was_called
     assert d.id == 6023
@@ -415,3 +415,27 @@ def test_query_device_do_update_sensor_version(monkeypatch):
     patch_cbc_sdk_api(monkeypatch, api, POST=_update_sensor_version)
     api.select(Device).where("foobar").update_sensor_version({"RHEL": "2.3.4.5"})
     assert _was_called
+
+
+def test_query_deployment_type(monkeypatch):
+    """Test deployment type query with correct and incorrect params."""
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+
+    def _invalid_deployment_type():
+        with pytest.raises(ApiError):
+            api.select(Device).set_deployment_type(["BOGUS"])
+
+    _invalid_deployment_type()
+
+    def _valid_deployment_type(url, body, **kwargs):
+        assert url == "/appservices/v6/orgs/Z100/devices/_search"
+        assert body == {"query": "",
+                        "criteria": {"deployment_type": ["ENDPOINT"]},
+                        "exclusions": {}}
+        return StubResponse({"results": [{"id": 6023, "deployment_type": ["ENDPOINT"]}],
+                             "num_found": 1})
+
+    patch_cbc_sdk_api(monkeypatch, api, POST=_valid_deployment_type)
+    query = api.select(Device).set_deployment_type(["ENDPOINT"])
+    type = query.one()
+    assert type.deployment_type[0] in ["ENDPOINT", "WORKLOAD"]
