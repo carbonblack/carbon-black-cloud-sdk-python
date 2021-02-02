@@ -521,6 +521,24 @@ class BaseAPI(object):
         """
         return self.api_json_request("POST", uri, data=body, **kwargs)
 
+    def post_multipart(self, uri, **kwargs):
+        """
+        Send a POST request to the specified URI, with parameters sent as multipart form data.
+
+        Args:
+            uri (str): The URI to send the POST request to.
+            **kwargs (dict): Arguments to pass to the API. Except for "headers," these will all be added as parameters
+                             to the form data sent.
+
+        Returns:
+            object: The return data from the POST request.
+        """
+        headers = kwargs.pop("headers", {})
+        headers["Content-Type"] = "multipart/form-data"
+        print(kwargs)
+        files_body = {k: (None, v) for (k, v) in kwargs.items()}
+        return self.api_json_request("POST", uri, headers=headers, files=files_body)
+
     def put_object(self, uri, body, **kwargs):
         """
         Send a PUT request to the specified URI.
