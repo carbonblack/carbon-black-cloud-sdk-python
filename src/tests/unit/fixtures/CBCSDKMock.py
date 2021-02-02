@@ -82,7 +82,7 @@ class CBCSDKMock:
         Mocks the VERB + URL by defining the response for that particular request
 
         Args:
-            verb (str): HTTP verb supported [ GET, RAW_GET, POST, PUT, DELETE ]
+            verb (str): HTTP verb supported [ GET, RAW_GET, POST, POST_MULTIPART, PUT, DELETE ]
             url (str): The full path of to be mocked with support for regex
             body (?): Any value or object to be returned as mocked response
 
