@@ -379,12 +379,11 @@ def enriched_events_aggregation(cb):
 
 
 def search_devices(cb):
-    """text"""
+    """Start SDK call and print out response"""
     print("API Calls:")
     print("Search Devices")
 
     query = cb.select(Device).set_deployment_type(["WORKLOAD"])
-    #print(*query._info)
     for event in query:
         pprint(event._info)
 
