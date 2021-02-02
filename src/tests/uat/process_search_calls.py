@@ -36,13 +36,8 @@ Enriched Events
 * Retrieve Results for an Enriched Events Search (v2)
 * Retrieve Results for an Enriched Events Facet Search (v2)
 
-The following calls will be added soon.  Work on the SDK is in progress.
-* Get Events Facet Associated with a Process (v2)
-* Start Aggregation Search on Enriched Events (v1)
-* Retrieve Results for an Enriched Event Aggregation Search (v1)
-* Request Details for Enriched Events (v2)
-* Get the Enriched Events Detail Search Status (v2)
-* Retrieve Results for an Enriched Event Detail Search (v2)
+Devices:
+* Search Devices
 
 The following calls will be added when the API on CBC is complete
 * Request Details of Processes (v2)
@@ -383,6 +378,20 @@ def enriched_events_aggregation(cb):
     print("----------------------------------------------------------")
 
 
+def search_devices(cb):
+    """text"""
+    print("API Calls:")
+    print("Search Devices")
+
+    query = cb.select(Device).set_deployment_type(["WORKLOAD"])
+    #print(*query._info)
+    for event in query:
+        pprint(event._info)
+
+    print("\nCompare results manually with Postman")
+    print("----------------------------------------------------------")
+
+
 def main():
     """Script entry point"""
     parser = build_cli_parser()
@@ -390,6 +399,7 @@ def main():
     print_detail = args.verbose
     window = '-' + args.window
 
+    do_devices = True
     do_process = True
     do_enriched_events = True
 
@@ -413,6 +423,8 @@ def main():
         get_enriched_event_facet(cb, print_detail, window)
         enriched_events_details(cb, event_id)
         enriched_events_aggregation(cb)
+    if do_devices:
+        search_devices(cb)
 
 
 if __name__ == "__main__":
