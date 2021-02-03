@@ -562,6 +562,11 @@ class Report(FeedModel):
             if key in self._info:
                 self._info[key] = value
 
+        if self.iocs:
+            self._iocs = IOC(self._cb, initial_data=self.iocs, report_id=self.id)
+        if self.iocs_v2:
+            self._iocs_v2 = [IOC_V2(self._cb, initial_data=ioc, report_id=self.id) for ioc in self.iocs_v2]
+
         # NOTE(ww): Updating reports on the watchlist API appears to require
         # updated timestamps.
         self.timestamp = int(time.time())

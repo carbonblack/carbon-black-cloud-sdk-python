@@ -1,6 +1,21 @@
 Changelog
 ================================
 
+CBC SDK 1.1.1 - Released February 2, 2021
+------------------------------------
+
+New Features
+
+* Add easy way to add single approvals and blocks
+* Add Device Control Alerts
+* Add deployment_type support to the Device model
+
+Bug Fixes
+
+* Fix error when updating iocs in a Report model
+* Set max_retries to None to use Connection init logic for retries
+
+
 CBC SDK 1.1.0 - Released January 27, 2021
 ------------------------------------
 
