@@ -14,3 +14,6 @@ from cbc_sdk.platform.processes import (Process, ProcessFacet,
 
 
 from cbc_sdk.platform.reputation import ReputationOverride
+
+from cbc_sdk.platform.vulnerability_assessment import (VulnerabilitySummary,
+    VulnerabilityQuery, OrganizationalVulnerability)
