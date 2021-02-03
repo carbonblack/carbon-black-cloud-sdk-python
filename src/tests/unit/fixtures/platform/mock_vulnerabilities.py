@@ -159,7 +159,7 @@ GET_ASSET_VIEW_VUL_SUMMARY_RESP = {
             },
             "vuln_info": {
                 "cve_id": "CVE-2007-4559",
-                "cve_description": "Directory traversal vulnerability in the (1) extract and (2) extractall functions in the tarfile module in Python allows user-assisted remote attackers to overwrite arbitrary files via a .. (dot dot) sequence in filenames in a TAR archive, a related issue to CVE-2001-1267.",
+                "cve_description": "Directory traversal vulnerability in the (1) extract and (2) extractall functions",
                 "risk_meter_score": 2.9,
                 "severity": "LOW",
                 "fixed_by": None,
@@ -205,7 +205,7 @@ GET_ASSET_VIEW_VUL_SUMMARY_RESP = {
             },
             "vuln_info": {
                 "cve_id": "CVE-2007-4559",
-                "cve_description": "Directory traversal vulnerability in the (1) extract and (2) extractall functions in the tarfile module in Python allows user-assisted remote attackers to overwrite arbitrary files via a .. (dot dot) sequence in filenames in a TAR archive, a related issue to CVE-2001-1267.",
+                "cve_description": "Directory traversal vulnerability in the (1) extract and (2) extractall functions",
                 "risk_meter_score": 2.9,
                 "severity": "LOW",
                 "fixed_by": None,
