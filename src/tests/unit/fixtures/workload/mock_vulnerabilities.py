@@ -304,3 +304,32 @@ GET_ASSET_VIEW_VUL_ALL_SETS_RESP = {
         }
     ]
 }
+
+GET_AFFECTED_ASSETS_SPECIFIC_VULNERABILITY = {
+    "num_found": 1,
+    "results": [{
+        "device_id": 1,
+        "vm_id": "vm-1",
+        "name": "VM-1"
+    }]
+}
+
+GET_VULNERABILITY_RESP = {
+    "cvss_access_complexity": "Low",
+    "cvss_access_vector": "Local access",
+    "cvss_authentication": "None required",
+    "cvss_availability_impact": "Partial",
+    "cvss_confidentiality_impact": "None",
+    "cvss_integrity_impact": "None",
+    "easily_exploitable": False,
+    "malware_exploitable": False,
+    "active_internet_breach": False,
+    "cvss_exploit_subscore": 3.9,
+    "cvss_impact_subscore": 2.9,
+    "cvss_vector": "AV:L/AC:L/Au:N/C:N/I:N/A:P/E:U/RL:OF/RC:C",
+    "cvss_v3_exploit_subscore": 3.9,
+    "cvss_v3_impact_subscore": 2.9,
+    "cvss_v3_vector": "CVSS:3.0/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H/E:U/RL:O/RC:C",
+    "cvss_score": 3.9,
+    "cvss_v3_score": 3.9
+}
