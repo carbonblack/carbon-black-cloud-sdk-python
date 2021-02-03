@@ -15,6 +15,7 @@ Guides
 ------
 
 * :doc:`device-control` - Control the blocking of USB devices on endpoints.
+* :doc:`reputation-override` - Manage reputation overrides for known applications, IT tools or certs.
 
 Examples
 --------

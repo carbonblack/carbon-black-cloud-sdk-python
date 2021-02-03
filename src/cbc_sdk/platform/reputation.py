@@ -41,7 +41,7 @@ class ReputationOverride(PlatformModel):
             model_unique_id (str): ID of the alert represented.
             initial_data (dict): Initial data used to populate the alert.
         """
-        super(ReputationOverride, self).__init__(cb, model_unique_id, initial_data)
+        super(ReputationOverride, self).__init__(cb, model_unique_id, initial_data, full_doc=True)
         if model_unique_id is not None and initial_data is None:
             self._refresh()
 
@@ -72,6 +72,7 @@ class ReputationOverride(PlatformModel):
         resp = self._cb.get_object(url)
         self._info = resp
         self._last_refresh_time = time.time()
+        self._full_init = True
         return True
 
     def delete(self):
