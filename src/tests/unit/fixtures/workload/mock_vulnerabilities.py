@@ -333,3 +333,122 @@ GET_VULNERABILITY_RESP = {
     "cvss_score": 3.9,
     "cvss_v3_score": 3.9
 }
+
+GET_DEVICE_VULNERABILITY_SUMMARY_RESP = {
+    "os_info": {
+        "os_type": "CENTOS",
+        "os_name": "CentOS Linux",
+        "os_version": "7.1.1503",
+        "os_arch": "x86_64"
+    },
+    "monitored": True,
+    "os_compatible": True,
+    "sensor_compatible": True,
+    "sync_type": "SCHEDULED",
+    "sync_status": "COMPLETED",
+    "last_sync_ts": "2020-10-30T16:17:16.078363Z",
+    "severity_counts": {
+        "critical": 0,
+        "important": 7,
+        "moderate": 45,
+        "low": 804
+    }
+}
+
+GET_DEVICE_VULNERABILITY_RESP = {
+    "num_found": 2,
+    "results": [
+        {
+            "os_product_id": "90_5363",
+            "category": "APP",
+            "os_info": {
+                "os_type": "CENTOS",
+                "os_name": "CentOS Linux",
+                "os_version": "7.1.1503",
+                "os_arch": "x86_64"
+            },
+            "product_info": {
+                "vendor": "CentOS",
+                "product": "python",
+                "version": "2.7.5",
+                "release": "16.el7",
+                "arch": "x86_64"
+            },
+            "vuln_info": {
+                "cve_id": "CVE-2014-4650",
+                "cve_description": "The CGIHTTPServer module in Python 2.7.5 and 3.3.4 does not properly handle ...",
+                "risk_meter_score": 4.9,
+                "severity": "MODERATE",
+                "fixed_by": "0:2.7.5-34.el7",
+                "solution": None,
+                "created_at": "2020-02-20T17:15:00Z",
+                "nvd_link": "https://nvd.nist.gov/vuln/detail/CVE-2014-4650",
+                "cvss_access_complexity": None,
+                "cvss_access_vector": None,
+                "cvss_authentication": None,
+                "cvss_availability_impact": None,
+                "cvss_confidentiality_impact": None,
+                "cvss_integrity_impact": None,
+                "easily_exploitable": None,
+                "malware_exploitable": None,
+                "active_internet_breach": None,
+                "cvss_exploit_subscore": None,
+                "cvss_impact_subscore": None,
+                "cvss_vector": None,
+                "cvss_v3_exploit_subscore": None,
+                "cvss_v3_impact_subscore": None,
+                "cvss_v3_vector": None,
+                "cvss_score": None,
+                "cvss_v3_score": None
+            },
+            "device_count": 1,
+            "affected_assets": None
+        },
+        {
+            "os_product_id": "90_5372",
+            "category": "APP",
+            "os_info": {
+                "os_type": "CENTOS",
+                "os_name": "CentOS Linux",
+                "os_version": "7.1.1503",
+                "os_arch": "x86_64"
+            },
+            "product_info": {
+                "vendor": "CentOS",
+                "product": "python-libs",
+                "version": "2.7.5",
+                "release": "16.el7",
+                "arch": "x86_64"
+            },
+            "vuln_info": {
+                "cve_id": "CVE-2014-4650",
+                "cve_description": "The CGIHTTPServer module in Python 2.7.5 and 3.3.4 does not properly handle...",
+                "risk_meter_score": 4.9,
+                "severity": "MODERATE",
+                "fixed_by": "0:2.7.5-34.el7",
+                "solution": None,
+                "created_at": "2020-02-20T17:15:00Z",
+                "nvd_link": "https://nvd.nist.gov/vuln/detail/CVE-2014-4650",
+                "cvss_access_complexity": None,
+                "cvss_access_vector": None,
+                "cvss_authentication": None,
+                "cvss_availability_impact": None,
+                "cvss_confidentiality_impact": None,
+                "cvss_integrity_impact": None,
+                "easily_exploitable": None,
+                "malware_exploitable": None,
+                "active_internet_breach": None,
+                "cvss_exploit_subscore": None,
+                "cvss_impact_subscore": None,
+                "cvss_vector": None,
+                "cvss_v3_exploit_subscore": None,
+                "cvss_v3_impact_subscore": None,
+                "cvss_v3_vector": None,
+                "cvss_score": None,
+                "cvss_v3_score": None
+            },
+            "device_count": 1,
+            "affected_assets": None
+        }
+    ]
+}

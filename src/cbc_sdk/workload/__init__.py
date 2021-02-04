@@ -1,4 +1,4 @@
 
 from cbc_sdk.workload.vulnerability_assessment import (VulnerabilitySummary,
     VulnerabilityQuery, OrganizationalVulnerability, Vulnerability,
-    AffectedAssetQuery)
+    AffectedAssetQuery, DeviceVulnerability, DeviceVulnerabilityQuery)
