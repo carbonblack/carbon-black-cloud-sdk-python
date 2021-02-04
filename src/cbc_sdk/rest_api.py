@@ -188,9 +188,6 @@ class CBCloudAPI(BaseAPI):
             action (string): The action to be performed
             vcenter_id (string): (Optional) If the request needs to be vcenter specific
 
-        Returns:
-            dict: The parsed JSON output from the request.
-
         Raises:
             ServerError: If the API method returns an HTTP error code.
         """
