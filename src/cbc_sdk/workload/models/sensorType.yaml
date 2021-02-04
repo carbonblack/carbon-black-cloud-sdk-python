@@ -1,0 +1,29 @@
+type: object
+properties:
+  device_type:
+    type: string
+    description: Type of device the sensor is destined for
+    enum:
+      - WINDOWS
+      - LINUX
+      - MAC
+  architecture:
+    type: string
+    description: Architecture (primarily bit size) the sensor is destined for
+    enum:
+      - 32
+      - 64
+      - OTHER
+  sensor_type:
+    type: string
+    description: Type of the sensor (may be specific to an operating system)
+    enum:
+      - WINDOWS
+      - MAC
+      - RHEL
+      - UBUNTU
+      - SUSE
+      - AMAZON_LINUX
+  version:
+    type: string
+    description: Version of the sensor
