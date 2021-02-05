@@ -179,35 +179,6 @@ class CBCloudAPI(BaseAPI):
         else:
             raise ServerError(error_code=resp.status_code, message="Device action error: {0}".format(resp.content))
 
-    def _vulnerability_device_action(self, device_id, action, vcenter_id=None):
-        """
-        Invokes the API method for a device action for vulnerability.
-
-        Args:
-            device_id (int): The device id for which the action will be performed
-            action (string): The action to be performed
-            vcenter_id (string): (Optional) If the request needs to be vcenter specific
-
-        Raises:
-            ServerError: If the API method returns an HTTP error code.
-        """
-        request = {"action_type": action}
-        url = "/vulnerability/assessment/api/v1/orgs/{}".format(self.credentials.org_key)
-
-        # vcenter specific
-        if vcenter_id:
-            url += '/vcenters/{}'.format(vcenter_id)
-
-        url += '/devices/{}/device_actions'.format(device_id)
-
-        resp = self.post_object(url, body=request)
-        if resp.status_code == 201:
-            return None
-        elif resp.status_code == 204:
-            return None
-        else:
-            raise ServerError(error_code=resp.status_code, message="Device action error: {0}".format(resp.content))
-
     def _device_action(self, device_ids, action_type, options=None):
         """
         Executes a device action on multiple device IDs.

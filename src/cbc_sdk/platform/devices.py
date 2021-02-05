@@ -13,9 +13,10 @@
 
 """Model and Query Classes for Platform Devices"""
 
-from cbc_sdk.errors import ApiError
+from cbc_sdk.errors import ApiError, ServerError
 from cbc_sdk.platform import PlatformModel
-from cbc_sdk.workload import DeviceVulnerability, DeviceVulnerabilityQuery
+from cbc_sdk.workload import DeviceVulnerability
+from cbc_sdk.workload.vulnerability_assessment import DeviceVulnerabilityQuery
 from cbc_sdk.base import (BaseQuery, QueryBuilder, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
                           IterableQueryMixin, AsyncQueryMixin)
 
@@ -171,33 +172,46 @@ class Device(PlatformModel):
         """
         return self._cb.device_update_sensor_version([self._model_unique_id], sensor_version)
 
-    def vulnerability_refresh(self, vcenter_id=None):
+    def vulnerability_refresh(self):
         """
         Perform an action on a specific device.
 
         Currently only REFRESH is allowed.
         """
-        return self._cb._vulnerability_device_action(self._model_unique_id, 'REFRESH', vcenter_id)
+        request = {"action_type": 'REFRESH'}
+        url = "/vulnerability/assessment/api/v1/orgs/{}".format(self._cb.credentials.org_key)
 
-    def get_vulnerability_summary(self, category=None, vcenter_id=None):
+        # check whether vcenter_uuid is populated
+        if self.vcenter_uuid:
+            url += '/vcenters/{}'.format(self.vcenter_uuid)
+
+        url += '/devices/{}/device_actions'.format(self._model_unique_id)
+
+        resp = self._cb.post_object(url, body=request)
+        if resp.status_code == 201:
+            return None
+        elif resp.status_code == 204:
+            return None
+        else:
+            raise ServerError(error_code=resp.status_code, message="Device action error: {0}".format(resp.content))
+
+    def get_vulnerability_summary(self, category=None):
         """
         Get the vulnerabilities associated with this device
 
         Args:
             category (string): get vulnerabilties per category (OS, APP)
-            vcenter_id (string): (Optional) get vulnerabilities per vcenter_id
         """
+        if self.vcenter_uuid:
+            vcenter_id = self.vcenter_uuid
+        else:
+            vcenter_id = None
         return DeviceVulnerability.get_vulnerability_summary_per_device(self._cb, self, category, vcenter_id)
 
-    def get_vulnerabilties(self, vcenter_id=None):
-        """
-        Get an Operating System or Application Vulnerability List for a specific device.
-
-        Args:
-            vcenter_id (string): (Optional) get vulnerabilities per vcenter_id
-        """
-        if vcenter_id:
-            self._vcenter_specific = vcenter_id
+    def get_vulnerabilties(self):
+        """Get an Operating System or Application Vulnerability List for a specific device."""
+        if self.vcenter_uuid:
+            self._vcenter_specific = self.vcenter_uuid
         else:
             self._vcenter_specific = None
         return DeviceVulnerabilityQuery(self, self._cb)

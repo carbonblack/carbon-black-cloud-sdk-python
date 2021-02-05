@@ -308,7 +308,7 @@ GET_ASSET_VIEW_VUL_ALL_SETS_RESP = {
 GET_AFFECTED_ASSETS_SPECIFIC_VULNERABILITY = {
     "num_found": 1,
     "results": [{
-        "device_id": 1,
+        "device_id": 98765,
         "vm_id": "vm-1",
         "name": "VM-1"
     }]
