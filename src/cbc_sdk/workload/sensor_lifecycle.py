@@ -188,7 +188,7 @@ class SensorRequest:
         request = {'sensor_types': [stype._as_dict() for stype in self._sensor_types], 'expires_at': expire_time}
         url = "/lcm/v1/orgs/{0}/sensor/_download".format(self._cb.credentials.org_key)
         return_data = self._cb.post_multipart(url, sensor_url_request=json.dumps(request), configParams=config_params)
-        return_list = return_data.get('sensor_infos', [])
+        return_list = return_data.json().get('sensor_infos', [])
         return [SensorInfo(self._cb, info) for info in return_list]
 
     def request_sensor_install(self, config_file):
@@ -207,4 +207,4 @@ class SensorRequest:
         url = "/lcm/v1/orgs/{0}/workloads/actions".format(self._cb.credentials.org_key)
         return_data = self._cb.post_multipart(url, action_type='INSTALL', install_request=json.dumps(request),
                                               file=config_file)
-        return return_data
+        return return_data.json()

@@ -150,7 +150,7 @@ class CBCSDKMock:
         return _post_multipart
 
     def _self_get_raw_data(self):
-        def _get_raw_data(url, query_params, **kwargs):
+        def _get_raw_data(url, query_params=None, default=None, **kwargs):
             self._capture_data(query_params)
             matched = self.match_key(self.get_mock_key("RAW_GET", url))
             if matched:
