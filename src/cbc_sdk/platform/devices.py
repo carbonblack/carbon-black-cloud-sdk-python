@@ -200,7 +200,10 @@ class Device(PlatformModel):
         Get the vulnerabilities associated with this device
 
         Args:
-            category (string): get vulnerabilties per category (OS, APP)
+            category (string): (optional) get vulnerabilties per category (OS, APP)
+
+        Returns:
+            dict: summary for the vulnerabilities for this device
         """
         if self.vcenter_uuid:
             vcenter_id = self.vcenter_uuid
