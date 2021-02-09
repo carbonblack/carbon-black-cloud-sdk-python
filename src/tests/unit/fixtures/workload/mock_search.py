@@ -26,35 +26,35 @@ FETCH_COMPUTE_RESOURCE_BY_ID_RESP = {
 }
 
 SEARCH_AND_FACET_COMPUTE_RESEOURCES = {
-  "num_found": 1,
-  "results": [
-    {
-      "id": "15054477",
-      "appliance_uuid": "c89f183b-f201-4bca-bacc-80184b5b8823",
-      "cluster_name": "launcher-cluster",
-      "datacenter_name": "launcher-dc",
-      "esx_host_name": "10.105.5.70",
-      "esx_host_uuid": "d5304d56-5004-a871-1ad1-bd4b4af9977d",
-      "vcenter_name": "VMware vCenter Server 7.0.0 build-15952599",
-      "vcenter_host_url": "10.105.5.63",
-      "vcenter_uuid": "4a6b1382-f917-4e1a-8564-374cb7274bd7",
-      "name": "vsvv-2k8r2",
-      "host_name": "",
-      "created_at": "2020-11-18T07:41:18.218Z",
-      "ip_address": "192.168.1.1",
-      "eligibility": "NOT_ELIGIBLE",
-      "eligibility_code": [
-        "VMware Tools install required",
-        "Launcher not found",
-        "VM is offline"
-      ],
-      "installation_status": "NOT_INSTALLED",
-      "installation_status_code": "",
-      "uuid": "502277cc-0aa9-80b0-9ac8-6f540c11edaf",
-      "os_description": "",
-      "os_type": "WINDOWS",
-      "os_architecture": "32",
-      "vmwaretools_version": "0"
-    }
-  ]
+    "num_found": 1,
+    "results": [
+        {
+            "id": "15054477",
+            "appliance_uuid": "c89f183b-f201-4bca-bacc-80184b5b8823",
+            "cluster_name": "launcher-cluster",
+            "datacenter_name": "launcher-dc",
+            "esx_host_name": "10.105.5.70",
+            "esx_host_uuid": "d5304d56-5004-a871-1ad1-bd4b4af9977d",
+            "vcenter_name": "VMware vCenter Server 7.0.0 build-15952599",
+            "vcenter_host_url": "10.105.5.63",
+            "vcenter_uuid": "4a6b1382-f917-4e1a-8564-374cb7274bd7",
+            "name": "vsvv-2k8r2",
+            "host_name": "",
+            "created_at": "2020-11-18T07:41:18.218Z",
+            "ip_address": "192.168.1.1",
+            "eligibility": "NOT_ELIGIBLE",
+            "eligibility_code": [
+                "VMware Tools install required",
+                "Launcher not found",
+                "VM is offline"
+            ],
+            "installation_status": "NOT_INSTALLED",
+            "installation_status_code": "",
+            "uuid": "502277cc-0aa9-80b0-9ac8-6f540c11edaf",
+            "os_description": "",
+            "os_type": "WINDOWS",
+            "os_architecture": "32",
+            "vmwaretools_version": "0"
+        }
+    ]
 }
