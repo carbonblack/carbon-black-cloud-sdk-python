@@ -452,3 +452,13 @@ GET_DEVICE_VULNERABILITY_RESP = {
         }
     ]
 }
+
+REFRESH_DEVICE_RESP = {
+    "created_at": "2021-02-09T07:29:09.179588Z",
+    "device_id": 98765,
+    "lq_query_id": "qwety",
+    "lq_query_status": "ACTIVE",
+    "org_key": "orgkey",
+    "schedule_type": "LINUX_OS_PRODUCT",
+    "updated_at": "2021-02-09T07:29:09.179589Z"
+}
