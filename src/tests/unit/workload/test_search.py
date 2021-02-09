@@ -15,6 +15,7 @@
 
 import pytest
 import logging
+from cbc_sdk.errors import ApiError
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from cbc_sdk.workload import ComputeResource
@@ -48,6 +49,26 @@ def test_compute_resource_by_id(cbcsdk_mock):
     api = cbcsdk_mock.api
     resource = ComputeResource(api, "15396109")
     assert resource._model_unique_id == "15396109"
+
+
+def test_search_facet_async(cbcsdk_mock):
+    """Tests running the async_querry."""
+    def post_validate(url, body, **kwargs):
+        crits = body['criteria']
+        assert crits['uuid'] == ['502277cc-0aa9-80b0-9ac8-6f540c11edaf']
+
+        return SEARCH_AND_FACET_COMPUTE_RESEOURCES
+
+    cbcsdk_mock.mock_request("POST", "/lcm/view/v1/orgs/test/compute_resources/_search",
+                             post_validate)
+    api = cbcsdk_mock.api
+    query = api.select(ComputeResource).set_uuid(['502277cc-0aa9-80b0-9ac8-6f540c11edaf'])
+
+    assert query._count() == 1
+    results = [result for result in query._run_async_query(None)]
+    assert len(results) == 1
+    facet = results[0]
+    assert facet.uuid == '502277cc-0aa9-80b0-9ac8-6f540c11edaf'
 
 
 def test_search_facet_with_all_bells_and_whistles(cbcsdk_mock):
@@ -92,3 +113,26 @@ def test_search_facet_with_all_bells_and_whistles(cbcsdk_mock):
     assert facet.uuid == '502277cc-0aa9-80b0-9ac8-6f540c11edaf'
     assert facet.os_type == 'WINDOWS'
     assert facet.os_architecture == '32'
+
+
+def test_search_facet_with_all_bells_and_whistles_failures(cbcsdk_mock):
+    """Testng all set methods"""
+    query = cbcsdk_mock.api.select(ComputeResource)
+    with pytest.raises(ApiError):
+        query.set_uuid([1])
+    with pytest.raises(ApiError):
+        query.set_appliance_uuid([1])
+    with pytest.raises(ApiError):
+        query.set_eligibility([1])
+    with pytest.raises(ApiError):
+        query.set_cluster_name([1])
+    with pytest.raises(ApiError):
+        query.set_name([1])
+    with pytest.raises(ApiError):
+        query.set_ip_address([1])
+    with pytest.raises(ApiError):
+        query.set_installation_status([1])
+    with pytest.raises(ApiError):
+        query.set_os_type([1])
+    with pytest.raises(ApiError):
+        query.set_os_architecture([1])
