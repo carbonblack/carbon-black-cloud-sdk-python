@@ -16,7 +16,6 @@
 import pytest
 import logging
 from cbc_sdk.rest_api import CBCloudAPI
-from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from cbc_sdk.workload import ComputeResource
 from tests.unit.fixtures.workload.mock_search import (FETCH_COMPUTE_RESOURCE_BY_ID_RESP,
@@ -43,12 +42,12 @@ def cbcsdk_mock(monkeypatch, cb):
 
 # ==================================== UNIT TESTS BELOW ====================================
 def test_compute_resource_by_id(cbcsdk_mock):
-     """Tests a simple load, modify, and store of an approval object."""
-     cbcsdk_mock.mock_request("GET", "/lcm/view/v1/orgs/test/compute_resources/1539610",
-                              FETCH_COMPUTE_RESOURCE_BY_ID_RESP)
-     api = cbcsdk_mock.api
-     resource = ComputeResource(api, "15396109")
-     assert resource._model_unique_id == "15396109"
+    """Tests a simple compute resource querry"""
+    cbcsdk_mock.mock_request("GET", "/lcm/view/v1/orgs/test/compute_resources/1539610",
+                             FETCH_COMPUTE_RESOURCE_BY_ID_RESP)
+    api = cbcsdk_mock.api
+    resource = ComputeResource(api, "15396109")
+    assert resource._model_unique_id == "15396109"
 
 
 def test_search_facet_with_all_bells_and_whistles(cbcsdk_mock):
