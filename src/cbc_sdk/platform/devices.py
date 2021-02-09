@@ -212,7 +212,10 @@ class Device(PlatformModel):
             vcenter_id = self.vcenter_uuid
         else:
             vcenter_id = None
-        return DeviceVulnerability.get_vulnerability_summary_per_device(self._cb, self, category, vcenter_id)
+        return DeviceVulnerability.get_vulnerability_summary_per_device(self._cb,
+                                                                        self._model_unique_id,
+                                                                        category,
+                                                                        vcenter_id)
 
     def get_vulnerabilties(self, vcenter_specific=False):
         """
