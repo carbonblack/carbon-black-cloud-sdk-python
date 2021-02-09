@@ -535,7 +535,6 @@ class BaseAPI(object):
         """
         headers = kwargs.pop("headers", {})
         headers["Content-Type"] = "multipart/form-data"
-        print(kwargs)
         files_body = {k: (None, v) for (k, v) in kwargs.items()}
         return self.api_json_request("POST", uri, headers=headers, files=files_body)
 
