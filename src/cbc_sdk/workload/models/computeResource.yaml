@@ -1,0 +1,68 @@
+type: object
+properties:
+  id:
+    description: Numerical identifier for the compute resource
+    type: String
+  appliance_uuid:
+    description: The UUID of the appliance the VM is associated with
+    type: Array
+  cluster_name:
+    description: Name of the cluster. A cluster is a group of hosts
+    type: Array
+  datacenter_name:
+    description: Name of the underlying datacenter. The datacenter managed object provides the interface to the common container object for hosts, virtual machines, networks, and datastores
+    type: Array
+  esx_host_name:
+    description: Name of the ESX host on which the VM is deployed
+    type: Array
+  esx_host_uuid:
+    description: UUID of the ESX host on which VM is deployed
+    type: Array
+  vcenter_name:
+    description: Name of the vcenter the vm is associated with
+    type: Array
+  vcenter_host_url:
+    description: The hostname or ip address of the vcenter the vm is associated with
+    type: Array
+  vcenter_uuid:
+    description: 128-bit SMBIOS UUID of a vcenter represented as a hexadecimal string
+    type: Array
+  name:
+    description: The name of the compute resource
+    type: Array
+  host_name:
+    description: The DNS name of associated with the compute resource
+    type: Array
+  created_at:
+    description: The timestamp the compute resource was created
+    type: ISO 8601 timestamp in UTC
+  ip_address:
+    description: The current ip address assigned to the compute resource
+    type: Array
+  eligibility:
+    description: The status indicator indicating whether a compute resource is capable of installing a Carbon Black Cloud sensor
+    type: Array
+  eligibility_code:
+    description: Reason messages for why a compute resource is not eligible
+    type: Array
+  installation_status:
+    description: The current state of installing the Carbon Black Cloud sensor on the compute resource
+    type: Array
+  installation_status_code:
+    description: The reason an the installation process is in an ERROR state
+    type: String
+  uuid:
+    description: Universally unique identifier for a compute resource
+    type: Array
+  os_description:
+    description: The operating system, version, and architecture
+    type: Array
+  os_type:
+    description: The type of operating system
+    type: Array
+  os_architecture:
+    description: The compute resource’s operating system architecture
+    type: Array
+  vmwaretools_version:
+    description: The current version of VMware tools installed in the compute resource
+    type: Array
