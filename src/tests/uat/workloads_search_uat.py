@@ -26,7 +26,7 @@ import sys
 import requests
 
 # Internal library imports
-from cbc_sdk.workload import ComputeResource
+from cbc_sdk.workload.vm_workloads_search import ComputeResource
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
 
 

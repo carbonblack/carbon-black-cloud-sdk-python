@@ -18,7 +18,7 @@ import logging
 from cbc_sdk.errors import ApiError
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from cbc_sdk.workload import ComputeResource
+from cbc_sdk.workload.vm_workloads_search import ComputeResource
 from tests.unit.fixtures.workload.mock_search import (FETCH_COMPUTE_RESOURCE_BY_ID_RESP,
                                                       SEARCH_AND_FACET_COMPUTE_RESEOURCES)
 
