@@ -18,6 +18,7 @@ import logging
 from cbc_sdk.errors import ApiError
 from cbc_sdk.base import (NewBaseModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
                           CriteriaBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
+from cbc_sdk.workload.sensor_lifecycle import _do_sensor_install_request
 
 log = logging.getLogger(__name__)
 
@@ -81,6 +82,40 @@ class ComputeResource(NewBaseModel):
             str: The URL used to make requests for this object.
         """
         return self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id)
+
+    def install_sensor(self, sensor_kit_types, config_file=None):
+        """
+        Install a sensor on this compute resource.
+
+        Args:
+            sensor_kit_types (list): A list of SensorKit objects used to specify sensor types to choose from
+                                     in installation.
+            config_file (str): The text of a config.ini file with a list of sensor properties to configure
+                               on installation.
+
+        Returns:
+            dict: A dict with two members, 'type' and 'code', indicating the status of the installation.
+        """
+        return _do_sensor_install_request(self._cb, [self], sensor_kit_types, config_file)
+
+    @classmethod
+    def bulk_install(cls, cb, compute_resources, sensor_kit_types, config_file=None):
+        """
+        Install a sensor on a list of compute resources.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            compute_resources (list): A list of ComputeResource objects used to specify compute resources to install
+                                      sensors on.
+            sensor_kit_types (list): A list of SensorKit objects used to specify sensor types to choose from
+                                     in installation.
+            config_file (str): The text of a config.ini file with a list of sensor properties to configure
+                               on installation.
+
+        Returns:
+            dict: A dict with two members, 'type' and 'code', indicating the status of the installation.
+        """
+        return _do_sensor_install_request(cb, compute_resources, sensor_kit_types, config_file)
 
 
 class ComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
