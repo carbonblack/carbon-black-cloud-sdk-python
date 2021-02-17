@@ -14,8 +14,8 @@
 """Sensor Lifecycle Management for Workloads"""
 
 from cbc_sdk.errors import ApiError
-from cbc_sdk.base import UnrefreshableModel, BaseQuery, CriteriaBuilderSupportMixin, \
-                         IterableQueryMixin, AsyncQueryMixin
+from cbc_sdk.base import (UnrefreshableModel, BaseQuery, CriteriaBuilderSupportMixin,
+                          IterableQueryMixin, AsyncQueryMixin)
 
 import logging
 import json
@@ -137,7 +137,7 @@ class SensorKitQuery(BaseQuery, CriteriaBuilderSupportMixin, IterableQueryMixin,
         if my_skit is None:
             my_skit = SensorKit.from_type(self._cb, kwargs.pop('device_type', None), kwargs.pop('architecture', None),
                                           kwargs.pop('sensor_type', None), kwargs.pop('version', None))
-        self._update_criteria('sensor_types', my_skit.sensor_type)
+        self._update_criteria('sensor_types', [my_skit.sensor_type])
         return self
 
     def expires(self, expiration_date_time):
@@ -177,7 +177,7 @@ class SensorKitQuery(BaseQuery, CriteriaBuilderSupportMixin, IterableQueryMixin,
         """
         url = "/lcm/v1/orgs/{0}/sensor/_download".format(self._cb.credentials.org_key)
         request = {'sensor_types': self._criteria['sensor_types'], 'expires_at': self._expires}
-        resp = self._cb.post_multipart(url, sensor_url_request=json.dumps(request), configParams=config_params)
+        resp = self._cb.post_multipart(url, sensor_url_request=json.dumps(request), configParams=self._config_params)
         result = resp.json()
         return result.get('sensor_infos', [])
 
