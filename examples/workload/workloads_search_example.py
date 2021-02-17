@@ -95,23 +95,23 @@ def search_and_facet_compute_resources(cbc, menu, parser):
               'Exmaple: --name ABCD --appliance_uuid 1234 5678')
         args = parser.parse_args(input('Enter criteria filters: ').split())
         if args.name:
-            query.set_name(['","'.join(map(str, args.name))])
+            query.set_name(args.name)
         if args.os_type:
-            query.set_os_type(['","'.join(map(str, args.os_type))])
+            query.set_os_type(args.os_type)
         if args.appliance_uuid:
-            query.set_appliance_uuid(['","'.join(map(str, args.appliance_uuid))])
+            query.set_appliance_uuid(args.appliance_uuid)
         if args.cluster_name:
-            query.set_cluster_name(['","'.join(map(str, args.cluster_name))])
+            query.set_cluster_name(args.cluster_name)
         if args.ip_address:
-            query.set_ip_address(['","'.join(map(str, args.ip_address))])
+            query.set_ip_address(args.ip_address)
         if args.installation_status:
-            query.set_installation_status(['","'.join(map(str, args.installation_status))])
+            query.set_installation_status(args.installation_status)
         if args.uuid:
-            query.set_uuid(['","'.join(map(str, args.uuid))])
+            query.set_uuid(args.uuid)
         if args.os_architecture:
-            query.set_os_architecture(['","'.join(map(str, args.os_architecture))])
+            query.set_os_architecture(args.os_architecture)
         if args.eligibility:
-            query.set_eligibility(['","'.join(map(str, args.eligibility))])
+            query.set_eligibility(args.eligibility)
 
     print(*query)
     new_query = input('\nMake anothery query? Y/n\n')
