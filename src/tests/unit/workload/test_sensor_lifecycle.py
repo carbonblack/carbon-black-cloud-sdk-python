@@ -43,9 +43,10 @@ def cbcsdk_mock(monkeypatch, cb):
     return CBCSDKMock(monkeypatch, cb)
 
 
-def create_stub_compute_resource(cb, id, uuid, vcenter_uuid):
+def create_stub_compute_resource(cb, id, uuid, vcenter_uuid, os_type, os_arch, eligibility='ELIGIBLE'):
     """Create a stub ComputeResource object with the data we need."""
-    return ComputeResource(cb, id, {'id': id, 'uuid': uuid, 'vcenter_uuid': vcenter_uuid})
+    return ComputeResource(cb, id, {'id': id, 'name': id, 'uuid': uuid, 'vcenter_uuid': vcenter_uuid,
+                                    'eligibility': eligibility, 'os_type': os_type, 'os_architecture': os_arch})
 
 
 # ==================================== UNIT TESTS BELOW ====================================
@@ -150,6 +151,91 @@ def test_sensor_query_async(cbcsdk_mock):
     assert result[1].message == "Message2"
 
 
+@pytest.mark.parametrize("in_type, out_type", [
+    ('WINDOWS', 'WINDOWS'),
+    ('RHEL', 'RHEL'),
+    ('UBUNTU', 'UBUNTU'),
+    ('SUSE', 'SUSE'),
+    ('SLES', 'SUSE'),
+    ('CENTOS', 'RHEL'),
+    ('AMAZON_LINUX', 'AMAZON_LINUX'),
+    ('ORACLE', 'RHEL')
+])
+def test_compute_resource_get_sensor_type(cb, in_type, out_type):
+    """Tests success cases for the _get_sensor_type function on ComputeResource."""
+    resource = create_stub_compute_resource(cb, '1', 'Disregard', 'Disregard', in_type, '64')
+    assert out_type == resource._get_sensor_type()
+
+
+@pytest.mark.parametrize("in_type, eligibility, exctext", [
+    ('OTHER', 'ELIGIBLE', 'not supported for'),
+    ('BLAHBLAH', 'ELIGIBLE', 'not supported for'),
+    ('DEBIAN', 'ELIGIBLE', 'not supported for'),
+    ('WINDOWS', 'NOT_ELIGIBLE', 'does not allow'),
+    ('MAC', 'UNSUPPORTED', 'does not allow'),
+    ('OTHER', 'UNSUPPORTED', 'does not allow')
+])
+def test_compute_resource_get_sensor_type_fail(cb, in_type, eligibility, exctext):
+    """Tests failure cases for the _get_sensor_type function on ComputeResource."""
+    resource = create_stub_compute_resource(cb, '1', 'Disregard', 'Disregard', in_type, '64', eligibility)
+    with pytest.raises(ApiError, match=f"^.*{exctext}"):
+        resource._get_sensor_type()
+
+
+@pytest.mark.parametrize("in_type, in_arch, out_type, out_devtype", [
+    ('WINDOWS', '64', 'WINDOWS', 'WINDOWS'),
+    ('MAC', '64', 'MAC', 'MAC'),
+    ('RHEL', '32', 'RHEL', 'LINUX'),
+    ('UBUNTU', '64', 'UBUNTU', 'LINUX'),
+    ('SUSE', '64', 'SUSE', 'LINUX'),
+    ('SLES', '32', 'SUSE', 'LINUX'),
+    ('CENTOS', '32', 'RHEL', 'LINUX'),
+    ('AMAZON_LINUX', '64', 'AMAZON_LINUX', 'LINUX'),
+    ('ORACLE', '64', 'RHEL', 'LINUX')
+])
+def test_compute_resource_build_desired_sensorkit(cb, in_type, in_arch, out_type, out_devtype):
+    """Tests the _build_desired_sensorkit function on ComputeResource."""
+    resource = create_stub_compute_resource(cb, '1', 'Disregard', 'Disregard', in_type, in_arch)
+    skit = resource._build_desired_sensorkit('1.2.3.4')
+    assert skit.sensor_type == {'device_type': out_devtype, 'architecture': in_arch, 'type': out_type,
+                                'version': '1.2.3.4'}
+
+
+def test_build_compute_resource_list(cb):
+    """Tests the _build_compute_resource_list function on ComputeResource."""
+    res1 = create_stub_compute_resource(cb, '1', 'Zulu', 'Alpha', 'WINDOWS', '64')
+    res2 = create_stub_compute_resource(cb, '2', 'Yankee', 'Bravo', 'WINDOWS', '64')
+    res3 = create_stub_compute_resource(cb, '3', 'X-Ray', 'Charlie', 'WINDOWS', '64')
+    output = ComputeResource._build_compute_resource_list([res1, res2, res3])
+    assert output == [{'vcenter_id': 'Alpha', 'compute_resource_id': 'Zulu'},
+                      {'vcenter_id': 'Bravo', 'compute_resource_id': 'Yankee'},
+                      {'vcenter_id': 'Charlie', 'compute_resource_id': 'X-Ray'}]
+
+
+def test_sensor_install_bulk_by_id(cbcsdk_mock):
+    """Test the bulk_install_by_id function on ComputeResource."""
+    def validate_post(url, **kwargs):
+        assert kwargs['action_type'] == 'INSTALL'
+        assert kwargs['file'] == 'MyConfigFile'
+        r = json.loads(kwargs['install_request'])
+        assert r == {'compute_resources': [{'resource_manager_id': 'Alpha', 'compute_resource_id': 'Zulu'},
+                                           {'resource_manager_id': 'Bravo', 'compute_resource_id': 'Yankee'}],
+                     'sensor_types': [{'device_type': 'LINUX', 'architecture': '64', 'type': 'SUSE',
+                                       'version': '1.2.3.4'},
+                                      {'device_type': 'MAC', 'architecture': '64', 'type': 'MAC',
+                                       'version': '5.6.7.8'}]}
+        return REQUEST_SENSOR_INSTALL_RESP
+
+    cbcsdk_mock.mock_request("POST_MULTIPART", "/lcm/v1/orgs/test/workloads/actions", validate_post)
+    api = cbcsdk_mock.api
+    skit1 = SensorKit.from_type(api, 'LINUX', '64', 'SUSE', '1.2.3.4')
+    skit2 = SensorKit.from_type(api, 'MAC', '64', 'MAC', '5.6.7.8')
+    result = ComputeResource.bulk_install_by_id(api, [{'vcenter_id': 'Alpha', 'compute_resource_id': 'Zulu'},
+                                                      {'vcenter_id': 'Bravo', 'compute_resource_id': 'Yankee'}],
+                                                [skit1, skit2], 'MyConfigFile')
+    assert result == {'type': "INFO", 'code': "INSTALL_SENSOR_REQUEST_PROCESSED"}
+
+
 def test_sensor_install_bulk(cbcsdk_mock):
     """Test the bulk_install function on ComputeResource."""
     def validate_post(url, **kwargs):
@@ -166,8 +252,8 @@ def test_sensor_install_bulk(cbcsdk_mock):
 
     cbcsdk_mock.mock_request("POST_MULTIPART", "/lcm/v1/orgs/test/workloads/actions", validate_post)
     api = cbcsdk_mock.api
-    resource1 = create_stub_compute_resource(api, '123', 'Zulu', 'Alpha')
-    resource2 = create_stub_compute_resource(api, '234', 'Yankee', 'Bravo')
+    resource1 = create_stub_compute_resource(api, '123', 'Zulu', 'Alpha', 'SUSE', '64')
+    resource2 = create_stub_compute_resource(api, '234', 'Yankee', 'Bravo', 'SUSE', '64')
     skit1 = SensorKit.from_type(api, 'LINUX', '64', 'SUSE', '1.2.3.4')
     skit2 = SensorKit.from_type(api, 'MAC', '64', 'MAC', '5.6.7.8')
     result = ComputeResource.bulk_install(api, [resource1, resource2], [skit1, skit2], 'MyConfigFile')
@@ -182,15 +268,11 @@ def test_sensor_install_single(cbcsdk_mock):
         r = json.loads(kwargs['install_request'])
         assert r == {'compute_resources': [{'resource_manager_id': 'Alpha', 'compute_resource_id': 'Zulu'}],
                      'sensor_types': [{'device_type': 'LINUX', 'architecture': '64', 'type': 'SUSE',
-                                       'version': '1.2.3.4'},
-                                      {'device_type': 'MAC', 'architecture': '64', 'type': 'MAC',
-                                       'version': '5.6.7.8'}]}
+                                       'version': '1.2.3.4'}]}
         return REQUEST_SENSOR_INSTALL_RESP
 
     cbcsdk_mock.mock_request("POST_MULTIPART", "/lcm/v1/orgs/test/workloads/actions", validate_post)
     api = cbcsdk_mock.api
-    resource = create_stub_compute_resource(api, '123', 'Zulu', 'Alpha')
-    skit1 = SensorKit.from_type(api, 'LINUX', '64', 'SUSE', '1.2.3.4')
-    skit2 = SensorKit.from_type(api, 'MAC', '64', 'MAC', '5.6.7.8')
-    result = resource.install_sensor([skit1, skit2], 'MyConfigFile')
+    resource = create_stub_compute_resource(api, '123', 'Zulu', 'Alpha', 'SUSE', '64')
+    result = resource.install_sensor('1.2.3.4', 'MyConfigFile')
     assert result == {'type': "INFO", 'code': "INSTALL_SENSOR_REQUEST_PROCESSED"}

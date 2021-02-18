@@ -18,7 +18,7 @@ import logging
 from cbc_sdk.errors import ApiError
 from cbc_sdk.base import (NewBaseModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
                           CriteriaBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
-from cbc_sdk.workload.sensor_lifecycle import _do_sensor_install_request
+from cbc_sdk.workload.sensor_lifecycle import SensorKit, _do_sensor_install_request
 
 log = logging.getLogger(__name__)
 
@@ -83,20 +83,81 @@ class ComputeResource(NewBaseModel):
         """
         return self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id)
 
-    def install_sensor(self, sensor_kit_types, config_file=None):
+    def _get_sensor_type(self):
+        """
+        Calculates the sensor type that should be installed on this compute resource.
+
+        May also raise errors if the compute resource is ineligible or has an invalid type.
+
+        Returns:
+            str: The sensor type to be used for this compute resource.
+
+        Raises:
+            ApiError: If the compute node is not eligible or is of an invalid type.
+        """
+        if self.eligibility != 'ELIGIBLE':
+            raise ApiError(f"device {self.name} does not allow sensor installation ({self.eligibility})")
+        my_type = self.os_type
+        if my_type in SensorKit.COMPUTE_RESOURCE_MAP:
+            my_type = SensorKit.COMPUTE_RESOURCE_MAP[my_type]
+        if my_type not in SensorKit.VALID_TYPES:
+            raise ApiError(f"device {self.name} type {self.os_type} not supported for sensor installation")
+        return my_type
+
+    def _build_desired_sensorkit(self, version):
+        """
+        Builds a SensorKit to be used to specify the sensor to be installed on this compute resource.
+
+        May also raise errors if the compute resource is ineligible or has an invalid type.
+
+        Args:
+            version (str): The version number of the sensor to be used.
+
+        Returns:
+            SensorKit: A SensorKit object configured with the right sensor type values.
+
+        Raises:
+            ApiError: If the compute node is not eligible or is of an invalid type.
+        """
+        my_type = self._get_sensor_type()
+        if my_type in ('WINDOWS', 'MAC'):
+            my_device_type = my_type
+        else:
+            my_device_type = 'LINUX'
+        return SensorKit.from_type(self._cb, my_device_type, self.os_architecture, my_type, version)
+
+    @classmethod
+    def _build_compute_resource_list(cls, reslist):
+        """
+        Given a list of ComputeResource objects, returns a list of dicts to feed to _do_sensor_install_request.
+
+        Args:
+            reslist (list): A list of ComputeResource objects.
+
+        Returns:
+            list: List of dicts with the keys 'vcenter_id' and 'compute_resource_id', containing information extracted
+                  from the ComputeResource objects.
+        """
+        return [{'vcenter_id': resource.vcenter_uuid, 'compute_resource_id': resource.uuid} for resource in reslist]
+
+    def install_sensor(self, sensor_version, config_file=None):
         """
         Install a sensor on this compute resource.
 
         Args:
-            sensor_kit_types (list): A list of SensorKit objects used to specify sensor types to choose from
-                                     in installation.
+            sensor_version (str): The version number of the sensor to be used.
             config_file (str): The text of a config.ini file with a list of sensor properties to configure
                                on installation.
 
         Returns:
             dict: A dict with two members, 'type' and 'code', indicating the status of the installation.
+
+        Raises:
+            ApiError: If the compute node is not eligible or is of an invalid type.
         """
-        return _do_sensor_install_request(self._cb, [self], sensor_kit_types, config_file)
+        sensorkit = self._build_desired_sensorkit(sensor_version)
+        return _do_sensor_install_request(self._cb, ComputeResource._build_compute_resource_list([self]),
+                                          [sensorkit], config_file)
 
     @classmethod
     def bulk_install(cls, cb, compute_resources, sensor_kit_types, config_file=None):
@@ -107,6 +168,26 @@ class ComputeResource(NewBaseModel):
             cb (BaseAPI): Reference to API object used to communicate with the server.
             compute_resources (list): A list of ComputeResource objects used to specify compute resources to install
                                       sensors on.
+            sensor_kit_types (list): A list of SensorKit objects used to specify sensor types to choose from
+                                     in installation.
+            config_file (str): The text of a config.ini file with a list of sensor properties to configure
+                               on installation.
+
+        Returns:
+            dict: A dict with two members, 'type' and 'code', indicating the status of the installation.
+        """
+        return _do_sensor_install_request(cb, ComputeResource._build_compute_resource_list(compute_resources),
+                                          sensor_kit_types, config_file)
+
+    @classmethod
+    def bulk_install_by_id(cls, cb, compute_resources, sensor_kit_types, config_file=None):
+        """
+        Install a sensor on a list of compute resources, specified by ID.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            compute_resources (list): A list of dicts, each of which contains the keys 'vcenter_id' and
+                                      'compute_resource_id', specifying the compute resources to install sensors on.
             sensor_kit_types (list): A list of SensorKit objects used to specify sensor types to choose from
                                      in installation.
             config_file (str): The text of a config.ini file with a list of sensor properties to configure

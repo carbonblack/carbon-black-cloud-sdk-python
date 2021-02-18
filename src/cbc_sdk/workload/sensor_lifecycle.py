@@ -30,6 +30,7 @@ class SensorKit(UnrefreshableModel):
     VALID_DEVICE_TYPES = ["WINDOWS", "LINUX", "MAC"]
     VALID_ARCHITECTURES = ["32", "64", "OTHER"]
     VALID_TYPES = ["WINDOWS", "MAC", "RHEL", "UBUNTU", "SUSE", "AMAZON_LINUX"]
+    COMPUTE_RESOURCE_MAP = {'SLES': 'SUSE', 'CENTOS': 'RHEL', 'ORACLE': 'RHEL'}
 
     def __init__(self, cb, initial_data=None):
         """
@@ -237,16 +238,17 @@ def _do_sensor_install_request(cb, compute_resources, sensor_kits, config_file):
 
     Args:
         cb (BaseAPI): Reference to API object used to communicate with the server.
-        compute_resources (list): A list of ComputeResource objects used to specify compute resources to install
-                                  sensors on.
+        compute_resources (list): A list of dicts containing the keys 'vcenter_id' and 'compute_resource_id',
+                                  used to specify the compute resources to install on.
         sensor_kits (list): A list of SensorKit objects used to specify sensor types to choose from in installation.
         config_file (str): The text of a config.ini file with a list of sensor properties to configure on installation.
 
     Returns:
         dict: A dict with two members, 'type' and 'code', indicating the status of the installation.
     """
-    request = {'compute_resources': [{'resource_manager_id': resource.vcenter_uuid,
-                                      'compute_resource_id': resource.uuid} for resource in compute_resources],
+    request = {'compute_resources': [{'resource_manager_id': resource['vcenter_id'],
+                                      'compute_resource_id': resource['compute_resource_id']}
+                                     for resource in compute_resources],
                'sensor_types': [kit.sensor_type for kit in sensor_kits]}
     url = "/lcm/v1/orgs/{0}/workloads/actions".format(cb.credentials.org_key)
     return_data = cb.post_multipart(url, action_type='INSTALL', install_request=json.dumps(request), file=config_file)
