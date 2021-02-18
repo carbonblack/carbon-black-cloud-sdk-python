@@ -40,7 +40,7 @@ class SensorKit(UnrefreshableModel):
             initial_data (dict): Initial data used to populate the sensor kit data.
         """
         super(SensorKit, self).__init__(cb, None, initial_data)
-        self._full_init = True
+        self._full_init = (initial_data is not None and not initial_data.get('_pseudo', False))
 
     @classmethod
     def from_type(cls, cb, device_type, architecture, sensor_type, version):
@@ -70,7 +70,7 @@ class SensorKit(UnrefreshableModel):
         if sensor_type not in SensorKit.VALID_TYPES:
             raise ApiError("invalid type specified for SensorKit")
         return SensorKit(cb, {'sensor_type': {'device_type': device_type, 'architecture': architecture,
-                                              'type': sensor_type, 'version': version}})
+                                              'type': sensor_type, 'version': version}, '_pseudo': True})
 
     @classmethod
     def get_config_template(cls, cb):
