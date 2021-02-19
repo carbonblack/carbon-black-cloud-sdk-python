@@ -32,6 +32,7 @@ class CBCSDKMock:
         monkeypatch.setattr(api, "get_object", self._self_get_object())
         monkeypatch.setattr(api, "get_raw_data", self._self_get_raw_data())
         monkeypatch.setattr(api, "post_object", self._self_post_object())
+        monkeypatch.setattr(api, "post_multipart", self._self_post_multipart())
         monkeypatch.setattr(api, "put_object", self._self_put_object())
         monkeypatch.setattr(api, "delete_object", self._self_delete_object())
         monkeypatch.setattr(api, "api_json_request", self._self_patch_object())
@@ -81,7 +82,7 @@ class CBCSDKMock:
         Mocks the VERB + URL by defining the response for that particular request
 
         Args:
-            verb (str): HTTP verb supported [ GET, RAW_GET, POST, PUT, DELETE ]
+            verb (str): HTTP verb supported [ GET, RAW_GET, POST, POST_MULTIPART, PUT, DELETE ]
             url (str): The full path of to be mocked with support for regex
             body (?): Any value or object to be returned as mocked response
 
@@ -133,8 +134,23 @@ class CBCSDKMock:
 
         return _post_object
 
+    def _self_post_multipart(self):
+        def _post_multipart(url, **kwargs):
+            self._capture_data(kwargs)
+            matched = self.match_key(self.get_mock_key("POST_MULTIPART", url))
+            if matched:
+                if callable(self.mocks[matched]):
+                    return self.StubResponse(self.mocks[matched](url, **kwargs))
+                elif self.mocks[matched] is Exception or self.mocks[matched] in Exception.__subclasses__():
+                    raise self.mocks[matched]
+                else:
+                    return self.mocks[matched]
+            pytest.fail("Multipart POST called for %s when it shouldn't be" % url)
+
+        return _post_multipart
+
     def _self_get_raw_data(self):
-        def _get_raw_data(url, query_params, **kwargs):
+        def _get_raw_data(url, query_params=None, default=None, **kwargs):
             self._capture_data(query_params)
             matched = self.match_key(self.get_mock_key("RAW_GET", url))
             if matched:

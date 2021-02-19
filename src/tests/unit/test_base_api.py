@@ -247,6 +247,30 @@ def test_BaseAPI_post_object(mox):
     mox.VerifyAll()
 
 
+def test_BaseAPI_post_multipart(mox):
+    """Test the operation of post_multipart."""
+    def validate_header(hdrs):
+        assert hdrs['Content-Type'] == 'multipart/form-data'
+        return True
+
+    def validate_files(files):
+        assert len(files) == 2
+        assert files['name'][0] is None
+        assert files['name'][1] == 'Cheeseburger'
+        assert files['config'][0] is None
+        assert files['config'][1] == 'abc\ndef\nghi'
+        return True
+
+    sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
+    mox.StubOutWithMock(sut.session, 'http_request')
+    sut.session.http_request('POST', '/path', headers=Func(validate_header), data=None, files=Func(validate_files)) \
+        .AndReturn(StubResponse({'zyx': 100}))
+    mox.ReplayAll()
+    rc = sut.post_multipart('/path', name='Cheeseburger', config='abc\ndef\nghi')
+    assert rc.json() == {'zyx': 100}
+    mox.VerifyAll()
+
+
 def test_BaseAPI_put_object(mox):
     """Test the operation of put_object."""
     def validate_header(hdrs):
