@@ -73,6 +73,7 @@ See detailed information on the objects and methods exposed by the Carbon Black 
    cbc_sdk.endpoint_standard
    cbc_sdk.enterprise_edr
    cbc_sdk.platform
+   cbc_sdk.workload
    cbc_sdk
    exceptions
 
