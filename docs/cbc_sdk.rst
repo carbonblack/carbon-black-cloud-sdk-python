@@ -13,6 +13,7 @@ Subpackages
    cbc_sdk.endpoint_standard
    cbc_sdk.enterprise_edr
    cbc_sdk.platform
+   cbc_sdk.workload
 
 Submodules
 ----------
@@ -49,8 +50,8 @@ cbc\_sdk.errors module
    :undoc-members:
    :show-inheritance:
 
-cbc\_sdk.example\_helpers module
---------------------------------
+cbc\_sdk.helpers module
+-----------------------
 
 .. automodule:: cbc_sdk.helpers
    :members:

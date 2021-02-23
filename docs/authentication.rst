@@ -323,7 +323,7 @@ When supplying API credentials to the SDK :ref:`with environmental variables <Wi
 the credentials include these components:
 
 +-------------------------+----------------------+---------+
-| Keyword                 | Legacy          | Default |
+| Keyword                 | Legacy               | Default |
 +=========================+======================+=========+
 | ``CBC_URL``             | ``CBAPI_URL``        |         |
 +-------------------------+----------------------+---------+
