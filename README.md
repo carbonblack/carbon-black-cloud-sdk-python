@@ -42,8 +42,9 @@ At least one Carbon Black Cloud product is required to use this SDK:
 * [Endpoint Standard](https://developer.carbonblack.com/reference/carbon-black-cloud/cb-defense/)
 * [Audit and Remediation](https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/)
 * [Enterprise EDR](https://developer.carbonblack.com/reference/carbon-black-cloud/cb-threathunter/)
+* [Workload](https://developer.carbonblack.com/reference/carbon-black-cloud/workload-protection/)
 
-_Note: Support for the latest products such as Workloads and Containers are planned for early 2021_
+_Note: Support for the latest products such as Containers are planned for early 2021_
 
 ### Python Packages
 
