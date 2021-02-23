@@ -11,7 +11,8 @@ packages = [
     'cbc_sdk.credential_providers',
     'cbc_sdk.endpoint_standard',
     'cbc_sdk.enterprise_edr',
-    'cbc_sdk.platform'
+    'cbc_sdk.platform',
+    'cbc_sdk.workload'
 ]
 
 install_requires = [
