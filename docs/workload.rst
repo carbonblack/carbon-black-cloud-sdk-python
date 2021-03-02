@@ -50,8 +50,6 @@ Using a query of the ``ComputeResource`` object, you can get the compute resourc
          vmwaretools_version: 10336
 
 
-And there we have it, the Carbon Black Cloud Python SDK makes querying as easy as writing just a few lines of code.
-
 Search and Facet Compute Resources
 ----------------------------------
 Using a query of the ``ComputeResource`` object, you can search and facet compute resources in your organization.
@@ -71,7 +69,7 @@ Available criteria filters are:
   uuid
 
 
-Lets start by making a simple query with our ComputeResource object.
+Start by making a simple query with our ComputeResource object.
 
 ::
 
@@ -85,8 +83,8 @@ Lets start by making a simple query with our ComputeResource object.
   >>> print(len(query))
   >>> 218
 
-That`s a bit too many entries to print to the console output, so let us try and narrow down our search based on certain criteria.
-To add a criteria to the query, simply add the desired method to the ComputeResource object.
+Since this is too many entries to print to the console output, try to narrow down the search by adding criteria to the query.
+To add a criteria to the query, add the desired method to the ComputeResource object.
 
 The class methods are as follows:
 ::
@@ -101,14 +99,15 @@ The class methods are as follows:
   os_type -> set_os_type()
   uuid -> set_uuid()
 
-Each of these methods accepts an array of strings. You can find more detailed information about the class methods here(link to workload)
+Each of these methods accepts an array of strings. You can find more detailed information about the class methods here :ref:`RST Overview`
+
 
 Example:
 ::
 
   set_appliance_uuid(['ABCD', 'DEFG'])
 
-Now lets make another query, but this time use a criteria filter for the os type.
+Next, make a query with a filter for OS type.
 
 ::
 
@@ -184,10 +183,11 @@ Now lets make another query, but this time use a criteria filter for the os type
 
 Interactive example script featuring Workloads Search
 -------------------------------------------------------------------------------
-Another cool feature we provide with our python SDK are a number of example scripts.
+
+We have a number of example scripts you can use with the CBC SDK.
 
 .. image:: _static/workloads_example_script.gif
 
-This interactive script, in particular, will show you the capabilities of our SDK in a clear and precise manner. It is designed in such a way, that everybody, regardless of technical skill or level can use it intuitively.
+This interactive script highlights the capabilities of the CBC SDK.
 
-You can download it from `here <https://github.com/carbonblack/carbon-black-cloud-sdk-python/blob/develop/examples/workload/workloads_search_example.py>`_
+You can download it from: `here <https://github.com/carbonblack/carbon-black-cloud-sdk-python/blob/develop/examples/workload/workloads_search_example.py>`_
