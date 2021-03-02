@@ -87,7 +87,7 @@ def test_get_config_template(cbcsdk_mock):
 
 def test_sensor_query(cbcsdk_mock):
     """Test the sensor kit query."""
-    def validate_post(url, **kwargs):
+    def validate_post(url, param_table, **kwargs):
         assert kwargs['configParams'] == 'SampleConfParams'
         r = json.loads(kwargs['sensor_url_request'])
         assert r == {'sensor_types': [{'device_type': 'LINUX', 'architecture': '64', 'type': 'SUSE',
@@ -120,7 +120,7 @@ def test_sensor_query(cbcsdk_mock):
 
 def test_sensor_query_async(cbcsdk_mock):
     """Test the sensor kit query."""
-    def validate_post(url, **kwargs):
+    def validate_post(url, param_table, **kwargs):
         assert kwargs['configParams'] == 'SampleConfParams'
         r = json.loads(kwargs['sensor_url_request'])
         assert r == {'sensor_types': [{'device_type': 'LINUX', 'architecture': '64', 'type': 'SUSE',
@@ -214,7 +214,7 @@ def test_build_compute_resource_list(cb):
 
 def test_sensor_install_bulk_by_id(cbcsdk_mock):
     """Test the bulk_install_by_id function on ComputeResource."""
-    def validate_post(url, **kwargs):
+    def validate_post(url, param_table, **kwargs):
         assert kwargs['action_type'] == 'INSTALL'
         assert kwargs['file'] == 'MyConfigFile'
         r = json.loads(kwargs['install_request'])
@@ -238,7 +238,7 @@ def test_sensor_install_bulk_by_id(cbcsdk_mock):
 
 def test_sensor_install_bulk(cbcsdk_mock):
     """Test the bulk_install function on ComputeResource."""
-    def validate_post(url, **kwargs):
+    def validate_post(url, param_table, **kwargs):
         assert kwargs['action_type'] == 'INSTALL'
         assert kwargs['file'] == 'MyConfigFile'
         r = json.loads(kwargs['install_request'])
@@ -262,7 +262,7 @@ def test_sensor_install_bulk(cbcsdk_mock):
 
 def test_sensor_install_single(cbcsdk_mock):
     """Test the install_sensor function on ComputeResource."""
-    def validate_post(url, **kwargs):
+    def validate_post(url, param_table, **kwargs):
         assert kwargs['action_type'] == 'INSTALL'
         assert kwargs['file'] == 'MyConfigFile'
         r = json.loads(kwargs['install_request'])
