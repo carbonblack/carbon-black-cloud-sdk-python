@@ -99,8 +99,7 @@ The class methods are as follows:
   os_type -> set_os_type()
   uuid -> set_uuid()
 
-Each of these methods accepts an array of strings. You can find more detailed information about the class methods here :ref:`RST Overview`
-
+Each of these methods accepts an array of strings. You can find more detailed information about the class methods here(link to workload)
 
 Example:
 ::
@@ -183,7 +182,6 @@ Next, make a query with a filter for OS type.
 
 Interactive example script featuring Workloads Search
 -------------------------------------------------------------------------------
-
 We have a number of example scripts you can use with the CBC SDK.
 
 .. image:: _static/workloads_example_script.gif
