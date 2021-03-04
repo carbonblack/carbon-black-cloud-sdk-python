@@ -22,6 +22,12 @@ import json
 
 log = logging.getLogger(__name__)
 
+_GET_SENSOR_KIT_TRANS_TABLE = {'sensor_url_request': {'filename': 'sensor.json', 'type': 'application/json'},
+                               'configParams': {'filename': 'config.ini', 'type': 'text/plain'}}
+_SENSOR_INSTALL_TRANS_TABLE = {'action_type': {},
+                               'install_request': {'filename': 'request.json', 'type': 'application/json'},
+                               'file': {'filename': 'config.ini', 'type': 'text/plain'}}
+
 
 class SensorKit(UnrefreshableModel):
     """Represents the information about a sensor, including installation file URLs."""
@@ -64,14 +70,22 @@ class SensorKit(UnrefreshableModel):
         Raises:
             ApiError: If an invalid value was used for one of the three limited values.
         """
-        if device_type not in SensorKit.VALID_DEVICE_TYPES:
-            raise ApiError("invalid device_type specified for SensorKit")
-        if architecture not in SensorKit.VALID_ARCHITECTURES:
-            raise ApiError("invalid architecture specified for SensorKit")
-        if sensor_type not in SensorKit.VALID_TYPES:
-            raise ApiError("invalid type specified for SensorKit")
-        return SensorKit(cb, {'sensor_type': {'device_type': device_type, 'architecture': architecture,
-                                              'type': sensor_type, 'version': version}, '_pseudo': True})
+        sensor_type_data = {}
+        if device_type is not None:
+            if device_type not in SensorKit.VALID_DEVICE_TYPES:
+                raise ApiError("invalid device_type specified for SensorKit")
+            sensor_type_data['device_type'] = device_type
+        if architecture is not None:
+            if architecture not in SensorKit.VALID_ARCHITECTURES:
+                raise ApiError("invalid architecture specified for SensorKit")
+            sensor_type_data['architecture'] = architecture
+        if sensor_type is not None:
+            if sensor_type not in SensorKit.VALID_TYPES:
+                raise ApiError("invalid type specified for SensorKit")
+            sensor_type_data['type'] = sensor_type
+        if version is not None:
+            sensor_type_data['version'] = version
+        return SensorKit(cb, {'sensor_type': sensor_type_data, '_pseudo': True})
 
     @classmethod
     def get_config_template(cls, cb):
@@ -178,7 +192,8 @@ class SensorKitQuery(BaseQuery, CriteriaBuilderSupportMixin, IterableQueryMixin,
         """
         url = "/lcm/v1/orgs/{0}/sensor/_download".format(self._cb.credentials.org_key)
         request = {'sensor_types': self._criteria['sensor_types'], 'expires_at': self._expires}
-        resp = self._cb.post_multipart(url, sensor_url_request=json.dumps(request), configParams=self._config_params)
+        resp = self._cb.post_multipart(url, _GET_SENSOR_KIT_TRANS_TABLE, sensor_url_request=json.dumps(request),
+                                       configParams=self._config_params)
         result = resp.json()
         return result.get('sensor_infos', [])
 
@@ -251,5 +266,6 @@ def _do_sensor_install_request(cb, compute_resources, sensor_kits, config_file):
                                      for resource in compute_resources],
                'sensor_types': [kit.sensor_type for kit in sensor_kits]}
     url = "/lcm/v1/orgs/{0}/workloads/actions".format(cb.credentials.org_key)
-    return_data = cb.post_multipart(url, action_type='INSTALL', install_request=json.dumps(request), file=config_file)
+    return_data = cb.post_multipart(url, _SENSOR_INSTALL_TRANS_TABLE, action_type='INSTALL',
+                                    install_request=json.dumps(request), file=config_file)
     return return_data.json()

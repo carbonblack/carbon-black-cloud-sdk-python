@@ -135,12 +135,12 @@ class CBCSDKMock:
         return _post_object
 
     def _self_post_multipart(self):
-        def _post_multipart(url, **kwargs):
+        def _post_multipart(url, param_table, **kwargs):
             self._capture_data(kwargs)
             matched = self.match_key(self.get_mock_key("POST_MULTIPART", url))
             if matched:
                 if callable(self.mocks[matched]):
-                    return self.StubResponse(self.mocks[matched](url, **kwargs))
+                    return self.StubResponse(self.mocks[matched](url, param_table, **kwargs))
                 elif self.mocks[matched] is Exception or self.mocks[matched] in Exception.__subclasses__():
                     raise self.mocks[matched]
                 else:
