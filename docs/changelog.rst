@@ -1,8 +1,26 @@
 Changelog
 ================================
 
+CBC SDK 1.2.0 - Released March 9, 2021
+--------------------------------------
+
+New Features
+
+* VMware Carbon Black Cloud Workload support for managing workloads:
+
+  * Appliance Installation
+  * Appliance Service
+  * Sensor Lifecycle Management
+  * VM Workloads Search
+
+* Add tutorial for Reputation Override
+
+Bug Fixes
+
+* Fix to initialization of ReputationOverride objects
+
 CBC SDK 1.1.1 - Released February 2, 2021
-------------------------------------
+-----------------------------------------
 
 New Features
 
