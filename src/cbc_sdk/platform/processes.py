@@ -683,8 +683,10 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, Iterabl
         query = self._query_builder._collapse()
         if self._query_builder._process_guid is not None:
             args["process_guid"] = self._query_builder._process_guid
-        elif self._model_unique_id is not None:
-            args["process_guid"] = self._model_unique_id
+        elif 'process_guid:' in query:
+            q = query.split('process_guid:', 1)[1].split(' ', 1)[0]
+            args["process_guid"] = q
+
         if 'parent_guid:' in query:
             # extract parent_guid from where() clause
             parent_guid = query.split('parent_guid:', 1)[1].split(' ', 1)[0]
@@ -727,27 +729,6 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, Iterabl
             return True
 
         return False
-
-    def _count(self):
-        if self._count_valid:
-            return self._total_results
-
-        while self._still_querying():
-            time.sleep(.5)
-
-        if self._timed_out:
-            raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
-
-        result_url = "/api/investigate/v2/orgs/{}/processes/summary_jobs/{}/results".format(
-            self._cb.credentials.org_key,
-            self._query_token,
-        )
-        result = self._cb.get_object(result_url)
-
-        self._total_results = result.get('num_available', 0)
-        self._count_valid = True
-
-        return self._total_results
 
     def _search(self, start=0, rows=0):
         """Execute the query, with one expected result."""

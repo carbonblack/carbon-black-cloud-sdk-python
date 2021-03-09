@@ -100,6 +100,22 @@ GET_PROCESS_SEARCH_JOB_RESULTS_RESP = {
     "completed": 45
 }
 
+GET_PROCESS_SEARCH_JOB_RESULTS_RESP_ZERO = {
+    "results": [],
+    "num_found": 616,
+    "num_available": 1,
+    "contacted": 0,
+    "completed": 0
+}
+
+GET_PROCESS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING = {
+    "results": [],
+    "num_found": 616,
+    "num_available": 1,
+    "contacted": 10,
+    "completed": 0
+}
+
 GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1 = {
     "results": [
         {
@@ -148,6 +164,146 @@ GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1 = {
             "process_pid": [
                 3909
             ],
+            "process_reputation": "TRUSTED_WHITE_LIST",
+            "process_username": [
+                "Username"
+            ],
+            "regmod_count": 1,
+            "scriptload_count": 0,
+            "ttp": [
+                "ENUMERATE_PROCESSES",
+                "INJECT_CODE",
+                "MITRE_T1003_CREDENTIAL_DUMP",
+                "MITRE_T1005_DATA_FROM_LOCAL_SYS",
+                "MITRE_T1055_PROCESS_INJECT",
+                "MITRE_T1057_PROCESS_DISCOVERY",
+                "RAM_SCRAPING",
+                "READ_SECURITY_DATA"
+            ]
+        }
+    ],
+    "num_found": 6168,
+    "num_available": 1,
+    "contacted": 45,
+    "completed": 45
+}
+
+GET_PROCESS_SEARCH_JOB_RESULTS_RESP_NO_PARENT_GUID = {
+    "results": [
+        {
+            "backend_timestamp": "2020-09-11T19:35:02.972Z",
+            "childproc_count": 0,
+            "crossproc_count": 787,
+            "device_external_ip": "192.168.0.1",
+            "device_group_id": 0,
+            "device_id": 1234567,
+            "device_internal_ip": "192.168.0.2",
+            "device_name": "Windows10Device",
+            "device_os": "WINDOWS",
+            "device_policy_id": 12345,
+            "device_timestamp": "2020-09-11T19:32:12.821Z",
+            "enriched": True,
+            "enriched_event_type": [
+                "INJECT_CODE",
+                "SYSTEM_API_CALL"
+            ],
+            "event_type": [
+                "crossproc"
+            ],
+            "filemod_count": 0,
+            "ingress_time": 1599852859660,
+            "legacy": True,
+            "modload_count": 1,
+            "netconn_count": 0,
+            "org_id": "test",
+            "parent_hash": [
+                "9090e0e44e14709fb09b23b98572e0e61c810189e2de8f7156021bc81c3b1bb6",
+                "bccc12eb2ef644e662a63a023fb83f9b"
+            ],
+            "parent_name": "c:\\windows\\system32\\services.exe",
+            "parent_pid": 644,
+            "process_cmdline": [
+                "\"C:\\Program Files\\VMware\\VMware Tools\\vmtoolsd.exe\""
+            ],
+            "process_effective_reputation": "TRUSTED_WHITE_LIST",
+            "process_guid": "test-003513bc-00000001-00000000-1d640200c9a61d7",
+            "process_hash": [
+                "f2c7d894abe8ac0b4c2a597caa6b3efe7ad2bdb4226845798d954c5ab9c9bf15",
+                "12384336325dc8eadfb1e8ff876921c4"
+            ],
+            "process_name": "c:\\program files\\vmware\\vmware tools\\vmtoolsd.exe",
+            "process_pid": [
+                3909
+            ],
+            "process_reputation": "TRUSTED_WHITE_LIST",
+            "process_username": [
+                "Username"
+            ],
+            "regmod_count": 1,
+            "scriptload_count": 0,
+            "ttp": [
+                "ENUMERATE_PROCESSES",
+                "INJECT_CODE",
+                "MITRE_T1003_CREDENTIAL_DUMP",
+                "MITRE_T1005_DATA_FROM_LOCAL_SYS",
+                "MITRE_T1055_PROCESS_INJECT",
+                "MITRE_T1057_PROCESS_DISCOVERY",
+                "RAM_SCRAPING",
+                "READ_SECURITY_DATA"
+            ]
+        }
+    ],
+    "num_found": 6168,
+    "num_available": 1,
+    "contacted": 45,
+    "completed": 45
+}
+
+GET_PROCESS_SEARCH_JOB_RESULTS_RESP_NO_PID = {
+    "results": [
+        {
+            "backend_timestamp": "2020-09-11T19:35:02.972Z",
+            "childproc_count": 0,
+            "crossproc_count": 787,
+            "device_external_ip": "192.168.0.1",
+            "device_group_id": 0,
+            "device_id": 1234567,
+            "device_internal_ip": "192.168.0.2",
+            "device_name": "Windows10Device",
+            "device_os": "WINDOWS",
+            "device_policy_id": 12345,
+            "device_timestamp": "2020-09-11T19:32:12.821Z",
+            "enriched": True,
+            "enriched_event_type": [
+                "INJECT_CODE",
+                "SYSTEM_API_CALL"
+            ],
+            "event_type": [
+                "crossproc"
+            ],
+            "filemod_count": 0,
+            "ingress_time": 1599852859660,
+            "legacy": True,
+            "modload_count": 1,
+            "netconn_count": 0,
+            "org_id": "test",
+            "parent_guid": "test-0034d5f2-00000284-00000000-1d687097e9cf7b5",
+            "parent_hash": [
+                "9090e0e44e14709fb09b23b98572e0e61c810189e2de8f7156021bc81c3b1bb6",
+                "bccc12eb2ef644e662a63a023fb83f9b"
+            ],
+            "parent_name": "c:\\windows\\system32\\services.exe",
+            "parent_pid": 644,
+            "process_cmdline": [
+                "\"C:\\Program Files\\VMware\\VMware Tools\\vmtoolsd.exe\""
+            ],
+            "process_effective_reputation": "TRUSTED_WHITE_LIST",
+            "process_guid": "test-003513bc-00000001-00000000-1d640200c9a61d7",
+            "process_hash": [
+                "f2c7d894abe8ac0b4c2a597caa6b3efe7ad2bdb4226845798d954c5ab9c9bf15",
+                "12384336325dc8eadfb1e8ff876921c4"
+            ],
+            "process_name": "c:\\program files\\vmware\\vmware tools\\vmtoolsd.exe",
             "process_reputation": "TRUSTED_WHITE_LIST",
             "process_username": [
                 "Username"
@@ -711,6 +867,294 @@ GET_PROCESS_SUMMARY_RESP = {
             }
         ]
     }
+}
+
+GET_PROCESS_SUMMARY_RESP_NO_PID = {
+    "completed": 30,
+    "contacted": 30,
+    "exception": "",
+    "summary": {
+        "children": [],
+        "parent": {
+            "_process_filename": "systemd",
+            "backend_timestamp": "2020-08-28T19:12:07.989Z",
+            "childproc_count": 0,
+            "crossproc_count": 0,
+            "device_external_ip": "34.56.78.90",
+            "device_group_id": 0,
+            "device_id": 176678,
+            "device_name": "devr-dev",
+            "device_os": "LINUX",
+            "device_policy": "sm-restrictive",
+            "device_policy_id": 11200,
+            "device_timestamp": "2020-08-28T19:10:02.123Z",
+            "filemod_count": 0,
+            "has_children": True,
+            "hits": False,
+            "ingress_time": 1598641901273,
+            "modload_count": 0,
+            "netconn_count": 0,
+            "org_id": "ABCD1234",
+            "process_effective_reputation": "NOT_LISTED",
+            "process_guid": "ABCD1234-0002b226-00000001-00000000-1d6225bbba75e43",
+            "process_hash": [
+                "e4b9902024ac32b3ca37f6b4c9b841e8",
+                "81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85"
+            ],
+            "process_name": "/usr/lib/systemd/systemd",
+            "process_pid": [
+                1
+            ],
+            "process_reputation": "NOT_LISTED",
+            "process_start_time": "2020-05-04T21:34:03.968Z",
+            "regmod_count": 0,
+            "scriptload_count": 0
+        },
+        "process": {
+            "_process_filename": "bash",
+            "backend_timestamp": "2020-08-28T19:16:11.959Z",
+            "childproc_count": 333580,
+            "crossproc_count": 0,
+            "device_external_ip": "34.56.78.90",
+            "device_group_id": 0,
+            "device_id": 176678,
+            "device_name": "devr-dev",
+            "device_os": "LINUX",
+            "device_policy": "sm-restrictive",
+            "device_policy_id": 11200,
+            "device_timestamp": "2020-08-28T19:14:41.231Z",
+            "filemod_count": 0,
+            "ingress_time": 1598642141411,
+            "modload_count": 0,
+            "netconn_count": 0,
+            "org_id": "ABCD1234",
+            "parent_guid": "ABCD1234-0002b226-00000001-00000000-1d6225bbba75e43",
+            "parent_hash": [
+                "81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85",
+                "e4b9902024ac32b3ca37f6b4c9b841e8"
+            ],
+            "parent_name": "/usr/lib/systemd/systemd",
+            "parent_pid": 1,
+            "process_cmdline": [
+                "/bin/bash /usr/sbin/ksmtuned"
+            ],
+            "process_effective_reputation": "NOT_LISTED",
+            "process_guid": "ABCD1234-0002b226-00001615-00000000-1d6225bbba75e5e",
+            "process_hash": [
+                "c7084336325dc8eadfb1e8ff876921c4",
+                "5920199e4fbfa47c1717b863814722148a353e54f8c10912cf1f991a1c86309d"
+            ],
+            "process_name": "/usr/bin/bash",
+            "process_reputation": "NOT_LISTED",
+            "process_start_time": "2020-05-04T21:34:03.968Z",
+            "process_username": [
+                "root"
+            ],
+            "regmod_count": 0,
+            "scriptload_count": 0
+        },
+        "siblings": [
+            {
+                "_process_filename": "nm-dispatcher",
+                "backend_timestamp": "2020-08-19T20:55:33.446Z",
+                "childproc_count": 1,
+                "crossproc_count": 0,
+                "device_external_ip": "34.56.78.90",
+                "device_group_id": 0,
+                "device_id": 176678,
+                "device_name": "devr-dev",
+                "device_os": "LINUX",
+                "device_policy": "sm-restrictive",
+                "device_policy_id": 11200,
+                "device_timestamp": "2020-08-19T20:54:44.980Z",
+                "filemod_count": 0,
+                "has_children": True,
+                "hits": False,
+                "ingress_time": 1597870506825,
+                "modload_count": 0,
+                "netconn_count": 0,
+                "org_id": "ABCD1234",
+                "parent_guid": "ABCD1234-0002b226-00000001-00000000-1d6225bbba75e43",
+                "parent_hash": [
+                    "81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85",
+                    "e4b9902024ac32b3ca37f6b4c9b841e8"
+                ],
+                "parent_name": "/usr/lib/systemd/systemd",
+                "parent_pid": 1,
+                "process_cmdline": [
+                    "/usr/libexec/nm-dispatcher"
+                ],
+                "process_effective_reputation": "NOT_LISTED",
+                "process_guid": "ABCD1234-0002b226-00005742-00000000-1d6766af7bedb39",
+                "process_hash": [
+                    "04b2450579a663c964f3960cd0cf93a8",
+                    "2206d95e0a435aadad6c84b5bce370d076137efecf6adbbf6feddbe0515fb17e"
+                ],
+                "process_name": "/usr/libexec/nm-dispatcher",
+                "process_pid": [
+                    22338
+                ],
+                "process_reputation": "NOT_LISTED",
+                "process_start_time": "2020-08-19T20:54:44.909Z",
+                "process_username": [
+                    "root"
+                ],
+                "regmod_count": 0,
+                "scriptload_count": 0
+            }
+        ]
+    }
+}
+
+GET_PROCESS_SUMMARY_RESP_NO_HASH = {
+    "completed": 30,
+    "contacted": 30,
+    "exception": "",
+    "summary": {
+        "children": [],
+        "parent": {
+            "_process_filename": "systemd",
+            "backend_timestamp": "2020-08-28T19:12:07.989Z",
+            "childproc_count": 0,
+            "crossproc_count": 0,
+            "device_external_ip": "34.56.78.90",
+            "device_group_id": 0,
+            "device_id": 176678,
+            "device_name": "devr-dev",
+            "device_os": "LINUX",
+            "device_policy": "sm-restrictive",
+            "device_policy_id": 11200,
+            "device_timestamp": "2020-08-28T19:10:02.123Z",
+            "filemod_count": 0,
+            "has_children": True,
+            "hits": False,
+            "ingress_time": 1598641901273,
+            "modload_count": 0,
+            "netconn_count": 0,
+            "org_id": "ABCD1234",
+            "process_effective_reputation": "NOT_LISTED",
+            "process_guid": "ABCD1234-0002b226-00000001-00000000-1d6225bbba75e43",
+            "process_hash": [
+                "e4b9902024ac32b3ca37f6b4c9b841e8",
+                "81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85"
+            ],
+            "process_name": "/usr/lib/systemd/systemd",
+            "process_pid": [
+                1
+            ],
+            "process_reputation": "NOT_LISTED",
+            "process_start_time": "2020-05-04T21:34:03.968Z",
+            "regmod_count": 0,
+            "scriptload_count": 0
+        },
+        "process": {
+            "_process_filename": "bash",
+            "backend_timestamp": "2020-08-28T19:16:11.959Z",
+            "childproc_count": 333580,
+            "crossproc_count": 0,
+            "device_external_ip": "34.56.78.90",
+            "device_group_id": 0,
+            "device_id": 176678,
+            "device_name": "devr-dev",
+            "device_os": "LINUX",
+            "device_policy": "sm-restrictive",
+            "device_policy_id": 11200,
+            "device_timestamp": "2020-08-28T19:14:41.231Z",
+            "filemod_count": 0,
+            "ingress_time": 1598642141411,
+            "modload_count": 0,
+            "netconn_count": 0,
+            "org_id": "ABCD1234",
+            "parent_guid": "ABCD1234-0002b226-00000001-00000000-1d6225bbba75e43",
+            "parent_hash": [
+                "81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85",
+                "e4b9902024ac32b3ca37f6b4c9b841e8"
+            ],
+            "parent_name": "/usr/lib/systemd/systemd",
+            "parent_pid": 1,
+            "process_cmdline": [
+                "/bin/bash /usr/sbin/ksmtuned"
+            ],
+            "process_effective_reputation": "NOT_LISTED",
+            "process_guid": "ABCD1234-0002b226-00001615-00000000-1d6225bbba75e5e",
+            "process_name": "/usr/bin/bash",
+            "process_pid": [
+                5653,
+                16139
+            ],
+            "process_reputation": "NOT_LISTED",
+            "process_start_time": "2020-05-04T21:34:03.968Z",
+            "process_username": [
+                "root"
+            ],
+            "regmod_count": 0,
+            "scriptload_count": 0
+        },
+        "siblings": [
+            {
+                "_process_filename": "nm-dispatcher",
+                "backend_timestamp": "2020-08-19T20:55:33.446Z",
+                "childproc_count": 1,
+                "crossproc_count": 0,
+                "device_external_ip": "34.56.78.90",
+                "device_group_id": 0,
+                "device_id": 176678,
+                "device_name": "devr-dev",
+                "device_os": "LINUX",
+                "device_policy": "sm-restrictive",
+                "device_policy_id": 11200,
+                "device_timestamp": "2020-08-19T20:54:44.980Z",
+                "filemod_count": 0,
+                "has_children": True,
+                "hits": False,
+                "ingress_time": 1597870506825,
+                "modload_count": 0,
+                "netconn_count": 0,
+                "org_id": "ABCD1234",
+                "parent_guid": "ABCD1234-0002b226-00000001-00000000-1d6225bbba75e43",
+                "parent_hash": [
+                    "81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85",
+                    "e4b9902024ac32b3ca37f6b4c9b841e8"
+                ],
+                "parent_name": "/usr/lib/systemd/systemd",
+                "parent_pid": 1,
+                "process_cmdline": [
+                    "/usr/libexec/nm-dispatcher"
+                ],
+                "process_effective_reputation": "NOT_LISTED",
+                "process_guid": "ABCD1234-0002b226-00005742-00000000-1d6766af7bedb39",
+                "process_hash": [
+                    "04b2450579a663c964f3960cd0cf93a8",
+                    "2206d95e0a435aadad6c84b5bce370d076137efecf6adbbf6feddbe0515fb17e"
+                ],
+                "process_name": "/usr/libexec/nm-dispatcher",
+                "process_pid": [
+                    22338
+                ],
+                "process_reputation": "NOT_LISTED",
+                "process_start_time": "2020-08-19T20:54:44.909Z",
+                "process_username": [
+                    "root"
+                ],
+                "regmod_count": 0,
+                "scriptload_count": 0
+            }
+        ]
+    }
+}
+
+GET_PROCESS_SUMMARY_RESP_ZERO_CONTACTED = {
+    "completed": 0,
+    "contacted": 0,
+    "exception": "",
+    "summary": {}
+}
+
+GET_PROCESS_SUMMARY_RESP_STILL_QUERYING = {
+    "completed": 5,
+    "contacted": 10,
+    "exception": "",
+    "summary": {}
 }
 
 GET_PROCESS_SUMMARY_RESP_1 = {
@@ -1279,6 +1723,214 @@ GET_PROCESS_SUMMARY_RESP_2 = {
                 "scriptload_count": 0
             }
         ]
+    },
+    "contacted": 34,
+    "completed": 34
+}
+
+GET_PROCESS_SUMMARY_RESP_NO_CHILDREN = {
+    "exception": "",
+    "summary": {
+        "process": {
+            "_process_filename": "svchost.exe",
+            "backend_timestamp": "2020-12-03T20:34:38.889Z",
+            "childproc_count": 3,
+            "crossproc_count": 40,
+            "device_external_ip": "24.243.76.124",
+            "device_group_id": 0,
+            "device_id": 329219,
+            "device_internal_ip": "172.16.115.191",
+            "device_name": "desktop-8qonquj",
+            "device_os": "WINDOWS",
+            "device_policy": "default",
+            "device_policy_id": 2198,
+            "device_timestamp": "2020-12-03T20:32:20.912Z",
+            "filemod_count": 0,
+            "has_children": True,
+            "hits": False,
+            "ingress_time": 1607027652665,
+            "modload_count": 101,
+            "netconn_count": 0,
+            "org_id": "WNEXFKQ7",
+            "parent_guid": "WNEXFKQ7-00050603-00000270-00000000-1d6c86e280fbff8",
+            "parent_hash": [
+                "1b6ffe1f5480675fc618b42247ef49a1c60ca99d2d53271b3472557e3bea2e8a",
+                "2bd115a27b60b74bbeb31013519ac199"
+            ],
+            "parent_name": "c:\\windows\\system32\\services.exe",
+            "parent_pid": 624,
+            "process_cmdline": [
+                "C:\\Windows\\System32\\svchost.exe -k LocalServiceNetworkRestricted -p -s wscsvc"
+            ],
+            "process_effective_reputation": "TRUSTED_WHITE_LIST",
+            "process_guid": "WNEXFKQ7-00050603-00000b6c-00000000-1d6c86e29731218",
+            "process_hash": [
+                "45684336325dc8eadfb1e8ff876921c4",
+                "dd191a5b23df92e12a8852291f9fb5ed594b76a28a5a464418442584afd1e048"
+            ],
+            "process_name": "c:\\windows\\system32\\svchost.exe",
+            "process_pid": [
+                788
+            ],
+            "process_reputation": "TRUSTED_WHITE_LIST",
+            "process_start_time": "2020-12-02T05:44:12.137Z",
+            "process_username": [
+                "NT AUTHORITY\\LOCAL SERVICE"
+            ],
+            "regmod_count": 5,
+            "scriptload_count": 0
+        },
+        "siblings": [
+            {
+                "_process_filename": "spoolsv.exe",
+                "backend_timestamp": "2020-12-03T20:34:38.889Z",
+                "childproc_count": 2,
+                "crossproc_count": 35,
+                "device_external_ip": "24.243.76.124",
+                "device_group_id": 0,
+                "device_id": 329219,
+                "device_internal_ip": "172.16.115.191",
+                "device_name": "desktop-8qonquj",
+                "device_os": "WINDOWS",
+                "device_policy": "default",
+                "device_policy_id": 2198,
+                "device_timestamp": "2020-12-03T20:32:18.693Z",
+                "filemod_count": 405,
+                "has_children": True,
+                "hits": False,
+                "ingress_time": 1607027652665,
+                "modload_count": 382,
+                "netconn_count": 0,
+                "org_id": "WNEXFKQ7",
+                "parent_guid": "WNEXFKQ7-00050603-00000270-00000000-1d6c86e280fbff8",
+                "parent_hash": [
+                    "1b6ffe1f5480675fc618b42247ef49a1c60ca99d2d53271b3472557e3bea2e8a",
+                    "2bd115a27b60b74bbeb31013519ac199"
+                ],
+                "parent_name": "c:\\windows\\system32\\services.exe",
+                "parent_pid": 624,
+                "process_cmdline": [
+                    "C:\\Windows\\System32\\spoolsv.exe"
+                ],
+                "process_effective_reputation": "LOCAL_WHITE",
+                "process_guid": "WNEXFKQ7-00050603-00000944-00000000-1d6c86e29169d10",
+                "process_hash": [
+                    "94170797d822cd195f8f92da9def082f",
+                    "f45ca80e151494a7394dcd1958ee94c0b83fe3f7b9e281fa1e626e71ff6c2604"
+                ],
+                "process_name": "c:\\windows\\system32\\spoolsv.exe",
+                "process_pid": [
+                    2372
+                ],
+                "process_reputation": "COMMON_WHITE_LIST",
+                "process_start_time": "2020-12-02T05:44:11.531Z",
+                "process_username": [
+                    "NT AUTHORITY\\SYSTEM"
+                ],
+                "regmod_count": 445,
+                "scriptload_count": 0
+            },
+            {
+                "_process_filename": "wmiapsrv.exe",
+                "backend_timestamp": "2020-12-02T06:00:54.384Z",
+                "childproc_count": 0,
+                "crossproc_count": 3,
+                "device_external_ip": "24.243.76.124",
+                "device_group": "schumaker-test",
+                "device_group_id": 1706,
+                "device_id": 329219,
+                "device_internal_ip": "172.16.115.191",
+                "device_name": "desktop-8qonquj",
+                "device_os": "WINDOWS",
+                "device_policy": "default",
+                "device_policy_id": 2198,
+                "device_timestamp": "2020-12-02T05:46:50.369Z",
+                "filemod_count": 0,
+                "has_children": False,
+                "ingress_time": 1606888837162,
+                "modload_count": 21,
+                "netconn_count": 0,
+                "org_id": "WNEXFKQ7",
+                "parent_guid": "WNEXFKQ7-00050603-00000270-00000000-1d6c86e280fbff8",
+                "parent_hash": [
+                    "1b6ffe1f5480675fc618b42247ef49a1c60ca99d2d53271b3472557e3bea2e8a",
+                    "2bd115a27b60b74bbeb31013519ac199"
+                ],
+                "parent_name": "c:\\windows\\system32\\services.exe",
+                "parent_pid": 624,
+                "process_cmdline": [
+                    "C:\\Windows\\system32\\wbem\\WmiApSrv.exe"
+                ],
+                "process_effective_reputation": "LOCAL_WHITE",
+                "process_guid": "WNEXFKQ7-00050603-000020f8-00000000-1d6c86e87b1e2be",
+                "process_hash": [
+                    "55e21dfb7ec2394903e5ca62fdca21e6",
+                    "55c2021f06d28696843672ff90e242c33c4cf6d30cdf0b2d9dcf07d8282cfc19"
+                ],
+                "process_name": "c:\\windows\\system32\\wbem\\wmiapsrv.exe",
+                "process_pid": [
+                    8440
+                ],
+                "process_reputation": "ADAPTIVE_WHITE_LIST",
+                "process_start_time": "2020-12-02T05:46:50.254Z",
+                "process_terminated": True,
+                "process_username": [
+                    "NT AUTHORITY\\SYSTEM"
+                ],
+                "regmod_count": 1,
+                "scriptload_count": 0
+            }
+        ],
+        "parent": {
+            "_process_filename": "services.exe",
+            "backend_timestamp": "2020-12-03T20:34:38.889Z",
+            "childproc_count": 243,
+            "crossproc_count": 39,
+            "device_external_ip": "24.243.76.124",
+            "device_group_id": 0,
+            "device_id": 329219,
+            "device_internal_ip": "172.16.115.191",
+            "device_name": "desktop-8qonquj",
+            "device_os": "WINDOWS",
+            "device_policy": "default",
+            "device_policy_id": 2198,
+            "device_timestamp": "2020-12-03T20:32:13.397Z",
+            "filemod_count": 0,
+            "has_children": True,
+            "hits": False,
+            "ingress_time": 1607027652665,
+            "modload_count": 53,
+            "netconn_count": 0,
+            "org_id": "WNEXFKQ7",
+            "parent_guid": "WNEXFKQ7-00050603-000001fc-00000000-1d6c86e2801246d",
+            "parent_hash": [
+                "d5e122606054fa0b03db3ee8cf9ea7701e523875e2bdb87581ad7232ffc9308e",
+                "e83650f70459a027aa596e1a73c961a1"
+            ],
+            "parent_name": "c:\\windows\\system32\\wininit.exe",
+            "parent_pid": 508,
+            "process_cmdline": [
+                "C:\\Windows\\system32\\services.exe"
+            ],
+            "process_effective_reputation": "TRUSTED_WHITE_LIST",
+            "process_guid": "WNEXFKQ7-00050603-00000270-00000000-1d6c86e280fbff8",
+            "process_hash": [
+                "2bd115a27b60b74bbeb31013519ac199",
+                "1b6ffe1f5480675fc618b42247ef49a1c60ca99d2d53271b3472557e3bea2e8a"
+            ],
+            "process_name": "c:\\windows\\system32\\services.exe",
+            "process_pid": [
+                624
+            ],
+            "process_reputation": "TRUSTED_WHITE_LIST",
+            "process_start_time": "2020-12-02T05:44:09.808Z",
+            "process_username": [
+                "NT AUTHORITY\\SYSTEM"
+            ],
+            "regmod_count": 254,
+            "scriptload_count": 0
+        },
+        "children": None
     },
     "contacted": 34,
     "completed": 34
