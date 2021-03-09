@@ -15,6 +15,8 @@ Guides
 ------
 
 * :doc:`device-control` - Control the blocking of USB devices on endpoints.
+* :doc:`workload` - Advanced protection purpose-built for securing modern workloads to reduce the attack surface and strengthen security posture.
+* :doc:`reputation-override` - Manage reputation overrides for known applications, IT tools or certs.
 
 Examples
 --------

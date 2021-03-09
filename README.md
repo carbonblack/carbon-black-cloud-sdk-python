@@ -1,8 +1,8 @@
 # VMware Carbon Black Cloud Python SDK
 
-**Latest Version:** 1.1.1
+**Latest Version:** 1.2.0
 <br>
-**Release Date:** 2 February 2021
+**Release Date:** 9 March 2021
 
 [![Coverage Status](https://coveralls.io/repos/github/carbonblack/carbon-black-cloud-sdk-python/badge.svg?t=Id6Baf)](https://coveralls.io/github/carbonblack/carbon-black-cloud-sdk-python)
 [![Codeship Status for carbonblack/carbon-black-cloud-sdk-python](https://app.codeship.com/projects/9e55a370-a772-0138-aae4-129773225755/status?branch=develop)](https://app.codeship.com/projects/402767)
@@ -42,8 +42,9 @@ At least one Carbon Black Cloud product is required to use this SDK:
 * [Endpoint Standard](https://developer.carbonblack.com/reference/carbon-black-cloud/cb-defense/)
 * [Audit and Remediation](https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/)
 * [Enterprise EDR](https://developer.carbonblack.com/reference/carbon-black-cloud/cb-threathunter/)
+* [Workload](https://developer.carbonblack.com/reference/carbon-black-cloud/workload-protection/)
 
-_Note: Support for the latest products such as Workloads and Containers are planned for early 2021_
+_Note: Support for the latest products such as Containers are planned for early 2021_
 
 ### Python Packages
 

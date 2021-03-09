@@ -1,0 +1,45 @@
+type: object
+properties:
+  sensor_type:
+    type: object
+    description: The type of information this sensor is for.
+    properties:
+      device_type:
+        type: string
+        description: Type of device the sensor is destined for
+        enum:
+          - WINDOWS
+          - LINUX
+          - MAC
+      architecture:
+        type: string
+        description: Architecture (primarily bit size) the sensor is destined for
+        enum:
+          - 32
+          - 64
+          - OTHER
+      type:
+        type: string
+        description: Type of the sensor (may be specific to an operating system)
+        enum:
+          - WINDOWS
+          - MAC
+          - RHEL
+          - UBUNTU
+          - SUSE
+          - AMAZON_LINUX
+      version:
+        type: string
+        description: Version of the sensor
+  sensor_url:
+    type: string
+    description: The URL for downloading the sensor installation package.
+  sensor_config_url:
+    type: string
+    description: The URL for downloading the sensor configuration information.
+  error_code:
+    type: string
+    description: Code for any error that occurred while getting the sensor information.
+  message:
+    type: string
+    description: Message for any error that occurred while getting the sensor information.

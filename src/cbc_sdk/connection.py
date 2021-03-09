@@ -494,6 +494,8 @@ class BaseAPI(object):
                 headers["Content-Type"] = "application/json"
                 raw_data = kwargs.pop("data", {})
                 raw_data = json.dumps(raw_data, sort_keys=True)
+            elif headers["Content-Type"] == "multipart/form-data":
+                del headers["Content-Type"]  # let the request library set it since we passed files=
 
         result = self.session.http_request(method, uri, headers=headers, data=raw_data, **kwargs)
 
@@ -520,6 +522,41 @@ class BaseAPI(object):
             object: The return data from the POST request.
         """
         return self.api_json_request("POST", uri, data=body, **kwargs)
+
+    @classmethod
+    def _map_multipart_param(cls, table_entry, value):
+        """
+        Set up the tuple for a multipart request parameter.
+
+        Args:
+            table_entry (dict): Entry from the parameter table for the multipart method call.
+            value (str): Parameter value.
+
+        Returns:
+            tuple: A tuple with three elements, containing the pseudo-filename, data, and MIME type.
+        """
+        return table_entry.get('filename', None), value, table_entry.get('type', None)
+
+    def post_multipart(self, uri, param_table, **kwargs):
+        """
+        Send a POST request to the specified URI, with parameters sent as multipart form data.
+
+        Args:
+            uri (str): The URI to send the POST request to.
+            param_table (dict): A dict of known parameters to the underlying method, each element of which is a
+                                parameter name mapped to a dict, which contains elements 'filename' and 'type'
+                                representing the pseudo-filename to be used for the data and the MIME type of the data.
+            **kwargs (dict): Arguments to pass to the API. Except for "headers," these will all be added as parameters
+                             to the form data sent.
+
+        Returns:
+            object: The return data from the POST request.
+        """
+        headers = kwargs.pop("headers", {})
+        headers['Content-Type'] = 'multipart/form-data'
+        files_body = {k: BaseAPI._map_multipart_param(param_table[k], v)
+                      for (k, v) in kwargs.items() if k in param_table}
+        return self.api_json_request("POST", uri, headers=headers, files=files_body)
 
     def put_object(self, uri, body, **kwargs):
         """

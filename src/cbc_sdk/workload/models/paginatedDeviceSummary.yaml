@@ -1,0 +1,88 @@
+type: object
+properties:
+  num_found:
+    type: integer
+    format: uint64
+    description: Number of matching devices
+  result:
+    type: array
+    items:
+      device_id:
+        type: integer
+        format: uint64
+        description: ID of the device
+      type:
+        type: string
+        enum:
+          - WORKLOAD
+          - ENDPOINT
+        description: Device type
+      vm_id:
+        type: string
+        description: ID of the virtual machine
+      name:
+        type: string
+        description: Name of the device
+      os_info:
+        type: object
+        description: Information about the device operating system
+        properties:
+          os_arch:
+            type: string
+            description: Operating system architecture
+          os_name:
+            type: string
+            description: Operating system name
+          os_version:
+            type: string
+            description: Operating system version
+      product_info:
+        type: object
+        description: Information about the vulnerable product
+        properties:
+          arch:
+            type: string
+            description: The product architecture
+          product:
+            type: string
+            description: The product name
+          release:
+            type: string
+            description: The product release
+          vendor:
+            type: string
+            description: The product creator
+          version:
+            type: string
+            description: The product version
+      vuln_info:
+        type: object
+        description: Information about the vulnerability
+        properties:
+          created_at:
+            type: string
+            format: date-time
+            description: When the vulnerability was identified
+          cve_description:
+            type: string
+            description: The CVE description
+          cve_id:
+            type: string
+            description: The CVE ID
+          fixed_by:
+            type: string
+            description: The fix for the vulnerability
+          risk_meter_score:
+            type: float
+            description: The risk meter scoere
+          severity: 
+            type: string
+            description: The vulnerability severity
+            enum:
+              - CRITICAL
+              - IMPORTANT
+              - MODERATE
+              - LOW
+          solution:
+            type: string
+            description: The solution for the vulnerability
