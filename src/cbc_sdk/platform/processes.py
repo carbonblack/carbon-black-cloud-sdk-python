@@ -59,6 +59,15 @@ class Process(UnrefreshableModel):
         summary_format = "summary"
         default_sort = "last_update desc"
         primary_key = "process_guid"
+        SHOW_ATTR = {'process': {'type': 'single', 'fields': ['device_id', 'device_name', 'process_name',
+                                                              'parent_guid', 'parent_hash', 'parent_name',
+                                                              'parent_pid', 'process_hash', 'process_pid']},
+                     'siblings': {'type': 'list', 'fields': ['process_name', 'process_guid', 'process_hash',
+                                                             'process_pid']},
+                     'parent': {'type': 'single', 'fields': ['process_name', 'process_guid', 'process_hash',
+                                                             'process_pid']},
+                     'children': {'type': 'list', 'fields': ['process_name', 'process_guid', 'process_hash',
+                                                             'process_pid']}}
 
         def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
             """
@@ -76,6 +85,45 @@ class Process(UnrefreshableModel):
             super(Process.Summary, self).__init__(cb, model_unique_id=model_unique_id,
                                                   initial_data=initial_data, force_init=False,
                                                   full_doc=True)
+
+        def __str__(self):
+            """
+            Returns a string representation of the object.
+
+            Returns:
+                str: A string representation of the object.
+            """
+            lines = []
+            for top_level in self._info:
+                if self._info[top_level] and top_level in self.SHOW_ATTR:
+                    if self.SHOW_ATTR[top_level]['type'] == 'single':
+                        lines.append(top_level)
+                    else:
+                        lines.append(f"{top_level} - {len(self._info[top_level])}")
+
+                    if self.SHOW_ATTR[top_level]['type'] == 'single':
+                        for attr in self._info[top_level]:
+                            if attr in self.SHOW_ATTR[top_level]['fields']:
+                                try:
+                                    val = str(self._info[top_level][attr])
+                                except UnicodeDecodeError:
+                                    val = repr(self._info[top_level][attr])
+                                if len(val) > 50:
+                                    val = val[:47] + u"..."
+                                lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", attr, val))
+                    else:
+                        for item in self._info[top_level]:
+                            for attr in item:
+                                if attr in self.SHOW_ATTR[top_level]['fields']:
+                                    try:
+                                        val = str(item[attr])
+                                    except UnicodeDecodeError:
+                                        val = repr(item[attr])
+                                    if len(val) > 50:
+                                        val = val[:47] + u"..."
+                                    lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", attr, val))
+                            lines.append('')
+            return "\n".join(lines)
 
         @classmethod
         def _query_implementation(self, cb, **kwargs):
@@ -95,6 +143,10 @@ class Process(UnrefreshableModel):
         summary_format = 'tree'
         default_sort = "last_update desc"
         primary_key = 'process_guid'
+        SHOW_ATTR = {'top': ['device_id', 'device_name', 'process_name',
+                             'parent_guid', 'parent_hash', 'parent_name',
+                             'parent_pid', 'process_hash', 'process_pid'],
+                     'children': ['process_name', 'process_guid', 'process_hash', 'process_pid']}
 
         def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
             """
@@ -113,6 +165,39 @@ class Process(UnrefreshableModel):
                 cb, model_unique_id=model_unique_id, initial_data=initial_data,
                 force_init=force_init, full_doc=full_doc
             )
+
+        def __str__(self):
+            """
+            Returns a string representation of the object.
+
+            Returns:
+                str: A string representation of the object.
+            """
+            lines = []
+            lines.append('process')
+            for attr in self._info:
+                if attr in self.SHOW_ATTR['top']:
+                    try:
+                        val = str(self._info[attr])
+                    except UnicodeDecodeError:
+                        val = repr(self._info[attr])
+                    if len(val) > 50:
+                        val = val[:47] + u"..."
+                    lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", attr, val))
+
+            lines.append(f"children - {len(self._info['children'])}")
+            for child in self._info['children']:
+                for attr in child:
+                    if attr in self.SHOW_ATTR['children']:
+                        try:
+                            val = str(child[attr])
+                        except UnicodeDecodeError:
+                            val = repr(child[attr])
+                        if len(val) > 50:
+                            val = val[:47] + u"..."
+                        lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", attr, val))
+                lines.append('')
+            return "\n".join(lines)
 
         @classmethod
         def _query_implementation(self, cb, **kwargs):

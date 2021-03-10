@@ -87,6 +87,7 @@ def test_process_select(cbcsdk_mock):
     api = cbcsdk_mock.api
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     process = api.select(Process, guid)
+    process.summary.__str__()
     assert process.summary is not None
     assert process.siblings is not None
     summary = api.select(Process.Summary, guid)
@@ -1138,6 +1139,7 @@ def test_tree_select(cbcsdk_mock):
     guid = "WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00"
     process = api.select(Process, guid)
     tree = process.tree
+    tree.__str__()
     children = tree.children
     assert len(children) == len(tree.children)
     assert len(children) > 0
