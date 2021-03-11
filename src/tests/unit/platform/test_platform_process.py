@@ -15,7 +15,6 @@ from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_SUMMARY_RESP,
                                                        GET_PROCESS_SUMMARY_RESP_ZERO_CONTACTED,
                                                        GET_PROCESS_SUMMARY_RESP_NO_HASH,
                                                        GET_PROCESS_SUMMARY_RESP_NO_PID,
-                                                       GET_TREE_RESP,
                                                        GET_PROCESS_VALIDATION_RESP,
                                                        POST_PROCESS_SEARCH_JOB_RESP,
                                                        POST_TREE_SEARCH_JOB_RESP,
@@ -35,7 +34,9 @@ from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_SUMMARY_RESP,
                                                        GET_PROCESS_SEARCH_PARENT_JOB_RESULTS_RESP_1,
                                                        GET_FACET_SEARCH_RESULTS_RESP,
                                                        EXPECTED_PROCESS_FACETS,
-                                                       EXPECTED_PROCESS_RANGES_FACETS)
+                                                       EXPECTED_PROCESS_RANGES_FACETS,
+                                                       GET_PROCESS_TREE_STR,
+                                                       GET_PROCESS_SUMMARY_STR)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -83,11 +84,75 @@ def test_process_select(cbcsdk_mock):
     # mock the GET to get summary search results
     cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
                                      "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
-                             GET_PROCESS_SUMMARY_RESP)
+                             GET_PROCESS_SUMMARY_STR)
     api = cbcsdk_mock.api
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     process = api.select(Process, guid)
-    process.summary.__str__()
+    actual = process.summary.__str__()
+
+    process_info = {
+        "device_id": 199106,
+        "device_name": "w10prov1703x86",
+        "parent_guid": "WNEXFKQ7-000309c2-000002c4-00000000-1d6a1c1f161a86a",
+        "parent_hash": [
+            "bd3036f60f1438c82900a29221e3a4912a89bfe904d01aad70c781ef514df0b3"
+        ],
+        "parent_name": "c:\\windows\\system32\\services.exe",
+        "parent_pid": 708,
+        "process_hash": [
+            "a7296c1245ee76768d581c6330dade06",
+            "5be0de7f915ba819d4ba048db7a2a87f6f3253fdd4865dc418181a0d6a031caa"
+        ],
+        "process_name": "c:\\windows\\system32\\svchost.exe",
+        "process_pid": [1144]
+    }
+    sibling_info = {
+        "process_guid": "WNEXFKQ7-000309c2-00000980-00000000-1d6a1c1f41ae014",
+        "process_hash": [
+            "b5a2c3084251ad5ce53e02f071fa7dc9",
+            "ae600593a0a6915cf5ecbf96b4cb1d0e1d165339bde136c351bf606127c5dcec"
+        ],
+        "process_name": "c:\\windows\\carbonblack\\cb.exe",
+        "process_pid": [2432]
+    }
+    parent_info = {
+        "process_guid": "ABCD1234-0002b226-00000001-00000000-1d6225bbba75e43",
+        "process_hash": [
+            "e4b9902024ac32b3ca37f6b4c9b841e8",
+            "81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85"
+        ],
+        "process_name": "/usr/lib/systemd/systemd",
+        "process_pid": [1]
+    }
+    child_info = {
+        "process_guid": "WNEXFKQ7-000309c2-000004f8-00000000-1d6a88e80c541a3",
+        "process_hash": [
+            "2ae75e810f4dd1fb36607f66e7e1d80b",
+            "db703055ec0641e7e96e22a62bf075547b480c51ea9e163d94e33452894b885c"
+        ],
+        "process_name": "c:\\windows\\system32\\wermgr.exe",
+        "process_pid": [1272]
+    }
+    info = {
+        'process': process_info,
+        'siblings - 1': sibling_info,
+        'parent': parent_info,
+        'children - 1': child_info
+    }
+    lines = []
+    for top in info:
+        lines.append(top)
+        for key in info[top]:
+            val = str(info[top][key])
+            if len(val) > 50:
+                val = val[:47] + u"..."
+            lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", key, val))
+        if top != 'process' and top != 'parent':
+            lines.append("")
+
+    expected = "\n".join(lines)
+    assert actual == expected
+
     assert process.summary is not None
     assert process.siblings is not None
     summary = api.select(Process.Summary, guid)
@@ -133,6 +198,9 @@ def test_summary_select_failures(cbcsdk_mock):
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     summary = api.select(Process.Summary).where(f"process_guid:{guid}")
     assert isinstance(summary, SummaryQuery)
+    with pytest.raises(ApiError) as ex:
+        summary._count()
+    assert 'The result is not iterable' in ex.value.message
     summary._query_token = 'something'
     with pytest.raises(ApiError) as ex:
         summary._submit()
@@ -171,8 +239,6 @@ def test_summary_still_querying(cbcsdk_mock):
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     summary = api.select(Process.Summary).where(f"process_guid:{guid}")
     assert summary._still_querying() is True
-    summary._search()
-    summary._timed_out = True
     summary._search()
 
 
@@ -1133,13 +1199,48 @@ def test_tree_select(cbcsdk_mock):
     # mock the GET to get search results
     cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/summary_jobs/"
                                      "ee158f11-4dfb-4ae2-8f1a-7707b712226d/results"),
-                             GET_TREE_RESP)
+                             GET_PROCESS_TREE_STR)
 
     api = cbcsdk_mock.api
     guid = "WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00"
     process = api.select(Process, guid)
     tree = process.tree
-    tree.__str__()
+    process_info = {
+        "device_id": 176678,
+        "device_name": "devr-dev",
+        "process_hash": [
+            "e4b9902024ac32b3ca37f6b4c9b841e8",
+            "81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85"
+        ],
+        "process_name": "/usr/lib/systemd/systemd",
+        "process_pid": [1],
+    }
+    child_info = {
+        "process_guid": "WNEXFKQ7-000309c2-00000454-00000000-1d6a2b6252ba18e",
+        "process_hash": [
+            "f9a3eee1c3a4067702bc9a59bc894285",
+            "8e2aa014d7729cbfee95671717646ee480561f22e2147dae87a75c18d7369d99"
+        ],
+        "process_name": "c:\\windows\\system32\\msiexec.exe",
+        "process_pid": [1108]
+    }
+    actual = tree.__str__()
+    info = {
+        'process': process_info,
+        'children - 1': child_info
+    }
+    lines = []
+    for top in info:
+        lines.append(top)
+        for key in info[top]:
+            val = str(info[top][key])
+            if len(val) > 50:
+                val = val[:47] + u"..."
+            lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", key, val))
+        if top != 'process':
+            lines.append("")
+    expected = "\n".join(lines)
+    assert actual == expected
     children = tree.children
     assert len(children) == len(tree.children)
     assert len(children) > 0

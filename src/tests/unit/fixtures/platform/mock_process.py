@@ -1728,6 +1728,289 @@ GET_PROCESS_SUMMARY_RESP_2 = {
     "completed": 34
 }
 
+GET_PROCESS_TREE_STR = {
+    "exception": "",
+    "tree": {
+        "children": [
+            {
+                "_process_filename": "msiexec.exe",
+                "backend_timestamp": "2020-10-15T05:44:47.387Z",
+                "device_external_ip": "144.121.3.50",
+                "device_group": "schumaker-test",
+                "device_group_id": 1706,
+                "device_id": 199106,
+                "device_internal_ip": "10.210.161.66",
+                "device_name": "w10prov1703x86",
+                "device_os": "WINDOWS",
+                "device_policy": "default",
+                "device_policy_id": 2198,
+                "device_timestamp": "2020-10-15T05:43:45.336Z",
+                "enriched": True,
+                "enriched_event_type": "SYSTEM_API_CALL",
+                "event_type": "crossproc",
+                "has_children": False,
+                "ingress_time": 1602740641018,
+                "legacy": True,
+                "org_id": "WNEXFKQ7",
+                "parent_guid": "WNEXFKQ7-000309c2-000002c4-00000000-1d6a1c1f161a86a",
+                "parent_hash": [
+                    "bd3036f60f1438c82900a29221e3a4912a89bfe904d01aad70c781ef514df0b3"
+                ],
+                "parent_name": "c:\\windows\\system32\\services.exe",
+                "parent_pid": 708,
+                "process_cmdline":[
+                    "C:\\WINDOWS\\system32\\msiexec.exe /V"
+                ],
+                "process_effective_reputation": "TRUSTED_WHITE_LIST",
+                "process_guid": "WNEXFKQ7-000309c2-00000454-00000000-1d6a2b6252ba18e",
+                "process_hash":[
+                    "f9a3eee1c3a4067702bc9a59bc894285",
+                    "8e2aa014d7729cbfee95671717646ee480561f22e2147dae87a75c18d7369d99"
+                ],
+                "process_name": "c:\\windows\\system32\\msiexec.exe",
+                "process_pid":[
+                    1108
+                ],
+                "process_reputation": "TRUSTED_WHITE_LIST",
+                "process_start_time": "2020-10-15T05:43:44.537Z",
+                "process_username": [
+                    "NT AUTHORITY\\SYSTEM"
+                ],
+                "ttp":[
+                    "ENUMERATE_PROCESSES",
+                    "MITRE_T1057_PROCESS_DISCOVERY"
+                ]
+            }
+        ],
+        "device_id": 176678,
+        "device_name": "devr-dev",
+        "device_os": "LINUX",
+        "device_policy": "sm-restrictive",
+        "device_policy_id": 11200,
+        "device_timestamp": "2020-08-28T19:10:02.123Z",
+        "filemod_count": 0,
+        "has_children": True,
+        "hits": False,
+        "ingress_time": 1598641901273,
+        "modload_count": 0,
+        "netconn_count": 0,
+        "org_id": "ABCD1234",
+        "process_effective_reputation": "NOT_LISTED",
+        "process_guid": "ABCD1234-0002b226-00000001-00000000-1d6225bbba75e43",
+        "process_hash": [
+            "e4b9902024ac32b3ca37f6b4c9b841e8",
+            "81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85"
+        ],
+        "process_name": "/usr/lib/systemd/systemd",
+        "process_pid": [1],
+        "process_reputation": "NOT_LISTED",
+        "process_start_time": "2020-05-04T21:34:03.968Z",
+        "regmod_count": 0,
+        "scriptload_count": 0
+    }
+}
+
+GET_PROCESS_SUMMARY_STR = {
+    "exception": "",
+    "summary": {
+        "process": {
+            "_process_filename": "svchost.exe",
+            "backend_timestamp": "2020-10-22T16:27:52.931Z",
+            "device_external_ip": "144.121.3.50",
+            "device_group_id": 0,
+            "device_id": 199106,
+            "device_internal_ip": "10.210.161.66",
+            "device_name": "w10prov1703x86",
+            "device_os": "WINDOWS",
+            "device_policy": "lyon_test",
+            "device_policy_id": 30241,
+            "device_timestamp": "2020-10-22T16:15:05.925Z",
+            "enriched": True,
+            "enriched_event_type": "NETWORK",
+            "event_type": "netconn",
+            "has_children": True,
+            "hits": True,
+            "ingress_time": 1603384040142,
+            "legacy": True,
+            "org_id": "WNEXFKQ7",
+            "parent_guid": "WNEXFKQ7-000309c2-000002c4-00000000-1d6a1c1f161a86a",
+            "parent_hash": [
+                "bd3036f60f1438c82900a29221e3a4912a89bfe904d01aad70c781ef514df0b3"
+            ],
+            "parent_name": "c:\\windows\\system32\\services.exe",
+            "parent_pid": 708,
+            "process_cmdline": [
+                "C:\\WINDOWS\\system32\\svchost.exe -k netsvcs -p"
+            ],
+            "process_effective_reputation": "TRUSTED_WHITE_LIST",
+            "process_guid": "WNEXFKQ7-000309c2-00000478-00000000-1d6a1c1f2b02805",
+            "process_hash": [
+                "a7296c1245ee76768d581c6330dade06",
+                "5be0de7f915ba819d4ba048db7a2a87f6f3253fdd4865dc418181a0d6a031caa"
+            ],
+            "process_name": "c:\\windows\\system32\\svchost.exe",
+            "process_pid": [
+                1144
+            ],
+            "process_reputation": "TRUSTED_WHITE_LIST",
+            "process_start_time": "2020-10-14T00:35:42.639Z",
+            "process_username": [
+                "NT AUTHORITY\\SYSTEM"
+            ],
+            "sensor_action": [
+                "DENY",
+                "BLOCK"
+            ],
+            "ttp": [
+                "POLICY_DENY"
+            ]
+        },
+        "siblings": [
+            {
+                "_process_filename": "cb.exe",
+                "backend_timestamp": "2020-10-22T16:14:38.964Z",
+                "device_external_ip": "144.121.3.50",
+                "device_group_id": 0,
+                "device_id": 199106,
+                "device_name": "w10prov1703x86",
+                "device_os": "WINDOWS",
+                "device_policy": "lyon_test",
+                "device_policy_id": 30241,
+                "device_timestamp": "2020-10-22T16:11:30.514Z",
+                "enriched": True,
+                "enriched_event_type": "NETWORK",
+                "event_type": "netconn",
+                "has_children": False,
+                "hits": False,
+                "ingress_time": 1603383254356,
+                "legacy": True,
+                "org_id": "WNEXFKQ7",
+                "parent_guid": "WNEXFKQ7-000309c2-000002c4-00000000-1d6a1c1f161a86a",
+                "parent_hash": [
+                    "bd3036f60f1438c82900a29221e3a4912a89bfe904d01aad70c781ef514df0b3"
+                ],
+                "parent_name": "c:\\windows\\system32\\services.exe",
+                "parent_pid": 708,
+                "process_cmdline": [
+                    "C:\\WINDOWS\\CarbonBlack\\cb.exe"
+                ],
+                "process_effective_reputation": "TRUSTED_WHITE_LIST",
+                "process_guid": "WNEXFKQ7-000309c2-00000980-00000000-1d6a1c1f41ae014",
+                "process_hash": [
+                    "b5a2c3084251ad5ce53e02f071fa7dc9",
+                    "ae600593a0a6915cf5ecbf96b4cb1d0e1d165339bde136c351bf606127c5dcec"
+                ],
+                "process_name": "c:\\windows\\carbonblack\\cb.exe",
+                "process_pid": [
+                    2432
+                ],
+                "process_reputation": "TRUSTED_WHITE_LIST",
+                "process_start_time": "2020-10-14T00:35:45.017Z",
+                "process_username": [
+                    "NT AUTHORITY\\SYSTEM"
+                ],
+                "sensor_action": [
+                    "DENY",
+                    "BLOCK"
+                ],
+                "ttp": [
+                    "POLICY_DENY"
+                ]
+            }
+        ],
+        "parent": {
+            "_process_filename": "systemd",
+            "backend_timestamp": "2020-08-28T19:12:07.989Z",
+            "childproc_count": 0,
+            "crossproc_count": 0,
+            "device_external_ip": "34.56.78.90",
+            "device_group_id": 0,
+            "device_id": 176678,
+            "device_name": "devr-dev",
+            "device_os": "LINUX",
+            "device_policy": "sm-restrictive",
+            "device_policy_id": 11200,
+            "device_timestamp": "2020-08-28T19:10:02.123Z",
+            "filemod_count": 0,
+            "has_children": True,
+            "hits": False,
+            "ingress_time": 1598641901273,
+            "modload_count": 0,
+            "netconn_count": 0,
+            "org_id": "ABCD1234",
+            "process_effective_reputation": "NOT_LISTED",
+            "process_guid": "ABCD1234-0002b226-00000001-00000000-1d6225bbba75e43",
+            "process_hash": [
+                "e4b9902024ac32b3ca37f6b4c9b841e8",
+                "81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85"
+            ],
+            "process_name": "/usr/lib/systemd/systemd",
+            "process_pid": [
+                1
+            ],
+            "process_reputation": "NOT_LISTED",
+            "process_start_time": "2020-05-04T21:34:03.968Z",
+            "regmod_count": 0,
+            "scriptload_count": 0
+        },
+        "children": [
+            {
+                "_process_filename": "wermgr.exe",
+                "backend_timestamp": "2020-10-22T16:28:23.556Z",
+                "device_external_ip": "144.121.3.50",
+                "device_group_id": 0,
+                "device_id": 199106,
+                "device_internal_ip": "10.210.161.66",
+                "device_name": "w10prov1703x86",
+                "device_os": "WINDOWS",
+                "device_policy": "lyon_test",
+                "device_policy_id": 30241,
+                "device_timestamp": "2020-10-22T16:15:06.065Z",
+                "enriched": True,
+                "enriched_event_type": "NETWORK",
+                "event_type": "netconn",
+                "has_children": False,
+                "hits": True,
+                "ingress_time": 1603384060202,
+                "legacy": True,
+                "org_id": "WNEXFKQ7",
+                "parent_guid": "WNEXFKQ7-000309c2-00000478-00000000-1d6a1c1f2b02805",
+                "parent_hash": [
+                    "5be0de7f915ba819d4ba048db7a2a87f6f3253fdd4865dc418181a0d6a031caa"
+                ],
+                "parent_name": "c:\\windows\\system32\\svchost.exe",
+                "parent_pid": 1144,
+                "process_cmdline":[
+                    "C:\\WINDOWS\\system32\\wermgr.exe -upload"
+                ],
+                "process_effective_reputation": "TRUSTED_WHITE_LIST",
+                "process_guid": "WNEXFKQ7-000309c2-000004f8-00000000-1d6a88e80c541a3",
+                "process_hash":[
+                    "2ae75e810f4dd1fb36607f66e7e1d80b",
+                    "db703055ec0641e7e96e22a62bf075547b480c51ea9e163d94e33452894b885c"
+                ],
+                "process_name": "c:\\windows\\system32\\wermgr.exe",
+                "process_pid":[
+                    1272
+                ],
+                "process_reputation": "TRUSTED_WHITE_LIST",
+                "process_start_time": "2020-10-22T16:15:05.324Z",
+                "process_username":[
+                    "NT AUTHORITY\\SYSTEM"
+                ],
+                "sensor_action":[
+                    "DENY",
+                    "BLOCK"
+                ],
+                "ttp":[
+                    "POLICY_DENY"
+                ]
+            }
+        ],
+        "process_guid": "b31019a5-d69b-4aba-b36d-0b29fe2e7f61"
+    }
+}
+
 GET_PROCESS_SUMMARY_RESP_NO_CHILDREN = {
     "exception": "",
     "summary": {

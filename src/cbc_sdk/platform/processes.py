@@ -778,6 +778,9 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, Iterabl
             args["parent_guid"] = parent_guid
         return args
 
+    def _count(self):
+        raise ApiError('The result is not iterable')
+
     def _submit(self):
         if self._query_token:
             raise ApiError("Query already submitted: token {0}".format(self._query_token))
