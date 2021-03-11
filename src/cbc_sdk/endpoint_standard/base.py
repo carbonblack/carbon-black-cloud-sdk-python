@@ -14,7 +14,7 @@
 """Model and Query Classes for Endpoint Standard"""
 
 from cbc_sdk.base import (MutableBaseModel, UnrefreshableModel, CreatableModelMixin, NewBaseModel, FacetQuery,
-                          PaginatedQuery, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
+                          PaginatedQuery, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin)
 from cbc_sdk.base import Query as BaseEventQuery
 from cbc_sdk.utils import convert_query_params
 from cbc_sdk.errors import ApiError
