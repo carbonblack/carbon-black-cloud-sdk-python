@@ -97,9 +97,9 @@ class Process(UnrefreshableModel):
             for top_level in self._info:
                 if self._info[top_level] and top_level in self.SHOW_ATTR:
                     if self.SHOW_ATTR[top_level]['type'] == 'single':
-                        lines.append(top_level)
+                        lines.append('{}:'.format(top_level))
                     else:
-                        lines.append(f"{top_level} - {len(self._info[top_level])}")
+                        lines.append(f"{top_level} ({len(self._info[top_level])}):")
 
                     if self.SHOW_ATTR[top_level]['type'] == 'single':
                         for attr in self._info[top_level]:
@@ -108,8 +108,6 @@ class Process(UnrefreshableModel):
                                     val = str(self._info[top_level][attr])
                                 except UnicodeDecodeError:
                                     val = repr(self._info[top_level][attr])
-                                if len(val) > 50:
-                                    val = val[:47] + u"..."
                                 lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", attr, val))
                     else:
                         for item in self._info[top_level]:
@@ -119,8 +117,6 @@ class Process(UnrefreshableModel):
                                         val = str(item[attr])
                                     except UnicodeDecodeError:
                                         val = repr(item[attr])
-                                    if len(val) > 50:
-                                        val = val[:47] + u"..."
                                     lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", attr, val))
                             lines.append('')
             return "\n".join(lines)
@@ -174,18 +170,16 @@ class Process(UnrefreshableModel):
                 str: A string representation of the object.
             """
             lines = []
-            lines.append('process')
+            lines.append('process:')
             for attr in self._info:
                 if attr in self.SHOW_ATTR['top']:
                     try:
                         val = str(self._info[attr])
                     except UnicodeDecodeError:
                         val = repr(self._info[attr])
-                    if len(val) > 50:
-                        val = val[:47] + u"..."
                     lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", attr, val))
 
-            lines.append(f"children - {len(self._info['children'])}")
+            lines.append(f"children ({len(self._info['children'])}):")
             for child in self._info['children']:
                 for attr in child:
                     if attr in self.SHOW_ATTR['children']:
@@ -193,8 +187,6 @@ class Process(UnrefreshableModel):
                             val = str(child[attr])
                         except UnicodeDecodeError:
                             val = repr(child[attr])
-                        if len(val) > 50:
-                            val = val[:47] + u"..."
                         lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", attr, val))
                 lines.append('')
             return "\n".join(lines)

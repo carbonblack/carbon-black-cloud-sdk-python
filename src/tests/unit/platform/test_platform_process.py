@@ -134,20 +134,18 @@ def test_process_select(cbcsdk_mock):
         "process_pid": [1272]
     }
     info = {
-        'process': process_info,
-        'siblings - 1': sibling_info,
-        'parent': parent_info,
-        'children - 1': child_info
+        'process:': process_info,
+        'siblings (1):': sibling_info,
+        'parent:': parent_info,
+        'children (1):': child_info
     }
     lines = []
     for top in info:
         lines.append(top)
         for key in info[top]:
             val = str(info[top][key])
-            if len(val) > 50:
-                val = val[:47] + u"..."
             lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", key, val))
-        if top != 'process' and top != 'parent':
+        if top != 'process:' and top != 'parent:':
             lines.append("")
 
     expected = "\n".join(lines)
@@ -1226,18 +1224,16 @@ def test_tree_select(cbcsdk_mock):
     }
     actual = tree.__str__()
     info = {
-        'process': process_info,
-        'children - 1': child_info
+        'process:': process_info,
+        'children (1):': child_info
     }
     lines = []
     for top in info:
         lines.append(top)
         for key in info[top]:
             val = str(info[top][key])
-            if len(val) > 50:
-                val = val[:47] + u"..."
             lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", key, val))
-        if top != 'process':
+        if top != 'process:':
             lines.append("")
     expected = "\n".join(lines)
     assert actual == expected
