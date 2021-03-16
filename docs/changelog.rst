@@ -8,6 +8,10 @@ New Features
 
 * VMware Carbon Black Cloud Workload support for managing workloads:
 
+  * Vulnerability Assessment
+  * Sensor Lifecycle Management
+  * VM Workloads Search
+
   * Appliance Installation
   * Appliance Service
   * Sensor Lifecycle Management
