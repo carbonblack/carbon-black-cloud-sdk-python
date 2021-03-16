@@ -15,7 +15,7 @@
 
 from cbc_sdk.base import (UnrefreshableModel, BaseQuery, Query, FacetQuery,
                           QueryBuilderSupportMixin, QueryBuilder,
-                          AsyncQueryMixin, IterableQueryMixin)
+                          AsyncQueryMixin)
 from cbc_sdk.platform import Event
 from cbc_sdk.platform.reputation import ReputationOverride
 from cbc_sdk.errors import ApiError, TimeoutError
@@ -684,7 +684,7 @@ class AsyncProcessQuery(Query):
         return list(self._search())
 
 
-class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, IterableQueryMixin):
+class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
     """Represents the logic for a Process Summary or Process Tree query."""
     def __init__(self, doc_class, cb):
         """

@@ -237,7 +237,6 @@ def test_summary_still_querying(cbcsdk_mock):
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     summary = api.select(Process.Summary).where(f"process_guid:{guid}")
     assert summary._still_querying() is True
-    summary._search()
 
 
 def test_summary_select_set_time_range(cbcsdk_mock):
