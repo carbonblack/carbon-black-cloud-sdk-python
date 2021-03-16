@@ -12,12 +12,6 @@ New Features
   * Sensor Lifecycle Management
   * VM Workloads Search
 
-  * Appliance Installation
-  * Appliance Service
-  * Sensor Lifecycle Management
-  * VM Workloads Search
-  * Vulnerability Assessment
-
 * Add tutorial for Reputation Override
 
 Bug Fixes
