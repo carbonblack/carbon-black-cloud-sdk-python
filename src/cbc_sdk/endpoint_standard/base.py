@@ -14,7 +14,8 @@
 """Model and Query Classes for Endpoint Standard"""
 
 from cbc_sdk.base import (MutableBaseModel, UnrefreshableModel, CreatableModelMixin, NewBaseModel, FacetQuery,
-                          PaginatedQuery, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
+                          PaginatedQuery, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin)
+from cbc_sdk.base import Query as BaseEventQuery
 from cbc_sdk.utils import convert_query_params
 from cbc_sdk.errors import ApiError
 from cbc_sdk.platform.reputation import ReputationOverride
@@ -608,7 +609,7 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
                 break
 
 
-class EnrichedEventQuery(Query, AsyncQueryMixin):
+class EnrichedEventQuery(BaseEventQuery):
     """Represents the query logic for an Enriched Event query.
 
     This class specializes `Query` to handle the particulars of enriched events querying.
@@ -623,16 +624,10 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
             cb (CBCloudAPI): A reference to the CBCloudAPI object.
         """
         super(EnrichedEventQuery, self).__init__(doc_class, cb)
-        self._sort_by = None
-        self._group_by = None
-        self._rows = 500
-        self._default_args = {}
-        self._default_args["rows"] = self._rows
+        self._default_args["rows"] = self._batch_size
         self._query_token = None
         self._timeout = 0
         self._timed_out = False
-        self._sort = []
-        self._time_range = {}
         self._aggregation = False
         self._aggregation_field = None
 
@@ -659,15 +654,6 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
         self._aggregation_field = field
         return self
 
-    def _get_query_parameters(self):
-        """Need to override base class implementation as it sets custom (invalid) fields"""
-        args = self._default_args.copy()
-        args['query'] = self._query_builder._collapse()
-        if self._time_range:
-            args["time_range"] = self._time_range
-
-        return args
-
     def set_rows(self, rows):
         """
         Sets the 'rows' query body parameter to the 'start search' API call, determining how many rows to request.
@@ -679,70 +665,7 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
             raise ApiError(f"Rows must be an integer. {rows} is a {type(rows)}.")
         if rows > 10000:
             raise ApiError("Maximum allowed value for rows is 10000")
-
-        self._rows = rows
-        self._default_args["rows"] = self._rows
-        return self
-
-    def set_time_range(self, start=None, end=None, window=None):
-        """
-        Sets the 'time_range' query body parameter, determining a time window based on 'device_timestamp'.
-
-        Args:
-            start (str in ISO 8601 timestamp): When to start the result search.
-            end (str in ISO 8601 timestamp): When to end the result search.
-            window (str): Time window to execute the result search, ending on the current time.
-                Should be in the form "-2w", where y=year, w=week, d=day, h=hour, m=minute, s=second.
-
-        Note:
-            - `window` will take precedence over `start` and `end` if provided.
-
-        Examples:
-            query = api.select(EnrichedEvent).set_time_range(start="2020-10-20T20:34:07Z")
-            second_query = api.select(EnrichedEvent).set_time_range(start="2020-10-20T20:34:07Z",
-                end="2020-10-30T20:34:07Z")
-            third_query = api.select(EnrichedEvent).set_time_range(window='-3d')
-        """
-        if start:
-            if not isinstance(start, str):
-                raise ApiError(f"Start time must be a string in ISO 8601 format. {start} is a {type(start)}.")
-            self._time_range["start"] = start
-        if end:
-            if not isinstance(end, str):
-                raise ApiError(f"End time must be a string in ISO 8601 format. {end} is a {type(end)}.")
-            self._time_range["end"] = end
-        if window:
-            if not isinstance(window, str):
-                raise ApiError(f"Window must be a string. {window} is a {type(window)}.")
-            self._time_range["window"] = window
-
-        return self
-
-    def sort_by(self, key, direction="ASC"):
-        """Sets the sorting behavior on a query's results.
-
-        Arguments:
-            key (str): The key in the schema to sort by.
-            direction (str): The sort order, either "ASC" or "DESC".
-
-        Returns:
-            Query (EnrichedEventQuery: The query with sorting parameters.
-
-        Example:
-        >>> cb.select(EnrichedEvent).where(process_name="cmd.exe").sort_by("device_timestamp")
-        """
-        found = False
-
-        for sort_item in self._sort:
-            if sort_item['field'] == key:
-                sort_item['order'] = direction
-                found = True
-
-        if not found:
-            self._sort.append({'field': key, 'order': direction})
-
-        self._default_args['sort'] = self._sort
-
+        super(EnrichedEventQuery, self).set_rows(rows)
         return self
 
     def timeout(self, msecs):
@@ -894,14 +817,3 @@ class EnrichedEventQuery(Query, AsyncQueryMixin):
                     still_fetching = False
 
                 log.debug("current: {}, total_results: {}".format(current, self._total_results))
-
-    def _run_async_query(self, context):
-        """Executed in the background to run an asynchronous query.
-
-        Args:
-            context (object): The context (query token) returned by _init_async_query.
-
-        Returns:
-            Any: Result of the async query, which is then returned by the future.
-        """
-        return list(self._search())
