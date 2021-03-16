@@ -357,6 +357,74 @@ class Process(UnrefreshableModel):
         """
         return self._cb.select(ProcessFacet).where(process_guid=self.process_guid)
 
+    def get_details(self, timeout=0, async_mode=False):
+        """Requests detailed results.
+
+        Args:
+            timeout (int): Event details request timeout in milliseconds.
+            async_mode (bool): True to request details in an asynchronous manner.
+
+        Note:
+            - When using asynchronous mode, this method returns a python future.
+              You can call result() on the future object to wait for completion and get the results.
+        """
+        self._details_timeout = timeout
+        if not self.process_guid:
+            raise ApiError("Trying to get process details on an invalid process_guid")
+        if async_mode:
+            return self._cb._async_submit(lambda arg, kwarg: self._get_detailed_results()._info)
+        else:
+            return self._get_detailed_results()._info
+
+    def _get_detailed_results(self):
+        """Actual search details implementation"""
+        args = {"process_guids": [self.process_guid]}
+        url = "/api/investigate/v2/orgs/{}/processes/detail_jobs".format(self._cb.credentials.org_key)
+        query_start = self._cb.post_object(url, body=args)
+        job_id = query_start.json().get("job_id")
+        timed_out = False
+        submit_time = time.time() * 1000
+
+        while True:
+            status_url = "/api/investigate/v2/orgs/{}/processes/detail_jobs/{}".format(
+                self._cb.credentials.org_key,
+                job_id,
+            )
+            result = self._cb.get_object(status_url)
+            searchers_contacted = result.get("contacted", 0)
+            searchers_completed = result.get("completed", 0)
+            log.debug("contacted = {}, completed = {}".format(searchers_contacted, searchers_completed))
+            if searchers_contacted == 0:
+                time.sleep(.5)
+                continue
+            if searchers_completed < searchers_contacted:
+                if self._details_timeout != 0 and (time.time() * 1000) - submit_time > self._details_timeout:
+                    timed_out = True
+                    break
+            else:
+                break
+
+            time.sleep(.5)
+
+        if timed_out:
+            raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
+
+        log.debug("Pulling detailed results, timed_out={}".format(timed_out))
+
+        still_fetching = True
+        result_url = "/api/investigate/v2/orgs/{}/processes/detail_jobs/{}/results".format(
+            self._cb.credentials.org_key,
+            job_id
+        )
+        query_parameters = {}
+        while still_fetching:
+            result = self._cb.get_object(result_url, query_parameters=query_parameters)
+            total_results = result.get('num_available', 0)
+            if total_results != 0:
+                results = result.get('results', [])
+                self._info = results[0]
+                return self
+
     def ban_process_sha256(self, description=""):
         """Bans the application by adding the process_sha256 to the BLACK_LIST
 
