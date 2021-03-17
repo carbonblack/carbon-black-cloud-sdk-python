@@ -15,7 +15,7 @@
 
 from cbc_sdk.base import (UnrefreshableModel, BaseQuery, Query, FacetQuery,
                           QueryBuilderSupportMixin, QueryBuilder,
-                          AsyncQueryMixin, IterableQueryMixin)
+                          AsyncQueryMixin)
 from cbc_sdk.platform import Event
 from cbc_sdk.platform.reputation import ReputationOverride
 from cbc_sdk.errors import ApiError, TimeoutError
@@ -59,6 +59,15 @@ class Process(UnrefreshableModel):
         summary_format = "summary"
         default_sort = "last_update desc"
         primary_key = "process_guid"
+        SHOW_ATTR = {'process': {'type': 'single', 'fields': ['device_id', 'device_name', 'process_name',
+                                                              'parent_guid', 'parent_hash', 'parent_name',
+                                                              'parent_pid', 'process_hash', 'process_pid']},
+                     'siblings': {'type': 'list', 'fields': ['process_name', 'process_guid', 'process_hash',
+                                                             'process_pid']},
+                     'parent': {'type': 'single', 'fields': ['process_name', 'process_guid', 'process_hash',
+                                                             'process_pid']},
+                     'children': {'type': 'list', 'fields': ['process_name', 'process_guid', 'process_hash',
+                                                             'process_pid']}}
 
         def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
             """
@@ -76,6 +85,41 @@ class Process(UnrefreshableModel):
             super(Process.Summary, self).__init__(cb, model_unique_id=model_unique_id,
                                                   initial_data=initial_data, force_init=False,
                                                   full_doc=True)
+
+        def __str__(self):
+            """
+            Returns a string representation of the object.
+
+            Returns:
+                str: A string representation of the object.
+            """
+            lines = []
+            for top_level in self._info:
+                if self._info[top_level] and top_level in self.SHOW_ATTR:
+                    if self.SHOW_ATTR[top_level]['type'] == 'single':
+                        lines.append('{}:'.format(top_level))
+                    else:
+                        lines.append(f"{top_level} ({len(self._info[top_level])}):")
+
+                    if self.SHOW_ATTR[top_level]['type'] == 'single':
+                        for attr in self._info[top_level]:
+                            if attr in self.SHOW_ATTR[top_level]['fields']:
+                                try:
+                                    val = str(self._info[top_level][attr])
+                                except UnicodeDecodeError:
+                                    val = repr(self._info[top_level][attr])
+                                lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", attr, val))
+                    else:
+                        for item in self._info[top_level]:
+                            for attr in item:
+                                if attr in self.SHOW_ATTR[top_level]['fields']:
+                                    try:
+                                        val = str(item[attr])
+                                    except UnicodeDecodeError:
+                                        val = repr(item[attr])
+                                    lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", attr, val))
+                            lines.append('')
+            return "\n".join(lines)
 
         @classmethod
         def _query_implementation(self, cb, **kwargs):
@@ -95,6 +139,10 @@ class Process(UnrefreshableModel):
         summary_format = 'tree'
         default_sort = "last_update desc"
         primary_key = 'process_guid'
+        SHOW_ATTR = {'top': ['device_id', 'device_name', 'process_name',
+                             'parent_guid', 'parent_hash', 'parent_name',
+                             'parent_pid', 'process_hash', 'process_pid'],
+                     'children': ['process_name', 'process_guid', 'process_hash', 'process_pid']}
 
         def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
             """
@@ -113,6 +161,35 @@ class Process(UnrefreshableModel):
                 cb, model_unique_id=model_unique_id, initial_data=initial_data,
                 force_init=force_init, full_doc=full_doc
             )
+
+        def __str__(self):
+            """
+            Returns a string representation of the object.
+
+            Returns:
+                str: A string representation of the object.
+            """
+            lines = []
+            lines.append('process:')
+            for attr in self._info:
+                if attr in self.SHOW_ATTR['top']:
+                    try:
+                        val = str(self._info[attr])
+                    except UnicodeDecodeError:
+                        val = repr(self._info[attr])
+                    lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", attr, val))
+
+            lines.append(f"children ({len(self._info['children'])}):")
+            for child in self._info['children']:
+                for attr in child:
+                    if attr in self.SHOW_ATTR['children']:
+                        try:
+                            val = str(child[attr])
+                        except UnicodeDecodeError:
+                            val = repr(child[attr])
+                        lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", attr, val))
+                lines.append('')
+            return "\n".join(lines)
 
         @classmethod
         def _query_implementation(self, cb, **kwargs):
@@ -607,7 +684,7 @@ class AsyncProcessQuery(Query):
         return list(self._search())
 
 
-class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, IterableQueryMixin):
+class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
     """Represents the logic for a Process Summary or Process Tree query."""
     def __init__(self, doc_class, cb):
         """
@@ -683,13 +760,18 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, Iterabl
         query = self._query_builder._collapse()
         if self._query_builder._process_guid is not None:
             args["process_guid"] = self._query_builder._process_guid
-        elif self._model_unique_id is not None:
-            args["process_guid"] = self._model_unique_id
+        elif 'process_guid:' in query:
+            q = query.split('process_guid:', 1)[1].split(' ', 1)[0]
+            args["process_guid"] = q
+
         if 'parent_guid:' in query:
             # extract parent_guid from where() clause
             parent_guid = query.split('parent_guid:', 1)[1].split(' ', 1)[0]
             args["parent_guid"] = parent_guid
         return args
+
+    def _count(self):
+        raise ApiError('The result is not iterable')
 
     def _submit(self):
         if self._query_token:
@@ -727,27 +809,6 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, Iterabl
             return True
 
         return False
-
-    def _count(self):
-        if self._count_valid:
-            return self._total_results
-
-        while self._still_querying():
-            time.sleep(.5)
-
-        if self._timed_out:
-            raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
-
-        result_url = "/api/investigate/v2/orgs/{}/processes/summary_jobs/{}/results".format(
-            self._cb.credentials.org_key,
-            self._query_token,
-        )
-        result = self._cb.get_object(result_url)
-
-        self._total_results = result.get('num_available', 0)
-        self._count_valid = True
-
-        return self._total_results
 
     def _search(self, start=0, rows=0):
         """Execute the query, with one expected result."""
