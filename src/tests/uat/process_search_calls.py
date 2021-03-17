@@ -26,6 +26,11 @@ Processes:
 * Start a Facet Search on Processes (v2)
 * Retrieve Results for a Process Facets Search (v2)
 
+Process Details:
+* Request Details of Processes (v2)
+* Get the Status of a Process Detail Search (v2)
+* Retrieve Results for a Process Detail Search (v2)
+
 Process Events:
 * Get Validation for Event Search (v1)
 * Get Events Associated with a Given Process (v2)
@@ -182,6 +187,27 @@ def get_process_basic_window_enriched(cb, print_detail, window):
     print("----------------------------------------------------------")
 
     return matching_processes[6].process_guid
+
+
+def get_process_details_for_single_process(cb, guid):
+    """
+    Start API calls for getting process details and print the response.
+
+    Args:
+        cb (CBCloudAPI): API object
+        guid (str): GUID of process to have details retrieved
+    """
+    print("API Calls:")
+    print("Request Details of Processes (v2)")
+    print("Get the Status of a Process Detail Search (v2)")
+    print("Retrieve Results for a Process Detail Search (v2)")
+    print(f"process_guid: {guid}\n")
+
+    process_query = cb.select(Process).where(process_guid=guid)
+    pprint(process_query[0].get_details())
+
+    print("\nCompare results manually with Postman")
+    print("----------------------------------------------------------")
 
 
 def get_process_events_for_single_process(cb, print_detail, guid):
@@ -392,6 +418,7 @@ def main():
     cb = get_cb_cloud_object(args)
     if do_process:
         process_guid = get_process_basic_window_enriched(cb, print_detail, window)
+        get_process_details_for_single_process(cb, process_guid)
         get_process_events_for_single_process(cb, print_detail, process_guid)
         run_process_invalid_search(cb, print_detail)
         run_process_event_invalid_search(cb, print_detail)
