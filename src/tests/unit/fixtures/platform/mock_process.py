@@ -2360,6 +2360,92 @@ GET_PROCESS_SUMMARY_NOT_FOUND = {
     "completed": 33
 }
 
+POST_PROCESS_DETAILS_JOB_RESP = {
+    'job_id': 'ccc47a52-9a61-4c77-8652-8a03dc187b98'
+}
+
+GET_PROCESS_DETAILS_JOB_STATUS_RESP = {
+    'contacted': 16,
+    'completed': 16
+}
+
+GET_PROCESS_DETAILS_JOB_STATUS_IN_PROGRESS_RESP = {
+    'contacted': 16,
+    'completed': 8
+}
+
+GET_PROCESS_DETAILS_JOB_RESULTS_RESP = {
+    'contacted': 16,
+    'completed': 16,
+    'num_available': 1,
+    'num_found': 1,
+    'results': [
+        {
+            "backend_timestamp": "2020-08-28T19:14:40.394Z",
+            "childproc_count": 333576,
+            "crossproc_count": 0,
+            "device_external_ip": "34.56.78.90",
+            "device_group_id": 0,
+            "device_id": 176678,
+            "device_location": "UNKNOWN",
+            "device_name": "devr-dev",
+            "device_os": "LINUX",
+            "device_os_version": "CentOS 7.6-1810",
+            "device_policy": "sm-restrictive",
+            "device_policy_id": 11200,
+            "device_target_priority": "MEDIUM",
+            "device_timestamp": "2020-08-28T19:12:41.178Z",
+            "document_guid": "6Gqoe-abQXu-k9LagGOoQg",
+            "filemod_count": 0,
+            "ingress_time": 1598642021337,
+            "modload_count": 0,
+            "netconn_count": 0,
+            "org_id": "test",
+            "parent_effective_reputation": "NOT_LISTED",
+            "parent_guid": "ABCD1234-0002b226-00000001-00000000-1d6225bbba75e43",
+            "parent_hash": [
+                "81b37dcb0321108e564d528df827580153ab64005be3bcafd5162e9e7e707e85",
+                "e4b9902024ac32b3ca37f6b4c9b841e8"
+            ],
+            "parent_name": "/usr/lib/systemd/systemd",
+            "parent_pid": 1,
+            "parent_publisher_state": [
+                "FILE_SIGNATURE_STATE_NOT_SIGNED"
+            ],
+            "parent_reputation": "NOT_LISTED",
+            "process_cmdline": [
+                "/usr/bin/gitea"
+            ],
+            "process_cmdline_length": [
+                14
+            ],
+            "process_effective_reputation": "NOT_LISTED",
+            "process_guid": "80dab519-3b5f-4502-afad-da87cd58a4c3",
+            "process_hash": [
+                "285044ad8f8b9322d0cc5e929e2cc18c",
+                "5975d972eea6b1c53ef9a69452797439ed5bf63fae72e1780761ea1c2cb6976a"
+            ],
+            "process_name": "/usr/bin/bash",
+            "process_pid": [
+                10111,
+                10222,
+                10333
+            ],
+            "process_publisher_state": [
+                "FILE_SIGNATURE_STATE_NOT_SIGNED"
+            ],
+            "process_reputation": "NOT_LISTED",
+            "process_sha256": "5975d972eea6b1c53ef9a69452797439ed5bf63fae72e1780761ea1c2cb6976a",
+            "process_start_time": "2020-05-04T21:34:03.968Z",
+            "process_username": [
+                "root"
+            ],
+            "regmod_count": 0,
+            "scriptload_count": 0
+        }
+    ]
+}
+
 GET_FACET_SEARCH_RESULTS_RESP = {
     "ranges": [
         {

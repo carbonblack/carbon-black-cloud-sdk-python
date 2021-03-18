@@ -5,7 +5,7 @@ import logging
 from cbc_sdk.platform import Process, ProcessFacet, Event, AsyncProcessQuery, SummaryQuery
 from cbc_sdk.base import FacetQuery, Query
 from cbc_sdk.rest_api import CBCloudAPI
-from cbc_sdk.errors import ApiError
+from cbc_sdk.errors import ApiError, TimeoutError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_SUMMARY_RESP,
                                                        GET_PROCESS_SUMMARY_RESP_1,
@@ -32,6 +32,10 @@ from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_SUMMARY_RESP,
                                                        GET_PROCESS_SEARCH_JOB_RESULTS_RESP_NO_PARENT_GUID,
                                                        GET_PROCESS_SEARCH_PARENT_JOB_RESULTS_RESP,
                                                        GET_PROCESS_SEARCH_PARENT_JOB_RESULTS_RESP_1,
+                                                       POST_PROCESS_DETAILS_JOB_RESP,
+                                                       GET_PROCESS_DETAILS_JOB_STATUS_RESP,
+                                                       GET_PROCESS_DETAILS_JOB_STATUS_IN_PROGRESS_RESP,
+                                                       GET_PROCESS_DETAILS_JOB_RESULTS_RESP,
                                                        GET_FACET_SEARCH_RESULTS_RESP,
                                                        EXPECTED_PROCESS_FACETS,
                                                        EXPECTED_PROCESS_RANGES_FACETS,
@@ -1078,6 +1082,61 @@ def test_process_still_querying_zero(cbcsdk_mock):
     process = api.select(Process).where(f"process_guid:{guid}")
     assert isinstance(process, AsyncProcessQuery)
     assert process._still_querying() is True
+
+
+def test_process_get_details(cbcsdk_mock):
+    """Test get_details on a process."""
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/detail_jobs",
+                             POST_PROCESS_DETAILS_JOB_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v2/orgs/test/processes/detail_jobs/ccc47a52-9a61-4c77-8652-8a03dc187b98",  # noqa: E501
+                             GET_PROCESS_DETAILS_JOB_STATUS_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v2/orgs/test/processes/detail_jobs/ccc47a52-9a61-4c77-8652-8a03dc187b98/results",  # noqa: E501
+                             GET_PROCESS_DETAILS_JOB_RESULTS_RESP)
+
+    api = cbcsdk_mock.api
+    process = Process(api, '80dab519-3b5f-4502-afad-da87cd58a4c3',
+                      {'process_guid': '80dab519-3b5f-4502-afad-da87cd58a4c3'})
+    results = process.get_details()
+    assert results['process_guid'] == '80dab519-3b5f-4502-afad-da87cd58a4c3'
+    assert results['process_cmdline'][0] == '/usr/bin/gitea'
+    assert 10222 in results['process_pid']
+
+
+def test_process_get_details_async(cbcsdk_mock):
+    """Test get_details on a process in async mode."""
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/detail_jobs",
+                             POST_PROCESS_DETAILS_JOB_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v2/orgs/test/processes/detail_jobs/ccc47a52-9a61-4c77-8652-8a03dc187b98",  # noqa: E501
+                             GET_PROCESS_DETAILS_JOB_STATUS_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v2/orgs/test/processes/detail_jobs/ccc47a52-9a61-4c77-8652-8a03dc187b98/results",  # noqa: E501
+                             GET_PROCESS_DETAILS_JOB_RESULTS_RESP)
+
+    api = cbcsdk_mock.api
+    process = Process(api, '80dab519-3b5f-4502-afad-da87cd58a4c3',
+                      {'process_guid': '80dab519-3b5f-4502-afad-da87cd58a4c3'})
+    future = process.get_details(0, True)
+    results = future.result()
+    assert results['process_guid'] == '80dab519-3b5f-4502-afad-da87cd58a4c3'
+    assert results['process_cmdline'][0] == '/usr/bin/gitea'
+    assert 10222 in results['process_pid']
+
+
+def test_process_get_details_timeout(cbcsdk_mock):
+    """Test the timeout of a get_details request."""
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/detail_jobs",
+                             POST_PROCESS_DETAILS_JOB_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v2/orgs/test/processes/detail_jobs/ccc47a52-9a61-4c77-8652-8a03dc187b98",  # noqa: E501
+                             GET_PROCESS_DETAILS_JOB_STATUS_IN_PROGRESS_RESP)
+    api = cbcsdk_mock.api
+    process = Process(api, '80dab519-3b5f-4502-afad-da87cd58a4c3',
+                      {'process_guid': '80dab519-3b5f-4502-afad-da87cd58a4c3'})
+    with pytest.raises(TimeoutError):
+        process.get_details(1000)
 
 
 def test_process_facet_select(cbcsdk_mock):
