@@ -1,0 +1,92 @@
+type: object
+properties:
+  principal:
+    type: string
+    description: URN of principal
+  expires:
+    type: string
+    format: date-time
+    description: Date and time the grant expires
+  revoked:
+    type: boolean
+    description: True if this grant has been/is being revoked
+  roles:
+    type: array
+    description: URNs of roles assigned to grant (obsolete)
+    items:
+      type: string
+  profiles:
+    type: array
+    description: Profiles assigned to this grant
+    items:
+      type: object
+      properties:
+        profile_uuid:
+          type: string
+          description: UUID identifying this profile
+        orgs:
+          type: object
+          description: Organization references for this profile
+          properties:
+            allow:
+              type: array
+              description: List of URNs of organizations to be granted access
+              items:
+                type: string
+            deny:
+              type: array
+              description: List of URNs of organizations to be denied access
+              items:
+                type: string
+        org_groups:
+          type: array
+          description: Organization groups added to this grant (TBD)
+          items:
+            type: string
+        roles:
+          type: array
+          description: URNs of roles assigned to profile
+          items:
+            type: string
+        conditions:
+          type: object
+          description: Access conditions to be imposed on this profile
+          properties:
+            cidr:
+              type: array
+              description: CIDR rules for access via network
+              items:
+                type: string
+            expiration:
+              type: string
+              format: date-time
+              description: Date and time the profile expires
+            disabled:
+              type: boolean
+              description: True if this profile is disabled
+        can_manage:
+          type: boolean
+          description: True if can manage (TBD)
+  org_ref:
+    type: string
+    description: URN of org that this grant references
+  principal_name:
+    type: string
+    description: Name of principal
+  created_by:
+    type: string
+    description: URN of user that created this grant
+  updated_by:
+    type: string
+    description: URN of user that last updated this grant
+  create_time:
+    type: string
+    format: date-time
+    description: Date and time the grant was created
+  update_time:
+    type: string
+    format: date-time
+    description: Date and time the grant was last updated
+  can_manage:
+    type: boolean
+    description: True if can manage (TBD)
