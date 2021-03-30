@@ -4,6 +4,7 @@ import pytest
 import logging
 from cbc_sdk.platform import Device, DeviceSearchQuery
 from cbc_sdk.rest_api import CBCloudAPI
+from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_devices import (GET_DEVICE_RESP,
                                                        POST_DEVICE_SEARCH_RESP)
@@ -77,3 +78,16 @@ def test_device_id_property(cbcsdk_mock):
         cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
         a = Device(cbcsdk_mock.api, 98765)
         a.deviceId
+
+
+def test_device_max_rows(cbcsdk_mock):
+    """Testing Device Querying with .set_max_rows"""
+    api = cbcsdk_mock.api
+    query = api.select(Device).set_max_rows(10)
+    assert query.max_rows == 10
+
+    with pytest.raises(ApiError):
+        query.set_max_rows(-1)
+
+    with pytest.raises(ApiError):
+        query.set_max_rows(10001)

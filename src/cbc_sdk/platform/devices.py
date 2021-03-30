@@ -267,6 +267,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         self._time_filter = {}
         self._exclusions = {}
         self._sortcriteria = {}
+        self.max_rows = -1
 
     def _update_exclusions(self, key, newlist):
         """
@@ -485,6 +486,24 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         self._update_criteria("deployment_type", deployment_type)
         return self
 
+    def set_max_rows(self, max_rows):
+        """
+        Sets the max number of devices to fetch in a singular query
+
+        Args:
+            max_rows (integer): Max number of devices
+
+        Returns:
+            DeviceSearchQuery: This instance.
+
+        Raises:
+            ApiError: If rows is negative or greater than 10000
+        """
+        if max_rows < 0 or max_rows > 10000:
+            raise ApiError("Max rows must be between 0 and 10000")
+        self.max_rows = max_rows
+        return self
+
     def _build_request(self, from_row, max_rows):
         """
         Creates the request body for an API call.
@@ -505,6 +524,8 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
             request["start"] = from_row
         if max_rows >= 0:
             request["rows"] = max_rows
+        elif self.max_rows >= 0:
+            request["rows"] = self.max_rows
         if self._sortcriteria != {}:
             request["sort"] = [self._sortcriteria]
         return request
