@@ -1,4 +1,4 @@
-cbc\_sdk.workload package
+Workload
 =========================
 
 Submodules

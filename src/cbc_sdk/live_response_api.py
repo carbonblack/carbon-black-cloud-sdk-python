@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2021. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -937,6 +937,8 @@ class LiveResponseJobScheduler(threading.Thread):
                 if item.status == "error":
                     log.error("Error encountered by JobWorker[{0}]: {1}".format(item.device_id,
                                                                                 item.exception))
+                    # Don't reattempt error'd jobs
+                    del self._unscheduled_jobs[item.device_id]
                 elif item.status == "exiting":
                     log.debug("JobWorker[{0}] has exited, waiting...".format(item.device_id))
                     self._job_workers[item.device_id].join()
@@ -1015,17 +1017,18 @@ class LiveResponseJobScheduler(threading.Thread):
         if len(self._job_workers) >= self._max_workers:
             return
 
-        schedule_max = self._max_workers - len(self._job_workers)
+        from datetime import datetime, timedelta
+        now = datetime.utcnow()
+        delta = timedelta(minutes=60)
 
         from cbc_sdk.endpoint_standard import Device
         devices = [s for s in self._cb.select(Device) if s.deviceId in self._unscheduled_jobs
-                   and s.deviceId not in self._job_workers and s.status == "Online"]  # noqa: W503
-        devices_to_schedule = sorted(devices, key=lambda x: (
-            int(x.num_storefiles_bytes) + int(x.num_eventlog_bytes), x.next_checkin_time
-        ))[:schedule_max]
+                   and s.deviceId not in self._job_workers and now - s.lastContact < delta]  # noqa: W503
 
-        log.debug("Spawning new workers to handle these devices: {0}".format(devices_to_schedule))
-        for device in devices_to_schedule:
+        log.debug("Spawning new workers to handle these devices: {0}".format(devices))
+        for device in devices:
+            if len(self._job_workers) >= self._max_workers:
+                break
             log.debug("Spawning new JobWorker for device id {0}".format(device.deviceId))
             self._job_workers[device.deviceId] = JobWorker(self._cb, device.deviceId, self.schedule_queue)
             self._job_workers[device.deviceId].start()
@@ -1296,7 +1299,7 @@ def poll_status(cb, url, desired_status="complete", timeout=None, delay=None):
 
     while status != desired_status and time.time() - start_time < timeout:
         res = cb.get_object(url)
-        log.error(f"url: {url} -> status: {res['status']}")
+        log.debug(f"url: {url} -> status: {res['status']}")
         if res["status"] == desired_status:
             log.debug(json.dumps(res))
             return res

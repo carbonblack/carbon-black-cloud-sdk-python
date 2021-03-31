@@ -1,6 +1,23 @@
 Changelog
 ================================
 
+CBC SDK 1.2.1 - Released March 31, 2021
+--------------------------------------
+
+New Features
+
+* Add `__str__` functions for Process.Tree and Process.Summary
+* Add `get_details` for Process
+* Add  `set_max_rows` to DeviceQuery
+
+Bug Fixes
+
+* Modify base class for EnrichedEventQuery to Query from cbc_sdk.base to support entire feature set for searching
+* Document fixes for changelog and Workload
+* Fix `_spawn_new_workers` to correctly find active devices for Carbon Black Cloud
+
+
+
 CBC SDK 1.2.0 - Released March 9, 2021
 --------------------------------------
 
@@ -8,8 +25,7 @@ New Features
 
 * VMware Carbon Black Cloud Workload support for managing workloads:
 
-  * Appliance Installation
-  * Appliance Service
+  * Vulnerability Assessment
   * Sensor Lifecycle Management
   * VM Workloads Search
 
