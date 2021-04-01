@@ -65,11 +65,11 @@ def test_create_new_grant(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/access/v2/orgs/test/grants/psc:user:ABC12345:DEF67890/profiles',
                              respond_to_profile_grant)
     api = cbcsdk_mock.api
-    grant = Grant.new_grant(api, 'psc:user:ABC12345:DEF67890')
+    grant = Grant.create(api, 'psc:user:ABC12345:DEF67890')
     grant.roles = ["psc:role::SECOPS_ROLE_MANAGER"]
     grant.org_ref = 'psc:org:test'
     grant.principal_name = 'Doug Jones'
-    builder = grant.new_profile().add_allow("psc:org:test2")
+    builder = grant.create_profile().add_org("psc:org:test2")
     profile = builder.add_role("psc:role::SECOPS_ROLE_MANAGER").build()
     grant.save()
     assert grant.roles == ["psc:role::SECOPS_ROLE_MANAGER"]
@@ -87,12 +87,12 @@ def test_create_new_grant_alt1(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/access/v2/orgs/test/grants/psc:user:ABC12345:DEF67890/profiles',
                              respond_to_profile_grant)
     api = cbcsdk_mock.api
-    grant = Grant.new_grant(api, 'psc:user:ABC12345:DEF67890')
+    grant = Grant.create(api, 'psc:user:ABC12345:DEF67890')
     grant.roles = ["psc:role::SECOPS_ROLE_MANAGER"]
     grant.org_ref = 'psc:org:test'
     grant.principal_name = 'Doug Jones'
-    builder = grant.new_profile().set_allowed_orgs(["psc:org:test2"]).set_roles(["psc:role::SECOPS_ROLE_MANAGER"])
-    profile = builder.set_disabled(False).set_can_manage(False).build()
+    builder = grant.create_profile().set_orgs(["psc:org:test2"]).set_roles(["psc:role::SECOPS_ROLE_MANAGER"])
+    profile = builder.set_disabled(False).build()
     grant.save()
     assert grant.roles == ["psc:role::SECOPS_ROLE_MANAGER"]
     assert profile.orgs['allow'] == ["psc:org:test2"]

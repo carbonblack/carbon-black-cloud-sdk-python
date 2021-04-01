@@ -32,6 +32,24 @@ class Grant(MutableBaseModel):
     primary_key = "principal"
     swagger_meta_file = "platform/models/grant.yaml"
 
+    def __init__(self, cb, model_unique_id, initial_data=None):
+        """
+        Initialize the Grant object.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            model_unique_id (str): URN of the principal associated with this grant.
+            initial_data (dict): Initial data used to populate the grant.
+        """
+        super(Grant, self).__init__(cb, model_unique_id, initial_data)
+        if initial_data:
+            self._profiles = [Grant.Profile(cb, self, prof.get('profile_uuid', None), prof)
+                              for prof in initial_data.get('profiles', [])]
+        else:
+            self._profiles = []
+        if model_unique_id is not None and initial_data is None:
+            self._refresh()
+
     class Profile(MutableBaseModel):
         """Represents an access profile assigned to a grant."""
         urlobject = "/access/v2/orgs/{0}/grants/{1}/profiles"
@@ -125,21 +143,7 @@ class Grant(MutableBaseModel):
             self._conditions = {'expiration': 0, 'disabled': False}
             self._can_manage = False
 
-        def set_orgs(self, orgs_structure):
-            """
-            Set the organization allow and deny rules for the new profile.
-
-            Args:
-                orgs_structure (dict): The organization structure, with 'allow' and 'deny' members containing lists
-                                       of organization URNs.
-
-            Returns:
-                ProfileBuilder: This object.
-            """
-            self._orgs = orgs_structure
-            return self
-
-        def set_allowed_orgs(self, orgs_list):
+        def set_orgs(self, orgs_list):
             """
             Set the list of organizations to which the new profile is allowed access.
 
@@ -152,7 +156,7 @@ class Grant(MutableBaseModel):
             self._orgs['allow'] = orgs_list
             return self
 
-        def add_allow(self, org):
+        def add_org(self, org):
             """
             Adds the specified organization to the list of organizations for which the new profile is allowed.
 
@@ -231,19 +235,6 @@ class Grant(MutableBaseModel):
             self._conditions['disabled'] = flag
             return self
 
-        def set_can_manage(self, flag):
-            """
-            Sets the management flag for the new profile.
-
-            Args:
-                flag (bool): New value of the management flag.
-
-            Returns:
-                ProfileBuilder: This object.
-            """
-            self._can_manage = flag
-            return self
-
         def build(self):
             """
             Builds the new Profile object from the entered data.
@@ -251,30 +242,11 @@ class Grant(MutableBaseModel):
             Returns:
                 Profile: The new Profile object.
             """
-            data = {'orgs': self._orgs, 'roles': self._roles, 'conditions': self._conditions,
-                    'can_manage': self._can_manage}
+            data = {'orgs': self._orgs, 'roles': self._roles, 'conditions': self._conditions}
             profile = Grant.Profile(self._grant._cb, self._grant, None, data)
             self._grant._profiles.append(profile)
             self._grant.touch()
             return profile
-
-    def __init__(self, cb, model_unique_id, initial_data=None):
-        """
-        Initialize the Grant object.
-
-        Args:
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-            model_unique_id (str): URN of the principal associated with this grant.
-            initial_data (dict): Initial data used to populate the grant.
-        """
-        super(Grant, self).__init__(cb, model_unique_id, initial_data)
-        if initial_data:
-            self._profiles = [Grant.Profile(cb, self, prof.get('profile_uuid', None), prof)
-                              for prof in initial_data.get('profiles', [])]
-        else:
-            self._profiles = []
-        if model_unique_id is not None and initial_data is None:
-            self._refresh()
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -340,7 +312,7 @@ class Grant(MutableBaseModel):
         self._refresh_if_needed(ret)
 
     @classmethod
-    def new_grant(cls, cb, principal):
+    def create(cls, cb, principal):
         """
         Create a new grant object for the specified principal.
 
@@ -365,7 +337,7 @@ class Grant(MutableBaseModel):
         """
         return self._profiles
 
-    def new_profile(self):
+    def create_profile(self):
         """
         Returns a ProfileBuilder to begin the process of adding a new profile to this grant.
 
