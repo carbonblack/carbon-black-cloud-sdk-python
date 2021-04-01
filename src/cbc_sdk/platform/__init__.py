@@ -15,4 +15,4 @@ from cbc_sdk.platform.processes import (Process, ProcessFacet,
 
 from cbc_sdk.platform.reputation import ReputationOverride
 
-from cbc_sdk.platform.admin_grants import Grant
+from cbc_sdk.platform.grants import Grant
