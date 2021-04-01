@@ -120,10 +120,9 @@ class Grant(MutableBaseModel):
                 grant (Grant): The grant the new profile will be attached to.
             """
             self._grant = grant
-            self._orgs = {'allow': [], 'deny': []}
-            self._org_groups = []
+            self._orgs = {'allow': []}
             self._roles = []
-            self._conditions = {'cidr': [], 'expiration': 0, 'disabled': False}
+            self._conditions = {'expiration': 0, 'disabled': False}
             self._can_manage = False
 
         def set_orgs(self, orgs_structure):
@@ -153,19 +152,6 @@ class Grant(MutableBaseModel):
             self._orgs['allow'] = orgs_list
             return self
 
-        def set_denied_orgs(self, orgs_list):
-            """
-            Set the list of organizations to which the new profile is denied access.
-
-            Args:
-                orgs_list (list): List of organization URNs.
-
-            Returns:
-                ProfileBuilder: This object.
-            """
-            self._orgs['deny'] = orgs_list
-            return self
-
         def add_allow(self, org):
             """
             Adds the specified organization to the list of organizations for which the new profile is allowed.
@@ -177,45 +163,6 @@ class Grant(MutableBaseModel):
                 ProfileBuilder: This object.
             """
             self._orgs['allow'].append(org)
-            return self
-
-        def add_deny(self, org):
-            """
-            Adds the specified organization to the list of organizations for which the new profile is denied.
-
-            Args:
-                org (str): URN of the organization to be added.
-
-            Returns:
-                ProfileBuilder: This object.
-            """
-            self._orgs['deny'].append(org)
-            return self
-
-        def set_org_groups(self, groups_list):
-            """
-            Sets the list of organization groups associated with the new profile.
-
-            Args:
-                groups_list (list): A list of organization group identifiers.
-
-            Returns:
-                ProfileBuilder: This object.
-            """
-            self._org_groups = groups_list
-            return self
-
-        def add_org_group(self, org_group):
-            """
-            Adds an organization group identifier to the list of groups associated with the new profile.
-
-            Args:
-                org_group (str): Identifier of the organization group.
-
-            Returns:
-                ProfileBuilder: This object.
-            """
-            self._org_groups.append(org_group)
             return self
 
         def set_roles(self, roles_list):
@@ -256,32 +203,6 @@ class Grant(MutableBaseModel):
                 ProfileBuilder: This object.
             """
             self._conditions = conditions_structure
-            return self
-
-        def set_cidr(self, cidr_list):
-            """
-            Sets the list of CIDR access rules associated with the new profile.
-
-            Args:
-                cidr_list (list): List of CIDR access rules for the profile.
-
-            Returns:
-                ProfileBuilder: This object.
-            """
-            self._conditions['cidr'] = cidr_list
-            return self
-
-        def add_cidr(self, cidr):
-            """
-            Adds a CIDR access rule to the new profile.
-
-            Args:
-                cidr (str): CIDR access rule to be added.
-
-            Returns:
-                ProfileBuilder: This object.
-            """
-            self._conditions['cidr'].append(cidr)
             return self
 
         def set_expiration(self, expiration):
@@ -330,8 +251,8 @@ class Grant(MutableBaseModel):
             Returns:
                 Profile: The new Profile object.
             """
-            data = {'orgs': self._orgs, 'org_groups': self._org_groups, 'roles': self._roles,
-                    'conditions': self._conditions, 'can_manage': self._can_manage}
+            data = {'orgs': self._orgs, 'roles': self._roles, 'conditions': self._conditions,
+                    'can_manage': self._can_manage}
             profile = Grant.Profile(self._grant._cb, self._grant, None, data)
             self._grant._profiles.append(profile)
             self._grant.touch()

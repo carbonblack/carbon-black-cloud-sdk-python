@@ -44,16 +44,14 @@ def test_get_and_set_grant(cbcsdk_mock):
     profile = grant.profiles_[0]
     assert profile.profile_uuid == 'c57ba255-1736-4bfa-a59d-c54bb97a41d6'
     assert profile.orgs['allow'] == ["psc:org:test2"]
-    assert profile.orgs['deny'] == ["psc:org:test3"]
     assert profile.roles == ["psc:role::SECOPS_ROLE_MANAGER"]
-    assert profile.conditions['cidr'] == ["192.168.*.*"]
     grant.roles.append('psc:role:test:DUMMY_ROLE')
-    profile.conditions['cidr'].append('10.8.16.*')
+    profile.orgs['allow'].append('psc:org:test3')
     grant.touch()  # force object to be "dirty"
     grant.save()
     assert grant.roles == ["psc:role::SECOPS_ROLE_MANAGER", "psc:role:test:APP_SERVICE_ROLE",
                            'psc:role:test:DUMMY_ROLE']
-    assert profile.conditions['cidr'] == ["192.168.*.*", '10.8.16.*']
+    assert profile.orgs['allow'] == ["psc:org:test2", "psc:org:test3"]
 
 
 def test_create_new_grant(cbcsdk_mock):
@@ -71,11 +69,11 @@ def test_create_new_grant(cbcsdk_mock):
     grant.roles = ["psc:role::SECOPS_ROLE_MANAGER"]
     grant.org_ref = 'psc:org:test'
     grant.principal_name = 'Doug Jones'
-    builder = grant.new_profile().add_allow("psc:org:test2").add_deny("psc:org:test3")
-    profile = builder.add_role("psc:role::SECOPS_ROLE_MANAGER").add_cidr('192.168.*.*').build()
+    builder = grant.new_profile().add_allow("psc:org:test2")
+    profile = builder.add_role("psc:role::SECOPS_ROLE_MANAGER").build()
     grant.save()
     assert grant.roles == ["psc:role::SECOPS_ROLE_MANAGER"]
-    assert profile.conditions['cidr'] == ["192.168.*.*"]
+    assert profile.orgs['allow'] == ["psc:org:test2"]
 
 
 def test_create_new_grant_alt1(cbcsdk_mock):
@@ -93,12 +91,11 @@ def test_create_new_grant_alt1(cbcsdk_mock):
     grant.roles = ["psc:role::SECOPS_ROLE_MANAGER"]
     grant.org_ref = 'psc:org:test'
     grant.principal_name = 'Doug Jones'
-    builder = grant.new_profile().set_allowed_orgs(["psc:org:test2"]).set_denied_orgs(["psc:org:test3"])
-    builder.set_org_groups([]).set_roles(["psc:role::SECOPS_ROLE_MANAGER"]).set_cidr(['192.168.*.*'])
+    builder = grant.new_profile().set_allowed_orgs(["psc:org:test2"]).set_roles(["psc:role::SECOPS_ROLE_MANAGER"])
     profile = builder.set_disabled(False).set_can_manage(False).build()
     grant.save()
     assert grant.roles == ["psc:role::SECOPS_ROLE_MANAGER"]
-    assert profile.conditions['cidr'] == ["192.168.*.*"]
+    assert profile.orgs['allow'] == ["psc:org:test2"]
 
 
 def test_create_new_grant_fail(cb):
@@ -122,11 +119,9 @@ def test_modify_profile_within_grant(cbcsdk_mock):
     profile = grant.profiles_[0]
     profile.refresh()
     profile.orgs['allow'].append('psc:org:test22')
-    profile.orgs['deny'].append('psc:org:test23')
     profile.touch()
     profile.save()
     assert profile.orgs['allow'] == ["psc:org:test2", 'psc:org:test22']
-    assert profile.orgs['deny'] == ["psc:org:test3", 'psc:org:test23']
 
 
 def test_delete_profile_within_grant(cbcsdk_mock):
@@ -176,3 +171,10 @@ def test_query_grants_async(cbcsdk_mock):
     assert results[0].principal_name == 'J. Random Nerd'
     assert results[1].principal == 'psc:user:87654321:HGFEDCBA'
     assert results[1].principal_name == 'Sally Shears'
+
+
+def test_query_grants_fail(cb):
+    """Test to ensure the grant query fails if we don't supply a principal."""
+    query = cb.select(Grant)
+    with pytest.raises(ApiError):
+        list(query)

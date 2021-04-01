@@ -15,20 +15,11 @@ GET_GRANT_RESP = {
                 "allow": [
                     "psc:org:test2"
                 ],
-                "deny": [
-                    "psc:org:test3"
-                ]
             },
-            "org_groups": [
-                0
-            ],
             "roles": [
                 "psc:role::SECOPS_ROLE_MANAGER"
             ],
             "conditions": {
-                "cidr": [
-                    "192.168.*.*"
-                ],
                 "expiration": 0,
                 "disabled": False
             },
@@ -57,23 +48,14 @@ PUT_GRANT_RESP = {
             "profile_uuid": "c57ba255-1736-4bfa-a59d-c54bb97a41d6",
             "orgs": {
                 "allow": [
-                    "psc:org:test2"
-                ],
-                "deny": [
+                    "psc:org:test2",
                     "psc:org:test3"
-                ]
+                ],
             },
-            "org_groups": [
-                0
-            ],
             "roles": [
                 "psc:role::SECOPS_ROLE_MANAGER"
             ],
             "conditions": {
-                "cidr": [
-                    "192.168.*.*",
-                    "10.8.16.*"
-                ],
                 "expiration": 0,
                 "disabled": False
             },
@@ -111,20 +93,11 @@ POST_PROFILE_IN_GRANT_RESP = {
         "allow": [
             "psc:org:test2"
         ],
-        "deny": [
-            "psc:org:test3"
-        ]
     },
-    "org_groups": [
-        0
-    ],
     "roles": [
         "psc:role::SECOPS_ROLE_MANAGER"
     ],
     "conditions": {
-        "cidr": [
-            "192.168.*.*"
-        ],
         "expiration": 0,
         "disabled": False
     },
@@ -137,20 +110,11 @@ GET_PROFILE_RESP = {
         "allow": [
             "psc:org:test2"
         ],
-        "deny": [
-            "psc:org:test3"
-        ]
     },
-    "org_groups": [
-        0
-    ],
     "roles": [
         "psc:role::SECOPS_ROLE_MANAGER"
     ],
     "conditions": {
-        "cidr": [
-            "192.168.*.*"
-        ],
         "expiration": 0,
         "disabled": False
     },
@@ -164,21 +128,11 @@ PUT_PROFILE_RESP = {
             "psc:org:test2",
             "psc:org:test22"
         ],
-        "deny": [
-            "psc:org:test3",
-            "psc:org:test23"
-        ]
     },
-    "org_groups": [
-        0
-    ],
     "roles": [
         "psc:role::SECOPS_ROLE_MANAGER"
     ],
     "conditions": {
-        "cidr": [
-            "192.168.*.*"
-        ],
         "expiration": 0,
         "disabled": False
     },
@@ -191,20 +145,11 @@ DELETE_PROFILE_RESP = {
         "allow": [
             "psc:org:test2"
         ],
-        "deny": [
-            "psc:org:test3"
-        ]
     },
-    "org_groups": [
-        0
-    ],
     "roles": [
         "psc:role::SECOPS_ROLE_MANAGER"
     ],
     "conditions": {
-        "cidr": [
-            "192.168.*.*"
-        ],
         "expiration": 0,
         "disabled": True
     },
@@ -226,20 +171,11 @@ DELETE_GRANT_RESP = {
                 "allow": [
                     "psc:org:test2"
                 ],
-                "deny": [
-                    "psc:org:test3"
-                ]
             },
-            "org_groups": [
-                0
-            ],
             "roles": [
                 "psc:role::SECOPS_ROLE_MANAGER"
             ],
             "conditions": {
-                "cidr": [
-                    "192.168.*.*"
-                ],
                 "expiration": 0,
                 "disabled": False
             },
@@ -271,20 +207,11 @@ QUERY_GRANT_RESP = {
                         "allow": [
                             "psc:org:test2"
                         ],
-                        "deny": [
-                            "psc:org:test3"
-                        ]
                     },
-                    "org_groups": [
-                        0
-                    ],
                     "roles": [
                         "psc:role::SECOPS_ROLE_MANAGER"
                     ],
                     "conditions": {
-                        "cidr": [
-                            "192.168.*.*"
-                        ],
                         "expiration": 0,
                         "disabled": False
                     },
@@ -313,20 +240,11 @@ QUERY_GRANT_RESP = {
                         "allow": [
                             "psc:org:test2"
                         ],
-                        "deny": [
-                            "psc:org:test3"
-                        ]
                     },
-                    "org_groups": [
-                        0
-                    ],
                     "roles": [
                         "psc:role::SECOPS_ROLE_MANAGER"
                     ],
                     "conditions": {
-                        "cidr": [
-                            "192.168.*.*"
-                        ],
                         "expiration": 0,
                         "disabled": False
                     },
