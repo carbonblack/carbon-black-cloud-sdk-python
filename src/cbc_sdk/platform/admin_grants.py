@@ -69,8 +69,6 @@ class Grant(MutableBaseModel):
             """
             super(Grant.Profile, self).__init__(cb, model_unique_id, initial_data, False, True)
             self._grant = grant
-            if model_unique_id is not None and initial_data is None:
-                self._refresh()
 
         @classmethod
         def _query_implementation(cls, cb, **kwargs):
@@ -88,17 +86,12 @@ class Grant(MutableBaseModel):
 
         def _refresh(self):
             """
-            Rereads the profile data from the server.
+            Throws an error, since Profile data cannot be refreshed.
 
-            Returns:
-                bool: True if refresh was successful, False if not.
+            Raises:
+                ApiError: Always.
             """
-            url = self.urlobject_single.format(self._cb.credentials.org_key, self._grant._model_unique_id,
-                                               self._model_unique_id)
-            resp = self._cb.get_object(url)
-            self._info = resp
-            self._last_refresh_time = time.time()
-            return True
+            raise ApiError("Profile cannot be refreshed")
 
         def _update_object(self):
             """
@@ -337,13 +330,23 @@ class Grant(MutableBaseModel):
         """
         return self._profiles
 
-    def create_profile(self):
+    def create_profile(self, template=None):
         """
-        Returns a ProfileBuilder to begin the process of adding a new profile to this grant.
+        Returns either a new Profile, or a ProfileBuilder to begin the process of adding a new profile to this grant.
+
+        Args:
+            template (dict): Optional template to use for creating the profile object.
 
         Returns:
-            ProfileBuilder: The new ProfileBuilder object.
+            Profile: If a template was specified, return the new Profile object.
+            ProfileBuilder: If template was None, returns a ProfileBuilder object.  Call methods on it to set
+                            up the new profile, and then call build() to create the new profile.
         """
+        if template:
+            t = copy.deepcopy(template)
+            if 'profile_uuid' in t:
+                del t['profile_uuid']
+            return Grant.Profile(self._cb, self, None, t)
         return Grant.ProfileBuilder(self)
 
 

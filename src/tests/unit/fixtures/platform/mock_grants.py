@@ -104,23 +104,6 @@ POST_PROFILE_IN_GRANT_RESP = {
     "can_manage": False
 }
 
-GET_PROFILE_RESP = {
-    "profile_uuid": "c57ba255-1736-4bfa-a59d-c54bb97a41d6",
-    "orgs": {
-        "allow": [
-            "psc:org:test2"
-        ],
-    },
-    "roles": [
-        "psc:role::SECOPS_ROLE_MANAGER"
-    ],
-    "conditions": {
-        "expiration": 0,
-        "disabled": False
-    },
-    "can_manage": False
-}
-
 PUT_PROFILE_RESP = {
     "profile_uuid": "c57ba255-1736-4bfa-a59d-c54bb97a41d6",
     "orgs": {

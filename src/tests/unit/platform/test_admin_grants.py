@@ -8,7 +8,7 @@ from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_grants import (GET_GRANT_RESP, PUT_GRANT_RESP, POST_GRANT_RESP,
-                                                      POST_PROFILE_IN_GRANT_RESP, GET_PROFILE_RESP, PUT_PROFILE_RESP,
+                                                      POST_PROFILE_IN_GRANT_RESP, PUT_PROFILE_RESP,
                                                       DELETE_PROFILE_RESP, DELETE_GRANT_RESP, QUERY_GRANT_RESP)
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -107,17 +107,46 @@ def test_create_new_grant_fail(cb):
         grant.save()
 
 
+def test_create_profile_from_template(cbcsdk_mock):
+    """Test the creation of a new profile within a grant via a template."""
+    def respond_to_profile_grant(url, body, **kwargs):
+        ret = copy.deepcopy(POST_PROFILE_IN_GRANT_RESP)
+        ret['profile_uuid'] = body['profile_uuid']
+        return ret
+
+    cbcsdk_mock.mock_request('GET', '/access/v2/orgs/test/grants/psc:user:12345678:ABCDEFGH', GET_GRANT_RESP)
+    cbcsdk_mock.mock_request('POST', '/access/v2/orgs/test/grants/psc:user:ABC12345:DEF67890/profiles',
+                             respond_to_profile_grant)
+    api = cbcsdk_mock.api
+    grant = Grant(api, 'psc:user:12345678:ABCDEFGH')
+    template = {
+        "profile_uuid": "to-be-deleted",
+        "orgs": {
+            "allow": [
+                "psc:org:test2"
+            ],
+        },
+        "roles": [
+            "psc:role::SECOPS_ROLE_MANAGER"
+        ],
+        "conditions": {
+            "expiration": 0,
+            "disabled": False
+        }
+    }
+    profile = grant.create_profile(template)
+    profile.save()
+    assert profile.orgs['allow'] == ["psc:org:test2"]
+
+
 def test_modify_profile_within_grant(cbcsdk_mock):
     """Test the modification of a profile within a grant."""
     cbcsdk_mock.mock_request('GET', '/access/v2/orgs/test/grants/psc:user:12345678:ABCDEFGH', GET_GRANT_RESP)
-    cbcsdk_mock.mock_request('GET', '/access/v2/orgs/test/grants/psc:user:12345678:ABCDEFGH/profiles/c57ba255-1736-4bfa-a59d-c54bb97a41d6',  # noqa: E501
-                             GET_PROFILE_RESP)
     cbcsdk_mock.mock_request('PUT', '/access/v2/orgs/test/grants/psc:user:12345678:ABCDEFGH/profiles/c57ba255-1736-4bfa-a59d-c54bb97a41d6',  # noqa: E501
                              PUT_PROFILE_RESP)
     api = cbcsdk_mock.api
     grant = Grant(api, 'psc:user:12345678:ABCDEFGH')
     profile = grant.profiles_[0]
-    profile.refresh()
     profile.orgs['allow'].append('psc:org:test22')
     profile.touch()
     profile.save()
