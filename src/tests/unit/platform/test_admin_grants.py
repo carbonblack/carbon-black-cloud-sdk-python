@@ -36,7 +36,7 @@ def test_get_and_set_grant(cbcsdk_mock):
     cbcsdk_mock.mock_request('GET', '/access/v2/orgs/test/grants/psc:user:12345678:ABCDEFGH', GET_GRANT_RESP)
     cbcsdk_mock.mock_request('PUT', '/access/v2/orgs/test/grants/psc:user:12345678:ABCDEFGH', PUT_GRANT_RESP)
     api = cbcsdk_mock.api
-    grant = Grant(api, 'psc:user:12345678:ABCDEFGH')
+    grant = api.select(Grant, 'psc:user:12345678:ABCDEFGH')
     assert grant.principal == 'psc:user:12345678:ABCDEFGH'
     assert grant.roles == ["psc:role::SECOPS_ROLE_MANAGER", "psc:role:test:APP_SERVICE_ROLE"]
     assert len(grant.profiles_) == 1
@@ -98,6 +98,32 @@ def test_create_new_grant_alt1(cbcsdk_mock):
     assert profile.orgs['allow'] == ["psc:org:test2"]
 
 
+def test_create_grant_from_template(cbcsdk_mock):
+    """Test creation of a new grant from a template."""
+    def respond_to_profile_grant(url, body, **kwargs):
+        ret = copy.deepcopy(POST_PROFILE_IN_GRANT_RESP)
+        ret['profile_uuid'] = body['profile_uuid']
+        return ret
+
+    cbcsdk_mock.mock_request('POST', '/access/v2/orgs/test/grants', POST_GRANT_RESP)
+    cbcsdk_mock.mock_request('POST', '/access/v2/orgs/test/grants/psc:user:ABC12345:DEF67890/profiles',
+                             respond_to_profile_grant)
+    api = cbcsdk_mock.api
+    template = {
+        "roles": [
+            "psc:role::SECOPS_ROLE_MANAGER"
+        ],
+        "org_ref": 'psc:org:test',
+        "principal_name": 'Doug Jones'
+    }
+    grant = Grant.create(api, 'psc:user:ABC12345:DEF67890', template)
+    builder = grant.create_profile().add_org("psc:org:test2")
+    profile = builder.add_role("psc:role::SECOPS_ROLE_MANAGER").build()
+    grant.save()
+    assert grant.roles == ["psc:role::SECOPS_ROLE_MANAGER"]
+    assert profile.orgs['allow'] == ["psc:org:test2"]
+
+
 def test_create_new_grant_fail(cb):
     """Test failure of the creation of a new grant."""
     grant = Grant(cb, None)
@@ -120,7 +146,7 @@ def test_create_profile_from_template(cbcsdk_mock):
     api = cbcsdk_mock.api
     grant = Grant(api, 'psc:user:12345678:ABCDEFGH')
     template = {
-        "profile_uuid": "to-be-deleted",
+        "profile_uuid": "to-be-deleted",  # this member should be explicitly stripped by create_profile()
         "orgs": {
             "allow": [
                 "psc:org:test2"

@@ -305,19 +305,25 @@ class Grant(MutableBaseModel):
         self._refresh_if_needed(ret)
 
     @classmethod
-    def create(cls, cb, principal):
+    def create(cls, cb, principal, template=None):
         """
         Create a new grant object for the specified principal.
 
         Args:
             cb (CBCloudAPI): A reference to the CBCloudAPI object.
             principal (str): The principal URN for the new grant object.
+            template (dict): Optional template to use for creating the grant object.
 
         Returns:
             Grant: The new grant object.
         """
-        grant = Grant(cb, principal, {'principal': principal})
-        grant._full_init = True
+        if template:
+            t = copy.deepcopy(template)
+            t['principal'] = principal
+        else:
+            t = {'principal': principal}
+        grant = Grant(cb, principal, t)
+        grant._full_init = True  # XXX Alex says this is wrong, but I'm keeping it until we have a better solution
         return grant
 
     @property
