@@ -362,17 +362,10 @@ class BaseAPI(object):
         integration_name = kwargs.pop("integration_name", None)
         self.credential_provider = kwargs.pop("credential_provider", None)
 
-        url, token, org_key = kwargs.pop("url", None), kwargs.pop("token", None), kwargs.pop("org_key", None)
+        url, token = kwargs.get("url", None), kwargs.get("token", None)
         if url and token:
-            if org_key:
-                credentials = {"url": url, "token": token, "org_key": org_key}
-            else:
-                credentials = {"url": url, "token": token}
-
-            for k in ("ssl_verify",):
-                if k in kwargs:
-                    credentials[k] = kwargs.pop(k)
-            self.credentials = Credentials(credentials)
+            self.credentials = Credentials(kwargs)
+            self.credentials.integration = integration_name
             self.credential_profile_name = None
         else:
             credential_file = kwargs.pop("credential_file", None)

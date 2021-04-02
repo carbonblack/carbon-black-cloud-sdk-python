@@ -92,6 +92,30 @@ def test_BaseAPI_init_external_credential_provider_with_integration():
     assert sut.session.token_header['User-Agent'].startswith('Anthrax')
 
 
+def test_BaseAPI_all_options():
+    """Test initializing BaseAPI with all options."""
+    sut = BaseAPI(url='https://example.com',
+                  token='ABCDEFGHIJKLM',
+                  org_key='A1B2C3D4',
+                  integration_name='Anthrax',
+                  proxy='https://proxy.io:8080',
+                  ssl_verify=True,
+                  ssl_verify_hostname=True,
+                  ssl_force_tls_1_2=True)
+    assert sut.credentials.url == 'https://example.com'
+    assert sut.credentials.token == 'ABCDEFGHIJKLM'
+    assert sut.credentials.org_key == 'A1B2C3D4'
+    assert sut.credentials.integration == 'Anthrax'
+    assert sut.credentials.proxy == 'https://proxy.io:8080'
+    assert sut.credentials.ssl_verify is True
+    assert sut.credentials.ssl_verify_hostname is True
+    assert sut.credentials.ssl_force_tls_1_2 is True
+    assert sut.credential_profile_name is None
+    assert sut.session.server == 'https://example.com'
+    assert sut.session.token == 'ABCDEFGHIJKLM'
+    assert sut.session.token_header['User-Agent'].startswith('Anthrax')
+
+
 def test_BaseAPI_init_credential_provider_raises_error():
     """Test initializing the credentials when the provider raises an error."""
     creds = Credentials({'url': 'https://example.com', 'token': 'ABCDEFGHIJKLM', 'org_key': 'A1B2C3D4'})
