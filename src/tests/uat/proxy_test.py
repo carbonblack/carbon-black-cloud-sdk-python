@@ -40,6 +40,8 @@ The following tinyproxy.conf file will allow all traffic to be accepted at port 
     # BasicAuth user password
 """
 
+import sys
+
 from cbc_sdk import CBCloudAPI
 from cbc_sdk.platform import Device
 
@@ -48,7 +50,17 @@ token = ''
 org_key = ''
 proxy = ''
 
-cb = CBCloudAPI(url=url, token=token, org_key=org_key, proxy=proxy, ssl_verify=False)
 
-assert type(cb.select(Device).first()) is Device
-print(f"Successfully fetched Device using proxy: {proxy}")
+def main():
+    """Script entry point"""
+    cb = CBCloudAPI(url=url, token=token, org_key=org_key, proxy=proxy, ssl_verify=False)
+
+    assert type(cb.select(Device).first()) is Device
+    print(f"Successfully fetched Device using proxy: {proxy}")
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main())
+    except KeyboardInterrupt:
+        print("\nInterrupted by user")
