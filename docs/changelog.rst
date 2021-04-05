@@ -1,6 +1,14 @@
 Changelog
 ================================
 
+CBC SDK 1.2.2 - Released April 5, 2021
+--------------------------------------
+
+Bug Fixes
+
+* Add support for full credential property loading through BaseAPI constructor
+
+
 CBC SDK 1.2.1 - Released March 31, 2021
 --------------------------------------
 
