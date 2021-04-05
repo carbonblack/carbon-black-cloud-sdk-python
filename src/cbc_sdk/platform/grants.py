@@ -128,9 +128,16 @@ class Grant(MutableBaseModel):
             Create the empty ProfileBuilder object.
 
             Args:
-                grant (Grant): The grant the new profile will be attached to.
+                grant (Grant/GrantBuilder): The grant or GrantBuilder the new profile will be attached to.
             """
-            self._grant = grant
+            if isinstance(grant, Grant.GrantBuilder):
+                self._grantbuilder = grant
+                self._grant = None
+                self._cb = grant._cb
+            else:
+                self._grant = grant
+                self._grantbuilder = None
+                self._cb = grant._cb
             self._orgs = {'allow': []}
             self._roles = []
             self._conditions = {'expiration': 0, 'disabled': False}
@@ -141,12 +148,12 @@ class Grant(MutableBaseModel):
             Set the list of organizations to which the new profile is allowed access.
 
             Args:
-                orgs_list (list): List of organization URNs.
+                orgs_list (list): List of organization names.
 
             Returns:
                 ProfileBuilder: This object.
             """
-            self._orgs['allow'] = orgs_list
+            self._orgs['allow'] = [f"psc:org:{org}" for org in orgs_list]
             return self
 
         def add_org(self, org):
@@ -154,12 +161,12 @@ class Grant(MutableBaseModel):
             Adds the specified organization to the list of organizations for which the new profile is allowed.
 
             Args:
-                org (str): URN of the organization to be added.
+                org (str): Name of the organization to be added.
 
             Returns:
                 ProfileBuilder: This object.
             """
-            self._orgs['allow'].append(org)
+            self._orgs['allow'].append(f"psc:org:{org}")
             return self
 
         def set_roles(self, roles_list):
@@ -236,10 +243,119 @@ class Grant(MutableBaseModel):
                 Profile: The new Profile object.
             """
             data = {'orgs': self._orgs, 'roles': self._roles, 'conditions': self._conditions}
-            profile = Grant.Profile(self._grant._cb, self._grant, None, data)
-            self._grant._profiles.append(profile)
-            self._grant.touch()
+            profile = Grant.Profile(self._cb, self._grant, None, data)
+            if self._grant:
+                profile._update_object()
+                self._grant._profiles.append(profile)
+            else:
+                self._grantbuilder._profiles.append(profile)
             return profile
+
+    class GrantBuilder:
+        """Auxiliary object used to construct a new grant."""
+        def __init__(self, cb, principal):
+            """
+            Creates the empty GrantBuilder object.
+
+            Args:
+                cb (CBCloudAPI): The reference to the API object that accesses the server.
+                principal (str): The URN for the principal.
+            """
+            self._cb = cb
+            self._principal = principal
+            self._roles = []
+            self._org_ref = ''
+            self._principal_name = ''
+            self._profiles = []
+
+        def set_roles(self, roles):
+            """
+            Sets the roles to be associated with the new grant.
+
+            Args:
+                roles (list): List of role URNs.
+
+            Returns:
+                GrantBuilder: This object.
+            """
+            self._roles = roles
+            return self
+
+        def add_role(self, role):
+            """
+            Adds a role to be associated with the new grant.
+
+            Args:
+                role (str): URN of the role to be added.
+
+            Returns:
+                GrantBuilder: This object.
+            """
+            self._roles.append(role)
+            return self
+
+        def set_org(self, org):
+            """
+            Sets the organization reference to be associated with the new grant.
+
+            Args:
+                org (str): Name of the organization.
+
+            Returns:
+                GrantBuilder: This object.
+            """
+            self._org_ref = f"psc:org:{org}"
+            return self
+
+        def set_principal_name(self, name):
+            """
+            Sets the principal name to be associated with the new object.
+
+            Args:
+                name (str): Principal name to be used.
+
+            Returns:
+                GrantBuilder: This object.
+            """
+            self._principal_name = name
+            return self
+
+        def create_profile(self, template=None):
+            """
+            Returns either a new Profile, or a ProfileBuilder to begin the process of adding profile to the new grant.
+
+            Args:
+                template (dict): Optional template to use for creating the profile object.
+
+            Returns:
+                Profile: If a template was specified, return the new Profile object.
+                ProfileBuilder: If template was None, returns a ProfileBuilder object.  Call methods on it to set
+                                up the new profile, and then call build() to create the new profile.
+            """
+            if template:
+                t = copy.deepcopy(template)
+                if 'profile_uuid' in t:
+                    del t['profile_uuid']
+                profile = Grant.Profile(self._cb, None, None, t)
+                self._profiles.append(profile)
+                return profile
+            return Grant.ProfileBuilder(self)
+
+        def build(self):
+            """
+            Builds the new Grant object from the entered data.
+
+            Returns:
+                Grant: The new Grant object.
+            """
+            data = {'principal': self._principal, 'roles': self._roles, 'profiles': [], 'org_ref': self._org_ref,
+                    'principal_name': self._principal_name}
+            grant = Grant(self._cb, self._principal, data)
+            for profile in self._profiles:
+                profile._grant = grant
+            grant._profiles = self._profiles
+            grant._update_object()  # causes new grant to be immediately pushed to the server
+            return grant
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -280,22 +396,30 @@ class Grant(MutableBaseModel):
         save_info = copy.deepcopy(self._info)
         if 'principal' not in save_info:
             raise ApiError("principal must be specified for a Grant object")
-        save_info['profiles'] = [copy.deepcopy(prof._info) for prof in self._profiles if 'profile_uuid' in prof._info]
+        is_update = all([key in save_info for key in ['created_by', 'updated_by', 'create_time', 'update_time']])
 
-        if all([key in save_info for key in ['created_by', 'updated_by', 'create_time', 'update_time']]):
+        if is_update:
             log.debug("Updating the Grant object for principal {0:s}".format(save_info['principal']))
+            save_info['profiles'] = [copy.deepcopy(prof._info)
+                                     for prof in self._profiles if 'profile_uuid' in prof._info]
             url = self.urlobject_single.format(self._cb.credentials.org_key, save_info['principal'])
             ret = self._cb.put_object(url, save_info)
         else:
             log.debug("Creating a new Grant object for principal {0:s}".format(save_info['principal']))
+            save_info['profiles'] = []
+            for profile in self._profiles:
+                # presumed to be all new profiles, so create UUIDs for them
+                profile._info['profile_uuid'] = str(uuid.uuid4())
+                save_info['profiles'].append(copy.deepcopy(profile._info))
             url = self.urlobject.format(self._cb.credentials.org_key)
             ret = self._cb.post_object(url, save_info)
         update_return = self._refresh_if_needed(ret)
 
-        # add all profiles not yet part of grant
-        for profile in self._profiles:
-            if 'profile_uuid' not in profile._info:
-                profile._update_object()
+        # for update, add all profiles not yet part of grant (for which UUIDs have yet to be assigned)
+        if is_update:
+            for profile in self._profiles:
+                if 'profile_uuid' not in profile._info:
+                    profile._update_object()
         return update_return
 
     def _delete_object(self):
@@ -305,26 +429,34 @@ class Grant(MutableBaseModel):
         self._refresh_if_needed(ret)
 
     @classmethod
-    def create(cls, cb, principal, template=None):
+    def create(cls, cb, template=None, **kwargs):
         """
-        Create a new grant object for the specified principal.
+        Returns either a new Grant, or a GrantBuilder to begin the process of creating a new grant.
 
         Args:
             cb (CBCloudAPI): A reference to the CBCloudAPI object.
-            principal (str): The principal URN for the new grant object.
             template (dict): Optional template to use for creating the grant object.
+            kwargs (dict): Additional arguments to be used to specify the principal, if template is None.
+                           The arguments to be used are 'orgid' and 'userid' for the two parts of the ID.
 
         Returns:
-            Grant: The new grant object.
+            Grant: The new grant object, if the template is specified.
+            GrantBuilder: If template was None, returns a GrantBuilder object.  Call methods on it to set
+                            up the new grant, and then call build() to create the new grant.
+
+        Raises:
+            ApiError: If the principal is inadequately specified (whether for the Grant or GrantBuilder).
         """
         if template:
+            if 'principal' not in template:
+                raise ApiError('principal must be specified in Grant template')
             t = copy.deepcopy(template)
-            t['principal'] = principal
-        else:
-            t = {'principal': principal}
-        grant = Grant(cb, principal, t)
-        grant._full_init = True  # XXX Alex says this is wrong, but I'm keeping it until we have a better solution
-        return grant
+            grant = Grant(cb, t['principal'], t)
+            grant._update_object()
+            return grant
+        if not all([key in kwargs for key in ['orgid', 'userid']]):
+            raise ApiError('orgid and userid must be specified as keyword arguments to create')
+        return Grant.GrantBuilder(cb, f"psc:user:{kwargs['orgid']}:{kwargs['userid']}")
 
     @property
     def profiles_(self):
@@ -352,7 +484,9 @@ class Grant(MutableBaseModel):
             t = copy.deepcopy(template)
             if 'profile_uuid' in t:
                 del t['profile_uuid']
-            return Grant.Profile(self._cb, self, None, t)
+            profile = Grant.Profile(self._cb, self, None, t)
+            profile._update_object()
+            return profile
         return Grant.ProfileBuilder(self)
 
 
