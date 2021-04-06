@@ -148,7 +148,7 @@ class Grant(MutableBaseModel):
             Set the list of organizations to which the new profile is allowed access.
 
             Args:
-                orgs_list (list): List of organization names.
+                orgs_list (list): List of organization keys.
 
             Returns:
                 ProfileBuilder: This object.
@@ -161,7 +161,7 @@ class Grant(MutableBaseModel):
             Adds the specified organization to the list of organizations for which the new profile is allowed.
 
             Args:
-                org (str): Name of the organization to be added.
+                org (str): Organization key of the organization to be added.
 
             Returns:
                 ProfileBuilder: This object.
@@ -437,7 +437,7 @@ class Grant(MutableBaseModel):
             cb (CBCloudAPI): A reference to the CBCloudAPI object.
             template (dict): Optional template to use for creating the grant object.
             kwargs (dict): Additional arguments to be used to specify the principal, if template is None.
-                           The arguments to be used are 'orgid' and 'userid' for the two parts of the ID.
+                           The arguments to be used are 'org_key' and 'userid' for the two parts of the ID.
 
         Returns:
             Grant: The new grant object, if the template is specified.
@@ -454,9 +454,9 @@ class Grant(MutableBaseModel):
             grant = Grant(cb, t['principal'], t)
             grant._update_object()
             return grant
-        if not all([key in kwargs for key in ['orgid', 'userid']]):
+        if not all([key in kwargs for key in ['org_key', 'userid']]):
             raise ApiError('orgid and userid must be specified as keyword arguments to create')
-        return Grant.GrantBuilder(cb, f"psc:user:{kwargs['orgid']}:{kwargs['userid']}")
+        return Grant.GrantBuilder(cb, f"psc:user:{kwargs['org_key']}:{kwargs['userid']}")
 
     @property
     def profiles_(self):
