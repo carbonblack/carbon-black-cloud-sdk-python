@@ -654,6 +654,10 @@ class MutableBaseModel(NewBaseModel):
         if self._refresh():
             self._dirty_attributes = {}
 
+    def touch(self):
+        """Force this object to be considered as changed."""
+        self._dirty_attributes = {key: self._info.get(key, None) for key in self.__class__._valid_fields}
+
     def is_dirty(self):
         """
         Returns whether or not any fields of this object have been changed.
