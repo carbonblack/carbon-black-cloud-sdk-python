@@ -25,6 +25,13 @@ log = logging.getLogger(__name__)
 """Grant and Profile Models"""
 
 
+def normalize_org(org):
+    """Internal function to normalize an org reference to a URN."""
+    if org.startswith('psc:org:'):
+        return org
+    return f"psc:org:{org}"
+
+
 class Grant(MutableBaseModel):
     """Represents a grant of access to the Carbon Black Cloud."""
     urlobject = "/access/v2/orgs/{0}/grants"
@@ -43,8 +50,12 @@ class Grant(MutableBaseModel):
         """
         super(Grant, self).__init__(cb, model_unique_id, initial_data)
         if initial_data:
-            self._profiles = [Grant.Profile(cb, self, prof.get('profile_uuid', None), prof)
-                              for prof in initial_data.get('profiles', [])]
+            raw_profiles = initial_data.get('profiles', [])
+            if raw_profiles:
+                self._profiles = [Grant.Profile(cb, self, prof.get('profile_uuid', None), prof)
+                                  for prof in raw_profiles]
+            else:
+                self._profiles = []
         else:
             self._profiles = []
         if model_unique_id is not None and initial_data is None:
@@ -148,12 +159,12 @@ class Grant(MutableBaseModel):
             Set the list of organizations to which the new profile is allowed access.
 
             Args:
-                orgs_list (list): List of organization keys.
+                orgs_list (list): List of organization keys or URNs.
 
             Returns:
                 ProfileBuilder: This object.
             """
-            self._orgs['allow'] = [f"psc:org:{org}" for org in orgs_list]
+            self._orgs['allow'] = [normalize_org(org) for org in orgs_list]
             return self
 
         def add_org(self, org):
@@ -161,12 +172,12 @@ class Grant(MutableBaseModel):
             Adds the specified organization to the list of organizations for which the new profile is allowed.
 
             Args:
-                org (str): Organization key of the organization to be added.
+                org (str): Organization key or URN of the organization to be added.
 
             Returns:
                 ProfileBuilder: This object.
             """
-            self._orgs['allow'].append(f"psc:org:{org}")
+            self._orgs['allow'].append(normalize_org(org))
             return self
 
         def set_roles(self, roles_list):
@@ -299,12 +310,12 @@ class Grant(MutableBaseModel):
             Sets the organization reference to be associated with the new grant.
 
             Args:
-                org (str): Name of the organization.
+                org (str): Organization key or URN of the organization.
 
             Returns:
                 GrantBuilder: This object.
             """
-            self._org_ref = f"psc:org:{org}"
+            self._org_ref = normalize_org(org)
             return self
 
         def set_principal_name(self, name):
@@ -381,8 +392,12 @@ class Grant(MutableBaseModel):
         url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id)
         resp = self._cb.get_object(url)
         self._info = resp
-        self._profiles = [Grant.Profile(self._cb, self, prof.get('profile_uuid', None), prof)
-                          for prof in resp.get('profiles', [])]
+        raw_profiles = resp.get('profiles', [])
+        if raw_profiles:
+            self._profiles = [Grant.Profile(self._cb, self, prof.get('profile_uuid', None), prof)
+                              for prof in raw_profiles]
+        else:
+            self._profiles = []
         self._last_refresh_time = time.time()
         return True
 

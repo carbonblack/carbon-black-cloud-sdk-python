@@ -68,7 +68,7 @@ def test_create_new_grant(cbcsdk_mock):
                              respond_to_profile_grant)
     api = cbcsdk_mock.api
     grant_builder = Grant.create(api, org_key='ABC12345', userid='DEF67890')
-    grant_builder.set_org('test').set_roles(["psc:role::SECOPS_ROLE_MANAGER"]).set_principal_name('Doug Jones')
+    grant_builder.set_org('psc:org:test').set_roles(["psc:role::SECOPS_ROLE_MANAGER"]).set_principal_name('Doug Jones')
     profile = grant_builder.create_profile().add_org("test2").add_role("psc:role::SECOPS_ROLE_MANAGER").build()
     grant = grant_builder.build()
     assert grant.roles == ["psc:role::SECOPS_ROLE_MANAGER"]
@@ -141,7 +141,7 @@ def test_create_new_grant_with_profile_template(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/access/v2/orgs/test/grants', POST_GRANT_RESP)
     api = cbcsdk_mock.api
     grant_builder = Grant.create(api, org_key='ABC12345', userid='DEF67890')
-    grant_builder.set_org('test').set_roles(["psc:role::SECOPS_ROLE_MANAGER"]).set_principal_name('Doug Jones')
+    grant_builder.set_org('psc:org:test').set_roles(["psc:role::SECOPS_ROLE_MANAGER"]).set_principal_name('Doug Jones')
     profile_template = {
         "profile_uuid": "to-be-deleted",  # this member should be explicitly stripped by create_profile()
         "orgs": {
