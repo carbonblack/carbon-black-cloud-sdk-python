@@ -21,6 +21,13 @@ import copy
 """User Models"""
 
 
+def normalize_org(org):
+    """Internal function to normalize an org reference to a URN."""
+    if org.startswith('psc:org:'):
+        return org
+    return f"psc:org:{org}"
+
+
 class User(MutableBaseModel):
     """Represents a user in the Carbon Black Cloud."""
     urlobject = "/appservices/v6/orgs/{0}/users"
@@ -65,6 +72,19 @@ class User(MutableBaseModel):
                 UserBuilder: This object.
             """
             self._criteria['email'] = email
+            return self
+
+        def set_role(self, role):
+            """
+            Sets the role URN for the new user.
+
+            Args:
+                role (str): The URN of the role to set for the user.
+
+            Returns:
+                UserBuilder: This object.
+            """
+            self._criteria['role_urn'] = role
             return self
 
         def set_first_name(self, first_name):
@@ -117,6 +137,24 @@ class User(MutableBaseModel):
                 UserBuilder: This object.
             """
             self._criteria['add_without_invite'] = False if invite else True
+            return self
+
+        def add_grant_profile(self, orgs, roles):
+            """
+            Adds a grant profile for the new user.
+
+            Args:
+                orgs (list): List of organizations to be allowed, specified as keys or URNs.
+                roles (list): List of roles to be granted, specified as URNs.
+
+            Returns:
+                UserBuilder: This object.
+            """
+            grant_prof = {'orgs': {'allow': [normalize_org(org) for org in orgs]}, 'roles': roles}
+            if 'grant_profiles' in self._criteria:
+                self._criteria['grant_profiles'].append(grant_prof)
+            else:
+                self._criteria['grant_profiles'] = [grant_prof]
             return self
 
         def build(self):
