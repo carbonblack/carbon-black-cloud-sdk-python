@@ -112,7 +112,7 @@ class CbLRSessionBase(object):
 
         self.session_data = session_data
         self.os_type = None
-        self.cblr_base = self._cblr_manager.cblr_base
+        self.cblr_base = self._cblr_manager.cblr_base.format(self._cb.credentials.org_key)
 
     def __enter__(self):
         """Enter the Live Response session context."""
@@ -168,9 +168,9 @@ class CbLRSessionBase(object):
         command_id = resp.get('id', None)
 
         self._poll_command(command_id, timeout=timeout, delay=delay)
-        response = self._cb.session.get("{cblr_base}/session/{0}/file/{1}/content".format(self.session_id,
-                                                                                          file_id,
-                                                                                          cblr_base=self.cblr_base),
+        response = self._cb.session.get("{cblr_base}/sessions/{0}/files/{1}/content".format(self.session_id,
+                                                                                            file_id,
+                                                                                            cblr_base=self.cblr_base),
                                         stream=True)
         response.raw.decode_content = True
         return response.raw
@@ -691,12 +691,12 @@ class CbLRSessionBase(object):
         return self._path_compose(workdir, f'cblr.{randfile}.tmp')
 
     def _poll_command(self, command_id, **kwargs):
-        return poll_status(self._cb, "{cblr_base}/session/{0}/command/{1}".format(self.session_id, command_id,
-                                                                                  cblr_base=self.cblr_base),
+        return poll_status(self._cb, "{cblr_base}/sessions/{0}/command/{1}".format(self.session_id, command_id,
+                                                                                   cblr_base=self.cblr_base),
                            **kwargs)
 
     def _upload_file(self, fp):
-        resp = self._cb.session.post("{cblr_base}/session/{0}/file".format(self.session_id, cblr_base=self.cblr_base),
+        resp = self._cb.session.post("{cblr_base}/sessions/{0}/files".format(self.session_id, cblr_base=self.cblr_base),
                                      files={"file": fp}).json()
         return resp.get('id')
 
@@ -709,8 +709,8 @@ class CbLRSessionBase(object):
         while retries:
             try:
                 data["session_id"] = self.session_id
-                resp = self._cb.post_object("{cblr_base}/session/{0}/command".format(self.session_id,
-                                                                                     cblr_base=self.cblr_base), data)
+                resp = self._cb.post_object("{cblr_base}/sessions/{0}/command".format(self.session_id,
+                                                                                      cblr_base=self.cblr_base), data)
             except ObjectNotFoundError as e:
                 if e.message.startswith("Device") or e.message.startswith("Session"):
                     self.session_id, self.session_data = self._cblr_manager._get_or_create_session(self.device_id)
@@ -788,7 +788,7 @@ def jobrunner(callable, cb, device_id):
     Returns:
         object: The wrapped object.
     """
-    from cbc_sdk.endpoint_standard import Device
+    from cbc_sdk.platform import Device
     with cb.select(Device, device_id).lr_session() as sess:
         return callable(sess)
 
@@ -805,7 +805,7 @@ class WorkItem(object):
             device_id (object): The device ID or Device object the work item is directed for.
         """
         self.fn = fn
-        from cbc_sdk.endpoint_standard import Device
+        from cbc_sdk.platform import Device
         if isinstance(device_id, Device):
             self.device_id = device_id.deviceId
         else:
@@ -1021,7 +1021,7 @@ class LiveResponseJobScheduler(threading.Thread):
         now = datetime.utcnow()
         delta = timedelta(minutes=60)
 
-        from cbc_sdk.endpoint_standard import Device
+        from cbc_sdk.platform import Device
         devices = [s for s in self._cb.select(Device) if s.deviceId in self._unscheduled_jobs
                    and s.deviceId not in self._job_workers and now - s.lastContact < delta]  # noqa: W503
 
@@ -1168,7 +1168,7 @@ class CbLRManagerBase(object):
 
     def _send_keepalive(self, session_id):
         log.debug("Sending keepalive message for session id {0}".format(session_id))
-        self._cb.get_object("{cblr_base}/session/{0}/keepalive".format(session_id, cblr_base=self.cblr_base))
+        self._cb.get_object("{cblr_base}/sessions/{0}/keepalive".format(session_id, cblr_base=self.cblr_base))
 
 
 class LiveResponseSession(CbLRSessionBase):
@@ -1185,15 +1185,20 @@ class LiveResponseSession(CbLRSessionBase):
             session_data (dict): Additional session data.
         """
         super(LiveResponseSession, self).__init__(cblr_manager, session_id, device_id, session_data=session_data)
-        from cbc_sdk.endpoint_standard import Device
+        from cbc_sdk.platform import Device
         device_info = self._cb.select(Device, self.device_id)
-        self.os_type = OS_LIVE_RESPONSE_ENUM.get(device_info.deviceType, None)
+        self.os_type = OS_LIVE_RESPONSE_ENUM.get(device_info.os, None)
 
 
 class LiveResponseSessionManager(CbLRManagerBase):
     """Session manager for Live Response sessions."""
-    cblr_base = "/integrationServices/v3/cblr"
+    cblr_base = "/appservices/v6/orgs/{}/liveresponse"
     cblr_session_cls = LiveResponseSession
+
+    def __init__(self, cb, timeout=30, keepalive_sessions=False):
+        """Initialize the LiveResponseSessionManager - only needed to format cblr_base"""
+        super(LiveResponseSessionManager, self).__init__(cb, timeout, keepalive_sessions)
+        self.cblr_base = self.cblr_base.format(cb.credentials.org_key)
 
     def submit_job(self, job, device):
         """
@@ -1219,14 +1224,15 @@ class LiveResponseSessionManager(CbLRManagerBase):
         session_id = self._create_session(device_id)
 
         try:
-            res = poll_status(self._cb, "{cblr_base}/session/{0}".format(session_id, cblr_base=self.cblr_base),
+            res = poll_status(self._cb, "{cblr_base}/sessions/{0}".format(session_id,
+                              cblr_base=self.cblr_base),
                               desired_status="ACTIVE", delay=self._init_poll_delay, timeout=self._init_poll_timeout)
         except Exception:
             # "close" the session, otherwise it will stay in a pending state
             self._close_session(session_id)
 
             # the Cb server will return a 404 if we don't establish a session in time, so convert this to a "timeout"
-            raise TimeoutError(uri="{cblr_base}/session/{0}".format(session_id, cblr_base=self.cblr_base),
+            raise TimeoutError(uri="{cblr_base}/sessions/{0}".format(session_id, cblr_base=self.cblr_base),
                                message="Could not establish session with device {0}".format(device_id),
                                error_code=404)
         else:
@@ -1234,13 +1240,12 @@ class LiveResponseSessionManager(CbLRManagerBase):
 
     def _close_session(self, session_id):
         try:
-            self._cb.put_object("{cblr_base}/session".format(cblr_base=self.cblr_base),
-                                {"session_id": session_id, "status": "CLOSE"})
+            self._cb.delete_object("{cblr_base}/sessions/{0}".format(session_id, cblr_base=self.cblr_base))
         except Exception:
             pass
 
     def _create_session(self, device_id):
-        response = self._cb.post_object("{cblr_base}/session/{0}".format(device_id, cblr_base=self.cblr_base),
+        response = self._cb.post_object("{cblr_base}/sessions".format(cblr_base=self.cblr_base),
                                         {"device_id": device_id}).json()
         session_id = response["id"]
         return session_id

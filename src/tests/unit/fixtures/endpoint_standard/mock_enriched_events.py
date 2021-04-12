@@ -24,6 +24,46 @@ GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP = {
     'connector_id': 'P1PFUIAN32'
 }
 
+GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_0 = {
+    'contacted': 0,
+    'completed': 0,
+    'query': {
+        'cb.event_docs': True,
+        'cb.max_backend_timestamp': 1603973841000,
+        'cb.min_backend_timestamp': 0,
+        'cb.min_device_timestamp': 0,
+        'cb.preview_results': 500,
+        'cb.use_agg': True,
+        'facet': False,
+        'fq': '{!collapse field=event_id sort="device_timestamp desc"}',
+        'q': '(process_pid:1000 OR process_pid:2000)',
+        'rows': 500,
+        'start': 0
+    },
+    'search_initiated_time': 1603973841206,
+    'connector_id': 'P1PFUIAN32'
+}
+
+GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_0_0 = {
+    'contacted': 10,
+    'completed': 0,
+    'query': {
+        'cb.event_docs': True,
+        'cb.max_backend_timestamp': 1603973841000,
+        'cb.min_backend_timestamp': 0,
+        'cb.min_device_timestamp': 0,
+        'cb.preview_results': 500,
+        'cb.use_agg': True,
+        'facet': False,
+        'fq': '{!collapse field=event_id sort="device_timestamp desc"}',
+        'q': '(process_pid:1000 OR process_pid:2000)',
+        'rows': 500,
+        'start': 0
+    },
+    'search_initiated_time': 1603973841206,
+    'connector_id': 'P1PFUIAN32'
+}
+
 GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_1 = {
     'num_found': 808,
     'num_available': 1,
@@ -118,6 +158,22 @@ GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_2 = {
             'process_username': ['NT AUTHORITY\\SYSTEM']
         },
     ]
+}
+
+GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_5 = {
+    'num_found': 808,
+    'num_available': 1,
+    'contacted': 0,
+    'completed': 6,
+    'results': []
+}
+
+GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_6 = {
+    'num_found': 808,
+    'num_available': 1,
+    'contacted': 10,
+    'completed': 6,
+    'results': []
 }
 
 GET_ENRICHED_EVENTS_AGG_JOB_RESULTS_RESP_1 = {

@@ -597,6 +597,13 @@ def test_alerts_bulk_undismiss_threat(monkeypatch):
     assert reqid == "497ABX"
 
 
+def test_alerts_bulk_threat_error(monkeypatch):
+    """Test error raise from bulk threat update status"""
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
+    with pytest.raises(ApiError):
+        api.bulk_threat_dismiss([123], "Fixed", "Yessir")
+
+
 def test_load_workflow(monkeypatch):
     """Test loading a workflow status."""
     _was_called = False

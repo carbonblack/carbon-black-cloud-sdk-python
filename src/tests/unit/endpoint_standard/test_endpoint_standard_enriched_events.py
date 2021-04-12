@@ -10,6 +10,10 @@ from tests.unit.fixtures.endpoint_standard.mock_enriched_events import (POST_ENR
                                                                         GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP,
                                                                         GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_1,
                                                                         GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_2,
+                                                                        GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_5,
+                                                                        GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_6,
+                                                                        GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_0,
+                                                                        GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_0_0,
                                                                         GET_ENRICHED_EVENTS_AGG_JOB_RESULTS_RESP_1,
                                                                         GET_ENRICHED_EVENTS_DETAIL_JOB_RESULTS_RESP_1,
                                                                         )
@@ -175,6 +179,7 @@ def test_enriched_event_select_aggregation(cbcsdk_mock):
 
     api = cbcsdk_mock.api
     events = api.select(EnrichedEvent).where(process_pid=2000).aggregation("process_sha256")
+    assert events._count() == 1
     for event in events:
         assert event.device_name is not None
         assert event.enriched is not None
@@ -252,6 +257,12 @@ def test_enriched_event_rows(cbcsdk_mock):
     api = cbcsdk_mock.api
     events = api.select(EnrichedEvent).where(process_pid=1000).set_rows(1500)
     assert events._batch_size == 1500
+    with pytest.raises(ApiError) as ex:
+        api.select(EnrichedEvent).where(process_pid=1000).set_rows('alabala')
+    assert 'Rows must be an integer.' in str(ex)
+    with pytest.raises(ApiError) as ex:
+        api.select(EnrichedEvent).where(process_pid=1000).set_rows(10001)
+    assert 'Maximum allowed value for rows is 10000' in str(ex)
 
 
 def test_enriched_event_time_range(cbcsdk_mock):
@@ -273,6 +284,9 @@ def test_enriched_events_submit(cbcsdk_mock):
     events = api.select(EnrichedEvent).where(process_pid=1000)
     events._submit()
     assert events._query_token == "08ffa932-b633-4107-ba56-8741e929e48b"
+    with pytest.raises(ApiError) as ex:
+        events._submit()
+    assert 'Query already submitted: token' in str(ex)
 
 
 def test_enriched_events_count(cbcsdk_mock):
@@ -307,3 +321,37 @@ def test_enriched_events_search(cbcsdk_mock):
     events = api.select(EnrichedEvent).where(process_pid=1000)
     events._search()
     assert events[0].process_pid[0] == 1000
+    events._search(start=1)
+    assert events[0].process_pid[0] == 1000
+
+
+def test_enriched_events_still_querying(cbcsdk_mock):
+    """Test _search method of enrichedeventquery class"""
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/search_job",
+                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v1/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b",  # noqa: E501
+                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_0)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v2/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
+                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_5)
+
+    api = cbcsdk_mock.api
+    events = api.select(EnrichedEvent).where(process_pid=1000)
+    assert events._still_querying() is True
+
+
+def test_enriched_events_still_querying2(cbcsdk_mock):
+    """Test _search method of enrichedeventquery class"""
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/search_job",
+                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v1/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b",  # noqa: E501
+                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_0_0)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v2/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
+                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_6)
+
+    api = cbcsdk_mock.api
+    events = api.select(EnrichedEvent).where(process_pid=1000)
+    assert events._still_querying() is True
