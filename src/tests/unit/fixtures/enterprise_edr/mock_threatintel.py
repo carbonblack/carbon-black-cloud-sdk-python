@@ -475,6 +475,23 @@ WATCHLIST_GET_SPECIFIC_RESP = {
     }
 }
 
+WATCHLIST_GET_SPECIFIC_RESP_2 = {
+    "name": "ATT&CK Framework",
+    "description": "Existing description for the watchlist.",
+    "id": "watchlistId2",
+    "tags_enabled": True,
+    "alerts_enabled": False,
+    "create_timestamp": 1597173159,
+    "last_update_timestamp": 1597173159,
+    "report_ids": ["reportId0",
+                   "reportId1",
+                   "reportId2"],
+    "classifier": {
+        "key": "feed_id",
+        "value": "feed_id_associated"
+    }
+}
+
 WATCHLIST_GET_SPECIFIC_MISSING_FIELDS_RESP = {
     "description": "Description of invalid response.",
     "id": "watchlistMissingFieldsWithID",

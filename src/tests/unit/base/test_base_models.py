@@ -6,7 +6,8 @@ from cbc_sdk.base import MutableBaseModel, NewBaseModel
 from cbc_sdk.endpoint_standard import Policy, Event
 from cbc_sdk.platform import Process
 from cbc_sdk.rest_api import CBCloudAPI
-from cbc_sdk.errors import ServerError, InvalidObjectError
+from cbc_sdk.errors import ServerError, InvalidObjectError, ApiError
+from cbc_sdk.enterprise_edr.threat_intelligence import FeedModel
 from cbc_sdk.enterprise_edr import Feed
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.endpoint_standard.mock_events import EVENT_GET_SPECIFIC_RESP
@@ -262,6 +263,13 @@ def test_update_object_mbm(cbcsdk_mock):
 
     # refresh at end of tests to clear dirty_attributes
     policy.reset()
+
+
+def test_query_implementation_error(cbcsdk_mock):
+    """Test save method of MutableBaseModel"""
+    api = cbcsdk_mock.api
+    with pytest.raises(ApiError):
+        api.select(FeedModel)
 
 
 def test_update_entire_mbm(cbcsdk_mock):

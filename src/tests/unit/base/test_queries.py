@@ -1,9 +1,7 @@
 """Testing the Query objects of cbc_sdk.base"""
 
-from cbc_sdk.base import BaseQuery, SimpleQuery, PaginatedQuery
+from cbc_sdk.base import BaseQuery, SimpleQuery
 from cbc_sdk.enterprise_edr import Feed, FeedQuery
-from cbc_sdk.platform import Process
-from cbc_sdk.endpoint_standard import Query, Policy
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.stubresponse import patch_cbc_sdk_api
 
@@ -52,6 +50,7 @@ def test_simple_query(monkeypatch):
     results = feed.results
 
     assert isinstance(results, list)
+    assert len(feed) == 1
     assert isinstance(results[0], Feed)
     assert results[0].id == "my_feed_id"
     assert results[0].name == "My Feed"

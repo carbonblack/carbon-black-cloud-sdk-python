@@ -78,6 +78,7 @@ def test_live_response_error(details, message, decoded_win32):
     """Test the creation of a LiveResponseError."""
     err = LiveResponseError(details)
     assert err.message == message
+    assert str(err) == message
     assert err.decoded_win32_error == decoded_win32
 
 
