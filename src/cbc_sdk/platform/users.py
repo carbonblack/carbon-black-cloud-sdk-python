@@ -13,7 +13,7 @@
 
 """Model and Query Classes for Users"""
 from cbc_sdk.base import MutableBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
-from cbc_sdk.errors import ApiError, ServerError
+from cbc_sdk.errors import ApiError, ServerError, ObjectNotFoundError
 import time
 import copy
 
@@ -31,7 +31,7 @@ def normalize_org(org):
 class User(MutableBaseModel):
     """Represents a user in the Carbon Black Cloud."""
     urlobject = "/appservices/v6/orgs/{0}/users"
-    urlobject_single = "/appservices/v6/orgs/{0}/users{1}"
+    urlobject_single = "/appservices/v6/orgs/{0}/users/{1}"
     primary_key = "login_id"
     swagger_meta_file = "platform/models/user.yaml"
 
@@ -46,7 +46,8 @@ class User(MutableBaseModel):
         """
         super(User, self).__init__(cb, model_unique_id, initial_data)
         if model_unique_id is not None and initial_data is None:
-            self._refresh()
+            if not self._refresh():
+                raise ObjectNotFoundError(f"user with login ID {model_unique_id} not found")
 
     class UserBuilder:
         """Auxiliary object used to construct a new User."""
@@ -58,8 +59,7 @@ class User(MutableBaseModel):
                 cb (BaseAPI): Reference to API object used to communicate with the server.
             """
             self._cb = cb
-            self._criteria = {'org_id': 0, 'role': 'DEPRECATED', 'auth_method': 'PASSWORD',
-                              'add_without_invite': False}
+            self._criteria = {'org_id': 0, 'role': 'DEPRECATED', 'auth_method': 'PASSWORD'}
 
         def set_email(self, email):
             """
@@ -71,7 +71,7 @@ class User(MutableBaseModel):
             Returns:
                 UserBuilder: This object.
             """
-            self._criteria['email'] = email
+            self._criteria['email_id'] = email
             return self
 
         def set_role(self, role):
@@ -126,19 +126,6 @@ class User(MutableBaseModel):
             self._criteria['auth_method'] = method
             return self
 
-        def set_send_invitation(self, invite):
-            """
-            Sets whether or not an invitation will be sent to the new user via E-mail.
-
-            Args:
-                invite (bool): True to have an invitation sent, False to not have one sent.
-
-            Returns:
-                UserBuilder: This object.
-            """
-            self._criteria['add_without_invite'] = False if invite else True
-            return self
-
         def add_grant_profile(self, orgs, roles):
             """
             Adds a grant profile for the new user.
@@ -150,11 +137,11 @@ class User(MutableBaseModel):
             Returns:
                 UserBuilder: This object.
             """
-            grant_prof = {'orgs': {'allow': [normalize_org(org) for org in orgs]}, 'roles': roles}
-            if 'grant_profiles' in self._criteria:
-                self._criteria['grant_profiles'].append(grant_prof)
+            new_profile = {'orgs': {'allow': [normalize_org(org) for org in orgs]}, 'roles': roles}
+            if 'profiles' in self._criteria:
+                self._criteria['profiles'].append(new_profile)
             else:
-                self._criteria['grant_profiles'] = [grant_prof]
+                self._criteria['profiles'] = [new_profile]
             return self
 
         def build(self):
@@ -203,7 +190,7 @@ class User(MutableBaseModel):
         if resp['registration_type'] == 'SUCCESS':
             new_user = User(cb, int(resp['login_id']))
             return new_user, resp['password']
-        raise ServerError(f"registration return was unsuccessful: {resp['registration_type']}")
+        raise ServerError(500, f"registration return was unsuccessful: {resp['registration_type']}")
 
     def _refresh(self):
         """
@@ -260,8 +247,6 @@ class User(MutableBaseModel):
             my_templ['role'] = 'DEPRECATED'
             if 'auth_method' not in my_templ:
                 my_templ['auth_method'] = 'PASSWORD'
-            if 'add_without_invite' not in my_templ:
-                my_templ['add_without_invite'] = False
             return User._create_user(cb, my_templ)
         return User.UserBuilder(cb)
 
