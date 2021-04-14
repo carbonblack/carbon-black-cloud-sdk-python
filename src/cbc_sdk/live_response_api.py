@@ -26,7 +26,7 @@ from collections import defaultdict
 import shutil
 
 from cbc_sdk.errors import TimeoutError, ObjectNotFoundError, ApiError
-from concurrent.futures import _base, wait
+from concurrent.futures import _base
 from cbc_sdk import winerror
 
 import queue
@@ -134,18 +134,6 @@ class CbLRSessionBase(object):
         self._cblr_manager.close_session(self.device_id, self.session_id)
         self._closed = True
 
-    def get_session_archive(self):
-        """
-        Get the archive data of the current session.
-
-        Returns:
-            object: Contains the archive data of the current session.
-        """
-        response = self._cb.session.get("{cblr_base}/session/{0}/archive".format(self.session_id,
-                                                                                 cblr_base=self.cblr_base), stream=True)
-        response.raw.decode_content = True
-        return response.raw
-
     #
     # File operations
     #
@@ -164,16 +152,16 @@ class CbLRSessionBase(object):
         data = {"name": "get file", "object": file_name}
 
         resp = self._lr_post_command(data).json()
-        file_id = resp.get('file_id', None)
-        command_id = resp.get('id', None)
+        file_details = resp.get('file_details', None)
+        if file_details:
+            file_id = file_details.get('file_id', None)
+            command_id = resp.get('id', None)
+            self._poll_command(command_id, timeout=timeout, delay=delay)
 
-        self._poll_command(command_id, timeout=timeout, delay=delay)
-        response = self._cb.session.get("{cblr_base}/sessions/{0}/files/{1}/content".format(self.session_id,
-                                                                                            file_id,
-                                                                                            cblr_base=self.cblr_base),
-                                        stream=True)
-        response.raw.decode_content = True
-        return response.raw
+            response = self._cb.session.get("{cblr_base}/sessions/{0}/files/{1}/content".format(
+                self.session_id, file_id, cblr_base=self.cblr_base), stream=True)
+            response.raw.decode_content = True
+            return response.raw
 
     def get_file(self, file_name, timeout=None, delay=None):
         """
@@ -691,8 +679,8 @@ class CbLRSessionBase(object):
         return self._path_compose(workdir, f'cblr.{randfile}.tmp')
 
     def _poll_command(self, command_id, **kwargs):
-        return poll_status(self._cb, "{cblr_base}/sessions/{0}/command/{1}".format(self.session_id, command_id,
-                                                                                   cblr_base=self.cblr_base),
+        return poll_status(self._cb, "{cblr_base}/sessions/{0}/commands/{1}".format(self.session_id, command_id,
+                                                                                    cblr_base=self.cblr_base),
                            **kwargs)
 
     def _upload_file(self, fp):
@@ -709,8 +697,8 @@ class CbLRSessionBase(object):
         while retries:
             try:
                 data["session_id"] = self.session_id
-                resp = self._cb.post_object("{cblr_base}/sessions/{0}/command".format(self.session_id,
-                                                                                      cblr_base=self.cblr_base), data)
+                resp = self._cb.post_object("{cblr_base}/sessions/{0}/commands".format(self.session_id,
+                                                                                       cblr_base=self.cblr_base), data)
             except ObjectNotFoundError as e:
                 if e.message.startswith("Device") or e.message.startswith("Session"):
                     self.session_id, self.session_data = self._cblr_manager._get_or_create_session(self.device_id)
@@ -1314,23 +1302,3 @@ def poll_status(cb, url, desired_status="complete", timeout=None, delay=None):
             time.sleep(delay)
 
     raise TimeoutError(uri=url, message="timeout polling for Live Response")
-
-
-if __name__ == "__main__":
-    from cbc_sdk import CBCloudAPI
-    from cbc_sdk.platform import Device
-    import logging
-
-    root = logging.getLogger()
-    root.addHandler(logging.StreamHandler())
-
-    logging.getLogger("cbc_sdk").setLevel(logging.DEBUG)
-
-    c = CBCloudAPI()
-    j = GetFileJob(r"c:\test.txt")
-    with c.select(Device, 3).lr_session() as lr_session:
-        file_contents = lr_session.get_file(r"c:\test.txt")
-
-    future = c.live_response.submit_job(j.run, 3)
-    wait([future, ])
-    print(future.result())

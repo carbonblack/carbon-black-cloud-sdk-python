@@ -17,6 +17,8 @@ import copy
 import io
 from cbc_sdk.errors import ApiError, ObjectNotFoundError, ServerError, TimeoutError
 from cbc_sdk.live_response_api import LiveResponseError, LiveResponseSessionManager
+from cbc_sdk.connection import Connection
+from cbc_sdk.credentials import Credentials
 from cbc_sdk.winerror import HRESULT_FROM_WIN32, Win32Error
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -24,6 +26,7 @@ from tests.unit.fixtures.live_response.mock_command import (DIRECTORY_LIST_START
                                                             DELETE_FILE_START_RESP, DELETE_FILE_END_RESP,
                                                             DELETE_FILE_ERROR_RESP, PUT_FILE_START_RESP,
                                                             PUT_FILE_END_RESP, CREATE_DIRECTORY_START_RESP,
+                                                            GET_FILE_COMMAND_RESP, GET_FILE_END_RESP,
                                                             CREATE_DIRECTORY_END_RESP, WALK_RETURN_1, WALK_RETURN_2,
                                                             WALK_RETURN_3, KILL_PROC_START_RESP, KILL_PROC_END_RESP,
                                                             CREATE_PROC_START_RESP, CREATE_PROC_END_RESP,
@@ -55,6 +58,29 @@ def cb():
 def cbcsdk_mock(monkeypatch, cb):
     """Mocks CBC SDK for unit tests"""
     return CBCSDKMock(monkeypatch, cb)
+
+
+class MockClass:
+    """Class to mock a raw file response"""
+    @property
+    def raw(self):
+        """Raw property"""
+        return io.StringIO('This is a test')
+
+
+def get_file_content(url, stream=True):
+    """Replacement function for the Connection.get"""
+    return MockClass()
+
+
+@pytest.fixture(scope="function")
+def connection_mock(monkeypatch, cb):
+    """Mocks Connection for unit tests"""
+    creds = Credentials({'url': 'https://example.com', 'token': 'ABCDEFGH'})
+    conn = Connection(creds)
+    monkeypatch.setattr(conn, "get", get_file_content)
+    cb.session = conn
+    return conn
 
 
 FILE_NOT_FOUND_ERR = {'status': 'error', 'result_type': 'WinHresult',
@@ -181,9 +207,9 @@ def test_list_directory(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
-    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command',
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
                              DIRECTORY_LIST_START_RESP)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command/6',
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/6',
                              DIRECTORY_LIST_END_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
@@ -202,9 +228,9 @@ def test_delete_file(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
-    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command',
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
                              DELETE_FILE_START_RESP)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command/3',
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/3',
                              DELETE_FILE_END_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
@@ -217,9 +243,9 @@ def test_delete_file_with_error(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
-    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command',
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
                              DELETE_FILE_START_RESP)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command/3',
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/3',
                              DELETE_FILE_ERROR_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
@@ -227,6 +253,21 @@ def test_delete_file_with_error(cbcsdk_mock):
         with pytest.raises(LiveResponseError) as excinfo:
             session.delete_file('C:\\\\TEMP\\\\foo.txt')
         assert excinfo.value.decoded_win32_error == "ERROR_FILE_NOT_FOUND"
+
+
+def test_get_file(cbcsdk_mock, connection_mock, mox):
+    """Test the response to the 'delete file' command."""
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
+                             GET_FILE_COMMAND_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/7',
+                             GET_FILE_END_RESP)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
+    manager = LiveResponseSessionManager(cbcsdk_mock.api)
+    with manager.request_session(2468) as session:
+        session.get_file('c:\\\\test.txt')
 
 
 def test_put_file(cbcsdk_mock, mox):
@@ -241,8 +282,8 @@ def test_put_file(cbcsdk_mock, mox):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
-    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command', respond_to_post)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command/6',
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands', respond_to_post)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/6',
                              PUT_FILE_END_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
@@ -260,9 +301,9 @@ def test_create_directory(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
-    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command',
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
                              CREATE_DIRECTORY_START_RESP)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command/7',
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/7',
                              CREATE_DIRECTORY_END_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
@@ -355,9 +396,9 @@ def test_kill_process(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
-    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command',
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
                              KILL_PROC_START_RESP)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command/13',
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/13',
                              KILL_PROC_END_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
@@ -370,9 +411,9 @@ def test_kill_process_timeout(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
-    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command',
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
                              KILL_PROC_START_RESP)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command/13',
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/13',
                              KILL_PROC_START_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api, 2)
@@ -385,9 +426,9 @@ def test_create_process(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
-    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command',
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
                              CREATE_PROC_START_RESP)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command/52',
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/52',
                              CREATE_PROC_END_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
@@ -400,7 +441,7 @@ def test_spawn_process(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
-    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command',
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
                              CREATE_PROC_START_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
@@ -432,8 +473,8 @@ def test_run_process_with_output(cbcsdk_mock, mox, remotefile):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
-    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command', respond_to_post)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command/9',
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands', respond_to_post)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/9',
                              RUN_PROC_END_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
@@ -446,14 +487,49 @@ def test_run_process_with_output(cbcsdk_mock, mox, remotefile):
         mox.VerifyAll()
 
 
+def test_run_process_with_output_2(cbcsdk_mock, mox):
+    """Test the response to the 'create process' command with output that we retrieve."""
+    def respond_to_post(url, body, **kwargs):
+        assert body['session_id'] == '1:2468'
+        if body['name'] == 'create process':
+            return RUN_PROC_START_RESP
+        elif body['name'] == 'delete file':
+            resp = copy.deepcopy(DELETE_FILE_START_RESP)
+            resp['object'] = body['object']
+            return resp
+        else:
+            pytest.fail(f"Invalid command name seen: {body['name']}")
+
+    def validate_get_file(name):
+        if name is None:
+            return False
+        return True
+
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands', respond_to_post)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/9',
+                             RUN_PROC_END_RESP)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
+    manager = LiveResponseSessionManager(cbcsdk_mock.api)
+    with manager.request_session(2468) as session:
+        mox.StubOutWithMock(session, 'get_file')
+        session.get_file(pymox.Func(validate_get_file)).AndReturn('I Got It')
+        mox.ReplayAll()
+        rc = session.create_process('gimme', True, None, 'c:\\temp')
+        assert rc == 'I Got It'
+        mox.VerifyAll()
+
+
 def test_list_processes(cbcsdk_mock):
     """Test the response to the 'list processes' command."""
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
-    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command',
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
                              LIST_PROC_START_RESP)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command/10',
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/10',
                              LIST_PROC_END_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
@@ -470,9 +546,9 @@ def test_registry_enum(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
-    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command',
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
                              REG_ENUM_START_RESP)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command/56',
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/56',
                              REG_ENUM_END_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
@@ -496,9 +572,9 @@ def test_registry_get(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
-    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command',
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
                              REG_GET_START_RESP)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command/61',
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/61',
                              REG_GET_END_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
@@ -530,8 +606,8 @@ def test_registry_set(cbcsdk_mock, set_val, check_val, overwrite, set_type, chec
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
-    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command', respond_to_post)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command/62',
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands', respond_to_post)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/62',
                              REG_SET_END_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
@@ -545,9 +621,9 @@ def test_registry_create_key(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
-    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command',
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
                              REG_CREATE_KEY_START_RESP)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command/63',
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/63',
                              REG_CREATE_KEY_END_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
@@ -560,9 +636,9 @@ def test_registry_delete_key(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
-    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command',
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
                              REG_DELETE_KEY_START_RESP)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command/64',
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/64',
                              REG_DELETE_KEY_END_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
@@ -575,9 +651,9 @@ def test_registry_delete(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
-    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command',
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
                              REG_DELETE_START_RESP)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command/65',
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/65',
                              REG_DELETE_END_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
@@ -635,9 +711,9 @@ def test_memdump(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
-    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command', respond_to_post)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command/101', respond_get1)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/command/102', respond_get2)
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands', respond_to_post)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/101', respond_get1)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/102', respond_get2)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
     with manager.request_session(2468) as session:
@@ -646,3 +722,71 @@ def test_memdump(cbcsdk_mock):
         assert memdump.remote_filename == target_file_name
         memdump.wait()
         memdump.delete()
+
+
+def test_lr_post_command(cbcsdk_mock):
+    """Test creating a Live Response session."""
+    called = 0
+
+    def start_command(url, param_table, **kwargs):
+        nonlocal called
+        called += 1
+        if called == 1:
+            raise ObjectNotFoundError('/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
+                                      message='Session not found')
+        elif called == 2:
+            raise ObjectNotFoundError('/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
+                                      message='{"status": "NOT_FOUND"}')
+        return DELETE_FILE_START_RESP
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
+                             start_command)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/3',
+                             DELETE_FILE_END_RESP)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
+    manager = LiveResponseSessionManager(cbcsdk_mock.api)
+    with manager.request_session(2468) as session:
+        data = {"name": "delete file", "object": 'filename'}
+        session._lr_post_command(data)
+
+
+def test_lr_post_command_error(cbcsdk_mock):
+    """Test creating a Live Response session."""
+    def start_command(url, param_table, **kwargs):
+        raise ObjectNotFoundError('/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
+                                  message='other')
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
+                             start_command)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/3',
+                             DELETE_FILE_END_RESP)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
+    manager = LiveResponseSessionManager(cbcsdk_mock.api)
+    with manager.request_session(2468) as session:
+        data = {"name": "delete file", "object": 'filename'}
+        with pytest.raises(ApiError):
+            session._lr_post_command(data)
+
+
+def test_lr_post_command_error_timeout(cbcsdk_mock):
+    """Test creating a Live Response session."""
+    def start_command(url, param_table, **kwargs):
+        raise ObjectNotFoundError('/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
+                                  message='{"status": "NOT_FOUND"}')
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
+                             start_command)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/3',
+                             DELETE_FILE_END_RESP)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
+    manager = LiveResponseSessionManager(cbcsdk_mock.api)
+    with manager.request_session(2468) as session:
+        data = {"name": "delete file", "object": 'filename'}
+        with pytest.raises(TimeoutError):
+            session._lr_post_command(data)

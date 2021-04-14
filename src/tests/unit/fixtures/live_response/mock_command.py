@@ -84,6 +84,40 @@ DELETE_FILE_ERROR_RESP = {
     'result_desc': 'File not found'
 }
 
+
+GET_FILE_END_RESP = {
+    'id': 7,
+    'session_id': '1:2468',
+    'sensor_id': 2468,
+    'command_timeout': 120,
+    'status': 'complete',
+    'name': 'get file',
+    'object': 'C:\\\\test.txt',
+    'completion_time': 2345678901
+}
+
+GET_FILE_COMMAND_RESP = {
+    "values": [],
+    "file_details": {
+        "offset": 0,
+        "count": 0,
+        "file_id": "f0245f97-67dd-42c4-9548-b35dca12f185"
+    },
+    "id": 7,
+    "name": "get file",
+    "result_code": 0,
+    "result_desc": "",
+    "status": "pending",
+    "sub_keys": [],
+    "files": [],
+    "input": {
+        "name": "get file",
+        "object": "c:\\test.txt"
+    },
+    "create_time": "2021-04-13T14:25:38Z",
+    "finish_time": "2021-04-13T14:25:38.537Z"
+}
+
 PUT_FILE_START_RESP = {
     'id': 6,
     'session_id': '1:2468',
