@@ -34,7 +34,7 @@ This may be useful if the intention is to keep an up-to-date collection of STIX 
 ## Troubleshooting
 
 ### Credential Error
-In order to use this code, you must have CBC SDK installed and configured. If you receive an authentication error, visit the Developer Network Authentication Page for [instructions on setting up authentication](https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/). See [ReadTheDocs](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/authentication.html) for instructions on configuring your credentials file.
+In order to use this code, you must have CBC SDK installed and configured. If you receive an authentication error, visit the Developer Network Authentication Page for [instructions on setting up authentication](https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/). See [ReadTheDocs](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/authentication) for instructions on configuring your credentials file.
 
 ### 504 Gateway Timeout Error
 The [Carbon Black Enterprise EDR Feed Manager API](https://developer.carbonblack.com/reference/carbon-black-cloud/cb-threathunter/latest/feed-api/) is used in this code. When posting to a Feed, there is a 60 second limit before the gateway terminates your connection. The amount of reports you can POST to a Feed is limited by your connection speed. In this case, you will have to split your threat intelligence into smaller collections until the request takes less than 60 seconds, and send each smaller collection to an individual Enterprise EDR Feed.
