@@ -226,6 +226,16 @@ class User(MutableBaseModel):
         self._cb.delete_object(url)
         return self._model_unique_id
 
+    @property
+    def urn(self):
+        """
+        Returns the URN for this user (used in accessing Grants).
+
+        Returns:
+            str: URN for this user.
+        """
+        return f"psc:user:{self._cb.credentials.org_key}:{self._info['login_id']}"
+
     @classmethod
     def create(cls, cb, template=None):
         """

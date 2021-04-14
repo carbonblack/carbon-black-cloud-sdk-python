@@ -74,6 +74,7 @@ def test_get_and_modify_user(cbcsdk_mock):
     assert user.first_name == 'John'
     assert user.login_name == 'jsheridan@babylon5.com'
     assert user.email == 'jsheridan@babylon5.com'
+    assert user.urn == 'psc:user:test:6942'
     user.email = 'jsheridan@zhadum.net'
     user.save()
     assert user.last_name == 'Sheridan'
@@ -92,6 +93,7 @@ def test_get_and_delete_user(cbcsdk_mock):
     assert user.first_name == 'Beckett'
     assert user.login_name == 'bmariner@cerritos.starfleet.mil'
     assert user.email == 'bmariner@cerritos.starfleet.mil'
+    assert user.urn == 'psc:user:test:3978'
     user.delete()
 
 
@@ -105,6 +107,7 @@ def test_get_user_and_reset_googleauth(cbcsdk_mock):
     assert user.first_name == 'Daniel'
     assert user.login_name == 'djackson@stargate-command.af.mil'
     assert user.email == 'djackson@stargate-command.af.mil'
+    assert user.urn == 'psc:user:test:4338'
     user.reset_google_authenticator_registration()
 
 
