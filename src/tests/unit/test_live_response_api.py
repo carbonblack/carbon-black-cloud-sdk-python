@@ -15,10 +15,14 @@ import mox as pymox
 import pytest
 import copy
 import io
+from queue import Queue
 from cbc_sdk.errors import ApiError, ObjectNotFoundError, ServerError, TimeoutError
-from cbc_sdk.live_response_api import LiveResponseError, LiveResponseSessionManager
+from cbc_sdk.live_response_api import (LiveResponseError, LiveResponseSessionManager, CbLRManagerBase,
+                                       CompletionNotification, WorkerStatus, JobWorker, GetFileJob,
+                                       LiveResponseJobScheduler)
 from cbc_sdk.connection import Connection
 from cbc_sdk.credentials import Credentials
+from cbc_sdk.platform import Device
 from cbc_sdk.winerror import HRESULT_FROM_WIN32, Win32Error
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -114,6 +118,76 @@ def test_create_manager(cbcsdk_mock):
     assert sut._timeout == 35
     assert not sut._keepalive_sessions
     assert sut._job_scheduler is None
+
+
+def test_submit_job(cbcsdk_mock):
+    """Test submit job to the Live Response session manager."""
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    sut = LiveResponseSessionManager(cbcsdk_mock.api, 35)
+    assert sut._timeout == 35
+    assert not sut._keepalive_sessions
+    assert sut._job_scheduler is None
+    queue = Queue()
+    queue.put('some job')
+    sut.submit_job(queue.get(), 2468)
+    assert sut._job_scheduler is not None
+
+
+def test_base_manager_submit_job(cbcsdk_mock):
+    """Test submit job to the Live Response manager base."""
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    sut = CbLRManagerBase(cbcsdk_mock.api, timeout=35)
+    assert sut._timeout == 35
+    assert not sut._keepalive_sessions
+    assert sut._job_scheduler is None
+    queue = Queue()
+    queue.put('some job')
+    sut.submit_job(queue.get(), 2468)
+    assert sut._job_scheduler is not None
+
+
+def test_base_manager_submit_job_with_device_object(cbcsdk_mock):
+    """Test submit job to the Live Response manager base."""
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    sut = CbLRManagerBase(cbcsdk_mock.api, timeout=35)
+    assert sut._timeout == 35
+    assert not sut._keepalive_sessions
+    assert sut._job_scheduler is None
+    queue = Queue()
+    queue.put('some job')
+    device = Device(cbcsdk_mock.api, 2468)
+    sut.submit_job(queue.get(), device)
+    assert sut._job_scheduler is not None
+
+
+@pytest.mark.parametrize("thrown_exception", [
+    (ObjectNotFoundError('/appservices/v6/orgs/test/liveresponse/sessions/1:2468/keepalive'),),
+    (ServerError(500, 'test error'),)
+])
+def test_base_manager_maintain_sessions(cbcsdk_mock, thrown_exception):
+    """Test maintain sessions from Live Response manager base."""
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/keepalive',
+                             thrown_exception)
+    sut = LiveResponseSessionManager(cbcsdk_mock.api, 35, keepalive_sessions=True)
+    assert sut._timeout == 35
+    assert sut._keepalive_sessions
+    assert sut._job_scheduler is None
+    session = sut.request_session(2468)
+    sut._sessions[2468] = session
+    sut.__cleanup_thread_running = True
+    sut._refcount = 1
+    queue = Queue()
+    queue.put('some job')
+    sut._maintain_sessions()
 
 
 def test_create_session(cbcsdk_mock):
@@ -255,7 +329,7 @@ def test_delete_file_with_error(cbcsdk_mock):
         assert excinfo.value.decoded_win32_error == "ERROR_FILE_NOT_FOUND"
 
 
-def test_get_file(cbcsdk_mock, connection_mock, mox):
+def test_get_file(cbcsdk_mock, connection_mock):
     """Test the response to the 'delete file' command."""
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
@@ -724,6 +798,114 @@ def test_memdump(cbcsdk_mock):
         memdump.delete()
 
 
+def test_memdump_errors(cbcsdk_mock):
+    """Test the response to the 'memdump' command."""
+    generated_file_name = None
+    target_file_name = None
+
+    def respond_to_post(url, body, **kwargs):
+        assert body['session_id'] == '1:2468'
+        nonlocal generated_file_name, target_file_name
+        if body['name'] == 'memdump':
+            generated_file_name = body['object']
+            target_file_name = generated_file_name
+            if body['compress']:
+                target_file_name += '.zip'
+            retval = copy.deepcopy(MEMDUMP_START_RESP)
+            retval['object'] = generated_file_name
+            return retval
+        elif body['name'] == 'delete file':
+            assert body['object'] == target_file_name
+            retval = copy.deepcopy(MEMDUMP_DEL_START_RESP)
+            retval['object'] = target_file_name
+            return retval
+        else:
+            pytest.fail(f"Invalid command name seen: {body['name']}")
+
+    def respond_get1(url, query_parameters, default):
+        retval = copy.deepcopy(MEMDUMP_END_RESP)
+        retval['object'] = generated_file_name
+        return retval
+
+    def respond_get2(url, query_parameters, default):
+        retval = copy.deepcopy(MEMDUMP_DEL_END_RESP)
+        retval['object'] = target_file_name
+        return retval
+
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands', respond_to_post)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/101', respond_get1)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/102', respond_get2)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
+    manager = LiveResponseSessionManager(cbcsdk_mock.api)
+    with manager.request_session(2468) as session:
+        memdump = session.start_memdump()
+        assert memdump.lr_session is session
+        assert memdump.remote_filename == target_file_name
+        memdump._done = True
+        memdump._error = Exception('some error')
+        with pytest.raises(Exception):
+            memdump.get('test.txt')
+        memdump.wait()
+        memdump.delete()
+
+
+def test_memdump_not_done(cbcsdk_mock):
+    """Test the response to the 'memdump' command."""
+    generated_file_name = None
+    target_file_name = None
+
+    def respond_to_post(url, body, **kwargs):
+        assert body['session_id'] == '1:2468'
+        nonlocal generated_file_name, target_file_name
+        if body['name'] == 'memdump':
+            generated_file_name = body['object']
+            target_file_name = generated_file_name
+            if body['compress']:
+                target_file_name += '.zip'
+            retval = copy.deepcopy(MEMDUMP_START_RESP)
+            retval['object'] = generated_file_name
+            return retval
+        elif body['name'] == 'delete file':
+            assert body['object'] == target_file_name
+            retval = copy.deepcopy(MEMDUMP_DEL_START_RESP)
+            retval['object'] = target_file_name
+            return retval
+        else:
+            pytest.fail(f"Invalid command name seen: {body['name']}")
+
+    def respond_get1(url, query_parameters, default):
+        retval = copy.deepcopy(MEMDUMP_END_RESP)
+        retval['object'] = generated_file_name
+        return retval
+
+    def respond_get2(url, query_parameters, default):
+        retval = copy.deepcopy(MEMDUMP_DEL_END_RESP)
+        retval['object'] = target_file_name
+        return retval
+
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands', respond_to_post)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/101', respond_get1)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/102', respond_get2)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
+    manager = LiveResponseSessionManager(cbcsdk_mock.api)
+    with manager.request_session(2468) as session:
+        memdump = session.start_memdump()
+        assert memdump.lr_session is session
+        assert memdump.remote_filename == target_file_name
+        memdump._done = False
+        memdump._error = Exception('some error')
+        with pytest.raises(Exception):
+            memdump.get('test.txt')
+        memdump.wait()
+        memdump.delete()
+
+
 def test_lr_post_command(cbcsdk_mock):
     """Test creating a Live Response session."""
     called = 0
@@ -773,7 +955,7 @@ def test_lr_post_command_error(cbcsdk_mock):
 
 
 def test_lr_post_command_error_timeout(cbcsdk_mock):
-    """Test creating a Live Response session."""
+    """Test creating a Live Response session lr_post_command errors."""
     def start_command(url, param_table, **kwargs):
         raise ObjectNotFoundError('/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
                                   message='{"status": "NOT_FOUND"}')
@@ -790,3 +972,65 @@ def test_lr_post_command_error_timeout(cbcsdk_mock):
         data = {"name": "delete file", "object": 'filename'}
         with pytest.raises(TimeoutError):
             session._lr_post_command(data)
+
+
+def test_completion_notification_work_status(cbcsdk_mock):
+    """Test CompletionNotification, WorkerStatus"""
+    obj = CompletionNotification(2468)
+    assert obj.device_id == 2468
+    obj = WorkerStatus(2468)
+    assert obj.device_id == 2468
+    assert obj.status == "ready"
+    assert obj.exception is None
+
+
+def test_job_worker(cbcsdk_mock):
+    """Test JobWorker"""
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
+    results = Queue()
+    job_worker = JobWorker(cbcsdk_mock.api, 2468, results)
+    assert job_worker.device_id == 2468
+    job_worker.job_queue.put('element')
+    job_worker.run()
+
+
+def test_get_file_job(cbcsdk_mock, connection_mock):
+    """Test GetFileJob"""
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
+                             GET_FILE_COMMAND_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/7',
+                             GET_FILE_END_RESP)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
+    manager = LiveResponseSessionManager(cbcsdk_mock.api)
+    with manager.request_session(2468) as session:
+        file_job = GetFileJob('c:\\\\test.txt')
+        file_job.run(session)
+
+
+def test_job_scheduler_statuses(cbcsdk_mock):
+    """Test LiveResponseJobScheduler"""
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
+    job_scheduler = LiveResponseJobScheduler(cbcsdk_mock.api)
+    cn_obj = CompletionNotification(2468)
+    assert cn_obj.device_id == 2468
+    ws_obj = WorkerStatus(2468)
+    assert ws_obj.device_id == 2468
+    ws_obj_wrong_status = WorkerStatus(2468, status="alabala")
+    ws_obj_error = WorkerStatus(2468, status="error")
+    job_scheduler.schedule_queue.put(ws_obj_error)
+    job_scheduler.schedule_queue.put(ws_obj_wrong_status)
+    job_scheduler.schedule_queue.put(ws_obj)
+    job_scheduler.schedule_queue.put(cn_obj)
+    job_scheduler.schedule_queue.put('test')
+    job_scheduler._unscheduled_jobs[2468] = ws_obj_error
+    job_scheduler._idle_workers.add(2468)
+    job_scheduler.run()

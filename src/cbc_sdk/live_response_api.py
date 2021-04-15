@@ -795,7 +795,7 @@ class WorkItem(object):
         self.fn = fn
         from cbc_sdk.platform import Device
         if isinstance(device_id, Device):
-            self.device_id = device_id.deviceId
+            self.device_id = device_id.id
         else:
             self.device_id = int(device_id)
 
@@ -973,7 +973,6 @@ class LiveResponseJobScheduler(threading.Thread):
         log.debug("There are idle workers for device ids {0}".format(self._idle_workers))
 
         intersection = self._idle_workers.intersection(set(self._unscheduled_jobs.keys()))
-
         log.debug("{0} jobs ready to execute in existing execution slots".format(len(intersection)))
 
         for device in intersection:
@@ -1010,16 +1009,16 @@ class LiveResponseJobScheduler(threading.Thread):
         delta = timedelta(minutes=60)
 
         from cbc_sdk.platform import Device
-        devices = [s for s in self._cb.select(Device) if s.deviceId in self._unscheduled_jobs
-                   and s.deviceId not in self._job_workers and now - s.lastContact < delta]  # noqa: W503
+        devices = [s for s in self._cb.select(Device) if s.id in self._unscheduled_jobs
+                   and s.id not in self._job_workers and now - s.lastContact < delta]  # noqa: W503
 
         log.debug("Spawning new workers to handle these devices: {0}".format(devices))
         for device in devices:
             if len(self._job_workers) >= self._max_workers:
                 break
-            log.debug("Spawning new JobWorker for device id {0}".format(device.deviceId))
-            self._job_workers[device.deviceId] = JobWorker(self._cb, device.deviceId, self.schedule_queue)
-            self._job_workers[device.deviceId].start()
+            log.debug("Spawning new JobWorker for device id {0}".format(device.id))
+            self._job_workers[device.id] = JobWorker(self._cb, device.id, self.schedule_queue)
+            self._job_workers[device.id].start()
 
 
 class CbLRManagerBase(object):
