@@ -95,6 +95,7 @@ def main():
     fp.write(FILE_CONTENT)
     fp.close()
 
+    print()
     print(10 * ' ' + 'Live Response Files Commands')
     print(SYMBOLS * DELIMITER)
 
@@ -157,21 +158,29 @@ def main():
     print('Memdump.......................................OK')
     """
 
+    print()
     print(9 * ' ' + 'Live Response Process Commands')
     print(SYMBOLS * DELIMITER)
+
+    # list processes
     processes = lr_session.list_processes()
     pprint(flatten_processes_response(processes))
     print('List Processes................................OK')
-    # lr_session.create_process(r'cmd.exe /c "ping.exe -t 192.168.1.1"',
-    #                          wait_for_completion=False, wait_for_output=False)
+
+    # create infinite ping, that could be killed afterwards
+    lr_session.create_process(r'cmd.exe /c "ping.exe -t 192.168.1.1"',
+                              wait_for_completion=False, wait_for_output=False)
     processes = lr_session.list_processes()
     found = False
     for process in processes:
         if 'ping.exe' in process['process_path']:
             found = True
-            print(process)
+
+    # assert that indeed there is such a process
     assert found
     print('Create Process................................OK')
+
+    # kill all of the processes that are for ping.exe
     for pid in flatten_processes_response_filter(processes, 'ping.exe'):
         print(f'Killing process with pid {pid}')
         lr_session.kill_process(pid)
