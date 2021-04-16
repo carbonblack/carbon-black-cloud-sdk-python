@@ -204,6 +204,7 @@ class User(MutableBaseModel):
         if len(rawdata) == 0:
             return False
         self._info = rawdata[0]
+        self._full_init = True
         self._last_refresh_time = time.time()
         return True
 
