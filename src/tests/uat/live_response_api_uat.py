@@ -24,6 +24,8 @@ Processes: Live Response
 # Standard library imports
 import sys
 import os
+import os.path
+from os import path
 
 # Internal library imports
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
@@ -35,6 +37,10 @@ HEADERS = {'X-Auth-Token': '', 'Content-Type': 'application/json'}
 ORG_KEY = ''
 HOSTNAME = ''
 DEVICE_ID = 8612331
+LOCAL_FILE = 'memdump.txt'
+DIR = 'C:\\\\demo\\\\'
+MEMDUMP_FILE = r"c:\demo\memdump.txt"
+FILE = r"c:\demo\test.txt"
 FILE_CONTENT = "This is just a test"
 FILE_CONTENT_1 = b"This is just a test"
 
@@ -65,7 +71,7 @@ def main():
     ORG_KEY = cb.credentials.org_key
     HOSTNAME = cb.credentials.url
 
-    print('LR Files')
+    print(10 * ' ' + 'Live Response Files Commands')
     print(SYMBOLS * DELIMITER)
     device = cb.select(Device, DEVICE_ID)
     lr_session = device.lr_session()
@@ -79,7 +85,7 @@ def main():
 
     # create directory
     try:
-        lr_session.create_directory('C:\\\\demo')
+        lr_session.create_directory(DIR)
     except LiveResponseError as ex:
         if 'ERROR_ALREADY_EXISTS' in str(ex):
             print('Directory already exists, continue with the test.')
@@ -87,32 +93,59 @@ def main():
             raise
 
     # show that test.txt is not present in that directory
-    response = lr_session.list_directory('C:\\\\demo\\\\')
+    response = lr_session.list_directory(DIR)
     directories = flatten_response(response)
-    assert 'test.txt' not in directories
-    print(directories)
+    assert 'test.txt' not in directories, f'Dirs: {directories}'
 
     # upload the file on the server
-    lr_session.put_file(open("test.txt", "r"), r"c:\demo\test.txt")
+    lr_session.put_file(open("test.txt", "r"), FILE)
     print('PUT File......................................OK')
-    # show that test.txt is present in that directory
-    response = lr_session.list_directory('C:\\\\demo\\\\')
-    directories = flatten_response(response)
-    assert 'test.txt' in directories
-    print(directories)
 
-    content = lr_session.get_file(r"c:\demo\test.txt")
+    # show that test.txt is present in that directory
+    response = lr_session.list_directory(DIR)
+    directories = flatten_response(response)
+    assert 'test.txt' in directories, f'Dirs: {directories}'
+
+    # walk through the directories
+    for entry in lr_session.walk(DIR):
+        print(entry)
+    print('walk dir......................................OK')
+
+    content = lr_session.get_file(FILE)
     assert content == FILE_CONTENT_1, '{} {}'.format(content, FILE_CONTENT)
     print('GET File......................................OK')
-    lr_session.delete_file(r"c:\demo\test.txt")
+    lr_session.delete_file(FILE)
+
+    exc_raise = False
     try:
-        content = lr_session.get_file(r"c:\demo\test.txt")
+        content = lr_session.get_file(FILE)
     except LiveResponseError as ex:
         assert 'ERROR_FILE_NOT_FOUND' in str(ex), f'Other error {ex}'
-
+        exc_raise = True
+    finally:
+        assert exc_raise
     print('DELETE File...................................OK')
 
-    os.remove("test.txt")
+    # This command takes a lot of time!
+    # uncomment only if this needs to be tested!
+    """
+    lr_session.memdump(LOCAL_FILE, MEMDUMP_FILE)
+    assert path.exists(LOCAL_FILE)
+    exc_raise = False
+    try:
+        content = lr_session.get_file(MEMDUMP_FILE)
+    except LiveResponseError as ex:
+        assert 'ERROR_FILE_NOT_FOUND' in str(ex), f'Other error {ex}'
+        exc_raise = True
+    finally:
+        assert exc_raise
+    print('Memdump.......................................OK')
+    """
+    # clean-up actions after the tests
+    if path.exists(LOCAL_FILE):
+        os.remove(LOCAL_FILE)
+    if path.exists("test.txt"):
+        os.remove("test.txt")
     lr_session.close()
     print(f'Deleted the session {lr_session.session_id}...........OK')
 
