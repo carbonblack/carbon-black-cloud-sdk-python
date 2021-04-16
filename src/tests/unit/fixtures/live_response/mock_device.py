@@ -128,14 +128,4 @@ UDEVICE_RESPONSE = {
     "windows_platform": None
 }
 
-
-DEVICE_QUERY_RESPONSE = {
-    'latestTime': 0,
-    'success': True,
-    'message': 'Success',
-    'totalResults': 2,
-    'elapsed': 1,
-    'results': [DEVICE_RESPONSE, UDEVICE_RESPONSE]
-}
-
 POST_DEVICE_SEARCH_RESP = {'results': [DEVICE_RESPONSE], "num_found": 1}

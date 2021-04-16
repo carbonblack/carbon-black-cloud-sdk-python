@@ -125,7 +125,7 @@ def main():
     # walk through the directories
     for entry in lr_session.walk(DIR):
         print(entry)
-    print('walk dir......................................OK')
+    print('WALK dir......................................OK')
 
     content = lr_session.get_file(FILE)
     assert content == FILE_CONTENT_1, '{} {}'.format(content, FILE_CONTENT)
@@ -157,7 +157,6 @@ def main():
         assert exc_raise
     print('Memdump.......................................OK')
     """
-
     print()
     print(9 * ' ' + 'Live Response Process Commands')
     print(SYMBOLS * DELIMITER)
