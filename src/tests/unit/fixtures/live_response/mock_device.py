@@ -137,3 +137,5 @@ DEVICE_QUERY_RESPONSE = {
     'elapsed': 1,
     'results': [DEVICE_RESPONSE, UDEVICE_RESPONSE]
 }
+
+POST_DEVICE_SEARCH_RESP = {'results': [DEVICE_RESPONSE], "num_found": 1}

@@ -856,7 +856,6 @@ class JobWorker(threading.Thread):
         try:
             self.lr_session = self.cb.live_response.request_session(self.device_id)
             self.result_queue.put(WorkerStatus(self.device_id, status="ready"))
-
             while True:
                 work_item = self.job_queue.get(block=True)
                 if not work_item:
@@ -964,17 +963,14 @@ class LiveResponseJobScheduler(threading.Thread):
     def _cleanup_idle_workers(self, max=None):
         if not max:
             max = self._max_workers
-
         for device in list(self._idle_workers)[:max]:
             log.debug("asking worker for device id {0} to exit".format(device))
             self._job_workers[device].job_queue.put(None)
 
     def _schedule_existing_workers(self):
         log.debug("There are idle workers for device ids {0}".format(self._idle_workers))
-
         intersection = self._idle_workers.intersection(set(self._unscheduled_jobs.keys()))
         log.debug("{0} jobs ready to execute in existing execution slots".format(len(intersection)))
-
         for device in intersection:
             item = self._unscheduled_jobs[device].pop(0)
             self._job_workers[device].job_queue.put(item)
@@ -1003,14 +999,14 @@ class LiveResponseJobScheduler(threading.Thread):
     def _spawn_new_workers(self):
         if len(self._job_workers) >= self._max_workers:
             return
-
         from datetime import datetime, timedelta
         now = datetime.utcnow()
         delta = timedelta(minutes=60)
-
+        dformat = '%Y-%m-%dT%H:%M:%S.%fZ'
         from cbc_sdk.platform import Device
-        devices = [s for s in self._cb.select(Device) if s.id in self._unscheduled_jobs
-                   and s.id not in self._job_workers and now - s.lastContact < delta]  # noqa: W503
+        devices = [s for s in self._cb.select(Device)
+                   if s.id in self._unscheduled_jobs and s.id not in self._job_workers
+                   and now - datetime.strptime(s.last_contact_time, dformat) < delta]  # noqa: W503
 
         log.debug("Spawning new workers to handle these devices: {0}".format(devices))
         for device in devices:

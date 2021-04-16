@@ -43,7 +43,7 @@ from tests.unit.fixtures.live_response.mock_command import (DIRECTORY_LIST_START
                                                             REG_DELETE_START_RESP, REG_DELETE_END_RESP,
                                                             MEMDUMP_START_RESP, MEMDUMP_END_RESP,
                                                             MEMDUMP_DEL_START_RESP, MEMDUMP_DEL_END_RESP)
-from tests.unit.fixtures.live_response.mock_device import DEVICE_RESPONSE, UDEVICE_RESPONSE
+from tests.unit.fixtures.live_response.mock_device import DEVICE_RESPONSE, UDEVICE_RESPONSE, POST_DEVICE_SEARCH_RESP
 from tests.unit.fixtures.live_response.mock_session import (SESSION_INIT_RESP, SESSION_POLL_RESP,
                                                             SESSION_POLL_RESP_ERROR, USESSION_INIT_RESP,
                                                             USESSION_POLL_RESP)
@@ -102,7 +102,10 @@ FILE_NOT_FOUND_ERR = {'status': 'error', 'result_type': 'WinHresult',
      "", ""),
     ({'status': 'warning', 'result_type': 'WinHResult',
       'result_code': HRESULT_FROM_WIN32(Win32Error.ERROR_FILE_NOT_FOUND)},
-     "", "")
+     "", ""),
+    ({'status': 'error', 'result_type': 'WinHresult',
+      'result_code': 'ssss'},
+     "Unknown Win32 error code", '')
 ])
 def test_live_response_error(details, message, decoded_win32):
     """Test the creation of a LiveResponseError."""
@@ -125,6 +128,7 @@ def test_submit_job(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request("POST", "/appservices/v6/orgs/test/devices/_search", POST_DEVICE_SEARCH_RESP)
     sut = LiveResponseSessionManager(cbcsdk_mock.api, 35)
     assert sut._timeout == 35
     assert not sut._keepalive_sessions
@@ -168,7 +172,6 @@ def test_base_manager_submit_job_with_device_object(cbcsdk_mock):
 
 @pytest.mark.parametrize("thrown_exception", [
     (ObjectNotFoundError('/appservices/v6/orgs/test/liveresponse/sessions/1:2468/keepalive'),),
-    (ServerError(500, 'test error'),)
 ])
 def test_base_manager_maintain_sessions(cbcsdk_mock, thrown_exception):
     """Test maintain sessions from Live Response manager base."""
@@ -177,6 +180,30 @@ def test_base_manager_maintain_sessions(cbcsdk_mock, thrown_exception):
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/keepalive',
                              thrown_exception)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
+    sut = LiveResponseSessionManager(cbcsdk_mock.api, 35, keepalive_sessions=True)
+    assert sut._timeout == 35
+    assert sut._keepalive_sessions
+    assert sut._job_scheduler is None
+    session = sut.request_session(2468)
+    sut._sessions[2468] = session
+    sut.__cleanup_thread_running = True
+    sut._refcount = 1
+    queue = Queue()
+    queue.put('some job')
+    sut._maintain_sessions()
+
+
+def test_base_manager_maintain_sessions_exc(cbcsdk_mock):
+    """Test maintain sessions from Live Response manager base."""
+    def thrown_exception(url, body, **kwargs):
+        raise ServerError(500)
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/keepalive',
+                             thrown_exception)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     sut = LiveResponseSessionManager(cbcsdk_mock.api, 35, keepalive_sessions=True)
     assert sut._timeout == 35
     assert sut._keepalive_sessions
@@ -995,6 +1022,23 @@ def test_job_worker(cbcsdk_mock):
     assert job_worker.device_id == 2468
     job_worker.job_queue.put('element')
     job_worker.run()
+    assert not job_worker.result_queue.empty()
+    assert job_worker.job_queue.empty()
+
+
+def test_job_worker_no_item(cbcsdk_mock):
+    """Test JobWorker"""
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
+    results = Queue()
+    job_worker = JobWorker(cbcsdk_mock.api, 2468, results)
+    assert job_worker.device_id == 2468
+    job_worker.job_queue.put(None)
+    job_worker.run()
+    assert not job_worker.result_queue.empty()
+    assert job_worker.job_queue.empty()
 
 
 def test_get_file_job(cbcsdk_mock, connection_mock):
@@ -1022,15 +1066,39 @@ def test_job_scheduler_statuses(cbcsdk_mock):
     job_scheduler = LiveResponseJobScheduler(cbcsdk_mock.api)
     cn_obj = CompletionNotification(2468)
     assert cn_obj.device_id == 2468
-    ws_obj = WorkerStatus(2468)
-    assert ws_obj.device_id == 2468
+    ws_obj_ready = WorkerStatus(2468)
+    assert ws_obj_ready.device_id == 2468
+    ws_obj = WorkerStatus(2469)
+    assert ws_obj.device_id == 2469
     ws_obj_wrong_status = WorkerStatus(2468, status="alabala")
     ws_obj_error = WorkerStatus(2468, status="error")
     job_scheduler.schedule_queue.put(ws_obj_error)
+    job_scheduler.schedule_queue.put(ws_obj_ready)
     job_scheduler.schedule_queue.put(ws_obj_wrong_status)
-    job_scheduler.schedule_queue.put(ws_obj)
     job_scheduler.schedule_queue.put(cn_obj)
     job_scheduler.schedule_queue.put('test')
-    job_scheduler._unscheduled_jobs[2468] = ws_obj_error
-    job_scheduler._idle_workers.add(2468)
+    job_scheduler._job_workers[2469] = JobWorker(cbcsdk_mock.api, 2469, Queue())
+    job_scheduler._unscheduled_jobs[2469] = [ws_obj]
+    job_scheduler._unscheduled_jobs[2468] = [ws_obj_error]
+    job_scheduler._idle_workers.add(2469)
     job_scheduler.run()
+
+
+def test_job_scheduler_exiting(cbcsdk_mock, mox):
+    """Test LiveResponseJobScheduler"""
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
+    job_scheduler = LiveResponseJobScheduler(cbcsdk_mock.api)
+    ws_obj_exiting = WorkerStatus(2468, status="exiting")
+    job_scheduler.schedule_queue.put(ws_obj_exiting)
+    job_scheduler._idle_workers.add(2469)
+    job_worker = JobWorker(cbcsdk_mock.api, 2468, Queue())
+    job_scheduler._job_workers[2468] = job_worker
+    job_scheduler.schedule_queue.put('test')
+    mox.StubOutWithMock(job_worker, 'join')
+    job_worker.join().AndReturn(True)
+    mox.ReplayAll()
+    job_scheduler.run()
+    mox.VerifyAll()
