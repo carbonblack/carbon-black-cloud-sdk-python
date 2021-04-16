@@ -377,7 +377,7 @@ def test_put_file(cbcsdk_mock, mox):
         assert body['session_id'] == '1:2468'
         assert body['name'] == 'put file'
         assert body['file_id'] == 10203
-        assert body['object'] == 'foobar.txt'
+        assert body['path'] == 'foobar.txt'
         return PUT_FILE_START_RESP
 
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
@@ -559,7 +559,7 @@ def test_run_process_with_output(cbcsdk_mock, mox, remotefile):
             return RUN_PROC_START_RESP
         elif body['name'] == 'delete file':
             resp = copy.deepcopy(DELETE_FILE_START_RESP)
-            resp['object'] = body['object']
+            resp['path'] = body['path']
             return resp
         else:
             pytest.fail(f"Invalid command name seen: {body['name']}")
@@ -596,7 +596,7 @@ def test_run_process_with_output_2(cbcsdk_mock, mox):
             return RUN_PROC_START_RESP
         elif body['name'] == 'delete file':
             resp = copy.deepcopy(DELETE_FILE_START_RESP)
-            resp['object'] = body['object']
+            resp['path'] = body['path']
             return resp
         else:
             pytest.fail(f"Invalid command name seen: {body['name']}")
@@ -698,7 +698,7 @@ def test_registry_set(cbcsdk_mock, set_val, check_val, overwrite, set_type, chec
     def respond_to_post(url, body, **kwargs):
         assert body['session_id'] == '1:2468'
         assert body['name'] == 'reg set value'
-        assert body['object'] == 'HKLM\\SYSTEM\\CurrentControlSet\\services\\ACPI\\testvalue'
+        assert body['path'] == 'HKLM\\SYSTEM\\CurrentControlSet\\services\\ACPI\\testvalue'
         assert body['overwrite'] == overwrite
         assert body['value_type'] == check_type
         assert body['value_data'] == check_val
@@ -784,29 +784,29 @@ def test_memdump(cbcsdk_mock):
         assert body['session_id'] == '1:2468'
         nonlocal generated_file_name, target_file_name
         if body['name'] == 'memdump':
-            generated_file_name = body['object']
+            generated_file_name = body['path']
             target_file_name = generated_file_name
             if body['compress']:
                 target_file_name += '.zip'
             retval = copy.deepcopy(MEMDUMP_START_RESP)
-            retval['object'] = generated_file_name
+            retval['path'] = generated_file_name
             return retval
         elif body['name'] == 'delete file':
-            assert body['object'] == target_file_name
+            assert body['path'] == target_file_name
             retval = copy.deepcopy(MEMDUMP_DEL_START_RESP)
-            retval['object'] = target_file_name
+            retval['path'] = target_file_name
             return retval
         else:
             pytest.fail(f"Invalid command name seen: {body['name']}")
 
     def respond_get1(url, query_parameters, default):
         retval = copy.deepcopy(MEMDUMP_END_RESP)
-        retval['object'] = generated_file_name
+        retval['path'] = generated_file_name
         return retval
 
     def respond_get2(url, query_parameters, default):
         retval = copy.deepcopy(MEMDUMP_DEL_END_RESP)
-        retval['object'] = target_file_name
+        retval['path'] = target_file_name
         return retval
 
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
@@ -834,29 +834,29 @@ def test_memdump_errors(cbcsdk_mock):
         assert body['session_id'] == '1:2468'
         nonlocal generated_file_name, target_file_name
         if body['name'] == 'memdump':
-            generated_file_name = body['object']
+            generated_file_name = body['path']
             target_file_name = generated_file_name
             if body['compress']:
                 target_file_name += '.zip'
             retval = copy.deepcopy(MEMDUMP_START_RESP)
-            retval['object'] = generated_file_name
+            retval['path'] = generated_file_name
             return retval
         elif body['name'] == 'delete file':
-            assert body['object'] == target_file_name
+            assert body['path'] == target_file_name
             retval = copy.deepcopy(MEMDUMP_DEL_START_RESP)
-            retval['object'] = target_file_name
+            retval['path'] = target_file_name
             return retval
         else:
             pytest.fail(f"Invalid command name seen: {body['name']}")
 
     def respond_get1(url, query_parameters, default):
         retval = copy.deepcopy(MEMDUMP_END_RESP)
-        retval['object'] = generated_file_name
+        retval['path'] = generated_file_name
         return retval
 
     def respond_get2(url, query_parameters, default):
         retval = copy.deepcopy(MEMDUMP_DEL_END_RESP)
-        retval['object'] = target_file_name
+        retval['path'] = target_file_name
         return retval
 
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
@@ -888,29 +888,29 @@ def test_memdump_not_done(cbcsdk_mock):
         assert body['session_id'] == '1:2468'
         nonlocal generated_file_name, target_file_name
         if body['name'] == 'memdump':
-            generated_file_name = body['object']
+            generated_file_name = body['path']
             target_file_name = generated_file_name
             if body['compress']:
                 target_file_name += '.zip'
             retval = copy.deepcopy(MEMDUMP_START_RESP)
-            retval['object'] = generated_file_name
+            retval['path'] = generated_file_name
             return retval
         elif body['name'] == 'delete file':
-            assert body['object'] == target_file_name
+            assert body['path'] == target_file_name
             retval = copy.deepcopy(MEMDUMP_DEL_START_RESP)
-            retval['object'] = target_file_name
+            retval['path'] = target_file_name
             return retval
         else:
             pytest.fail(f"Invalid command name seen: {body['name']}")
 
     def respond_get1(url, query_parameters, default):
         retval = copy.deepcopy(MEMDUMP_END_RESP)
-        retval['object'] = generated_file_name
+        retval['path'] = generated_file_name
         return retval
 
     def respond_get2(url, query_parameters, default):
         retval = copy.deepcopy(MEMDUMP_DEL_END_RESP)
-        retval['object'] = target_file_name
+        retval['path'] = target_file_name
         return retval
 
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
@@ -957,7 +957,7 @@ def test_lr_post_command(cbcsdk_mock):
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
     with manager.request_session(2468) as session:
-        data = {"name": "delete file", "object": 'filename'}
+        data = {"name": "delete file", "path": 'filename'}
         session._lr_post_command(data)
 
 
@@ -976,7 +976,7 @@ def test_lr_post_command_error(cbcsdk_mock):
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
     with manager.request_session(2468) as session:
-        data = {"name": "delete file", "object": 'filename'}
+        data = {"name": "delete file", "pth": 'filename'}
         with pytest.raises(ApiError):
             session._lr_post_command(data)
 
@@ -996,7 +996,7 @@ def test_lr_post_command_error_timeout(cbcsdk_mock):
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
     with manager.request_session(2468) as session:
-        data = {"name": "delete file", "object": 'filename'}
+        data = {"name": "delete file", "path": 'filename'}
         with pytest.raises(TimeoutError):
             session._lr_post_command(data)
 

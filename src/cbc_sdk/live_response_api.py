@@ -149,7 +149,7 @@ class CbLRSessionBase(object):
         Returns:
             object: Contains the data of the file.
         """
-        data = {"name": "get file", "object": file_name}
+        data = {"name": "get file", "path": file_name}
 
         resp = self._lr_post_command(data).json()
         file_details = resp.get('file_details', None)
@@ -188,7 +188,7 @@ class CbLRSessionBase(object):
         Args:
             filename (str): Name of the file to be deleted.
         """
-        data = {"name": "delete file", "object": filename}
+        data = {"name": "delete file", "path": filename}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
         self._poll_command(command_id)
@@ -205,7 +205,7 @@ class CbLRSessionBase(object):
             infp (object): Python file-like containing data to upload to the remote endpoint.
             remote_filename (str): File name to create on the remote endpoint.
         """
-        data = {"name": "put file", "object": remote_filename}
+        data = {"name": "put file", "path": remote_filename}
         file_id = self._upload_file(infp)
         data["file_id"] = file_id
 
@@ -246,7 +246,7 @@ class CbLRSessionBase(object):
             list: A list of dicts, each one describing a directory entry.
 
         """
-        data = {"name": "directory list", "object": dir_name}
+        data = {"name": "directory list", "path": dir_name}
         resp = self._lr_post_command(data).json()
         command_id = resp.get("id")
         return self._poll_command(command_id).get("files", [])
@@ -258,7 +258,7 @@ class CbLRSessionBase(object):
         Args:
             dir_name (str): The new directory name.
         """
-        data = {"name": "create directory", "object": dir_name}
+        data = {"name": "create directory", "path": dir_name}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
         self._poll_command(command_id)
@@ -372,7 +372,7 @@ class CbLRSessionBase(object):
         Returns:
             bool: True if success, False if failure.
         """
-        data = {"name": "kill", "object": pid}
+        data = {"name": "kill", "pid": pid}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
 
@@ -416,7 +416,7 @@ class CbLRSessionBase(object):
         if wait_for_output:
             wait_for_completion = True
 
-        data = {"name": "create process", "object": command_string, "wait": wait_for_completion}
+        data = {"name": "create process", "path": command_string, "wait": wait_for_completion}
 
         if wait_for_output and not remote_output_file_name:
             randfilename = self._random_file_name()
@@ -439,7 +439,7 @@ class CbLRSessionBase(object):
 
             file_content = self.get_file(data["output_file"])
             # delete the file
-            self._lr_post_command({"name": "delete file", "object": data["output_file"]})
+            self._lr_post_command({"name": "delete file", "path": data["output_file"]})
 
             return file_content
         else:
@@ -517,7 +517,7 @@ class CbLRSessionBase(object):
             dict: A dictionary with two keys, 'sub_keys' (a list of subkey names) and 'values' (a list of dicts
                 containing value data, name, and type).
         """
-        data = {"name": "reg enum key", "object": regkey}
+        data = {"name": "reg enum key", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
         raw_output = self._poll_command(command_id)
@@ -534,7 +534,7 @@ class CbLRSessionBase(object):
         Returns:
             list: List of values for the registry key.
         """
-        data = {"name": "reg enum key", "object": regkey}
+        data = {"name": "reg enum key", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
 
@@ -556,7 +556,7 @@ class CbLRSessionBase(object):
         Returns:
             dict: A dictionary with keys of: value_data, value_name, value_type.
         """
-        data = {"name": "reg query value", "object": regkey}
+        data = {"name": "reg query value", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
 
@@ -587,7 +587,7 @@ class CbLRSessionBase(object):
                 value_type = "REG_SZ"
                 real_value = str(value)
 
-        data = {"name": "reg set value", "object": regkey, "overwrite": overwrite, "value_type": value_type,
+        data = {"name": "reg set value", "path": regkey, "overwrite": overwrite, "value_type": value_type,
                 "value_data": real_value}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
@@ -600,7 +600,7 @@ class CbLRSessionBase(object):
         Args:
             regkey (str): The registry key to create.
         """
-        data = {"name": "reg create key", "object": regkey}
+        data = {"name": "reg create key", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
         self._poll_command(command_id)
@@ -612,7 +612,7 @@ class CbLRSessionBase(object):
         Args:
             regkey (str): The registry key to delete.
         """
-        data = {"name": "reg delete key", "object": regkey}
+        data = {"name": "reg delete key", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
         self._poll_command(command_id)
@@ -624,7 +624,7 @@ class CbLRSessionBase(object):
         Args:
             regkey (str): The registry value to delete.
         """
-        data = {"name": "reg delete value", "object": regkey}
+        data = {"name": "reg delete value", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
         self._poll_command(command_id)
@@ -660,7 +660,7 @@ class CbLRSessionBase(object):
         if not remote_filename:
             remote_filename = self._random_file_name()
 
-        data = {"name": "memdump", "object": remote_filename, "compress": compress}
+        data = {"name": "memdump", "path": remote_filename, "compress": compress}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
 

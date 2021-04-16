@@ -26,6 +26,7 @@ import sys
 import os
 import os.path
 from os import path
+from pprint import pprint
 
 # Internal library imports
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
@@ -55,6 +56,16 @@ def flatten_response(response):
     return [item['filename'] for item in response]
 
 
+def flatten_processes_response(response):
+    """Helper function to extract only pids and paths from the list processes command"""
+    return [{item['process_pid']: item['process_path']} for item in response]
+
+
+def flatten_processes_response_filter(response, process_name):
+    """Helper function to extract only pids and paths from the list processes command"""
+    return [item['process_pid'] for item in response if process_name in item['process_path']]
+
+
 def main():
     """Script entry point"""
     global ORG_KEY
@@ -71,17 +82,21 @@ def main():
     ORG_KEY = cb.credentials.org_key
     HOSTNAME = cb.credentials.url
 
-    print(10 * ' ' + 'Live Response Files Commands')
+    print(13 * ' ' + 'Live Response Commands')
     print(SYMBOLS * DELIMITER)
     device = cb.select(Device, DEVICE_ID)
     lr_session = device.lr_session()
     print(f'Created Session {lr_session.session_id}...............OK')
+    print()
 
     # create the file that will be uploaded on the server,
     # will be deleted once we are done with the test
     fp = open("test.txt", "w")
     fp.write(FILE_CONTENT)
     fp.close()
+
+    print(10 * ' ' + 'Live Response Files Commands')
+    print(SYMBOLS * DELIMITER)
 
     # create directory
     try:
@@ -141,6 +156,27 @@ def main():
         assert exc_raise
     print('Memdump.......................................OK')
     """
+
+    print(9 * ' ' + 'Live Response Process Commands')
+    print(SYMBOLS * DELIMITER)
+    processes = lr_session.list_processes()
+    pprint(flatten_processes_response(processes))
+    print('List Processes................................OK')
+    # lr_session.create_process(r'cmd.exe /c "ping.exe -t 192.168.1.1"',
+    #                          wait_for_completion=False, wait_for_output=False)
+    processes = lr_session.list_processes()
+    found = False
+    for process in processes:
+        if 'ping.exe' in process['process_path']:
+            found = True
+            print(process)
+    assert found
+    print('Create Process................................OK')
+    for pid in flatten_processes_response_filter(processes, 'ping.exe'):
+        print(f'Killing process with pid {pid}')
+        lr_session.kill_process(pid)
+    print('Kill Process..................................OK')
+
     # clean-up actions after the tests
     if path.exists(LOCAL_FILE):
         os.remove(LOCAL_FILE)
