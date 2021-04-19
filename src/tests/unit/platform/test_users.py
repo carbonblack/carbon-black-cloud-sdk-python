@@ -100,7 +100,7 @@ def test_get_and_delete_user(cbcsdk_mock):
 def test_get_user_and_reset_googleauth(cbcsdk_mock):
     """Tests retrieving a user and resetting Google authentication."""
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
-    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/users/4338/googleauth', None)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/users/4338/google-auth', None)
     api = cbcsdk_mock.api
     user = api.select(User, 4338)
     assert user.last_name == 'Jackson'

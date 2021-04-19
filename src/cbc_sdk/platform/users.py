@@ -263,7 +263,7 @@ class User(MutableBaseModel):
 
     def reset_google_authenticator_registration(self):
         """Forces Google Authenticator registration to be reset for this user."""
-        url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id) + "/googleauth"
+        url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id) + "/google-auth"
         self._cb.delete_object(url)
 
 
