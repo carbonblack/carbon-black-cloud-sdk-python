@@ -398,6 +398,7 @@ class Grant(MutableBaseModel):
                               for prof in raw_profiles]
         else:
             self._profiles = []
+        self._full_init = True
         self._last_refresh_time = time.time()
         return True
 
