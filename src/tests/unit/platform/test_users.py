@@ -119,7 +119,7 @@ def test_get_nonexistent_user(cbcsdk_mock):
         api.select(User, 999)
 
 
-def test_attempt_to_create_naively(cb):
+def test_unsupported_create_by_update(cb):
     """Attempt to create a user by just creating one and saving it, which doesn't work."""
     user = User(cb, None)
     user.last_name = 'Rios'
