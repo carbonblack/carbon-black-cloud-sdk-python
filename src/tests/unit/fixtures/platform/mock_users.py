@@ -156,6 +156,33 @@ EXPECT_USER_ADD_SMALL = {
     ]
 }
 
+EXPECT_USER_ADD_V1 = {
+    "org_id": 0,
+    "email_id": "rios@la-sirena.net",
+    "role": "DEPRECATED",
+    "role_urn": "psc:role:test:APP_SERVICE_ROLE",
+    "first_name": "Cristobal",
+    "last_name": "Rios",
+    "auth_method": "PASSWORD",
+}
+
+EXPECT_USER_ADD_V2 = {
+    "org_id": 0,
+    "email_id": "rios@la-sirena.net",
+    "role": "DEPRECATED",
+    "first_name": "Cristobal",
+    "last_name": "Rios",
+    "auth_method": "PASSWORD",
+    "profiles": [
+        {
+            'orgs': {
+                'allow': ['psc:org:test2']
+            },
+            'roles': ['psc:role:test2:DUMMY']
+        }
+    ]
+}
+
 USER_ADD_SUCCESS_RESP = {
     'password': 'abcd_efgh',
     'login_id': '6969',

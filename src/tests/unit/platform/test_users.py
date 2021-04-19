@@ -7,8 +7,8 @@ from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError, ObjectNotFoundError, ServerError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_users import (GET_USERS_RESP, GET_USERS_AFTER_CREATE_RESP, EXPECT_USER_ADD,
-                                                     EXPECT_USER_ADD_SMALL, USER_ADD_SUCCESS_RESP,
-                                                     USER_ADD_FAILURE_RESP)
+                                                     EXPECT_USER_ADD_SMALL, EXPECT_USER_ADD_V1, EXPECT_USER_ADD_V2,
+                                                     USER_ADD_SUCCESS_RESP, USER_ADD_FAILURE_RESP)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -160,13 +160,39 @@ def test_create_user(cbcsdk_mock):
     assert user.email == 'rios@la-sirena.net'
 
 
-def test_create_user_from_template(cbcsdk_mock):
+TEMPLATE1 = {
+    "email_id": "rios@la-sirena.net",
+    "role_urn": "psc:role:test:APP_SERVICE_ROLE",
+    "first_name": "Cristobal",
+    "last_name": "Rios",
+}
+
+TEMPLATE2 = {
+    "email_id": "rios@la-sirena.net",
+    "first_name": "Cristobal",
+    "last_name": "Rios",
+    "profiles": [
+        {
+            'orgs': {
+                'allow': ['psc:org:test2']
+            },
+            'roles': ['psc:role:test2:DUMMY']
+        }
+    ]
+}
+
+
+@pytest.mark.parametrize('template, response', [
+    (TEMPLATE1, EXPECT_USER_ADD_V1),
+    (TEMPLATE2, EXPECT_USER_ADD_V2)
+])
+def test_create_user_from_template(cbcsdk_mock, template, response):
     """Test creating a user from a template."""
     post_made = False
 
     def check_post(uri, body, **kwargs):
-        assert body == EXPECT_USER_ADD_SMALL
-        nonlocal post_made
+        nonlocal response, post_made
+        assert body == response
         post_made = True
         return USER_ADD_SUCCESS_RESP
 
@@ -178,20 +204,6 @@ def test_create_user_from_template(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/users', check_post)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', check_get)
     api = cbcsdk_mock.api
-    template = {
-        "email_id": "rios@la-sirena.net",
-        "role_urn": "psc:role:test:APP_SERVICE_ROLE",
-        "first_name": "Cristobal",
-        "last_name": "Rios",
-        "profiles": [
-            {
-                'orgs': {
-                    'allow': ['psc:org:test2']
-                },
-                'roles': ['psc:role:test2:DUMMY']
-            }
-        ]
-    }
     user = User.create(api, template)
     assert post_made
     assert user.last_name == 'Rios'
