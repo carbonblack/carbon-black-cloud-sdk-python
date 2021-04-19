@@ -24,6 +24,8 @@ import time
 
 """Alert Models"""
 
+MAX_RESULTS_LIMIT = 10000
+
 
 class BaseAlert(PlatformModel):
     """Represents a basic alert."""
@@ -837,6 +839,8 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
             result = resp.json()
 
             self._total_results = result["num_found"]
+            if self._total_results > MAX_RESULTS_LIMIT:
+                self._total_results = MAX_RESULTS_LIMIT
             self._count_valid = True
 
             results = result.get("results", [])
