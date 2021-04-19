@@ -1,6 +1,13 @@
 Changelog
 ================================
 
+CBC SDK 1.2.3 - Released April 19, 2021
+--------------------------------------
+
+Bug Fixes
+
+* Prevent alert query from retrieving past 10k limit
+
 CBC SDK 1.2.2 - Released April 5, 2021
 --------------------------------------
 
