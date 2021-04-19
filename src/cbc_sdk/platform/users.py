@@ -59,7 +59,7 @@ class User(MutableBaseModel):
                 cb (BaseAPI): Reference to API object used to communicate with the server.
             """
             self._cb = cb
-            self._criteria = {'org_id': 0, 'role': 'DEPRECATED', 'auth_method': 'PASSWORD'}
+            self._creation_data = {'org_id': 0, 'role': 'DEPRECATED', 'auth_method': 'PASSWORD'}
 
         def set_email(self, email):
             """
@@ -71,7 +71,7 @@ class User(MutableBaseModel):
             Returns:
                 UserBuilder: This object.
             """
-            self._criteria['email_id'] = email
+            self._creation_data['email_id'] = email
             return self
 
         def set_role(self, role):
@@ -84,7 +84,7 @@ class User(MutableBaseModel):
             Returns:
                 UserBuilder: This object.
             """
-            self._criteria['role_urn'] = role
+            self._creation_data['role_urn'] = role
             return self
 
         def set_first_name(self, first_name):
@@ -97,7 +97,7 @@ class User(MutableBaseModel):
             Returns:
                 UserBuilder: This object.
             """
-            self._criteria['first_name'] = first_name
+            self._creation_data['first_name'] = first_name
             return self
 
         def set_last_name(self, last_name):
@@ -110,7 +110,7 @@ class User(MutableBaseModel):
             Returns:
                 UserBuilder: This object.
             """
-            self._criteria['last_name'] = last_name
+            self._creation_data['last_name'] = last_name
             return self
 
         def set_auth_method(self, method):
@@ -123,7 +123,7 @@ class User(MutableBaseModel):
             Returns:
                 UserBuilder: This object.
             """
-            self._criteria['auth_method'] = method
+            self._creation_data['auth_method'] = method
             return self
 
         def add_grant_profile(self, orgs, roles):
@@ -138,10 +138,10 @@ class User(MutableBaseModel):
                 UserBuilder: This object.
             """
             new_profile = {'orgs': {'allow': [normalize_org(org) for org in orgs]}, 'roles': roles}
-            if 'profiles' in self._criteria:
-                self._criteria['profiles'].append(new_profile)
+            if 'profiles' in self._creation_data:
+                self._creation_data['profiles'].append(new_profile)
             else:
-                self._criteria['profiles'] = [new_profile]
+                self._creation_data['profiles'] = [new_profile]
             return self
 
         def build(self):
@@ -149,10 +149,9 @@ class User(MutableBaseModel):
             Builds the new user and returns it.
 
             Returns:
-                User: The new user object from the server.  First element in returned tuple.
-                str: The temporary password set for the user.  Second element in returned tuple.
+                User: The new user object from the server.
             """
-            return User._create_user(self._cb, self._criteria)
+            return User._create_user(self._cb, self._creation_data)
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -178,8 +177,7 @@ class User(MutableBaseModel):
             user_data (dict): The user data to be used to create the new user.
 
         Returns:
-            User: The new user object from the server.  First element in returned tuple.
-            str: The temporary password set for the user.  Second element in returned tuple.
+            User: The new user object from the server.
 
         Raises:
             ServerError: If the user registration was unsuccessful.
@@ -188,8 +186,7 @@ class User(MutableBaseModel):
         result = cb.post_object(url, user_data)
         resp = result.json()
         if resp['registration_type'] == 'SUCCESS':
-            new_user = User(cb, int(resp['login_id']))
-            return new_user, resp['password']
+            return User(cb, int(resp['login_id']))
         raise ServerError(500, f"registration return was unsuccessful: {resp['registration_type']}")
 
     def _refresh(self):
@@ -247,8 +244,7 @@ class User(MutableBaseModel):
             template (dict): Optional template data for creating the new user.
 
         Returns:
-            User: New user created, if template is specified.  First element in returned tuple.
-            str: Temporary password for new user, if template is specified. Second element in returned tuple.
+            User: New user created, if template is specified.
             UserBuilder: If template is None, returns an instance of this object. Call methods on the object to set
                          the values associated with the new user, and then call build() to create it.
         """

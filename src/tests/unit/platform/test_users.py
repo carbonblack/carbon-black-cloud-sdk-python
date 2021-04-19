@@ -152,9 +152,8 @@ def test_create_user(cbcsdk_mock):
     builder.set_first_name('Cristobal').set_last_name('Rios')
     builder.add_grant_profile(['psc:org:test2'], ['psc:role:test2:DUMMY'])
     builder.add_grant_profile(['test3'], ['psc:role:test3:DUMMY'])
-    user, password = builder.build()
+    user = builder.build()
     assert post_made
-    assert password == 'abcd_efgh'
     assert user.last_name == 'Rios'
     assert user.first_name == 'Cristobal'
     assert user.login_name == 'rios@la-sirena.net'
@@ -193,9 +192,8 @@ def test_create_user_from_template(cbcsdk_mock):
             }
         ]
     }
-    user, password = User.create(api, template)
+    user = User.create(api, template)
     assert post_made
-    assert password == 'abcd_efgh'
     assert user.last_name == 'Rios'
     assert user.first_name == 'Cristobal'
     assert user.login_name == 'rios@la-sirena.net'
