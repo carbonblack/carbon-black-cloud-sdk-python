@@ -38,12 +38,18 @@ HEADERS = {'X-Auth-Token': '', 'Content-Type': 'application/json'}
 ORG_KEY = ''
 HOSTNAME = ''
 DEVICE_ID = 8612331
+
+# Files constants
 LOCAL_FILE = 'memdump.txt'
 DIR = 'C:\\\\demo\\\\'
 MEMDUMP_FILE = r"c:\demo\memdump.txt"
 FILE = r"c:\demo\test.txt"
 FILE_CONTENT = "This is just a test"
 FILE_CONTENT_1 = b"This is just a test"
+
+# Registry constants
+KEY_PATH = 'HKCU\\Environment\\Test'
+KEY_PATH_PARENT = 'HKCU\\Environment'
 
 # Formatters
 NEWLINES = 1
@@ -185,11 +191,101 @@ def main():
         lr_session.kill_process(pid)
     print('Kill Process..................................OK')
 
+    print()
+    print(6 * ' ' + 'Live Response Registry Keys Commands')
+    print(SYMBOLS * DELIMITER)
+
+    result = lr_session.list_registry_keys_and_values(KEY_PATH_PARENT)
+    pprint(result)
+    print('List Registry Keys and Values.................OK')
+
+    found = False
+    for item in result['values']:
+        if item['registry_name'] == 'Test':
+            found = True
+            break
+    # make sure the value for the key doesn't exist
+    assert found is False
+
+    exists = True
+    try:
+        result = lr_session.list_registry_keys_and_values(KEY_PATH)
+        print(result)
+    except LiveResponseError as ex:
+        # make sure such registry key does not exist
+        exists = not ('ERROR_FILE_NOT_FOUND' in str(ex))
+    assert exists is False
+    print(f'Registry key with path {KEY_PATH} does not exist. Creating...')
+
+    lr_session.create_registry_key(KEY_PATH)
+    exists = True
+    try:
+        result = lr_session.list_registry_keys_and_values(KEY_PATH)
+    except LiveResponseError as ex:
+        exists = False
+        assert 'ERROR_FILE_NOT_FOUND' in str(ex)
+    # make sure that now the key exists
+    assert exists
+    print('Create Registry Key...........................OK')
+
+    # create value for the key
+    lr_session.set_registry_value(KEY_PATH, 1)
+    result = lr_session.get_registry_value(KEY_PATH)
+    assert result['registry_data'] == '1'
+    assert result['registry_name'] == 'Test'
+    print('Create Registry Value.........................OK')
+
+    pprint(result)
+    print('Get Registry Value............................OK')
+
+    result = lr_session.list_registry_keys_and_values(KEY_PATH_PARENT)
+    pprint(result)
+    print('List Registry Keys and Values.................OK')
+
+    found = False
+    for item in result['values']:
+        if item['registry_name'] == 'Test':
+            found = True
+            break
+    # make sure the value for the key exists
+    assert found is True
+
+    result = lr_session.delete_registry_value(KEY_PATH)
+    deleted = False
+    try:
+        result = lr_session.get_registry_value(KEY_PATH)
+    except LiveResponseError as ex:
+        deleted = 'ERROR_FILE_NOT_FOUND' in str(ex)
+    # make sure the value is deleted
+    assert deleted
+    print('Delete Registry Value.........................OK')
+
+    result = lr_session.list_registry_keys_and_values(KEY_PATH_PARENT)
+    found = False
+    for item in result['values']:
+        if item['registry_name'] == 'Test':
+            found = True
+            break
+    # make sure the value for the key was deleted successfully
+    assert found is False
+
+    result = lr_session.delete_registry_key(KEY_PATH)
+    exists = True
+    try:
+        result = lr_session.list_registry_keys_and_values(KEY_PATH)
+    except LiveResponseError as ex:
+        # make sure such registry key does not exist
+        exists = False
+        assert 'ERROR_FILE_NOT_FOUND' in str(ex)
+    assert exists is False, 'Registry key was not properly deleted.'
+    print('Delete Registry Key...........................OK')
+
     # clean-up actions after the tests
     if path.exists(LOCAL_FILE):
         os.remove(LOCAL_FILE)
     if path.exists("test.txt"):
         os.remove("test.txt")
+
     lr_session.close()
     print(f'Deleted the session {lr_session.session_id}...........OK')
 
