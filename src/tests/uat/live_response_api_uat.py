@@ -45,7 +45,7 @@ DIR = 'C:\\\\demo\\\\'
 MEMDUMP_FILE = r"c:\demo\memdump.txt"
 FILE = r"c:\demo\test.txt"
 FILE_CONTENT = "This is just a test"
-FILE_CONTENT_1 = b"This is just a test"
+FILE_CONTENT_BINARY = b"This is just a test"
 
 # Registry constants
 KEY_PATH = 'HKCU\\Environment\\Test'
@@ -81,7 +81,7 @@ def main():
     print_detail = args.verbose
 
     if print_detail:
-        print(f"profile being used is {args.__dict__}")
+        print("args provided {}".format(args))
 
     cb = get_cb_cloud_object(args)
     HEADERS['X-Auth-Token'] = cb.credentials.token
@@ -90,7 +90,14 @@ def main():
 
     print(13 * ' ' + 'Live Response Commands')
     print(SYMBOLS * DELIMITER)
-    device = cb.select(Device, DEVICE_ID)
+
+    try:
+        device = cb.select(Device, DEVICE_ID)
+    except Exception:
+        # if this is not run on dev01, pick a random active device
+        devices = cb.select(Device).set_status(['ACTIVE'])
+        device = devices[0]
+
     lr_session = device.lr_session()
     print(f'Created Session {lr_session.session_id}...............OK')
     print()
@@ -134,7 +141,7 @@ def main():
     print('WALK dir......................................OK')
 
     content = lr_session.get_file(FILE)
-    assert content == FILE_CONTENT_1, '{} {}'.format(content, FILE_CONTENT)
+    assert content == FILE_CONTENT_BINARY, '{} {}'.format(content, FILE_CONTENT)
     print('GET File......................................OK')
     lr_session.delete_file(FILE)
 
@@ -173,7 +180,7 @@ def main():
     print('List Processes................................OK')
 
     # create infinite ping, that could be killed afterwards
-    lr_session.create_process(r'cmd.exe /c "ping.exe -t 192.168.1.1"',
+    lr_session.create_process(r'cmd.exe /c "ping.exe -t 127.0.0.1"',
                               wait_for_completion=False, wait_for_output=False)
     processes = lr_session.list_processes()
     found = False

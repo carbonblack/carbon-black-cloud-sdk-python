@@ -64,7 +64,7 @@ def cbcsdk_mock(monkeypatch, cb):
     return CBCSDKMock(monkeypatch, cb)
 
 
-class MockClass:
+class MockRawFile:
     """Class to mock a raw file response"""
     @property
     def raw(self):
@@ -74,7 +74,7 @@ class MockClass:
 
 def get_file_content(url, stream=True):
     """Replacement function for the Connection.get"""
-    return MockClass()
+    return MockRawFile()
 
 
 @pytest.fixture(scope="function")
@@ -588,7 +588,7 @@ def test_run_process_with_output(cbcsdk_mock, mox, remotefile):
         mox.VerifyAll()
 
 
-def test_run_process_with_output_2(cbcsdk_mock, mox):
+def test_run_process_with_output_no_remote_file(cbcsdk_mock, mox):
     """Test the response to the 'create process' command with output that we retrieve."""
     def respond_to_post(url, body, **kwargs):
         assert body['session_id'] == '1:2468'
@@ -637,9 +637,9 @@ def test_list_processes(cbcsdk_mock):
     with manager.request_session(2468) as session:
         plist = session.list_processes()
         assert len(plist) == 3
-        assert plist[0]['path'] == 'proc1'
-        assert plist[1]['path'] == 'server'
-        assert plist[2]['path'] == 'borg'
+        assert plist[0]['process_path'] == 'proc1'
+        assert plist[1]['process_path'] == 'server'
+        assert plist[2]['process_path'] == 'borg'
 
 
 def test_registry_enum(cbcsdk_mock):
@@ -799,12 +799,12 @@ def test_memdump(cbcsdk_mock):
         else:
             pytest.fail(f"Invalid command name seen: {body['name']}")
 
-    def respond_get1(url, query_parameters, default):
+    def respond_get_memdump_file(url, query_parameters, default):
         retval = copy.deepcopy(MEMDUMP_END_RESP)
         retval['path'] = generated_file_name
         return retval
 
-    def respond_get2(url, query_parameters, default):
+    def respond_delete_file(url, query_parameters, default):
         retval = copy.deepcopy(MEMDUMP_DEL_END_RESP)
         retval['path'] = target_file_name
         return retval
@@ -813,8 +813,10 @@ def test_memdump(cbcsdk_mock):
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands', respond_to_post)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/101', respond_get1)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/102', respond_get2)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/101',
+                             respond_get_memdump_file)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/102',
+                             respond_delete_file)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
     with manager.request_session(2468) as session:
@@ -849,12 +851,12 @@ def test_memdump_errors(cbcsdk_mock):
         else:
             pytest.fail(f"Invalid command name seen: {body['name']}")
 
-    def respond_get1(url, query_parameters, default):
+    def respond_get_file(url, query_parameters, default):
         retval = copy.deepcopy(MEMDUMP_END_RESP)
         retval['path'] = generated_file_name
         return retval
 
-    def respond_get2(url, query_parameters, default):
+    def respond_delete_file(url, query_parameters, default):
         retval = copy.deepcopy(MEMDUMP_DEL_END_RESP)
         retval['path'] = target_file_name
         return retval
@@ -863,8 +865,10 @@ def test_memdump_errors(cbcsdk_mock):
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands', respond_to_post)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/101', respond_get1)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/102', respond_get2)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/101',
+                             respond_get_file)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/102',
+                             respond_delete_file)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
     with manager.request_session(2468) as session:
@@ -903,12 +907,12 @@ def test_memdump_not_done(cbcsdk_mock):
         else:
             pytest.fail(f"Invalid command name seen: {body['name']}")
 
-    def respond_get1(url, query_parameters, default):
+    def respond_get_file(url, query_parameters, default):
         retval = copy.deepcopy(MEMDUMP_END_RESP)
         retval['path'] = generated_file_name
         return retval
 
-    def respond_get2(url, query_parameters, default):
+    def respond_delete_file(url, query_parameters, default):
         retval = copy.deepcopy(MEMDUMP_DEL_END_RESP)
         retval['path'] = target_file_name
         return retval
@@ -917,8 +921,10 @@ def test_memdump_not_done(cbcsdk_mock):
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands', respond_to_post)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/101', respond_get1)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/102', respond_get2)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/101',
+                             respond_get_file)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/102',
+                             respond_delete_file)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
     with manager.request_session(2468) as session:

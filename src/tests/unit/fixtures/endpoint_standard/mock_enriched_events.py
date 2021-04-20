@@ -44,7 +44,7 @@ GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_0 = {
     'connector_id': 'P1PFUIAN32'
 }
 
-GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_0_0 = {
+GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ZERO_COMP = {
     'contacted': 10,
     'completed': 0,
     'query': {
@@ -160,18 +160,10 @@ GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_2 = {
     ]
 }
 
-GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_5 = {
+GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING = {
     'num_found': 808,
     'num_available': 1,
     'contacted': 0,
-    'completed': 6,
-    'results': []
-}
-
-GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_6 = {
-    'num_found': 808,
-    'num_available': 1,
-    'contacted': 10,
     'completed': 6,
     'results': []
 }

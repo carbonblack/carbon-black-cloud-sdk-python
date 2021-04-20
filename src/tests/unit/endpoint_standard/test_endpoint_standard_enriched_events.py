@@ -2,21 +2,18 @@
 
 import pytest
 import logging
-from cbc_sdk.endpoint_standard import EnrichedEvent, EnrichedEventQuery
+from cbc_sdk.endpoint_standard import EnrichedEvent
+from cbc_sdk.endpoint_standard.base import EnrichedEventQuery
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.endpoint_standard.mock_enriched_events import (POST_ENRICHED_EVENTS_SEARCH_JOB_RESP,
-                                                                        GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP,
-                                                                        GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_1,
-                                                                        GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_2,
-                                                                        GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_5,
-                                                                        GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_6,
-                                                                        GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_0,
-                                                                        GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_0_0,
-                                                                        GET_ENRICHED_EVENTS_AGG_JOB_RESULTS_RESP_1,
-                                                                        GET_ENRICHED_EVENTS_DETAIL_JOB_RESULTS_RESP_1,
-                                                                        )
+from tests.unit.fixtures.endpoint_standard.mock_enriched_events import (
+    POST_ENRICHED_EVENTS_SEARCH_JOB_RESP, GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_1,
+    GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_2, GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING,
+    GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_0, GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ZERO_COMP,
+    GET_ENRICHED_EVENTS_AGG_JOB_RESULTS_RESP_1, GET_ENRICHED_EVENTS_DETAIL_JOB_RESULTS_RESP_1,
+    GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP
+)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -334,7 +331,7 @@ def test_enriched_events_still_querying(cbcsdk_mock):
                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_0)
     cbcsdk_mock.mock_request("GET",
                              "/api/investigate/v2/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_5)
+                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING)
 
     api = cbcsdk_mock.api
     events = api.select(EnrichedEvent).where(process_pid=1000)
@@ -347,10 +344,10 @@ def test_enriched_events_still_querying2(cbcsdk_mock):
                              POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
     cbcsdk_mock.mock_request("GET",
                              "/api/investigate/v1/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b",  # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_0_0)
+                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ZERO_COMP)
     cbcsdk_mock.mock_request("GET",
                              "/api/investigate/v2/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_6)
+                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING)
 
     api = cbcsdk_mock.api
     events = api.select(EnrichedEvent).where(process_pid=1000)

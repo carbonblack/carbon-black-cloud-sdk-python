@@ -3,7 +3,7 @@
 DIRECTORY_LIST_START_RESP = {
     'id': 6,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'in progress',
     'name': 'directory list',
@@ -14,7 +14,7 @@ DIRECTORY_LIST_START_RESP = {
 DIRECTORY_LIST_END_RESP = {
     'id': 6,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'complete',
     'name': 'directory list',
@@ -51,7 +51,7 @@ DIRECTORY_LIST_END_RESP = {
 DELETE_FILE_START_RESP = {
     'id': 3,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'in progress',
     'name': 'delete file',
@@ -62,7 +62,7 @@ DELETE_FILE_START_RESP = {
 DELETE_FILE_END_RESP = {
     'id': 3,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'complete',
     'name': 'delete file',
@@ -73,7 +73,7 @@ DELETE_FILE_END_RESP = {
 DELETE_FILE_ERROR_RESP = {
     'id': 3,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'error',
     'name': 'delete file',
@@ -88,7 +88,7 @@ DELETE_FILE_ERROR_RESP = {
 GET_FILE_END_RESP = {
     'id': 7,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'complete',
     'name': 'get file',
@@ -121,7 +121,7 @@ GET_FILE_COMMAND_RESP = {
 PUT_FILE_START_RESP = {
     'id': 6,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'in progress',
     'name': 'put file',
@@ -132,7 +132,7 @@ PUT_FILE_START_RESP = {
 PUT_FILE_END_RESP = {
     'id': 6,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'complete',
     'name': 'put file',
@@ -143,7 +143,7 @@ PUT_FILE_END_RESP = {
 CREATE_DIRECTORY_START_RESP = {
     'id': 7,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'in progress',
     'name': 'create directory',
@@ -154,7 +154,7 @@ CREATE_DIRECTORY_START_RESP = {
 CREATE_DIRECTORY_END_RESP = {
     'id': 7,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'complete',
     'name': 'create directory',
@@ -270,7 +270,7 @@ WALK_RETURN_3 = [
 KILL_PROC_START_RESP = {
     'id': 13,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'in progress',
     'name': 'kill',
@@ -281,7 +281,7 @@ KILL_PROC_START_RESP = {
 KILL_PROC_END_RESP = {
     'id': 13,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'complete',
     'name': 'kill',
@@ -292,7 +292,7 @@ KILL_PROC_END_RESP = {
 CREATE_PROC_START_RESP = {
     'id': 52,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'in progress',
     'name': 'create process',
@@ -303,7 +303,7 @@ CREATE_PROC_START_RESP = {
 CREATE_PROC_END_RESP = {
     'id': 52,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'complete',
     'name': 'create process',
@@ -314,7 +314,7 @@ CREATE_PROC_END_RESP = {
 RUN_PROC_START_RESP = {
     'id': 9,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'in progress',
     'name': 'create process',
@@ -325,7 +325,7 @@ RUN_PROC_START_RESP = {
 RUN_PROC_END_RESP = {
     'id': 9,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'complete',
     'name': 'create process',
@@ -336,7 +336,7 @@ RUN_PROC_END_RESP = {
 LIST_PROC_START_RESP = {
     'id': 10,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'in progress',
     'name': 'process list',
@@ -347,7 +347,7 @@ LIST_PROC_START_RESP = {
 LIST_PROC_END_RESP = {
     'id': 10,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'complete',
     'name': 'process list',
@@ -355,36 +355,36 @@ LIST_PROC_END_RESP = {
     'completion_time': 2345678901,
     'processes': [
         {
-            'pid': 303,
+            'process_pid': 303,
             'create_time': 1476390670,
             'proc_guid': '6EDF43E9-11B3-469F-B80F-D7917D60CC62',
-            'path': 'proc1',
-            'command_line': 'proc1',
+            'process_path': 'proc1',
+            'process_cmdline': 'proc1',
             'sid': 'S-1-4-888',
-            'username': 'root',
-            'parent': 1,
+            'process_username': 'root',
+            'parent_pid': 1,
             'parent_guid': 'D0A5F3CA-E08D-41CA-8FDF-BBF95850752F'
         },
         {
-            'pid': 805,
+            'process_pid': 805,
             'create_time': 1476390670,
             'proc_guid': '17FD30A5-B8BF-41F9-8B38-4137B7241D4B',
-            'path': 'server',
-            'command_line': 'server',
+            'process_path': 'server',
+            'process_cmdline': 'server',
             'sid': 'S-1-4-888',
-            'username': 'root',
-            'parent': 1,
+            'process_username': 'root',
+            'parent_pid': 1,
             'parent_guid': 'D0A5F3CA-E08D-41CA-8FDF-BBF95850752F'
         },
         {
-            'pid': 1024,
+            'process_pid': 1024,
             'create_time': 1476390670,
             'proc_guid': '5EC3FFCA-238C-496E-ADEA-DF4F9EC4F473',
-            'path': 'borg',
-            'command_line': 'borg',
+            'process_path': 'borg',
+            'process_cmdline': 'borg',
             'sid': 'S-1-4-888',
-            'username': 'root',
-            'parent': 1,
+            'process_username': 'root',
+            'parent_pid': 1,
             'parent_guid': 'D0A5F3CA-E08D-41CA-8FDF-BBF95850752F'
         }
     ]
@@ -393,7 +393,7 @@ LIST_PROC_END_RESP = {
 REG_ENUM_START_RESP = {
     'id': 56,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'in progress',
     'name': 'reg enum key',
@@ -404,7 +404,7 @@ REG_ENUM_START_RESP = {
 REG_ENUM_END_RESP = {
     'id': 56,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'complete',
     'name': 'reg enum key',
@@ -442,7 +442,7 @@ REG_ENUM_END_RESP = {
 REG_GET_START_RESP = {
     'id': 61,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'in progress',
     'name': 'reg query value',
@@ -453,7 +453,7 @@ REG_GET_START_RESP = {
 REG_GET_END_RESP = {
     'id': 61,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'complete',
     'name': 'reg query value',
@@ -465,7 +465,7 @@ REG_GET_END_RESP = {
 REG_SET_START_RESP = {
     'id': 62,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'in progress',
     'name': 'reg set value',
@@ -476,7 +476,7 @@ REG_SET_START_RESP = {
 REG_SET_END_RESP = {
     'id': 62,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'complete',
     'name': 'reg set value',
@@ -487,7 +487,7 @@ REG_SET_END_RESP = {
 REG_CREATE_KEY_START_RESP = {
     'id': 63,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'in progress',
     'name': 'reg create key',
@@ -498,7 +498,7 @@ REG_CREATE_KEY_START_RESP = {
 REG_CREATE_KEY_END_RESP = {
     'id': 63,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'complete',
     'name': 'reg create key',
@@ -509,7 +509,7 @@ REG_CREATE_KEY_END_RESP = {
 REG_DELETE_KEY_START_RESP = {
     'id': 64,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'in progress',
     'name': 'reg delete key',
@@ -520,7 +520,7 @@ REG_DELETE_KEY_START_RESP = {
 REG_DELETE_KEY_END_RESP = {
     'id': 64,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'complete',
     'name': 'reg delete key',
@@ -531,7 +531,7 @@ REG_DELETE_KEY_END_RESP = {
 REG_DELETE_START_RESP = {
     'id': 65,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'in progress',
     'name': 'reg delete value',
@@ -542,7 +542,7 @@ REG_DELETE_START_RESP = {
 REG_DELETE_END_RESP = {
     'id': 65,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'complete',
     'name': 'reg delete value',
@@ -553,7 +553,7 @@ REG_DELETE_END_RESP = {
 MEMDUMP_START_RESP = {
     'id': 101,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'in progress',
     'name': 'memdump',
@@ -568,7 +568,7 @@ MEMDUMP_START_RESP = {
 MEMDUMP_END_RESP = {
     'id': 101,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'complete',
     'name': 'memdump',
@@ -583,7 +583,7 @@ MEMDUMP_END_RESP = {
 MEMDUMP_DEL_START_RESP = {
     'id': 102,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'in progress',
     'name': 'delete file',
@@ -594,7 +594,7 @@ MEMDUMP_DEL_START_RESP = {
 MEMDUMP_DEL_END_RESP = {
     'id': 102,
     'session_id': '1:2468',
-    'sensor_id': 2468,
+    'device_id': 2468,
     'command_timeout': 120,
     'status': 'complete',
     'name': 'delete file',

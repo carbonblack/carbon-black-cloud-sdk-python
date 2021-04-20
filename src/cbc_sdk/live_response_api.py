@@ -25,6 +25,7 @@ from collections import defaultdict
 
 import shutil
 
+from cbc_sdk.platform import Device
 from cbc_sdk.errors import TimeoutError, ObjectNotFoundError, ApiError
 from concurrent.futures import _base
 from cbc_sdk import winerror
@@ -776,7 +777,6 @@ def jobrunner(callable, cb, device_id):
     Returns:
         object: The wrapped object.
     """
-    from cbc_sdk.platform import Device
     with cb.select(Device, device_id).lr_session() as sess:
         return callable(sess)
 
@@ -793,7 +793,6 @@ class WorkItem(object):
             device_id (object): The device ID or Device object the work item is directed for.
         """
         self.fn = fn
-        from cbc_sdk.platform import Device
         if isinstance(device_id, Device):
             self.device_id = device_id.id
         else:
@@ -1003,7 +1002,6 @@ class LiveResponseJobScheduler(threading.Thread):
         now = datetime.utcnow()
         delta = timedelta(minutes=60)
         dformat = '%Y-%m-%dT%H:%M:%S.%fZ'
-        from cbc_sdk.platform import Device
         devices = [s for s in self._cb.select(Device)
                    if s.id in self._unscheduled_jobs and s.id not in self._job_workers
                    and now - datetime.strptime(s.last_contact_time, dformat) < delta]  # noqa: W503
@@ -1168,7 +1166,6 @@ class LiveResponseSession(CbLRSessionBase):
             session_data (dict): Additional session data.
         """
         super(LiveResponseSession, self).__init__(cblr_manager, session_id, device_id, session_data=session_data)
-        from cbc_sdk.platform import Device
         device_info = self._cb.select(Device, self.device_id)
         self.os_type = OS_LIVE_RESPONSE_ENUM.get(device_info.os, None)
 
