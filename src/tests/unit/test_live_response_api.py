@@ -951,7 +951,7 @@ def test_lr_post_command(cbcsdk_mock):
                                       message='Session not found')
         elif called == 2:
             raise ObjectNotFoundError('/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
-                                      message='{"status": "NOT_FOUND"}')
+                                      message='{"error_code": "NOT_FOUND"}')
         return DELETE_FILE_START_RESP
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
@@ -991,7 +991,7 @@ def test_lr_post_command_error_timeout(cbcsdk_mock):
     """Test creating a Live Response session lr_post_command errors."""
     def start_command(url, param_table, **kwargs):
         raise ObjectNotFoundError('/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
-                                  message='{"status": "NOT_FOUND"}')
+                                  message='{"error_code": "NOT_FOUND"}')
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
