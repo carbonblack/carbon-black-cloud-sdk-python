@@ -133,9 +133,7 @@ def test_submit_job(cbcsdk_mock):
     assert sut._timeout == 35
     assert not sut._keepalive_sessions
     assert sut._job_scheduler is None
-    queue = Queue()
-    queue.put('some job')
-    sut.submit_job(queue.get(), 2468)
+    sut.submit_job('some job', 2468)
     assert sut._job_scheduler is not None
 
 
@@ -148,9 +146,7 @@ def test_base_manager_submit_job(cbcsdk_mock):
     assert sut._timeout == 35
     assert not sut._keepalive_sessions
     assert sut._job_scheduler is None
-    queue = Queue()
-    queue.put('some job')
-    sut.submit_job(queue.get(), 2468)
+    sut.submit_job('some job', 2468)
     assert sut._job_scheduler is not None
 
 
@@ -163,10 +159,8 @@ def test_base_manager_submit_job_with_device_object(cbcsdk_mock):
     assert sut._timeout == 35
     assert not sut._keepalive_sessions
     assert sut._job_scheduler is None
-    queue = Queue()
-    queue.put('some job')
     device = Device(cbcsdk_mock.api, 2468)
-    sut.submit_job(queue.get(), device)
+    sut.submit_job('some job', device)
     assert sut._job_scheduler is not None
 
 
@@ -189,8 +183,6 @@ def test_base_manager_maintain_sessions(cbcsdk_mock, thrown_exception):
     sut._sessions[2468] = session
     sut.__cleanup_thread_running = True
     sut._refcount = 1
-    queue = Queue()
-    queue.put('some job')
     sut._maintain_sessions()
 
 
@@ -212,8 +204,8 @@ def test_base_manager_maintain_sessions_exc(cbcsdk_mock):
     sut._sessions[2468] = session
     sut.__cleanup_thread_running = True
     sut._refcount = 1
-    queue = Queue()
-    queue.put('some job')
+    # queue = Queue()
+    # queue.put('some job')
     sut._maintain_sessions()
 
 
@@ -941,15 +933,12 @@ def test_memdump_not_done(cbcsdk_mock):
 
 def test_lr_post_command(cbcsdk_mock):
     """Test creating a Live Response session."""
-    called = 0
+    called = False
 
     def start_command(url, param_table, **kwargs):
         nonlocal called
-        called += 1
-        if called == 1:
-            raise ObjectNotFoundError('/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
-                                      message='Session not found')
-        elif called == 2:
+        if called is False:
+            called = True
             raise ObjectNotFoundError('/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
                                       message='{"error_code": "NOT_FOUND"}')
         return DELETE_FILE_START_RESP

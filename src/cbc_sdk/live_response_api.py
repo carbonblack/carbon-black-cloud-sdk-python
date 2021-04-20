@@ -701,21 +701,16 @@ class CbLRSessionBase(object):
                 resp = self._cb.post_object("{cblr_base}/sessions/{0}/commands".format(self.session_id,
                                                                                        cblr_base=self.cblr_base), data)
             except ObjectNotFoundError as e:
-                if e.message.startswith("Device") or e.message.startswith("Session"):
-                    self.session_id, self.session_data = self._cblr_manager._get_or_create_session(self.device_id)
-                    retries -= 1
-                    continue
-                else:
-                    try:
-                        error_message = json.loads(e.message)
-                        if error_message["error_code"] == "NOT_FOUND":
-                            self.session_id, self.session_data = \
-                                self._cblr_manager._get_or_create_session(self.device_id)
-                            retries -= 1
-                            continue
-                    except Exception:
-                        pass
-                    raise ApiError("Received 404 error from server: {0}".format(e.message))
+                try:
+                    error_message = json.loads(e.message)
+                    if error_message["error_code"] == "NOT_FOUND":
+                        self.session_id, self.session_data = \
+                            self._cblr_manager._get_or_create_session(self.device_id)
+                        retries -= 1
+                        continue
+                except Exception:
+                    pass
+                raise ApiError("Received 404 error from server: {0}".format(e.message))
             else:
                 return resp
 
