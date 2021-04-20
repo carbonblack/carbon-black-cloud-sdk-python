@@ -2,7 +2,8 @@
 
 import pytest
 import logging
-from cbc_sdk.endpoint_standard import Policy, Query
+from cbc_sdk.endpoint_standard import Policy
+from cbc_sdk.endpoint_standard.base import Query
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.endpoint_standard.mock_policy import (POLICY_GET_RESP,

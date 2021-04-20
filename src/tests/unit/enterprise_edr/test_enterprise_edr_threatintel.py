@@ -8,6 +8,7 @@ from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.enterprise_edr.mock_threatintel import (WATCHLIST_GET_RESP,
                                                                  WATCHLIST_GET_SPECIFIC_RESP,
+                                                                 WATCHLIST_GET_SPECIFIC_RESP_2,
                                                                  WATCHLIST_GET_SPECIFIC_MISSING_FIELDS_RESP,
                                                                  WATCHLIST_GET_SPECIFIC_INVALID_CLASSIFIER_RESP,
                                                                  CREATE_WATCHLIST_DATA,
@@ -83,8 +84,28 @@ def test_watchlist_update(cbcsdk_mock):
     assert watchlist._info["description"] == "Existing description for the watchlist."
     cbcsdk_mock.mock_request("PUT", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}",
                              WATCHLIST_GET_SPECIFIC_RESP)
+    cbcsdk_mock.mock_request("PATCH", f"/threathunter/watchlistmgr/v2/watchlist/{id}",
+                             WATCHLIST_GET_SPECIFIC_RESP)
     watchlist.update(description="My New Description", nonexistant_key="This Is Ignored")
     assert watchlist._info["description"] == "My New Description"
+    watchlist._update_object()
+
+
+def test_watchlist_update_id(cbcsdk_mock):
+    """Testing Watchlist.update()."""
+    id = "watchlistId2"
+    id2 = "watchlistId"
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_RESP_2)
+    watchlist = Watchlist(cbcsdk_mock.api, model_unique_id="watchlistId2", initial_data=None)
+    assert "description" in watchlist._info
+    assert "nonexistant_key" not in watchlist._info
+    cbcsdk_mock.mock_request("PATCH", "/threathunter/watchlistmgr/v2/watchlist",
+                             WATCHLIST_GET_SPECIFIC_RESP)
+    watchlist.id = id2
+    result_repr = watchlist.__repr__()
+    assert 'id watchlistId' in result_repr
+    assert '(*)' in result_repr
+    watchlist._update_object()
 
 
 def test_watchlist_update_invalid_object(cbcsdk_mock):

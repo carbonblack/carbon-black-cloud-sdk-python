@@ -12,7 +12,7 @@
 """Tests of the devices v6 API."""
 
 import pytest
-from cbc_sdk.errors import ApiError
+from cbc_sdk.errors import ApiError, ServerError
 from cbc_sdk.platform import Device
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.stubresponse import StubResponse, patch_cbc_sdk_api
@@ -142,6 +142,24 @@ def test_device_update_policy(monkeypatch):
     patch_cbc_sdk_api(monkeypatch, api, POST=_call_update_policy)
     api.device_update_policy([6023], 8675309)
     assert _was_called
+
+
+def test_device_update_policy_error(monkeypatch):
+    """Test updating the policy of a device."""
+    _was_called = False
+
+    def _call_update_policy(url, body, **kwargs):
+        nonlocal _was_called
+        assert url == "/appservices/v6/orgs/Z100/device_actions"
+        assert body == {"action_type": "UPDATE_POLICY", "device_id": [6023], "options": {"policy_id": 8675309}}
+        _was_called = True
+        return StubResponse(None, 500)
+
+    api = call_cbcloud_api()
+    patch_cbc_sdk_api(monkeypatch, api, POST=_call_update_policy)
+    with pytest.raises(ServerError):
+        api.device_update_policy([6023], 8675309)
+        assert _was_called
 
 
 def test_device_update_sensor_version(monkeypatch):
