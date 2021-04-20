@@ -708,7 +708,7 @@ class CbLRSessionBase(object):
                 else:
                     try:
                         error_message = json.loads(e.message)
-                        if error_message["status"] == "NOT_FOUND":
+                        if error_message["error_code"] == "NOT_FOUND":
                             self.session_id, self.session_data = \
                                 self._cblr_manager._get_or_create_session(self.device_id)
                             retries -= 1
