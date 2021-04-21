@@ -11,14 +11,31 @@
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
 """
-The following API calls are tested in this script.
-
-For the validation CBC API requests are used.
-
 To execute, a profile must be provided using the standard CBC Credentials.
 
 Processes: Live Response
-
+* Create sesssion
+* File commands
+    * Create directory
+    * Create/Put file in a directory
+    * List a directory
+    * Walk a directory
+    * Get a file
+    * Delete a file
+    * Delete a directory
+    * Memdump
+* Process commands
+    * Create a process
+    * List processes
+    * Kill a process
+* Registry commands
+    * List registry keys and values
+    * List registry values
+    * Create registry key
+    * Create registry value
+    * Delete registry value
+    * Delete registry key
+* Close a session
 """
 
 # Standard library imports
@@ -120,6 +137,7 @@ def main():
             print('Directory already exists, continue with the test.')
         else:
             raise
+    print('Create Dir....................................OK')
 
     # show that test.txt is not present in that directory
     response = lr_session.list_directory(DIR)
@@ -149,11 +167,14 @@ def main():
     try:
         content = lr_session.get_file(FILE)
     except LiveResponseError as ex:
-        assert 'ERROR_FILE_NOT_FOUND' in str(ex), f'Other error {ex}'
+        assert 'ERROR_FILE_NOT_FOUND' in str(ex) or 'ERROR_PATH_NOT_FOUND' in str(ex), f'Other error {ex}'
         exc_raise = True
     finally:
         assert exc_raise
     print('DELETE File...................................OK')
+    # delete the directory too
+    lr_session.delete_file(DIR)
+    print('DELETE Dir....................................OK')
 
     # This command takes a lot of time!
     # uncomment only if this needs to be tested!
