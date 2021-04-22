@@ -261,7 +261,6 @@ QUERY_GRANT_RESP = {
     ]
 }
 
-
 DETAILS_GRANT1 = {
     "principal": "psc:user:test:3911",
     "expires": 0,
@@ -898,4 +897,56 @@ EXPECT_SET_EXPIRATION_2B = {
     "updated_by": "psc:user:FOO:BAR",
     "create_time": "2021-03-20T12:56:31.645Z",
     "update_time": "2021-03-20T12:56:31.645Z"
+}
+
+PERMITTED_ROLES_RESP = {
+    "additionalProp1": {
+        "additionalProp1": [
+            {
+                "urn": "psc:role::ALPHA",
+                "scoped": "psc:org:ABCD1234",
+                "name": "Support",
+                "desc": "The Alpha role.",
+                "disabled": False,
+                "capabilities": ["internal"],
+                "child_urn": "psc:role::ALPHA",
+                "created_by": "psc:user:ABCD1234:DEFG1234",
+                "updated_by": "psc:user:ABCD1234:DEFG1234",
+                "create_time": {},
+                "update_time": {}
+            }
+        ],
+        "additionalProp2": [
+            {
+                "urn": "psc:role::BRAVO",
+                "scoped": "psc:org:ABCD1234",
+                "name": "Support",
+                "desc": "The Bravo role.",
+                "disabled": False,
+                "capabilities": ["internal"],
+                "child_urn": "psc:role::BRAVO",
+                "created_by": "psc:user:ABCD1234:DEFG1234",
+                "updated_by": "psc:user:ABCD1234:DEFG1234",
+                "create_time": {},
+                "update_time": {}
+            }
+        ]
+    },
+    "additionalProp2": {
+        "additionalProp1": [
+            {
+                "urn": "psc:role::CHARLIE",
+                "scoped": "psc:org:ABCD1234",
+                "name": "Support",
+                "desc": "The Charlie role.",
+                "disabled": False,
+                "capabilities": ["internal"],
+                "child_urn": "psc:role::CHARLIE",
+                "created_by": "psc:user:ABCD1234:DEFG1234",
+                "updated_by": "psc:user:ABCD1234:DEFG1234",
+                "create_time": {},
+                "update_time": {}
+            }
+        ]
+    }
 }
