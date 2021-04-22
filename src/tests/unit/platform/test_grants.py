@@ -9,7 +9,8 @@ from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_grants import (GET_GRANT_RESP, PUT_GRANT_RESP, POST_GRANT_RESP,
                                                       POST_PROFILE_IN_GRANT_RESP, PUT_PROFILE_RESP,
-                                                      DELETE_PROFILE_RESP, DELETE_GRANT_RESP, QUERY_GRANT_RESP)
+                                                      DELETE_PROFILE_RESP, DELETE_GRANT_RESP, QUERY_GRANT_RESP,
+                                                      PERMITTED_ROLES_RESP)
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -278,3 +279,11 @@ def test_query_grants_fail(cb):
     query = cb.select(Grant)
     with pytest.raises(ApiError):
         list(query)
+
+
+def test_get_permitted_roles(cbcsdk_mock):
+    """Test the get_permitted_roles function."""
+    cbcsdk_mock.mock_request('GET', '/access/v3/orgs/test/users/6023/roles/permitted?type=USER', PERMITTED_ROLES_RESP)
+    api = cbcsdk_mock.api
+    roles = Grant.get_permitted_roles(api, 6023)
+    assert roles == ["psc:role::ALPHA", "psc:role::BRAVO", "psc:role::CHARLIE"]
