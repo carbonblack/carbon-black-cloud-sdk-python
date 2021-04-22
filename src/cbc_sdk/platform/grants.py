@@ -500,8 +500,8 @@ class Grant(MutableBaseModel):
         def _extractor(resp_data):
             """Pulls out all the lists of URN descriptors from the result."""
             for d in resp_data.values():
-                for l in d.values():
-                    yield l
+                for ll in d.values():
+                    yield ll
 
         url = "/access/v3/orgs/{0}/users/{1}/roles/permitted?type=USER".format(cb.credentials.org_key, userid)
         data = list(_extractor(cb.get_object(url)))
