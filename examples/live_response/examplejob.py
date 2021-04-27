@@ -15,15 +15,19 @@
 
 class GetFileJob(object):
     """Get file"""
-    def __init__(self, file_name):
+    def __init__(self, file_name, file_dir):
         """Initializer"""
         self._file_name = file_name
+        self._file_dir = file_dir
 
     def run(self, session):
-        """Get the file"""
+        """List directory and get file"""
+        directories = session.list_directory(self._file_dir)
+        for directory in directories:
+            print(f"{directory['attributes'][0]} {directory['filename']}")
         return session.get_file(self._file_name)
 
 
 def getjob():
     """Get job"""
-    return GetFileJob("c:\\test.txt")
+    return GetFileJob("c:\\test.txt", "c:\\")
