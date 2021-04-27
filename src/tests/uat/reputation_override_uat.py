@@ -29,6 +29,8 @@ Reputation Override:
 import sys
 
 # Internal library imports
+import pytest
+
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
 from cbc_sdk.platform import ReputationOverride
 from cbc_sdk.errors import ObjectNotFoundError
@@ -132,20 +134,10 @@ def main():
 
     ReputationOverride.bulk_delete(cb, [it_tool_override.id, cert_override.id])
 
-    isDeleted = True
-    try:
+    with pytest.raises(ObjectNotFoundError):
         cb.select(ReputationOverride, it_tool_override.id)
-        isDeleted = False
-    except ObjectNotFoundError:
-        pass
-
-    try:
+    with pytest.raises(ObjectNotFoundError):
         cb.select(ReputationOverride, cert_override.id)
-        isDeleted = False
-    except ObjectNotFoundError:
-        pass
-
-    assert isDeleted
     print('Bulk Delete Reputation Overrides .............OK')
 
 
