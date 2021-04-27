@@ -26,11 +26,10 @@ Reputation Override:
 """
 
 # Standard library imports
+import pytest
 import sys
 
 # Internal library imports
-import pytest
-
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
 from cbc_sdk.platform import ReputationOverride
 from cbc_sdk.errors import ObjectNotFoundError
