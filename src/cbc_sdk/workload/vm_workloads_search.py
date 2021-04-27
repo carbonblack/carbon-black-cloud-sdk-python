@@ -135,10 +135,11 @@ class ComputeResource(NewBaseModel):
             reslist (list): A list of ComputeResource objects.
 
         Returns:
-            list: List of dicts with the keys 'vcenter_id' and 'compute_resource_id', containing information extracted
+            list: List of dicts with the keys 'vcenter_uuid' and 'compute_resource_id', containing information extracted
                   from the ComputeResource objects.
         """
-        return [{'vcenter_id': resource.vcenter_uuid, 'compute_resource_id': resource.uuid} for resource in reslist]
+        return [{'resource_manager_id': resource.vcenter_uuid, 'compute_resource_id': resource.id}
+                for resource in reslist]
 
     def install_sensor(self, sensor_version, config_file=None):
         """
@@ -186,7 +187,7 @@ class ComputeResource(NewBaseModel):
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
-            compute_resources (list): A list of dicts, each of which contains the keys 'vcenter_id' and
+            compute_resources (list): A list of dicts, each of which contains the keys 'vcenter_uuid' and
                                       'compute_resource_id', specifying the compute resources to install sensors on.
             sensor_kit_types (list): A list of SensorKit objects used to specify sensor types to choose from
                                      in installation.

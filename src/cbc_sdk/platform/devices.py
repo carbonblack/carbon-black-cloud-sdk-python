@@ -15,8 +15,7 @@
 
 from cbc_sdk.errors import ApiError, ServerError
 from cbc_sdk.platform import PlatformModel
-from cbc_sdk.workload import DeviceVulnerability
-from cbc_sdk.workload.vulnerability_assessment import DeviceVulnerabilityQuery
+from cbc_sdk.workload.vulnerability_assessment import Vulnerability, VulnerabilityQuery
 from cbc_sdk.base import (BaseQuery, QueryBuilder, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
                           IterableQueryMixin, AsyncQueryMixin)
 
@@ -185,8 +184,6 @@ class Device(PlatformModel):
         # check whether vcenter_uuid is populated
         if vcenter_specific and self.vcenter_uuid:
             url += '/vcenters/{}'.format(self.vcenter_uuid)
-        else:
-            self._vcenter_specific = None
         url += '/devices/{}/device_actions'.format(self._model_unique_id)
 
         resp = self._cb.post_object(url, body=request)
@@ -208,14 +205,21 @@ class Device(PlatformModel):
         Returns:
             dict: summary for the vulnerabilities for this device
         """
+        VALID_CATEGORY = ["OS", "APP"]
+
+        query_params = {}
+
+        url = '/vulnerability/assessment/api/v1/orgs/{}'
         if vcenter_specific and self.vcenter_uuid:
-            vcenter_id = self.vcenter_uuid
-        else:
-            vcenter_id = None
-        return DeviceVulnerability.get_vulnerability_summary_per_device(self._cb,
-                                                                        self._model_unique_id,
-                                                                        category,
-                                                                        vcenter_id)
+            url += "/vcenters/{}".format(self.vcenter_uuid)
+
+        if category and category not in VALID_CATEGORY:
+            raise ApiError("Invalid category provided")
+        elif category:
+            query_params["category"] = category
+
+        req_url = url.format(self._cb.credentials.org_key) + '/devices/{}/vulnerabilities/summary'.format(self.id)
+        return self._cb.get_object(req_url, query_params)
 
     def get_vulnerabilties(self, vcenter_specific=False):
         """
@@ -227,11 +231,9 @@ class Device(PlatformModel):
         Returns:
             dict: vulnerabilities for this device
         """
-        if vcenter_specific and self.vcenter_uuid:
-            self._vcenter_specific = self.vcenter_uuid
-        else:
-            self._vcenter_specific = None
-        return DeviceVulnerabilityQuery(self, self._cb)
+        if vcenter_specific and not self.vcenter_uuid:
+            raise ApiError('vCenter Specific requires the device to have a vcenter_uuid')
+        return VulnerabilityQuery(Vulnerability, self._cb, self)
 
 
 """Device Queries"""
