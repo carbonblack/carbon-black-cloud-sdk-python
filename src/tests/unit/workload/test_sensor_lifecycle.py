@@ -207,9 +207,9 @@ def test_build_compute_resource_list(cb):
     res2 = create_stub_compute_resource(cb, '2', 'Yankee', 'Bravo', 'WINDOWS', '64')
     res3 = create_stub_compute_resource(cb, '3', 'X-Ray', 'Charlie', 'WINDOWS', '64')
     output = ComputeResource._build_compute_resource_list([res1, res2, res3])
-    assert output == [{'vcenter_id': 'Alpha', 'compute_resource_id': 'Zulu'},
-                      {'vcenter_id': 'Bravo', 'compute_resource_id': 'Yankee'},
-                      {'vcenter_id': 'Charlie', 'compute_resource_id': 'X-Ray'}]
+    assert output == [{'resource_manager_id': 'Alpha', 'compute_resource_id': '1'},
+                      {'resource_manager_id': 'Bravo', 'compute_resource_id': '2'},
+                      {'resource_manager_id': 'Charlie', 'compute_resource_id': '3'}]
 
 
 def test_sensor_install_bulk_by_id(cbcsdk_mock):
@@ -218,8 +218,8 @@ def test_sensor_install_bulk_by_id(cbcsdk_mock):
         assert kwargs['action_type'] == 'INSTALL'
         assert kwargs['file'] == 'MyConfigFile'
         r = json.loads(kwargs['install_request'])
-        assert r == {'compute_resources': [{'resource_manager_id': 'Alpha', 'compute_resource_id': 'Zulu'},
-                                           {'resource_manager_id': 'Bravo', 'compute_resource_id': 'Yankee'}],
+        assert r == {'compute_resources': [{'resource_manager_id': 'Alpha', 'compute_resource_id': '1'},
+                                           {'resource_manager_id': 'Bravo', 'compute_resource_id': '2'}],
                      'sensor_types': [{'device_type': 'LINUX', 'architecture': '64', 'type': 'SUSE',
                                        'version': '1.2.3.4'},
                                       {'device_type': 'MAC', 'architecture': '64', 'type': 'MAC',
@@ -230,8 +230,8 @@ def test_sensor_install_bulk_by_id(cbcsdk_mock):
     api = cbcsdk_mock.api
     skit1 = SensorKit.from_type(api, 'LINUX', '64', 'SUSE', '1.2.3.4')
     skit2 = SensorKit.from_type(api, 'MAC', '64', 'MAC', '5.6.7.8')
-    result = ComputeResource.bulk_install_by_id(api, [{'vcenter_id': 'Alpha', 'compute_resource_id': 'Zulu'},
-                                                      {'vcenter_id': 'Bravo', 'compute_resource_id': 'Yankee'}],
+    result = ComputeResource.bulk_install_by_id(api, [{'resource_manager_id': 'Alpha', 'compute_resource_id': '1'},
+                                                      {'resource_manager_id': 'Bravo', 'compute_resource_id': '2'}],
                                                 [skit1, skit2], 'MyConfigFile')
     assert result == {'type': "INFO", 'code': "INSTALL_SENSOR_REQUEST_PROCESSED"}
 
@@ -242,8 +242,8 @@ def test_sensor_install_bulk(cbcsdk_mock):
         assert kwargs['action_type'] == 'INSTALL'
         assert kwargs['file'] == 'MyConfigFile'
         r = json.loads(kwargs['install_request'])
-        assert r == {'compute_resources': [{'resource_manager_id': 'Alpha', 'compute_resource_id': 'Zulu'},
-                                           {'resource_manager_id': 'Bravo', 'compute_resource_id': 'Yankee'}],
+        assert r == {'compute_resources': [{'resource_manager_id': 'Alpha', 'compute_resource_id': '123'},
+                                           {'resource_manager_id': 'Bravo', 'compute_resource_id': '234'}],
                      'sensor_types': [{'device_type': 'LINUX', 'architecture': '64', 'type': 'SUSE',
                                        'version': '1.2.3.4'},
                                       {'device_type': 'MAC', 'architecture': '64', 'type': 'MAC',
@@ -266,7 +266,7 @@ def test_sensor_install_single(cbcsdk_mock):
         assert kwargs['action_type'] == 'INSTALL'
         assert kwargs['file'] == 'MyConfigFile'
         r = json.loads(kwargs['install_request'])
-        assert r == {'compute_resources': [{'resource_manager_id': 'Alpha', 'compute_resource_id': 'Zulu'}],
+        assert r == {'compute_resources': [{'resource_manager_id': 'Alpha', 'compute_resource_id': '123'}],
                      'sensor_types': [{'device_type': 'LINUX', 'architecture': '64', 'type': 'SUSE',
                                        'version': '1.2.3.4'}]}
         return REQUEST_SENSOR_INSTALL_RESP
