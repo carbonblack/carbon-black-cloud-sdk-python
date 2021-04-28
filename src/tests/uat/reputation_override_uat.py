@@ -26,6 +26,7 @@ Reputation Override:
 """
 
 # Standard library imports
+import pytest
 import sys
 
 # Internal library imports
@@ -59,7 +60,7 @@ def main():
                         .where("foo*") \
                         .set_override_list("BLACK_LIST") \
                         .set_override_type("SHA256") \
-                        .sort_by("create_time", "asc") \
+                        .sort_by("create_time", "desc") \
                         .first()
 
     assert sha256_override.sha256_hash == "af62e6b3d475879c4234fe7bd8ba67ff6544ce6510131a069aaac75aa92aee7a"
@@ -103,7 +104,7 @@ def main():
     it_tool_override = cb.select(ReputationOverride) \
                          .set_override_list("WHITE_LIST") \
                          .set_override_type("IT_TOOL") \
-                         .sort_by("create_time", "asc") \
+                         .sort_by("create_time", "desc") \
                          .first()
 
     assert it_tool_override.path == "C://tools//*.exe"
@@ -122,7 +123,7 @@ def main():
     cert_override = cb.select(ReputationOverride) \
                       .set_override_list("WHITE_LIST") \
                       .set_override_type("CERT") \
-                      .sort_by("create_time", "asc") \
+                      .sort_by("create_time", "desc") \
                       .first()
 
     assert cert_override.signed_by == "VMware Inc."
@@ -132,19 +133,10 @@ def main():
 
     ReputationOverride.bulk_delete(cb, [it_tool_override.id, cert_override.id])
 
-    delete_query = cb.select(ReputationOverride) \
-                     .set_override_list("WHITE_LIST") \
-                     .set_override_type("IT_TOOL") \
-                     .sort_by("create_time", "asc")
-
-    assert len(delete_query) == 0
-
-    delete_query = cb.select(ReputationOverride) \
-                     .set_override_list("WHITE_LIST") \
-                     .set_override_type("CERT") \
-                     .sort_by("create_time", "asc")
-
-    assert len(delete_query) == 0
+    with pytest.raises(ObjectNotFoundError):
+        cb.select(ReputationOverride, it_tool_override.id)
+    with pytest.raises(ObjectNotFoundError):
+        cb.select(ReputationOverride, cert_override.id)
     print('Bulk Delete Reputation Overrides .............OK')
 
 
