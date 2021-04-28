@@ -30,8 +30,10 @@ then you must use Endpoint Standard Devices and a Live Response API Key.
   >>> api = CBCloudAPI(profile='live_response')
   >>> endpoint_standard_device = api.select(endpoint_standard.Device, 1234)
   >>> endpoint_standard_device.lr_session()
-  url: /integrationServices/v3/cblr/session/428:1234 -> status: PENDING
+  url: /appservices/v6/orgs/{org_key}/liveresponse/sessions/428:1234 -> status: PENDING
   [...]
+
+  For more examples on Live Response, check :doc:`live-response`
 
 USB Devices
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

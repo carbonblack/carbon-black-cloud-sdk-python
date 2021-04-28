@@ -16,11 +16,9 @@ specific actions, and use them as needed.
 For example, if using the
 `Platform Devices API <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/devices-api/#search-devices>`_
 to search for mission critical devices, and the
-`Endpoint Standard Live Response API <https://developer.carbonblack.com/reference/carbon-black-cloud/cb-defense/latest/live-response-api/>`_
-to execute commands on those devices, generate two API Keys. The Platform API Key should have the
-Custom Access Level, and the Live Response Key should have the Live Response Access Level.
-Store these Keys with profile names, and reference the profile names when creating
-CBCloudAPI objects.
+`Platform Live Response API <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/live-response-api/>`_
+to execute commands on those devices, generate two API Keys with Custom Access Level with appropriate permissions.
+Store the Keys with profile name, and reference the profile names when creating CBCloudAPI objects.
 
 ::
 
@@ -42,6 +40,8 @@ CBCloudAPI objects.
   ...      lr_session = live_response_api.live_response.request_session(device.id)
   ...      lr_session.create_process(r'cmd.exe /c "ping.exe 192.168.1.1"'))
   ...      lr_session.close()
+  
+For more examples on Live Response, check :doc:`live-response`
 
 
 
