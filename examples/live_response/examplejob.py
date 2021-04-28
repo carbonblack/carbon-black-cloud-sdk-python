@@ -24,7 +24,7 @@ class GetFileJob(object):
         """List directory and get file"""
         directories = session.list_directory(self._file_dir)
         for directory in directories:
-            print(f"{directory['attributes'][0]} {directory['filename']}")
+            print("{} {}".format(directory['attributes'][0], directory['filename']))
         return session.get_file(self._file_name)
 
 

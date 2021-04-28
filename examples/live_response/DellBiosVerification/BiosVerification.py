@@ -24,7 +24,7 @@ from cbc_sdk.helpers import get_cb_cloud_object, build_cli_parser
 def live_response(cb, host=None, response=None):
     """Live Response"""
     # Select the device you want to gather forensic data from
-    query_hostname = f"name:{host}"
+    query_hostname = "name:{}".format(host)
     print("[ * ] Establishing LiveResponse Session with Remote Host:")
 
     # Create a new device object to launch LR on
