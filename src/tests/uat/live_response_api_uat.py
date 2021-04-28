@@ -98,7 +98,7 @@ def main():
     print_detail = args.verbose
 
     if print_detail:
-        print("args provided {}".format(args))
+        print(f"args provided {args}")
 
     cb = get_cb_cloud_object(args)
     HEADERS['X-Auth-Token'] = cb.credentials.token
@@ -159,7 +159,7 @@ def main():
     print('WALK dir......................................OK')
 
     content = lr_session.get_file(FILE)
-    assert content == FILE_CONTENT_BINARY, '{} {}'.format(content, FILE_CONTENT)
+    assert content == FILE_CONTENT_BINARY, f'{content} {FILE_CONTENT}'
     print('GET File......................................OK')
     lr_session.delete_file(FILE)
 
