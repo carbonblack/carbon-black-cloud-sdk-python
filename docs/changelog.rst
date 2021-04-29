@@ -1,5 +1,11 @@
 Changelog
 ================================
+CBC SDK 1.3.0 - Released ?, 2021
+--------------------------------
+
+New Features
+
+* Live Response migrated from v3 to v6 (:doc:`migration guide<live-response-v6-migration>`)
 
 CBC SDK 1.2.3 - Released April 19, 2021
 --------------------------------------
