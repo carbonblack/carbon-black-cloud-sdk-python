@@ -46,7 +46,7 @@ table shows the corresponding permissions that needs to be enabled, based on the
 
 
 Changes in the routes and response codes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------------
 
 +-----------------------------------------------------------+---------------------------------------------------------+
 | v3                                                        | v6                                                      |
@@ -68,7 +68,7 @@ Changes in the routes and response codes
 
 
 Changes in some of the request/response fields
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------------------
 
 +----------------------+------------------+------------------+
 | Where is the change? | v3               | v6               |
@@ -88,12 +88,12 @@ Changes in some of the request/response fields
 
 
 Changes in the response body
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------
 Registry Command Response was changed from ``{ "valueType":"", "valueData":"", "valueName":""}`` to ``{ "value_type":"", "value_data":"", "value_name":""}``
 
 
 Additional Information
-^^^^^^^^^^^^^^^^^^^^^^
+----------------------
 
 * `(CBC) Live Response API releasing v6: now with granular RBAC! <https://community.carbonblack.com/t5/Developer-Relations/CBC-Live-Response-API-releasing-v6-now-with-granular-RBAC/m-p/102358/thread-id/2595>`_
 * `Live Response Documentation <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/live-response-api/>`_

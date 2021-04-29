@@ -1,13 +1,18 @@
 Live Response
 ==============
 
-With the Carbon Black Cloud SDK, we can use the Live Response functionality to upload, download, and remove files,
-retrieve and remove registry entries, dump contents of physical memory, execute and terminate processes.
-Before any commands can be sent to an endpoint, we must first establish a “session” with a device.
+You can use Live Response with the Carbon Black Cloud Python SDK to:
+
+* Upload, download, or remove files
+* Create, retrieve and remove registry entries
+* Dump contents of physical memory
+* Execute, terminate and list processes
+
+To send commands to an endpoint, first establish a "session" with a device.
 
 Establish A Session With A Device
 ---------------------------------
-Using a query of the ``Device`` object, we can choose a device to connect to.
+Connect to a device by querying the ``Device`` object.
 
 ::
 
@@ -20,8 +25,8 @@ Using a query of the ``Device`` object, we can choose a device to connect to.
 File Commands
 -------------
 
-Once a session is established we are going to create a directory and upload a file in that newly created directory.
-List directory command is returning the content of the directory including the uploaded file.
+Once a session is established, create a directory and upload a file to that directory.
+The ``list directory`` command returns the content of the directory, including the uploaded file.
 
 ::
 
@@ -35,9 +40,9 @@ List directory command is returning the content of the directory including the u
     DIRECTORY ..
     ARCHIVE demo.txt
 
-Note that the creation of the directory will fail if the directory already exists.
+*Note that the creation of the directory will fail if the directory already exists.*
 
-Now we will get the contents of the file and then delete the file and the directory.
+Next, get the contents of the file and then delete the file and the directory.
 
 ::
 
@@ -45,12 +50,11 @@ Now we will get the contents of the file and then delete the file and the direct
     >>> lr_session.delete_file('C:\\\\demo\\\\demo.txt')
     >>> lr_session.delete_file('C:\\\\demo\\\\')
 
-Note that we could delete a directory with the delete file command.
+*Note: you can also delete a directory with the delete file command.*
 
 Process Commands
 ----------------
-We can also execute commands to manage processes. Once we have established a session we could check the
-running processes, create or kill a process.
+You can also execute commands to manage processes. Once you have established a session, you can check running processes.
 
 ::
 
@@ -61,7 +65,7 @@ running processes, create or kill a process.
     42 c:\windows\explorer.exe
     43 c:\windows\system32\svchost.exe
 
-We can create a process and kill it.
+You can also create or kill a process.
 
 ::
 
@@ -72,13 +76,12 @@ We can create a process and kill it.
     ...     if 'ping.exe' in process['process_path']:
     ...         lr_session.kill_process(process['process_pid'])
 
-Note that we need to pass the pid of the process to kill it.
+*Note: you must pass the PID of the process to kill it.*
 
 Additional Resources
 --------------------
 
-There are a number other commands supported. For full list and description see
-`the developer documentation <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/live-response-api/>`_
-for details.
+Find a full list of supported commands in the
+`Live Response API documentation <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/live-response-api/>`_.
 
-Check the migration guide of Live Response from v3 to v6 :doc:`live-response-v6-migration`
+For tips on migrating from Live Response v3 to v6, check the :doc:`migration guide<live-response-v6-migration>`.
