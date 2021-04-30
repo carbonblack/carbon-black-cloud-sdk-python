@@ -22,7 +22,7 @@ from .utils import convert_from_cb, convert_to_cb
 import yaml
 import json
 import time
-from .errors import ApiError, ServerError, InvalidObjectError, MoreThanOneResultError
+from .errors import ApiError, ServerError, InvalidObjectError, MoreThanOneResultError, ObjectNotFoundError
 import logging
 from datetime import datetime
 from solrq import Q
@@ -174,7 +174,6 @@ class ArrayFieldDescriptor(FieldDescriptor):
         return ret or []
 
 
-# TODO: this is a kludge to avoid writing "small" models?
 class ObjectFieldDescriptor(FieldDescriptor):
     """Field descriptor for fields of 'object' type."""
     def __get__(self, instance, instance_type=None):
@@ -858,13 +857,14 @@ class IterableQueryMixin:
             obj: Sole query return item
 
         Raises:
-            MoreThanOneResultError: If the query returns zero items, or more than one item
+            MoreThanOneResultError: If the query returns more than one item
+            ObjectNotFoundError: If the query returns zero items
         """
         res = self[:2]
         if res is None:
             return None
         if len(res) == 0:
-            raise MoreThanOneResultError(
+            raise ObjectNotFoundError(
                 message="0 results for query {0:s}".format(self._query)
             )
         if len(res) > 1:
