@@ -253,7 +253,7 @@ def _do_sensor_install_request(cb, compute_resources, sensor_kits, config_file):
 
     Args:
         cb (BaseAPI): Reference to API object used to communicate with the server.
-        compute_resources (list): A list of dicts containing the keys 'vcenter_id' and 'compute_resource_id',
+        compute_resources (list): A list of dicts containing the keys 'resource_manager_id' and 'compute_resource_id',
                                   used to specify the compute resources to install on.
         sensor_kits (list): A list of SensorKit objects used to specify sensor types to choose from in installation.
         config_file (str): The text of a config.ini file with a list of sensor properties to configure on installation.
@@ -261,11 +261,15 @@ def _do_sensor_install_request(cb, compute_resources, sensor_kits, config_file):
     Returns:
         dict: A dict with two members, 'type' and 'code', indicating the status of the installation.
     """
-    request = {'compute_resources': [{'resource_manager_id': resource['vcenter_id'],
-                                      'compute_resource_id': resource['compute_resource_id']}
-                                     for resource in compute_resources],
-               'sensor_types': [kit.sensor_type for kit in sensor_kits]}
+    request = {
+        'compute_resources': compute_resources,
+        'sensor_types': [kit.sensor_type for kit in sensor_kits]
+    }
+
     url = "/lcm/v1/orgs/{0}/workloads/actions".format(cb.credentials.org_key)
-    return_data = cb.post_multipart(url, _SENSOR_INSTALL_TRANS_TABLE, action_type='INSTALL',
-                                    install_request=json.dumps(request), file=config_file)
+    return_data = cb.post_multipart(url,
+                                    _SENSOR_INSTALL_TRANS_TABLE,
+                                    action_type='INSTALL',
+                                    install_request=json.dumps(request),
+                                    file=config_file)
     return return_data.json()
