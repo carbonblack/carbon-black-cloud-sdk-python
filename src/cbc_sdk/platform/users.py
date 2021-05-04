@@ -322,12 +322,26 @@ class User(MutableBaseModel):
 
     @classmethod
     def bulk_add_profiles(cls, users, profile_templates):
+        """
+        Add the specified profiles to the specified users' grants.
+
+        Args:
+            users (list): List of User objects specifying users to be modified.
+            profile_templates (list): List of profile templates to be added to the users.
+        """
         my_profiles = normalize_profile_list(profile_templates)
         for user in users:
             user._internal_add_profiles(my_profiles)
 
     @classmethod
     def bulk_disable_profiles(cls, users, profile_templates):
+        """
+        Disable the specified profiles in the specified users' grants.
+
+        Args:
+            users (list): List of User objects specifying users to be modified.
+            profile_templates (list): List of profile templates to be disabled.
+        """
         my_profiles = normalize_profile_list(profile_templates)
         for user in users:
             user._internal_disable_profiles(my_profiles)
@@ -362,24 +376,108 @@ class User(MutableBaseModel):
         grant.save()
 
     def change_role(self, role_urn, org=None):
-        ...
+        """
+        Add the specified role to the user (either to the grant or the profiles).
+
+        Args:
+            role_urn (str): URN of the role to be added.
+            org (str): If specified, only profiles that match this org will have the role added.
+        """
+        my_org = None if org is None else normalize_org(org)
+        grant = self.grant()
+        prof_list = grant.profiles_
+        if len(prof_list) > 0:
+            for profile in prof_list:
+                add_role = True
+                if my_org and my_org not in profile.allowed_orgs:
+                    add_role = False
+                if add_role and role_urn not in profile.roles:
+                    profile.roles.append(role_urn)
+                    profile.touch()
+        elif role_urn not in grant.roles:
+            grant.roles.append(role_urn)
+            grant.touch()
+        grant.save()
 
     def _internal_add_profiles(self, profile_templates):
-        ...
+        """
+        Add the specified profiles to the user's grant.
+
+        Args:
+            profile_templates (list): List of profile templates to be added to the user.  Must be normalized.
+        """
+        grant = self.grant()
+        for template in profile_templates:
+            need_create = True
+            for profile in grant.profiles_:
+                if profile.matches_template(template) and profile.conditions['disabled']:
+                    profile.conditions['disabled'] = False
+                    grant.touch()
+                    need_create = False
+                    break
+            if need_create:
+                grant.create_profile(template)
+        grant.save()
 
     def _internal_disable_profiles(self, profile_templates):
-        ...
+        """
+        Disable the specified profiles in the user's grant.
+
+        Args:
+            profile_templates (list): List of profile templates to be disabled.  Must be normalized.
+        """
+        grant = self.grant()
+        for profile in grant.profiles_:
+            for template in profile_templates:
+                if profile.matches_template(template):
+                    profile.conditions['disabled'] = True
+                    grant.touch()
+                    break
+        grant.save()
 
     def _internal_set_profile_expiration(self, profile_templates, expiration_date):
-        ...
+        """
+        Set the expiration time for the specified profiles in the user's grant.
+
+        Args:
+            profile_templates (list): List of profile templates to be reset.  Must be normalized.
+            expiration_date (str): New expiration date, in ISO 8601 format.
+        """
+        grant = self.grant()
+        for profile in grant.profiles_:
+            for template in profile_templates:
+                if profile.matches_template(template):
+                    profile.conditions['expiration'] = expiration_date
+                    grant.touch()
+                    break
+        grant.save()
 
     def add_profiles(self, profile_templates):
+        """
+        Add the specified profiles to the user's grant.
+
+        Args:
+            profile_templates (list): List of profile templates to be added to the user.
+        """
         self._internal_add_profiles(normalize_profile_list(profile_templates))
 
     def disable_profiles(self, profile_templates):
+        """
+        Disable the specified profiles in the user's grant.
+
+        Args:
+            profile_templates (list): List of profile templates to be disabled.
+        """
         self._internal_disable_profiles(normalize_profile_list(profile_templates))
 
     def set_profile_expiration(self, profile_templates, expiration_date):
+        """
+        Set the expiration time for the specified profiles in the user's grant.
+
+        Args:
+            profile_templates (list): List of profile templates to be reset.
+            expiration_date (str): New expiration date, in ISO 8601 format.
+        """
         self._internal_set_profile_expiration(normalize_profile_list(profile_templates), expiration_date)
 
 
@@ -458,7 +556,7 @@ class UserQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
 
     def _include_user(self, userdata):
         """
-        Predicate to determine if a user's data should be include din the query result.
+        Predicate to determine if a user's data should be included in the query result.
 
         Args:
             userdata (dict): Raw user data.

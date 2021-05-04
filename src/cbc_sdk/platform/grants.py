@@ -132,6 +132,27 @@ class Grant(MutableBaseModel):
             ret = self._cb.delete_object(url)
             self._refresh_if_needed(ret)
 
+        @property
+        def allowed_orgs(self):
+            """Returns the list of organization URNs allowed by this profile."""
+            return self._info['orgs']['allow']
+
+        def matches_template(self, template):
+            """
+            Returns whether or not the profile matches the given template.
+
+            Args:
+                template (dict): The profile template to match against.
+
+            Returns:
+                bool: True if this profile matches the template, False if not.
+            """
+            if set(self.roles) != set(template['roles']):
+                return False
+            if set(self.allowed_orgs) != set(template['orgs']['allow']):
+                return False
+            return True
+
     class ProfileBuilder:
         """Auxiliary object used to construct a new profile on a grant."""
         def __init__(self, grant):
