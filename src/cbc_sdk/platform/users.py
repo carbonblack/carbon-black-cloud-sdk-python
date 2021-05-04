@@ -14,6 +14,7 @@
 """Model and Query Classes for Users"""
 from cbc_sdk.base import MutableBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
 from cbc_sdk.errors import ApiError, ServerError, ObjectNotFoundError
+from cbc_sdk.platform.grants import Grant
 import time
 import copy
 
@@ -26,6 +27,17 @@ def normalize_org(org):
     if org.startswith('psc:org:'):
         return org
     return f"psc:org:{org}"
+
+
+def normalize_profile_list(profile_templates):
+    """Internal function to normalize a list of profile templates."""
+    return_profiles = None
+    if profile_templates:
+        return_profiles = []
+        for template in profile_templates:
+            return_profiles.append({'orgs': {'allow': [normalize_org(org) for org in template['orgs']['allow']]},
+                                    'roles': template['roles']})
+    return return_profiles
 
 
 class User(MutableBaseModel):
@@ -234,6 +246,26 @@ class User(MutableBaseModel):
         """
         return f"psc:user:{self._cb.credentials.org_key}:{self._info['login_id']}"
 
+    @property
+    def org_urn(self):
+        """
+        Returns the URN for this user's organization (used in accessing Grants).
+
+        Returns:
+            str: URN for this user's organization.
+        """
+        return f"psc:org:{self._cb.credentials.org_key}"
+
+    def grant(self):
+        """
+        Locates the access grant for this user.
+
+        Returns:
+            Grant: Access grant for this user.
+        """
+        query = self._cb.select(Grant).add_principal(self.urn, self.org_urn)
+        return query.one()
+
     @classmethod
     def create(cls, cb, template=None):
         """
@@ -262,6 +294,94 @@ class User(MutableBaseModel):
         url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id) + "/google-auth"
         self._cb.delete_object(url)
 
+    @classmethod
+    def bulk_create(cls, cb, user_templates, profile_templates):
+        """
+        Creates a series of new users.
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            user_templates (list): List of templates for users to be created.
+            profile_templates (list): List of profile templates to be applied to each user.
+
+        Returns:
+            list: List of User objects that were just created.
+        """
+        my_profiles = normalize_profile_list(profile_templates)
+        return_users = []
+        for template in user_templates:
+            my_templ = copy.deepcopy(template)
+            my_templ['org_id'] = 0
+            my_templ['role'] = 'DEPRECATED'
+            if 'auth_method' not in my_templ:
+                my_templ['auth_method'] = 'PASSWORD'
+            if my_profiles:
+                my_templ['profiles'] = my_profiles
+            return_users.append(User._create_user(cb, my_templ))
+        return return_users
+
+    @classmethod
+    def bulk_add_profiles(cls, users, profile_templates):
+        my_profiles = normalize_profile_list(profile_templates)
+        for user in users:
+            user._internal_add_profiles(my_profiles)
+
+    @classmethod
+    def bulk_disable_profiles(cls, users, profile_templates):
+        my_profiles = normalize_profile_list(profile_templates)
+        for user in users:
+            user._internal_disable_profiles(my_profiles)
+
+    @classmethod
+    def bulk_disable_all_access(cls, users):
+        """
+        Disables all access profiles held by the listed users.
+
+        Args:
+            users (list): List of User objects specifying users to be disabled.
+        """
+        for user in users:
+            user.disable_all_access()
+
+    @classmethod
+    def bulk_delete(cls, users):
+        """
+        Deletes all the listed users.
+
+        Args:
+            users (list): List of User objects specifying users to be deleted.
+        """
+        for user in users:
+            user.delete()
+
+    def disable_all_access(self):
+        """Disables all access profiles held by ths user."""
+        grant = self.grant()
+        for profile in grant.profiles_:
+            profile.disabled = True
+        grant.save()
+
+    def change_role(self, role_urn, org=None):
+        ...
+
+    def _internal_add_profiles(self, profile_templates):
+        ...
+
+    def _internal_disable_profiles(self, profile_templates):
+        ...
+
+    def _internal_set_profile_expiration(self, profile_templates, expiration_date):
+        ...
+
+    def add_profiles(self, profile_templates):
+        self._internal_add_profiles(normalize_profile_list(profile_templates))
+
+    def disable_profiles(self, profile_templates):
+        self._internal_disable_profiles(normalize_profile_list(profile_templates))
+
+    def set_profile_expiration(self, profile_templates, expiration_date):
+        self._internal_set_profile_expiration(normalize_profile_list(profile_templates), expiration_date)
+
 
 """User Queries"""
 
@@ -279,8 +399,78 @@ class UserQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
         super(UserQuery, self).__init__(None)
         self._doc_class = doc_class
         self._cb = cb
+        self._valid_emails = None
+        self._valid_userids = None
         self._count_valid = False
         self._total_results = 0
+
+    def email_addresses(self, addrs):
+        """
+        Limit the query to users with the specified E-mail addresses.  Call multiple times to add multiple addresses.
+
+        Args:
+            addrs (list): List of addresses to be added to the query.
+
+        Returns:
+            UserQuery: This object.
+        """
+        addr_set = set(addrs)
+        self._valid_emails = addr_set if self._valid_emails is None else addr_set.union(self._valid_emails)
+        return self
+
+    def email_address(self, addr):
+        """
+        Limit the query to users with the specified E-mail address.  Call multiple times to add multiple addresses.
+
+        Args:
+            addr (str): Address to be added to the query.
+
+        Returns:
+            UserQuery: This object.
+        """
+        return self.email_addresses([addr])
+
+    def user_ids(self, userids):
+        """
+        Limit the query to users with the specified user IDs.  Call multiple times to add multiple user IDs.
+
+        Args:
+            userids (list): List of user IDs to be added to the query.
+
+        Returns:
+            UserQuery: This object.
+        """
+        id_set = set(userids)
+        self._valid_userids = id_set if self._valid_userids is None else id_set.union(self._valid_userids)
+        return self
+
+    def user_id(self, userid):
+        """
+        Limit the query to users with the specified user ID.  Call multiple times to add multiple user IDs.
+
+        Args:
+            userid (int): User ID to be added to the query.
+
+        Returns:
+            UserQuery: This object.
+        """
+        return self.user_ids([userid])
+
+    def _include_user(self, userdata):
+        """
+        Predicate to determine if a user's data should be include din the query result.
+
+        Args:
+            userdata (dict): Raw user data.
+
+        Returns:
+            bool: True if this data should be included, False if not.
+        """
+        if self._valid_emails is not None and userdata['email'] not in self._valid_emails:
+            return False
+        if self._valid_userids is not None and userdata['login_id'] not in self._valid_userids:
+            return False
+        return True
 
     def _execute(self):
         """
@@ -301,7 +491,8 @@ class UserQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
         """
         if not self._count_valid:
             return_data = self._execute()
-            self._total_results = len(return_data)
+            filtered_data = [item for item in return_data if self._include_user(item)]
+            self._total_results = len(filtered_data)
             self._count_valid = True
         return self._total_results
 
@@ -317,9 +508,10 @@ class UserQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
             Iterable: The iterated query.
         """
         return_data = self._execute()
-        self._total_results = len(return_data)
+        filtered_data = [item for item in return_data if self._include_user(item)]
+        self._total_results = len(filtered_data)
         self._count_valid = True
-        for item in return_data:
+        for item in filtered_data:
             yield User(self._cb, item['login_id'], item)
 
     def _run_async_query(self, context):
@@ -333,6 +525,7 @@ class UserQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
             list: Result of the async query, as a list of User objects.
         """
         return_data = self._execute()
-        self._total_results = len(return_data)
+        output = [User(self._cb, item['login_id'], item) for item in return_data if self._include_user(item)]
+        self._total_results = len(output)
         self._count_valid = True
-        return [User(self._cb, item['login_id'], item) for item in return_data]
+        return output
