@@ -143,8 +143,8 @@ class User(MutableBaseModel):
             Adds a grant profile for the new user.
 
             Args:
-                orgs (list): List of organizations to be allowed, specified as keys or URNs.
-                roles (list): List of roles to be granted, specified as URNs.
+                orgs (list[str]): List of organizations to be allowed, specified as keys or URNs.
+                roles (list[str]): List of roles to be granted, specified as URNs.
 
             Returns:
                 UserBuilder: This object.
@@ -301,11 +301,11 @@ class User(MutableBaseModel):
 
         Args:
             cb (CBCloudAPI): A reference to the CBCloudAPI object.
-            user_templates (list): List of templates for users to be created.
-            profile_templates (list): List of profile templates to be applied to each user.
+            user_templates (list[dict]): List of templates for users to be created.
+            profile_templates (list[dict]): List of profile templates to be applied to each user.
 
         Returns:
-            list: List of User objects that were just created.
+            list[User]: List of User objects that were just created.
         """
         my_profiles = normalize_profile_list(profile_templates)
         return_users = []
@@ -326,8 +326,8 @@ class User(MutableBaseModel):
         Add the specified profiles to the specified users' grants.
 
         Args:
-            users (list): List of User objects specifying users to be modified.
-            profile_templates (list): List of profile templates to be added to the users.
+            users (list[User]): List of User objects specifying users to be modified.
+            profile_templates (list[dict]): List of profile templates to be added to the users.
         """
         my_profiles = normalize_profile_list(profile_templates)
         for user in users:
@@ -339,8 +339,8 @@ class User(MutableBaseModel):
         Disable the specified profiles in the specified users' grants.
 
         Args:
-            users (list): List of User objects specifying users to be modified.
-            profile_templates (list): List of profile templates to be disabled.
+            users (list[User]): List of User objects specifying users to be modified.
+            profile_templates (list[dict]): List of profile templates to be disabled.
         """
         my_profiles = normalize_profile_list(profile_templates)
         for user in users:
@@ -352,7 +352,7 @@ class User(MutableBaseModel):
         Disables all access profiles held by the listed users.
 
         Args:
-            users (list): List of User objects specifying users to be disabled.
+            users (list[User]): List of User objects specifying users to be disabled.
         """
         for user in users:
             user.disable_all_access()
@@ -363,7 +363,7 @@ class User(MutableBaseModel):
         Deletes all the listed users.
 
         Args:
-            users (list): List of User objects specifying users to be deleted.
+            users (list[User]): List of User objects specifying users to be deleted.
         """
         for user in users:
             user.delete()
@@ -404,7 +404,7 @@ class User(MutableBaseModel):
         Add the specified profiles to the user's grant.
 
         Args:
-            profile_templates (list): List of profile templates to be added to the user.  Must be normalized.
+            profile_templates (list[dict]): List of profile templates to be added to the user.  Must be normalized.
         """
         grant = self.grant()
         for template in profile_templates:
@@ -424,7 +424,7 @@ class User(MutableBaseModel):
         Disable the specified profiles in the user's grant.
 
         Args:
-            profile_templates (list): List of profile templates to be disabled.  Must be normalized.
+            profile_templates (list[dict]): List of profile templates to be disabled.  Must be normalized.
         """
         grant = self.grant()
         for profile in grant.profiles_:
@@ -440,7 +440,7 @@ class User(MutableBaseModel):
         Set the expiration time for the specified profiles in the user's grant.
 
         Args:
-            profile_templates (list): List of profile templates to be reset.  Must be normalized.
+            profile_templates (list[dict]): List of profile templates to be reset.  Must be normalized.
             expiration_date (str): New expiration date, in ISO 8601 format.
         """
         grant = self.grant()
@@ -457,7 +457,7 @@ class User(MutableBaseModel):
         Add the specified profiles to the user's grant.
 
         Args:
-            profile_templates (list): List of profile templates to be added to the user.
+            profile_templates (list[dict]): List of profile templates to be added to the user.
         """
         self._internal_add_profiles(normalize_profile_list(profile_templates))
 
@@ -466,7 +466,7 @@ class User(MutableBaseModel):
         Disable the specified profiles in the user's grant.
 
         Args:
-            profile_templates (list): List of profile templates to be disabled.
+            profile_templates (list[dict]): List of profile templates to be disabled.
         """
         self._internal_disable_profiles(normalize_profile_list(profile_templates))
 
@@ -475,7 +475,7 @@ class User(MutableBaseModel):
         Set the expiration time for the specified profiles in the user's grant.
 
         Args:
-            profile_templates (list): List of profile templates to be reset.
+            profile_templates (list[dict]): List of profile templates to be reset.
             expiration_date (str): New expiration date, in ISO 8601 format.
         """
         self._internal_set_profile_expiration(normalize_profile_list(profile_templates), expiration_date)
@@ -507,7 +507,7 @@ class UserQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
         Limit the query to users with the specified E-mail addresses.  Call multiple times to add multiple addresses.
 
         Args:
-            addrs (list): List of addresses to be added to the query.
+            addrs (list[str]): List of addresses to be added to the query.
 
         Returns:
             UserQuery: This object.
@@ -533,7 +533,7 @@ class UserQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
         Limit the query to users with the specified user IDs.  Call multiple times to add multiple user IDs.
 
         Args:
-            userids (list): List of user IDs to be added to the query.
+            userids (list[str]): List of user IDs to be added to the query.
 
         Returns:
             UserQuery: This object.
@@ -575,7 +575,7 @@ class UserQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
         Executes the query and returns the list of raw results.
 
         Returns:
-            list: The raw results of the query, as a list of dicts.
+            list[dict]: The raw results of the query, as a list of dicts.
         """
         rawdata = self._cb.get_object("/appservices/v6/orgs/{0}/users".format(self._cb.credentials.org_key))
         return rawdata.get('users', [])
@@ -620,7 +620,7 @@ class UserQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
             context (object): Not used; always None.
 
         Returns:
-            list: Result of the async query, as a list of User objects.
+            list[User]: Result of the async query, as a list of User objects.
         """
         return_data = self._execute()
         output = [User(self._cb, item['login_id'], item) for item in return_data if self._include_user(item)]
