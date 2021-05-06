@@ -381,7 +381,8 @@ class User(MutableBaseModel):
 
         Args:
             role_urn (str): URN of the role to be added.
-            org (str): If specified, only profiles that match this org will have the role added.
+            org (str): If specified, only profiles that match this organization will have the role added.  Organization
+                       may be specified as either an org key or a URN.
         """
         my_org = None if org is None else normalize_org(org)
         grant = self.grant()
