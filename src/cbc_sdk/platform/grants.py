@@ -15,6 +15,7 @@
 
 from cbc_sdk.base import MutableBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
 from cbc_sdk.errors import ApiError, ServerError
+from cbc_sdk.platform.users import normalize_org
 import time
 import copy
 import uuid
@@ -23,13 +24,6 @@ import logging
 log = logging.getLogger(__name__)
 
 """Grant and Profile Models"""
-
-
-def normalize_org(org):
-    """Internal function to normalize an org reference to a URN."""
-    if org.startswith('psc:org:'):
-        return org
-    return f"psc:org:{org}"
 
 
 class Grant(MutableBaseModel):
@@ -131,6 +125,27 @@ class Grant(MutableBaseModel):
                                                self._model_unique_id)
             ret = self._cb.delete_object(url)
             self._refresh_if_needed(ret)
+
+        @property
+        def allowed_orgs(self):
+            """Returns the list of organization URNs allowed by this profile."""
+            return self._info['orgs']['allow']
+
+        def matches_template(self, template):
+            """
+            Returns whether or not the profile matches the given template.
+
+            Args:
+                template (dict): The profile template to match against.
+
+            Returns:
+                bool: True if this profile matches the template, False if not.
+            """
+            if set(self.roles) != set(template['roles']):
+                return False
+            if set(self.allowed_orgs) != set(template['orgs']['allow']):
+                return False
+            return True
 
     class ProfileBuilder:
         """Auxiliary object used to construct a new profile on a grant."""
