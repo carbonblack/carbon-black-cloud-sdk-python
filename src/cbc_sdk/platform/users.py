@@ -510,18 +510,6 @@ class UserQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
         self._valid_emails = addr_set if self._valid_emails is None else addr_set.union(self._valid_emails)
         return self
 
-    def email_address(self, addr):
-        """
-        Limit the query to users with the specified E-mail address.  Call multiple times to add multiple addresses.
-
-        Args:
-            addr (str): Address to be added to the query.
-
-        Returns:
-            UserQuery: This object.
-        """
-        return self.email_addresses([addr])
-
     def user_ids(self, userids):
         """
         Limit the query to users with the specified user IDs.  Call multiple times to add multiple user IDs.
@@ -535,18 +523,6 @@ class UserQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
         id_set = set(userids)
         self._valid_userids = id_set if self._valid_userids is None else id_set.union(self._valid_userids)
         return self
-
-    def user_id(self, userid):
-        """
-        Limit the query to users with the specified user ID.  Call multiple times to add multiple user IDs.
-
-        Args:
-            userid (int): User ID to be added to the query.
-
-        Returns:
-            UserQuery: This object.
-        """
-        return self.user_ids([userid])
 
     def _include_user(self, userdata):
         """
