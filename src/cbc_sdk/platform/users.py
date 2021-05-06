@@ -14,19 +14,12 @@
 """Model and Query Classes for Users"""
 from cbc_sdk.base import MutableBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
 from cbc_sdk.errors import ApiError, ServerError, ObjectNotFoundError
-from cbc_sdk.platform.grants import Grant
+from cbc_sdk.platform.grants import Grant, normalize_org
 import time
 import copy
 
 
 """User Models"""
-
-
-def normalize_org(org):
-    """Internal function to normalize an org reference to a URN."""
-    if org.startswith('psc:org:'):
-        return org
-    return f"psc:org:{org}"
 
 
 def normalize_profile_list(profile_templates):

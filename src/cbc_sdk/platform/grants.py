@@ -15,7 +15,6 @@
 
 from cbc_sdk.base import MutableBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
 from cbc_sdk.errors import ApiError, ServerError
-from cbc_sdk.platform.users import normalize_org
 import time
 import copy
 import uuid
@@ -24,6 +23,13 @@ import logging
 log = logging.getLogger(__name__)
 
 """Grant and Profile Models"""
+
+
+def normalize_org(org):
+    """Internal function to normalize an org reference to a URN."""
+    if org.startswith('psc:org:'):
+        return org
+    return f"psc:org:{org}"
 
 
 class Grant(MutableBaseModel):
