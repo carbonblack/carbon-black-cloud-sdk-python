@@ -44,7 +44,14 @@ def test_get_and_set_grant(cbcsdk_mock):
     profile = grant.profiles_[0]
     assert profile.profile_uuid == 'c57ba255-1736-4bfa-a59d-c54bb97a41d6'
     assert profile.orgs['allow'] == ["psc:org:test2"]
+    assert profile.allowed_orgs == ["psc:org:test2"]
     assert profile.roles == ["psc:role::SECOPS_ROLE_MANAGER"]
+    assert profile.matches_template({'roles': ["psc:role::SECOPS_ROLE_MANAGER"],
+                                     'orgs': {'allow': ["psc:org:test2"]}})
+    assert not profile.matches_template({'roles': ["psc:role::NONEXISTENT_ROLE"],
+                                         'orgs': {'allow': ["psc:org:test2"]}})
+    assert not profile.matches_template({'roles': ["psc:role::SECOPS_ROLE_MANAGER"],
+                                         'orgs': {'allow': ["psc:org:notexist"]}})
     with pytest.raises(ApiError):
         profile.refresh()  # these can't be refreshed
     grant.roles.append('psc:role:test:DUMMY_ROLE')
