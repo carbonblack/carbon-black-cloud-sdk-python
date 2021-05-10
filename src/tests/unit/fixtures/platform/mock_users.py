@@ -102,6 +102,40 @@ _USER_NEW = {
     "contact_version": 0
 }
 
+_USER_BULK1 = {
+    "org_key": "test",
+    "auth_method": "PASSWORD",
+    "login_id": 8600,
+    "org_id": 1,
+    "login_name": "burnham@discovery.starfleet.mil",
+    "email": "burnham@discovery.starfleet.mil",
+    "last_name": "Burnham",
+    "phone": "",
+    "first_name": "Michael",
+    "admin_login_version": 1,
+    "org_admin_version": 0,
+    "role": "DEPRECATED",
+    "contact_id": 208600,
+    "contact_version": 0
+}
+
+_USER_BULK2 = {
+    "org_key": "test",
+    "auth_method": "PASSWORD",
+    "login_id": 8601,
+    "org_id": 1,
+    "login_name": "scully@fbi.gov",
+    "email": "scully@fbi.gov",
+    "last_name": "Scully",
+    "phone": "",
+    "first_name": "Dana",
+    "admin_login_version": 1,
+    "org_admin_version": 0,
+    "role": "DEPRECATED",
+    "contact_id": 208601,
+    "contact_version": 0
+}
+
 GET_USERS_RESP = {
     'success': True,
     'message': 'Success',
@@ -112,6 +146,18 @@ GET_USERS_AFTER_CREATE_RESP = {
     'success': True,
     'message': 'Success',
     'users': [_USER1, _USER2, _USER3, _USER4, _USER5, _USER_NEW]
+}
+
+GET_USERS_AFTER_BULK1_RESP = {
+    'success': True,
+    'message': 'Success',
+    'users': [_USER1, _USER2, _USER3, _USER4, _USER5, _USER_BULK1]
+}
+
+GET_USERS_AFTER_BULK2_RESP = {
+    'success': True,
+    'message': 'Success',
+    'users': [_USER1, _USER2, _USER3, _USER4, _USER5,  _USER_BULK1, _USER_BULK2]
 }
 
 EXPECT_USER_ADD = {
@@ -179,6 +225,40 @@ EXPECT_USER_ADD_V2 = {
                 'allow': ['psc:org:test2']
             },
             'roles': ['psc:role:test2:DUMMY']
+        }
+    ]
+}
+
+EXPECT_USER_ADD_BULK1 = {
+    "org_id": 0,
+    "email_id": "burnham@discovery.starfleet.mil",
+    "role": "DEPRECATED",
+    "first_name": "Michael",
+    "last_name": "Burnham",
+    "auth_method": "PASSWORD",
+    "profiles": [
+        {
+            'orgs': {
+                'allow': ['psc:org:testX']
+            },
+            'roles': ['psc:role:testX:DUMMY']
+        }
+    ]
+}
+
+EXPECT_USER_ADD_BULK2 = {
+    "org_id": 0,
+    "email_id": "scully@fbi.gov",
+    "role": "DEPRECATED",
+    "first_name": "Dana",
+    "last_name": "Scully",
+    "auth_method": "PASSWORD",
+    "profiles": [
+        {
+            'orgs': {
+                'allow': ['psc:org:testX']
+            },
+            'roles': ['psc:role:testX:DUMMY']
         }
     ]
 }

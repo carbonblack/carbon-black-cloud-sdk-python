@@ -308,6 +308,8 @@ class User(MutableBaseModel):
             my_templ['role'] = 'DEPRECATED'
             if 'auth_method' not in my_templ:
                 my_templ['auth_method'] = 'PASSWORD'
+            if 'profiles' in my_templ:
+                del my_templ['profiles']
             if my_profiles:
                 my_templ['profiles'] = my_profiles
             return_users.append(User._create_user(cb, my_templ))
@@ -386,10 +388,10 @@ class User(MutableBaseModel):
                 if my_org and my_org not in profile.allowed_orgs:
                     add_role = False
                 if add_role and role_urn not in profile.roles:
-                    profile.roles.append(role_urn)
-                    profile.touch()
+                    profile.roles += [role_urn]
+                    grant.touch()
         elif role_urn not in grant.roles:
-            grant.roles.append(role_urn)
+            grant.roles += [role_urn]
             grant.touch()
         grant.save()
 

@@ -1,4 +1,5 @@
 """Tests for the User object of the CBC SDK"""
+import copy
 
 import pytest
 import logging
@@ -6,9 +7,14 @@ from cbc_sdk.platform import User
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError, ObjectNotFoundError, ServerError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.platform.mock_users import (GET_USERS_RESP, GET_USERS_AFTER_CREATE_RESP, EXPECT_USER_ADD,
-                                                     EXPECT_USER_ADD_SMALL, EXPECT_USER_ADD_V1, EXPECT_USER_ADD_V2,
+from tests.unit.fixtures.platform.mock_users import (GET_USERS_RESP, GET_USERS_AFTER_CREATE_RESP,
+                                                     GET_USERS_AFTER_BULK1_RESP, GET_USERS_AFTER_BULK2_RESP,
+                                                     EXPECT_USER_ADD, EXPECT_USER_ADD_SMALL, EXPECT_USER_ADD_V1,
+                                                     EXPECT_USER_ADD_V2, EXPECT_USER_ADD_BULK1, EXPECT_USER_ADD_BULK2,
                                                      USER_ADD_SUCCESS_RESP, USER_ADD_FAILURE_RESP)
+from tests.unit.fixtures.platform.mock_grants import (CHANGE_ROLE_GRANT1, EXPECT_CHANGE_ROLE_GRANT1,
+                                                      CHANGE_ROLE_GRANT2, EXPECT_CHANGE_ROLE_GRANT2A,
+                                                      EXPECT_CHANGE_ROLE_GRANT2B)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -225,3 +231,116 @@ def test_create_user_fails(cbcsdk_mock):
     builder.add_grant_profile(['psc:org:test2'], ['psc:role:test2:DUMMY'])
     with pytest.raises(ServerError):
         builder.build()
+
+
+def test_bulk_create(cbcsdk_mock):
+    """Tests the User.bulk_create API."""
+    count_posts = 0
+    count_gets = 0
+
+    def check_post(uri, body, **kwargs):
+        nonlocal count_posts
+        rc = None
+        if count_posts == 0:
+            assert body == EXPECT_USER_ADD_BULK1
+            rc = copy.deepcopy(USER_ADD_SUCCESS_RESP)
+            rc['login_id'] = 8600
+        elif count_posts == 1:
+            assert body == EXPECT_USER_ADD_BULK2
+            rc = copy.deepcopy(USER_ADD_SUCCESS_RESP)
+            rc['login_id'] = 8601
+        else:
+            pytest.fail(f"invalid count_posts value {count_posts}")
+        count_posts = count_posts + 1
+        return rc
+
+    def check_get(uri, query_params, default):
+        nonlocal count_posts, count_gets
+        rc = None
+        if count_posts == 1:
+            assert count_gets == 0
+            rc = GET_USERS_AFTER_BULK1_RESP
+        elif count_posts == 2:
+            assert count_gets == 1
+            rc = GET_USERS_AFTER_BULK2_RESP
+        else:
+            pytest.fail(f"invalid count_posts value {count_posts}")
+        count_gets = count_gets + 1
+        return rc
+
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/users', check_post)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', check_get)
+    api = cbcsdk_mock.api
+    bulk_templates = [
+        {
+            "email_id": "burnham@discovery.starfleet.mil",
+            "first_name": "Michael",
+            "last_name": "Burnham"
+        },
+        {
+            "email_id": "scully@fbi.gov",
+            "first_name": "Dana",
+            "last_name": "Scully",
+            "profiles": [
+                {
+                    'orgs': {
+                        'allow': ['psc:org:test2']
+                    },
+                    'roles': ['psc:role:test2:DUMMY']
+                }
+            ]
+        }
+    ]
+    profile_templates = [
+        {
+            'orgs': {
+                'allow': ['psc:org:testX']
+            },
+            'roles': ['psc:role:testX:DUMMY']
+        }
+    ]
+    users = User.bulk_create(api, bulk_templates, profile_templates)
+    assert count_posts == 2
+    assert count_gets == 2
+    assert users[0].last_name == 'Burnham'
+    assert users[0].first_name == 'Michael'
+    assert users[0].login_name == 'burnham@discovery.starfleet.mil'
+    assert users[0].email == 'burnham@discovery.starfleet.mil'
+    assert users[1].last_name == 'Scully'
+    assert users[1].first_name == 'Dana'
+    assert users[1].login_name == 'scully@fbi.gov'
+    assert users[1].email == 'scully@fbi.gov'
+
+
+@pytest.mark.parametrize('user_email, user_loginid, grant_get, new_role, org, expect_put', [
+    ('emercer@orville.planetary-union.net', 3911, CHANGE_ROLE_GRANT1, 'psc:role:test:NEW_ROLE', None,
+     EXPECT_CHANGE_ROLE_GRANT1),
+    ('emercer@orville.planetary-union.net', 3911, CHANGE_ROLE_GRANT1, 'psc:role:test:APP_SERVICE_ROLE', None, None),
+    ('mreynolds@browncoats.org', 3934, CHANGE_ROLE_GRANT2, 'psc:role:test:ALPHA_ROLE', None,
+     EXPECT_CHANGE_ROLE_GRANT2A),
+    ('mreynolds@browncoats.org', 3934, CHANGE_ROLE_GRANT2, 'psc:role:test:ALPHA_ROLE', 'psc:org:test3',
+     EXPECT_CHANGE_ROLE_GRANT2B),  # NOTWORKING
+    ('mreynolds@browncoats.org', 3934, CHANGE_ROLE_GRANT2, 'psc:role:test:ALPHA_ROLE', 'test3',
+     EXPECT_CHANGE_ROLE_GRANT2B),  # NOTWORKING
+    ('mreynolds@browncoats.org', 3934, CHANGE_ROLE_GRANT2, 'psc:role::SECOPS_ROLE_MANAGER', None, None)
+])
+def test_change_role(cbcsdk_mock, user_email, user_loginid, grant_get, new_role, org, expect_put):
+    put_was_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal expect_put, put_was_called
+        assert expect_put is not None
+        assert body == expect_put
+        put_was_called = True
+        return expect_put
+
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', {'additionalProp1': [grant_get]})
+    cbcsdk_mock.mock_request('PUT', f'/access/v2/orgs/test/grants/psc:user:test:{user_loginid}', on_put)
+    api = cbcsdk_mock.api
+    user = api.select(User).email_addresses([user_email]).one()
+    user.change_role(new_role, org)
+    if expect_put is None:
+        assert not put_was_called
+    else:
+        assert put_was_called

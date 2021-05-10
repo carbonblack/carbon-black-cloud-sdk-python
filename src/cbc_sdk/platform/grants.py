@@ -60,6 +60,8 @@ class Grant(MutableBaseModel):
             self._profiles = []
         if model_unique_id is not None and initial_data is None:
             self._refresh()
+        else:
+            self._full_init = True
 
     class Profile(MutableBaseModel):
         """Represents an access profile assigned to a grant."""
