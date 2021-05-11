@@ -182,31 +182,6 @@ GET_ASSET_VIEW_VUL_RESP = {
     ]
 }
 
-GET_ASSET_VIEW_VUL_ALL_SETS_RESP = {
-    "num_found": 1,
-    "results": [
-        {
-            "device_id": 7330223,
-            "type": "WORKLOAD",
-            "vm_id": "123",
-            "name": "jdoe-windows_2012",
-            "os_info": {
-                "os_type": "WINDOWS",
-                "os_name": "Microsoft Windows Server 2012 Standard",
-                "os_version": "6.2.9200",
-                "os_arch": "64-bit"
-            },
-            "vuln_count": 733,
-            "severity": "CRITICAL",
-            "highest_risk_score": 10.0,
-            "last_sync_ts": "2020-10-30T16:00:52.897987Z",
-            "sync_type": "SCHEDULED",
-            "sync_status": "COMPLETED",
-            "cve_ids": ["CVE-2014-4650"]
-        }
-    ]
-}
-
 GET_AFFECTED_ASSETS_SPECIFIC_VULNERABILITY = {
     "num_found": 1,
     "results": [{
@@ -291,7 +266,7 @@ GET_DEVICE_VULNERABILITY_SUMMARY_RESP = {
     }
 }
 
-GET_DEVICE_VULNERABILITY_RESP = {
+GET_VULNERABILITY_RESP_MULTIPLE = {
     "num_found": 2,
     "results": [
         {
