@@ -367,7 +367,8 @@ class User(MutableBaseModel):
         """Disables all access profiles held by ths user."""
         grant = self.grant()
         for profile in grant.profiles_:
-            profile.disabled = True
+            profile.set_disabled(True)
+            grant.touch()
         grant.save()
 
     def change_role(self, role_urn, org=None):
@@ -407,7 +408,7 @@ class User(MutableBaseModel):
             need_create = True
             for profile in grant.profiles_:
                 if profile.matches_template(template) and profile.conditions['disabled']:
-                    profile.conditions['disabled'] = False
+                    profile.set_disabled(False)
                     grant.touch()
                     need_create = False
                     break
@@ -426,7 +427,7 @@ class User(MutableBaseModel):
         for profile in grant.profiles_:
             for template in profile_templates:
                 if profile.matches_template(template):
-                    profile.conditions['disabled'] = True
+                    profile.set_disabled(True)
                     grant.touch()
                     break
         grant.save()

@@ -139,6 +139,15 @@ class Grant(MutableBaseModel):
             """Returns the list of organization URNs allowed by this profile."""
             return self._info['orgs']['allow']
 
+        def set_disabled(self, flag):
+            """
+            Sets the "disabled" flag on a profile.
+
+            Args:
+                flag (bool): True to disable the profile, False to enable it.
+            """
+            self._info['conditions']['disabled'] = flag
+
         def matches_template(self, template):
             """
             Returns whether or not the profile matches the given template.
@@ -523,6 +532,13 @@ class Grant(MutableBaseModel):
             t = copy.deepcopy(template)
             if 'profile_uuid' in t:
                 del t['profile_uuid']
+            if 'conditions' not in t:
+                t['conditions'] = {}
+            if 'expiration' not in t['conditions']:
+                t['conditions']['expiration'] = 0
+            if 'disabled' not in t['conditions']:
+                t['conditions']['disabled'] = False
+            t['can_manage'] = False
             profile = Grant.Profile(self._cb, self, None, t)
             profile._update_object()
             return profile

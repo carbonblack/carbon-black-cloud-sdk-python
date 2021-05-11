@@ -245,7 +245,7 @@ QUERY_GRANT_RESP = {
 }
 
 
-CHANGE_ROLE_GRANT1 = {
+DETAILS_GRANT1 = {
     "principal": "psc:user:test:3911",
     "expires": 0,
     "revoked": True,
@@ -280,7 +280,7 @@ EXPECT_CHANGE_ROLE_GRANT1 = {
     "update_time": "2021-03-20T12:56:31.645Z"
 }
 
-CHANGE_ROLE_GRANT2 = {
+DETAILS_GRANT2 = {
     "principal": "psc:user:test:3934",
     "expires": 0,
     "revoked": False,
@@ -478,3 +478,202 @@ EXPECT_CHANGE_ROLE_GRANT2B = {
     "update_time": "2021-03-20T12:56:31.645Z"
 }
 
+EXPECT_DISABLE_ALL_GRANT2 = {
+    "principal": "psc:user:test:3934",
+    "expires": 0,
+    "revoked": False,
+    "roles": [],
+    "profiles": [
+        {
+            "profile_uuid": "c57ba255-1736-4bfa-a59d-c54bb97a41d6",
+            "orgs": {
+                "allow": [
+                    "psc:org:test2"
+                ],
+            },
+            "roles": [
+                "psc:role::SECOPS_ROLE_MANAGER",
+                "psc:role:test:ALPHA_ROLE"
+            ],
+            "conditions": {
+                "expiration": 0,
+                "disabled": True
+            },
+            "can_manage": False
+        },
+        {
+            "profile_uuid": "68b1f6e4-6d49-4e13-9278-723d08957cd4",
+            "orgs": {
+                "allow": [
+                    "psc:org:test2",
+                    "psc:org:test3"
+                ],
+            },
+            "roles": [
+                "psc:role::SECOPS_ROLE_MANAGER"
+            ],
+            "conditions": {
+                "expiration": 0,
+                "disabled": True
+            },
+            "can_manage": False
+        },
+        {
+            "profile_uuid": "d79bcdd7-443c-409a-a415-92ccd7a1395c",
+            "orgs": {
+                "allow": [
+                    "psc:org:test2"
+                ],
+            },
+            "roles": [
+                "psc:role::SECOPS_ROLE_MANAGER"
+            ],
+            "conditions": {
+                "expiration": 0,
+                "disabled": True
+            },
+            "can_manage": False
+        }
+    ],
+    "org_ref": "psc:org:test",
+    "principal_name": "Malcolm Reynolds",
+    "created_by": "psc:user:FOO:BAR",
+    "updated_by": "psc:user:FOO:BAR",
+    "create_time": "2021-03-20T12:56:31.645Z",
+    "update_time": "2021-03-20T12:56:31.645Z"
+}
+
+DETAILS_GRANT3 = {
+    "principal": "psc:user:test:4338",
+    "expires": 0,
+    "revoked": False,
+    "roles": [],
+    "profiles": [
+        {
+            "profile_uuid": "c57ba255-1736-4bfa-a59d-c54bb97a41d6",
+            "orgs": {
+                "allow": [
+                    "psc:org:test2"
+                ],
+            },
+            "roles": [
+                "psc:role::SECOPS_ROLE_MANAGER",
+                "psc:role:test:ALPHA_ROLE"
+            ],
+            "conditions": {
+                "expiration": 0,
+                "disabled": True
+            },
+            "can_manage": False
+        },
+        {
+            "profile_uuid": "68b1f6e4-6d49-4e13-9278-723d08957cd4",
+            "orgs": {
+                "allow": [
+                    "psc:org:test3"
+                ],
+            },
+            "roles": [
+                "psc:role::SECOPS_ROLE_MANAGER"
+            ],
+            "conditions": {
+                "expiration": 0,
+                "disabled": True
+            },
+            "can_manage": False
+        }
+    ],
+    "org_ref": "psc:org:test",
+    "principal_name": "Daniel Jackson",
+    "created_by": "psc:user:FOO:BAR",
+    "updated_by": "psc:user:FOO:BAR",
+    "create_time": "2021-03-20T12:56:31.645Z",
+    "update_time": "2021-03-20T12:56:31.645Z"
+}
+
+PROFILE_TEMPLATES_A = [
+    {
+        "orgs": {
+            "allow": [
+                "psc:org:test2"
+            ],
+        },
+        "roles": [
+            "psc:role::SECOPS_ROLE_MANAGER",
+            "psc:role:test:ALPHA_ROLE"
+        ]
+    },
+    {
+        "orgs": {
+            "allow": [
+                "psc:org:test_infinity"
+            ],
+        },
+        "roles": [
+            "psc:role::SECOPS_ROLE_MANAGER"
+        ]
+    },
+]
+
+EXPECT_ADD_PROFILES_3A = {
+    "principal": "psc:user:test:4338",
+    "expires": 0,
+    "revoked": False,
+    "roles": [],
+    "profiles": [
+        {
+            "profile_uuid": "c57ba255-1736-4bfa-a59d-c54bb97a41d6",
+            "orgs": {
+                "allow": [
+                    "psc:org:test2"
+                ],
+            },
+            "roles": [
+                "psc:role::SECOPS_ROLE_MANAGER",
+                "psc:role:test:ALPHA_ROLE"
+            ],
+            "conditions": {
+                "expiration": 0,
+                "disabled": False
+            },
+            "can_manage": False
+        },
+        {
+            "profile_uuid": "68b1f6e4-6d49-4e13-9278-723d08957cd4",
+            "orgs": {
+                "allow": [
+                    "psc:org:test3"
+                ],
+            },
+            "roles": [
+                "psc:role::SECOPS_ROLE_MANAGER"
+            ],
+            "conditions": {
+                "expiration": 0,
+                "disabled": True
+            },
+            "can_manage": False
+        },
+        {
+            "orgs": {
+                "allow": [
+                    "psc:org:test_infinity"
+                ],
+            },
+            "roles": [
+                "psc:role::SECOPS_ROLE_MANAGER"
+            ],
+            "conditions": {
+                "expiration": 0,
+                "disabled": False
+            },
+            "can_manage": False
+        },
+    ],
+    "org_ref": "psc:org:test",
+    "principal_name": "Daniel Jackson",
+    "created_by": "psc:user:FOO:BAR",
+    "updated_by": "psc:user:FOO:BAR",
+    "create_time": "2021-03-20T12:56:31.645Z",
+    "update_time": "2021-03-20T12:56:31.645Z"
+}

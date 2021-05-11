@@ -12,9 +12,10 @@ from tests.unit.fixtures.platform.mock_users import (GET_USERS_RESP, GET_USERS_A
                                                      EXPECT_USER_ADD, EXPECT_USER_ADD_SMALL, EXPECT_USER_ADD_V1,
                                                      EXPECT_USER_ADD_V2, EXPECT_USER_ADD_BULK1, EXPECT_USER_ADD_BULK2,
                                                      USER_ADD_SUCCESS_RESP, USER_ADD_FAILURE_RESP)
-from tests.unit.fixtures.platform.mock_grants import (CHANGE_ROLE_GRANT1, EXPECT_CHANGE_ROLE_GRANT1,
-                                                      CHANGE_ROLE_GRANT2, EXPECT_CHANGE_ROLE_GRANT2A,
-                                                      EXPECT_CHANGE_ROLE_GRANT2B)
+from tests.unit.fixtures.platform.mock_grants import (DETAILS_GRANT1, EXPECT_CHANGE_ROLE_GRANT1,
+                                                      DETAILS_GRANT2, EXPECT_CHANGE_ROLE_GRANT2A,
+                                                      EXPECT_CHANGE_ROLE_GRANT2B, EXPECT_DISABLE_ALL_GRANT2,
+                                                      DETAILS_GRANT3, PROFILE_TEMPLATES_A, EXPECT_ADD_PROFILES_3A)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -312,19 +313,47 @@ def test_bulk_create(cbcsdk_mock):
     assert users[1].email == 'scully@fbi.gov'
 
 
+@pytest.mark.parametrize('login_id, grant_get, expect_put', [
+    (3934, DETAILS_GRANT2, EXPECT_DISABLE_ALL_GRANT2),
+    (3911, DETAILS_GRANT1, None)
+])
+def test_disable_all_access(cbcsdk_mock, login_id, grant_get, expect_put):
+    """Tests the User.disable_all_access method"""
+    put_was_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal put_was_called, expect_put
+        assert expect_put is not None
+        assert body == expect_put
+        put_was_called = True
+        return expect_put
+
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', {'additionalProp1': [copy.deepcopy(grant_get)]})
+    cbcsdk_mock.mock_request('PUT', f'/access/v2/orgs/test/grants/psc:user:test:{login_id}', on_put)
+    api = cbcsdk_mock.api
+    user = api.select(User).user_ids([login_id]).one()
+    user.disable_all_access()
+    if expect_put is None:
+        assert not put_was_called
+    else:
+        assert put_was_called
+
+
 @pytest.mark.parametrize('user_email, user_loginid, grant_get, new_role, org, expect_put', [
-    ('emercer@orville.planetary-union.net', 3911, CHANGE_ROLE_GRANT1, 'psc:role:test:NEW_ROLE', None,
+    ('emercer@orville.planetary-union.net', 3911, DETAILS_GRANT1, 'psc:role:test:NEW_ROLE', None,
      EXPECT_CHANGE_ROLE_GRANT1),
-    ('emercer@orville.planetary-union.net', 3911, CHANGE_ROLE_GRANT1, 'psc:role:test:APP_SERVICE_ROLE', None, None),
-    ('mreynolds@browncoats.org', 3934, CHANGE_ROLE_GRANT2, 'psc:role:test:ALPHA_ROLE', None,
+    ('emercer@orville.planetary-union.net', 3911, DETAILS_GRANT1, 'psc:role:test:APP_SERVICE_ROLE', None, None),
+    ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, 'psc:role:test:ALPHA_ROLE', None,
      EXPECT_CHANGE_ROLE_GRANT2A),
-    ('mreynolds@browncoats.org', 3934, CHANGE_ROLE_GRANT2, 'psc:role:test:ALPHA_ROLE', 'psc:org:test3',
-     EXPECT_CHANGE_ROLE_GRANT2B),  # NOTWORKING
-    ('mreynolds@browncoats.org', 3934, CHANGE_ROLE_GRANT2, 'psc:role:test:ALPHA_ROLE', 'test3',
-     EXPECT_CHANGE_ROLE_GRANT2B),  # NOTWORKING
-    ('mreynolds@browncoats.org', 3934, CHANGE_ROLE_GRANT2, 'psc:role::SECOPS_ROLE_MANAGER', None, None)
+    ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, 'psc:role:test:ALPHA_ROLE', 'psc:org:test3',
+     EXPECT_CHANGE_ROLE_GRANT2B),
+    ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, 'psc:role:test:ALPHA_ROLE', 'test3',
+     EXPECT_CHANGE_ROLE_GRANT2B),
+    ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, 'psc:role::SECOPS_ROLE_MANAGER', None, None)
 ])
 def test_change_role(cbcsdk_mock, user_email, user_loginid, grant_get, new_role, org, expect_put):
+    """Tests the User.change_role method"""
     put_was_called = False
 
     def on_put(url, body, **kwargs):
@@ -335,7 +364,7 @@ def test_change_role(cbcsdk_mock, user_email, user_loginid, grant_get, new_role,
         return expect_put
 
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
-    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', {'additionalProp1': [grant_get]})
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', {'additionalProp1': [copy.deepcopy(grant_get)]})
     cbcsdk_mock.mock_request('PUT', f'/access/v2/orgs/test/grants/psc:user:test:{user_loginid}', on_put)
     api = cbcsdk_mock.api
     user = api.select(User).email_addresses([user_email]).one()
@@ -344,3 +373,63 @@ def test_change_role(cbcsdk_mock, user_email, user_loginid, grant_get, new_role,
         assert not put_was_called
     else:
         assert put_was_called
+
+
+def fixup_profile_uuids(expected, actual):
+    """Auxiliary function to fix the profile UUIDs in an "expected" profile return."""
+    work = copy.deepcopy(expected)
+    if 'profiles' not in work:
+        work['profiles'] = []
+    if 'profiles' in actual:
+        for index, profile in enumerate(actual['profiles']):
+            if index >= len(work['profiles']) or 'profile_uuid' not in profile:
+                continue
+            if 'profile_uuid' not in work['profiles'][index]:
+                work['profiles'][index]['profile_uuid'] = profile['profile_uuid']
+    return work
+
+
+def template_matches(profile, template):
+    if set(profile['roles']) != set(template['roles']):
+        return False
+    if set(profile['orgs']['allow']) != set(template['orgs']['allow']):
+        return False
+    return True
+
+
+@pytest.mark.parametrize('login_id, grant_get, new_profiles, expect_put, expect_new_profs', [
+    (4338, DETAILS_GRANT3, PROFILE_TEMPLATES_A, EXPECT_ADD_PROFILES_3A, 1)  # NOTWORKINGYET
+])
+def test_add_profiles(cbcsdk_mock, login_id, grant_get, new_profiles, expect_put, expect_new_profs):
+    put_was_called = False
+    new_profile_count = 0
+
+    def on_put(url, body, **kwargs):
+        nonlocal expect_put, put_was_called
+        assert expect_put is not None
+        fixed_expect_put = fixup_profile_uuids(expect_put, body)
+        assert body == fixed_expect_put
+        put_was_called = True
+        return fixed_expect_put
+
+    def on_profile_post(url, body, **kwargs):
+        nonlocal new_profiles, new_profile_count
+        matched = False
+        for template in new_profiles:
+            matched = template_matches(body, template) or matched
+        assert matched
+        new_profile_count = new_profile_count + 1
+        return body
+
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', {'additionalProp1': [copy.deepcopy(grant_get)]})
+    cbcsdk_mock.mock_request('POST', f'/access/v2/orgs/test/grants/psc:user:test:{login_id}/profiles', on_profile_post)
+    cbcsdk_mock.mock_request('PUT', f'/access/v2/orgs/test/grants/psc:user:test:{login_id}', on_put)
+    api = cbcsdk_mock.api
+    user = api.select(User).user_ids([login_id]).one()
+    user.add_profiles(new_profiles)
+    if expect_put is None:
+        assert not put_was_called
+    else:
+        assert put_was_called
+    assert expect_new_profs == new_profile_count
