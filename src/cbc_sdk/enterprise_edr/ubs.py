@@ -15,7 +15,7 @@
 
 from __future__ import absolute_import
 from cbc_sdk.errors import ApiError, InvalidObjectError, NonQueryableModel
-from cbc_sdk.base import UnrefreshableModel, Query
+from cbc_sdk.base import UnrefreshableModel
 
 import logging
 import validators
@@ -52,8 +52,9 @@ class Binary(UnrefreshableModel):
                                                  initial_data=item, force_init=False,
                                                  full_doc=True)
 
+        @classmethod
         def _query_implementation(self, cb, **kwargs):
-            return Query(self, cb, **kwargs)
+            raise NonQueryableModel("Summary does not support querying")
 
     def __init__(self, cb, model_unique_id):
         """
@@ -73,15 +74,15 @@ class Binary(UnrefreshableModel):
                                      initial_data=item, force_init=False,
                                      full_doc=True)
 
+    @classmethod
     def _query_implementation(self, cb, **kwargs):
-        return Query(self, cb, **kwargs)
+        raise NonQueryableModel("Binary does not support querying")
 
     @property
     def summary(self):
         """Returns organization-specific information about this binary."""
         return self._cb.select(Binary.Summary, self.sha256)
 
-    @property
     def download_url(self, expiration_seconds=3600):
         """Returns a URL that can be used to download the file for this binary. Returns None if no download found.
 
@@ -128,6 +129,7 @@ class Downloads(UnrefreshableModel):
                                                       initial_data=item, force_init=False,
                                                       full_doc=True)
 
+        @classmethod
         def _query_implementation(self, cb, **kwargs):
             raise NonQueryableModel("IOC does not support querying")
 
@@ -152,8 +154,9 @@ class Downloads(UnrefreshableModel):
                                         initial_data=item, force_init=False,
                                         full_doc=True)
 
+    @classmethod
     def _query_implementation(self, cb, **kwargs):
-        return Query(self, cb, **kwargs)
+        raise NonQueryableModel("Downloads does not support querying")
 
     @property
     def found(self):
