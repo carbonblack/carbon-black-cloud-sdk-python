@@ -259,8 +259,17 @@ class InvalidHashError(Exception):
 
 class MoreThanOneResultError(ApiError):
     """Only one object was requested, but multiple matches were found in the Carbon Black datastore."""
+    def __init__(self, message=None, original_exception=None, results=None):
+        """
+        Initialize the MoreThanOneResultError.
 
-    pass
+        Args:
+            message (str): The actual error message.
+            original_exception (Exception): The exception that caused this one to be raised.
+            results (list): List of results returned
+        """
+        super().__init__(message=message, original_exception=original_exception)
+        self.results = results
 
 
 class NonQueryableModel(ApiError):

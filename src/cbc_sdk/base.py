@@ -871,7 +871,8 @@ class IterableQueryMixin:
             raise MoreThanOneResultError(
                 message="{0:d} results found for query {1:s}".format(
                     len(self), self._query
-                )
+                ),
+                results=self.all()
             )
         return res[0]
 
