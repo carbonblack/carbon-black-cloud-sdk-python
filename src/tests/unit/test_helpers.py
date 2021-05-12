@@ -48,7 +48,6 @@ def test_argument_parser_default_values():
     assert args.no_ssl_verify is False
     assert args.profile == 'default'
     assert args.verbose is False
-    assert args.window == '3d'
 
 
 def test_apicloudapi_object_with_command_line_arguments():
@@ -110,16 +109,16 @@ def test_read_iocs(cbcsdk_mock):
 
 
 def test_get_object_by_name_or_id(cbcsdk_mock):
-    """Test get_object_by_name_or_id"""
+    """Test get object by name"""
     cbcsdk_mock.mock_request("POST", "/device_control/v3/orgs/test/devices/_search", USBDEVICE_QUERY_RESP)
     api = cbcsdk_mock.api
-    result = get_object_by_name_or_id(api, USBDevice)
+    result = get_object_by_name_or_id(api, USBDevice, name_field="device_name", name="\\Device\\HarddiskVolume30")
     assert len(result) == 1
     assert isinstance(result[0], USBDevice)
 
 
 def test_get_object_by_name_or_id_with_id(cbcsdk_mock):
-    """Test get_object_by_name_or_id"""
+    """Test get object by id"""
     cbcsdk_mock.mock_request("GET", "/device_control/v3/orgs/test/devices/774", USBDEVICE_GET_RESP)
     api = cbcsdk_mock.api
     result = get_object_by_name_or_id(api, USBDevice, id=774)
@@ -132,4 +131,14 @@ def test_get_object_by_name_or_id_no_result(cbcsdk_mock):
     cbcsdk_mock.mock_request("POST", "/device_control/v3/orgs/test/devices/_search", USBDEVICE_QUERY_RESP_ZERO_RESULT)
     api = cbcsdk_mock.api
     with pytest.raises(Exception):
+        get_object_by_name_or_id(api, USBDevice, name_field="device_name", name="\\Device\\HarddiskVolume30")
+
+
+def test_get_object_by_name_or_id_errors(cbcsdk_mock):
+    """Test get_object_by_name_or_id with 0 found"""
+    api = cbcsdk_mock.api
+    with pytest.raises(Exception):
         get_object_by_name_or_id(api, USBDevice)
+
+    with pytest.raises(Exception):
+        get_object_by_name_or_id(api, USBDevice, id=774, name_field="device_name", name="\\Device\\HarddiskVolume30")

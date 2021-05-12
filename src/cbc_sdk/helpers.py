@@ -58,7 +58,6 @@ def build_cli_parser(description="Cb Example Script"):
                         default=False)
     parser.add_argument("--profile", help="profile to connect", default="default")
     parser.add_argument("--verbose", help="enable debug logging", default=False, action='store_true')
-    parser.add_argument("--window", help="Define search window", default='3d')
 
     return parser
 
@@ -92,7 +91,7 @@ def get_cb_cloud_object(args):
     return cb
 
 
-def get_object_by_name_or_id(cb, cls, name_field="name", id=None, name='', force_init=True):
+def get_object_by_name_or_id(cb, cls, name_field="name", id=None, name=None, force_init=True):
     """
     Locate an object in the API by either ID or name.
 
@@ -108,8 +107,11 @@ def get_object_by_name_or_id(cb, cls, name_field="name", id=None, name='', force
         list: List of objects that match the search criteria.
     """
     clsname = cls.__name__
+    attempted_to_find = ''
     try:
-        if id:
+        if not (id or name) or (id and name):
+            raise Exception("Either id or name should be provided.")
+        elif id:
             attempted_to_find = "ID of {0:d}".format(id)
             objs = [cb.select(cls, id)]
         else:
