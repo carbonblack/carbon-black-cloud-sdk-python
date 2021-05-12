@@ -17,7 +17,9 @@ from cbc_sdk.errors import ApiError, ServerError, ObjectNotFoundError
 from cbc_sdk.platform.grants import Grant, normalize_org
 import time
 import copy
+import logging
 
+logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
 """User Models"""
 
@@ -325,8 +327,9 @@ class User(MutableBaseModel):
             profile_templates (list[dict]): List of profile templates to be added to the users.
         """
         my_profiles = normalize_profile_list(profile_templates)
-        for user in users:
-            user._internal_add_profiles(my_profiles)
+        if my_profiles:
+            for user in users:
+                user._internal_add_profiles(my_profiles)
 
     @classmethod
     def bulk_disable_profiles(cls, users, profile_templates):
@@ -338,8 +341,9 @@ class User(MutableBaseModel):
             profile_templates (list[dict]): List of profile templates to be disabled.
         """
         my_profiles = normalize_profile_list(profile_templates)
-        for user in users:
-            user._internal_disable_profiles(my_profiles)
+        if my_profiles:
+            for user in users:
+                user._internal_disable_profiles(my_profiles)
 
     @classmethod
     def bulk_disable_all_access(cls, users):
@@ -444,7 +448,7 @@ class User(MutableBaseModel):
         for profile in grant.profiles_:
             for template in profile_templates:
                 if profile.matches_template(template):
-                    profile.conditions['expiration'] = expiration_date
+                    profile.set_expiration(expiration_date)
                     grant.touch()
                     break
         grant.save()
@@ -456,7 +460,9 @@ class User(MutableBaseModel):
         Args:
             profile_templates (list[dict]): List of profile templates to be added to the user.
         """
-        self._internal_add_profiles(normalize_profile_list(profile_templates))
+        my_profiles = normalize_profile_list(profile_templates)
+        if my_profiles:
+            self._internal_add_profiles(my_profiles)
 
     def disable_profiles(self, profile_templates):
         """
@@ -465,7 +471,9 @@ class User(MutableBaseModel):
         Args:
             profile_templates (list[dict]): List of profile templates to be disabled.
         """
-        self._internal_disable_profiles(normalize_profile_list(profile_templates))
+        my_profiles = normalize_profile_list(profile_templates)
+        if my_profiles:
+            self._internal_disable_profiles(my_profiles)
 
     def set_profile_expiration(self, profile_templates, expiration_date):
         """
@@ -475,7 +483,9 @@ class User(MutableBaseModel):
             profile_templates (list[dict]): List of profile templates to be reset.
             expiration_date (str): New expiration date, in ISO 8601 format.
         """
-        self._internal_set_profile_expiration(normalize_profile_list(profile_templates), expiration_date)
+        my_profiles = normalize_profile_list(profile_templates)
+        if my_profiles:
+            self._internal_set_profile_expiration(my_profiles, expiration_date)
 
 
 """User Queries"""

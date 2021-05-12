@@ -157,7 +157,7 @@ GET_USERS_AFTER_BULK1_RESP = {
 GET_USERS_AFTER_BULK2_RESP = {
     'success': True,
     'message': 'Success',
-    'users': [_USER1, _USER2, _USER3, _USER4, _USER5,  _USER_BULK1, _USER_BULK2]
+    'users': [_USER1, _USER2, _USER3, _USER4, _USER5, _USER_BULK1, _USER_BULK2]
 }
 
 EXPECT_USER_ADD = {
