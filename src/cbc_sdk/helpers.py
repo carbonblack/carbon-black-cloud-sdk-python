@@ -91,7 +91,7 @@ def get_cb_cloud_object(args):
     return cb
 
 
-def get_object_by_name_or_id(cb, cls, name_field="name", id=None, name=None, force_init=True):
+def get_object_by_name_or_id(cb, cls, name_field="name", id=None, name=None):
     """
     Locate an object in the API by either ID or name.
 
