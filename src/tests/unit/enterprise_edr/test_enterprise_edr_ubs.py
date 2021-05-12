@@ -1,10 +1,12 @@
 """Testing Binary, Downloads objects of cbc_sdk.enterprise_edr"""
 
-import pytest
 import logging
+import pytest
+
 from cbc_sdk.enterprise_edr import Downloads, Binary
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError, InvalidObjectError, NonQueryableModel
+
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.enterprise_edr.mock_ubs import (BINARY_GET_METADATA_RESP,
                                                          BINARY_GET_DEVICE_SUMMARY_RESP,
@@ -12,7 +14,7 @@ from tests.unit.fixtures.enterprise_edr.mock_ubs import (BINARY_GET_METADATA_RES
                                                          BINARY_GET_FILE_RESP_NOT_FOUND,
                                                          BINARY_GET_FILE_RESP_ERROR)
 
-log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
+logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
 
 @pytest.fixture(scope="function")
@@ -42,9 +44,8 @@ def test_binary_query(cbcsdk_mock):
             called = True
             assert body['expiration_seconds'] == 3600
             return BINARY_GET_FILE_RESP
-        else:
-            assert body['expiration_seconds'] == 10
-            return BINARY_GET_FILE_RESP
+        assert body['expiration_seconds'] == 10
+        return BINARY_GET_FILE_RESP
 
     sha256 = "00a16c806ff694b64e566886bba5122655eff89b45226cddc8651df7860e4524"
     cbcsdk_mock.mock_request("GET", f"/ubs/v1/orgs/test/sha256/{sha256}", BINARY_GET_METADATA_RESP)
