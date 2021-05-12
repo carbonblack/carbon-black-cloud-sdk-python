@@ -20,8 +20,9 @@ import time
 import argparse
 import logging
 from collections import defaultdict
-import validators
 import hashlib
+import validators
+
 
 from cbc_sdk import CBCloudAPI
 
