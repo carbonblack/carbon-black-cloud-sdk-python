@@ -14,11 +14,13 @@
 """Model Classes for Enterprise Endpoint Detection and Response"""
 
 from __future__ import absolute_import
-from cbc_sdk.errors import ApiError, InvalidObjectError, NonQueryableModel
-from cbc_sdk.base import UnrefreshableModel
 
 import logging
 import validators
+
+from cbc_sdk.errors import ApiError, InvalidObjectError, NonQueryableModel
+from cbc_sdk.base import UnrefreshableModel
+
 
 log = logging.getLogger(__name__)
 
@@ -53,7 +55,7 @@ class Binary(UnrefreshableModel):
                                                  full_doc=True)
 
         @classmethod
-        def _query_implementation(self, cb, **kwargs):
+        def _query_implementation(cls, cb, **kwargs):
             raise NonQueryableModel("Summary does not support querying")
 
     def __init__(self, cb, model_unique_id):
@@ -75,7 +77,7 @@ class Binary(UnrefreshableModel):
                                      full_doc=True)
 
     @classmethod
-    def _query_implementation(self, cb, **kwargs):
+    def _query_implementation(cls, cb, **kwargs):
         raise NonQueryableModel("Binary does not support querying")
 
     @property
@@ -130,7 +132,7 @@ class Downloads(UnrefreshableModel):
                                                       full_doc=True)
 
         @classmethod
-        def _query_implementation(self, cb, **kwargs):
+        def _query_implementation(cls, cb, **kwargs):
             raise NonQueryableModel("IOC does not support querying")
 
     def __init__(self, cb, shas, expiration_seconds=3600):
@@ -155,7 +157,7 @@ class Downloads(UnrefreshableModel):
                                         full_doc=True)
 
     @classmethod
-    def _query_implementation(self, cb, **kwargs):
+    def _query_implementation(cls, cb, **kwargs):
         raise NonQueryableModel("Downloads does not support querying")
 
     @property
