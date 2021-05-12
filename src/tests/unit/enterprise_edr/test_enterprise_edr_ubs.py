@@ -84,7 +84,7 @@ def test_binary_query_not_found(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", f"/ubs/v1/orgs/test/sha256/{sha256}", BINARY_GET_METADATA_RESP)
     api = cbcsdk_mock.api
     binary = api.select(Binary, sha256)
-    assert isinstance(bin, Binary)
+    assert isinstance(binary, Binary)
     cbcsdk_mock.mock_request("POST", "/ubs/v1/orgs/test/file/_download", BINARY_GET_FILE_RESP_NOT_FOUND)
     url = binary.download_url()
     assert url is None
