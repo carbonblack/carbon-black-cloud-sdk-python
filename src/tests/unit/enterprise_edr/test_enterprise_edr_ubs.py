@@ -50,15 +50,15 @@ def test_binary_query(cbcsdk_mock):
     sha256 = "00a16c806ff694b64e566886bba5122655eff89b45226cddc8651df7860e4524"
     cbcsdk_mock.mock_request("GET", f"/ubs/v1/orgs/test/sha256/{sha256}", BINARY_GET_METADATA_RESP)
     api = cbcsdk_mock.api
-    bin = api.select(Binary, sha256)
-    assert isinstance(bin, Binary)
+    binary = api.select(Binary, sha256)
+    assert isinstance(binary, Binary)
     cbcsdk_mock.mock_request("GET", f"/ubs/v1/orgs/test/sha256/{sha256}/summary/device", BINARY_GET_DEVICE_SUMMARY_RESP)
-    summary = bin.summary
+    summary = binary.summary
     cbcsdk_mock.mock_request("POST", "/ubs/v1/orgs/test/file/_download", post_validate)
-    url = bin.download_url()
+    url = binary.download_url()
     assert summary is not None
     assert url is not None
-    url = bin.download_url(expiration_seconds=10)
+    url = binary.download_url(expiration_seconds=10)
     assert url is not None
 
 
@@ -83,10 +83,10 @@ def test_binary_query_not_found(cbcsdk_mock):
     sha256 = "00a16c806ff694b64e566886bba5122655eff89b45226cddc8651df7860e4524"
     cbcsdk_mock.mock_request("GET", f"/ubs/v1/orgs/test/sha256/{sha256}", BINARY_GET_METADATA_RESP)
     api = cbcsdk_mock.api
-    bin = api.select(Binary, sha256)
+    binary = api.select(Binary, sha256)
     assert isinstance(bin, Binary)
     cbcsdk_mock.mock_request("POST", "/ubs/v1/orgs/test/file/_download", BINARY_GET_FILE_RESP_NOT_FOUND)
-    url = bin.download_url()
+    url = binary.download_url()
     assert url is None
 
 
