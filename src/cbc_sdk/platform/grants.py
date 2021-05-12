@@ -503,7 +503,7 @@ class Grant(MutableBaseModel):
                 for ll in d.values():
                     yield ll
 
-        url = "/access/v3/orgs/{0}/users/{1}/roles/permitted?type=USER".format(cb.credentials.org_key, userid)
+        url = "/access/v3/orgs/{0}/principals/{1}/roles/permitted".format(cb.credentials.org_key, userid)
         data = list(_extractor(cb.get_object(url)))
         flat_data = [item for sublist in data for item in sublist]
         return [subitem['urn'] for subitem in flat_data if 'urn' in subitem]
