@@ -3,6 +3,10 @@ Changelog
 CBC SDK 1.3.0 - Released ?, 2021
 --------------------------------
 
+Bug Fixes
+
+  * Fix the ability to set expiration for binary download URL
+
 New Features
 
 * Live Response migrated from v3 to v6 (:doc:`migration guide<live-response-v6-migration>`)
