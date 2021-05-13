@@ -14,7 +14,7 @@
 """Model and Query Classes for Administrative Grants and Profiles"""
 
 from cbc_sdk.base import MutableBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
-from cbc_sdk.errors import ApiError, ServerError
+from cbc_sdk.errors import ApiError, ServerError, NonQueryableModel
 import time
 import copy
 import uuid
@@ -95,7 +95,7 @@ class Grant(MutableBaseModel):
             Raises:
                 ApiError: Always.
             """
-            raise ApiError("Profiles cannot be queried directly")
+            raise NonQueryableModel("Profiles cannot be queried directly")
 
         def _refresh(self):
             """
