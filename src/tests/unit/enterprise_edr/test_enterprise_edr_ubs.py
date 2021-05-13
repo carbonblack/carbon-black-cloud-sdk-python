@@ -43,8 +43,8 @@ def test_binary_query(cbcsdk_mock):
         if not called:
             called = True
             assert body['expiration_seconds'] == 3600
-            return BINARY_GET_FILE_RESP
-        assert body['expiration_seconds'] == 10
+        else:
+            assert body['expiration_seconds'] == 10
         return BINARY_GET_FILE_RESP
 
     sha256 = "00a16c806ff694b64e566886bba5122655eff89b45226cddc8651df7860e4524"
@@ -95,11 +95,11 @@ def test_binary_downloads_error(cbcsdk_mock):
     sha256 = "00a16c806ff694b64e566886bba5122655eff89b45226cddc8651df7860e4524"
     cbcsdk_mock.mock_request("GET", f"/ubs/v1/orgs/test/sha256/{sha256}", BINARY_GET_METADATA_RESP)
     api = cbcsdk_mock.api
-    bin = api.select(Binary, sha256)
-    assert isinstance(bin, Binary)
+    binary = api.select(Binary, sha256)
+    assert isinstance(binary, Binary)
     cbcsdk_mock.mock_request("POST", "/ubs/v1/orgs/test/file/_download", BINARY_GET_FILE_RESP_ERROR)
     with pytest.raises(InvalidObjectError):
-        bin.download_url()
+        binary.download_url()
 
 
 def test_downloads_query(cbcsdk_mock):
