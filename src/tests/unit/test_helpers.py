@@ -10,6 +10,7 @@
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
 """Test code for the helper functions"""
+import pytest
 
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object, read_iocs, get_object_by_name_or_id
 from cbc_sdk.rest_api import CBCloudAPI
@@ -19,7 +20,6 @@ from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.endpoint_standard.mock_usb_devices import (USBDEVICE_GET_RESP,
                                                                     USBDEVICE_QUERY_RESP,
                                                                     USBDEVICE_QUERY_RESP_ZERO_RESULT)
-import pytest
 
 
 @pytest.fixture(scope="function")
@@ -83,8 +83,7 @@ def test_read_iocs(cbcsdk_mock):
         if not called:
             called = True
             return {"valid": True}
-        else:
-            return {"valid": False}
+        return {"valid": False}
 
     cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation", post_validate)
     api = cbcsdk_mock.api

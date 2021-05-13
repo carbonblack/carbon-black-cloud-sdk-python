@@ -112,7 +112,7 @@ def get_object_by_name_or_id(cb, cls, name_field="name", id=None, name=None):
     try:
         if not (id or name) or (id and name):
             raise Exception("Either id or name should be provided.")
-        elif id:
+        if id:
             attempted_to_find = "ID of {0:d}".format(id)
             objs = [cb.select(cls, id)]
         else:
