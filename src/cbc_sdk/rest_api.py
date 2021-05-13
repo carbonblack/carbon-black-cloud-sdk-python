@@ -423,7 +423,7 @@ class CBCloudAPI(BaseAPI):
             bool: True if the query is valid, False if not.
 
         Examples:
-        >>> cb.validate_query("process_name:chrome.exe") # True
+        >>> cb.validate_process_query("process_name:chrome.exe") # True
         """
         args = {"q": query}
         url = "/api/investigate/v1/orgs/{}/processes/search_validation".format(

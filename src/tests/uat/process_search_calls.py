@@ -404,6 +404,8 @@ def enriched_events_aggregation(cb):
 def main():
     """Script entry point"""
     parser = build_cli_parser()
+    parser.add_argument("--window", help="Define search window", default='3d')
+
     args = parser.parse_args()
     print_detail = args.verbose
     window = '-' + args.window
