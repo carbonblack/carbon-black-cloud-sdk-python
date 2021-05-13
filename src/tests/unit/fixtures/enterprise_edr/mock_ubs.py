@@ -48,3 +48,15 @@ BINARY_GET_FILE_RESP = {
     "not_found": [],
     "error": []
 }
+
+BINARY_GET_FILE_RESP_NOT_FOUND = {
+    "found": [],
+    "not_found": ["00a16c806ff694b64e566886bba5122655eff89b45226cddc8651df7860e4524"],
+    "error": []
+}
+
+BINARY_GET_FILE_RESP_ERROR = {
+    "found": [],
+    "not_found": [],
+    "error": ["00a16c806ff694b64e566886bba5122655eff89b45226cddc8651df7860e4524"]
+}
