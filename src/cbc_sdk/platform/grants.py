@@ -14,7 +14,7 @@
 """Model and Query Classes for Administrative Grants and Profiles"""
 
 from cbc_sdk.base import MutableBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
-from cbc_sdk.errors import ApiError, ServerError
+from cbc_sdk.errors import ApiError, NonQueryableModel
 import time
 import copy
 import uuid
@@ -60,6 +60,8 @@ class Grant(MutableBaseModel):
             self._profiles = []
         if model_unique_id is not None and initial_data is None:
             self._refresh()
+        else:
+            self._full_init = True
 
     class Profile(MutableBaseModel):
         """Represents an access profile assigned to a grant."""
@@ -93,7 +95,7 @@ class Grant(MutableBaseModel):
             Raises:
                 ApiError: Always.
             """
-            raise ApiError("Profiles cannot be queried directly")
+            raise NonQueryableModel("Profiles cannot be queried directly")
 
         def _refresh(self):
             """
@@ -131,6 +133,45 @@ class Grant(MutableBaseModel):
                                                self._model_unique_id)
             ret = self._cb.delete_object(url)
             self._refresh_if_needed(ret)
+
+        @property
+        def allowed_orgs(self):
+            """Returns the list of organization URNs allowed by this profile."""
+            return self._info['orgs']['allow']
+
+        def set_disabled(self, flag):
+            """
+            Sets the "disabled" flag on a profile.
+
+            Args:
+                flag (bool): True to disable the profile, False to enable it.
+            """
+            self._info['conditions']['disabled'] = flag
+
+        def set_expiration(self, expiration):
+            """
+            Sets the expiration time on a profile.
+
+            Args:
+                expiration (str): Expiration time to set on the profile (ISO 8601 format).
+            """
+            self._info['conditions']['expiration'] = expiration
+
+        def matches_template(self, template):
+            """
+            Returns whether or not the profile matches the given template.
+
+            Args:
+                template (dict): The profile template to match against.
+
+            Returns:
+                bool: True if this profile matches the template, False if not.
+            """
+            if set(self.roles) != set(template['roles']):
+                return False
+            if set(self.allowed_orgs) != set(template['orgs']['allow']):
+                return False
+            return True
 
     class ProfileBuilder:
         """Auxiliary object used to construct a new profile on a grant."""
@@ -464,7 +505,7 @@ class Grant(MutableBaseModel):
             ApiError: If the principal is inadequately specified (whether for the Grant or GrantBuilder).
         """
         if template:
-            if 'principal' not in template:
+            if not template.get('principal', None):
                 raise ApiError('principal must be specified in Grant template')
             t = copy.deepcopy(template)
             grant = Grant(cb, t['principal'], t)
@@ -500,8 +541,16 @@ class Grant(MutableBaseModel):
             t = copy.deepcopy(template)
             if 'profile_uuid' in t:
                 del t['profile_uuid']
+            if 'conditions' not in t:
+                t['conditions'] = {}
+            if 'expiration' not in t['conditions']:
+                t['conditions']['expiration'] = 0
+            if 'disabled' not in t['conditions']:
+                t['conditions']['disabled'] = False
+            t['can_manage'] = False
             profile = Grant.Profile(self._cb, self, None, t)
             profile._update_object()
+            self._profiles.append(profile)
             return profile
         return Grant.ProfileBuilder(self)
 
@@ -551,9 +600,6 @@ class GrantQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
         if len(self._criteria) == 0:
             raise ApiError("At least one principal must be specified for Grant query")
         ret = self._cb.post_object('/access/v2/grants/_fetch', self._criteria)
-        if ret.status_code != 200:
-            raise ServerError(ret.status_code,
-                              ret.json().get('message', "Server error {0} occurred".format(ret.status_code)))
         return ret.json().get('additionalProp1', [])
 
     def _count(self):
