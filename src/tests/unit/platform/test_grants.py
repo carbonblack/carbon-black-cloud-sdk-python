@@ -5,7 +5,7 @@ import logging
 import copy
 from cbc_sdk.platform import Grant
 from cbc_sdk.rest_api import CBCloudAPI
-from cbc_sdk.errors import ApiError, NonQueryableModel, ServerError
+from cbc_sdk.errors import ApiError, NonQueryableModel
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_grants import (GET_GRANT_RESP, PUT_GRANT_RESP, POST_GRANT_RESP,
                                                       POST_PROFILE_IN_GRANT_RESP, POST_PROFILE_IN_GRANT_RESP_2,

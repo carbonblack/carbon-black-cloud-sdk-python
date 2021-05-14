@@ -14,7 +14,7 @@
 """Model and Query Classes for Administrative Grants and Profiles"""
 
 from cbc_sdk.base import MutableBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
-from cbc_sdk.errors import ApiError, ServerError, NonQueryableModel
+from cbc_sdk.errors import ApiError, NonQueryableModel
 import time
 import copy
 import uuid
