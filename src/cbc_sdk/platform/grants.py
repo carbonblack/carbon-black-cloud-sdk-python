@@ -505,7 +505,7 @@ class Grant(MutableBaseModel):
             ApiError: If the principal is inadequately specified (whether for the Grant or GrantBuilder).
         """
         if template:
-            if 'principal' not in template:
+            if not template.get('principal', None):
                 raise ApiError('principal must be specified in Grant template')
             t = copy.deepcopy(template)
             grant = Grant(cb, t['principal'], t)
@@ -600,9 +600,6 @@ class GrantQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
         if len(self._criteria) == 0:
             raise ApiError("At least one principal must be specified for Grant query")
         ret = self._cb.post_object('/access/v2/grants/_fetch', self._criteria)
-        if ret.status_code != 200:
-            raise ServerError(ret.status_code,
-                              ret.json().get('message', "Server error {0} occurred".format(ret.status_code)))
         return ret.json().get('additionalProp1', [])
 
     def _count(self):

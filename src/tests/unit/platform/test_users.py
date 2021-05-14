@@ -8,6 +8,7 @@ from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError, ObjectNotFoundError, ServerError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_users import (GET_USERS_RESP, GET_USERS_AFTER_CREATE_RESP,
+                                                     GET_USERS_AFTER_CREATE_OAUTH_RESP,
                                                      GET_USERS_AFTER_BULK1_RESP, GET_USERS_AFTER_BULK2_RESP,
                                                      EXPECT_USER_ADD, EXPECT_USER_ADD_SMALL, EXPECT_USER_ADD_V1,
                                                      EXPECT_USER_ADD_V2, EXPECT_USER_ADD_BULK1, EXPECT_USER_ADD_BULK2,
@@ -139,19 +140,28 @@ def test_unsupported_create_by_update(cb):
         user.save()
 
 
-def test_create_user(cbcsdk_mock):
+@pytest.mark.parametrize('in_auth, out_auth', [
+    (None, 'PASSWORD'),
+    ('OAUTH', 'OAUTH')
+])
+def test_create_user(cbcsdk_mock, in_auth, out_auth):
     """Test creating a user."""
     post_made = False
 
     def check_post(uri, body, **kwargs):
-        assert body == EXPECT_USER_ADD
-        nonlocal post_made
+        nonlocal in_auth, post_made
+        compare_body = copy.deepcopy(EXPECT_USER_ADD)
+        if in_auth:
+            compare_body['auth_method'] = in_auth
+        assert body == compare_body
         post_made = True
         return USER_ADD_SUCCESS_RESP
 
     def check_get(uri, query_params, default):
-        nonlocal post_made
+        nonlocal in_auth, post_made
         assert post_made
+        if in_auth == 'OAUTH':
+            return GET_USERS_AFTER_CREATE_OAUTH_RESP
         return GET_USERS_AFTER_CREATE_RESP
 
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/users', check_post)
@@ -159,6 +169,8 @@ def test_create_user(cbcsdk_mock):
     api = cbcsdk_mock.api
     builder = User.create(api).set_email('rios@la-sirena.net').set_role('psc:role:test:APP_SERVICE_ROLE')
     builder.set_first_name('Cristobal').set_last_name('Rios')
+    if in_auth:
+        builder.set_auth_method(in_auth)
     builder.add_grant_profile(['psc:org:test2'], ['psc:role:test2:DUMMY'])
     builder.add_grant_profile(['test3'], ['psc:role:test3:DUMMY'])
     user = builder.build()
@@ -167,6 +179,7 @@ def test_create_user(cbcsdk_mock):
     assert user.first_name == 'Cristobal'
     assert user.login_name == 'rios@la-sirena.net'
     assert user.email == 'rios@la-sirena.net'
+    assert user.auth_method == out_auth
 
 
 TEMPLATE1 = {
@@ -234,6 +247,16 @@ def test_create_user_fails(cbcsdk_mock):
     builder.add_grant_profile(['psc:org:test2'], ['psc:role:test2:DUMMY'])
     with pytest.raises(ServerError):
         builder.build()
+
+
+def test_user_unsupported_create(cbcsdk_mock):
+    """We don't support creating the user just by saving it. Test that."""
+    api = cbcsdk_mock.api
+    user = User(api, None, TEMPLATE2)
+    user._full_init = True  # fake out to keep from trying to GET the nonexistent user
+    user.touch()
+    with pytest.raises(ApiError):
+        user.save()
 
 
 def test_bulk_create(cbcsdk_mock):

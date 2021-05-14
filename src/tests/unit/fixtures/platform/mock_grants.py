@@ -104,6 +104,23 @@ POST_PROFILE_IN_GRANT_RESP = {
     "can_manage": False
 }
 
+POST_PROFILE_IN_GRANT_RESP_2 = {
+    "profile_uuid": "REPLACEME",
+    "orgs": {
+        "allow": [
+            "psc:org:test2"
+        ],
+    },
+    "roles": [
+        "psc:role::SECOPS_ROLE_MANAGER"
+    ],
+    "conditions": {
+        "expiration": '20211031T12:34:56',
+        "disabled": True
+    },
+    "can_manage": False
+}
+
 PUT_PROFILE_RESP = {
     "profile_uuid": "c57ba255-1736-4bfa-a59d-c54bb97a41d6",
     "orgs": {
