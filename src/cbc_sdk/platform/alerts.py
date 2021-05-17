@@ -259,8 +259,6 @@ class CBAnalyticsAlert(BaseAlert):
                 if self._details_timeout != 0 and (time.time() * 1000) - submit_time > self._details_timeout:
                     timed_out = True
                     break
-            else:
-                break
 
             time.sleep(.5)
 
