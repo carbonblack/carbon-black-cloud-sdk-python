@@ -106,7 +106,7 @@ def main():
                     stopped.write('\n')
 
         if len(alerts_detected) > 0:
-            print(f'Writing Attacks Stopped to: attacks_detected_{now}.csv')
+            print(f'Writing Attacks Detected to: attacks_detected_{now}.csv')
             with open(f'attacks_detected_{now}.csv', 'w') as detected:
                 detected.write('Alert ID,Alert,ThreatScore,TargetPriority,Vector,Stage,First Seen,DeviceHostName,'
                                'Username,Policy,On/Off Premise,TTPs,ThreatCategory,RunState,PolicyAppliedState,'
