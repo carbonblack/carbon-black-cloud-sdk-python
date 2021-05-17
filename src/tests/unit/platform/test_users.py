@@ -1,4 +1,5 @@
 """Tests for the User object of the CBC SDK"""
+import copy
 
 import pytest
 import logging
@@ -6,9 +7,18 @@ from cbc_sdk.platform import User
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError, ObjectNotFoundError, ServerError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.platform.mock_users import (GET_USERS_RESP, GET_USERS_AFTER_CREATE_RESP, EXPECT_USER_ADD,
-                                                     EXPECT_USER_ADD_SMALL, EXPECT_USER_ADD_V1, EXPECT_USER_ADD_V2,
+from tests.unit.fixtures.platform.mock_users import (GET_USERS_RESP, GET_USERS_AFTER_CREATE_RESP,
+                                                     GET_USERS_AFTER_CREATE_OAUTH_RESP,
+                                                     GET_USERS_AFTER_BULK1_RESP, GET_USERS_AFTER_BULK2_RESP,
+                                                     EXPECT_USER_ADD, EXPECT_USER_ADD_SMALL, EXPECT_USER_ADD_V1,
+                                                     EXPECT_USER_ADD_V2, EXPECT_USER_ADD_BULK1, EXPECT_USER_ADD_BULK2,
                                                      USER_ADD_SUCCESS_RESP, USER_ADD_FAILURE_RESP)
+from tests.unit.fixtures.platform.mock_grants import (DETAILS_GRANT1, EXPECT_CHANGE_ROLE_GRANT1,
+                                                      DETAILS_GRANT2, EXPECT_CHANGE_ROLE_GRANT2A,
+                                                      EXPECT_CHANGE_ROLE_GRANT2B, EXPECT_DISABLE_ALL_GRANT2,
+                                                      DETAILS_GRANT3, PROFILE_TEMPLATES_A, EXPECT_ADD_PROFILES_3A,
+                                                      PROFILE_TEMPLATES_B, EXPECT_ADD_PROFILES_3B, PROFILE_TEMPLATES_C,
+                                                      EXPECT_DISABLE_2B, EXPECT_SET_EXPIRATION_2B)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -130,19 +140,28 @@ def test_unsupported_create_by_update(cb):
         user.save()
 
 
-def test_create_user(cbcsdk_mock):
+@pytest.mark.parametrize('in_auth, out_auth', [
+    (None, 'PASSWORD'),
+    ('OAUTH', 'OAUTH')
+])
+def test_create_user(cbcsdk_mock, in_auth, out_auth):
     """Test creating a user."""
     post_made = False
 
     def check_post(uri, body, **kwargs):
-        assert body == EXPECT_USER_ADD
-        nonlocal post_made
+        nonlocal in_auth, post_made
+        compare_body = copy.deepcopy(EXPECT_USER_ADD)
+        if in_auth:
+            compare_body['auth_method'] = in_auth
+        assert body == compare_body
         post_made = True
         return USER_ADD_SUCCESS_RESP
 
     def check_get(uri, query_params, default):
-        nonlocal post_made
+        nonlocal in_auth, post_made
         assert post_made
+        if in_auth == 'OAUTH':
+            return GET_USERS_AFTER_CREATE_OAUTH_RESP
         return GET_USERS_AFTER_CREATE_RESP
 
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/users', check_post)
@@ -150,6 +169,8 @@ def test_create_user(cbcsdk_mock):
     api = cbcsdk_mock.api
     builder = User.create(api).set_email('rios@la-sirena.net').set_role('psc:role:test:APP_SERVICE_ROLE')
     builder.set_first_name('Cristobal').set_last_name('Rios')
+    if in_auth:
+        builder.set_auth_method(in_auth)
     builder.add_grant_profile(['psc:org:test2'], ['psc:role:test2:DUMMY'])
     builder.add_grant_profile(['test3'], ['psc:role:test3:DUMMY'])
     user = builder.build()
@@ -158,6 +179,7 @@ def test_create_user(cbcsdk_mock):
     assert user.first_name == 'Cristobal'
     assert user.login_name == 'rios@la-sirena.net'
     assert user.email == 'rios@la-sirena.net'
+    assert user.auth_method == out_auth
 
 
 TEMPLATE1 = {
@@ -225,3 +247,393 @@ def test_create_user_fails(cbcsdk_mock):
     builder.add_grant_profile(['psc:org:test2'], ['psc:role:test2:DUMMY'])
     with pytest.raises(ServerError):
         builder.build()
+
+
+def test_user_unsupported_create(cbcsdk_mock):
+    """We don't support creating the user just by saving it. Test that."""
+    api = cbcsdk_mock.api
+    user = User(api, None, TEMPLATE2)
+    user._full_init = True  # fake out to keep from trying to GET the nonexistent user
+    user.touch()
+    with pytest.raises(ApiError):
+        user.save()
+
+
+def test_bulk_create(cbcsdk_mock):
+    """Tests the User.bulk_create API."""
+    count_posts = 0
+    count_gets = 0
+
+    def check_post(uri, body, **kwargs):
+        nonlocal count_posts
+        rc = None
+        if count_posts == 0:
+            assert body == EXPECT_USER_ADD_BULK1
+            rc = copy.deepcopy(USER_ADD_SUCCESS_RESP)
+            rc['login_id'] = 8600
+        elif count_posts == 1:
+            assert body == EXPECT_USER_ADD_BULK2
+            rc = copy.deepcopy(USER_ADD_SUCCESS_RESP)
+            rc['login_id'] = 8601
+        else:
+            pytest.fail(f"invalid count_posts value {count_posts}")
+        count_posts = count_posts + 1
+        return rc
+
+    def check_get(uri, query_params, default):
+        nonlocal count_posts, count_gets
+        rc = None
+        if count_posts == 1:
+            assert count_gets == 0
+            rc = GET_USERS_AFTER_BULK1_RESP
+        elif count_posts == 2:
+            assert count_gets == 1
+            rc = GET_USERS_AFTER_BULK2_RESP
+        else:
+            pytest.fail(f"invalid count_posts value {count_posts}")
+        count_gets = count_gets + 1
+        return rc
+
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/users', check_post)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', check_get)
+    api = cbcsdk_mock.api
+    bulk_templates = [
+        {
+            "email_id": "burnham@discovery.starfleet.mil",
+            "first_name": "Michael",
+            "last_name": "Burnham"
+        },
+        {
+            "email_id": "scully@fbi.gov",
+            "first_name": "Dana",
+            "last_name": "Scully",
+            "profiles": [
+                {
+                    'orgs': {
+                        'allow': ['psc:org:test2']
+                    },
+                    'roles': ['psc:role:test2:DUMMY']
+                }
+            ]
+        }
+    ]
+    profile_templates = [
+        {
+            'orgs': {
+                'allow': ['psc:org:testX']
+            },
+            'roles': ['psc:role:testX:DUMMY']
+        }
+    ]
+    users = User.bulk_create(api, bulk_templates, profile_templates)
+    assert count_posts == 2
+    assert count_gets == 2
+    assert users[0].last_name == 'Burnham'
+    assert users[0].first_name == 'Michael'
+    assert users[0].login_name == 'burnham@discovery.starfleet.mil'
+    assert users[0].email == 'burnham@discovery.starfleet.mil'
+    assert users[1].last_name == 'Scully'
+    assert users[1].first_name == 'Dana'
+    assert users[1].login_name == 'scully@fbi.gov'
+    assert users[1].email == 'scully@fbi.gov'
+
+
+def bulk_get_grant(url, body, **kwargs):
+    """Implementation of fetching grants from within a bulk method."""
+    assert len(body) == 1
+    assert body[0]['org_ref'] == 'psc:org:test'
+    rc = None
+    if body[0]['principal'] == 'psc:user:test:3911':
+        rc = DETAILS_GRANT1
+    elif body[0]['principal'] == 'psc:user:test:3934':
+        rc = DETAILS_GRANT2
+    elif body[0]['principal'] == 'psc:user:test:4338':
+        rc = DETAILS_GRANT3
+    else:
+        pytest.fail(f"Unknown principal getting grant: {body[0]['principal']}")
+    return {'additionalProp1': [copy.deepcopy(rc)]}
+
+
+def test_bulk_add_profiles(cbcsdk_mock):
+    """Tests the User.bulk_add_profiles method."""
+    profile_count = {}
+    put_was_called = False
+
+    def on_profile_post(userid, url, body, **kwargs):
+        nonlocal profile_count
+        matched = False
+        for template in PROFILE_TEMPLATES_A:
+            matched = template_matches(body, template) or matched
+        assert matched
+        if userid in profile_count:
+            profile_count[userid] = profile_count[userid] + 1
+        else:
+            profile_count[userid] = 1
+        return body
+
+    def on_prof(userid):
+        return lambda url, body, **kwargs: on_profile_post(userid, url, body, **kwargs)
+
+    def on_put(url, body, **kwargs):
+        nonlocal put_was_called
+        fixed_expect_put = fixup_profile_uuids(EXPECT_ADD_PROFILES_3A, body)
+        assert body == fixed_expect_put
+        put_was_called = True
+        return fixed_expect_put
+
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', bulk_get_grant)
+    cbcsdk_mock.mock_request('POST', '/access/v2/orgs/test/grants/psc:user:test:3911/profiles', on_prof(3911))
+    cbcsdk_mock.mock_request('POST', '/access/v2/orgs/test/grants/psc:user:test:4338/profiles', on_prof(4338))
+    cbcsdk_mock.mock_request('PUT', '/access/v2/orgs/test/grants/psc:user:test:4338', on_put)
+    api = cbcsdk_mock.api
+    users = list(api.select(User).user_ids([3911, 4338]))
+    User.bulk_add_profiles(users, PROFILE_TEMPLATES_A)
+    assert put_was_called
+    assert profile_count == {3911: 2, 4338: 1}
+
+
+def test_bulk_disable_profiles(cbcsdk_mock):
+    """Test the User.bulk_disable_profiles method."""
+    put_was_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal put_was_called
+        assert body == EXPECT_DISABLE_2B
+        put_was_called = True
+        return EXPECT_DISABLE_2B
+
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', bulk_get_grant)
+    cbcsdk_mock.mock_request('PUT', '/access/v2/orgs/test/grants/psc:user:test:3934', on_put)
+    api = cbcsdk_mock.api
+    users = list(api.select(User).user_ids([3911, 3934]))
+    User.bulk_disable_profiles(users, PROFILE_TEMPLATES_B)
+    assert put_was_called
+
+
+def test_bulk_disable_all_access(cbcsdk_mock):
+    """Tests the User.bulk_disable_all_access method."""
+    put_was_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal put_was_called
+        assert body == EXPECT_DISABLE_ALL_GRANT2
+        put_was_called = True
+        return EXPECT_DISABLE_ALL_GRANT2
+
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', bulk_get_grant)
+    cbcsdk_mock.mock_request('PUT', '/access/v2/orgs/test/grants/psc:user:test:3934', on_put)
+    api = cbcsdk_mock.api
+    users = list(api.select(User).user_ids([3911, 3934]))
+    User.bulk_disable_all_access(users)
+    assert put_was_called
+
+
+def test_bulk_delete(cbcsdk_mock):
+    """Tests the User.bulk_delete method."""
+    deleted_users = set()
+
+    def _checkoff(userid, url, body):
+        nonlocal deleted_users
+        deleted_users.add(userid)
+        return None
+
+    def checkoff(userid):
+        return lambda url, body: _checkoff(userid, url, body)
+
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/users/3911', checkoff(3911))
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/users/3934', checkoff(3934))
+    api = cbcsdk_mock.api
+    id_list = [3911, 3934]
+    users = list(api.select(User).user_ids(id_list))
+    User.bulk_delete(users)
+    assert deleted_users == set(id_list)
+
+
+@pytest.mark.parametrize('login_id, grant_get, expect_put', [
+    (3934, DETAILS_GRANT2, EXPECT_DISABLE_ALL_GRANT2),
+    (3911, DETAILS_GRANT1, None)
+])
+def test_disable_all_access(cbcsdk_mock, login_id, grant_get, expect_put):
+    """Tests the User.disable_all_access method"""
+    put_was_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal put_was_called, expect_put
+        assert expect_put is not None
+        assert body == expect_put
+        put_was_called = True
+        return expect_put
+
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', {'additionalProp1': [copy.deepcopy(grant_get)]})
+    cbcsdk_mock.mock_request('PUT', f'/access/v2/orgs/test/grants/psc:user:test:{login_id}', on_put)
+    api = cbcsdk_mock.api
+    user = api.select(User).user_ids([login_id]).one()
+    user.disable_all_access()
+    if expect_put is None:
+        assert not put_was_called
+    else:
+        assert put_was_called
+
+
+@pytest.mark.parametrize('user_email, user_loginid, grant_get, new_role, org, expect_put', [
+    ('emercer@orville.planetary-union.net', 3911, DETAILS_GRANT1, 'psc:role:test:NEW_ROLE', None,
+     EXPECT_CHANGE_ROLE_GRANT1),
+    ('emercer@orville.planetary-union.net', 3911, DETAILS_GRANT1, 'psc:role:test:APP_SERVICE_ROLE', None, None),
+    ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, 'psc:role:test:ALPHA_ROLE', None,
+     EXPECT_CHANGE_ROLE_GRANT2A),
+    ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, 'psc:role:test:ALPHA_ROLE', 'psc:org:test3',
+     EXPECT_CHANGE_ROLE_GRANT2B),
+    ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, 'psc:role:test:ALPHA_ROLE', 'test3',
+     EXPECT_CHANGE_ROLE_GRANT2B),
+    ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, 'psc:role::SECOPS_ROLE_MANAGER', None, None)
+])
+def test_change_role(cbcsdk_mock, user_email, user_loginid, grant_get, new_role, org, expect_put):
+    """Tests the User.change_role method"""
+    put_was_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal expect_put, put_was_called
+        assert expect_put is not None
+        assert body == expect_put
+        put_was_called = True
+        return expect_put
+
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', {'additionalProp1': [copy.deepcopy(grant_get)]})
+    cbcsdk_mock.mock_request('PUT', f'/access/v2/orgs/test/grants/psc:user:test:{user_loginid}', on_put)
+    api = cbcsdk_mock.api
+    user = api.select(User).email_addresses([user_email]).one()
+    user.change_role(new_role, org)
+    if expect_put is None:
+        assert not put_was_called
+    else:
+        assert put_was_called
+
+
+def fixup_profile_uuids(expected, actual):
+    """Auxiliary function to fix the profile UUIDs in an "expected" profile return."""
+    work = copy.deepcopy(expected)
+    if 'profiles' not in work:
+        work['profiles'] = []
+    if 'profiles' in actual:
+        for index, profile in enumerate(actual['profiles']):
+            if index >= len(work['profiles']) or 'profile_uuid' not in profile:
+                continue
+            if 'profile_uuid' not in work['profiles'][index]:
+                work['profiles'][index]['profile_uuid'] = profile['profile_uuid']
+    return work
+
+
+def template_matches(profile, template):
+    """Auxiliary function to see if a profile template matches a given value."""
+    if set(profile['roles']) != set(template['roles']):
+        return False
+    if set(profile['orgs']['allow']) != set(template['orgs']['allow']):
+        return False
+    return True
+
+
+@pytest.mark.parametrize('login_id, grant_get, new_profiles, expect_put, expect_new_profs', [
+    (4338, DETAILS_GRANT3, PROFILE_TEMPLATES_A, EXPECT_ADD_PROFILES_3A, 1),
+    (4338, DETAILS_GRANT3, PROFILE_TEMPLATES_B, EXPECT_ADD_PROFILES_3B, 0),
+    (4338, DETAILS_GRANT3, PROFILE_TEMPLATES_C, None, 1),
+    (3911, DETAILS_GRANT1, PROFILE_TEMPLATES_A, None, 2),
+    (4338, DETAILS_GRANT3, [], None, 0),
+])
+def test_add_profiles(cbcsdk_mock, login_id, grant_get, new_profiles, expect_put, expect_new_profs):
+    """Test the User.add_profiles method."""
+    put_was_called = False
+    new_profile_count = 0
+
+    def on_put(url, body, **kwargs):
+        nonlocal expect_put, put_was_called
+        assert expect_put is not None
+        fixed_expect_put = fixup_profile_uuids(expect_put, body)
+        assert body == fixed_expect_put
+        put_was_called = True
+        return fixed_expect_put
+
+    def on_profile_post(url, body, **kwargs):
+        nonlocal new_profiles, new_profile_count
+        matched = False
+        for template in new_profiles:
+            matched = template_matches(body, template) or matched
+        assert matched
+        new_profile_count = new_profile_count + 1
+        return body
+
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', {'additionalProp1': [copy.deepcopy(grant_get)]})
+    cbcsdk_mock.mock_request('POST', f'/access/v2/orgs/test/grants/psc:user:test:{login_id}/profiles', on_profile_post)
+    cbcsdk_mock.mock_request('PUT', f'/access/v2/orgs/test/grants/psc:user:test:{login_id}', on_put)
+    api = cbcsdk_mock.api
+    user = api.select(User).user_ids([login_id]).one()
+    user.add_profiles(new_profiles)
+    if expect_put is None:
+        assert not put_was_called
+    else:
+        assert put_was_called
+    assert expect_new_profs == new_profile_count
+
+
+@pytest.mark.parametrize('user_email, user_loginid, grant_get, profiles, expect_put', [
+    ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, [], None),
+    ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, PROFILE_TEMPLATES_B, EXPECT_DISABLE_2B),
+    ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, PROFILE_TEMPLATES_C, None),
+    ('emercer@orville.planetary-union.net', 3911, DETAILS_GRANT1, PROFILE_TEMPLATES_B, None)
+])
+def test_disable_profiles(cbcsdk_mock, user_email, user_loginid, grant_get, profiles, expect_put):
+    """Test the User.disable_profiles method."""
+    put_was_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal expect_put, put_was_called
+        assert expect_put is not None
+        assert body == expect_put
+        put_was_called = True
+        return expect_put
+
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', {'additionalProp1': [copy.deepcopy(grant_get)]})
+    cbcsdk_mock.mock_request('PUT', f'/access/v2/orgs/test/grants/psc:user:test:{user_loginid}', on_put)
+    api = cbcsdk_mock.api
+    user = api.select(User).email_addresses([user_email]).one()
+    user.disable_profiles(profiles)
+    if expect_put is None:
+        assert not put_was_called
+    else:
+        assert put_was_called
+
+
+@pytest.mark.parametrize('login_id, grant_get, profiles, expect_put', [
+    (3934, DETAILS_GRANT2, [], None),
+    (3934, DETAILS_GRANT2, PROFILE_TEMPLATES_B, EXPECT_SET_EXPIRATION_2B),
+    (3934, DETAILS_GRANT2, PROFILE_TEMPLATES_C, None),
+    (3911, DETAILS_GRANT1, PROFILE_TEMPLATES_B, None),
+])
+def test_set_profile_expiration(cbcsdk_mock, login_id, grant_get, profiles, expect_put):
+    """Test the User.set_profile_expiration method."""
+    put_was_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal expect_put, put_was_called
+        assert expect_put is not None
+        assert body == expect_put
+        put_was_called = True
+        return expect_put
+
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', {'additionalProp1': [copy.deepcopy(grant_get)]})
+    cbcsdk_mock.mock_request('PUT', f'/access/v2/orgs/test/grants/psc:user:test:{login_id}', on_put)
+    api = cbcsdk_mock.api
+    user = api.select(User).user_ids([login_id]).one()
+    user.set_profile_expiration(profiles, '20111031T12:34:56')
+    if expect_put is None:
+        assert not put_was_called
+    else:
+        assert put_was_called

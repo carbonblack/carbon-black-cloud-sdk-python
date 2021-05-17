@@ -5,11 +5,12 @@ import logging
 import copy
 from cbc_sdk.platform import Grant
 from cbc_sdk.rest_api import CBCloudAPI
-from cbc_sdk.errors import ApiError
+from cbc_sdk.errors import ApiError, NonQueryableModel
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_grants import (GET_GRANT_RESP, PUT_GRANT_RESP, POST_GRANT_RESP,
-                                                      POST_PROFILE_IN_GRANT_RESP, PUT_PROFILE_RESP,
-                                                      DELETE_PROFILE_RESP, DELETE_GRANT_RESP, QUERY_GRANT_RESP)
+                                                      POST_PROFILE_IN_GRANT_RESP, POST_PROFILE_IN_GRANT_RESP_2,
+                                                      PUT_PROFILE_RESP, DELETE_PROFILE_RESP, DELETE_GRANT_RESP,
+                                                      QUERY_GRANT_RESP)
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -44,7 +45,14 @@ def test_get_and_set_grant(cbcsdk_mock):
     profile = grant.profiles_[0]
     assert profile.profile_uuid == 'c57ba255-1736-4bfa-a59d-c54bb97a41d6'
     assert profile.orgs['allow'] == ["psc:org:test2"]
+    assert profile.allowed_orgs == ["psc:org:test2"]
     assert profile.roles == ["psc:role::SECOPS_ROLE_MANAGER"]
+    assert profile.matches_template({'roles': ["psc:role::SECOPS_ROLE_MANAGER"],
+                                     'orgs': {'allow': ["psc:org:test2"]}})
+    assert not profile.matches_template({'roles': ["psc:role::NONEXISTENT_ROLE"],
+                                         'orgs': {'allow': ["psc:org:test2"]}})
+    assert not profile.matches_template({'roles': ["psc:role::SECOPS_ROLE_MANAGER"],
+                                         'orgs': {'allow': ["psc:org:notexist"]}})
     with pytest.raises(ApiError):
         profile.refresh()  # these can't be refreshed
     grant.roles.append('psc:role:test:DUMMY_ROLE')
@@ -95,6 +103,61 @@ def test_create_new_grant_alt1(cbcsdk_mock):
     assert profile.orgs['allow'] == ["psc:org:test2"]
 
 
+def test_create_new_grant_alt2(cbcsdk_mock):
+    """Test creation of a grant and the profile inside it with more options."""
+    def respond_to_profile_grant(url, body, **kwargs):
+        ret = copy.deepcopy(POST_PROFILE_IN_GRANT_RESP_2)
+        ret['profile_uuid'] = body['profile_uuid']
+        return ret
+
+    cbcsdk_mock.mock_request('POST', '/access/v2/orgs/test/grants', POST_GRANT_RESP)
+    cbcsdk_mock.mock_request('POST', '/access/v2/orgs/test/grants/psc:user:ABC12345:DEF67890/profiles',
+                             respond_to_profile_grant)
+    api = cbcsdk_mock.api
+    grant_builder = Grant.create(api, org_key='ABC12345', userid='DEF67890')
+    grant_builder.set_org('test').add_role("psc:role::SECOPS_ROLE_MANAGER").set_principal_name('Doug Jones')
+    profile_builder = grant_builder.create_profile().set_orgs(["test2"]).set_roles(["psc:role::SECOPS_ROLE_MANAGER"])
+    profile = profile_builder.set_disabled(True).set_expiration('20211031T12:34:56').build()
+    grant = grant_builder.build()
+    assert grant.roles == ["psc:role::SECOPS_ROLE_MANAGER"]
+    assert profile.orgs['allow'] == ["psc:org:test2"]
+    assert profile.conditions['expiration'] == '20211031T12:34:56'
+    assert profile.conditions['disabled']
+
+
+def test_create_new_grant_alt3(cbcsdk_mock):
+    """Test creation of a grant and the profile inside it with more options in a different way."""
+    def respond_to_profile_grant(url, body, **kwargs):
+        ret = copy.deepcopy(POST_PROFILE_IN_GRANT_RESP_2)
+        ret['profile_uuid'] = body['profile_uuid']
+        return ret
+
+    cbcsdk_mock.mock_request('POST', '/access/v2/orgs/test/grants', POST_GRANT_RESP)
+    cbcsdk_mock.mock_request('POST', '/access/v2/orgs/test/grants/psc:user:ABC12345:DEF67890/profiles',
+                             respond_to_profile_grant)
+    api = cbcsdk_mock.api
+    grant_builder = Grant.create(api, org_key='ABC12345', userid='DEF67890')
+    grant_builder.set_org('test').add_role("psc:role::SECOPS_ROLE_MANAGER").set_principal_name('Doug Jones')
+    profile_builder = grant_builder.create_profile().set_orgs(["test2"]).set_roles(["psc:role::SECOPS_ROLE_MANAGER"])
+    profile = profile_builder.set_conditions({'expiration': '20211031T12:34:56', 'disabled': True}).build()
+    grant = grant_builder.build()
+    assert grant.roles == ["psc:role::SECOPS_ROLE_MANAGER"]
+    assert profile.orgs['allow'] == ["psc:org:test2"]
+    assert profile.conditions['expiration'] == '20211031T12:34:56'
+    assert profile.conditions['disabled']
+
+
+def test_create_new_grant_without_keywords(cbcsdk_mock):
+    """Tests that Grant.create fails if you don't supply the keyword arguments."""
+    api = cbcsdk_mock.api
+    with pytest.raises(ApiError):
+        Grant.create(api, org_key='ABC12345')
+    with pytest.raises(ApiError):
+        Grant.create(api, userid='DEF67890')
+    with pytest.raises(ApiError):
+        Grant.create(api)
+
+
 def test_create_grant_from_template(cbcsdk_mock):
     """Test creation of a new grant from a template."""
     def respond_to_profile_grant(url, body, **kwargs):
@@ -134,6 +197,36 @@ def test_create_grant_from_template(cbcsdk_mock):
     assert grant.roles == ["psc:role::SECOPS_ROLE_MANAGER"]
     profile = grant.profiles_[0]
     assert profile.orgs['allow'] == ["psc:org:test2"]
+
+
+def test_create_grant_from_template_without_principal(cbcsdk_mock):
+    """Test that creating a grant from a template fails if the template does not specify the principal."""
+    api = cbcsdk_mock.api
+    grant_template = {
+        "roles": [
+            "psc:role::SECOPS_ROLE_MANAGER"
+        ],
+        "profiles": [
+            {
+                "orgs": {
+                    "allow": [
+                        "psc:org:test2"
+                    ]
+                },
+                "roles": [
+                    "psc:role::SECOPS_ROLE_MANAGER"
+                ],
+                "conditions": {
+                    "expiration": 0,
+                    "disabled": False
+                }
+            }
+        ],
+        "org_ref": 'psc:org:test',
+        "principal_name": 'Doug Jones'
+    }
+    with pytest.raises(ApiError):
+        Grant.create(api, grant_template)
 
 
 def test_create_new_grant_with_profile_template(cbcsdk_mock):
@@ -278,3 +371,9 @@ def test_query_grants_fail(cb):
     query = cb.select(Grant)
     with pytest.raises(ApiError):
         list(query)
+
+
+def test_unsupported_query_profiles(cb):
+    """Make sure trying to do a direct query on Profile fails."""
+    with pytest.raises(NonQueryableModel):
+        cb.select(Grant.Profile)
