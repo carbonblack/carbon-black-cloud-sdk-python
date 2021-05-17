@@ -486,16 +486,15 @@ class Grant(MutableBaseModel):
         self._refresh_if_needed(ret)
 
     @classmethod
-    def get_permitted_roles(cls, cb, userid):
+    def get_permitted_roles(cls, cb):
         """
-        Returns a list of all permitted roles that the specified user can have.
+        Returns a list of all permitted roles that we can assign to a user.
 
         Args:
             cb (CBCloudAPI): A reference to the CBCloudAPI object.
-            userid (int): ID of the user to get permitted roles for.
 
         Returns:
-            list: A list of string role URNs that are permitted for the user.
+            set: A set of string role URNs that we are permitted to manage (assign to users).
         """
         def _extractor(resp_data):
             """Pulls out all the lists of URN descriptors from the result."""
@@ -503,10 +502,12 @@ class Grant(MutableBaseModel):
                 for ll in d.values():
                     yield ll
 
-        url = "/access/v3/orgs/{0}/principals/{1}/roles/permitted".format(cb.credentials.org_key, userid)
+        token_split = cb.credentials.token.split('/')
+        url = "/access/v3/orgs/{0}/principals/{1}/roles/permitted?type=USER".format(cb.credentials.org_key,
+                                                                                    token_split[1])
         data = list(_extractor(cb.get_object(url)))
         flat_data = [item for sublist in data for item in sublist]
-        return [subitem['urn'] for subitem in flat_data if 'urn' in subitem]
+        return set([subitem['urn'] for subitem in flat_data if 'urn' in subitem])
 
     @classmethod
     def create(cls, cb, template=None, **kwargs):

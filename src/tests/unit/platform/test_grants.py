@@ -381,7 +381,8 @@ def test_unsupported_query_profiles(cb):
 
 def test_get_permitted_roles(cbcsdk_mock):
     """Test the get_permitted_roles function."""
-    cbcsdk_mock.mock_request('GET', '/access/v3/orgs/test/principals/6023/roles/permitted', PERMITTED_ROLES_RESP)
+    cbcsdk_mock.mock_request('GET', '/access/v3/orgs/test/principals/1234/roles/permitted?type=USER',
+                             PERMITTED_ROLES_RESP)
     api = cbcsdk_mock.api
-    roles = Grant.get_permitted_roles(api, 6023)
-    assert roles == ["psc:role::ALPHA", "psc:role::BRAVO", "psc:role::CHARLIE"]
+    roles = Grant.get_permitted_roles(api)
+    assert roles == {"psc:role::ALPHA", "psc:role::BRAVO", "psc:role::CHARLIE"}
