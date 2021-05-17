@@ -15,9 +15,13 @@
 
 from cbc_sdk.errors import ApiError
 from cbc_sdk.platform import PlatformModel
-from cbc_sdk.base import (BaseQuery, UnrefreshableModel, QueryBuilder,
-                          QueryBuilderSupportMixin, IterableQueryMixin,
+from cbc_sdk.base import (BaseQuery,
+                          UnrefreshableModel,
+                          QueryBuilder,
+                          QueryBuilderSupportMixin,
+                          IterableQueryMixin,
                           CriteriaBuilderSupportMixin)
+from cbc_sdk.endpoint_standard.base import EnrichedEvent
 from cbc_sdk.platform.devices import DeviceSearchQuery
 
 import time
@@ -202,6 +206,87 @@ class CBAnalyticsAlert(BaseAlert):
             CBAnalyticsAlertSearchQuery: The query object for this alert type.
         """
         return CBAnalyticsAlertSearchQuery(cls, cb)
+
+    def get_events(self, timeout=0, async_mode=False):
+        """Requests enriched events detailed results.
+
+        Args:
+            timeout (int): Event details request timeout in milliseconds.
+            async_mode (bool): True to request details in an asynchronous manner.
+
+        Returns:
+            list: EnrichedEvents matching the legacy_alert_id
+
+        Note:
+            - When using asynchronous mode, this method returns a python future.
+              You can call result() on the future object to wait for completion and get the results.
+        """
+        self._details_timeout = timeout
+        alert_id = self._info.get('legacy_alert_id')
+        if not alert_id:
+            raise ApiError("Trying to get event details on an invalid alert_id {}".format(alert_id))
+        if async_mode:
+            return self._cb._async_submit(lambda arg, kwarg: self._get_events_detailed_results())
+        else:
+            return self._get_events_detailed_results()
+
+    def _get_events_detailed_results(self):
+        """Actual search details implementation"""
+        args = {"alert_id": self._info.get('legacy_alert_id')}
+        """Flow:
+        1. Start the job by providing alert_id
+        2. Check the status of the job - wait until contacted and complete are equal
+        3. Retrieve the results - it is possible for num_found to be 0, because enreached events are
+           kept for specific period, so return empty list in that case.
+        """
+        url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs".format(self._cb.credentials.org_key)
+        query_start = self._cb.post_object(url, body=args)
+        job_id = query_start.json().get("job_id")
+        timed_out = False
+        submit_time = time.time() * 1000
+
+        while True:
+            status_url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs/{}".format(
+                self._cb.credentials.org_key,
+                job_id,
+            )
+            result = self._cb.get_object(status_url)
+            searchers_contacted = result.get("contacted", 0)
+            searchers_completed = result.get("completed", 0)
+            if searchers_completed == searchers_contacted:
+                break
+            if searchers_contacted == 0:
+                time.sleep(.5)
+                continue
+            if searchers_completed < searchers_contacted:
+                if self._details_timeout != 0 and (time.time() * 1000) - submit_time > self._details_timeout:
+                    timed_out = True
+                    break
+            else:
+                break
+
+            time.sleep(.5)
+
+        if timed_out:
+            raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
+
+        still_fetching = True
+        result_url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs/{}/results".format(
+            self._cb.credentials.org_key,
+            job_id
+        )
+
+        query_parameters = {}
+        while still_fetching:
+            result = self._cb.get_object(result_url, query_parameters=query_parameters)
+            available_results = result.get('num_available', 0)
+            found_results = result.get('num_found', 0)
+            # if found is 0, then no enriched events
+            if found_results == 0:
+                return []
+            if available_results != 0:
+                results = result.get('results', [])
+                return [EnrichedEvent(self._cb, initial_data=item) for item in results]
 
 
 class DeviceControlAlert(BaseAlert):
