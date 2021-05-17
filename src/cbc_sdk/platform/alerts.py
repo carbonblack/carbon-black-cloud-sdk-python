@@ -12,6 +12,7 @@
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
 """Model and Query Classes for Platform Alerts and Workflows"""
+import time
 
 from cbc_sdk.errors import ApiError
 from cbc_sdk.platform import PlatformModel
@@ -23,8 +24,6 @@ from cbc_sdk.base import (BaseQuery,
                           CriteriaBuilderSupportMixin)
 from cbc_sdk.endpoint_standard.base import EnrichedEvent
 from cbc_sdk.platform.devices import DeviceSearchQuery
-
-import time
 
 """Alert Models"""
 
@@ -227,12 +226,10 @@ class CBAnalyticsAlert(BaseAlert):
             raise ApiError("Trying to get event details on an invalid alert_id {}".format(alert_id))
         if async_mode:
             return self._cb._async_submit(lambda arg, kwarg: self._get_events_detailed_results())
-        else:
-            return self._get_events_detailed_results()
+        return self._get_events_detailed_results()
 
     def _get_events_detailed_results(self):
         """Actual search details implementation"""
-        args = {"alert_id": self._info.get('legacy_alert_id')}
         """Flow:
         1. Start the job by providing alert_id
         2. Check the status of the job - wait until contacted and complete are equal
@@ -240,7 +237,7 @@ class CBAnalyticsAlert(BaseAlert):
            kept for specific period, so return empty list in that case.
         """
         url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs".format(self._cb.credentials.org_key)
-        query_start = self._cb.post_object(url, body=args)
+        query_start = self._cb.post_object(url, body={"alert_id": self._info.get('legacy_alert_id')})
         job_id = query_start.json().get("job_id")
         timed_out = False
         submit_time = time.time() * 1000
