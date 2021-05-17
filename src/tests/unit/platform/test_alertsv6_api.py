@@ -732,7 +732,7 @@ def test_get_events(cbcsdk_mock):
 
 
 def test_get_events_zero_found(cbcsdk_mock):
-    """Test get_events method"""
+    """Test get_events method - zero enriched events found"""
     cbcsdk_mock.mock_request("GET",
                              "/appservices/v6/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
                              GET_ALERT_RESP)
@@ -752,7 +752,7 @@ def test_get_events_zero_found(cbcsdk_mock):
 
 
 def test_get_events_detail_jobs_resp_handling(cbcsdk_mock):
-    """Test get_events method"""
+    """Test get_events method - different resps from details jobs request"""
     called = 0
 
     def get_validate(*args):
@@ -784,7 +784,7 @@ def test_get_events_detail_jobs_resp_handling(cbcsdk_mock):
 
 
 def test_get_events_invalid_alert_id(cbcsdk_mock):
-    """Test get_events method"""
+    """Test get_events method with invalid alert_id"""
     cbcsdk_mock.mock_request("GET",
                              "/appservices/v6/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
                              GET_ALERT_RESP_INVALID_ALERT_ID)
@@ -796,7 +796,7 @@ def test_get_events_invalid_alert_id(cbcsdk_mock):
 
 
 def test_get_events_async(cbcsdk_mock):
-    """Test get_events method"""
+    """Test async get_events method"""
     cbcsdk_mock.mock_request("GET",
                              "/appservices/v6/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
                              GET_ALERT_RESP)
@@ -818,7 +818,7 @@ def test_get_events_async(cbcsdk_mock):
 
 
 def test_query_basealert_with_time_range_errors(cbcsdk_mock):
-    """Test an alert query with the invalid field for time range"""
+    """Test exeptions in alert query"""
     api = cbcsdk_mock.api
     with pytest.raises(ApiError) as ex:
         api.select(BaseAlert).where("Blort").set_time_range("invalid", range="whatever")
