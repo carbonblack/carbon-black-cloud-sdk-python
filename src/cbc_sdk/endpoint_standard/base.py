@@ -268,9 +268,9 @@ class EnrichedEvent(UnrefreshableModel):
         if not self.event_id:
             raise ApiError("Trying to get event details on an invalid event_id")
         if async_mode:
-            return self._cb._async_submit(lambda arg, kwarg: self._get_detailed_results()._info)
+            return self._cb._async_submit(lambda arg, kwarg: self._get_detailed_results())
         else:
-            return self._get_detailed_results()._info
+            return self._get_detailed_results()
 
     def _get_detailed_results(self):
         """Actual search details implementation"""
