@@ -24,9 +24,9 @@ Processes:
 # Standard library imports
 import datetime
 from pprint import pprint
+import requests
 import sys
 import time
-import requests
 
 # Internal library imports
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
