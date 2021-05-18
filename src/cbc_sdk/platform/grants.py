@@ -494,7 +494,7 @@ class Grant(MutableBaseModel):
             cb (CBCloudAPI): A reference to the CBCloudAPI object.
 
         Returns:
-            set: A set of string role URNs that we are permitted to manage (assign to users).
+            list: A list of string role URNs that we are permitted to manage (assign to users).
         """
         def _extractor(resp_data):
             """Pulls out all the lists of URN descriptors from the result."""
@@ -507,7 +507,7 @@ class Grant(MutableBaseModel):
                                                                                     token_split[1])
         data = list(_extractor(cb.get_object(url)))
         flat_data = [item for sublist in data for item in sublist]
-        return set([subitem['urn'] for subitem in flat_data if 'urn' in subitem])
+        return list(set([subitem['urn'] for subitem in flat_data if 'urn' in subitem]))
 
     @classmethod
     def create(cls, cb, template=None, **kwargs):
