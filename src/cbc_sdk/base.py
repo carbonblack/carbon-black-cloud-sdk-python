@@ -431,6 +431,39 @@ class NewBaseModel(object, metaclass=CbMetaModel):
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
                                                                               item))
 
+    def __getitem__(self, item):
+        """
+        Return an attribute of this object.
+
+        Args:
+            item (str): Name of the attribute to be returned.
+
+        Returns:
+            Any: The returned attribute value.
+
+        Raises:
+            AttributeError: If the object has no such attribute.
+        """
+        try:
+            super(NewBaseModel, self).__getattribute__(item)
+        except AttributeError:
+            pass  # fall through to the rest of the logic...
+
+        # try looking up via self._info, if we already have it.
+        if item in self._info:
+            return self._info[item]
+
+        # if we're still here, let's load the object if we haven't done so already.
+        if not self._full_init:
+            self._refresh()
+
+        # try one more time.
+        if item in self._info:
+            return self._info[item]
+        else:
+            raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
+                                                                              item))
+
     def __setattr__(self, attrname, val):
         """
         Set an attribute of this object.
