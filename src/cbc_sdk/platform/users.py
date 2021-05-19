@@ -251,15 +251,25 @@ class User(MutableBaseModel):
         """
         return f"psc:org:{self._cb.credentials.org_key}"
 
-    def grant(self):
+    def grant(self, create=False):
         """
         Locates the access grant for this user.
 
+        Args:
+            create (bool): If True and the user does not already have a grant, attempt to create one.
+
         Returns:
-            Grant: Access grant for this user.
+            Grant: Access grant for this user, or None if the user has none.
         """
         query = self._cb.select(Grant).add_principal(self.urn, self.org_urn)
-        return query.one()
+        try:
+            return query.one()
+        except ObjectNotFoundError:
+            if create:
+                template = {'principal': self.urn, 'org_ref': self.org_urn, 'roles': [],
+                            'principal_name': f"{self.first_name} {self.last_name}", 'profiles': []}
+                return Grant.create(self._cb, template)
+            return None
 
     @classmethod
     def create(cls, cb, template=None):
@@ -370,10 +380,11 @@ class User(MutableBaseModel):
     def disable_all_access(self):
         """Disables all access profiles held by ths user."""
         grant = self.grant()
-        for profile in grant.profiles_:
-            profile.set_disabled(True)
-            grant.touch()
-        grant.save()
+        if grant:
+            for profile in grant.profiles_:
+                profile.set_disabled(True)
+                grant.touch()
+            grant.save()
 
     def change_role(self, role_urn, org=None):
         """
@@ -386,19 +397,20 @@ class User(MutableBaseModel):
         """
         my_org = None if org is None else normalize_org(org)
         grant = self.grant()
-        prof_list = grant.profiles_
-        if len(prof_list) > 0:
-            for profile in prof_list:
-                add_role = True
-                if my_org and my_org not in profile.allowed_orgs:
-                    add_role = False
-                if add_role and role_urn not in profile.roles:
-                    profile.roles += [role_urn]
-                    grant.touch()
-        elif role_urn not in grant.roles:
-            grant.roles += [role_urn]
-            grant.touch()
-        grant.save()
+        if grant:
+            prof_list = grant.profiles_
+            if len(prof_list) > 0:
+                for profile in prof_list:
+                    add_role = True
+                    if my_org and my_org not in profile.allowed_orgs:
+                        add_role = False
+                    if add_role and role_urn not in profile.roles:
+                        profile.roles += [role_urn]
+                        grant.touch()
+            elif role_urn not in grant.roles:
+                grant.roles += [role_urn]
+                grant.touch()
+            grant.save()
 
     def _internal_add_profiles(self, profile_templates):
         """
@@ -408,17 +420,22 @@ class User(MutableBaseModel):
             profile_templates (list[dict]): List of profile templates to be added to the user.  Must be normalized.
         """
         grant = self.grant()
-        for template in profile_templates:
-            need_create = True
-            for profile in grant.profiles_:
-                if profile.matches_template(template) and profile.conditions['disabled']:
-                    profile.set_disabled(False)
-                    grant.touch()
-                    need_create = False
-                    break
-            if need_create:
-                grant.create_profile(template)
-        grant.save()
+        if grant:
+            for template in profile_templates:
+                need_create = True
+                for profile in grant.profiles_:
+                    if profile.matches_template(template) and profile.conditions['disabled']:
+                        profile.set_disabled(False)
+                        grant.touch()
+                        need_create = False
+                        break
+                if need_create:
+                    grant.create_profile(template)
+            grant.save()
+        else:
+            grant_template = {'principal': self.urn, 'org_ref': self.org_urn, 'roles': [],
+                              'principal_name': f"{self.first_name} {self.last_name}", 'profiles': profile_templates}
+            Grant.create(self._cb, grant_template)
 
     def _internal_disable_profiles(self, profile_templates):
         """
@@ -428,13 +445,14 @@ class User(MutableBaseModel):
             profile_templates (list[dict]): List of profile templates to be disabled.  Must be normalized.
         """
         grant = self.grant()
-        for profile in grant.profiles_:
-            for template in profile_templates:
-                if profile.matches_template(template):
-                    profile.set_disabled(True)
-                    grant.touch()
-                    break
-        grant.save()
+        if grant:
+            for profile in grant.profiles_:
+                for template in profile_templates:
+                    if profile.matches_template(template):
+                        profile.set_disabled(True)
+                        grant.touch()
+                        break
+            grant.save()
 
     def _internal_set_profile_expiration(self, profile_templates, expiration_date):
         """
@@ -445,13 +463,14 @@ class User(MutableBaseModel):
             expiration_date (str): New expiration date, in ISO 8601 format.
         """
         grant = self.grant()
-        for profile in grant.profiles_:
-            for template in profile_templates:
-                if profile.matches_template(template):
-                    profile.set_expiration(expiration_date)
-                    grant.touch()
-                    break
-        grant.save()
+        if grant:
+            for profile in grant.profiles_:
+                for template in profile_templates:
+                    if profile.matches_template(template):
+                        profile.set_expiration(expiration_date)
+                        grant.touch()
+                        break
+            grant.save()
 
     def add_profiles(self, profile_templates):
         """
