@@ -80,7 +80,7 @@ SESSION_POLL_RESP_ERROR = {
     "check_in_timeout": 900,
     "session_timeout": 900,
     "sensor_check_in_time": 1502126744685,
-    "status": "error",
+    "status": "ERROR",
     "current_command_index": 0,
     "create_time": 1502126655758
 }

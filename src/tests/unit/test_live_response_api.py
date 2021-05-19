@@ -108,7 +108,7 @@ def connection_mock(monkeypatch, cb):
     return conn
 
 
-FILE_NOT_FOUND_ERR = {'status': 'error', 'result_type': 'WinHresult',
+FILE_NOT_FOUND_ERR = {'status': 'ERROR', 'result_type': 'WinHresult',
                       'result_code': HRESULT_FROM_WIN32(Win32Error.ERROR_FILE_NOT_FOUND)}
 
 
@@ -117,14 +117,14 @@ FILE_NOT_FOUND_ERR = {'status': 'error', 'result_type': 'WinHresult',
 
 @pytest.mark.parametrize("details, message, decoded_win32", [
     (FILE_NOT_FOUND_ERR, "Win32 error code 0x-7FF8FFFE (ERROR_FILE_NOT_FOUND)", "ERROR_FILE_NOT_FOUND"),
-    ({'status': 'error', 'result_type': 'WinHresult', 'result_code': HRESULT_FROM_WIN32(10203)},
+    ({'status': 'ERROR', 'result_type': 'WinHresult', 'result_code': HRESULT_FROM_WIN32(10203)},
      "Win32 error code 0x-7FF8D825", None),
-    ({'status': 'error', 'result_type': 'int', 'result_code': HRESULT_FROM_WIN32(Win32Error.ERROR_FILE_NOT_FOUND)},
+    ({'status': 'ERROR', 'result_type': 'int', 'result_code': HRESULT_FROM_WIN32(Win32Error.ERROR_FILE_NOT_FOUND)},
      "", ""),
     ({'status': 'warning', 'result_type': 'WinHResult',
       'result_code': HRESULT_FROM_WIN32(Win32Error.ERROR_FILE_NOT_FOUND)},
      "", ""),
-    ({'status': 'error', 'result_type': 'WinHresult',
+    ({'status': 'ERROR', 'result_type': 'WinHresult',
       'result_code': 'ssss'},
      "Unknown Win32 error code", '')
 ])
@@ -1087,7 +1087,7 @@ def test_job_scheduler_statuses(cbcsdk_mock):
     ws_obj = WorkerStatus(2469)
     assert ws_obj.device_id == 2469
     ws_obj_wrong_status = WorkerStatus(2468, status="alabala")
-    ws_obj_error = WorkerStatus(2468, status="error")
+    ws_obj_error = WorkerStatus(2468, status="ERROR")
     job_scheduler.schedule_queue.put(ws_obj_error)
     job_scheduler.schedule_queue.put(ws_obj_ready)
     job_scheduler.schedule_queue.put(ws_obj_wrong_status)
