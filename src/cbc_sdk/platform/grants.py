@@ -486,6 +486,30 @@ class Grant(MutableBaseModel):
         self._refresh_if_needed(ret)
 
     @classmethod
+    def get_permitted_roles(cls, cb):
+        """
+        Returns a list of all permitted roles that we can assign to a user.
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+
+        Returns:
+            list: A list of string role URNs that we are permitted to manage (assign to users).
+        """
+        def _extractor(resp_data):
+            """Pulls out all the lists of URN descriptors from the result."""
+            for d in resp_data.values():
+                for ll in d.values():
+                    yield ll
+
+        token_split = cb.credentials.token.split('/')
+        url = "/access/v3/orgs/{0}/principals/{1}/roles/permitted?type=USER".format(cb.credentials.org_key,
+                                                                                    token_split[1])
+        data = list(_extractor(cb.get_object(url)))
+        flat_data = [item for sublist in data for item in sublist]
+        return list(set([subitem['urn'] for subitem in flat_data if 'urn' in subitem]))
+
+    @classmethod
     def create(cls, cb, template=None, **kwargs):
         """
         Returns either a new Grant, or a GrantBuilder to begin the process of creating a new grant.

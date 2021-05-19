@@ -15,7 +15,7 @@
 
 from cbc_sdk.errors import ApiError, ServerError
 from cbc_sdk.platform import PlatformModel
-from cbc_sdk.workload.vulnerability_assessment import Vulnerability, VulnerabilityQuery
+from cbc_sdk.platform.vulnerability_assessment import Vulnerability, VulnerabilityQuery
 from cbc_sdk.base import (BaseQuery, QueryBuilder, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
                           IterableQueryMixin, AsyncQueryMixin)
 
