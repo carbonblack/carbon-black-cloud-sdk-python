@@ -19,8 +19,7 @@ from tests.unit.fixtures.platform.mock_grants import (DETAILS_GRANT1, EXPECT_CHA
                                                       DETAILS_GRANT3, PROFILE_TEMPLATES_A, EXPECT_ADD_PROFILES_3A,
                                                       PROFILE_TEMPLATES_B, EXPECT_ADD_PROFILES_3B, PROFILE_TEMPLATES_C,
                                                       EXPECT_DISABLE_2B, EXPECT_SET_EXPIRATION_2B,
-                                                      EXPECT_CREATE_TEMPLATE5, NEW_DETAILS_GRANT5, EXPECT_NEW_GRANT_5A,
-                                                      POST_GRANT_RESP_5A)
+                                                      EXPECT_NEW_GRANT_5A, POST_GRANT_RESP_5A)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -267,50 +266,17 @@ def wrap_grant(grant_details):
     return {'additionalProp1': details_list}
 
 
-@pytest.mark.parametrize('create_flag', [(False,), (True,)])
-def test_get_grant(cbcsdk_mock, create_flag):
+def test_get_grant(cbcsdk_mock):
     """Tests the grant() function on a user."""
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
     cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', wrap_grant(DETAILS_GRANT1))
     api = cbcsdk_mock.api
     user = api.select(User).user_ids([3911]).one()
-    grant = user.grant(create_flag)
+    grant = user.grant()
     assert grant.principal == 'psc:user:test:3911'
     assert grant.org_ref == 'psc:org:test'
     assert grant.principal_name == 'Ed Mercer'
     assert grant.roles == ["psc:role::SECOPS_ROLE_MANAGER", "psc:role:test:APP_SERVICE_ROLE"]
-
-
-def test_get_grant_none(cbcsdk_mock):
-    """Tests the grant() function on a user that has no grant."""
-    get_calls = 0
-    create_calls = 0
-
-    def on_getgrant(uri, body, **kwargs):
-        nonlocal get_calls
-        get_calls = get_calls + 1
-        return wrap_grant(None)
-
-    def on_newgrant(uri, body, **kwargs):
-        nonlocal create_calls
-        assert body == EXPECT_CREATE_TEMPLATE5
-        create_calls = create_calls + 1
-        return NEW_DETAILS_GRANT5
-
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
-    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', on_getgrant)
-    cbcsdk_mock.mock_request('POST', '/access/v2/orgs/test/grants', on_newgrant)
-    api = cbcsdk_mock.api
-    user = api.select(User).user_ids([3978]).one()
-    grant = user.grant()
-    assert grant is None
-    grant = user.grant(True)
-    assert grant.principal == 'psc:user:test:3978'
-    assert grant.org_ref == 'psc:org:test'
-    assert grant.principal_name == 'Beckett Mariner'
-    assert grant.roles == []
-    assert get_calls == 4  # 2 calls per call to one()
-    assert create_calls == 1
 
 
 def test_bulk_create(cbcsdk_mock):

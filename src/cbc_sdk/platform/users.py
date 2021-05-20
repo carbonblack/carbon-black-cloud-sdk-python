@@ -251,12 +251,9 @@ class User(MutableBaseModel):
         """
         return f"psc:org:{self._cb.credentials.org_key}"
 
-    def grant(self, create=False):
+    def grant(self):
         """
         Locates the access grant for this user.
-
-        Args:
-            create (bool): If True and the user does not already have a grant, attempt to create one.
 
         Returns:
             Grant: Access grant for this user, or None if the user has none.
@@ -265,10 +262,6 @@ class User(MutableBaseModel):
         try:
             return query.one()
         except ObjectNotFoundError:
-            if create:
-                template = {'principal': self.urn, 'org_ref': self.org_urn, 'roles': [],
-                            'principal_name': f"{self.first_name} {self.last_name}", 'profiles': []}
-                return Grant.create(self._cb, template)
             return None
 
     @classmethod
