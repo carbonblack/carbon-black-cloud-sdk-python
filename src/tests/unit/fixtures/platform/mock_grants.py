@@ -959,3 +959,25 @@ PERMITTED_ROLES_RESP = {
         ]
     }
 }
+
+EXPECT_CREATE_TEMPLATE5 = {
+    'principal': 'psc:user:test:3978',
+    'org_ref': 'psc:org:test',
+    'roles': [],
+    'principal_name': "Beckett Mariner",
+    'profiles': []
+}
+
+NEW_DETAILS_GRANT5 = {
+    "principal": "psc:user:test:3978",
+    "expires": 0,
+    "revoked": False,
+    "roles": [],
+    "profiles": [],
+    "org_ref": "psc:org:test",
+    "principal_name": "Beckett Mariner",
+    "created_by": "psc:user:FOO:BAR",
+    "updated_by": "psc:user:FOO:BAR",
+    "create_time": "2021-03-20T12:56:31.645Z",
+    "update_time": "2021-03-20T12:56:31.645Z"
+}

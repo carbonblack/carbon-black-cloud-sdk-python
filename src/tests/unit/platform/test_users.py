@@ -18,7 +18,8 @@ from tests.unit.fixtures.platform.mock_grants import (DETAILS_GRANT1, EXPECT_CHA
                                                       EXPECT_CHANGE_ROLE_GRANT2B, EXPECT_DISABLE_ALL_GRANT2,
                                                       DETAILS_GRANT3, PROFILE_TEMPLATES_A, EXPECT_ADD_PROFILES_3A,
                                                       PROFILE_TEMPLATES_B, EXPECT_ADD_PROFILES_3B, PROFILE_TEMPLATES_C,
-                                                      EXPECT_DISABLE_2B, EXPECT_SET_EXPIRATION_2B)
+                                                      EXPECT_DISABLE_2B, EXPECT_SET_EXPIRATION_2B,
+                                                      EXPECT_CREATE_TEMPLATE5, NEW_DETAILS_GRANT5)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -259,6 +260,58 @@ def test_user_unsupported_create(cbcsdk_mock):
         user.save()
 
 
+def wrap_grant(grant_details):
+    """Utility function wrapping grant details for return from a POST."""
+    details_list = [copy.deepcopy(grant_details)] if grant_details else []
+    return {'additionalProp1': details_list}
+
+
+@pytest.mark.parametrize('create_flag', [(False,), (True,)])
+def test_get_grant(cbcsdk_mock, create_flag):
+    """Tests the grant() function on a user."""
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', wrap_grant(DETAILS_GRANT1))
+    api = cbcsdk_mock.api
+    user = api.select(User).user_ids([3911]).one()
+    grant = user.grant(create_flag)
+    assert grant.principal == 'psc:user:test:3911'
+    assert grant.org_ref == 'psc:org:test'
+    assert grant.principal_name == 'Ed Mercer'
+    assert grant.roles == ["psc:role::SECOPS_ROLE_MANAGER", "psc:role:test:APP_SERVICE_ROLE"]
+
+
+def test_get_grant_none(cbcsdk_mock):
+    """Tests the grant() function on a user that has no grant."""
+    get_calls = 0
+    create_calls = 0
+
+    def on_getgrant(uri, body, **kwargs):
+        nonlocal get_calls
+        get_calls = get_calls + 1
+        return wrap_grant(None)
+
+    def on_newgrant(uri, body, **kwargs):
+        nonlocal create_calls
+        assert body == EXPECT_CREATE_TEMPLATE5
+        create_calls = create_calls + 1
+        return NEW_DETAILS_GRANT5
+
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', on_getgrant)
+    cbcsdk_mock.mock_request('POST', '/access/v2/orgs/test/grants', on_newgrant)
+    api = cbcsdk_mock.api
+    user = api.select(User).user_ids([3978]).one()
+    grant = user.grant()
+    assert grant is None
+    grant = user.grant(True)
+    assert grant.principal == 'psc:user:test:3978'
+    assert grant.org_ref == 'psc:org:test'
+    assert grant.principal_name == 'Beckett Mariner'
+    assert grant.roles == []
+    assert get_calls == 4  # 2 calls per call to one()
+    assert create_calls == 1
+
+
 def test_bulk_create(cbcsdk_mock):
     """Tests the User.bulk_create API."""
     count_posts = 0
@@ -351,7 +404,7 @@ def bulk_get_grant(url, body, **kwargs):
         rc = DETAILS_GRANT3
     else:
         pytest.fail(f"Unknown principal getting grant: {body[0]['principal']}")
-    return {'additionalProp1': [copy.deepcopy(rc)]}
+    return wrap_grant(rc)
 
 
 def test_bulk_add_profiles(cbcsdk_mock):
@@ -455,7 +508,8 @@ def test_bulk_delete(cbcsdk_mock):
 
 @pytest.mark.parametrize('login_id, grant_get, expect_put', [
     (3934, DETAILS_GRANT2, EXPECT_DISABLE_ALL_GRANT2),
-    (3911, DETAILS_GRANT1, None)
+    (3911, DETAILS_GRANT1, None),
+    (3978, None, None)
 ])
 def test_disable_all_access(cbcsdk_mock, login_id, grant_get, expect_put):
     """Tests the User.disable_all_access method"""
@@ -469,7 +523,7 @@ def test_disable_all_access(cbcsdk_mock, login_id, grant_get, expect_put):
         return expect_put
 
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
-    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', {'additionalProp1': [copy.deepcopy(grant_get)]})
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', wrap_grant(grant_get))
     cbcsdk_mock.mock_request('PUT', f'/access/v2/orgs/test/grants/psc:user:test:{login_id}', on_put)
     api = cbcsdk_mock.api
     user = api.select(User).user_ids([login_id]).one()
@@ -490,7 +544,8 @@ def test_disable_all_access(cbcsdk_mock, login_id, grant_get, expect_put):
      EXPECT_CHANGE_ROLE_GRANT2B),
     ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, 'psc:role:test:ALPHA_ROLE', 'test3',
      EXPECT_CHANGE_ROLE_GRANT2B),
-    ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, 'psc:role::SECOPS_ROLE_MANAGER', None, None)
+    ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, 'psc:role::SECOPS_ROLE_MANAGER', None, None),
+    ("bmariner@cerritos.starfleet.mil", 3978, None, 'psc:role::SECOPS_ROLE_MANAGER', None, None)
 ])
 def test_change_role(cbcsdk_mock, user_email, user_loginid, grant_get, new_role, org, expect_put):
     """Tests the User.change_role method"""
@@ -504,7 +559,7 @@ def test_change_role(cbcsdk_mock, user_email, user_loginid, grant_get, new_role,
         return expect_put
 
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
-    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', {'additionalProp1': [copy.deepcopy(grant_get)]})
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', wrap_grant(grant_get))
     cbcsdk_mock.mock_request('PUT', f'/access/v2/orgs/test/grants/psc:user:test:{user_loginid}', on_put)
     api = cbcsdk_mock.api
     user = api.select(User).email_addresses([user_email]).one()
@@ -544,6 +599,7 @@ def template_matches(profile, template):
     (4338, DETAILS_GRANT3, PROFILE_TEMPLATES_C, None, 1),
     (3911, DETAILS_GRANT1, PROFILE_TEMPLATES_A, None, 2),
     (4338, DETAILS_GRANT3, [], None, 0),
+    (3978, None, PROFILE_TEMPLATES_A, None, 0),
 ])
 def test_add_profiles(cbcsdk_mock, login_id, grant_get, new_profiles, expect_put, expect_new_profs):
     """Test the User.add_profiles method."""
@@ -568,7 +624,7 @@ def test_add_profiles(cbcsdk_mock, login_id, grant_get, new_profiles, expect_put
         return body
 
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
-    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', {'additionalProp1': [copy.deepcopy(grant_get)]})
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', wrap_grant(grant_get))
     cbcsdk_mock.mock_request('POST', f'/access/v2/orgs/test/grants/psc:user:test:{login_id}/profiles', on_profile_post)
     cbcsdk_mock.mock_request('PUT', f'/access/v2/orgs/test/grants/psc:user:test:{login_id}', on_put)
     api = cbcsdk_mock.api
@@ -585,7 +641,8 @@ def test_add_profiles(cbcsdk_mock, login_id, grant_get, new_profiles, expect_put
     ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, [], None),
     ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, PROFILE_TEMPLATES_B, EXPECT_DISABLE_2B),
     ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, PROFILE_TEMPLATES_C, None),
-    ('emercer@orville.planetary-union.net', 3911, DETAILS_GRANT1, PROFILE_TEMPLATES_B, None)
+    ('emercer@orville.planetary-union.net', 3911, DETAILS_GRANT1, PROFILE_TEMPLATES_B, None),
+    ('bmariner@cerritos.starfleet.mil', 3978, None, PROFILE_TEMPLATES_B, None)
 ])
 def test_disable_profiles(cbcsdk_mock, user_email, user_loginid, grant_get, profiles, expect_put):
     """Test the User.disable_profiles method."""
@@ -599,7 +656,7 @@ def test_disable_profiles(cbcsdk_mock, user_email, user_loginid, grant_get, prof
         return expect_put
 
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
-    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', {'additionalProp1': [copy.deepcopy(grant_get)]})
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', wrap_grant(grant_get))
     cbcsdk_mock.mock_request('PUT', f'/access/v2/orgs/test/grants/psc:user:test:{user_loginid}', on_put)
     api = cbcsdk_mock.api
     user = api.select(User).email_addresses([user_email]).one()
@@ -628,7 +685,7 @@ def test_set_profile_expiration(cbcsdk_mock, login_id, grant_get, profiles, expe
         return expect_put
 
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
-    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', {'additionalProp1': [copy.deepcopy(grant_get)]})
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', wrap_grant(grant_get))
     cbcsdk_mock.mock_request('PUT', f'/access/v2/orgs/test/grants/psc:user:test:{login_id}', on_put)
     api = cbcsdk_mock.api
     user = api.select(User).user_ids([login_id]).one()
