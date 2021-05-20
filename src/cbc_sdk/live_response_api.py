@@ -58,11 +58,11 @@ class LiveResponseError(Exception):
         self.decoded_win32_error = ""
 
         # Details object:
-        # {u'status': u'error', u'username': u'admin', u'device_id': 9, u'name': u'kill',
+        # {u'status': u'ERROR', u'username': u'admin', u'device_id': 9, u'name': u'kill',
         # u'completion': 1464319733.190924, u'object': 1660, u'session_id': 7, u'result_type': u'WinHresult',
         # u'create_time': 1464319733.171967, u'result_desc': u'', u'id': 22, u'result_code': 2147942487}
 
-        if self.details.get("status") == "error" and self.details.get("result_type") == "WinHresult":
+        if self.details.get("status") == "ERROR" and self.details.get("result_type") == "WinHresult":
             # attempt to decode the win32 error
             win32_error_text = "Unknown Win32 error code"
             try:
@@ -860,7 +860,7 @@ class JobWorker(threading.Thread):
                 self.result_queue.put(CompletionNotification(self.device_id))
                 self.job_queue.task_done()
         except Exception as e:
-            self.result_queue.put(WorkerStatus(self.device_id, status="error", exception=e))
+            self.result_queue.put(WorkerStatus(self.device_id, status="ERROR", exception=e))
         finally:
             if self.lr_session:
                 self.lr_session.close()
@@ -915,7 +915,7 @@ class LiveResponseJobScheduler(threading.Thread):
                 # job completed
                 self._idle_workers.add(item.device_id)
             elif isinstance(item, WorkerStatus):
-                if item.status == "error":
+                if item.status == "ERROR":
                     log.error("Error encountered by JobWorker[{0}]: {1}".format(item.device_id,
                                                                                 item.exception))
                     # Don't reattempt error'd jobs
@@ -1252,7 +1252,7 @@ class GetFileJob(object):
 
 
 # TODO: adjust the polling interval and also provide a callback function to report progress
-def poll_status(cb, url, desired_status="complete", timeout=None, delay=None):
+def poll_status(cb, url, desired_status="COMPLETE", timeout=None, delay=None):
     """
     Poll the status of a Live Response query.
 
@@ -1283,7 +1283,7 @@ def poll_status(cb, url, desired_status="complete", timeout=None, delay=None):
         if res["status"] == desired_status:
             log.debug(json.dumps(res))
             return res
-        elif res["status"] == "error":
+        elif res["status"] == "ERROR":
             raise LiveResponseError(res)
         else:
             time.sleep(delay)
