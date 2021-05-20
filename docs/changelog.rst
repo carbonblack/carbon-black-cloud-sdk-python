@@ -10,6 +10,7 @@ Bug Fixes
 New Features
 
 * Live Response migrated from v3 to v6 (:doc:`migration guide<live-response-v6-migration>`)
+* Live Response uses API Keys of type Custom
 * Get Enriched Events for alert
 
 CBC SDK 1.2.3 - Released April 19, 2021
