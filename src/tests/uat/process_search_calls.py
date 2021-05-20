@@ -145,8 +145,7 @@ def run_process_event_invalid_search(cb, print_detail):
 
 def get_list_of_available_process_results(cb):
     """
-    Get a List of All Available Process Result Sets via API and SDK.
-    Compare the results.
+    Get a List of All Available Process Result Sets via API and SDK. Compare the results.
 
     API Calls performed:
         Get a List of All Available Process Result Sets (v1)
@@ -167,8 +166,7 @@ def get_list_of_available_process_results(cb):
 
 def get_events_facet_associated_with_a_process(cb, print_detail, start_date, end_date, process_guid):
     """
-    Get events facet associated with a process via API and SDK.
-    Compare the results.
+    Get events facet associated with a process via API and SDK. Compare the results.
 
     API Calls performed:
         Get Events Facet Associated with a Process (v2)
@@ -264,8 +262,7 @@ def get_events_facet_associated_with_a_process(cb, print_detail, start_date, end
 
 def get_process_guid(cb, print_detail, start_date, end_date):
     """
-    Compare the Process Search results retrieved by API and SDK calls.
-    Get the GUID of the first retrieved process.
+    Compare the Process Search results retrieved by API and SDK calls. Get the GUID of the first retrieved process.
 
     API Calls performed:
         Start a Process Search (v2)
@@ -325,6 +322,7 @@ def get_process_guid(cb, print_detail, start_date, end_date):
 
 
 def remove_event_info(process_details):
+    """Helper function to remove the event info from the process details"""
     del process_details['document_guid']
     del process_details['enriched']
     del process_details['enriched_event_type']
@@ -334,9 +332,7 @@ def remove_event_info(process_details):
 
 def retrieve_process_name_from_process_details(cb, guid):
     """
-    Get the process details for a single process via API and SDK.
-    Compare the responses.
-    Retrieve the process name
+    Get the process details for a single process via API and SDK. Compare the responses. Retrieve the process name.
 
     API Calls performed:
         Request Details of Processes (v2)
@@ -383,8 +379,7 @@ def retrieve_process_name_from_process_details(cb, guid):
 
 def get_process_events_for_single_process(cb, guid, start_date, end_date, print_detail):
     """
-    Get the events associated with a given process via API and SDK.
-    Compare the responses.
+    Get the events associated with a given process via API and SDK. Compare the responses.
 
     API Calls performed:
         Get Events Associated with a Given Process (v2)
@@ -445,8 +440,7 @@ def get_process_events_for_single_process(cb, guid, start_date, end_date, print_
 
 def get_process_facet(cb, print_detail, process_name, start_date, end_date):
     """
-    Perform Facet Search on Processes via API and SDK.
-    Compare the results.
+    Perform Facet Search on Processes via API and SDK. Compare the results.
 
     API Calls performed:
         Start a Facet Search on Processes (v2)
