@@ -19,7 +19,8 @@ from tests.unit.fixtures.platform.mock_grants import (DETAILS_GRANT1, EXPECT_CHA
                                                       DETAILS_GRANT3, PROFILE_TEMPLATES_A, EXPECT_ADD_PROFILES_3A,
                                                       PROFILE_TEMPLATES_B, EXPECT_ADD_PROFILES_3B, PROFILE_TEMPLATES_C,
                                                       EXPECT_DISABLE_2B, EXPECT_SET_EXPIRATION_2B,
-                                                      EXPECT_CREATE_TEMPLATE5, NEW_DETAILS_GRANT5)
+                                                      EXPECT_CREATE_TEMPLATE5, NEW_DETAILS_GRANT5, EXPECT_NEW_GRANT_5A,
+                                                      POST_GRANT_RESP_5A)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -598,8 +599,7 @@ def template_matches(profile, template):
     (4338, DETAILS_GRANT3, PROFILE_TEMPLATES_B, EXPECT_ADD_PROFILES_3B, 0),
     (4338, DETAILS_GRANT3, PROFILE_TEMPLATES_C, None, 1),
     (3911, DETAILS_GRANT1, PROFILE_TEMPLATES_A, None, 2),
-    (4338, DETAILS_GRANT3, [], None, 0),
-    (3978, None, PROFILE_TEMPLATES_A, None, 0),
+    (4338, DETAILS_GRANT3, [], None, 0)
 ])
 def test_add_profiles(cbcsdk_mock, login_id, grant_get, new_profiles, expect_put, expect_new_profs):
     """Test the User.add_profiles method."""
@@ -637,6 +637,26 @@ def test_add_profiles(cbcsdk_mock, login_id, grant_get, new_profiles, expect_put
     assert expect_new_profs == new_profile_count
 
 
+def test_add_profiles_with_new_grant(cbcsdk_mock):
+    """Test the User.add_profiles method with a user that does not (yet) have a grant."""
+    post_was_called = False
+
+    def on_grant_post(url, body, **kwargs):
+        nonlocal post_was_called
+        expected = fixup_profile_uuids(EXPECT_NEW_GRANT_5A, body)
+        assert body == expected
+        post_was_called = True
+        return fixup_profile_uuids(POST_GRANT_RESP_5A, body)
+
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', wrap_grant(None))
+    cbcsdk_mock.mock_request('POST', '/access/v2/orgs/test/grants', on_grant_post)
+    api = cbcsdk_mock.api
+    user = api.select(User).user_ids([3978]).one()
+    user.add_profiles(PROFILE_TEMPLATES_A)
+    assert post_was_called
+
+
 @pytest.mark.parametrize('user_email, user_loginid, grant_get, profiles, expect_put', [
     ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, [], None),
     ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, PROFILE_TEMPLATES_B, EXPECT_DISABLE_2B),
@@ -672,6 +692,7 @@ def test_disable_profiles(cbcsdk_mock, user_email, user_loginid, grant_get, prof
     (3934, DETAILS_GRANT2, PROFILE_TEMPLATES_B, EXPECT_SET_EXPIRATION_2B),
     (3934, DETAILS_GRANT2, PROFILE_TEMPLATES_C, None),
     (3911, DETAILS_GRANT1, PROFILE_TEMPLATES_B, None),
+    (3978, None, PROFILE_TEMPLATES_B, None),
 ])
 def test_set_profile_expiration(cbcsdk_mock, login_id, grant_get, profiles, expect_put):
     """Test the User.set_profile_expiration method."""
