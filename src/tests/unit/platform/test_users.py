@@ -3,6 +3,7 @@ import copy
 
 import pytest
 import logging
+from contextlib import ExitStack as does_not_raise
 from cbc_sdk.platform import User
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError, ObjectNotFoundError, ServerError
@@ -473,12 +474,12 @@ def test_bulk_delete(cbcsdk_mock):
     assert deleted_users == set(id_list)
 
 
-@pytest.mark.parametrize('login_id, grant_get, expect_put', [
-    (3934, DETAILS_GRANT2, EXPECT_DISABLE_ALL_GRANT2),
-    (3911, DETAILS_GRANT1, None),
-    (3978, None, None)
+@pytest.mark.parametrize('login_id, grant_get, expect_put, except_context', [
+    (3934, DETAILS_GRANT2, EXPECT_DISABLE_ALL_GRANT2, does_not_raise()),
+    (3911, DETAILS_GRANT1, None, does_not_raise()),
+    (3978, None, None, pytest.raises(ApiError))
 ])
-def test_disable_all_access(cbcsdk_mock, login_id, grant_get, expect_put):
+def test_disable_all_access(cbcsdk_mock, login_id, grant_get, expect_put, except_context):
     """Tests the User.disable_all_access method"""
     put_was_called = False
 
@@ -494,27 +495,30 @@ def test_disable_all_access(cbcsdk_mock, login_id, grant_get, expect_put):
     cbcsdk_mock.mock_request('PUT', f'/access/v2/orgs/test/grants/psc:user:test:{login_id}', on_put)
     api = cbcsdk_mock.api
     user = api.select(User).user_ids([login_id]).one()
-    user.disable_all_access()
+    with except_context:
+        user.disable_all_access()
     if expect_put is None:
         assert not put_was_called
     else:
         assert put_was_called
 
 
-@pytest.mark.parametrize('user_email, user_loginid, grant_get, new_role, org, expect_put', [
+@pytest.mark.parametrize('user_email, user_loginid, grant_get, new_role, org, expect_put, except_context', [
     ('emercer@orville.planetary-union.net', 3911, DETAILS_GRANT1, 'psc:role:test:NEW_ROLE', None,
-     EXPECT_CHANGE_ROLE_GRANT1),
-    ('emercer@orville.planetary-union.net', 3911, DETAILS_GRANT1, 'psc:role:test:APP_SERVICE_ROLE', None, None),
+     EXPECT_CHANGE_ROLE_GRANT1, does_not_raise()),
+    ('emercer@orville.planetary-union.net', 3911, DETAILS_GRANT1, 'psc:role:test:APP_SERVICE_ROLE', None, None,
+     does_not_raise()),
     ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, 'psc:role:test:ALPHA_ROLE', None,
-     EXPECT_CHANGE_ROLE_GRANT2A),
+     EXPECT_CHANGE_ROLE_GRANT2A, does_not_raise()),
     ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, 'psc:role:test:ALPHA_ROLE', 'psc:org:test3',
-     EXPECT_CHANGE_ROLE_GRANT2B),
+     EXPECT_CHANGE_ROLE_GRANT2B, does_not_raise()),
     ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, 'psc:role:test:ALPHA_ROLE', 'test3',
-     EXPECT_CHANGE_ROLE_GRANT2B),
-    ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, 'psc:role::SECOPS_ROLE_MANAGER', None, None),
-    ("bmariner@cerritos.starfleet.mil", 3978, None, 'psc:role::SECOPS_ROLE_MANAGER', None, None)
+     EXPECT_CHANGE_ROLE_GRANT2B, does_not_raise()),
+    ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, 'psc:role::SECOPS_ROLE_MANAGER', None, None, does_not_raise()),
+    ("bmariner@cerritos.starfleet.mil", 3978, None, 'psc:role::SECOPS_ROLE_MANAGER', None, None,
+     pytest.raises(ApiError))
 ])
-def test_change_role(cbcsdk_mock, user_email, user_loginid, grant_get, new_role, org, expect_put):
+def test_change_role(cbcsdk_mock, user_email, user_loginid, grant_get, new_role, org, expect_put, except_context):
     """Tests the User.change_role method"""
     put_was_called = False
 
@@ -530,7 +534,8 @@ def test_change_role(cbcsdk_mock, user_email, user_loginid, grant_get, new_role,
     cbcsdk_mock.mock_request('PUT', f'/access/v2/orgs/test/grants/psc:user:test:{user_loginid}', on_put)
     api = cbcsdk_mock.api
     user = api.select(User).email_addresses([user_email]).one()
-    user.change_role(new_role, org)
+    with except_context:
+        user.change_role(new_role, org)
     if expect_put is None:
         assert not put_was_called
     else:
@@ -623,14 +628,14 @@ def test_add_profiles_with_new_grant(cbcsdk_mock):
     assert post_was_called
 
 
-@pytest.mark.parametrize('user_email, user_loginid, grant_get, profiles, expect_put', [
-    ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, [], None),
-    ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, PROFILE_TEMPLATES_B, EXPECT_DISABLE_2B),
-    ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, PROFILE_TEMPLATES_C, None),
-    ('emercer@orville.planetary-union.net', 3911, DETAILS_GRANT1, PROFILE_TEMPLATES_B, None),
-    ('bmariner@cerritos.starfleet.mil', 3978, None, PROFILE_TEMPLATES_B, None)
+@pytest.mark.parametrize('user_email, user_loginid, grant_get, profiles, expect_put, except_context', [
+    ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, [], None, does_not_raise()),
+    ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, PROFILE_TEMPLATES_B, EXPECT_DISABLE_2B, does_not_raise()),
+    ('mreynolds@browncoats.org', 3934, DETAILS_GRANT2, PROFILE_TEMPLATES_C, None, does_not_raise()),
+    ('emercer@orville.planetary-union.net', 3911, DETAILS_GRANT1, PROFILE_TEMPLATES_B, None, does_not_raise()),
+    ('bmariner@cerritos.starfleet.mil', 3978, None, PROFILE_TEMPLATES_B, None, pytest.raises(ApiError))
 ])
-def test_disable_profiles(cbcsdk_mock, user_email, user_loginid, grant_get, profiles, expect_put):
+def test_disable_profiles(cbcsdk_mock, user_email, user_loginid, grant_get, profiles, expect_put, except_context):
     """Test the User.disable_profiles method."""
     put_was_called = False
 
@@ -646,21 +651,22 @@ def test_disable_profiles(cbcsdk_mock, user_email, user_loginid, grant_get, prof
     cbcsdk_mock.mock_request('PUT', f'/access/v2/orgs/test/grants/psc:user:test:{user_loginid}', on_put)
     api = cbcsdk_mock.api
     user = api.select(User).email_addresses([user_email]).one()
-    user.disable_profiles(profiles)
+    with except_context:
+        user.disable_profiles(profiles)
     if expect_put is None:
         assert not put_was_called
     else:
         assert put_was_called
 
 
-@pytest.mark.parametrize('login_id, grant_get, profiles, expect_put', [
-    (3934, DETAILS_GRANT2, [], None),
-    (3934, DETAILS_GRANT2, PROFILE_TEMPLATES_B, EXPECT_SET_EXPIRATION_2B),
-    (3934, DETAILS_GRANT2, PROFILE_TEMPLATES_C, None),
-    (3911, DETAILS_GRANT1, PROFILE_TEMPLATES_B, None),
-    (3978, None, PROFILE_TEMPLATES_B, None),
+@pytest.mark.parametrize('login_id, grant_get, profiles, expect_put, except_context', [
+    (3934, DETAILS_GRANT2, [], None, does_not_raise()),
+    (3934, DETAILS_GRANT2, PROFILE_TEMPLATES_B, EXPECT_SET_EXPIRATION_2B, does_not_raise()),
+    (3934, DETAILS_GRANT2, PROFILE_TEMPLATES_C, None, does_not_raise()),
+    (3911, DETAILS_GRANT1, PROFILE_TEMPLATES_B, None, does_not_raise()),
+    (3978, None, PROFILE_TEMPLATES_B, None, pytest.raises(ApiError)),
 ])
-def test_set_profile_expiration(cbcsdk_mock, login_id, grant_get, profiles, expect_put):
+def test_set_profile_expiration(cbcsdk_mock, login_id, grant_get, profiles, expect_put, except_context):
     """Test the User.set_profile_expiration method."""
     put_was_called = False
 
@@ -676,7 +682,8 @@ def test_set_profile_expiration(cbcsdk_mock, login_id, grant_get, profiles, expe
     cbcsdk_mock.mock_request('PUT', f'/access/v2/orgs/test/grants/psc:user:test:{login_id}', on_put)
     api = cbcsdk_mock.api
     user = api.select(User).user_ids([login_id]).one()
-    user.set_profile_expiration(profiles, '20111031T12:34:56')
+    with except_context:
+        user.set_profile_expiration(profiles, '20111031T12:34:56')
     if expect_put is None:
         assert not put_was_called
     else:

@@ -357,7 +357,7 @@ class User(MutableBaseModel):
             users (list[User]): List of User objects specifying users to be disabled.
         """
         for user in users:
-            user.disable_all_access()
+            user._disable_all_access()
 
     @classmethod
     def bulk_delete(cls, users):
@@ -370,14 +370,32 @@ class User(MutableBaseModel):
         for user in users:
             user.delete()
 
-    def disable_all_access(self):
-        """Disables all access profiles held by ths user."""
+    def _disable_all_access(self):
+        """
+        Disables all access profiles held by ths user.
+
+        Returns:
+            bool: True if this user was a "legacy" user (no grant), False otherwise.
+        """
         grant = self.grant()
         if grant:
             for profile in grant.profiles_:
                 profile.set_disabled(True)
                 grant.touch()
             grant.save()
+            return False
+        else:
+            return True
+
+    def disable_all_access(self):
+        """
+        Disables all access profiles held by ths user.
+
+        Raises:
+            ApiError: If the user is a "legacy" user that has no grant.
+        """
+        if self._disable_all_access():
+            raise ApiError("legacy user has no grant")
 
     def change_role(self, role_urn, org=None):
         """
@@ -387,6 +405,9 @@ class User(MutableBaseModel):
             role_urn (str): URN of the role to be added.
             org (str): If specified, only profiles that match this organization will have the role added.  Organization
                        may be specified as either an org key or a URN.
+
+        Raises:
+            ApiError: If the user is a "legacy" user that has no grant.
         """
         my_org = None if org is None else normalize_org(org)
         grant = self.grant()
@@ -404,6 +425,8 @@ class User(MutableBaseModel):
                 grant.roles += [role_urn]
                 grant.touch()
             grant.save()
+        else:
+            raise ApiError("legacy user has no grant")
 
     def _internal_add_profiles(self, profile_templates):
         """
@@ -436,6 +459,9 @@ class User(MutableBaseModel):
 
         Args:
             profile_templates (list[dict]): List of profile templates to be disabled.  Must be normalized.
+
+        Returns:
+            bool: True if this user was a "legacy" user (no grant), False otherwise.
         """
         grant = self.grant()
         if grant:
@@ -446,6 +472,9 @@ class User(MutableBaseModel):
                         grant.touch()
                         break
             grant.save()
+            return False
+        else:
+            return True
 
     def _internal_set_profile_expiration(self, profile_templates, expiration_date):
         """
@@ -454,6 +483,9 @@ class User(MutableBaseModel):
         Args:
             profile_templates (list[dict]): List of profile templates to be reset.  Must be normalized.
             expiration_date (str): New expiration date, in ISO 8601 format.
+
+        Returns:
+            bool: True if this user was a "legacy" user (no grant), False otherwise.
         """
         grant = self.grant()
         if grant:
@@ -464,6 +496,9 @@ class User(MutableBaseModel):
                         grant.touch()
                         break
             grant.save()
+            return False
+        else:
+            return True
 
     def add_profiles(self, profile_templates):
         """
@@ -482,10 +517,14 @@ class User(MutableBaseModel):
 
         Args:
             profile_templates (list[dict]): List of profile templates to be disabled.
+
+        Raises:
+            ApiError: If the user is a "legacy" user that has no grant.
         """
         my_profiles = normalize_profile_list(profile_templates)
         if my_profiles:
-            self._internal_disable_profiles(my_profiles)
+            if self._internal_disable_profiles(my_profiles):
+                raise ApiError("legacy user has no grant")
 
     def set_profile_expiration(self, profile_templates, expiration_date):
         """
@@ -494,10 +533,14 @@ class User(MutableBaseModel):
         Args:
             profile_templates (list[dict]): List of profile templates to be reset.
             expiration_date (str): New expiration date, in ISO 8601 format.
+
+        Raises:
+            ApiError: If the user is a "legacy" user that has no grant.
         """
         my_profiles = normalize_profile_list(profile_templates)
         if my_profiles:
-            self._internal_set_profile_expiration(my_profiles, expiration_date)
+            if self._internal_set_profile_expiration(my_profiles, expiration_date):
+                raise ApiError("legacy user has no grant")
 
 
 """User Queries"""
