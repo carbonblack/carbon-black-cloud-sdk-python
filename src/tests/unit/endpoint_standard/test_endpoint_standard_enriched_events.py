@@ -99,7 +99,10 @@ def test_enriched_event_select_details_async(cbcsdk_mock):
     event = events[0]
     details = event.get_details(async_mode=True, timeout=500)
     results = details.result()
+    assert results.device_name is not None
+    assert results.enriched is not None
     assert event._details_timeout == 500
+    assert results.process_pid[0] == 2000
     assert results["device_name"] is not None
     assert results["enriched"] is not None
     assert results["process_pid"][0] == 2000
@@ -147,9 +150,10 @@ def test_enriched_event_select_details_sync(cbcsdk_mock):
     events = s_api.select(EnrichedEvent).where(process_pid=2000)
     event = events[0]
     results = event.get_details()
-    assert results["device_name"] is not None
-    assert results["enriched"] is True
-    assert results["process_pid"][0] == 2000
+    assert results['device_name'] is not None
+    assert results.device_name is not None
+    assert results.enriched is True
+    assert results.process_pid[0] == 2000
 
 
 def test_enriched_event_select_compound(cbcsdk_mock):
