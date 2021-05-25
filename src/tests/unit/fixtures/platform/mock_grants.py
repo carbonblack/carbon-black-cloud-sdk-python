@@ -959,3 +959,58 @@ PERMITTED_ROLES_RESP = {
         ]
     }
 }
+
+EXPECT_NEW_GRANT_5A = {
+    "principal": "psc:user:test:3978",
+    'org_ref': 'psc:org:test',
+    'roles': [],
+    'principal_name': "Beckett Mariner",
+    'profiles': PROFILE_TEMPLATES_A
+}
+
+POST_GRANT_RESP_5A = {
+    "principal": "psc:user:test:3978",
+    "expires": 0,
+    "revoked": False,
+    "roles": [
+    ],
+    "profiles": [
+        {
+            "orgs": {
+                "allow": [
+                    "psc:org:test2"
+                ],
+            },
+            "roles": [
+                "psc:role::SECOPS_ROLE_MANAGER",
+                "psc:role:test:ALPHA_ROLE"
+            ],
+            "conditions": {
+                "expiration": 0,
+                "disabled": False
+            },
+            "can_manage": False
+        },
+        {
+            "orgs": {
+                "allow": [
+                    "psc:org:test_infinity"
+                ],
+            },
+            "roles": [
+                "psc:role::SECOPS_ROLE_MANAGER"
+            ],
+            "conditions": {
+                "expiration": 0,
+                "disabled": False
+            },
+            "can_manage": False
+        }
+    ],
+    "org_ref": "psc:org:test",
+    "principal_name": "Beckett Mariner",
+    "created_by": "psc:user:FOO:BAR",
+    "updated_by": "psc:user:FOO:BAR",
+    "create_time": "2021-03-20T12:56:31.645Z",
+    "update_time": "2021-03-20T12:56:31.645Z"
+}
