@@ -1023,7 +1023,7 @@ def test_completion_notification_work_status(cbcsdk_mock):
     assert obj.device_id == 2468
     obj = WorkerStatus(2468)
     assert obj.device_id == 2468
-    assert obj.status == "ready"
+    assert obj.status == "READY"
     assert obj.exception is None
 
 
@@ -1107,7 +1107,7 @@ def test_job_scheduler_exiting(cbcsdk_mock, mox):
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     job_scheduler = LiveResponseJobScheduler(cbcsdk_mock.api)
-    ws_obj_exiting = WorkerStatus(2468, status="exiting")
+    ws_obj_exiting = WorkerStatus(2468, status="EXISTING")
     job_scheduler.schedule_queue.put(ws_obj_exiting)
     job_scheduler._idle_workers.add(2469)
     job_worker = JobWorker(cbcsdk_mock.api, 2468, Queue())

@@ -5,7 +5,7 @@ DIRECTORY_LIST_START_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'PENDING',
+    'status': 'pending',
     'name': 'directory list',
     'object': 'C:\\\\TEMP\\\\',
     'completion_time': 0
@@ -16,7 +16,7 @@ DIRECTORY_LIST_END_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'COMPLETE',
+    'status': 'complete',
     'name': 'directory list',
     'object': 'C:\\\\TEMP\\\\',
     'completion_time': 2345678901,
@@ -53,7 +53,7 @@ DELETE_FILE_START_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'PENDING',
+    'status': 'pending',
     'name': 'delete file',
     'object': 'C:\\\\TEMP\\\\foo.txt',
     'completion_time': 0
@@ -64,7 +64,7 @@ DELETE_FILE_END_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'COMPLETE',
+    'status': 'complete',
     'name': 'delete file',
     'object': 'C:\\\\TEMP\\\\foo.txt',
     'completion_time': 2345678901
@@ -75,7 +75,7 @@ DELETE_FILE_ERROR_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'ERROR',
+    'status': 'error',
     'name': 'delete file',
     'object': 'C:\\\\TEMP\\\\foo.txt',
     'completion_time': 2345678901,
@@ -90,7 +90,7 @@ GET_FILE_END_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'COMPLETE',
+    'status': 'complete',
     'name': 'get file',
     'object': 'C:\\\\test.txt',
     'completion_time': 2345678901
@@ -123,7 +123,7 @@ PUT_FILE_START_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'PENDING',
+    'status': 'pending',
     'name': 'put file',
     'object': 'foobar.txt',
     'completion_time': 0
@@ -134,7 +134,7 @@ PUT_FILE_END_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'COMPLETE',
+    'status': 'complete',
     'name': 'put file',
     'object': 'foobar.txt',
     'completion_time': 2345678901
@@ -145,7 +145,7 @@ CREATE_DIRECTORY_START_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'PENDING',
+    'status': 'pending',
     'name': 'create directory',
     'object': 'C:\\\\TEMP\\\\TRASH',
     'completion_time': 0
@@ -156,7 +156,7 @@ CREATE_DIRECTORY_END_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'COMPLETE',
+    'status': 'complete',
     'name': 'create directory',
     'object': 'C:\\\\TEMP\\\\TRASH',
     'completion_time': 2345678901
@@ -272,7 +272,7 @@ KILL_PROC_START_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'PENDING',
+    'status': 'pending',
     'name': 'kill',
     'object': 601,
     'completion_time': 0
@@ -283,7 +283,7 @@ KILL_PROC_END_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'COMPLETE',
+    'status': 'complete',
     'name': 'kill',
     'object': 601,
     'completion_time': 2345678901
@@ -294,7 +294,7 @@ CREATE_PROC_START_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'PENDING',
+    'status': 'pending',
     'name': 'create process',
     'object': 'start_daemon',
     'completion_time': 0
@@ -305,7 +305,7 @@ CREATE_PROC_END_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'COMPLETE',
+    'status': 'complete',
     'name': 'create process',
     'object': 'start_daemon',
     'completion_time': 2345678901
@@ -316,7 +316,7 @@ RUN_PROC_START_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'PENDING',
+    'status': 'pending',
     'name': 'create process',
     'object': 'gimme',
     'completion_time': 0
@@ -327,7 +327,7 @@ RUN_PROC_END_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'COMPLETE',
+    'status': 'complete',
     'name': 'create process',
     'object': 'gimme',
     'completion_time': 2345678901
@@ -338,7 +338,7 @@ LIST_PROC_START_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'PENDING',
+    'status': 'pending',
     'name': 'process list',
     'object': None,
     'completion_time': 0
@@ -349,7 +349,7 @@ LIST_PROC_END_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'COMPLETE',
+    'status': 'complete',
     'name': 'process list',
     'object': None,
     'completion_time': 2345678901,
@@ -395,7 +395,7 @@ REG_ENUM_START_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'PENDING',
+    'status': 'pending',
     'name': 'reg enum key',
     'object': 'HKLM\\SYSTEM\\CurrentControlSet\\services\\ACPI',
     'completion_time': 0
@@ -406,7 +406,7 @@ REG_ENUM_END_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'COMPLETE',
+    'status': 'complete',
     'name': 'reg enum key',
     'object': 'HKLM\\SYSTEM\\CurrentControlSet\\services\\ACPI',
     'completion_time': 2345678901,
@@ -444,7 +444,7 @@ REG_GET_START_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'PENDING',
+    'status': 'pending',
     'name': 'reg query value',
     'object': 'HKLM\\SYSTEM\\CurrentControlSet\\services\\ACPI\\Start',
     'completion_time': 0
@@ -455,7 +455,7 @@ REG_GET_END_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'COMPLETE',
+    'status': 'complete',
     'name': 'reg query value',
     'object': 'HKLM\\SYSTEM\\CurrentControlSet\\services\\ACPI\\Start',
     'completion_time': 2345678901,
@@ -467,7 +467,7 @@ REG_SET_START_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'PENDING',
+    'status': 'pending',
     'name': 'reg set value',
     'object': 'HKLM\\SYSTEM\\CurrentControlSet\\services\\ACPI\\testvalue',
     'completion_time': 0
@@ -478,7 +478,7 @@ REG_SET_END_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'COMPLETE',
+    'status': 'complete',
     'name': 'reg set value',
     'object': 'HKLM\\SYSTEM\\CurrentControlSet\\services\\ACPI\\testvalue',
     'completion_time': 2345678901
@@ -489,7 +489,7 @@ REG_CREATE_KEY_START_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'PENDING',
+    'status': 'pending',
     'name': 'reg create key',
     'object': 'HKLM\\SYSTEM\\CurrentControlSet\\services\\ACPI\\Nonsense',
     'completion_time': 0
@@ -500,7 +500,7 @@ REG_CREATE_KEY_END_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'COMPLETE',
+    'status': 'complete',
     'name': 'reg create key',
     'object': 'HKLM\\SYSTEM\\CurrentControlSet\\services\\ACPI\\Nonsense',
     'completion_time': 2345678901
@@ -511,7 +511,7 @@ REG_DELETE_KEY_START_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'PENDING',
+    'status': 'pending',
     'name': 'reg delete key',
     'object': 'HKLM\\SYSTEM\\CurrentControlSet\\services\\ACPI\\Nonsense',
     'completion_time': 0
@@ -522,7 +522,7 @@ REG_DELETE_KEY_END_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'COMPLETE',
+    'status': 'complete',
     'name': 'reg delete key',
     'object': 'HKLM\\SYSTEM\\CurrentControlSet\\services\\ACPI\\Nonsense',
     'completion_time': 2345678901
@@ -533,7 +533,7 @@ REG_DELETE_START_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'PENDING',
+    'status': 'pending',
     'name': 'reg delete value',
     'object': 'HKLM\\SYSTEM\\CurrentControlSet\\services\\ACPI\\testvalue',
     'completion_time': 0
@@ -544,7 +544,7 @@ REG_DELETE_END_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'COMPLETE',
+    'status': 'complete',
     'name': 'reg delete value',
     'object': 'HKLM\\SYSTEM\\CurrentControlSet\\services\\ACPI\\testvalue',
     'completion_time': 2345678901
@@ -555,7 +555,7 @@ MEMDUMP_START_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'PENDING',
+    'status': 'pending',
     'name': 'memdump',
     'object': None,
     'completion_time': 0,
@@ -570,7 +570,7 @@ MEMDUMP_END_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'COMPLETE',
+    'status': 'complete',
     'name': 'memdump',
     'object': None,
     'completion_time': 2345678901,
@@ -585,7 +585,7 @@ MEMDUMP_DEL_START_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'PENDING',
+    'status': 'pending',
     'name': 'delete file',
     'object': None,
     'completion_time': 0
@@ -596,7 +596,7 @@ MEMDUMP_DEL_END_RESP = {
     'session_id': '1:2468',
     'device_id': 2468,
     'command_timeout': 120,
-    'status': 'COMPLETE',
+    'status': 'complete',
     'name': 'delete file',
     'object': None,
     'completion_time': 2345678901

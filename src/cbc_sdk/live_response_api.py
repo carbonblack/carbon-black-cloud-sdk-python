@@ -58,11 +58,11 @@ class LiveResponseError(Exception):
         self.decoded_win32_error = ""
 
         # Details object:
-        # {u'status': u'ERROR', u'username': u'admin', u'device_id': 9, u'name': u'kill',
+        # {u'status': u'error', u'username': u'admin', u'device_id': 9, u'name': u'kill',
         # u'completion': 1464319733.190924, u'object': 1660, u'session_id': 7, u'result_type': u'WinHresult',
         # u'create_time': 1464319733.171967, u'result_desc': u'', u'id': 22, u'result_code': 2147942487}
 
-        if self.details.get("status") == "ERROR" and self.details.get("result_type") == "WinHresult":
+        if self.details.get("status").upper() == "ERROR" and self.details.get("result_type") == "WinHresult":
             # attempt to decode the win32 error
             win32_error_text = "Unknown Win32 error code"
             try:
@@ -812,7 +812,7 @@ class CompletionNotification(object):
 class WorkerStatus(object):
     """Holds the status of an individual worker."""
 
-    def __init__(self, device_id, status="ready", exception=None):
+    def __init__(self, device_id, status="READY", exception=None):
         """
         Initialize the WorkerStatus.
 
@@ -849,7 +849,7 @@ class JobWorker(threading.Thread):
         """Execute the job worker."""
         try:
             self.lr_session = self.cb.live_response.request_session(self.device_id)
-            self.result_queue.put(WorkerStatus(self.device_id, status="ready"))
+            self.result_queue.put(WorkerStatus(self.device_id, status="READY"))
             while True:
                 work_item = self.job_queue.get(block=True)
                 if not work_item:
@@ -864,7 +864,7 @@ class JobWorker(threading.Thread):
         finally:
             if self.lr_session:
                 self.lr_session.close()
-            self.result_queue.put(WorkerStatus(self.device_id, status="exiting"))
+            self.result_queue.put(WorkerStatus(self.device_id, status="EXISTING"))
 
     def run_job(self, work_item):
         """
@@ -920,7 +920,7 @@ class LiveResponseJobScheduler(threading.Thread):
                                                                                 item.exception))
                     # Don't reattempt error'd jobs
                     del self._unscheduled_jobs[item.device_id]
-                elif item.status == "exiting":
+                elif item.status == "EXISTING":
                     log.debug("JobWorker[{0}] has exited, waiting...".format(item.device_id))
                     self._job_workers[item.device_id].join()
                     log.debug("JobWorker[{0}] deleted".format(item.device_id))
@@ -929,7 +929,7 @@ class LiveResponseJobScheduler(threading.Thread):
                         self._idle_workers.remove(item.device_id)
                     except KeyError:
                         pass
-                elif item.status == "ready":
+                elif item.status == "READY":
                     log.debug("JobWorker[{0}] now ready to accept jobs, session established".format(item.device_id))
                     self._idle_workers.add(item.device_id)
                 else:
@@ -1280,10 +1280,10 @@ def poll_status(cb, url, desired_status="COMPLETE", timeout=None, delay=None):
     while status != desired_status and time.time() - start_time < timeout:
         res = cb.get_object(url)
         log.debug(f"url: {url} -> status: {res['status']}")
-        if res["status"] == desired_status:
+        if res["status"].upper() == desired_status:
             log.debug(json.dumps(res))
             return res
-        elif res["status"] == "ERROR":
+        elif res["status"].upper() == "ERROR":
             raise LiveResponseError(res)
         else:
             time.sleep(delay)
