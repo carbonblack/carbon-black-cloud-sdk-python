@@ -85,11 +85,12 @@ Changes in some of the request/response fields
 +----------------------+------------------+------------------+
 | Process command      | parent           | parent_pid       |
 +----------------------+------------------+------------------+
-
-
-Changes in the response body
-----------------------------
-Registry Command Response was changed from ``{ "valueType":"", "valueData":"", "valueName":""}`` to ``{ "value_type":"", "value_data":"", "value_name":""}``
+| Registry command     | valueType        | value_type       |
++----------------------+------------------+------------------+
+| Registry command     | valueData        | value_data       |
++----------------------+------------------+------------------+
+| Registry command     | valueName        | value_name       |
++----------------------+------------------+------------------+
 
 
 Additional Information
