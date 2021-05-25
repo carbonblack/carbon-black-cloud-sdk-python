@@ -5,7 +5,7 @@ SESSION_INIT_RESP = {
     "device_id": 2468,
     "check_in_timeout": 900,
     "session_timeout": 900,
-    "status": "pending",
+    "status": "PENDING",
     "current_command_index": 0,
     "create_time": "2021-04-07T17:49:58.792Z",
     "device_check_in_time": "2021-04-07T17:49:58.793Z"
@@ -80,7 +80,7 @@ SESSION_POLL_RESP_ERROR = {
     "check_in_timeout": 900,
     "session_timeout": 900,
     "sensor_check_in_time": 1502126744685,
-    "status": "error",
+    "status": "ERROR",
     "current_command_index": 0,
     "create_time": 1502126655758
 }
@@ -124,7 +124,7 @@ USESSION_POLL_RESP = {
     "check_in_timeout": 900,
     "session_timeout": 900,
     "sensor_check_in_time": 1502126744685,
-    "status": "active",
+    "status": "ACTIVE",
     "current_command_index": 0,
     "create_time": 1502126655758
 }
