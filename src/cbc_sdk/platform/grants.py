@@ -624,7 +624,7 @@ class GrantQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
         if len(self._criteria) == 0:
             raise ApiError("At least one principal must be specified for Grant query")
         ret = self._cb.post_object('/access/v2/grants/_fetch', self._criteria)
-        return ret.json().get('additionalProp1', [])
+        return ret.json().get('results', [])
 
     def _count(self):
         """

@@ -14,17 +14,13 @@
 
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
 from cbc_sdk.platform import User
-from cbc_sdk.errors import ObjectNotFoundError
 import sys
 
 
 def is_interesting(user):
     """Returns True if the user is "interesting" (has a grant with profiles)."""
-    try:
-        grant = user.grant()
-        return True
-    except ObjectNotFoundError:
-        return False
+    grant = user.grant()
+    return grant is not None
 
 
 def main():
@@ -48,7 +44,7 @@ def main():
         if count % 100 == 0:
             print(f"Processed {count} users")
 
-    print(f"Found {len(result_list)} interesting users")
+    print(f"Found {len(result_list)} interesting users out of {count}")
     for user in result_list:
         grant = user.grant()
         print(f"{user.login_id} - '{user.first_name} {user.last_name}' - {len(grant.profiles_)} profiles")

@@ -191,7 +191,7 @@ DELETE_GRANT_RESP = {
 }
 
 QUERY_GRANT_RESP = {
-    "additionalProp1": [
+    "results": [
         {
             "principal": "psc:user:12345678:ABCDEFGH",
             "expires": 0,

@@ -264,7 +264,7 @@ def test_user_unsupported_create(cbcsdk_mock):
 def wrap_grant(grant_details):
     """Utility function wrapping grant details for return from a POST."""
     details_list = [copy.deepcopy(grant_details)] if grant_details else []
-    return {'additionalProp1': details_list}
+    return {'results': details_list}
 
 
 def test_get_grant(cbcsdk_mock):
