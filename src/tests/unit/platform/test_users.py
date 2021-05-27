@@ -10,7 +10,6 @@ from cbc_sdk.errors import ApiError, ObjectNotFoundError, ServerError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_users import (GET_USERS_RESP, GET_USERS_AFTER_CREATE_RESP,
                                                      GET_USERS_AFTER_CREATE_OAUTH_RESP,
-                                                     GET_USERS_AFTER_BULK1_RESP, GET_USERS_AFTER_BULK2_RESP,
                                                      EXPECT_USER_ADD, EXPECT_USER_ADD_SMALL, EXPECT_USER_ADD_V1,
                                                      EXPECT_USER_ADD_V2, EXPECT_USER_ADD_BULK1, EXPECT_USER_ADD_BULK2,
                                                      USER_ADD_SUCCESS_RESP, USER_ADD_FAILURE_RESP)
@@ -170,29 +169,23 @@ def test_create_user(cbcsdk_mock, in_auth, out_auth):
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', check_get)
     api = cbcsdk_mock.api
     builder = User.create(api).set_email('rios@la-sirena.net').set_role('psc:role:test:APP_SERVICE_ROLE')
-    builder.set_first_name('Cristobal').set_last_name('Rios')
+    builder.set_first_name('Cristobal').set_last_name('Rios').set_phone('800-555-1111')
     if in_auth:
         builder.set_auth_method(in_auth)
     builder.add_grant_profile(['psc:org:test2'], ['psc:role:test2:DUMMY'])
-    builder.add_grant_profile(['test3'], ['psc:role:test3:DUMMY'])
-    user = builder.build()
+    builder.add_grant_profile(['test3'], ['psc:role:test3:DUMMY']).build()
     assert post_made
-    assert user.last_name == 'Rios'
-    assert user.first_name == 'Cristobal'
-    assert user.login_name == 'rios@la-sirena.net'
-    assert user.email == 'rios@la-sirena.net'
-    assert user.auth_method == out_auth
 
 
 TEMPLATE1 = {
-    "email_id": "rios@la-sirena.net",
+    "email": "rios@la-sirena.net",
     "role_urn": "psc:role:test:APP_SERVICE_ROLE",
     "first_name": "Cristobal",
     "last_name": "Rios",
 }
 
 TEMPLATE2 = {
-    "email_id": "rios@la-sirena.net",
+    "email": "rios@la-sirena.net",
     "first_name": "Cristobal",
     "last_name": "Rios",
     "profiles": [
@@ -228,12 +221,8 @@ def test_create_user_from_template(cbcsdk_mock, template, response):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/users', check_post)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', check_get)
     api = cbcsdk_mock.api
-    user = User.create(api, template)
+    User.create(api, template)
     assert post_made
-    assert user.last_name == 'Rios'
-    assert user.first_name == 'Cristobal'
-    assert user.login_name == 'rios@la-sirena.net'
-    assert user.email == 'rios@la-sirena.net'
 
 
 def test_create_user_fails(cbcsdk_mock):
@@ -283,7 +272,6 @@ def test_get_grant(cbcsdk_mock):
 def test_bulk_create(cbcsdk_mock):
     """Tests the User.bulk_create API."""
     count_posts = 0
-    count_gets = 0
 
     def check_post(uri, body, **kwargs):
         nonlocal count_posts
@@ -301,31 +289,16 @@ def test_bulk_create(cbcsdk_mock):
         count_posts = count_posts + 1
         return rc
 
-    def check_get(uri, query_params, default):
-        nonlocal count_posts, count_gets
-        rc = None
-        if count_posts == 1:
-            assert count_gets == 0
-            rc = GET_USERS_AFTER_BULK1_RESP
-        elif count_posts == 2:
-            assert count_gets == 1
-            rc = GET_USERS_AFTER_BULK2_RESP
-        else:
-            pytest.fail(f"invalid count_posts value {count_posts}")
-        count_gets = count_gets + 1
-        return rc
-
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/users', check_post)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', check_get)
     api = cbcsdk_mock.api
     bulk_templates = [
         {
-            "email_id": "burnham@discovery.starfleet.mil",
+            "email": "burnham@discovery.starfleet.mil",
             "first_name": "Michael",
             "last_name": "Burnham"
         },
         {
-            "email_id": "scully@fbi.gov",
+            "email": "scully@fbi.gov",
             "first_name": "Dana",
             "last_name": "Scully",
             "profiles": [
@@ -346,17 +319,8 @@ def test_bulk_create(cbcsdk_mock):
             'roles': ['psc:role:testX:DUMMY']
         }
     ]
-    users = User.bulk_create(api, bulk_templates, profile_templates)
+    User.bulk_create(api, bulk_templates, profile_templates)
     assert count_posts == 2
-    assert count_gets == 2
-    assert users[0].last_name == 'Burnham'
-    assert users[0].first_name == 'Michael'
-    assert users[0].login_name == 'burnham@discovery.starfleet.mil'
-    assert users[0].email == 'burnham@discovery.starfleet.mil'
-    assert users[1].last_name == 'Scully'
-    assert users[1].first_name == 'Dana'
-    assert users[1].login_name == 'scully@fbi.gov'
-    assert users[1].email == 'scully@fbi.gov'
 
 
 def bulk_get_grant(url, body, **kwargs):

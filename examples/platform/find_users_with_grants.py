@@ -20,7 +20,10 @@ import sys
 def is_interesting(user):
     """Returns True if the user is "interesting" (has a grant with profiles)."""
     grant = user.grant()
-    return grant is not None
+    if grant:
+        return len(grant.profiles_) > 0
+    else:
+        return False
 
 
 def main():
@@ -44,10 +47,10 @@ def main():
         if count % 100 == 0:
             print(f"Processed {count} users")
 
-    print(f"Found {len(result_list)} interesting users out of {count}")
+    print(f"Found {len(result_list)} 'interesting' users (that have profiles) out of {count}")
     for user in result_list:
         grant = user.grant()
-        print(f"{user.login_id} - '{user.first_name} {user.last_name}' - {len(grant.profiles_)} profiles")
+        print(f"{user.login_id} - '{user.first_name} {user.last_name}' - {len(grant.profiles_)} profile(s)")
     return 0
 
 
