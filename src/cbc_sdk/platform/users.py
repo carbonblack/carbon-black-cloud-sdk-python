@@ -17,9 +17,6 @@ from cbc_sdk.errors import ApiError, ServerError, ObjectNotFoundError
 from cbc_sdk.platform.grants import Grant, normalize_org
 import time
 import copy
-import logging
-
-logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
 """User Models"""
 
