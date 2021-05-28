@@ -529,7 +529,8 @@ def test_process_sort(cbcsdk_mock):
                        "sort": [{
                            "field": "process_pid",
                            "order": "DESC"
-                       }]}
+                       }],
+                       'fields': ['*']}
     assert process_q_params == expected_params
 
 
@@ -735,7 +736,8 @@ def test_process_sort_by(cbcsdk_mock):
                        "sort": [{
                            "field": "process_pid",
                            "order": "DESC"
-                       }]}
+                       }],
+                       'fields': ['*']}
     assert process_q_params == expected_params
 
 

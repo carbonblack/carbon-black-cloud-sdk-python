@@ -1736,6 +1736,11 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
         if 'process_guid:' in args['query']:
             q = args['query'].split('process_guid:', 1)[1].split(' ', 1)[0]
             args["process_guid"] = q
+
+        if args.get("sort", None) is not None and args.get("fields", None) is None:
+            # Add default fields if only sort is specified
+            args["fields"] = ["*"]
+
         return args
 
     def sort_by(self, key, direction="ASC"):
@@ -1793,9 +1798,12 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
             args['q'] = args['query']
 
         # v2 search sort key does not work with v1 validation
-        args.pop('sort', None)
+        sort = args.pop('sort', None)
 
         validated = self._cb.get_object(url, query_parameters=args)
+
+        # Re-add sort
+        args["sort"] = sort
 
         if not validated.get("valid"):
             raise ApiError("Invalid query: {}: {}".format(args, validated["invalid_message"]))
