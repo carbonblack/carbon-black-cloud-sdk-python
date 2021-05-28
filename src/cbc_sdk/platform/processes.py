@@ -632,8 +632,7 @@ class AsyncProcessQuery(Query):
         self._validate(args)
 
         # Ensure search creation uses max due to event aggregation
-        if args.get("rows", None) is not None:
-            args["rows"] = 10000
+        args["rows"] = 10000
 
         url = "/api/investigate/v2/orgs/{}/processes/search_jobs".format(self._cb.credentials.org_key)
         query_start = self._cb.post_object(url, body=args)

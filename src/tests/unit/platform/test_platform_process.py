@@ -711,10 +711,10 @@ def test_process_query_start_rows(cbcsdk_mock):
                        "exclusions": {
                            "crossproc_effective_reputation": ["REP_WHITE"]
                        },
-                       "start": 10,
-                       "rows": 102
+                       "start": 10
                        }
     assert process_q_params == expected_params
+    assert process._batch_size == 102
 
 
 def test_process_sort_by(cbcsdk_mock):
