@@ -10,7 +10,7 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-"""Create a new user from the command line."""
+"""Change a user's role from the command line."""
 
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
 from cbc_sdk.platform import User
@@ -18,20 +18,19 @@ import sys
 
 
 def main():
-    """Main function for the user creation script"""
-    parser = build_cli_parser('Create a User')
-    parser.add_argument('first_name', help='First name for the new user')
-    parser.add_argument('last_name', help='Last name for the new user')
-    parser.add_argument('email', help='E-mail address for the new user')
-    parser.add_argument('phone', help='Phone number for the new user')
-    parser.add_argument('role', help='Role URN to assign the new user')
+    """Main function for the role changing script"""
+    parser = build_cli_parser("Change User's Role")
+    parser.add_argument('email', help='E-mail address of the user to change role of')
+    parser.add_argument('role', help='New role URN for the user')
 
     args = parser.parse_args()
     cb = get_cb_cloud_object(args)
 
-    builder = User.create(cb).set_first_name(args.first_name).set_last_name(args.last_name).set_email(args.email)
-    builder.set_phone(args.phone).set_role(args.role).build()
-    print("New user created.")
+    user = cb.select(User).email_addresses([args.email]).one()
+    grant = user.grant()
+    grant.roles = [args.role]
+    grant.save()
+    print("Role changed.")
     return 0
 
 
