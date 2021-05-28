@@ -59,6 +59,16 @@ class CBCloudAPI(BaseAPI):
         else:
             raise ApiError("All Carbon Black Cloud models must provide _query_implementation")
 
+    @property
+    def org_urn(self):
+        """
+        Returns the URN of the current organization.
+
+        Returns:
+            str: The URN of the current organization.
+        """
+        return f"psc:org:{self.credentials.org_key}"
+
     # ---- Async
 
     def _async_submit(self, callable, *args, **kwargs):
