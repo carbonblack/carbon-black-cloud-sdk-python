@@ -25,12 +25,19 @@ def main():
     parser.add_argument('email', help='E-mail address for the new user')
     parser.add_argument('phone', help='Phone number for the new user')
     parser.add_argument('role', help='Role URN to assign the new user')
+    parser.add_argument('-P', '--accessprofiles', action='store_true',
+                        help='Use access profiles when creating the user')
 
     args = parser.parse_args()
     cb = get_cb_cloud_object(args)
 
     builder = User.create(cb).set_first_name(args.first_name).set_last_name(args.last_name).set_email(args.email)
-    builder.set_phone(args.phone).set_role(args.role).build()
+    builder.set_phone(args.phone)
+    if args.accessprofiles:
+        builder.add_grant_profile([cb.org_urn], [args.role])
+    else:
+        builder.set_role(args.role)
+    builder.build()
     print("New user created.")
     return 0
 

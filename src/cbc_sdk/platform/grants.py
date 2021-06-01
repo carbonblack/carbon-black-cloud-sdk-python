@@ -146,7 +146,10 @@ class Grant(MutableBaseModel):
             Args:
                 flag (bool): True to disable the profile, False to enable it.
             """
-            self._info['conditions']['disabled'] = flag
+            if self._info['conditions']:
+                self._info['conditions']['disabled'] = flag
+            else:
+                self._info['conditions'] = {'disabled': flag}
 
         def set_expiration(self, expiration):
             """
@@ -155,7 +158,10 @@ class Grant(MutableBaseModel):
             Args:
                 expiration (str): Expiration time to set on the profile (ISO 8601 format).
             """
-            self._info['conditions']['expiration'] = expiration
+            if self._info['conditions']:
+                self._info['conditions']['expiration'] = expiration
+            else:
+                self._info['conditions'] = {'expiration': expiration}
 
         def matches_template(self, template):
             """

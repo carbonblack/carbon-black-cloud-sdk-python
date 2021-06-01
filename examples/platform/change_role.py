@@ -28,8 +28,15 @@ def main():
 
     user = cb.select(User).email_addresses([args.email]).one()
     grant = user.grant()
-    grant.roles = [args.role]
-    grant.save()
+    need_reset = True
+    for profile in grant.profiles_:
+        if profile.allowed_orgs == [cb.org_urn]:
+            profile.roles = [args.role]
+            profile.save()
+            need_reset = False
+    if need_reset:
+        grant.roles = [args.role]
+        grant.save()
     print("Role changed.")
     return 0
 

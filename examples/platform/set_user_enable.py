@@ -26,6 +26,8 @@ def peek_status(user):
 def poke_status(user, value):
     """Sets the enable/disable status of a user."""
     grant = user.grant()
+    for profile in grant.profiles_:
+        profile.set_disabled(not value)
     grant.revoked = not value
     grant.save()
 
