@@ -614,6 +614,9 @@ class AsyncProcessQuery(Query):
         """
         Sets the 'rows' query parameter to the 'results' API call, determining how many rows to request per batch.
 
+        This will not limit the total results to rows instead the batch size will use rows and all of the num_available
+        will be fetched.
+
         Args:
             rows (int): How many rows to request.
         """
