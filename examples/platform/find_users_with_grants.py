@@ -17,7 +17,7 @@ from cbc_sdk.platform import User
 import sys
 
 
-def is_interesting(user):
+def has_grant(user):
     """Returns True if the user is "interesting" (has a grant with profiles)."""
     grant = user.grant()
     if grant:
@@ -39,7 +39,7 @@ def main():
     result_list = []
     count = 0
     for user in users:
-        if is_interesting(user):
+        if has_grant(user):
             result_list.append(user)
             if 0 < args.number == len(result_list):
                 break

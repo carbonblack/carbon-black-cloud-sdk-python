@@ -62,10 +62,10 @@ class CBCloudAPI(BaseAPI):
     @property
     def org_urn(self):
         """
-        Returns the URN of the current organization.
+        Returns the URN based on the configured org_key.
 
         Returns:
-            str: The URN of the current organization.
+            str: The URN based on the configured org_key.
         """
         return f"psc:org:{self.credentials.org_key}"
 

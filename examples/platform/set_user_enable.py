@@ -17,13 +17,13 @@ from cbc_sdk.platform import User
 import sys
 
 
-def peek_status(user):
+def get_status(user):
     """Returns True if user is enabled, False if disabled."""
     grant = user.grant()
     return not grant.revoked
 
 
-def poke_status(user, value):
+def update_status(user, value):
     """Sets the enable/disable status of a user."""
     grant = user.grant()
     for profile in grant.profiles_:
@@ -44,15 +44,14 @@ def main():
 
     user = cb.select(User).email_addresses([args.email]).one()
     if args.enable:
-        poke_status(user, True)
+        update_status(user, True)
         status = True
     elif args.disable:
-        poke_status(user, False)
+        update_status(user, False)
         status = False
     else:
-        status = peek_status(user)
-    word_status = "ENABLED" if status else "DISABLED"
-    print(f"Current status: {word_status}")
+        status = get_status(user)
+    print(f"Current status: {'ENABLED' if status else 'DISABLED'}")
     return 0
 
 

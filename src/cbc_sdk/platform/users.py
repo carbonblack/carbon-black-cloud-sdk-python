@@ -190,6 +190,10 @@ class User(MutableBaseModel):
 
         Raises:
             ServerError: If the user registration was unsuccessful.
+
+        Notes:
+            The new user will not be "findable" by other API functions until it has been activated and its initial
+            password has been set.
         """
         url = User.urlobject.format(cb.credentials.org_key)
         result = cb.post_object(url, user_data)
