@@ -68,7 +68,7 @@ HEADERS = {'X-Auth-Token': '', 'Content-Type': 'application/json'}
 
 START_PROCESS_SEARCH = '{}api/investigate/v2/orgs/{}/processes/search_jobs'
 CHECK_SEARCH_PROGRESS = '{}api/investigate/v1/orgs/{}/processes/search_jobs/{}'
-GET_SEARCH_RESULTS = '{}api/investigate/v2/orgs/{}/processes/search_jobs/{}/results?rows=500'
+GET_SEARCH_RESULTS = '{}api/investigate/v2/orgs/{}/processes/search_jobs/{}/results?rows=10000'
 
 START_DETAILS_SEARCH = '{}api/investigate/v2/orgs/{}/processes/detail_jobs'
 CHECK_DETAILS_SEARCH_PROGRESS = '{}api/investigate/v2/orgs/{}/processes/detail_jobs/{}'
@@ -281,7 +281,7 @@ def get_process_guid(cb, print_detail, start_date, end_date):
     start_process_search_url = START_PROCESS_SEARCH.format(HOSTNAME, ORG_KEY)
     data = {
         "query": "enriched:true",
-        "rows": 500,
+        "rows": 10000,
         "time_range": {
             "end": f"{end_date}",
             "start": f"{start_date}"
@@ -300,7 +300,7 @@ def get_process_guid(cb, print_detail, start_date, end_date):
 
     process_query = cb.select(Process)\
         .where("enriched:true")\
-        .set_rows(500)\
+        .set_rows(10000)\
         .set_time_range(start=start_date, end=end_date)
     matching_processes = [process for process in process_query]
     sdk_results = []
