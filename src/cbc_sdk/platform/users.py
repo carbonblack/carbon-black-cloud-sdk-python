@@ -162,7 +162,13 @@ class User(MutableBaseModel):
             return self
 
         def build(self):
-            """Builds the new user."""
+            """
+            Builds the new user.
+
+            Notes:
+                The new user will not be "findable" by other API functions until it has been activated and its initial
+                password has been set.
+            """
             User._create_user(self._cb, self._creation_data)
 
     @classmethod
