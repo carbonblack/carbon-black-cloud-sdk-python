@@ -23,7 +23,7 @@ def main():
     args = parser.parse_args()
     cb = get_cb_cloud_object(args)
 
-    roles = Grant.get_permitted_roles(cb)
+    roles = Grant.get_permitted_role_urns(cb)
     for index, role in enumerate(sorted(roles)):
         print(f"{index + 1}. {role}")
     return 0

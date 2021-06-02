@@ -384,5 +384,5 @@ def test_get_permitted_roles(cbcsdk_mock):
     cbcsdk_mock.mock_request('GET', '/access/v3/orgs/test/principals/1234/roles/permitted?type=USER',
                              PERMITTED_ROLES_RESP)
     api = cbcsdk_mock.api
-    roles = Grant.get_permitted_roles(api)
+    roles = Grant.get_permitted_role_urns(api)
     assert set(roles) == {"psc:role::ALPHA", "psc:role::BRAVO", "psc:role::CHARLIE"}

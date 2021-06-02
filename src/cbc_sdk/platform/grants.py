@@ -492,9 +492,9 @@ class Grant(MutableBaseModel):
         self._refresh_if_needed(ret)
 
     @classmethod
-    def get_permitted_roles(cls, cb):
+    def get_permitted_role_urns(cls, cb):
         """
-        Returns a list of all permitted roles that we can assign to a user.
+        Returns a list of the URNs of all permitted roles that we can assign to a user.
 
         Args:
             cb (CBCloudAPI): A reference to the CBCloudAPI object.
