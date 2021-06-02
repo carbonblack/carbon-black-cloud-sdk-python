@@ -75,7 +75,20 @@ class User(MutableBaseModel):
             Returns:
                 UserBuilder: This object.
             """
-            self._creation_data['email_id'] = email
+            self._creation_data['email'] = email
+            return self
+
+        def set_phone(self, phone):
+            """
+            Sets the phone number for the new user.
+
+            Args:
+                phone (str): The phone number for the new user.
+
+            Returns:
+                UserBuilder: This object.
+            """
+            self._creation_data['phone'] = phone
             return self
 
         def set_role(self, role):
@@ -150,12 +163,13 @@ class User(MutableBaseModel):
 
         def build(self):
             """
-            Builds the new user and returns it.
+            Builds the new user.
 
-            Returns:
-                User: The new user object from the server.
+            Notes:
+                The new user will not be "findable" by other API functions until it has been activated and its initial
+                password has been set.
             """
-            return User._create_user(self._cb, self._creation_data)
+            User._create_user(self._cb, self._creation_data)
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -180,18 +194,20 @@ class User(MutableBaseModel):
             cb (BaseAPI): Reference to API object used to communicate with the server.
             user_data (dict): The user data to be used to create the new user.
 
-        Returns:
-            User: The new user object from the server.
-
         Raises:
             ServerError: If the user registration was unsuccessful.
+
+        Notes:
+            The new user will not be "findable" by other API functions until it has been activated and its initial
+            password has been set.
         """
         url = User.urlobject.format(cb.credentials.org_key)
         result = cb.post_object(url, user_data)
         resp = result.json()
-        if resp['registration_type'] == 'SUCCESS':
-            return User(cb, int(resp['login_id']))
-        raise ServerError(500, f"registration return was unsuccessful: {resp['registration_type']}")
+        if resp['registration_status'] != 'SUCCESS':
+            raise ServerError(500, f"registration return was unsuccessful: {resp['registration_status']} - "
+                                   f"{resp['message']}")
+        # N.B.: new user is not "findable" until activated and initial password set
 
     def _refresh(self):
         """
@@ -271,7 +287,6 @@ class User(MutableBaseModel):
             template (dict): Optional template data for creating the new user.
 
         Returns:
-            User: New user created, if template is specified.
             UserBuilder: If template is None, returns an instance of this object. Call methods on the object to set
                          the values associated with the new user, and then call build() to create it.
         """
@@ -281,7 +296,8 @@ class User(MutableBaseModel):
             my_templ['role'] = 'DEPRECATED'
             if 'auth_method' not in my_templ:
                 my_templ['auth_method'] = 'PASSWORD'
-            return User._create_user(cb, my_templ)
+            User._create_user(cb, my_templ)
+            return None
         return User.UserBuilder(cb)
 
     def reset_google_authenticator_registration(self):
@@ -298,12 +314,8 @@ class User(MutableBaseModel):
             cb (CBCloudAPI): A reference to the CBCloudAPI object.
             user_templates (list[dict]): List of templates for users to be created.
             profile_templates (list[dict]): List of profile templates to be applied to each user.
-
-        Returns:
-            list[User]: List of User objects that were just created.
         """
         my_profiles = normalize_profile_list(profile_templates)
-        return_users = []
         for template in user_templates:
             my_templ = copy.deepcopy(template)
             my_templ['org_id'] = 0
@@ -314,8 +326,7 @@ class User(MutableBaseModel):
                 del my_templ['profiles']
             if my_profiles:
                 my_templ['profiles'] = my_profiles
-            return_users.append(User._create_user(cb, my_templ))
-        return return_users
+            User._create_user(cb, my_templ)
 
     @classmethod
     def bulk_add_profiles(cls, users, profile_templates):

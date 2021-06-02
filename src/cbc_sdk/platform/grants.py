@@ -146,7 +146,10 @@ class Grant(MutableBaseModel):
             Args:
                 flag (bool): True to disable the profile, False to enable it.
             """
-            self._info['conditions']['disabled'] = flag
+            if self._info['conditions']:
+                self._info['conditions']['disabled'] = flag
+            else:
+                self._info['conditions'] = {'disabled': flag}
 
         def set_expiration(self, expiration):
             """
@@ -155,7 +158,10 @@ class Grant(MutableBaseModel):
             Args:
                 expiration (str): Expiration time to set on the profile (ISO 8601 format).
             """
-            self._info['conditions']['expiration'] = expiration
+            if self._info['conditions']:
+                self._info['conditions']['expiration'] = expiration
+            else:
+                self._info['conditions'] = {'expiration': expiration}
 
         def matches_template(self, template):
             """
@@ -486,9 +492,9 @@ class Grant(MutableBaseModel):
         self._refresh_if_needed(ret)
 
     @classmethod
-    def get_permitted_roles(cls, cb):
+    def get_permitted_role_urns(cls, cb):
         """
-        Returns a list of all permitted roles that we can assign to a user.
+        Returns a list of the URNs of all permitted roles that we can assign to a user.
 
         Args:
             cb (CBCloudAPI): A reference to the CBCloudAPI object.
@@ -624,7 +630,7 @@ class GrantQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
         if len(self._criteria) == 0:
             raise ApiError("At least one principal must be specified for Grant query")
         ret = self._cb.post_object('/access/v2/grants/_fetch', self._criteria)
-        return ret.json().get('additionalProp1', [])
+        return ret.json().get('results', [])
 
     def _count(self):
         """

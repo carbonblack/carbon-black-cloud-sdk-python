@@ -36,6 +36,12 @@ def cbcsdk_mock(monkeypatch, cb):
 
 # ==================================== UNIT TESTS BELOW ====================================
 
+def test_org_urn(cbcsdk_mock):
+    """Tests the org_urn property."""
+    api = cbcsdk_mock.api
+    assert api.org_urn == "psc:org:test"
+
+
 def test_get_notifications(cbcsdk_mock):
     """Tests getting notifications"""
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/notification", NOTIFICATIONS_RESP)
