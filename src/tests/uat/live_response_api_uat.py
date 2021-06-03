@@ -59,7 +59,7 @@ DEVICE_ID = 8612331
 # Files constants
 LOCAL_FILE = 'memdump.txt'
 DIR = 'C:\\\\demo\\\\'
-MEMDUMP_FILE = r"c:\demo\memdump.txt"
+MEMDUMP_FILE = r"c:\memdump.txt"
 FILE = r"c:\demo\test.txt"
 FILE_CONTENT = "This is just a test"
 FILE_CONTENT_BINARY = b"This is just a test"
@@ -191,6 +191,7 @@ def main():
         assert exc_raise
     print('Memdump.......................................OK')
     """
+
     print()
     print(9 * ' ' + 'Live Response Process Commands')
     print(SYMBOLS * DELIMITER)
