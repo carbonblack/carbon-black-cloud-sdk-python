@@ -74,7 +74,7 @@ def compare_data_facet(sdk_resp, api_resp, api_call):
     sdk_ids = sorted([_.id for _ in sdk_resp])
     api_ids = sorted([_['id'] for _ in api_resp])
 
-    assert sdk_ids == api_ids, print(f'TEST FAILED\nDifferance between api and sdk response found for {api_call}')
+    assert sdk_ids == api_ids, f'TEST FAILED\nDifferance between api and sdk response found for {api_call}'
 
     print('\nTEST PASSED')
     print("----------------------------------------------------------")
@@ -82,7 +82,7 @@ def compare_data_facet(sdk_resp, api_resp, api_call):
 
 def compare_data_id(sdk_resp, api_resp, api_call):
     """Compare the data between the sdk and api response"""
-    assert sdk_resp == api_resp, print(f'TEST FAILED\nDifferance between api and sdk response found for {api_call}')
+    assert sdk_resp == api_resp, f'TEST FAILED\nDifferance between api and sdk response found for {api_call}'
     print('\nTEST PASSED')
     print("----------------------------------------------------------")
 
