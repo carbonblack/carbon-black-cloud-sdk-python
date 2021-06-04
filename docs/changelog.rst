@@ -5,10 +5,15 @@ CBC SDK 1.3.0 - Released ?, 2021
 
 Bug Fixes
 
+  * Fix in the sort_by for Query class
   * Fix the ability to set expiration for binary download URL
+  * Fix bug in helpers read_iocs functionality
 
 New Features
 
+* Added User Management, Grants, Access Profiles, Permitted Roles
+* Refactor of the vulnerability models
+* Add dashboard export examples
 * Live Response migrated from v3 to v6 (:doc:`migration guide<live-response-v6-migration>`)
 * Live Response uses API Keys of type Custom
 * Get Enriched Events for alert
