@@ -39,12 +39,13 @@ def search_devices_api_call():
     """Search Devices with direct API call"""
     search_url = SEARCH_DEVICES.format(HOSTNAME, ORG_KEY)
     data = {
+        "rows": 10000,
         "criteria": {
             "deployment_type": ["WORKLOAD"]
         },
         "sort": [
             {
-                "field": "name",
+                "field": "id",
                 "order": "asc"
             }
         ]
@@ -58,7 +59,7 @@ def search_devices(cb):
 
     query = cb.select(Device)\
         .set_deployment_type(["WORKLOAD"])\
-        .sort_by("name", "ASC")
+        .sort_by("id", "ASC")
 
     sdk_results = []
     for device in query:
