@@ -506,7 +506,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
             mycrit["last_contact_time"] = self._time_filter
         request = {"criteria": mycrit, "exclusions": self._exclusions}
         request["query"] = self._query_builder._collapse()
-        if from_row > 0:
+        if from_row > 1:
             request["start"] = from_row
         if max_rows >= 0:
             request["rows"] = max_rows
