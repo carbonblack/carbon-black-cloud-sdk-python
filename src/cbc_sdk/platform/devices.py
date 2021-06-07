@@ -506,7 +506,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
             mycrit["last_contact_time"] = self._time_filter
         request = {"criteria": mycrit, "exclusions": self._exclusions}
         request["query"] = self._query_builder._collapse()
-        if from_row > 0:
+        if from_row > 1:
             request["start"] = from_row
         if max_rows >= 0:
             request["rows"] = max_rows
@@ -549,12 +549,14 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
 
         return self._total_results
 
-    def _perform_query(self, from_row=0, max_rows=-1):
+    def _perform_query(self, from_row=1, max_rows=-1):
         """
         Performs the query and returns the results of the query in an iterable fashion.
 
+        Device v6 API uses base 1 instead of 0.
+
         Args:
-            from_row (int): The row to start the query at (default 0).
+            from_row (int): The row to start the query at (default 1).
             max_rows (int): The maximum number of rows to be returned (default -1, meaning "all").
 
         Returns:
