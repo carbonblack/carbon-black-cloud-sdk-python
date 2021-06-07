@@ -35,7 +35,15 @@ def search_and_facet_compute_resources_api(cb):
     header = {'X-Auth-Token': cb.credentials.token,
               'Content-Type': 'application/json'}
     url = f'{cb.credentials.url}lcm/view/v1/orgs/{cb.credentials.org_key}/compute_resources/_search'
-    return requests.post(url, json={"rows": "10000"}, headers=header).json()['results']
+    count = 0
+    api_results = []
+    while True:
+        response = requests.post(url, json={"rows": "200", "start": count}, headers=header).json()
+        count += len(response['results'])
+        api_results.extend(response['results'])
+        if count >= response['num_found']:
+            break
+    return api_results
 
 
 def search_and_facet_compute_resources_sdk(cb):
