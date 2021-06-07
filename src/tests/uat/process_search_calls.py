@@ -311,9 +311,10 @@ def get_process_guid(cb, print_detail, start_date, end_date):
            'Test Failed: SDK call returns different number of available processes. ' \
            'Expected: {}\nActual: {}'.format(api_response['num_available'], process_query._total_results)
 
-    assert sdk_results == api_response['results'], 'Test Failed: SDK returns different processes data. '\
-        'Expected: {}\nActual: {}'.format(api_response['results'], sdk_results)
-
+    sdk_results = sorted(sdk_results, key=lambda i: i['process_guid'], reverse=True)
+    api_results = sorted(api_response['results'], key=lambda i: i['process_guid'], reverse=True)
+    assert sdk_results == api_results, 'Test Failed: SDK returns different processes data. '\
+        'Expected: {}\nActual: {}'.format(api_results, sdk_results)
     if print_detail:
         print('{} processes found for the period {} - {}'.format(len(matching_processes), start_date, end_date))
         print('Process GUID returned: {}'.format(matching_processes[0].process_guid))
@@ -323,10 +324,13 @@ def get_process_guid(cb, print_detail, start_date, end_date):
 
 def remove_event_info(process_details):
     """Helper function to remove the event info from the process details"""
-    del process_details['document_guid']
-    del process_details['enriched']
-    del process_details['enriched_event_type']
-    del process_details['event_type']
+    TO_DELETE_FIELDS = ['document_guid', 'enriched', 'enriched_event_type',
+                        'event_type', 'backend_timestamp', 'device_timestamp',
+                        'ingress_time', 'netconn_count', 'event_threat_score',
+                        'regmod_count', 'filemod_count']
+    for key in process_details.copy():
+        if key in TO_DELETE_FIELDS:
+            process_details.pop(key)
     return process_details
 
 
@@ -395,7 +399,7 @@ def get_process_events_for_single_process(cb, guid, start_date, end_date, print_
     data = {
         "fields": ["*"],
         "query": "*:*",
-        "rows": 2000,
+        "rows": 10000,
         "sort": [
             {
                 "field": "backend_timestamp",
@@ -414,7 +418,7 @@ def get_process_events_for_single_process(cb, guid, start_date, end_date, print_
 
     events_query = cb.select(Event).where(process_guid=guid)\
                                    .sort_by("backend_timestamp", "asc")\
-                                   .set_rows(2000)\
+                                   .set_rows(10000)\
                                    .set_time_range(start=start_date, end=end_date)
 
     sdk_results = []
@@ -555,7 +559,7 @@ def main():
     ORG_KEY = cb.credentials.org_key
     HOSTNAME = cb.credentials.url
 
-    start_date = (datetime.now() + timedelta(days=-4)).isoformat() + "Z"
+    start_date = (datetime.now() + timedelta(days=-2)).isoformat() + "Z"
     end_date = (datetime.now() + timedelta(days=-1)).isoformat() + "Z"
     if print_detail:
         print("Start date: {}\nEnd date: {}".format(start_date, end_date))

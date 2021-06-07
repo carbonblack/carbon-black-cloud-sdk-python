@@ -53,7 +53,7 @@ def start_api_call(name):
 
 def base_compare(sdk_resp, api_resp, api_call):
     """Compare the data between the sdk and api response"""
-    assert sdk_resp == api_resp, print(f'TEST FAILED\nDifferance between api and sdk response found for {api_call}')
+    assert sdk_resp == api_resp, f'TEST FAILED\nDifferance between api and sdk response found for {api_call}'
     print('\nTEST PASSED')
     print("----------------------------------------------------------")
 
