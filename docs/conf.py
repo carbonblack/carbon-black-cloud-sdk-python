@@ -23,7 +23,7 @@ copyright = '2020-2021, Developer Relations'
 author = 'Developer Relations'
 
 # The full version, including alpha/beta/rc tags
-release = '1.2.3'
+release = '1.3.0'
 
 
 # -- General configuration ---------------------------------------------------
