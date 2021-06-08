@@ -269,6 +269,12 @@ USBDEVICE_QUERY_RESP = {
     ]
 }
 
+USBDEVICE_QUERY_RESP_ZERO_RESULT = {
+    "num_found": 0,
+    "num_available": 0,
+    "results": []
+}
+
 USBDEVICE_FACET_RESP = {
     "terms": [
         {

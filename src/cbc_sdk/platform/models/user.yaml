@@ -1,0 +1,44 @@
+type: object
+properties:
+  org_key:
+    type: string
+    description: Organization key for this user
+  auth_method:
+    type: string
+    description: Method to be used for the user to authenticate
+  admin_login_version:
+    type: integer
+    description: Version number of the user information
+  email:
+    type: string
+    description: User's E-mail address
+  login_name:
+    type: string
+    description: Login name for the user
+  login_id:
+    type: integer
+    description: Login ID (user ID) for this user
+  phone:
+    type: string
+    description: User's phone number
+  first_name:
+    type: string
+    description: User's first name
+  last_name:
+    type: string
+    description: User's last name
+  org_id:
+    type: integer
+    description: ID of the organization the user is in
+  org_admin_version:
+    type: integer
+    description: TBD
+  role:
+    type: string
+    description: Not used, always "DEPRECATED"
+  contact_id:
+    type: integer
+    description: ID of the user's contact information
+  contact_version:
+    type: integer
+    description: Version of the user's contact information

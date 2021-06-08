@@ -1,0 +1,48 @@
+type: object
+properties:
+  profile_uuid:
+    type: string
+    description: UUID identifying this profile
+  orgs:
+    type: object
+    description: Organization references for this profile
+    properties:
+      allow:
+        type: array
+        description: List of URNs of organizations to be granted access
+        items:
+          type: string
+      deny:
+        type: array
+        description: List of URNs of organizations to be denied access
+        items:
+          type: string
+  org_groups:
+    type: array
+    description: Organization groups added to this grant (TBD)
+    items:
+      type: string
+  roles:
+    type: array
+    description: URNs of roles assigned to profile
+    items:
+      type: string
+  conditions:
+    type: object
+    description: Access conditions to be imposed on this profile
+    properties:
+      cidr:
+        type: array
+        description: CIDR rules for access via network
+        items:
+          type: string
+      expiration:
+        type: string
+        format: date-time
+        description: Date and time the profile expires
+      disabled:
+        type: boolean
+        description: True if this profile is disabled
+  can_manage:
+    type: boolean
+    description: True if can manage (TBD)

@@ -25,8 +25,9 @@ from collections import defaultdict
 
 import shutil
 
+from cbc_sdk.platform import Device
 from cbc_sdk.errors import TimeoutError, ObjectNotFoundError, ApiError
-from concurrent.futures import _base, wait
+from concurrent.futures import _base
 from cbc_sdk import winerror
 
 import queue
@@ -61,7 +62,7 @@ class LiveResponseError(Exception):
         # u'completion': 1464319733.190924, u'object': 1660, u'session_id': 7, u'result_type': u'WinHresult',
         # u'create_time': 1464319733.171967, u'result_desc': u'', u'id': 22, u'result_code': 2147942487}
 
-        if self.details.get("status") == "error" and self.details.get("result_type") == "WinHresult":
+        if self.details.get("status").upper() == "ERROR" and self.details.get("result_type") == "WinHresult":
             # attempt to decode the win32 error
             win32_error_text = "Unknown Win32 error code"
             try:
@@ -112,7 +113,7 @@ class CbLRSessionBase(object):
 
         self.session_data = session_data
         self.os_type = None
-        self.cblr_base = self._cblr_manager.cblr_base
+        self.cblr_base = self._cblr_manager.cblr_base.format(self._cb.credentials.org_key)
 
     def __enter__(self):
         """Enter the Live Response session context."""
@@ -134,18 +135,6 @@ class CbLRSessionBase(object):
         self._cblr_manager.close_session(self.device_id, self.session_id)
         self._closed = True
 
-    def get_session_archive(self):
-        """
-        Get the archive data of the current session.
-
-        Returns:
-            object: Contains the archive data of the current session.
-        """
-        response = self._cb.session.get("{cblr_base}/session/{0}/archive".format(self.session_id,
-                                                                                 cblr_base=self.cblr_base), stream=True)
-        response.raw.decode_content = True
-        return response.raw
-
     #
     # File operations
     #
@@ -161,19 +150,19 @@ class CbLRSessionBase(object):
         Returns:
             object: Contains the data of the file.
         """
-        data = {"name": "get file", "object": file_name}
+        data = {"name": "get file", "path": file_name}
 
         resp = self._lr_post_command(data).json()
-        file_id = resp.get('file_id', None)
-        command_id = resp.get('id', None)
+        file_details = resp.get('file_details', None)
+        if file_details:
+            file_id = file_details.get('file_id', None)
+            command_id = resp.get('id', None)
+            self._poll_command(command_id, timeout=timeout, delay=delay)
 
-        self._poll_command(command_id, timeout=timeout, delay=delay)
-        response = self._cb.session.get("{cblr_base}/session/{0}/file/{1}/content".format(self.session_id,
-                                                                                          file_id,
-                                                                                          cblr_base=self.cblr_base),
-                                        stream=True)
-        response.raw.decode_content = True
-        return response.raw
+            response = self._cb.session.get("{cblr_base}/sessions/{0}/files/{1}/content".format(
+                self.session_id, file_id, cblr_base=self.cblr_base), stream=True)
+            response.raw.decode_content = True
+            return response.raw
 
     def get_file(self, file_name, timeout=None, delay=None):
         """
@@ -200,7 +189,7 @@ class CbLRSessionBase(object):
         Args:
             filename (str): Name of the file to be deleted.
         """
-        data = {"name": "delete file", "object": filename}
+        data = {"name": "delete file", "path": filename}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
         self._poll_command(command_id)
@@ -217,7 +206,7 @@ class CbLRSessionBase(object):
             infp (object): Python file-like containing data to upload to the remote endpoint.
             remote_filename (str): File name to create on the remote endpoint.
         """
-        data = {"name": "put file", "object": remote_filename}
+        data = {"name": "put file", "path": remote_filename}
         file_id = self._upload_file(infp)
         data["file_id"] = file_id
 
@@ -258,7 +247,7 @@ class CbLRSessionBase(object):
             list: A list of dicts, each one describing a directory entry.
 
         """
-        data = {"name": "directory list", "object": dir_name}
+        data = {"name": "directory list", "path": dir_name}
         resp = self._lr_post_command(data).json()
         command_id = resp.get("id")
         return self._poll_command(command_id).get("files", [])
@@ -270,7 +259,7 @@ class CbLRSessionBase(object):
         Args:
             dir_name (str): The new directory name.
         """
-        data = {"name": "create directory", "object": dir_name}
+        data = {"name": "create directory", "path": dir_name}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
         self._poll_command(command_id)
@@ -384,7 +373,7 @@ class CbLRSessionBase(object):
         Returns:
             bool: True if success, False if failure.
         """
-        data = {"name": "kill", "object": pid}
+        data = {"name": "kill", "pid": pid}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
 
@@ -428,7 +417,7 @@ class CbLRSessionBase(object):
         if wait_for_output:
             wait_for_completion = True
 
-        data = {"name": "create process", "object": command_string, "wait": wait_for_completion}
+        data = {"name": "create process", "path": command_string, "wait": wait_for_completion}
 
         if wait_for_output and not remote_output_file_name:
             randfilename = self._random_file_name()
@@ -451,7 +440,7 @@ class CbLRSessionBase(object):
 
             file_content = self.get_file(data["output_file"])
             # delete the file
-            self._lr_post_command({"name": "delete file", "object": data["output_file"]})
+            self._lr_post_command({"name": "delete file", "path": data["output_file"]})
 
             return file_content
         else:
@@ -529,7 +518,7 @@ class CbLRSessionBase(object):
             dict: A dictionary with two keys, 'sub_keys' (a list of subkey names) and 'values' (a list of dicts
                 containing value data, name, and type).
         """
-        data = {"name": "reg enum key", "object": regkey}
+        data = {"name": "reg enum key", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
         raw_output = self._poll_command(command_id)
@@ -546,7 +535,7 @@ class CbLRSessionBase(object):
         Returns:
             list: List of values for the registry key.
         """
-        data = {"name": "reg enum key", "object": regkey}
+        data = {"name": "reg enum key", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
 
@@ -568,7 +557,7 @@ class CbLRSessionBase(object):
         Returns:
             dict: A dictionary with keys of: value_data, value_name, value_type.
         """
-        data = {"name": "reg query value", "object": regkey}
+        data = {"name": "reg query value", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
 
@@ -599,7 +588,7 @@ class CbLRSessionBase(object):
                 value_type = "REG_SZ"
                 real_value = str(value)
 
-        data = {"name": "reg set value", "object": regkey, "overwrite": overwrite, "value_type": value_type,
+        data = {"name": "reg set value", "path": regkey, "overwrite": overwrite, "value_type": value_type,
                 "value_data": real_value}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
@@ -612,7 +601,7 @@ class CbLRSessionBase(object):
         Args:
             regkey (str): The registry key to create.
         """
-        data = {"name": "reg create key", "object": regkey}
+        data = {"name": "reg create key", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
         self._poll_command(command_id)
@@ -624,7 +613,7 @@ class CbLRSessionBase(object):
         Args:
             regkey (str): The registry key to delete.
         """
-        data = {"name": "reg delete key", "object": regkey}
+        data = {"name": "reg delete key", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
         self._poll_command(command_id)
@@ -636,7 +625,7 @@ class CbLRSessionBase(object):
         Args:
             regkey (str): The registry value to delete.
         """
-        data = {"name": "reg delete value", "object": regkey}
+        data = {"name": "reg delete value", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
         self._poll_command(command_id)
@@ -672,7 +661,7 @@ class CbLRSessionBase(object):
         if not remote_filename:
             remote_filename = self._random_file_name()
 
-        data = {"name": "memdump", "object": remote_filename, "compress": compress}
+        data = {"name": "memdump", "path": remote_filename, "compress": compress}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
 
@@ -691,12 +680,12 @@ class CbLRSessionBase(object):
         return self._path_compose(workdir, f'cblr.{randfile}.tmp')
 
     def _poll_command(self, command_id, **kwargs):
-        return poll_status(self._cb, "{cblr_base}/session/{0}/command/{1}".format(self.session_id, command_id,
-                                                                                  cblr_base=self.cblr_base),
+        return poll_status(self._cb, "{cblr_base}/sessions/{0}/commands/{1}".format(self.session_id, command_id,
+                                                                                    cblr_base=self.cblr_base),
                            **kwargs)
 
     def _upload_file(self, fp):
-        resp = self._cb.session.post("{cblr_base}/session/{0}/file".format(self.session_id, cblr_base=self.cblr_base),
+        resp = self._cb.session.post("{cblr_base}/sessions/{0}/files".format(self.session_id, cblr_base=self.cblr_base),
                                      files={"file": fp}).json()
         return resp.get('id')
 
@@ -709,24 +698,19 @@ class CbLRSessionBase(object):
         while retries:
             try:
                 data["session_id"] = self.session_id
-                resp = self._cb.post_object("{cblr_base}/session/{0}/command".format(self.session_id,
-                                                                                     cblr_base=self.cblr_base), data)
+                resp = self._cb.post_object("{cblr_base}/sessions/{0}/commands".format(self.session_id,
+                                                                                       cblr_base=self.cblr_base), data)
             except ObjectNotFoundError as e:
-                if e.message.startswith("Device") or e.message.startswith("Session"):
-                    self.session_id, self.session_data = self._cblr_manager._get_or_create_session(self.device_id)
-                    retries -= 1
-                    continue
-                else:
-                    try:
-                        error_message = json.loads(e.message)
-                        if error_message["status"] == "NOT_FOUND":
-                            self.session_id, self.session_data = \
-                                self._cblr_manager._get_or_create_session(self.device_id)
-                            retries -= 1
-                            continue
-                    except Exception:
-                        pass
-                    raise ApiError("Received 404 error from server: {0}".format(e.message))
+                try:
+                    error_message = json.loads(e.message)
+                    if error_message["error_code"] == "NOT_FOUND":
+                        self.session_id, self.session_data = \
+                            self._cblr_manager._get_or_create_session(self.device_id)
+                        retries -= 1
+                        continue
+                except Exception:
+                    pass
+                raise ApiError("Received 404 error from server: {0}".format(e.message))
             else:
                 return resp
 
@@ -788,7 +772,6 @@ def jobrunner(callable, cb, device_id):
     Returns:
         object: The wrapped object.
     """
-    from cbc_sdk.endpoint_standard import Device
     with cb.select(Device, device_id).lr_session() as sess:
         return callable(sess)
 
@@ -805,9 +788,8 @@ class WorkItem(object):
             device_id (object): The device ID or Device object the work item is directed for.
         """
         self.fn = fn
-        from cbc_sdk.endpoint_standard import Device
         if isinstance(device_id, Device):
-            self.device_id = device_id.deviceId
+            self.device_id = device_id.id
         else:
             self.device_id = int(device_id)
 
@@ -830,7 +812,7 @@ class CompletionNotification(object):
 class WorkerStatus(object):
     """Holds the status of an individual worker."""
 
-    def __init__(self, device_id, status="ready", exception=None):
+    def __init__(self, device_id, status="READY", exception=None):
         """
         Initialize the WorkerStatus.
 
@@ -867,8 +849,7 @@ class JobWorker(threading.Thread):
         """Execute the job worker."""
         try:
             self.lr_session = self.cb.live_response.request_session(self.device_id)
-            self.result_queue.put(WorkerStatus(self.device_id, status="ready"))
-
+            self.result_queue.put(WorkerStatus(self.device_id, status="READY"))
             while True:
                 work_item = self.job_queue.get(block=True)
                 if not work_item:
@@ -879,11 +860,11 @@ class JobWorker(threading.Thread):
                 self.result_queue.put(CompletionNotification(self.device_id))
                 self.job_queue.task_done()
         except Exception as e:
-            self.result_queue.put(WorkerStatus(self.device_id, status="error", exception=e))
+            self.result_queue.put(WorkerStatus(self.device_id, status="ERROR", exception=e))
         finally:
             if self.lr_session:
                 self.lr_session.close()
-            self.result_queue.put(WorkerStatus(self.device_id, status="exiting"))
+            self.result_queue.put(WorkerStatus(self.device_id, status="EXISTING"))
 
     def run_job(self, work_item):
         """
@@ -934,12 +915,12 @@ class LiveResponseJobScheduler(threading.Thread):
                 # job completed
                 self._idle_workers.add(item.device_id)
             elif isinstance(item, WorkerStatus):
-                if item.status == "error":
+                if item.status == "ERROR":
                     log.error("Error encountered by JobWorker[{0}]: {1}".format(item.device_id,
                                                                                 item.exception))
                     # Don't reattempt error'd jobs
                     del self._unscheduled_jobs[item.device_id]
-                elif item.status == "exiting":
+                elif item.status == "EXISTING":
                     log.debug("JobWorker[{0}] has exited, waiting...".format(item.device_id))
                     self._job_workers[item.device_id].join()
                     log.debug("JobWorker[{0}] deleted".format(item.device_id))
@@ -948,7 +929,7 @@ class LiveResponseJobScheduler(threading.Thread):
                         self._idle_workers.remove(item.device_id)
                     except KeyError:
                         pass
-                elif item.status == "ready":
+                elif item.status == "READY":
                     log.debug("JobWorker[{0}] now ready to accept jobs, session established".format(item.device_id))
                     self._idle_workers.add(item.device_id)
                 else:
@@ -976,18 +957,14 @@ class LiveResponseJobScheduler(threading.Thread):
     def _cleanup_idle_workers(self, max=None):
         if not max:
             max = self._max_workers
-
         for device in list(self._idle_workers)[:max]:
             log.debug("asking worker for device id {0} to exit".format(device))
             self._job_workers[device].job_queue.put(None)
 
     def _schedule_existing_workers(self):
         log.debug("There are idle workers for device ids {0}".format(self._idle_workers))
-
         intersection = self._idle_workers.intersection(set(self._unscheduled_jobs.keys()))
-
         log.debug("{0} jobs ready to execute in existing execution slots".format(len(intersection)))
-
         for device in intersection:
             item = self._unscheduled_jobs[device].pop(0)
             self._job_workers[device].job_queue.put(item)
@@ -1016,22 +993,21 @@ class LiveResponseJobScheduler(threading.Thread):
     def _spawn_new_workers(self):
         if len(self._job_workers) >= self._max_workers:
             return
-
         from datetime import datetime, timedelta
         now = datetime.utcnow()
         delta = timedelta(minutes=60)
-
-        from cbc_sdk.endpoint_standard import Device
-        devices = [s for s in self._cb.select(Device) if s.deviceId in self._unscheduled_jobs
-                   and s.deviceId not in self._job_workers and now - s.lastContact < delta]  # noqa: W503
+        dformat = '%Y-%m-%dT%H:%M:%S.%fZ'
+        devices = [s for s in self._cb.select(Device)
+                   if s.id in self._unscheduled_jobs and s.id not in self._job_workers
+                   and now - datetime.strptime(s.last_contact_time, dformat) < delta]  # noqa: W503
 
         log.debug("Spawning new workers to handle these devices: {0}".format(devices))
         for device in devices:
             if len(self._job_workers) >= self._max_workers:
                 break
-            log.debug("Spawning new JobWorker for device id {0}".format(device.deviceId))
-            self._job_workers[device.deviceId] = JobWorker(self._cb, device.deviceId, self.schedule_queue)
-            self._job_workers[device.deviceId].start()
+            log.debug("Spawning new JobWorker for device id {0}".format(device.id))
+            self._job_workers[device.id] = JobWorker(self._cb, device.id, self.schedule_queue)
+            self._job_workers[device.id].start()
 
 
 class CbLRManagerBase(object):
@@ -1168,7 +1144,7 @@ class CbLRManagerBase(object):
 
     def _send_keepalive(self, session_id):
         log.debug("Sending keepalive message for session id {0}".format(session_id))
-        self._cb.get_object("{cblr_base}/session/{0}/keepalive".format(session_id, cblr_base=self.cblr_base))
+        self._cb.get_object("{cblr_base}/sessions/{0}/keepalive".format(session_id, cblr_base=self.cblr_base))
 
 
 class LiveResponseSession(CbLRSessionBase):
@@ -1185,15 +1161,19 @@ class LiveResponseSession(CbLRSessionBase):
             session_data (dict): Additional session data.
         """
         super(LiveResponseSession, self).__init__(cblr_manager, session_id, device_id, session_data=session_data)
-        from cbc_sdk.endpoint_standard import Device
         device_info = self._cb.select(Device, self.device_id)
-        self.os_type = OS_LIVE_RESPONSE_ENUM.get(device_info.deviceType, None)
+        self.os_type = OS_LIVE_RESPONSE_ENUM.get(device_info.os, None)
 
 
 class LiveResponseSessionManager(CbLRManagerBase):
     """Session manager for Live Response sessions."""
-    cblr_base = "/integrationServices/v3/cblr"
+    cblr_base = "/appservices/v6/orgs/{}/liveresponse"
     cblr_session_cls = LiveResponseSession
+
+    def __init__(self, cb, timeout=30, keepalive_sessions=False):
+        """Initialize the LiveResponseSessionManager - only needed to format cblr_base"""
+        super(LiveResponseSessionManager, self).__init__(cb, timeout, keepalive_sessions)
+        self.cblr_base = self.cblr_base.format(cb.credentials.org_key)
 
     def submit_job(self, job, device):
         """
@@ -1219,14 +1199,15 @@ class LiveResponseSessionManager(CbLRManagerBase):
         session_id = self._create_session(device_id)
 
         try:
-            res = poll_status(self._cb, "{cblr_base}/session/{0}".format(session_id, cblr_base=self.cblr_base),
+            res = poll_status(self._cb, "{cblr_base}/sessions/{0}".format(session_id,
+                              cblr_base=self.cblr_base),
                               desired_status="ACTIVE", delay=self._init_poll_delay, timeout=self._init_poll_timeout)
         except Exception:
             # "close" the session, otherwise it will stay in a pending state
             self._close_session(session_id)
 
             # the Cb server will return a 404 if we don't establish a session in time, so convert this to a "timeout"
-            raise TimeoutError(uri="{cblr_base}/session/{0}".format(session_id, cblr_base=self.cblr_base),
+            raise TimeoutError(uri="{cblr_base}/sessions/{0}".format(session_id, cblr_base=self.cblr_base),
                                message="Could not establish session with device {0}".format(device_id),
                                error_code=404)
         else:
@@ -1234,13 +1215,12 @@ class LiveResponseSessionManager(CbLRManagerBase):
 
     def _close_session(self, session_id):
         try:
-            self._cb.put_object("{cblr_base}/session".format(cblr_base=self.cblr_base),
-                                {"session_id": session_id, "status": "CLOSE"})
+            self._cb.delete_object("{cblr_base}/sessions/{0}".format(session_id, cblr_base=self.cblr_base))
         except Exception:
             pass
 
     def _create_session(self, device_id):
-        response = self._cb.post_object("{cblr_base}/session/{0}".format(device_id, cblr_base=self.cblr_base),
+        response = self._cb.post_object("{cblr_base}/sessions".format(cblr_base=self.cblr_base),
                                         {"device_id": device_id}).json()
         session_id = response["id"]
         return session_id
@@ -1272,7 +1252,7 @@ class GetFileJob(object):
 
 
 # TODO: adjust the polling interval and also provide a callback function to report progress
-def poll_status(cb, url, desired_status="complete", timeout=None, delay=None):
+def poll_status(cb, url, desired_status="COMPLETE", timeout=None, delay=None):
     """
     Poll the status of a Live Response query.
 
@@ -1300,32 +1280,12 @@ def poll_status(cb, url, desired_status="complete", timeout=None, delay=None):
     while status != desired_status and time.time() - start_time < timeout:
         res = cb.get_object(url)
         log.debug(f"url: {url} -> status: {res['status']}")
-        if res["status"] == desired_status:
+        if res["status"].upper() == desired_status:
             log.debug(json.dumps(res))
             return res
-        elif res["status"] == "error":
+        elif res["status"].upper() == "ERROR":
             raise LiveResponseError(res)
         else:
             time.sleep(delay)
 
     raise TimeoutError(uri=url, message="timeout polling for Live Response")
-
-
-if __name__ == "__main__":
-    from cbc_sdk import CBCloudAPI
-    from cbc_sdk.platform import Device
-    import logging
-
-    root = logging.getLogger()
-    root.addHandler(logging.StreamHandler())
-
-    logging.getLogger("cbc_sdk").setLevel(logging.DEBUG)
-
-    c = CBCloudAPI()
-    j = GetFileJob(r"c:\test.txt")
-    with c.select(Device, 3).lr_session() as lr_session:
-        file_contents = lr_session.get_file(r"c:\test.txt")
-
-    future = c.live_response.submit_job(j.run, 3)
-    wait([future, ])
-    print(future.result())

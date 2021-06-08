@@ -36,6 +36,14 @@ cbc\_sdk.platform.events module
   :undoc-members:
   :show-inheritance:
 
+cbc\_sdk.platform.grants module
+-------------------------------
+
+.. automodule:: cbc_sdk.platform.grants
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
 cbc\_sdk.platform.processes module
 ----------------------------------
 
@@ -48,6 +56,14 @@ cbc\_sdk.platform.reputation module
 -----------------------------------
 
 .. automodule:: cbc_sdk.platform.reputation
+  :members:
+  :undoc-members:
+  :show-inheritance:
+
+cbc\_sdk.platform.users module
+------------------------------
+
+.. automodule:: cbc_sdk.platform.users
   :members:
   :undoc-members:
   :show-inheritance:

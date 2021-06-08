@@ -16,6 +16,7 @@
 import pytest
 import re
 import copy
+import json
 import cbc_sdk
 
 
@@ -44,7 +45,10 @@ class CBCSDKMock:
             """Init default properties"""
             self.content = contents
             self.status_code = scode
-            self.text = text
+            if json_parsable and not text:
+                self.text = json.dumps(contents)
+            else:
+                self.text = text
             self._json_parsable = json_parsable
 
         def json(self):

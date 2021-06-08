@@ -133,37 +133,6 @@ class EndpointStandardMutableModel(MutableBaseModel):
         return self._model_unique_id
 
 
-class Device(EndpointStandardMutableModel):
-    """Represents an Endpoint Standard Device."""
-    urlobject = "/integrationServices/v3/device"
-    urlobject_single = "/integrationServices/v3/device/{}"
-    primary_key = "deviceId"
-    info_key = "deviceInfo"
-    swagger_meta_file = "endpoint_standard/models/deviceInfo.yaml"
-
-    def __init__(self, cb, model_unique_id, initial_data=None):
-        """Initialize a Device object with model_unique_id and initial_data."""
-        super(Device, self).__init__(cb, model_unique_id, initial_data)
-        if model_unique_id is not None and initial_data is None:
-            self._refresh()
-
-    @classmethod
-    def _query_implementation(cls, cb, **kwargs):
-        return Query(cls, cb, kwargs.get("query_string", None))
-
-    def lr_session(self):
-        """
-        Retrieve a Live Response session object for this Device.
-
-        Returns:
-            LiveResponseSession: Live Response session object.
-
-        Raises:
-            ApiError: If there is an error establishing a Live Response session for this Device.
-        """
-        return self._cb._request_lr_session(self._model_unique_id)
-
-
 class Event(NewBaseModel):
     """Represents an Endpoint Standard Event."""
     urlobject = "/integrationServices/v3/event"
@@ -299,9 +268,9 @@ class EnrichedEvent(UnrefreshableModel):
         if not self.event_id:
             raise ApiError("Trying to get event details on an invalid event_id")
         if async_mode:
-            return self._cb._async_submit(lambda arg, kwarg: self._get_detailed_results()._info)
+            return self._cb._async_submit(lambda arg, kwarg: self._get_detailed_results())
         else:
-            return self._get_detailed_results()._info
+            return self._get_detailed_results()
 
     def _get_detailed_results(self):
         """Actual search details implementation"""

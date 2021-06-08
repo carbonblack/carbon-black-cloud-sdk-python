@@ -20,8 +20,9 @@ import time
 import argparse
 import logging
 from collections import defaultdict
-import validators
 import hashlib
+import validators
+
 
 from cbc_sdk import CBCloudAPI
 
@@ -58,7 +59,6 @@ def build_cli_parser(description="Cb Example Script"):
                         default=False)
     parser.add_argument("--profile", help="profile to connect", default="default")
     parser.add_argument("--verbose", help="enable debug logging", default=False, action='store_true')
-    parser.add_argument("--window", help="Define search window", default='3d')
 
     return parser
 
@@ -92,7 +92,7 @@ def get_cb_cloud_object(args):
     return cb
 
 
-def get_object_by_name_or_id(cb, cls, name_field="name", id=None, name=None, force_init=True):
+def get_object_by_name_or_id(cb, cls, name_field="name", id=None, name=None):
     """
     Locate an object in the API by either ID or name.
 
@@ -108,10 +108,13 @@ def get_object_by_name_or_id(cb, cls, name_field="name", id=None, name=None, for
         list: List of objects that match the search criteria.
     """
     clsname = cls.__name__
+    attempted_to_find = ''
     try:
+        if not (id or name) or (id and name):
+            raise Exception("Either id or name should be provided.")
         if id:
             attempted_to_find = "ID of {0:d}".format(id)
-            objs = [cb.select(cls, id, force_init=force_init)]
+            objs = [cb.select(cls, id)]
         else:
             attempted_to_find = "name {0:s}".format(name)
             objs = cb.select(cls).where("{0}:{1}".format(name_field, name))[::]
@@ -139,7 +142,7 @@ def read_iocs(cb, file=sys.stdin):
     report_id = hashlib.md5()
     report_id.update(str(time.time()).encode("utf-8"))
 
-    for idx, line in enumerate(sys.stdin):
+    for idx, line in enumerate(file):
         line = line.rstrip("\r\n")
         report_id.update(line.encode("utf-8"))
         if validators.md5(line):
@@ -154,7 +157,7 @@ def read_iocs(cb, file=sys.stdin):
         elif validators.domain(line):
             iocs["dns"].append(line)
         else:
-            if cb.validate_query(line):
+            if cb.validate_process_query(line):
                 query_ioc = {"search_query": line}
                 iocs["query"].append(query_ioc)
             else:

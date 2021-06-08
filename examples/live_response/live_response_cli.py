@@ -14,7 +14,7 @@
 """Example command-line interface to Live Response."""
 
 import sys
-import time
+from datetime import datetime
 import cmd
 import logging
 import ntpath
@@ -23,7 +23,9 @@ import subprocess
 from optparse import OptionParser
 
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
-from cbc_sdk.endpoint_standard import Device
+from cbc_sdk.platform import Device
+
+FORMAT = '%Y-%m-%dT%H:%M:%SZ'
 
 log = logging.getLogger(__name__)
 
@@ -113,7 +115,7 @@ class CblrCli(cmd.Cmd):
 
         Args:
             cb (CBCloudAPI): Connection to the Carbon Black Cloud SDK.
-            connect_callback (func): Callable to get a sensor object from the ``connect`` command.
+            connect_callback (func): Callable to get a device object from the ``connect`` command.
         """
         cmd.Cmd.__init__(self)
 
@@ -154,10 +156,10 @@ class CblrCli(cmd.Cmd):
                 print("You must attach to a session")
                 continue
             except CliArgsException as e:
-                print("Error parsing arguments!\n %s" % e)
+                print("Error parsing arguments!\n {}".format(e))
                 continue
             except Exception as e:
-                print("Error: %s" % e)
+                print("Error: {}".format(e))
                 continue
 
         if self.lr_session:
@@ -208,10 +210,10 @@ class CblrCli(cmd.Cmd):
 
     def _stat(self, path):
         """
-        Look to see if a given path exists on the sensor and whether that is a file or directory.
+        Look to see if a given path exists on the device and whether that is a file or directory.
 
         Args:
-            path (str): A sensor path.
+            path (str): A device path.
 
         Returns:
             str: None, "dir", or "file".
@@ -231,7 +233,7 @@ class CblrCli(cmd.Cmd):
     ################################
     # pseudo commands and session commands
     #
-    # they don't change state on the sensor
+    # they don't change state on the device
     # (except start a session)
     #####################
 
@@ -248,7 +250,7 @@ class CblrCli(cmd.Cmd):
 
         Note: The shell keeps a pseudo working directory
         that allows the user to change directory without
-        changing the directory of the working process on sensor.
+        changing the directory of the working process on device.
 
         Format:
         cd <Directory>
@@ -259,7 +261,7 @@ class CblrCli(cmd.Cmd):
         path = ntpath.abspath(path)
         type = self._stat(path)
         if (type != "dir"):
-            print("Error: Path %s does not exist" % path)
+            print("Error: Path {} does not exist".format(path))
             return
         else:
             self.cwd = path
@@ -282,7 +284,7 @@ class CblrCli(cmd.Cmd):
         """
         self._needs_attached()
         gfile = self._file_path_fixup(line)
-        shutil.copyfileobj(self.lr_session.get_raw_file(gfile), sys.stdout)
+        shutil.copyfileobj(self.lr_session.get_raw_file(gfile), sys.stdout.buffer)
 
     def do_pwd(self, line):
         """
@@ -293,7 +295,7 @@ class CblrCli(cmd.Cmd):
 
         Note: The shell keeps a pseudo working directory
         that allows the user to change directory without
-        changing the directory of the working process on sensor.
+        changing the directory of the working process on device.
 
         Format:
         pwd
@@ -305,32 +307,32 @@ class CblrCli(cmd.Cmd):
             print(self.cwd + '\\')
         else:
             print(self.cwd)
-        print("")
+        print()
 
     def do_connect(self, line):
         """
         Command: connect
 
         Description:
-        Connect to a sensor given the sensor ID or the sensor hostname.
+        Connect to a device given the device ID or the device hostname.
 
         Format:
-        connect SENSOR_ID | SENSOR_HOSTNAME
+        connect DEVICE_ID | DEVICE_HOSTNAME
         """
         if not line:
-            raise CliArgsException("Need argument: sensor ID or hostname")
+            raise CliArgsException("Need argument: device ID or hostname")
 
-        sensor = self.connect_callback(self.cb, line)
-        self.lr_session = sensor.lr_session()
+        device = self.connect_callback(self.cb, line)
+        self.lr_session = device.lr_session()
 
         print("Session: {0}".format(self.lr_session.session_id))
-        print("  Available Drives: %s" % ' '.join(self.lr_session.session_data.get('drives', [])))
+        print("  Available Drives: {}".format(' '.join(self.lr_session.session_data.get('drives', []))))
 
         # look up supported commands
-        print("  Supported Commands: %s" % ', '.join(self.lr_session.session_data.get('supported_commands', [])))
-        print("  Working Directory: %s" % self.cwd)
+        print("  Supported Commands: {}".format(', '.join(self.lr_session.session_data.get('supported_commands', []))))
+        print("  Working Directory: {}".format(self.cwd))
 
-        log.info("Attached to sensor {0}".format(sensor._model_unique_id))
+        log.info("Attached to device {0}".format(device._model_unique_id))
 
     def do_detach(self, line):
         """Detaches the current Live Response connection."""
@@ -352,25 +354,12 @@ class CblrCli(cmd.Cmd):
     # these change state on the senesor
     ##############################
 
-    def do_archive(self, line):
-        """
-        Command: archive
-
-        Description:
-        Save the session archive.
-
-        Format:
-        archive <filename>
-        """
-        filename = line
-        shutil.copyfileobj(self.lr_session.get_session_archive(), open(filename, "wb+"))
-
     def do_ps(self, line):
         """
         Command: ps
 
         Description:
-        List the processes running on the sensor.
+        List the processes running on the device.
 
         Format:
         ps [OPTIONS]
@@ -393,31 +382,32 @@ class CblrCli(cmd.Cmd):
         processes = self.lr_session.list_processes()
 
         for p in processes:
-            if (opts.pid and p['pid'] == opts.pid) or opts.pid is None:
+            if (opts.pid and p['process_pid'] == opts.pid) or opts.pid is None:
                 if opts.verbose:
-                    print("Process: %5d : %s" % (p['pid'], ntpath.basename(p['path'])))
-                    print("  Guid:        %s" % p['proc_guid'])
-                    print("  CreateTime:  %s (GMT)" % self._time_dir_gmt(p['create_time']))
-                    print("  ParentPid:   %d" % p['parent'])
-                    print("  ParentGuid:  %s" % p['parent_guid'])
-                    print("  SID:         %s" % p['sid'].upper())
-                    print("  UserName:    %s" % p['username'])
-                    print("  ExePath:     %s" % p['path'])
-                    print("  CommandLine: %s" % p['command_line'])
-                    print("")
+                    print("Process: {:d5} : {}".format(p['process_pid'], ntpath.basename(p['process_path'])))
+                    print("  CreateTime:  {} (GMT)".format(self._time_dir_gmt(p['process_create_time'])))
+                    print("  ParentPid:   {}".format(p['parent_pid']))
+                    print("  ParentGuid:  {}".format(p.get('parent_guid')))
+                    print("  SID:         {}".format(p['sid'].upper()))
+                    print("  UserName:    {}".format(p['process_username']))
+                    print("  ExePath:     {}".format(p['process_path']))
+                    print("  CommandLine: {}".format(p['process_cmdline']))
+                    print()
                 else:
-                    print("%5d  %-30s %-20s" % (p['pid'], ntpath.basename(p['path']), p['username']))
+                    print("{:5}  {:<30} {:<20}".format(p['process_pid'],
+                                                       ntpath.basename(p['process_path']),
+                                                       p['process_username']))
 
         if not opts.verbose:
-            print("")
+            print()
 
     def do_exec(self, line):
         """
         Command: exec
 
         Description:
-        Execute a process on the sensor.  This assumes the executable is
-        already on the sensor.
+        Execute a process on the device.  This assumes the executable is
+        already on the device.
 
         Format:
         exec [OPTS] [process command line and arguments]
@@ -484,7 +474,9 @@ class CblrCli(cmd.Cmd):
         if not optWorkDir:
             optWorkDir = self.cwd
 
-        ret = self.lr_session.create_process(cmdline, wait_for_output=optWait, remote_output_file_name=optOut,
+        ret = self.lr_session.create_process(cmdline,
+                                             wait_for_output=optWait,
+                                             remote_output_file_name=optOut,
                                              working_directory=optWorkDir)
 
         if (optWait):
@@ -495,7 +487,7 @@ class CblrCli(cmd.Cmd):
         Command: get
 
         Description:
-        Get (copy) a file, or parts of file, from the sensor.
+        Get (copy) a file, or parts of file, from the device.
 
         Format:
         get [OPTIONS] <RemotePath> <LocalPath>
@@ -521,7 +513,7 @@ class CblrCli(cmd.Cmd):
         Command: del
 
         Description:
-        Delete a file on the sensor
+        Delete a file on the device
 
         Format:
         del <FileToDelete>
@@ -539,7 +531,7 @@ class CblrCli(cmd.Cmd):
         Command: mkdir
 
         Description:
-        Create a directory on the sensor
+        Create a directory on the device
 
         Format:
         mkdir <PathToCreate>
@@ -557,7 +549,7 @@ class CblrCli(cmd.Cmd):
         Command: put
 
         Description
-        Put a file onto the sensor
+        Put a file onto the device
 
         Format:
         put <LocalFile> <RemotePath>
@@ -572,8 +564,10 @@ class CblrCli(cmd.Cmd):
         with open(argv[0], "rb") as fin:
             self.lr_session.put_file(fin, argv[1])
 
-    def _time_dir_gmt(self, unixtime):
-        return time.strftime("%m/%d/%Y %I:%M:%S %p", time.gmtime(unixtime))
+    def _time_dir_gmt(self, date_to_format):
+        global FORMAT
+        date = datetime.strptime(date_to_format, FORMAT)
+        return date.strftime("%m/%d/%Y %I:%M:%S %p")
 
     def do_dir(self, line):
         """
@@ -597,29 +591,29 @@ class CblrCli(cmd.Cmd):
 
         ret = self.lr_session.list_directory(path)
 
-        print("Directory: %s\n" % path)
+        print("Directory: {}\n".format(path))
         for f in ret:
             timestr = self._time_dir_gmt(f['create_time'])
             if ('DIRECTORY' in f['attributes']):
                 x = '<DIR>               '
             else:
-                x = '     %15d' % f['size']
-            print("%s\t%s %s" % (timestr, x, f['filename']))
+                x = '     {:15}'.format(f['size'])
+            print("{}\t{} {}".format(timestr, x, f['filename']))
 
-        print("")
+        print()
 
     def do_kill(self, line):
         """
         Command: kill
 
         Description:
-        Kill a process on the sensor
+        Kill a process on the device
 
         Format:
         kill <Pid>
         """
         if line is None or line == '':
-            raise CliArgsException("Invalid argument passed to kill (%s)" % line)
+            raise CliArgsException("Invalid argument passed to kill ({})".format(line))
 
         self.lr_session.kill_process(line)
 
@@ -651,19 +645,19 @@ class CblrCli(cmd.Cmd):
 
 
 def connect_callback(cb, line):
-    """Called back when the Live Response connection is made; selects the sensor."""
+    """Called back when the Live Response connection is made; selects the device."""
     try:
-        sensor_id = int(line)
+        device_id = int(line)
     except ValueError:
-        sensor_id = None
+        device_id = None
 
-    if not sensor_id:
-        q = cb.select(Device).where("hostNameExact:{0}".format(line))
-        sensor = q.first()
+    if not device_id:
+        q = cb.select(Device).where("name:{0}".format(line))
+        device = q.first()
     else:
-        sensor = cb.select(Device, sensor_id)
+        device = cb.select(Device, device_id)
 
-    return sensor
+    return device
 
 
 def main():

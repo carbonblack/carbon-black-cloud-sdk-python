@@ -35,7 +35,15 @@ def search_and_facet_compute_resources_api(cb):
     header = {'X-Auth-Token': cb.credentials.token,
               'Content-Type': 'application/json'}
     url = f'{cb.credentials.url}lcm/view/v1/orgs/{cb.credentials.org_key}/compute_resources/_search'
-    return requests.post(url, json={"rows": "10000"}, headers=header).json()['results']
+    count = 0
+    api_results = []
+    while True:
+        response = requests.post(url, json={"rows": "200", "start": count}, headers=header).json()
+        count += len(response['results'])
+        api_results.extend(response['results'])
+        if count >= response['num_found']:
+            break
+    return api_results
 
 
 def search_and_facet_compute_resources_sdk(cb):
@@ -74,7 +82,7 @@ def compare_data_facet(sdk_resp, api_resp, api_call):
     sdk_ids = sorted([_.id for _ in sdk_resp])
     api_ids = sorted([_['id'] for _ in api_resp])
 
-    assert sdk_ids == api_ids, print(f'TEST FAILED\nDifferance between api and sdk response found for {api_call}')
+    assert sdk_ids == api_ids, f'TEST FAILED\nDifferance between api and sdk response found for {api_call}'
 
     print('\nTEST PASSED')
     print("----------------------------------------------------------")
@@ -82,7 +90,7 @@ def compare_data_facet(sdk_resp, api_resp, api_call):
 
 def compare_data_id(sdk_resp, api_resp, api_call):
     """Compare the data between the sdk and api response"""
-    assert sdk_resp == api_resp, print(f'TEST FAILED\nDifferance between api and sdk response found for {api_call}')
+    assert sdk_resp == api_resp, f'TEST FAILED\nDifferance between api and sdk response found for {api_call}'
     print('\nTEST PASSED')
     print("----------------------------------------------------------")
 

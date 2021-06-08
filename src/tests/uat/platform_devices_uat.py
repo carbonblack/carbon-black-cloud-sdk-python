@@ -11,8 +11,6 @@
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
 """
-Validation is manual; either from information in the console or running an equivalent API call from postman
-
 To execute, a profile must be provided using the standard CBC Credentials.
 
 The following API calls are tested in this script:
@@ -24,37 +22,73 @@ Devices:
 """
 
 # Standard library imports
+import requests
 import sys
-from pprint import pprint
 
 # Internal library imports
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
 from cbc_sdk.platform import Device
 
+HOSTNAME = ''
+ORG_KEY = ''
+HEADERS = {'X-Auth-Token': '', 'Content-Type': 'application/json'}
+SEARCH_DEVICES = '{}appservices/v6/orgs/{}/devices/_search'
+
+
+def search_devices_api_call():
+    """Search Devices with direct API call"""
+    search_url = SEARCH_DEVICES.format(HOSTNAME, ORG_KEY)
+    data = {
+        "rows": 10000,
+        "criteria": {
+            "deployment_type": ["WORKLOAD"]
+        },
+        "sort": [
+            {
+                "field": "id",
+                "order": "asc"
+            }
+        ]
+    }
+    return requests.post(search_url, json=data, headers=HEADERS)
+
 
 def search_devices(cb):
-    """Start SDK call and print out response"""
-    print("API Calls:")
-    print("Search Devices")
+    """Verify that the SDK returns the same result for Search Devices as the respective API call"""
+    api_search = search_devices_api_call().json()
 
-    query = cb.select(Device).set_deployment_type(["WORKLOAD"])
-    for event in query:
-        pprint(event._info)
+    query = cb.select(Device)\
+        .set_deployment_type(["WORKLOAD"])\
+        .sort_by("id", "ASC")
 
-    print("\nCompare results manually with Postman")
-    print("----------------------------------------------------------")
+    sdk_results = []
+    for device in query:
+        sdk_results.append(device._info)
+
+    assert api_search['num_found'] == query._total_results, \
+           'Test Failed: SDK call returns different number of devices. ' \
+           'Expected: {}, Actual: {}'.format(api_search['num_found'], query._total_results)
+
+    assert sdk_results == api_search['results'], 'Test Failed: SDK call returns different data. '\
+        'Expected: {}, Actual: {}'.format(api_search['results'], sdk_results)
+
+    print('Search Devices.................................OK')
 
 
 def main():
     """Script entry point"""
     parser = build_cli_parser()
     args = parser.parse_args()
-
-    do_devices = True
+    global ORG_KEY
+    global HOSTNAME
 
     cb = get_cb_cloud_object(args)
-    if do_devices:
-        search_devices(cb)
+
+    HEADERS['X-Auth-Token'] = cb.credentials.token
+    ORG_KEY = cb.credentials.org_key
+    HOSTNAME = cb.credentials.url
+
+    search_devices(cb)
 
 
 if __name__ == "__main__":

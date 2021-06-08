@@ -59,6 +59,16 @@ class CBCloudAPI(BaseAPI):
         else:
             raise ApiError("All Carbon Black Cloud models must provide _query_implementation")
 
+    @property
+    def org_urn(self):
+        """
+        Returns the URN based on the configured org_key.
+
+        Returns:
+            str: The URN based on the configured org_key.
+        """
+        return f"psc:org:{self.credentials.org_key}"
+
     # ---- Async
 
     def _async_submit(self, callable, *args, **kwargs):
@@ -91,8 +101,8 @@ class CBCloudAPI(BaseAPI):
             self._lr_scheduler = LiveResponseSessionManager(self)
         return self._lr_scheduler
 
-    def _request_lr_session(self, sensor_id):
-        return self.live_response.request_session(sensor_id)
+    def _request_lr_session(self, device_id):
+        return self.live_response.request_session(device_id)
 
     # ---- Audit and Remediation
 
@@ -423,7 +433,7 @@ class CBCloudAPI(BaseAPI):
             bool: True if the query is valid, False if not.
 
         Examples:
-        >>> cb.validate_query("process_name:chrome.exe") # True
+        >>> cb.validate_process_query("process_name:chrome.exe") # True
         """
         args = {"q": query}
         url = "/api/investigate/v1/orgs/{}/processes/search_validation".format(

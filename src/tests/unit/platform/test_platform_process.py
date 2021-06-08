@@ -505,10 +505,10 @@ def test_process_start_rows(cbcsdk_mock):
                        "exclusions": {
                            "crossproc_effective_reputation": ["REP_WHITE"]
                        },
-                       "start": 10,
-                       "rows": 102
+                       "start": 10
                        }
     assert process_q_params == expected_params
+    assert process._batch_size == 102
 
 
 def test_process_sort(cbcsdk_mock):
@@ -529,7 +529,8 @@ def test_process_sort(cbcsdk_mock):
                        "sort": [{
                            "field": "process_pid",
                            "order": "DESC"
-                       }]}
+                       }],
+                       'fields': ['*']}
     assert process_q_params == expected_params
 
 
@@ -711,10 +712,10 @@ def test_process_query_start_rows(cbcsdk_mock):
                        "exclusions": {
                            "crossproc_effective_reputation": ["REP_WHITE"]
                        },
-                       "start": 10,
-                       "rows": 102
+                       "start": 10
                        }
     assert process_q_params == expected_params
+    assert process._batch_size == 102
 
 
 def test_process_sort_by(cbcsdk_mock):
@@ -735,7 +736,8 @@ def test_process_sort_by(cbcsdk_mock):
                        "sort": [{
                            "field": "process_pid",
                            "order": "DESC"
-                       }]}
+                       }],
+                       'fields': ['*']}
     assert process_q_params == expected_params
 
 

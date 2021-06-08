@@ -1,9 +1,7 @@
 """Testing the Query objects of cbc_sdk.base"""
 
-from cbc_sdk.base import BaseQuery, SimpleQuery, PaginatedQuery
+from cbc_sdk.base import BaseQuery, SimpleQuery
 from cbc_sdk.enterprise_edr import Feed, FeedQuery
-from cbc_sdk.platform import Process
-from cbc_sdk.endpoint_standard import Query, Device
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.stubresponse import patch_cbc_sdk_api
 
@@ -52,6 +50,7 @@ def test_simple_query(monkeypatch):
     results = feed.results
 
     assert isinstance(results, list)
+    assert len(feed) == 1
     assert isinstance(results[0], Feed)
     assert results[0].id == "my_feed_id"
     assert results[0].name == "My Feed"
@@ -69,46 +68,3 @@ def test_simple_query(monkeypatch):
     assert clonedSimple._cb == simpleQuery._cb
     assert clonedSimple._results == simpleQuery._results
     assert clonedSimple._query == simpleQuery._query
-
-
-def test_paginated_query(monkeypatch):
-    """Test PaginatedQuery methods"""
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="WNEX", ssl_verify=True)
-    paginatedQuery = PaginatedQuery(Process, api, query="process_name='malicious.exe'")
-    assert isinstance(paginatedQuery, PaginatedQuery)
-    assert isinstance(paginatedQuery, BaseQuery)
-    assert paginatedQuery._doc_class == Process
-    assert paginatedQuery._query == "process_name='malicious.exe'"
-
-    clonedPaginated = paginatedQuery._clone()
-    assert clonedPaginated._doc_class == paginatedQuery._doc_class
-    assert clonedPaginated._cb == paginatedQuery._cb
-    assert clonedPaginated._total_results == paginatedQuery._total_results
-    assert clonedPaginated._count_valid == paginatedQuery._count_valid
-    assert clonedPaginated._batch_size == paginatedQuery._batch_size
-
-    _devices_was_called = False
-
-    def _get_devices(url, **kwargs):
-        nonlocal _devices_was_called
-        assert url == "/integrationServices/v3/device"
-        _devices_was_called = True
-        return {"results": [{"deviceId": "my_device_id"}]}
-
-    deviceQuery = Query(Device, api)
-    deviceQuery = deviceQuery.where("deviceId:'my_device_id'")
-
-    assert isinstance(deviceQuery, PaginatedQuery)
-    assert isinstance(deviceQuery, Query)
-
-    patch_cbc_sdk_api(monkeypatch, api, GET=_get_devices)
-
-    deviceQuery.__getitem__(1)
-    assert _devices_was_called
-
-    # Devices needs to be updated to v6 routes, this x test does nothing
-
-
-def test_query_builder():
-    """Test the Base QueryBuilder methods"""
-    pass

@@ -610,12 +610,32 @@ class AsyncProcessQuery(Query):
         self._timeout = msecs
         return self
 
+    def set_rows(self, rows):
+        """
+        Sets the 'rows' query parameter to the 'results' API call, determining how many rows to request per batch.
+
+        This will not limit the total results to rows instead the batch size will use rows and all of the num_available
+        will be fetched.
+
+        Args:
+            rows (int): How many rows to request.
+        """
+        if not isinstance(rows, int):
+            raise ApiError(f"Rows must be an integer. {rows} is a {type(rows)}.")
+        if rows > 10000:
+            raise ApiError("Maximum allowed value for rows is 10000")
+        self._batch_size = rows
+        return self
+
     def _submit(self):
         if self._query_token:
             raise ApiError("Query already submitted: token {0}".format(self._query_token))
 
         args = self._get_query_parameters()
         self._validate(args)
+
+        # Ensure search creation uses max due to event aggregation
+        args["rows"] = 10000
 
         url = "/api/investigate/v2/orgs/{}/processes/search_jobs".format(self._cb.credentials.org_key)
         query_start = self._cb.post_object(url, body=args)
@@ -703,7 +723,7 @@ class AsyncProcessQuery(Query):
             result_url = '{}?start={}&rows={}'.format(
                 result_url_template,
                 current,
-                10  # Batch gets to reduce API calls
+                self._batch_size
             )
 
             result = self._cb.get_object(result_url, query_parameters=query_parameters)

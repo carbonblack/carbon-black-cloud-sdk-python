@@ -22,7 +22,7 @@ from .utils import convert_from_cb, convert_to_cb
 import yaml
 import json
 import time
-from .errors import ApiError, ServerError, InvalidObjectError, MoreThanOneResultError
+from .errors import ApiError, ServerError, InvalidObjectError, MoreThanOneResultError, ObjectNotFoundError
 import logging
 from datetime import datetime
 from solrq import Q
@@ -174,7 +174,6 @@ class ArrayFieldDescriptor(FieldDescriptor):
         return ret or []
 
 
-# TODO: this is a kludge to avoid writing "small" models?
 class ObjectFieldDescriptor(FieldDescriptor):
     """Field descriptor for fields of 'object' type."""
     def __get__(self, instance, instance_type=None):
@@ -432,6 +431,39 @@ class NewBaseModel(object, metaclass=CbMetaModel):
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
                                                                               item))
 
+    def __getitem__(self, item):
+        """
+        Return an attribute of this object.
+
+        Args:
+            item (str): Name of the attribute to be returned.
+
+        Returns:
+            Any: The returned attribute value.
+
+        Raises:
+            AttributeError: If the object has no such attribute.
+        """
+        try:
+            super(NewBaseModel, self).__getattribute__(item)
+        except AttributeError:
+            pass  # fall through to the rest of the logic...
+
+        # try looking up via self._info, if we already have it.
+        if item in self._info:
+            return self._info[item]
+
+        # if we're still here, let's load the object if we haven't done so already.
+        if not self._full_init:
+            self._refresh()
+
+        # try one more time.
+        if item in self._info:
+            return self._info[item]
+        else:
+            raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
+                                                                              item))
+
     def __setattr__(self, attrname, val):
         """
         Set an attribute of this object.
@@ -654,6 +686,10 @@ class MutableBaseModel(NewBaseModel):
         if self._refresh():
             self._dirty_attributes = {}
 
+    def touch(self):
+        """Force this object to be considered as changed."""
+        self._dirty_attributes = {key: self._info.get(key, None) for key in self.__class__._valid_fields}
+
     def is_dirty(self):
         """
         Returns whether or not any fields of this object have been changed.
@@ -854,20 +890,19 @@ class IterableQueryMixin:
             obj: Sole query return item
 
         Raises:
-            MoreThanOneResultError: If the query returns zero items, or more than one item
+            MoreThanOneResultError: If the query returns more than one item
+            ObjectNotFoundError: If the query returns zero items
         """
         res = self[:2]
         if res is None:
             return None
+        label = str(self._query) if self._query else "<unspecified>"
         if len(res) == 0:
-            raise MoreThanOneResultError(
-                message="0 results for query {0:s}".format(self._query)
-            )
+            raise ObjectNotFoundError("query_uri", message="0 results for query {0:s}".format(label))
         if len(res) > 1:
             raise MoreThanOneResultError(
-                message="{0:d} results found for query {1:s}".format(
-                    len(self), self._query
-                )
+                message="{0:d} results found for query {1:s}".format(len(self), label),
+                results=self.all()
             )
         return res[0]
 
@@ -1701,6 +1736,11 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
         if 'process_guid:' in args['query']:
             q = args['query'].split('process_guid:', 1)[1].split(' ', 1)[0]
             args["process_guid"] = q
+
+        if args.get("sort", None) is not None and args.get("fields", None) is None:
+            # Add default fields if only sort is specified
+            args["fields"] = ["*"]
+
         return args
 
     def sort_by(self, key, direction="ASC"):
@@ -1758,9 +1798,12 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
             args['q'] = args['query']
 
         # v2 search sort key does not work with v1 validation
-        args.pop('sort', None)
+        sort = args.pop('sort', None)
 
         validated = self._cb.get_object(url, query_parameters=args)
+
+        # Re-add sort
+        args["sort"] = sort
 
         if not validated.get("valid"):
             raise ApiError("Invalid query: {}: {}".format(args, validated["invalid_message"]))

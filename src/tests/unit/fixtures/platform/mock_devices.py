@@ -74,7 +74,7 @@ GET_DEVICE_RESP = {
     "target_priority": "MEDIUM",
     "uninstall_code": "ABCDEF",
     "vcenter_name": None,
-    "vcenter_uuid": 'vcenterid',
+    "vcenter_uuid": "11eb-bcbc",
     "vdi_base_device": None,
     "virtual_machine": False,
     "virtualization_provider": "UNKNOWN",
