@@ -1,22 +1,29 @@
 Changelog
 ================================
-CBC SDK 1.3.0 - Released ?, 2021
+CBC SDK 1.3.0 - Released June 8, 2021
 --------------------------------
-
-Bug Fixes
-
-  * Fix in the sort_by for Query class
-  * Fix the ability to set expiration for binary download URL
-  * Fix bug in helpers read_iocs functionality
 
 New Features
 
 * Added User Management, Grants, Access Profiles, Permitted Roles
-* Refactor of the vulnerability models
+* Refactor Vulnerability models
+  * ``VulnerabilitySummary.get_org_vulnerability_summary`` changed to ``Vulnerability.OrgSummary`` model with query class
+  * ``VulnerabilitySummary`` changed to ``Vulnerability.AssetView``
+  * ``OrganizationalVulnerability`` and ``Vulnerability`` compressed into a single model to include Carbon Black Cloud context and CVE information
+  * ``DeviceVulnerability.get_vulnerability_summary_per_device`` static function moved to ``get_vulnerability_summary`` function on device model
+  * ``Vulnerability(cb, CVE_ID)`` returns Carbon Black Cloud context and CVE information
+  * ``affected_assets(os_product_id)`` changed to ``get_affected_assets()`` and no longer requires ``os_product_id``
 * Add dashboard export examples
 * Live Response migrated from v3 to v6 (:doc:`migration guide<live-response-v6-migration>`)
-* Live Response uses API Keys of type Custom
-* Get Enriched Events for alert
+  * Live Response uses API Keys of type Custom
+* Get Enriched Events for Alert
+
+Bug Fixes
+
+* Fix validate query from dropping sort_by for Query class
+* Fix the ability to set expiration for binary download URL
+* Fix bug in helpers read_iocs functionality
+
 
 CBC SDK 1.2.3 - Released April 19, 2021
 --------------------------------------
