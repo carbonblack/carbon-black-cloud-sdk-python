@@ -6,7 +6,7 @@ CBC SDK 1.3.0 - Released June 8, 2021
 New Features
 
 * Add User Management, Grants, Access Profiles, Permitted Roles
-* Mov Vulnerability models to Platform package in preparation for supporting Endpoints and Workloads
+* Move Vulnerability models to Platform package in preparation for supporting Endpoints and Workloads
 * Refactor Vulnerability models
   * ``VulnerabilitySummary.get_org_vulnerability_summary`` static function changed to ``Vulnerability.OrgSummary`` model with query class
   * ``VulnerabilitySummary`` model moved inside ``Vulnerability`` to ``Vulnerability.AssetView`` sub model
@@ -24,7 +24,7 @@ Bug Fixes
 * Fix validate query from dropping sort_by for Query class
 * Fix the ability to set expiration for binary download URL
 * Fix bug in helpers read_iocs functionality
-
+* Fix install_sensor and bulk_install on ComputeResource to use id instead of uuid
 
 CBC SDK 1.2.3 - Released April 19, 2021
 --------------------------------------
