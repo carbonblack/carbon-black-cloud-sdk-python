@@ -8,12 +8,12 @@ New Features
 * Added User Management, Grants, Access Profiles, Permitted Roles
 * Move Vulnerability models to Platform package in preparation for supporting Endpoints and Workloads
 * Refactor Vulnerability models
-  * ``VulnerabilitySummary.get_org_vulnerability_summary`` changed to ``Vulnerability.OrgSummary`` model with query class
-  * ``VulnerabilitySummary`` changed to ``Vulnerability.AssetView``
-  * ``OrganizationalVulnerability`` and ``Vulnerability`` compressed into a single model to include Carbon Black Cloud context and CVE information
-  * ``DeviceVulnerability.get_vulnerability_summary_per_device`` static function moved to ``get_vulnerability_summary`` function on device model
+  * ``VulnerabilitySummary.get_org_vulnerability_summary`` static function changed to ``Vulnerability.OrgSummary`` model with query class
+  * ``VulnerabilitySummary`` model move inside ``Vulnerability`` to ``Vulnerability.AssetView`` sub model
+  * ``OrganizationalVulnerability`` and ``Vulnerability`` consolidated into a single model to include Carbon Black Cloud context and CVE information together
   * ``Vulnerability(cb, CVE_ID)`` returns Carbon Black Cloud context and CVE information
-  * ``affected_assets(os_product_id)`` changed to ``get_affected_assets()`` and no longer requires ``os_product_id``
+  * ``DeviceVulnerability.get_vulnerability_summary_per_device`` static function moved to ``get_vulnerability_summary`` function on ``Device`` model
+  * ``affected_assets(os_product_id)`` function changed to ``get_affected_assets()`` function and no longer requires ``os_product_id``
 * Add dashboard export examples
 * Live Response migrated from v3 to v6 (:doc:`migration guide<live-response-v6-migration>`)
   * Live Response uses API Keys of type Custom
