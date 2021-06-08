@@ -1,22 +1,35 @@
 Changelog
 ================================
-CBC SDK 1.3.0 - Released ?, 2021
+CBC SDK 1.3.0 - Released June 8, 2021
 --------------------------------
-
-Bug Fixes
-
-  * Fix in the sort_by for Query class
-  * Fix the ability to set expiration for binary download URL
-  * Fix bug in helpers read_iocs functionality
 
 New Features
 
-* Added User Management, Grants, Access Profiles, Permitted Roles
-* Refactor of the vulnerability models
+* Add User Management, Grants, Access Profiles, Permitted Roles
+* Move Vulnerability models to Platform package in preparation for supporting Endpoints and Workloads
+* Refactor Vulnerability models
+
+  * ``VulnerabilitySummary.get_org_vulnerability_summary`` static function changed to ``Vulnerability.OrgSummary`` model with query class
+  * ``VulnerabilitySummary`` model moved inside ``Vulnerability`` to ``Vulnerability.AssetView`` sub model
+  * ``OrganizationalVulnerability`` and ``Vulnerability`` consolidated into a single model to include Carbon Black Cloud context and CVE information together
+  * ``Vulnerability(cb, CVE_ID)`` returns Carbon Black Cloud context and CVE information
+  * ``DeviceVulnerability.get_vulnerability_summary_per_device`` static function moved to ``get_vulnerability_summary`` function on ``Device`` model
+  * ``affected_assets(os_product_id)`` function changed to ``get_affected_assets()`` function and no longer requires ``os_product_id``
+
 * Add dashboard export examples
 * Live Response migrated from v3 to v6 (:doc:`migration guide<live-response-v6-migration>`)
-* Live Response uses API Keys of type Custom
-* Get Enriched Events for alert
+
+  * Live Response uses API Keys of type Custom
+
+* Add function to get Enriched Events for Alert
+
+Bug Fixes
+
+* Fix validate query from dropping sort_by for Query class
+* Fix the ability to set expiration for binary download URL
+* Fix bug in helpers read_iocs functionality
+* Fix install_sensor and bulk_install on ComputeResource to use id instead of uuid
+* Fix DeviceSearchQuery from duplicating Device due to base index of 1
 
 CBC SDK 1.2.3 - Released April 19, 2021
 --------------------------------------
