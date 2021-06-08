@@ -5,11 +5,11 @@ CBC SDK 1.3.0 - Released June 8, 2021
 
 New Features
 
-* Added User Management, Grants, Access Profiles, Permitted Roles
-* Move Vulnerability models to Platform package in preparation for supporting Endpoints and Workloads
+* Add User Management, Grants, Access Profiles, Permitted Roles
+* Mov Vulnerability models to Platform package in preparation for supporting Endpoints and Workloads
 * Refactor Vulnerability models
   * ``VulnerabilitySummary.get_org_vulnerability_summary`` static function changed to ``Vulnerability.OrgSummary`` model with query class
-  * ``VulnerabilitySummary`` model move inside ``Vulnerability`` to ``Vulnerability.AssetView`` sub model
+  * ``VulnerabilitySummary`` model moved inside ``Vulnerability`` to ``Vulnerability.AssetView`` sub model
   * ``OrganizationalVulnerability`` and ``Vulnerability`` consolidated into a single model to include Carbon Black Cloud context and CVE information together
   * ``Vulnerability(cb, CVE_ID)`` returns Carbon Black Cloud context and CVE information
   * ``DeviceVulnerability.get_vulnerability_summary_per_device`` static function moved to ``get_vulnerability_summary`` function on ``Device`` model
@@ -17,7 +17,7 @@ New Features
 * Add dashboard export examples
 * Live Response migrated from v3 to v6 (:doc:`migration guide<live-response-v6-migration>`)
   * Live Response uses API Keys of type Custom
-* Get Enriched Events for Alert
+* Add function to get Enriched Events for Alert
 
 Bug Fixes
 
