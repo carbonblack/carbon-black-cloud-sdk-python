@@ -11,6 +11,8 @@ The various API functions that work with users and grants often make use of *uni
 uniquely represent various pieces of the Carbon Black Cloud environment.  These pieces include:
 
 * **Organizations,** represented as ``psc:org:ORGKEY``, where ``ORGKEY`` is the organization's alphanumeric key value.
+* The special URN ``psc:org:ORKGEY:CHILDREN``, where where ``ORGKEY`` is the organization's alphanumeric key value,
+  refers to all the *child organizations* of that organization, but *not* the organization itself.
 * **Users,** represented as ``psc:user:ORGKEY:USERID``, where ``ORGKEY`` is the organization's alphanumeric key value
   and ``USERID`` is the user's numeric login ID.
 * **Access roles,** represented as ``psc:role:OPT-ORGKEY:NAME``, where ``OPT-ORGKEY`` is (optionally) the alphanumeric
