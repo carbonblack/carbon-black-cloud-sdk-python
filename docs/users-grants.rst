@@ -14,7 +14,8 @@ uniquely represent various pieces of the Carbon Black Cloud environment.  These 
 * **Users,** represented as ``psc:user:ORGKEY:USERID``, where ``ORGKEY`` is the organization's alphanumeric key value
   and ``USERID`` is the user's numeric login ID.
 * **Access roles,** represented as ``psc:role:OPT-ORGKEY:NAME``, where ``OPT-ORGKEY`` is (optionally) the alphanumeric
-  key value of the organization containing that role, and ``NAME`` is the name of the role.
+  key value of the organization containing that role, and ``NAME`` is the name of the role.  A role that does not have
+  an OPT-ORGKEY is a default/global role created for all organizations.
 
 Most of these are dealt with for you by the Carbon Black Cloud SDK.
 
@@ -38,7 +39,7 @@ We can do a query on the ``User`` object to get a list of users within the organ
     Arianne Martell (#2345672) <amartell@example.com>
     Jorah Mormont (#2345673) <jmormont@example.com>
 
-We can restrict the query by user IDs or E-mail addresses by using the ``user_ids()`` or ``email_addresses()``
+We can restrict the query by user IDs or E-mail addresses by using the ``user_ids([str])`` or ``email_addresses([str])``
 methods on the query object returned by ``select()`` before enumerating its results.
 
 Modifying a User
@@ -52,8 +53,6 @@ A ``User`` can be modified by changing one or more of its fields and then callin
     >>> api = CBCloudAPI(profile='sample')
     >>> from cbc_sdk.platform import User
     >>> user = api.select(User, 2345672)
-    >>> print(f"{user.first_name} {user.last_name}")
-    Arianne Martell
     >>> print(user.phone)
     800-555-0000
     >>> user.phone = '888-555-9753'
@@ -62,7 +61,7 @@ A ``User`` can be modified by changing one or more of its fields and then callin
     >>> print(user.phone)
     888-555-9753
 
-**Note:** A user's *role* must be changed by modifying its *access grant,* detailed below.
+**Note:** A user's *role* can only be modified by updating the user's *access grant,* detailed below.
 
 Creating a New User
 -------------------
@@ -97,8 +96,7 @@ create the user directly.
     >>> User.create(api, user_template)
 
 **Note:** A user that has just been created will *not* be visible in either the UI or in a ``User`` query as detailed
-above, until the intended user has responded to their invitation E-mail message, activated the account, and set
-a password.
+above, until the user activates their account through the invitation E-mail message and sets a password.
 
 User Access Grants
 ------------------
@@ -116,14 +114,14 @@ You can use the ``grant()`` method on a ``User`` to get the grant and inspect or
     Arianne Martell
     >>> grant = user.grant()
     >>> print(grant.roles)
-    ['psc:role::BETA_SUPER_ADMIN']
-    >>> grant.roles = ['psc:role::BETA_SYSTEM_ADMIN']
+    ['psc:role::BETA_SYSTEM_ADMIN']
+    >>> grant.roles = ['psc:role::BETA_VIEW_ONLY']
     >>> grant.save()
     <cbc_sdk.platform.grants.Grant: id psc:user:1A2B3C4DE:2345672> @ https://defense.conferdeploy.net
     >>> print(grant.roles)
-    ['psc:role::BETA_SYSTEM_ADMIN']
+    ['psc:role::psc:role::BETA_VIEW_ONLY']
 
-You can see what roles you can work with by using the ``get_permitted_role_urns()`` function:
+You can see what roles your API key is able to access and assign using the ``get_permitted_role_urns()`` function:
 
 ::
 
