@@ -445,6 +445,7 @@ class User(MutableBaseModel):
         """
         grant = self.grant()
         if grant:
+            create_templates = []
             for template in profile_templates:
                 need_create = True
                 for profile in grant.profiles_:
@@ -454,8 +455,10 @@ class User(MutableBaseModel):
                         need_create = False
                         break
                 if need_create:
-                    grant.create_profile(template)
+                    create_templates.append(template)
             grant.save()
+            for template in create_templates:
+                grant.create_profile(template)
         else:
             grant_template = {'principal': self.urn, 'org_ref': self.org_urn, 'roles': [],
                               'principal_name': f"{self.first_name} {self.last_name}", 'profiles': profile_templates}

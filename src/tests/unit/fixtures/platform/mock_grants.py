@@ -669,22 +669,7 @@ EXPECT_ADD_PROFILES_3A = {
                 "disabled": True
             },
             "can_manage": False
-        },
-        {
-            "orgs": {
-                "allow": [
-                    "psc:org:test_infinity"
-                ],
-            },
-            "roles": [
-                "psc:role::SECOPS_ROLE_MANAGER"
-            ],
-            "conditions": {
-                "expiration": 0,
-                "disabled": False
-            },
-            "can_manage": False
-        },
+        }
     ],
     "org_ref": "psc:org:test",
     "principal_name": "Daniel Jackson",

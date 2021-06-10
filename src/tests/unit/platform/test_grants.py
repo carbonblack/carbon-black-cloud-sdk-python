@@ -260,7 +260,6 @@ def test_create_profile_on_existing_grant(cbcsdk_mock):
     """Test the creation of a new profile within a grant via a builder."""
     def respond_to_profile_grant(url, body, **kwargs):
         ret = copy.deepcopy(POST_PROFILE_IN_GRANT_RESP)
-        ret['profile_uuid'] = body['profile_uuid']
         return ret
 
     cbcsdk_mock.mock_request('GET', '/access/v2/orgs/test/grants/psc:user:12345678:ABCDEFGH', GET_GRANT_RESP)
@@ -276,7 +275,6 @@ def test_create_profile_from_template(cbcsdk_mock):
     """Test the creation of a new profile within a grant via a template."""
     def respond_to_profile_grant(url, body, **kwargs):
         ret = copy.deepcopy(POST_PROFILE_IN_GRANT_RESP)
-        ret['profile_uuid'] = body['profile_uuid']
         return ret
 
     cbcsdk_mock.mock_request('GET', '/access/v2/orgs/test/grants/psc:user:12345678:ABCDEFGH', GET_GRANT_RESP)
