@@ -167,3 +167,32 @@ access grant object.
     ...
     ['psc:org:1A2B3C4DE'] - ['psc:role::BETA_LEVEL_3_ANALYST']
     ['psc:org:2F3G4H5JK'] - ['psc:role::BETA_LEVEL_1_ANALYST']
+
+Adding an access profile may be done via the ``create_profile()`` method on ``Grant``:
+
+::
+
+    >>> from cbc_sdk import CBCloudAPI
+    >>> api = CBCloudAPI(profile='sample')
+    >>> from cbc_sdk.platform import User
+    >>> user = api.select(User, 3450987)
+    >>> grant = user.grant()
+    >>> builder = grant.create_profile()
+    >>> builder.add_org('psc:org:2F3G4H5JK').add_role('psc:role::BETA_VIEW_ALL')
+    <cbc_sdk.platform.grants.Grant.ProfileBuilder object at 0x00000232942C8400>
+    >>> profile = builder.build()
+    {'orgs': {'allow': ['psc:org:2F3G4H5JK']}, 'roles': ['psc:role::BETA_VIEW_ALL']}
+
+Or it may be added via a template object (as with ``User``):
+
+::
+
+    >>> from cbc_sdk import CBCloudAPI
+    >>> api = CBCloudAPI(profile='sample')
+    >>> from cbc_sdk.platform import User
+    >>> user = api.select(User, 3450987)
+    >>> grant = user.grant()
+    >>> profile_template = {'orgs': {'allow': ['psc:org:2F3G4H5JK']}, 'roles': ['psc:role::BETA_VIEW_ALL']}
+    >>> profile = grant.create_profile(profile_template)
+    {'orgs': {'allow': ['psc:org:2F3G4H5JK']}, 'roles': ['psc:role::BETA_VIEW_ALL']}
+
