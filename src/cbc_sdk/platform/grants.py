@@ -17,7 +17,6 @@ from cbc_sdk.base import MutableBaseModel, BaseQuery, IterableQueryMixin, AsyncQ
 from cbc_sdk.errors import ApiError, NonQueryableModel
 import time
 import copy
-import uuid
 import logging
 
 log = logging.getLogger(__name__)
@@ -114,9 +113,7 @@ class Grant(MutableBaseModel):
                 str: The UUID of this profile object.
             """
             if 'profile_uuid' not in self._info:
-                self._info['profile_uuid'] = str(uuid.uuid4())
-                log.debug("Creating a Profile object with UUID {0:s} for Grant with ID {1:s}"
-                          .format(self._model_unique_id, self._grant._model_unique_id))
+                log.debug("Creating a Profile object for Grant with ID {0:s}".format(self._grant._model_unique_id))
                 url = self.urlobject.format(self._cb.credentials.org_key, self._grant._model_unique_id)
                 ret = self._cb.post_object(url, self._info)
             else:
@@ -198,7 +195,7 @@ class Grant(MutableBaseModel):
                 self._cb = grant._cb
             self._orgs = {'allow': []}
             self._roles = []
-            self._conditions = {'expiration': 0, 'disabled': False}
+            self._conditions = None
             self._can_manage = False
 
         def set_orgs(self, orgs_list):
@@ -277,7 +274,10 @@ class Grant(MutableBaseModel):
             Returns:
                 ProfileBuilder: This object.
             """
-            self._conditions['expiration'] = expiration
+            if self._conditions:
+                self._conditions['expiration'] = expiration
+            else:
+                self._conditions = {'expiration': expiration}
             return self
 
         def set_disabled(self, flag):
@@ -290,7 +290,10 @@ class Grant(MutableBaseModel):
             Returns:
                 ProfileBuilder: This object.
             """
-            self._conditions['disabled'] = flag
+            if self._conditions:
+                self._conditions['disabled'] = flag
+            else:
+                self._conditions = {'disabled': flag}
             return self
 
         def build(self):
@@ -300,7 +303,9 @@ class Grant(MutableBaseModel):
             Returns:
                 Profile: The new Profile object.
             """
-            data = {'orgs': self._orgs, 'roles': self._roles, 'conditions': self._conditions}
+            data = {'orgs': self._orgs, 'roles': self._roles}
+            if self._conditions:
+                data['conditions'] = self._conditions
             profile = Grant.Profile(self._cb, self._grant, None, data)
             if self._grant:
                 profile._update_object()
@@ -471,8 +476,6 @@ class Grant(MutableBaseModel):
             log.debug("Creating a new Grant object for principal {0:s}".format(save_info['principal']))
             save_info['profiles'] = []
             for profile in self._profiles:
-                # presumed to be all new profiles, so create UUIDs for them
-                profile._info['profile_uuid'] = str(uuid.uuid4())
                 save_info['profiles'].append(copy.deepcopy(profile._info))
             url = self.urlobject.format(self._cb.credentials.org_key)
             ret = self._cb.post_object(url, save_info)
@@ -571,13 +574,6 @@ class Grant(MutableBaseModel):
             t = copy.deepcopy(template)
             if 'profile_uuid' in t:
                 del t['profile_uuid']
-            if 'conditions' not in t:
-                t['conditions'] = {}
-            if 'expiration' not in t['conditions']:
-                t['conditions']['expiration'] = 0
-            if 'disabled' not in t['conditions']:
-                t['conditions']['disabled'] = False
-            t['can_manage'] = False
             profile = Grant.Profile(self._cb, self, None, t)
             profile._update_object()
             self._profiles.append(profile)
