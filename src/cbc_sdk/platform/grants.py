@@ -115,7 +115,6 @@ class Grant(MutableBaseModel):
             if 'profile_uuid' not in self._info:
                 log.debug("Creating a Profile object for Grant with ID {0:s}".format(self._grant._model_unique_id))
                 url = self.urlobject.format(self._cb.credentials.org_key, self._grant._model_unique_id)
-                print(self._info)
                 ret = self._cb.post_object(url, self._info)
             else:
                 log.debug("Updating Profile object with UUID {0:s} for Grant with ID {1:s}"
