@@ -151,9 +151,9 @@ You can see what roles your API key is able to access and assign using the ``get
     15. psc:role::BETA_LEVEL_2_ANALYST
     16. psc:role::KUBERNETES_SECURITY_DEVELOPER
 
-Some organizations employ *access profiles* on the access grants, which allow roles for a user to be specified for
-the organization and/or any child organizations.  Access profiles may be accessed and manipulated through the
-access grant object.
+Users created in the Carbon Black Cloud console employ *access profiles* on the access grants, which allow roles for
+a user to be specified for the organization and/or any child organizations.  Access profiles may be accessed and
+manipulated through the access grant object.
 
 ::
 
