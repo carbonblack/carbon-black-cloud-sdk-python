@@ -78,6 +78,22 @@ def test_session_cert_file_and_proxies():
     assert conn.proxies['https'] == 'foobie.bletch.com'
 
 
+def test_session_custom_session():
+    """Test to make sure custom session is passed"""
+    import requests
+    session = requests.Session()
+    creds = Credentials({'url': 'https://example.com', 'token': 'ABCDEFGH', 'ssl_cert_file': 'blort',
+                         'proxy': None})
+    session.proxies = {
+        'http': 'foobie.bletch.com',
+        'https': 'foobie.bletch.com'
+    }
+    conn = Connection(creds, proxy_session=session)
+    assert conn.ssl_verify == 'blort'
+    assert conn.proxies['http'] == 'foobie.bletch.com'
+    assert conn.proxies['https'] == 'foobie.bletch.com'
+
+
 def test_session_ignore_system_proxy():
     """Test to make sure the ignore system proxy parameter has the right effect."""
     creds = Credentials({'url': 'https://example.com', 'token': 'ABCDEFGH', 'ignore_system_proxy': True})

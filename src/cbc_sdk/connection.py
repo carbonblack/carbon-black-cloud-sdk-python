@@ -154,7 +154,13 @@ class CBCSDKSessionAdapter(HTTPAdapter):
 class Connection(object):
     """Object that encapsulates the HTTP connection to the CB server."""
 
-    def __init__(self, credentials, integration_name=None, timeout=None, max_retries=None, **pool_kwargs):
+    def __init__(self,
+                 credentials,
+                 integration_name=None,
+                 timeout=None,
+                 max_retries=None,
+                 proxy_session=None,
+                 **pool_kwargs):
         """
         Initialize the Connection object.
 
@@ -163,6 +169,7 @@ class Connection(object):
             integration_name (str): The integration name being used.
             timeout (int): The timeout value to use for HTTP requests on this connection.
             max_retries (int): The maximum number of times to retry a request.
+            proxy_session (requests.Session) custom session to be used
             **pool_kwargs: Additional arguments to be used to initialize connection pooling.
 
         Raises:
@@ -195,7 +202,12 @@ class Connection(object):
 
         self.token = credentials.token
         self.token_header = {'X-Auth-Token': self.token, 'User-Agent': user_agent}
-        self.session = requests.Session()
+        if proxy_session:
+            self.session = proxy_session
+            credentials.use_custom_proxy_session = True
+        else:
+            self.session = requests.Session()
+            credentials.use_custom_proxy_session = False
 
         self._timeout = timeout
 
@@ -215,7 +227,10 @@ class Connection(object):
         self.session.mount(self.server, tls_adapter)
 
         self.proxies = {}
-        if credentials.ignore_system_proxy:         # see https://github.com/kennethreitz/requests/issues/879
+        if credentials.use_custom_proxy_session:
+            # get the custom session proxies
+            self.proxies = self.session.proxies
+        elif credentials.ignore_system_proxy:         # see https://github.com/kennethreitz/requests/issues/879
             # Unfortunately, requests will look for any proxy-related environment variables and use those anyway. The
             # only way to solve this without side effects, is passing in empty strings for 'http' and 'https':
             self.proxies = {
@@ -380,13 +395,19 @@ class BaseAPI(object):
 
         # must be None to use MAX_RETRIES in Connection __init__
         max_retries = kwargs.pop("max_retries", None)
+        proxy_session = kwargs.pop("proxy_session", None)
         pool_connections = kwargs.pop("pool_connections", 1)
         pool_maxsize = kwargs.pop("pool_maxsize", DEFAULT_POOLSIZE)
         pool_block = kwargs.pop("pool_block", DEFAULT_POOLBLOCK)
 
-        self.session = Connection(self.credentials, integration_name=integration_name, timeout=timeout,
-                                  max_retries=max_retries, pool_connections=pool_connections,
-                                  pool_maxsize=pool_maxsize, pool_block=pool_block)
+        self.session = Connection(self.credentials,
+                                  integration_name=integration_name,
+                                  timeout=timeout,
+                                  max_retries=max_retries,
+                                  proxy_session=proxy_session,
+                                  pool_connections=pool_connections,
+                                  pool_maxsize=pool_maxsize,
+                                  pool_block=pool_block)
 
     def raise_unless_json(self, ret, expected):
         """
