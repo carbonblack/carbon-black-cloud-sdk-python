@@ -544,18 +544,18 @@ def test_add_profiles(cbcsdk_mock, login_id, grant_get, new_profiles, expect_put
     def on_put(url, body, **kwargs):
         nonlocal expect_put, put_was_called
         assert expect_put is not None
-        fixed_expect_put = fixup_profile_uuids(expect_put, body)
-        assert body == fixed_expect_put
+        assert body == expect_put
         put_was_called = True
-        return fixed_expect_put
+        return expect_put
 
     def on_profile_post(url, body, **kwargs):
-        nonlocal new_profiles, new_profile_count
+        nonlocal new_profiles, expect_new_profs, new_profile_count
         matched = False
         for template in new_profiles:
             matched = template_matches(body, template) or matched
         assert matched
         new_profile_count = new_profile_count + 1
+        assert new_profile_count <= expect_new_profs
         return body
 
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)

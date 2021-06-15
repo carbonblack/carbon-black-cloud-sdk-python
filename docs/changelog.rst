@@ -1,5 +1,16 @@
 Changelog
 ================================
+CBC SDK 1.3.1 - Released June 15, 2021
+--------------------------------
+
+New Features:
+
+* Allow the SDK to accept a pre-configured ``Session`` object to be used for access, to get around unusual configuration requirements.
+
+Bug Fixes:
+
+* Fix functions in ``Grant`` object for adding a new access profile to a user access grant.
+
 CBC SDK 1.3.0 - Released June 8, 2021
 --------------------------------
 
