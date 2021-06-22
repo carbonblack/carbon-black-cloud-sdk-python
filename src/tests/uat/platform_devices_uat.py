@@ -53,6 +53,14 @@ def search_devices_api_call():
     return requests.post(search_url, json=data, headers=HEADERS)
 
 
+def normalize_results(result):
+    """Helper function to sort dictionary values"""
+    for index in range(0, len(result)):
+        if result[index].get('device_meta_data_item_list'):
+            dl = result[index]['device_meta_data_item_list']
+            result[index]['device_meta_data_item_list'] = sorted(dl, key=lambda i: (i.get('key_name')), reverse=True)
+
+
 def search_devices(cb):
     """Verify that the SDK returns the same result for Search Devices as the respective API call"""
     api_search = search_devices_api_call().json()
@@ -69,6 +77,8 @@ def search_devices(cb):
            'Test Failed: SDK call returns different number of devices. ' \
            'Expected: {}, Actual: {}'.format(api_search['num_found'], query._total_results)
 
+    normalize_results(api_search['results'])
+    normalize_results(sdk_results)
     assert sdk_results == api_search['results'], 'Test Failed: SDK call returns different data. '\
         'Expected: {}, Actual: {}'.format(api_search['results'], sdk_results)
 
