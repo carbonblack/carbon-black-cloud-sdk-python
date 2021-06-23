@@ -151,6 +151,7 @@ class CbLRSessionBase(object):
 
         Args:
             command_id (int)
+
         Returns:
             status of the command
         """
