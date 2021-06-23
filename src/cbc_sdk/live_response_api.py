@@ -14,23 +14,20 @@
 """The Live Response API and associated objects."""
 
 from __future__ import absolute_import
-
+from collections import defaultdict
+from concurrent.futures import _base, ThreadPoolExecutor
 import json
+import logging
+import queue
 import random
+import shutil
 import string
 import threading
 import time
-import logging
-from collections import defaultdict
-
-import shutil
 
 from cbc_sdk.platform import Device
 from cbc_sdk.errors import TimeoutError, ObjectNotFoundError, ApiError
-from concurrent.futures import _base
 from cbc_sdk import winerror
-
-import queue
 
 OS_LIVE_RESPONSE_ENUM = {
     "WINDOWS": 1,
@@ -107,6 +104,8 @@ class CbLRSessionBase(object):
         self.device_id = device_id
         self._cblr_manager = cblr_manager
         self._cb = cblr_manager._cb
+        self._async_executor = None
+        self._thread_pool_count = 5
         # TODO: refcount should be in a different object in the scheduler
         self._refcount = 1
         self._closed = False
@@ -130,6 +129,48 @@ class CbLRSessionBase(object):
         """
         self.close()
 
+    def _async_submit(self, func, *args, **kwargs):
+        """
+        Submit a task to the executor, creating it if it doesn't yet exist.
+
+        Args:
+            func (func): A callable to be executed as a background task.
+            *args (list): Arguments to be passed to the callable.
+            **kwargs (dict): Keyword arguments to be passed to the callable.
+
+        Returns:
+            Future: A future object representing the background task, which will pass along the result.
+        """
+        if not self._async_executor:
+            self._async_executor = ThreadPoolExecutor(max_workers=self._thread_pool_count)
+        return self._async_executor.submit(func, args, kwargs)
+
+    def command_status(self, command_id):
+        """
+        Check the status of async command
+        Args:
+            command_id (int)
+        Returns:
+            status of the command
+        """
+        url = "{cblr_base}/sessions/{0}/commands/{1}".format(self.session_id, command_id, cblr_base=self.cblr_base)
+        res = self._cb.get_object(url)
+        return res["status"].upper()
+
+    def cancel_command(self, command_id):
+        """
+        Cancel command if it is in status PENDING.
+        Args:
+            command_id (int)
+        """
+        url = "{cblr_base}/sessions/{0}/commands/{1}".format(self.session_id, command_id, cblr_base=self.cblr_base)
+        res = self._cb.get_object(url)
+        if res["status"].upper() == 'PENDING':
+            self._cb.delete_object(url)
+        else:
+            raise ApiError(f'Cannot cancel command in status {res["status"].upper()}.'
+                           ' Only commands in status PENDING can be cancelled.')
+
     def close(self):
         """Close the Live Response session."""
         self._cblr_manager.close_session(self.device_id, self.session_id)
@@ -138,7 +179,7 @@ class CbLRSessionBase(object):
     #
     # File operations
     #
-    def get_raw_file(self, file_name, timeout=None, delay=None):
+    def get_raw_file(self, file_name, timeout=None, delay=None, async_mode=False):
         """
         Retrieve contents of the specified file on the remote machine.
 
@@ -146,8 +187,11 @@ class CbLRSessionBase(object):
             file_name (str): Name of the file to be retrieved.
             timeout (int): Timeout for the operation.
             delay (float): Delay in seconds to wait before command complete.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
 
         Returns:
+            command_id, future if ran async
+            or
             object: Contains the data of the file.
         """
         data = {"name": "get file", "path": file_name}
@@ -157,12 +201,20 @@ class CbLRSessionBase(object):
         if file_details:
             file_id = file_details.get('file_id', None)
             command_id = resp.get('id', None)
-            self._poll_command(command_id, timeout=timeout, delay=delay)
+            if async_mode:
+                return command_id, self._async_submit(lambda arg, kwarg: self._get_raw_file(command_id,
+                                                                                            file_id,
+                                                                                            timeout,
+                                                                                            delay))
+            else:
+                return self._get_raw_file(command_id, file_id, timeout, delay)
 
-            response = self._cb.session.get("{cblr_base}/sessions/{0}/files/{1}/content".format(
-                self.session_id, file_id, cblr_base=self.cblr_base), stream=True)
-            response.raw.decode_content = True
-            return response.raw
+    def _get_raw_file(self, command_id, file_id, timeout=None, delay=None):
+        self._poll_command(command_id, timeout=timeout, delay=delay)
+        response = self._cb.session.get("{cblr_base}/sessions/{0}/files/{1}/content".format(
+            self.session_id, file_id, cblr_base=self.cblr_base), stream=True)
+        response.raw.decode_content = True
+        return response.raw
 
     def get_file(self, file_name, timeout=None, delay=None):
         """
