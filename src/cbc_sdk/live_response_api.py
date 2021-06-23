@@ -148,6 +148,7 @@ class CbLRSessionBase(object):
     def command_status(self, command_id):
         """
         Check the status of async command
+
         Args:
             command_id (int)
         Returns:
@@ -160,6 +161,7 @@ class CbLRSessionBase(object):
     def cancel_command(self, command_id):
         """
         Cancel command if it is in status PENDING.
+
         Args:
             command_id (int)
         """
