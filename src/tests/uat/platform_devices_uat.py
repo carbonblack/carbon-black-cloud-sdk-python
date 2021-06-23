@@ -55,10 +55,10 @@ def search_devices_api_call():
 
 def normalize_results(result):
     """Helper function to sort dictionary values"""
-    for index in range(0, len(result)):
-        if result[index].get('device_meta_data_item_list'):
-            dl = result[index]['device_meta_data_item_list']
-            result[index]['device_meta_data_item_list'] = sorted(dl, key=lambda i: (i.get('key_name')), reverse=True)
+    for item in result:
+        if item.get('device_meta_data_item_list'):
+            dl = item['device_meta_data_item_list']
+            item['device_meta_data_item_list'] = sorted(dl, key=lambda i: (i.get('key_name')))
 
 
 def search_devices(cb):
