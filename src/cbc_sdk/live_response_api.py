@@ -150,7 +150,7 @@ class CbLRSessionBase(object):
         Check the status of async command
 
         Args:
-            command_id (int)
+            command_id (int): command_id
 
         Returns:
             status of the command
@@ -164,7 +164,7 @@ class CbLRSessionBase(object):
         Cancel command if it is in status PENDING.
 
         Args:
-            command_id (int)
+            command_id (int): command_id
         """
         url = "{cblr_base}/sessions/{0}/commands/{1}".format(self.session_id, command_id, cblr_base=self.cblr_base)
         res = self._cb.get_object(url)
