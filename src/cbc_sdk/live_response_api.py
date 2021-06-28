@@ -182,6 +182,18 @@ class CbLRSessionBase(object):
     #
     # File operations
     #
+    def _submit_get_file(self, file_name):
+        """Helper function for submitting get file command"""
+        data = {"name": "get file", "path": file_name}
+
+        resp = self._lr_post_command(data).json()
+        file_details = resp.get('file_details', None)
+        if file_details:
+            file_id = file_details.get('file_id', None)
+            command_id = resp.get('id', None)
+            return file_id, command_id
+        return None, None
+
     def get_raw_file(self, file_name, timeout=None, delay=None, async_mode=False):
         """
         Retrieve contents of the specified file on the remote machine.
@@ -197,13 +209,8 @@ class CbLRSessionBase(object):
             or
             object: Contains the data of the file.
         """
-        data = {"name": "get file", "path": file_name}
-
-        resp = self._lr_post_command(data).json()
-        file_details = resp.get('file_details', None)
-        if file_details:
-            file_id = file_details.get('file_id', None)
-            command_id = resp.get('id', None)
+        file_id, command_id = self._submit_get_file(file_name)
+        if file_id and command_id:
             if async_mode:
                 return command_id, self._async_submit(lambda arg, kwarg: self._get_raw_file(command_id,
                                                                                             file_id,
@@ -219,7 +226,14 @@ class CbLRSessionBase(object):
         response.raw.decode_content = True
         return response.raw
 
-    def get_file(self, file_name, timeout=None, delay=None):
+    def _get_file(self, command_id, file_id, timeout, delay):
+        """Helper function to get the content of a file"""
+        fp = self._get_raw_file(command_id, file_id, timeout=timeout, delay=delay)
+        content = fp.read()
+        fp.close()
+        return content
+
+    def get_file(self, file_name, timeout=None, delay=None, async_mode=False):
         """
         Retrieve contents of the specified file on the remote machine.
 
@@ -231,25 +245,33 @@ class CbLRSessionBase(object):
         Returns:
             str: Contents of the specified file.
         """
-        fp = self.get_raw_file(file_name, timeout=timeout, delay=delay)
-        content = fp.read()
-        fp.close()
+        file_id, command_id = self._submit_get_file(file_name)
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._get_file(command_id,
+                                                                                    file_id,
+                                                                                    timeout,
+                                                                                    delay))
+        return self._get_file(command_id, file_id, timeout, delay)
 
-        return content
-
-    def delete_file(self, filename):
+    def delete_file(self, filename, async_mode=False):
         """
         Delete the specified file name on the remote machine.
 
         Args:
             filename (str): Name of the file to be deleted.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
+
+        Returns:
+            command_id, future if ran async
         """
         data = {"name": "delete file", "path": filename}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id))
         self._poll_command(command_id)
 
-    def put_file(self, infp, remote_filename):
+    def put_file(self, infp, remote_filename, async_mode=False):
         r"""
         Create a new file on the remote machine with the specified data.
 
@@ -260,6 +282,10 @@ class CbLRSessionBase(object):
         Args:
             infp (object): Python file-like containing data to upload to the remote endpoint.
             remote_filename (str): File name to create on the remote endpoint.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
+
+        Returns:
+            command_id, future if ran async
         """
         data = {"name": "put file", "path": remote_filename}
         file_id = self._upload_file(infp)
@@ -267,9 +293,11 @@ class CbLRSessionBase(object):
 
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id))
         self._poll_command(command_id)
 
-    def list_directory(self, dir_name):
+    def list_directory(self, dir_name, async_mode=False):
         r"""
         List the contents of a directory on the remote machine.
 
@@ -297,26 +325,36 @@ class CbLRSessionBase(object):
 
         Args:
             dir_name (str): Directory to list.  This parameter should end with the path separator.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
 
         Returns:
+            command_id, future if ran async
+            or
             list: A list of dicts, each one describing a directory entry.
-
         """
         data = {"name": "directory list", "path": dir_name}
         resp = self._lr_post_command(data).json()
         command_id = resp.get("id")
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id).get("files", []))
         return self._poll_command(command_id).get("files", [])
 
-    def create_directory(self, dir_name):
+    def create_directory(self, dir_name, async_mode=False):
         """
         Create a directory on the remote machine.
 
         Args:
             dir_name (str): The new directory name.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
+
+        Returns:
+            command_id, future if ran async
         """
         data = {"name": "create directory", "path": dir_name}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id))
         self._poll_command(command_id)
 
     def _pathsep(self):
@@ -501,7 +539,7 @@ class CbLRSessionBase(object):
         else:
             return None
 
-    def list_processes(self):
+    def list_processes(self, async_mode=False):
         r"""
         List currently running processes on the remote machine.
 
@@ -524,7 +562,9 @@ class CbLRSessionBase(object):
         data = {"name": "process list"}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
-
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id).get(
+                "processes", []))
         return self._poll_command(command_id).get("processes", [])
 
     #
@@ -533,7 +573,7 @@ class CbLRSessionBase(object):
     # returns dictionary with 2 entries ("values" and "sub_keys")
     #  "values" is a list containing a dictionary for each registry value in the key
     #  "sub_keys" is a list containing one entry for each sub_key
-    def list_registry_keys_and_values(self, regkey):
+    def list_registry_keys_and_values(self, regkey, async_mode=False):
         r"""
         Enumerate subkeys and values of the specified registry key on the remote machine.
 
@@ -576,11 +616,17 @@ class CbLRSessionBase(object):
         data = {"name": "reg enum key", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._list_registry_keys_and_values(command_id))
+        return self._list_registry_keys_and_values(command_id)
+
+    def _list_registry_keys_and_values(self, command_id):
+        """Helper function for list registry keys and values"""
         raw_output = self._poll_command(command_id)
         return {'values': raw_output.get('values', []), 'sub_keys': raw_output.get('sub_keys', [])}
 
     # returns a list containing a dictionary for each registry value in the key
-    def list_registry_values(self, regkey):
+    def list_registry_values(self, regkey, async_mode=False):
         """
         Enumerate all registry values from the specified registry key on the remote machine.
 
@@ -593,11 +639,13 @@ class CbLRSessionBase(object):
         data = {"name": "reg enum key", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
-
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id).get(
+                "values", []))
         return self._poll_command(command_id).get("values", [])
 
     # returns a dictionary with the registry value
-    def get_registry_value(self, regkey):
+    def get_registry_value(self, regkey, async_mode=False):
         r"""
         Return the associated value of the specified registry key on the remote machine.
 
@@ -615,10 +663,12 @@ class CbLRSessionBase(object):
         data = {"name": "reg query value", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
-
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id).get(
+                "value", {}))
         return self._poll_command(command_id).get("value", {})
 
-    def set_registry_value(self, regkey, value, overwrite=True, value_type=None):
+    def set_registry_value(self, regkey, value, overwrite=True, value_type=None, async_mode=False):
         r"""
         Set a registry value on the specified registry key on the remote machine.
 
@@ -647,9 +697,11 @@ class CbLRSessionBase(object):
                 "value_data": real_value}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id))
         self._poll_command(command_id)
 
-    def create_registry_key(self, regkey):
+    def create_registry_key(self, regkey, async_mode=False):
         """
         Create a new registry key on the remote machine.
 
@@ -659,9 +711,11 @@ class CbLRSessionBase(object):
         data = {"name": "reg create key", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id))
         self._poll_command(command_id)
 
-    def delete_registry_key(self, regkey):
+    def delete_registry_key(self, regkey, async_mode=False):
         """
         Delete a registry key on the remote machine.
 
@@ -671,9 +725,11 @@ class CbLRSessionBase(object):
         data = {"name": "reg delete key", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id))
         self._poll_command(command_id)
 
-    def delete_registry_value(self, regkey):
+    def delete_registry_value(self, regkey, async_mode=False):
         """
         Delete a registry value on the remote machine.
 
@@ -683,12 +739,14 @@ class CbLRSessionBase(object):
         data = {"name": "reg delete value", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id))
         self._poll_command(command_id)
 
     #
     # Physical memory capture
     #
-    def memdump(self, local_filename, remote_filename=None, compress=False):
+    def memdump(self, local_filename, remote_filename=None, compress=False, async_mode=False):
         """
         Perform a memory dump operation on the remote machine.
 
@@ -698,6 +756,13 @@ class CbLRSessionBase(object):
             compress (bool): True to compress the file on the remote system.
         """
         dump_object = self.start_memdump(remote_filename=remote_filename, compress=compress)
+        if async_mode:
+            return dump_object.memdump_id, self._async_submit(lambda arg, kwarg: self._memdump(dump_object,
+                                                                                               local_filename))
+        self._memdump(dump_object, local_filename)
+
+    def _memdump(self, dump_object, local_filename):
+        """Helper function for memdump"""
         dump_object.wait()
         dump_object.get(local_filename)
         dump_object.delete()
