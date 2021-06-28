@@ -241,8 +241,10 @@ class CbLRSessionBase(object):
             file_name (str): Name of the file to be retrieved.
             timeout (int): Timeout for the operation.
             delay (float): Delay in seconds to wait before command complete.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
 
         Returns:
+            command_id, future if ran async
             str: Contents of the specified file.
         """
         file_id, command_id = self._submit_get_file(file_name)
@@ -556,7 +558,12 @@ class CbLRSessionBase(object):
          u'sid': u's-1-5-18',
          u'username': u'NT AUTHORITY\\SYSTEM'}
 
+        Args:
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
+
         Returns:
+            command_id, future if ran async
+            or
             list: A list of dicts describing the processes.
         """
         data = {"name": "process list"}
@@ -608,8 +615,11 @@ class CbLRSessionBase(object):
 
         Args:
             regkey (str): The registry key to enumerate.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
 
         Returns:
+            command_id, future if ran async
+            or
             dict: A dictionary with two keys, 'sub_keys' (a list of subkey names) and 'values' (a list of dicts
                 containing value data, name, and type).
         """
@@ -632,8 +642,11 @@ class CbLRSessionBase(object):
 
         Args:
             regkey (str): The registry key to enumerate.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
 
         Returns:
+            command_id, future if ran async
+            or
             list: List of values for the registry key.
         """
         data = {"name": "reg enum key", "path": regkey}
@@ -656,8 +669,11 @@ class CbLRSessionBase(object):
 
         Args:
             regkey (str): The registry key to retrieve.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
 
         Returns:
+            command_id, future if ran async
+            or
             dict: A dictionary with keys of: value_data, value_name, value_type.
         """
         data = {"name": "reg query value", "path": regkey}
@@ -681,6 +697,10 @@ class CbLRSessionBase(object):
             value (object): The value data.
             overwrite (bool): If True, any existing value will be overwritten.
             value_type (str): The type of value.  Examples: REG_DWORD, REG_MULTI_SZ, REG_SZ
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
+
+        Returns:
+            command_id, future if ran async
         """
         real_value = value
         if value_type is None:
@@ -707,6 +727,10 @@ class CbLRSessionBase(object):
 
         Args:
             regkey (str): The registry key to create.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
+
+        Returns:
+            command_id, future if ran async
         """
         data = {"name": "reg create key", "path": regkey}
         resp = self._lr_post_command(data).json()
@@ -721,6 +745,10 @@ class CbLRSessionBase(object):
 
         Args:
             regkey (str): The registry key to delete.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
+
+        Returns:
+            command_id, future if ran async
         """
         data = {"name": "reg delete key", "path": regkey}
         resp = self._lr_post_command(data).json()
@@ -735,6 +763,10 @@ class CbLRSessionBase(object):
 
         Args:
             regkey (str): The registry value to delete.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
+
+        Returns:
+            command_id, future if ran async
         """
         data = {"name": "reg delete value", "path": regkey}
         resp = self._lr_post_command(data).json()
@@ -754,6 +786,10 @@ class CbLRSessionBase(object):
             local_filename (str): Name of the file the memory dump will be transferred to on the local machine.
             remote_filename (str): Name of the file the memory dump will be stored in on the remote machine.
             compress (bool): True to compress the file on the remote system.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
+
+        Returns:
+            command_id, future if ran async
         """
         dump_object = self.start_memdump(remote_filename=remote_filename, compress=compress)
         if async_mode:
