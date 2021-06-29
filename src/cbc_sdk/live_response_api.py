@@ -458,20 +458,25 @@ class CbLRSessionBase(object):
     # Process operations
     #
 
-    def kill_process(self, pid):
+    def kill_process(self, pid, async_mode=False):
         """
         Terminate a process on the remote machine.
 
         Args:
             pid (int): Process ID to be terminated.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
 
         Returns:
+            command_id, future if ran async
             bool: True if success, False if failure.
         """
         data = {"name": "kill", "pid": pid}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
-
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id,
+                                                                                        timeout=10,
+                                                                                        delay=0.1))
         try:
             self._poll_command(command_id, timeout=10, delay=0.1)
         except TimeoutError:
@@ -479,8 +484,22 @@ class CbLRSessionBase(object):
 
         return True
 
+    def _wait_for_completion(self, command_id, wait_for_completion, wait_for_output, wait_timeout, data):
+        if wait_for_completion:
+            self._poll_command(command_id, timeout=wait_timeout)
+
+        if wait_for_output:
+            # now the file is ready to be read
+            file_content = self.get_file(data["output_file"])
+            # delete the file
+            self._lr_post_command({"name": "delete file", "path": data["output_file"]})
+
+            return file_content
+        else:
+            return None
+
     def create_process(self, command_string, wait_for_output=True, remote_output_file_name=None,
-                       working_directory=None, wait_timeout=30, wait_for_completion=True):
+                       working_directory=None, wait_timeout=30, wait_for_completion=True, async_mode=False):
         """
         Create a new process on the remote machine with the specified command string.
 
@@ -498,8 +517,10 @@ class CbLRSessionBase(object):
             working_directory (str): The working directory of the create process operation.
             wait_timeout (int): Timeout used for this command.
             wait_for_completion (bool): True to wait until the process is completed before returning.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
 
         Returns:
+            command_id, future if ran async
             str: The output of the process.
         """
         # process is:
@@ -526,20 +547,18 @@ class CbLRSessionBase(object):
 
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
-
-        if wait_for_completion:
-            self._poll_command(command_id, timeout=wait_timeout)
-
-        if wait_for_output:
-            # now the file is ready to be read
-
-            file_content = self.get_file(data["output_file"])
-            # delete the file
-            self._lr_post_command({"name": "delete file", "path": data["output_file"]})
-
-            return file_content
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._wait_for_completion(command_id,
+                                                                                               wait_for_completion,
+                                                                                               wait_for_output,
+                                                                                               wait_timeout,
+                                                                                               data))
         else:
-            return None
+            return self._wait_for_completion(command_id,
+                                             wait_for_completion,
+                                             wait_for_output,
+                                             wait_timeout,
+                                             data)
 
     def list_processes(self, async_mode=False):
         r"""
@@ -1441,6 +1460,8 @@ def poll_status(cb, url, desired_status="COMPLETE", timeout=None, delay=None):
             return res
         elif res["status"].upper() == "ERROR":
             raise LiveResponseError(res)
+        elif res["status"].upper() == "CANCELLED":
+            raise ApiError('The command has been cancelled.')
         else:
             time.sleep(delay)
 

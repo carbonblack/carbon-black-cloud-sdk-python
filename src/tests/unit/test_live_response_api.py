@@ -63,7 +63,8 @@ from tests.unit.fixtures.live_response.mock_command import (DIRECTORY_LIST_START
                                                             MEMDUMP_START_RESP,
                                                             MEMDUMP_END_RESP,
                                                             MEMDUMP_DEL_START_RESP,
-                                                            MEMDUMP_DEL_END_RESP)
+                                                            MEMDUMP_DEL_END_RESP,
+                                                            GET_FILE_CANCELLED_RESP)
 from tests.unit.fixtures.live_response.mock_device import DEVICE_RESPONSE, UDEVICE_RESPONSE, POST_DEVICE_SEARCH_RESP
 from tests.unit.fixtures.live_response.mock_session import (SESSION_INIT_RESP, SESSION_POLL_RESP,
                                                             SESSION_POLL_RESP_ERROR, USESSION_INIT_RESP,
@@ -423,6 +424,23 @@ def test_get_file(cbcsdk_mock, connection_mock):
         session.get_file('c:\\\\test.txt')
 
 
+def test_get_file_cancelled(cbcsdk_mock, connection_mock):
+    """Test the response to the 'get file' command."""
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
+                             GET_FILE_COMMAND_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/7',
+                             GET_FILE_CANCELLED_RESP)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
+    manager = LiveResponseSessionManager(cbcsdk_mock.api)
+    with manager.request_session(2468) as session:
+        with pytest.raises(ApiError) as ex:
+            session.get_file('c:\\\\test.txt')
+        assert 'The command has been cancelled.' in str(ex.value)
+
+
 def test_get_file_async(cbcsdk_mock, connection_mock):
     """Test the response to the 'get file' command."""
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
@@ -680,6 +698,23 @@ def test_kill_process(cbcsdk_mock):
         assert session.kill_process(601)
 
 
+def test_kill_process_async(cbcsdk_mock):
+    """Test the response to the 'kill' command."""
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
+                             KILL_PROC_START_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/13',
+                             KILL_PROC_END_RESP)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
+    manager = LiveResponseSessionManager(cbcsdk_mock.api)
+    with manager.request_session(2468) as session:
+        command_id, result = session.kill_process(601, async_mode=True)
+        assert command_id == 13
+        assert result.result()
+
+
 def test_kill_process_timeout(cbcsdk_mock):
     """Test the response to the 'kill' command when it times out."""
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
@@ -708,6 +743,23 @@ def test_create_process(cbcsdk_mock):
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
     with manager.request_session(2468) as session:
         assert session.create_process('start_daemon', False) is None
+
+
+def test_create_process_async(cbcsdk_mock):
+    """Test the response to the 'create process' command with wait for completion."""
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
+                             CREATE_PROC_START_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/52',
+                             CREATE_PROC_END_RESP)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
+    manager = LiveResponseSessionManager(cbcsdk_mock.api)
+    with manager.request_session(2468) as session:
+        command_id, result = session.create_process('start_daemon', False, async_mode=True)
+        assert command_id == 52
+        assert result.result() is None
 
 
 def test_spawn_process(cbcsdk_mock):

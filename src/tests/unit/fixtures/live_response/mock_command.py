@@ -96,6 +96,17 @@ GET_FILE_END_RESP = {
     'completion_time': 2345678901
 }
 
+GET_FILE_CANCELLED_RESP = {
+    'id': 7,
+    'session_id': '1:2468',
+    'device_id': 2468,
+    'command_timeout': 120,
+    'status': 'CANCELLED',
+    'name': 'get file',
+    'object': 'C:\\\\test.txt',
+    'completion_time': 2345678901
+}
+
 GET_FILE_COMMAND_RESP = {
     "values": [],
     "file_details": {
