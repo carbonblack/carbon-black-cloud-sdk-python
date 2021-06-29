@@ -89,6 +89,7 @@ class CbLRSessionBase(object):
     """A Live Response session that interacts with a remote machine."""
 
     MAX_RETRY_COUNT = 5
+    THREAD_POOL_COUNT = 5
 
     def __init__(self, cblr_manager, session_id, device_id, session_data=None):
         """
@@ -105,7 +106,7 @@ class CbLRSessionBase(object):
         self._cblr_manager = cblr_manager
         self._cb = cblr_manager._cb
         self._async_executor = None
-        self._thread_pool_count = 5
+        self._thread_pool_count = self.THREAD_POOL_COUNT
         # TODO: refcount should be in a different object in the scheduler
         self._refcount = 1
         self._closed = False
@@ -410,6 +411,7 @@ class CbLRSessionBase(object):
         r"""
         Perform a full directory walk with recursion into subdirectories on the remote machine.
 
+        Note: walk does not support async_mode due to its behaviour, it can only be invoked synchronously
         Example:
         >>> with c.select(Device, 1).lr_session() as lr_session:
         ...     for entry in lr_session.walk(directory_name):
@@ -1190,6 +1192,7 @@ class CbLRManagerBase(object):
 
     cblr_base = ""  # override in subclass for each product
     cblr_session_cls = NotImplemented  # override in subclass for each product
+    THREAD_POOL_COUNT = 5
 
     def __init__(self, cb, timeout=30, keepalive_sessions=False):
         """
@@ -1207,6 +1210,8 @@ class CbLRManagerBase(object):
         self._keepalive_sessions = keepalive_sessions
         self._init_poll_delay = 1
         self._init_poll_timeout = 360
+        self._async_executor = None
+        self._thread_pool_count = self.THREAD_POOL_COUNT
 
         if keepalive_sessions:
             self._cleanup_thread_running = True
@@ -1216,6 +1221,22 @@ class CbLRManagerBase(object):
             self._cleanup_thread.start()
 
         self._job_scheduler = None
+
+    def _async_submit(self, func, *args, **kwargs):
+        """
+        Submit a task to the executor, creating it if it doesn't yet exist.
+
+        Args:
+            func (func): A callable to be executed as a background task.
+            *args (list): Arguments to be passed to the callable.
+            **kwargs (dict): Keyword arguments to be passed to the callable.
+
+        Returns:
+            Future: A future object representing the background task, which will pass along the result.
+        """
+        if not self._async_executor:
+            self._async_executor = ThreadPoolExecutor(max_workers=self._thread_pool_count)
+        return self._async_executor.submit(func, args, kwargs)
 
     def submit_job(self, job, device):
         """
@@ -1275,7 +1296,21 @@ class CbLRManagerBase(object):
             self._cleanup_thread_running = False
             self._cleanup_thread_event.set()
 
-    def request_session(self, device_id):
+    def _return_existing_session(self, device_id, session):
+        self._sessions[device_id]._refcount += 1
+        return session
+
+    def _get_session_obj(self, device_id, session_id):
+        session_id, session_data = self._wait_create_session(device_id, session_id)
+        session = self.cblr_session_cls(self, session_id, device_id, session_data=session_data)
+        return session
+
+    def _create_and_store_session(self, device_id, session_id):
+        session = self._get_session_obj(device_id, session_id)
+        self._sessions[device_id] = session
+        return session
+
+    def request_session(self, device_id, async_mode=False):
         """
         Initiate a new Live Response session.
 
@@ -1289,16 +1324,21 @@ class CbLRManagerBase(object):
             with self._session_lock:
                 if device_id in self._sessions:
                     session = self._sessions[device_id]
-                    self._sessions[device_id]._refcount += 1
+                    if async_mode:
+                        return session.session_id, self._async_submit(lambda arg, kwarg: self._return_existing_session(
+                            device_id, session))
+                    return self._return_existing_session(device_id, session)
                 else:
-                    session_id, session_data = self._get_or_create_session(device_id)
-                    session = self.cblr_session_cls(self, session_id, device_id, session_data=session_data)
-                    self._sessions[device_id] = session
+                    session_id = self._create_session(device_id)
+                    if async_mode:
+                        return session_id, self._async_submit(lambda arg, kwarg: self._create_and_store_session(
+                            device_id, session_id))
+                    return self._create_and_store_session(device_id, session_id)
         else:
-            session_id, session_data = self._get_or_create_session(device_id)
-            session = self.cblr_session_cls(self, session_id, device_id, session_data=session_data)
-
-        return session
+            session_id = self._create_session(device_id)
+            if async_mode:
+                return session_id, self._async_submit(lambda arg, kwarg: self._get_session_obj(device_id, session_id))
+            return self._get_session_obj(device_id, session_id)
 
     def close_session(self, device_id, session_id):
         """
@@ -1372,7 +1412,9 @@ class LiveResponseSessionManager(CbLRManagerBase):
 
     def _get_or_create_session(self, device_id):
         session_id = self._create_session(device_id)
+        return self._wait_create_session(device_id, session_id)
 
+    def _wait_create_session(self, device_id, session_id):
         try:
             res = poll_status(self._cb, "{cblr_base}/sessions/{0}".format(session_id,
                               cblr_base=self.cblr_base),
@@ -1397,8 +1439,7 @@ class LiveResponseSessionManager(CbLRManagerBase):
     def _create_session(self, device_id):
         response = self._cb.post_object("{cblr_base}/sessions".format(cblr_base=self.cblr_base),
                                         {"device_id": device_id}).json()
-        session_id = response["id"]
-        return session_id
+        return response["id"]
 
 
 class GetFileJob(object):

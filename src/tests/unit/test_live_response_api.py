@@ -246,6 +246,23 @@ def test_create_session(cbcsdk_mock):
         assert session.os_type == 1
 
 
+def test_create_session_async(cbcsdk_mock):
+    """Test creating a Live Response session."""
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
+    manager = LiveResponseSessionManager(cbcsdk_mock.api)
+    session_id, result = manager.request_session(2468, async_mode=True)
+    session = result.result()
+    assert session.session_id == '1:2468'
+    assert session.device_id == 2468
+    assert session._cblr_manager is manager
+    assert session._cb is cbcsdk_mock.api
+    assert session.os_type == 1
+    session.close()
+
+
 def test_create_session_with_poll_error(cbcsdk_mock):
     """Test creating a Live Response session with an error in the polling."""
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
@@ -288,6 +305,34 @@ def test_create_session_with_keepalive_option(cbcsdk_mock):
             assert session1.os_type == 1
         with manager.request_session(2468) as session2:
             assert session2 is session1
+        assert len(manager._sessions) == 1
+        manager._maintain_sessions()
+        assert len(manager._sessions) == 0
+    finally:
+        manager.stop_keepalive_thread()
+
+
+def test_create_session_with_keepalive_option_async(cbcsdk_mock):
+    """Test creating a Live Response session using the keepalive option."""
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
+    manager = LiveResponseSessionManager(cbcsdk_mock.api, 100000, True)
+    try:
+        session_id, result = manager.request_session(2468, async_mode=True)
+        session1 = result.result()
+        assert session_id == '1:2468'
+        assert session1.session_id == '1:2468'
+        assert session1.device_id == 2468
+        assert session1._cblr_manager is manager
+        assert session1._cb is cbcsdk_mock.api
+        assert session1.os_type == 1
+        session1.close()
+        session_id, result2 = manager.request_session(2468, async_mode=True)
+        session2 = result2.result()
+        assert session2 is session1
+        session2.close()
         assert len(manager._sessions) == 1
         manager._maintain_sessions()
         assert len(manager._sessions) == 0
