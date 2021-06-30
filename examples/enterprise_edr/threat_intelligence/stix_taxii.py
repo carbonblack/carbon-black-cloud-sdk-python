@@ -201,7 +201,6 @@ class TaxiiSiteConnector():
             # Content Block failed or parsing issue continue with current progress
             yield from ()
 
-
     def import_collection(self, collection):
         """
         Polls a single TAXII server collection.
