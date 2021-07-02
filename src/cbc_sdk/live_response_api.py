@@ -1414,6 +1414,11 @@ class LiveResponseSessionManager(CbLRManagerBase):
         session_id = self._create_session(device_id)
         return self._wait_create_session(device_id, session_id)
 
+    def check_session_status(self, session_id):
+        url = "{cblr_base}/sessions/{0}".format(session_id, cblr_base=self.cblr_base)
+        res = self._cb.get_object(url)
+        return res['status'].upper()
+
     def _wait_create_session(self, device_id, session_id):
         try:
             res = poll_status(self._cb, "{cblr_base}/sessions/{0}".format(session_id,

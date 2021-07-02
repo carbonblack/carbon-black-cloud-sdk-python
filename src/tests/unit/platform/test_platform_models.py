@@ -29,7 +29,7 @@ class StubScheduler:
         self.expected_id = expected_id
         self.was_called = False
 
-    def request_session(self, sensor_id):
+    def request_session(self, sensor_id, async_mode=False):
         """
         Stub out the request_session call to the scheduler.
 

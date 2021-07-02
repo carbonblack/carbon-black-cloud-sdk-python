@@ -48,7 +48,8 @@ from pprint import pprint
 # Internal library imports
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
 from cbc_sdk.platform import Device
-from cbc_sdk.live_response_api import LiveResponseError
+from cbc_sdk.live_response_api import LiveResponseError, LiveResponseSessionManager
+from cbc_sdk.errors import ApiError
 
 # CONSTANTS
 HEADERS = {'X-Auth-Token': '', 'Content-Type': 'application/json'}
@@ -89,23 +90,8 @@ def flatten_processes_response_filter(response, process_name):
     return [item['process_pid'] for item in response if process_name in item['process_path']]
 
 
-def main():
-    """Script entry point"""
-    global ORG_KEY
-    global HOSTNAME
-    parser = build_cli_parser()
-    args = parser.parse_args()
-    print_detail = args.verbose
-
-    if print_detail:
-        print(f"args provided {args}")
-
-    cb = get_cb_cloud_object(args)
-    HEADERS['X-Auth-Token'] = cb.credentials.token
-    ORG_KEY = cb.credentials.org_key
-    HOSTNAME = cb.credentials.url
-
-    print(13 * ' ' + 'Live Response Commands')
+def synchronous_version(cb):
+    print(11 * ' ' + 'Sync Live Response Commands')
     print(SYMBOLS * DELIMITER)
 
     try:
@@ -118,12 +104,6 @@ def main():
     lr_session = device.lr_session()
     print(f'Created Session {lr_session.session_id}...............OK')
     print()
-
-    # create the file that will be uploaded on the server,
-    # will be deleted once we are done with the test
-    fp = open("test.txt", "w")
-    fp.write(FILE_CONTENT)
-    fp.close()
 
     print()
     print(10 * ' ' + 'Live Response Files Commands')
@@ -309,14 +289,150 @@ def main():
     assert exists is False, 'Registry key was not properly deleted.'
     print('Delete Registry Key...........................OK')
 
+    lr_session.close()
+    print(f'Deleted the session {lr_session.session_id}...........OK')
+
+
+def asynchronous_version(cb):
+    print(11 * ' ' + 'Async Live Response Commands')
+    print(SYMBOLS * DELIMITER)
+
+    try:
+        device = cb.select(Device, DEVICE_ID)
+    except Exception:
+        # if this is not run on dev01, pick a random active device
+        devices = cb.select(Device).set_status(['ACTIVE'])
+        device = devices[0]
+
+    manager = LiveResponseSessionManager(cb)
+    session_id, result = manager.request_session(device.id, async_mode=True)
+    print(f'Created Session {session_id}...............OK')
+    while True:
+        status = manager.check_session_status(session_id)
+        if status == 'ACTIVE':
+            break
+        print('Current status:', status)
+
+    lr_session = result.result()
+    print(f'Active Session {lr_session.session_id}................OK')
+    print()
+
+    print()
+    print(10 * ' ' + 'Live Response Files Commands')
+    print(SYMBOLS * DELIMITER)
+
+    # those two command will not raise an exception, because they are async
+    _, result1 = lr_session.create_directory(DIR, async_mode=True)
+    _, result2 = lr_session.create_directory(DIR, async_mode=True)
+    # create directory
+    try:
+        # upon getting the result, one of the commands will raise a LiveResponseError exception
+        result1.result()
+        result2.result()
+    except LiveResponseError as ex:
+        if 'ERROR_ALREADY_EXISTS' in str(ex):
+            print('Command raised ERROR_ALREADY_EXISTS...........OK')
+        else:
+            raise
+    print('Create Dir....................................OK')
+
+    # show that test.txt is not present in that directory
+    _, ldresult = lr_session.list_directory(DIR, async_mode=True)
+
+    # upload the file on the server
+    _, uresult = lr_session.put_file(open("test.txt", "r"), FILE, async_mode=True)
+    uresult.result()
+    print('PUT File......................................OK')
+
+    directories = flatten_response(ldresult.result())
+    assert 'test.txt' not in directories, f'Dirs: {directories}'
+
+    # show that test.txt is present in that directory
+    _, uresult = lr_session.list_directory(DIR, async_mode=True)
+    directories = flatten_response(uresult.result())
+    assert 'test.txt' in directories, f'Dirs: {directories}'
+
+    # start a few commands one after the other
+    _, gresult = lr_session.get_file(FILE, async_mode=True)
+    g2command_id, g2result = lr_session.get_file(FILE, async_mode=True)
+    _, dresult = lr_session.delete_file(FILE, async_mode=True)
+    lr_session.cancel_command(g2command_id)
+    print('Started async commands........................OK')
+
+    content = gresult.result()
+    assert content == FILE_CONTENT_BINARY, f'{content} {FILE_CONTENT}'
+    print('GET File......................................OK')
+
+    exc_raise = False
+    try:
+        g2result.result()
+    except ApiError as ex:
+        assert 'The command has been cancelled.' in str(ex)
+        exc_raise = True
+    finally:
+        assert exc_raise
+
+    # make sure the file is deleted before checking that it does not exist
+    dresult.result()
+    exc_raise = False
+    try:
+        _, result = lr_session.get_file(FILE, async_mode=True)
+        result.result()
+    except LiveResponseError as ex:
+        assert 'ERROR_FILE_NOT_FOUND' in str(ex) or 'ERROR_PATH_NOT_FOUND' in str(ex), f'Other error {ex}'
+        exc_raise = True
+    finally:
+        assert exc_raise
+
+    print('DELETE File...................................OK')
+    # delete the directory too
+    lr_session.delete_file(DIR)
+    print('DELETE Dir....................................OK')
+
+
+def setup():
+    # create the file that will be uploaded on the server,
+    # will be deleted once we are done with the test
+    fp = open("test.txt", "w")
+    fp.write(FILE_CONTENT)
+    fp.close()
+
+
+def teardown():
     # clean-up actions after the tests
     if path.exists(LOCAL_FILE):
         os.remove(LOCAL_FILE)
     if path.exists("test.txt"):
         os.remove("test.txt")
 
-    lr_session.close()
-    print(f'Deleted the session {lr_session.session_id}...........OK')
+
+def main():
+    """Script entry point"""
+    global ORG_KEY
+    global HOSTNAME
+    parser = build_cli_parser()
+    args = parser.parse_args()
+    print_detail = args.verbose
+
+    if print_detail:
+        print(f"args provided {args}")
+
+    cb = get_cb_cloud_object(args)
+    HEADERS['X-Auth-Token'] = cb.credentials.token
+    ORG_KEY = cb.credentials.org_key
+    HOSTNAME = cb.credentials.url
+
+    # setup actions
+    setup()
+
+    # synchronous version of the commands
+    # synchronous_version(cb)
+
+    # asynchronous version of the commands
+    asynchronous_version(cb)
+
+    # cleanup actions
+    teardown()
 
 
 if __name__ == "__main__":

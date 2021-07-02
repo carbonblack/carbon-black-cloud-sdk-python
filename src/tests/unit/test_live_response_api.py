@@ -532,6 +532,16 @@ def test_command_status(cbcsdk_mock):
         assert status == 'COMPLETE'
 
 
+def test_check_session_status(cbcsdk_mock):
+    """Test command status method"""
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    manager = LiveResponseSessionManager(cbcsdk_mock.api)
+    session_id, _ = manager.request_session(2468, async_mode=True)
+    status = manager.check_session_status(session_id)
+    assert status == 'ACTIVE'
+
+
 def test_cancel_complete_command(cbcsdk_mock):
     """Test the response to the 'cancel command' command for completed command."""
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
