@@ -310,7 +310,7 @@ def asynchronous_version(cb):
     session_id, result = manager.request_session(device.id, async_mode=True)
     print(f'Created Session {session_id}...............OK')
     while True:
-        status = manager.check_session_status(session_id)
+        status = manager.session_status(session_id)
         if status == 'ACTIVE':
             break
         print('Current status:', status)
