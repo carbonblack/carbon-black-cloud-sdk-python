@@ -39,11 +39,12 @@ Processes: Live Response
 """
 
 # Standard library imports
-import sys
 import os
 import os.path
 from os import path
 from pprint import pprint
+import sys
+import time
 
 # Internal library imports
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
@@ -296,6 +297,7 @@ def synchronous_version(cb):
 
 def asynchronous_version(cb):
     """Asynchronous commands"""
+    print()
     print(11 * ' ' + 'Async Live Response Commands')
     print(SYMBOLS * DELIMITER)
 
@@ -350,8 +352,8 @@ def asynchronous_version(cb):
     assert 'test.txt' not in directories, f'Dirs: {directories}'
 
     # show that test.txt is present in that directory
-    _, uresult = lr_session.list_directory(DIR, async_mode=True)
-    directories = flatten_response(uresult.result())
+    _, lresult = lr_session.list_directory(DIR, async_mode=True)
+    directories = flatten_response(lresult.result())
     assert 'test.txt' in directories, f'Dirs: {directories}'
 
     # start a few commands one after the other
@@ -377,8 +379,8 @@ def asynchronous_version(cb):
     # make sure the file is deleted before checking that it does not exist
     dresult.result()
     exc_raise = False
+    _, result = lr_session.get_file(FILE, async_mode=True)
     try:
-        _, result = lr_session.get_file(FILE, async_mode=True)
         result.result()
     except LiveResponseError as ex:
         assert 'ERROR_FILE_NOT_FOUND' in str(ex) or 'ERROR_PATH_NOT_FOUND' in str(ex), f'Other error {ex}'
@@ -390,6 +392,42 @@ def asynchronous_version(cb):
     # delete the directory too
     lr_session.delete_file(DIR)
     print('DELETE Dir....................................OK')
+
+    print()
+    print(9 * ' ' + 'Live Response Process Commands')
+    print(SYMBOLS * DELIMITER)
+
+    # list processes
+    _, lresult = lr_session.list_processes(async_mode=True)
+    # create infinite ping, that could be killed afterwards
+    _, cresult = lr_session.create_process(r'cmd.exe /c "ping.exe -t 127.0.0.1"',
+                                           wait_for_completion=False,
+                                           wait_for_output=False,
+                                           async_mode=True)
+    cresult.result()
+    processes = lresult.result()
+
+    pprint(flatten_processes_response(processes))
+    print('List Processes................................OK')
+
+    _, lresult = lr_session.list_processes(async_mode=True)
+    processes = lresult.result()
+    found = False
+    for process in processes:
+        if 'ping.exe' in process['process_path']:
+            found = True
+
+    # assert that indeed there is such a process
+    assert found
+    print('Create Process................................OK')
+
+    # kill all of the processes that are for ping.exe
+    for pid in flatten_processes_response_filter(processes, 'ping.exe'):
+        print(f'Killing process with pid {pid}')
+        _, result = lr_session.kill_process(pid, async_mode=True)
+        result.result()
+
+    print('Kill Process..................................OK')
 
     print()
     print(6 * ' ' + 'Live Response Registry Keys Commands')
@@ -545,7 +583,10 @@ def main():
     setup()
 
     # synchronous version of the commands
-    # synchronous_version(cb)
+    synchronous_version(cb)
+
+    # give time to the close session command to complete
+    time.sleep(10)
 
     # asynchronous version of the commands
     asynchronous_version(cb)
