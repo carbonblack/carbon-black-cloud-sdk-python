@@ -91,6 +91,7 @@ def flatten_processes_response_filter(response, process_name):
 
 
 def synchronous_version(cb):
+    """Synchronous commands"""
     print(11 * ' ' + 'Sync Live Response Commands')
     print(SYMBOLS * DELIMITER)
 
@@ -294,6 +295,7 @@ def synchronous_version(cb):
 
 
 def asynchronous_version(cb):
+    """Asynchronous commands"""
     print(11 * ' ' + 'Async Live Response Commands')
     print(SYMBOLS * DELIMITER)
 
@@ -506,6 +508,7 @@ def asynchronous_version(cb):
 
 
 def setup():
+    """Setup Function"""
     # create the file that will be uploaded on the server,
     # will be deleted once we are done with the test
     fp = open("test.txt", "w")
@@ -514,6 +517,7 @@ def setup():
 
 
 def teardown():
+    """Teardown Function"""
     # clean-up actions after the tests
     if path.exists(LOCAL_FILE):
         os.remove(LOCAL_FILE)
