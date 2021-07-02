@@ -193,8 +193,13 @@ class TaxiiSiteConnector():
             score = default_score
         else:
             score = self.config.default_score
-        for block in content_blocks:
-            yield from parse_stix(block.content, score)
+
+        try:
+            for block in content_blocks:
+                yield from parse_stix(block.content, score)
+        except:
+            # Content Block failed or parsing issue continue with current progress
+            yield from ()
 
     def import_collection(self, collection):
         """
