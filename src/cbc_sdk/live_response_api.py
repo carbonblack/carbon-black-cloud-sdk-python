@@ -1414,7 +1414,16 @@ class LiveResponseSessionManager(CbLRManagerBase):
         session_id = self._create_session(device_id)
         return self._wait_create_session(device_id, session_id)
 
-    def check_session_status(self, session_id):
+    def session_status(self, session_id):
+        """
+        Check the status of a lr session
+
+        Args:
+            session_id (str): The id of the session.
+
+        Returns:
+            str: Status of the session
+        """
         url = "{cblr_base}/sessions/{0}".format(session_id, cblr_base=self.cblr_base)
         res = self._cb.get_object(url)
         return res['status'].upper()

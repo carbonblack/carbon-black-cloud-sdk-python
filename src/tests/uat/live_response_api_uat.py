@@ -389,6 +389,121 @@ def asynchronous_version(cb):
     lr_session.delete_file(DIR)
     print('DELETE Dir....................................OK')
 
+    print()
+    print(6 * ' ' + 'Live Response Registry Keys Commands')
+    print(SYMBOLS * DELIMITER)
+
+    _, kv_result = lr_session.list_registry_keys_and_values(KEY_PATH_PARENT, async_mode=True)
+    _, kv2_result = lr_session.list_registry_keys_and_values(KEY_PATH, async_mode=True)
+    kvccommand_id, kvc_result = lr_session.create_registry_key(KEY_PATH, async_mode=True)
+
+    result = kv_result.result()
+    pprint(result)
+    print('List Registry Keys and Values.................OK')
+
+    found = False
+    for item in result['values']:
+        if item['registry_name'] == 'Test':
+            found = True
+            break
+    # make sure the value for the key doesn't exist
+    assert found is False
+
+    exists = True
+    try:
+        result = kv2_result.result()
+        print(result)
+    except LiveResponseError as ex:
+        # make sure such registry key does not exist
+        exists = not ('ERROR_FILE_NOT_FOUND' in str(ex))
+    assert exists is False
+    print(f'Registry key with path {KEY_PATH} does not exist. Creating...')
+
+    while True:
+        status = lr_session.command_status(kvccommand_id)
+        if status == 'COMPLETE':
+            break
+
+    result = kvc_result.result()
+
+    exists = True
+    try:
+        _, result = lr_session.list_registry_keys_and_values(KEY_PATH, async_mode=True)
+        result.result()
+    except LiveResponseError as ex:
+        exists = False
+        assert 'ERROR_FILE_NOT_FOUND' in str(ex)
+    # make sure that now the key exists
+    assert exists
+    print('Create Registry Key...........................OK')
+
+    # create value for the key
+    _, result = lr_session.set_registry_value(KEY_PATH, 1, async_mode=True)
+    result.result()
+    _, fresult = lr_session.get_registry_value(KEY_PATH, async_mode=True)
+    result = fresult.result()
+    assert result['registry_data'] == '1'
+    assert result['registry_name'] == 'Test'
+    print('Create Registry Value.........................OK')
+
+    pprint(result)
+    print('Get Registry Value............................OK')
+
+    _, fresult = lr_session.list_registry_keys_and_values(KEY_PATH_PARENT, async_mode=True)
+    result = fresult.result()
+    pprint(result)
+    print('List Registry Keys and Values.................OK')
+
+    found = False
+    for item in result['values']:
+        if item['registry_name'] == 'Test':
+            found = True
+            break
+    # make sure the value for the key exists
+    assert found is True
+
+    _, fresult = lr_session.delete_registry_value(KEY_PATH, async_mode=True)
+    fresult.result()
+
+    # this will not raise an exception, because the result is not obtained
+    _, dresult = lr_session.delete_registry_value(KEY_PATH, async_mode=True)
+    fresult.result()
+    deleted = False
+    try:
+        dresult.result()
+    except LiveResponseError as ex:
+        deleted = 'ERROR_FILE_NOT_FOUND' in str(ex)
+
+    # make sure the value is deleted
+    assert deleted
+    print('Delete Registry Value.........................OK')
+
+    _, fresult = lr_session.list_registry_keys_and_values(KEY_PATH_PARENT, async_mode=True)
+    result = fresult.result()
+    found = False
+    for item in result['values']:
+        if item['registry_name'] == 'Test':
+            found = True
+            break
+    # make sure the value for the key was deleted successfully
+    assert found is False
+
+    _, fresult = lr_session.delete_registry_key(KEY_PATH, async_mode=True)
+    result = fresult.result()
+    _, fresult = lr_session.list_registry_keys_and_values(KEY_PATH, async_mode=True)
+    exists = True
+    try:
+        fresult.result()
+    except LiveResponseError as ex:
+        # make sure such registry key does not exist
+        exists = False
+        assert 'ERROR_FILE_NOT_FOUND' in str(ex)
+    assert exists is False, 'Registry key was not properly deleted.'
+    print('Delete Registry Key...........................OK')
+
+    lr_session.close()
+    print(f'Deleted the session {lr_session.session_id}...........OK')
+
 
 def setup():
     # create the file that will be uploaded on the server,
