@@ -559,17 +559,25 @@ def test_cancel_complete_command(cbcsdk_mock):
 
 def test_cancel_pending_command(cbcsdk_mock):
     """Test the response to the 'cancel command' command for completed command."""
+    _was_called = False
+
+    def delete_req(url, body):
+        nonlocal _was_called
+        _was_called = True
+        return None
+
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/7',
                              GET_FILE_COMMAND_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
-    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/7', None)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/7', delete_req)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
     with manager.request_session(2468) as session:
         try:
             session.cancel_command(7)
+            assert _was_called
         except ApiError:
             raise Exception('Failed')
 

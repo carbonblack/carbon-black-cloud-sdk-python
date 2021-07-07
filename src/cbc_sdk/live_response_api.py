@@ -89,9 +89,8 @@ class CbLRSessionBase(object):
     """A Live Response session that interacts with a remote machine."""
 
     MAX_RETRY_COUNT = 5
-    THREAD_POOL_COUNT = 5
 
-    def __init__(self, cblr_manager, session_id, device_id, session_data=None):
+    def __init__(self, cblr_manager, session_id, device_id, session_data=None, thread_pool_count=5):
         """
         Initialize the CbLRSessionBase.
 
@@ -100,13 +99,14 @@ class CbLRSessionBase(object):
             session_id (str): The ID of this session.
             device_id (int): The ID of the device (remote machine) we're connected to.
             session_data (dict): Additional session data.
+            thread_pool_count (int) optional: number of workers for async commands
         """
         self.session_id = session_id
         self.device_id = device_id
         self._cblr_manager = cblr_manager
         self._cb = cblr_manager._cb
         self._async_executor = None
-        self._thread_pool_count = self.THREAD_POOL_COUNT
+        self._thread_pool_count = thread_pool_count
         # TODO: refcount should be in a different object in the scheduler
         self._refcount = 1
         self._closed = False
@@ -227,13 +227,6 @@ class CbLRSessionBase(object):
         response.raw.decode_content = True
         return response.raw
 
-    def _get_file(self, command_id, file_id, timeout, delay):
-        """Helper function to get the content of a file"""
-        fp = self._get_raw_file(command_id, file_id, timeout=timeout, delay=delay)
-        content = fp.read()
-        fp.close()
-        return content
-
     def get_file(self, file_name, timeout=None, delay=None, async_mode=False):
         """
         Retrieve contents of the specified file on the remote machine.
@@ -248,13 +241,17 @@ class CbLRSessionBase(object):
             command_id, future if ran async
             str: Contents of the specified file.
         """
+        def _get_file():
+            """Helper function to get the content of a file"""
+            fp = self._get_raw_file(command_id, file_id, timeout=timeout, delay=delay)
+            content = fp.read()
+            fp.close()
+            return content
+
         file_id, command_id = self._submit_get_file(file_name)
         if async_mode:
-            return command_id, self._async_submit(lambda arg, kwarg: self._get_file(command_id,
-                                                                                    file_id,
-                                                                                    timeout,
-                                                                                    delay))
-        return self._get_file(command_id, file_id, timeout, delay)
+            return command_id, self._async_submit(lambda arg, kwarg: _get_file())
+        return _get_file()
 
     def delete_file(self, filename, async_mode=False):
         """
@@ -486,20 +483,6 @@ class CbLRSessionBase(object):
 
         return True
 
-    def _wait_for_completion(self, command_id, wait_for_completion, wait_for_output, wait_timeout, data):
-        if wait_for_completion:
-            self._poll_command(command_id, timeout=wait_timeout)
-
-        if wait_for_output:
-            # now the file is ready to be read
-            file_content = self.get_file(data["output_file"])
-            # delete the file
-            self._lr_post_command({"name": "delete file", "path": data["output_file"]})
-
-            return file_content
-        else:
-            return None
-
     def create_process(self, command_string, wait_for_output=True, remote_output_file_name=None,
                        working_directory=None, wait_timeout=30, wait_for_completion=True, async_mode=False):
         """
@@ -531,6 +514,19 @@ class CbLRSessionBase(object):
         # - wait for the process to complete
         # - get the temporary file from the endpoint
         # - delete the temporary file
+        def wait_to_complete_command():
+            if wait_for_completion:
+                self._poll_command(command_id, timeout=wait_timeout)
+
+            if wait_for_output:
+                # now the file is ready to be read
+                file_content = self.get_file(data["output_file"])
+                # delete the file
+                self._lr_post_command({"name": "delete file", "path": data["output_file"]})
+
+                return file_content
+            else:
+                return None
 
         if wait_for_output:
             wait_for_completion = True
@@ -550,17 +546,9 @@ class CbLRSessionBase(object):
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
         if async_mode:
-            return command_id, self._async_submit(lambda arg, kwarg: self._wait_for_completion(command_id,
-                                                                                               wait_for_completion,
-                                                                                               wait_for_output,
-                                                                                               wait_timeout,
-                                                                                               data))
+            return command_id, self._async_submit(lambda arg, kwarg: wait_to_complete_command())
         else:
-            return self._wait_for_completion(command_id,
-                                             wait_for_completion,
-                                             wait_for_output,
-                                             wait_timeout,
-                                             data)
+            return wait_to_complete_command()
 
     def list_processes(self, async_mode=False):
         r"""
@@ -644,17 +632,16 @@ class CbLRSessionBase(object):
             dict: A dictionary with two keys, 'sub_keys' (a list of subkey names) and 'values' (a list of dicts
                 containing value data, name, and type).
         """
+        def _list_registry_keys_and_values():
+            """Helper function for list registry keys and values"""
+            raw_output = self._poll_command(command_id)
+            return {'values': raw_output.get('values', []), 'sub_keys': raw_output.get('sub_keys', [])}
         data = {"name": "reg enum key", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
         if async_mode:
-            return command_id, self._async_submit(lambda arg, kwarg: self._list_registry_keys_and_values(command_id))
-        return self._list_registry_keys_and_values(command_id)
-
-    def _list_registry_keys_and_values(self, command_id):
-        """Helper function for list registry keys and values"""
-        raw_output = self._poll_command(command_id)
-        return {'values': raw_output.get('values', []), 'sub_keys': raw_output.get('sub_keys', [])}
+            return command_id, self._async_submit(lambda arg, kwarg: _list_registry_keys_and_values())
+        return _list_registry_keys_and_values()
 
     # returns a list containing a dictionary for each registry value in the key
     def list_registry_values(self, regkey, async_mode=False):
@@ -812,17 +799,15 @@ class CbLRSessionBase(object):
         Returns:
             command_id, future if ran async
         """
+        def _memdump():
+            """Helper function for memdump"""
+            dump_object.wait()
+            dump_object.get(local_filename)
+            dump_object.delete()
         dump_object = self.start_memdump(remote_filename=remote_filename, compress=compress)
         if async_mode:
-            return dump_object.memdump_id, self._async_submit(lambda arg, kwarg: self._memdump(dump_object,
-                                                                                               local_filename))
-        self._memdump(dump_object, local_filename)
-
-    def _memdump(self, dump_object, local_filename):
-        """Helper function for memdump"""
-        dump_object.wait()
-        dump_object.get(local_filename)
-        dump_object.delete()
+            return dump_object.memdump_id, self._async_submit(lambda arg, kwarg: _memdump())
+        _memdump()
 
     def start_memdump(self, remote_filename=None, compress=True):
         """
@@ -1192,9 +1177,8 @@ class CbLRManagerBase(object):
 
     cblr_base = ""  # override in subclass for each product
     cblr_session_cls = NotImplemented  # override in subclass for each product
-    THREAD_POOL_COUNT = 5
 
-    def __init__(self, cb, timeout=30, keepalive_sessions=False):
+    def __init__(self, cb, timeout=30, keepalive_sessions=False, thread_pool_count=5):
         """
         Initialize the CbLRManagerBase object.
 
@@ -1202,6 +1186,7 @@ class CbLRManagerBase(object):
             cb (BaseAPI): The CBC SDK object reference.
             timeout (int): Timeout to use for requests, in seconds.
             keepalive_sessions (bool): If True, "ping" sessions occasionally to ensure they stay alive.
+            thread_pool_count (int) optional: number of workers for async commands
         """
         self._timeout = timeout
         self._cb = cb
@@ -1211,7 +1196,7 @@ class CbLRManagerBase(object):
         self._init_poll_delay = 1
         self._init_poll_timeout = 360
         self._async_executor = None
-        self._thread_pool_count = self.THREAD_POOL_COUNT
+        self._thread_pool_count = thread_pool_count
 
         if keepalive_sessions:
             self._cleanup_thread_running = True
@@ -1296,20 +1281,6 @@ class CbLRManagerBase(object):
             self._cleanup_thread_running = False
             self._cleanup_thread_event.set()
 
-    def _return_existing_session(self, device_id, session):
-        self._sessions[device_id]._refcount += 1
-        return session
-
-    def _get_session_obj(self, device_id, session_id):
-        session_id, session_data = self._wait_create_session(device_id, session_id)
-        session = self.cblr_session_cls(self, session_id, device_id, session_data=session_data)
-        return session
-
-    def _create_and_store_session(self, device_id, session_id):
-        session = self._get_session_obj(device_id, session_id)
-        self._sessions[device_id] = session
-        return session
-
     def request_session(self, device_id, async_mode=False):
         """
         Initiate a new Live Response session.
@@ -1320,25 +1291,37 @@ class CbLRManagerBase(object):
         Returns:
             CbLRSessionBase: The new Live Response session.
         """
+        def _return_existing_session():
+            self._sessions[device_id]._refcount += 1
+            return session
+
+        def _get_session_obj():
+            _, session_data = self._wait_create_session(device_id, session_id)
+            session = self.cblr_session_cls(self, session_id, device_id, session_data=session_data)
+            return session
+
+        def _create_and_store_session():
+            session = _get_session_obj()
+            self._sessions[device_id] = session
+            return session
+
         if self._keepalive_sessions:
             with self._session_lock:
                 if device_id in self._sessions:
                     session = self._sessions[device_id]
                     if async_mode:
-                        return session.session_id, self._async_submit(lambda arg, kwarg: self._return_existing_session(
-                            device_id, session))
-                    return self._return_existing_session(device_id, session)
+                        return session.session_id, self._async_submit(lambda arg, kwarg: _return_existing_session())
+                    return _return_existing_session()
                 else:
                     session_id = self._create_session(device_id)
                     if async_mode:
-                        return session_id, self._async_submit(lambda arg, kwarg: self._create_and_store_session(
-                            device_id, session_id))
-                    return self._create_and_store_session(device_id, session_id)
+                        return session_id, self._async_submit(lambda arg, kwarg: _create_and_store_session())
+                    return _create_and_store_session()
         else:
             session_id = self._create_session(device_id)
             if async_mode:
-                return session_id, self._async_submit(lambda arg, kwarg: self._get_session_obj(device_id, session_id))
-            return self._get_session_obj(device_id, session_id)
+                return session_id, self._async_submit(lambda arg, kwarg: _get_session_obj())
+            return _get_session_obj()
 
     def close_session(self, device_id, session_id):
         """
