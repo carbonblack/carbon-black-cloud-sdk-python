@@ -486,6 +486,24 @@ def test_get_file_cancelled(cbcsdk_mock, connection_mock):
         assert 'The command has been cancelled.' in str(ex.value)
 
 
+def test_get_file_cancelled_async(cbcsdk_mock, connection_mock):
+    """Test the response to the 'get file' command."""
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
+                             GET_FILE_COMMAND_RESP)
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/7',
+                             GET_FILE_CANCELLED_RESP)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
+    manager = LiveResponseSessionManager(cbcsdk_mock.api)
+    with manager.request_session(2468) as session:
+        with pytest.raises(ApiError) as ex:
+            _, result = session.get_file('c:\\\\test.txt', async_mode=True)
+            result.result()
+        assert 'The command has been cancelled.' in str(ex.value)
+
+
 def test_get_file_async(cbcsdk_mock, connection_mock):
     """Test the response to the 'get file' command."""
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
