@@ -99,7 +99,7 @@ class CbLRSessionBase(object):
             session_id (str): The ID of this session.
             device_id (int): The ID of the device (remote machine) we're connected to.
             session_data (dict): Additional session data.
-            thread_pool_count (int) optional: number of workers for async commands
+            thread_pool_count (int): number of workers for async commands (optional)
         """
         self.session_id = session_id
         self.device_id = device_id
@@ -1186,7 +1186,7 @@ class CbLRManagerBase(object):
             cb (BaseAPI): The CBC SDK object reference.
             timeout (int): Timeout to use for requests, in seconds.
             keepalive_sessions (bool): If True, "ping" sessions occasionally to ensure they stay alive.
-            thread_pool_count (int) optional: number of workers for async commands
+            thread_pool_count (int): number of workers for async commands (optional)
         """
         self._timeout = timeout
         self._cb = cb
