@@ -82,7 +82,7 @@ you can enable Alerting for the Watchlist.
     >>> watchlist.enable_alerts()
 
 A Closer Look at IOCs
-=====================
+---------------------
 In this document, we will only discuss the "v2" IOCs; other types of IOCs are only provided for backwards compatibility
 reasons, and are converted, internally, to this type.
 
@@ -153,7 +153,7 @@ to indicate that this IOC or report is being managed outside of the console.  If
 the console UI will disable the ability to edit the IOC or report, but they can still be edited via the API.
 
 Tips for Using IOCs
--------------------
++++++++++++++++++++
 
 * You can safely ignore certain fields in an IOC.  For example, fields like ``alert_id`` and ``process_guid`` will
   always uniquely identify just a single record in your organization's data, whereas a field like ``org_id`` will be
@@ -183,7 +183,7 @@ Tips for Using IOCs
 * Query IOCs may search on CIDR address ranges, e.g.: ``netconn_ipv4:192.168.0.0/16``.
 
 Feeds
-=====
+-----
 Another way of managing reports is to attach them to a *feed.* Feeds can contain multiple reports, and a feed can be
 attached to a watchlist, effectively making the contents of the watchlist equivalent to the contents of the feed.
 
@@ -236,7 +236,7 @@ anyone with sufficient privileges in the organization.  There are additional typ
 be created by MSSPs, and *public feeds* can only be created or edited by VMware Carbon Black.
 
 Limitations of Reports and Watchlists
-=====================================
+-------------------------------------
 Individual reports may contain no more than 10,000 IOCs.  Reports containing more than 1,000 IOCs will not be editable
 via the Carbon Black Cloud console UI, but may still be managed using APIs.
 
