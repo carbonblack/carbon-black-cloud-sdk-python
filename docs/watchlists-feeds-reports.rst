@@ -15,9 +15,26 @@ All examples here assume that a Carbon Black Cloud SDK connection has been set u
     >>> from cbc_sdk import CBCloudAPI
     >>> api = CBCloudAPI(profile='sample')
 
+Setting up a connection is documented here: :doc:`getting-started`
+
+About the Objects
+-----------------
+An *indicator of compromise* (IOC) is a query, list of strings, or list of regular expressions that the Carbon Black
+Cloud is set up to watch for.  Any activity that matches one of these may indicate a compromise of an endpoint.
+
+A *report* groups one or more IOCs together, which may reflect a number of possible conditions to look for, or a number
+of conditions related to a particular target program or type of malware.  Reports can be used to organize IOCs.
+
+A *watchlist* contains reports (either directly or through a feed) that the Carbon Black Cloud is matching against
+events coming from the endpoints. A positive match will trigger a "hit," which may be logged or result in an alert.
+
+A *feed* contains reports which have been gathered by a single source. They resemble "potential watchlists."
+A watchlist may be easily subscribed to a feed, so that any reports in the feed act as if they were in the watchlist
+itself, triggering logs or alerts as appropriate.
+
 Setting Up a Basic Custom Watchlist
 -----------------------------------
-Creating a custom watchlist that can watch and/or generate alerts requires three steps:
+Creating a custom watchlist that can watch incoming events and/or generate alerts requires three steps:
 
 1. Create a report including one or more Indicators of Compromise (IOCs).
 2. Add that report to a watchlist.
@@ -25,7 +42,7 @@ Creating a custom watchlist that can watch and/or generate alerts requires three
 
 Creating a Report
 +++++++++++++++++
-We create the report, adding one or more IOCs to it:
+In this example, a report is created, adding one or more IOCs to it:
 
 ::
 
@@ -47,8 +64,8 @@ Reports should always be given a ``title`` that's sufficiently unique within you
 the chances of confusing two or more Reports with each other.  Carbon Black Cloud will generate unique ``id`` values
 for each report, but does not enforce any uniqueness constraint on the ``title`` of reports.
 
-Alternatively, we can update an existing report, adding more IOCs and/or replacing existing ones.  Note that we have
-to find a report associated with a watchlist by looking in its ``reports`` collection.
+Alternatively, we can update an existing report, adding more IOCs and/or replacing existing ones.  To find an existing
+report associated with a watchlist, you must look in the watchlist's ``reports`` collection.
 
 Adding the Report to a Watchlist
 ++++++++++++++++++++++++++++++++
@@ -65,17 +82,19 @@ Now, add the new Report to a new Watchlist:
     ...                                   "tags_enabled": True})
     >>> watchlist.save()
 
-**Note:** ``classifier`` should always be ``None``, unless the new watchlist is being subscribed to a feed.
-
-When either ``alerts_enabled`` or ``tags_enabled`` are ``True``, that Watchlist will create data you can act on -
-either alerts or hits, respectively; if both are ``False``, the Watchlist is effectively disabled.
+**Note:** ``classifier`` *must* be ``None``, unless the new watchlist is being subscribed to a feed.
 
 If you already have an existing Watchlist you wish to enhance, you can add Reports to the existing Watchlist.
 
 Enabling Alerting on a Watchlist
 ++++++++++++++++++++++++++++++++
+When either the ``alerts_enabled`` or ``tags_enabled`` attributes of a watchlist are ``True``, that Watchlist will
+create data you can act on - either alerts or hits, respectively; if both are ``False``, the Watchlist is effectively
+disabled.
+
 Once you have the Watchlist configured with the IOCs that are generating the kinds of hits (results) you are after,
-you can enable Alerting for the Watchlist.
+you can enable Alerting for the Watchlist, which will allow matches against the reports in the watchlist to generate
+alerts.
 
 ::
 
@@ -83,8 +102,8 @@ you can enable Alerting for the Watchlist.
 
 A Closer Look at IOCs
 ---------------------
-In this document, we will only discuss the "v2" IOCs; other types of IOCs are only provided for backwards compatibility
-reasons, and are converted, internally, to this type.
+In this document, we will only discuss the "v2" IOCs; the "v1" IOCs are only provided for backwards compatibility
+reasons. They are officially deprecated, and are converted, internally, to this type.
 
 IOCs can be classified into two general types, depending on their ``match_type`` value:
 
@@ -154,7 +173,6 @@ the console UI will disable the ability to edit the IOC or report, but they can 
 
 Tips for Using IOCs
 +++++++++++++++++++
-
 * You can safely ignore certain fields in an IOC.  For example, fields like ``alert_id`` and ``process_guid`` will
   always uniquely identify just a single record in your organization's data, whereas a field like ``org_id`` will be
   a constant across *all* your organization's data.
@@ -167,8 +185,8 @@ Tips for Using IOCs
   large number of resources.  For example, the query ``netconn_count:[500 TO *]`` will match only processes that make
   a large number of network connections.
 * When using ingress IOCs, be careful of errant characters in the ``values`` list, such as leading or trailing
-  whitespace or embedded newline characters.  These errant characters may cause the IOCs to fail, leading to false
-  negative results.
+  whitespace or embedded newline characters.  These errant characters may cause the IOCs to fail to match, leading to
+  false negative results.
 * ``equality`` IOCs for IPv4 fields (e.g. ``netconn_remote_ipv4``) cannot support CIDR notation; full IP addresses
   must be used.
 * ``equality`` IOCs for IPv6 fields (e.g. ``netconn_remote_ipv6``) do not support standard or CIDR notation at this
@@ -186,6 +204,11 @@ Feeds
 -----
 Another way of managing reports is to attach them to a *feed.* Feeds can contain multiple reports, and a feed can be
 attached to a watchlist, effectively making the contents of the watchlist equivalent to the contents of the feed.
+
+**Note:** The feeds that are created by these examples are *private feeds,* meaning they are only visible within an
+organization and can be created by anyone with sufficient privileges in the organization.  There are additional types
+of feeds; *reserved feeds* can only be created by MSSPs, and *public feeds* can only be created or edited by
+VMware Carbon Black.
 
 A new feed may be created as follows:
 
@@ -230,10 +253,6 @@ If you have an existing feed, a new report may be added to it as follows:
     ...                             "timestamp": 1601326338,
     ...                             "title": "Unsigned Browsers"})
     >>> feed.append_reports([report])
-
-**Note:** These feeds are *private feeds,* meaning they are only visible within an organization and can be created by
-anyone with sufficient privileges in the organization.  There are additional types of feeds; *reserved feeds* can only
-be created by MSSPs, and *public feeds* can only be created or edited by VMware Carbon Black.
 
 Limitations of Reports and Watchlists
 -------------------------------------
