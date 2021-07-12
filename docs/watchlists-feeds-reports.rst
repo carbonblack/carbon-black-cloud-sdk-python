@@ -19,8 +19,9 @@ Setting up a connection is documented here: :doc:`getting-started`
 
 About the Objects
 -----------------
-An *indicator of compromise* (IOC) is a query, list of strings, or list of regular expressions that the Carbon Black
-Cloud is set up to watch for.  Any activity that matches one of these may indicate a compromise of an endpoint.
+An *indicator of compromise* (IOC) is a query, list of strings, or list of regular expressions which constitutes
+actionable threat intelligence that the Carbon Black Cloud is set up to watch for.  Any activity that matches one of
+these may indicate a compromise of an endpoint.
 
 A *report* groups one or more IOCs together, which may reflect a number of possible conditions to look for, or a number
 of conditions related to a particular target program or type of malware.  Reports can be used to organize IOCs.
@@ -94,7 +95,8 @@ disabled.
 
 Once you have the Watchlist configured with the IOCs that are generating the kinds of hits (results) you are after,
 you can enable Alerting for the Watchlist, which will allow matches against the reports in the watchlist to generate
-alerts.
+alerts.  If a watchlist identifies suspicious behavior and known threats in your environment, you will want to enable
+alerts to advise you of situations where you may need to take action or modify policies.
 
 ::
 
@@ -120,10 +122,19 @@ that does *not* connect to one of a specified list of IP addresses:
                     OR netconn_ipv4:80.18.61.229 OR netconn_ipv4:80.18.61.228)"]
     }
 
+Query IOCs must always use field-prefixed queries (key-value pairs); they do not support just searching for a value
+without a field specified.  Values in query clauses that do not specify fields will be ignored.
+
+:Wrong: ``process_name:chrome.exe AND 192.168.1.1``
+:Right: ``process_name:chrome.exe AND netconn_ipv4:192.168.1.1``
+
+Query IOCs may search on CIDR address ranges, e.g.: ``netconn_ipv4:192.168.0.0/16``.
+
 Query IOCs are searched every 5 minutes by the Carbon Black Cloud, and are tested against a rolling window of the
 last hour's worth of data for the organization.  (They will *not* generate hits or alerts for process attributes that
-were reported more than an hour in the past.)  They may employ any searchable field, and may employ complex query
-logic.
+were reported more than an hour in the past.)  They may employ any searchable field as documented
+`here <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/platform-search-fields/>`_,
+and may employ complex query logic.
 
 *Ingress IOCs* are those with a ``match_type`` of ``equality`` or ``regex``; they use the ``field`` element to specify
 the name of a field to examine the value of, and the ``values_list`` element to specify a list of values to match
@@ -154,7 +165,10 @@ This IOC will match any process running with an executable name beginning with "
 (Note the use of the backslash to escape the '.' that separates the file extension from the name.  It must be doubled
 to escape it in Python itself.)
 
-Ingress IOCs are searched as soon as the data is received from any endpoint, and may use any documented process field
+Ingress IOCs are searched as soon as the data is received from any endpoint, and may use any process field
+(as documented
+`here <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/platform-search-fields/>`_;
+the fields tagged with ``PROCESS``)
 in their ``field`` element, whether searchable or not.  For the searches they are capable of, they are more efficient
 than query IOCs, and also easier to add additional search target values to.  They can, however, only search on a single
 field at a time.
@@ -192,40 +206,27 @@ Tips for Using IOCs
 * ``equality`` IOCs for IPv6 fields (e.g. ``netconn_remote_ipv6``) do not support standard or CIDR notation at this
   time. All IPv6 addresses must omit colon characters, spell out all zeroes in the address, and represent all
   alphabetic characters in uppercase. For example, "ff02::fb" becomes "FF0200000000000000000000000000FB".
-* Query IOCs must always use field-prefixed queries (key-value pairs); they do not support just searching for a value
-  without a field specified.  Values in query clauses that do not specify fields will be ignored.
-
-:Wrong: ``process_name:chrome.exe AND 192.168.1.1``
-:Right: ``process_name:chrome.exe AND netconn_ipv4:192.168.1.1``
-
-* Query IOCs may search on CIDR address ranges, e.g.: ``netconn_ipv4:192.168.0.0/16``.
 
 Feeds
 -----
 Another way of managing reports is to attach them to a *feed.* Feeds can contain multiple reports, and a feed can be
 attached to a watchlist, effectively making the contents of the watchlist equivalent to the contents of the feed.
 
+Feeds are in effect “potentially-subscribable Watchlists”. A Feed has no effect on your organization until it is
+subscribed to, by creating a Watchlist containing that feed. Once subscribed (and until it’s disabled or unsubscribed),
+a watchlist will generate hits (and alerts if you have enabled them) for any matches against any of the IOCs in any of
+that feed’s enabled reports.
+
 **Note:** The feeds that are created by these examples are *private feeds,* meaning they are only visible within an
 organization and can be created by anyone with sufficient privileges in the organization.  There are additional types
 of feeds; *reserved feeds* can only be created by MSSPs, and *public feeds* can only be created or edited by
 VMware Carbon Black.
 
-A new feed may be created as follows:
+A new feed may be created as follows (assuming the new report for that feed is stored in the ``report`` variable):
 
 ::
 
-    >>> from cbc_sdk.enterprise_edr import Feed, Report
-    >>> report = Report(api, None, {"description": "Unsigned processes impersonating browsers",
-    ...                             "iocs_v2": [{
-    ...                                 "id": "unsigned-chrome",
-    ...                                 "match_type": "query",
-    ...                                 "values": [("process_name:chrome.exe NOT process_publisher_state:FILE_SIGNATURE_STATE_SIGNED")]
-    ...                                 }],
-    ...                             "link": None,
-    ...                             "severity": 5,
-    ...                             "tags": ["compliance", "unsigned browsers"],
-    ...                             "timestamp": 1601326338,
-    ...                             "title": "Unsigned Browsers"})
+    >>> from cbc_sdk.enterprise_edr import Feed
     >>> feed_data = {'feedinfo': {
     ...                 'name': 'Suspicious Applications',
     ...                 'provider_url': 'http://example.com/location',
@@ -235,24 +236,18 @@ A new feed may be created as follows:
     ...              'reports': [report._info]}
     >>> feed = api.create(Feed, feed_data)
 
-If you have an existing feed, a new report may be added to it as follows:
+If you have an existing feed, a new report may be added to it as follows (assuming the new report is stored in the
+``report`` variable):
 
 ::
 
-    >>> from cbc_sdk.enterprise_edr import Feed, Report
+    >>> from cbc_sdk.enterprise_edr import Feed
     >>> feed = cb.select(Feed, 'ABCDEFGHIJKLMNOPQRSTUVWX')
-    >>> report = Report(api, None, {"description": "Unsigned processes impersonating browsers",
-    ...                             "iocs_v2": [{
-    ...                                 "id": "unsigned-chrome",
-    ...                                 "match_type": "query",
-    ...                                 "values": [("process_name:chrome.exe NOT process_publisher_state:FILE_SIGNATURE_STATE_SIGNED")]
-    ...                                 }],
-    ...                             "link": None,
-    ...                             "severity": 5,
-    ...                             "tags": ["compliance", "unsigned browsers"],
-    ...                             "timestamp": 1601326338,
-    ...                             "title": "Unsigned Browsers"})
     >>> feed.append_reports([report])
+
+To update or delete an existing report in a feed, look for it in the feed's ``reports`` collection, then call the
+``update()`` method on the report to replace its contents, or the ``delete()`` method on the report to delete it
+entirely.
 
 Limitations of Reports and Watchlists
 -------------------------------------
