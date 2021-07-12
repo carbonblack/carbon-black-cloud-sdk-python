@@ -249,6 +249,17 @@ To update or delete an existing report in a feed, look for it in the feed's ``re
 ``update()`` method on the report to replace its contents, or the ``delete()`` method on the report to delete it
 entirely.
 
+To subscribe to a feed, a new watchlist must be created around it:
+
+::
+
+    >>> watchlist = Watchlist(api, None, {"alerts_enabled": True,
+    ...                                   "classifier": {"feed_id": feed.id},
+    ...                                   "description": "Subscription to the new feed",
+    ...                                   "name": "Subscribed feed",
+    ...                                   "tags_enabled": True})
+    >>> watchlist.save()
+
 Limitations of Reports and Watchlists
 -------------------------------------
 Individual reports may contain no more than 10,000 IOCs.  Reports containing more than 1,000 IOCs will not be editable
