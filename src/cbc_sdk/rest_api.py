@@ -101,8 +101,8 @@ class CBCloudAPI(BaseAPI):
             self._lr_scheduler = LiveResponseSessionManager(self)
         return self._lr_scheduler
 
-    def _request_lr_session(self, device_id):
-        return self.live_response.request_session(device_id)
+    def _request_lr_session(self, device_id, async_mode=False):
+        return self.live_response.request_session(device_id, async_mode=async_mode)
 
     # ---- Audit and Remediation
 
