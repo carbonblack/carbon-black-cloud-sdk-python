@@ -14,6 +14,10 @@
 """Model Classes for Enterprise Endpoint Detection and Response"""
 
 from __future__ import absolute_import
+
+import copy
+import uuid
+
 from cbc_sdk.errors import ApiError, InvalidObjectError, NonQueryableModel
 from cbc_sdk.base import CreatableModelMixin, MutableBaseModel, UnrefreshableModel, SimpleQuery
 
@@ -781,11 +785,18 @@ class ReportSeverity(FeedModel):
 
 
 class IOC(FeedModel):
-    """Represents a collection of categorized IOCs."""
+    """Represents a collection of categorized IOCs.  These objects are officially deprecated and replaced by IOC_V2."""
     swagger_meta_file = "enterprise_edr/models/iocs.yaml"
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, report_id=None):
-        """Creates a new IOC instance.
+        """
+        Creates a new IOC instance.
+
+        Arguments:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            model_unique_id (str): Unique ID of this IOC.
+            initial_data (dict): Initial data used to populate the IOC.
+            report_id (str): ID of the report this IOC belongs to (if this is a watchlist IOC).
 
         Raises:
             ApiError: If `initial_data` is None.
@@ -799,10 +810,21 @@ class IOC(FeedModel):
         self._report_id = report_id
 
     def _query_implementation(self, cb, **kwargs):
+        """
+        Queries are not supported for IOCs, so this raises an exception.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Additional arguments.
+
+        Raises:
+            NonQueryableModel: Always.
+        """
         raise NonQueryableModel("IOC does not support querying")
 
     def validate(self):
-        """Validates this IOC structure's state.
+        """
+        Validates this IOC structure's state.
 
         Raises:
             InvalidObjectError: If the IOC structure's state is invalid.
@@ -832,7 +854,14 @@ class IOC_V2(FeedModel):
     swagger_meta_file = "enterprise_edr/models/ioc_v2.yaml"
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, report_id=None):
-        """Creates a new IOC_V2 instance.
+        """
+        Creates a new IOC_V2 instance.
+
+        Arguments:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            model_unique_id (Any): Unused.
+            initial_data (dict): Initial data used to populate the IOC.
+            report_id (str): ID of the report this IOC belongs to (if this is a watchlist IOC).
 
         Raises:
             ApiError: If `initial_data` is None.
@@ -847,10 +876,94 @@ class IOC_V2(FeedModel):
         self._report_id = report_id
 
     def _query_implementation(self, cb, **kwargs):
+        """
+        Queries are not supported for IOCs, so this raises an exception.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Additional arguments.
+
+        Raises:
+            NonQueryableModel: Always.
+        """
         raise NonQueryableModel("IOC_V2 does not support querying")
 
+    @classmethod
+    def create_query(cls, cb, iocid, query):
+        """
+        Creates a new "query" IOC.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            iocid (str): ID for the new IOC.  If this is None, a UUID will be generated for the IOC.
+            query (str): Query to be incorporated in this IOC.
+
+        Returns:
+            IOC_V2: New IOC data structure.
+
+        Raises:
+            ApiError: If the query string is not present.
+        """
+        if not query:
+            raise ApiError("IOC must have a query string")
+        if not iocid:
+            iocid = uuid.uuid4()
+        return IOC_V2(cb, iocid, {'id': iocid, 'match_type': 'query', 'values': [query]})
+
+    @classmethod
+    def create_equality(cls, cb, iocid, field, *values):
+        """
+        Creates a new "equality" IOC.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            iocid (str): ID for the new IOC.  If this is None, a UUID will be generated for the IOC.
+            field (str): Name of the field to be matched by this IOC.
+            *values (list(str)): String values to match against the value of the specified field.
+
+        Returns:
+            IOC_V2: New IOC data structure.
+
+        Raises:
+            ApiError: If there is not at least one value to match against.
+        """
+        if not field:
+            raise ApiError('IOC must have a field name')
+        if len(values) == 0:
+            raise ApiError('IOC must have at least one value')
+        if not iocid:
+            iocid = uuid.uuid4()
+        return IOC_V2(cb, iocid, {'id': iocid, 'match_type': 'equality', 'field': field,
+                                  'values': copy.deepcopy(values)})
+
+    @classmethod
+    def create_regex(cls, cb, iocid, field, *values):
+        """
+        Creates a new "regex" IOC.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            iocid (str): ID for the new IOC.  If this is None, a UUID will be generated for the IOC.
+            field (str): Name of the field to be matched by this IOC.
+            *values (list(str)): Regular expression values to match against the value of the specified field.
+
+        Returns:
+            IOC_V2: New IOC data structure.
+
+        Raises:
+            ApiError: If there is not at least one regular expression to match against.
+        """
+        if not field:
+            raise ApiError('IOC must have a field name')
+        if len(values) == 0:
+            raise ApiError('IOC must have at least one value')
+        if not iocid:
+            iocid = uuid.uuid4()
+        return IOC_V2(cb, iocid, {'id': iocid, 'match_type': 'regex', 'field': field, 'values': copy.deepcopy(values)})
+
     def validate(self):
-        """Validates this IOC_V2's state.
+        """
+        Validates this IOC_V2's state.
 
         Raises:
             InvalidObjectError: If the IOC_V2's state is invalid.
@@ -862,10 +975,13 @@ class IOC_V2(FeedModel):
 
     @property
     def ignored(self):
-        """Returns whether or not this IOC is ignored
+        """
+        Returns whether or not this IOC is ignored.
+
+        Only watchlist IOCs have an ignore status.
 
         Returns:
-            (bool): True if the IOC is ignore, False otherwise.
+            bool: True if the IOC is ignored, False otherwise.
 
         Raises:
             InvalidObjectError: If this IOC is missing an `id` or is not a Watchlist IOC.
@@ -889,7 +1005,8 @@ class IOC_V2(FeedModel):
         return resp["ignored"]
 
     def ignore(self):
-        """Sets the ignore status on this IOC.
+        """
+        Sets the ignore status on this IOC.
 
         Only watchlist IOCs have an ignore status.
 
@@ -909,7 +1026,8 @@ class IOC_V2(FeedModel):
         self._cb.put_object(url, None)
 
     def unignore(self):
-        """Removes the ignore status on this IOC.
+        """
+        Removes the ignore status on this IOC.
 
         Only watchlist IOCs have an ignore status.
 
