@@ -65,7 +65,7 @@ Reports should always be given a ``title`` that's sufficiently unique within you
 the chances of confusing two or more Reports with each other.  Carbon Black Cloud will generate unique ``id`` values
 for each report, but does not enforce any uniqueness constraint on the ``title`` of reports.
 
-Alternatively, we can update an existing report, adding more IOCs and/or replacing existing ones.  To find an existing
+Alternatively, you can update an existing report, adding more IOCs and/or replacing existing ones.  To find an existing
 report associated with a watchlist, you must look in the watchlist's ``reports`` collection.
 
 Adding the Report to a Watchlist
@@ -77,7 +77,7 @@ Now, add the new Report to a new Watchlist:
     >>> from cbc_sdk.enterprise_edr import Watchlist
     >>> watchlist = Watchlist(api, None, {"alerts_enabled": False,
     ...                                   "classifier": None,
-    ...                                   "description": "We are on the lookout for any signs of suspicious applications running on our endpoints",
+    ...                                   "description": "Any signs of suspicious applications running on endpoints",
     ...                                   "name": "Suspicious Applications",
     ...                                   "report_ids": [report.id],
     ...                                   "tags_enabled": True})
@@ -104,7 +104,7 @@ alerts to advise you of situations where you may need to take action or modify p
 
 A Closer Look at IOCs
 ---------------------
-In this document, we will only discuss the "v2" IOCs; the "v1" IOCs are only provided for backwards compatibility
+In this document, only the "v2" IOCs are covered; the "v1" IOCs are only provided for backwards compatibility
 reasons. They are officially deprecated, and are converted, internally, to this type.
 
 IOCs can be classified into two general types, depending on their ``match_type`` value:
@@ -168,7 +168,7 @@ to escape it in Python itself.)
 Ingress IOCs are searched as soon as the data is received from any endpoint, and may use any process field
 (as documented
 `here <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/platform-search-fields/>`_;
-the fields tagged with ``PROCESS``)
+the fields that may be used in this context are tagged with ``PROCESS``)
 in their ``field`` element, whether searchable or not.  For the searches they are capable of, they are more efficient
 than query IOCs, and also easier to add additional search target values to.  They can, however, only search on a single
 field at a time.
@@ -227,13 +227,15 @@ A new feed may be created as follows (assuming the new report for that feed is s
 ::
 
     >>> from cbc_sdk.enterprise_edr import Feed
-    >>> feed_data = {'feedinfo': {
+    >>> feed_data = {
+    ...           'feedinfo': {
     ...                 'name': 'Suspicious Applications',
     ...                 'provider_url': 'http://example.com/location',
     ...                 'summary': 'Any signs of suspicious applications running on our endpoints',
     ...                 'category': 'external_threat_intel',
     ...                 'source_label': 'Where the info is coming from'},
-    ...              'reports': [report._info]}
+    ...                 'reports': [ {...}, {...} ]
+    ...             }
     >>> feed = api.create(Feed, feed_data)
 
 If you have an existing feed, a new report may be added to it as follows (assuming the new report is stored in the
@@ -247,7 +249,8 @@ If you have an existing feed, a new report may be added to it as follows (assumi
 
 To update or delete an existing report in a feed, look for it in the feed's ``reports`` collection, then call the
 ``update()`` method on the report to replace its contents, or the ``delete()`` method on the report to delete it
-entirely.
+entirely.  The ``replace_reports()`` method on the ``Feed`` object may also be used, but caution must be taken, as
+that method will replace *all* of the reports in a feed at once.
 
 To subscribe to a feed, a new watchlist must be created around it:
 
