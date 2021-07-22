@@ -1002,3 +1002,114 @@ FEED_GET_SPECIFIC_FROM_WATCHLIST_RESP = {
         }
     ]
 }
+
+IOC_GET_IGNORED = {
+    "ignored": True
+}
+
+REPORT_BUILT_VIA_BUILDER = {
+    "title": "ReportTitle",
+    "description": "The report description",
+    "timestamp": 1234567890,
+    "severity": 5,
+    "link": "https://example.com",
+    "tags": ["Alpha", "Bravo"],
+    "iocs_v2": [
+        {
+            "id": "foo",
+            "match_type": "equality",
+            "field": "process_name",
+            "values": ["evil.exe"],
+        },
+        {
+            "id": "bar",
+            "match_type": "equality",
+            "field": "netconn_ipv4",
+            "values": ["10.29.99.1"],
+        }
+    ],
+    "visibility": "visible"
+}
+
+REPORT_INIT = {
+    "id": "69e2a8d0-bc36-4970-9834-8687efe1aff7",
+    "title": "ReportTitle",
+    "description": "The report description",
+    "timestamp": 1234567890,
+    "severity": 5,
+    "link": "https://example.com",
+    "tags": ["Alpha", "Bravo"],
+    "iocs_v2": [
+        {
+            "id": "foo",
+            "match_type": "equality",
+            "field": "process_name",
+            "values": ["evil.exe"],
+        },
+        {
+            "id": "bar",
+            "match_type": "equality",
+            "field": "netconn_ipv4",
+            "values": ["10.29.99.1"],
+        }
+    ],
+    "visibility": "visible"
+}
+
+REPORT_GET_IGNORED = {
+    "ignored": True
+}
+
+REPORT_GET_SEVERITY = {
+    "report_id": "69e2a8d0-bc36-4970-9834-8687efe1aff7",
+    "severity": 8
+}
+
+REPORT_UPDATE_AFTER_ADD_IOC = {
+    "id": "69e2a8d0-bc36-4970-9834-8687efe1aff7",
+    "title": "ReportTitle",
+    "description": "The report description",
+    "timestamp": 1234567890,
+    "severity": 5,
+    "link": "https://example.com",
+    "tags": ["Alpha", "Bravo"],
+    "iocs_v2": [
+        {
+            "id": "foo",
+            "match_type": "equality",
+            "field": "process_name",
+            "values": ["evil.exe"]
+        },
+        {
+            "id": "bar",
+            "match_type": "equality",
+            "field": "netconn_ipv4",
+            "values": ["10.29.99.1"]
+        },
+        {
+            "id": "quux",
+            "match_type": "query",
+            "values": ["filemod_name: \"audio.dat\""]
+        }
+    ],
+    "visibility": "visible"
+}
+
+REPORT_UPDATE_AFTER_REMOVE_IOC = {
+    "id": "69e2a8d0-bc36-4970-9834-8687efe1aff7",
+    "title": "ReportTitle",
+    "description": "The report description",
+    "timestamp": 1234567890,
+    "severity": 5,
+    "link": "https://example.com",
+    "tags": ["Alpha", "Bravo"],
+    "iocs_v2": [
+        {
+            "id": "bar",
+            "match_type": "equality",
+            "field": "netconn_ipv4",
+            "values": ["10.29.99.1"],
+        }
+    ],
+    "visibility": "visible"
+}

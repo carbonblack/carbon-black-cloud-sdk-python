@@ -1,8 +1,11 @@
 """Testing Watchlist, Report, Feed objects of cbc_sdk.enterprise_edr"""
+import copy
 
 import pytest
 import logging
-from cbc_sdk.enterprise_edr import Watchlist, Report, Feed
+import re
+from contextlib import ExitStack as does_not_raise
+from cbc_sdk.enterprise_edr import Watchlist, Report, Feed, IOC_V2
 from cbc_sdk.errors import InvalidObjectError, ApiError
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -15,9 +18,17 @@ from tests.unit.fixtures.enterprise_edr.mock_threatintel import (WATCHLIST_GET_R
                                                                  REPORT_GET_RESP,
                                                                  FEED_GET_RESP,
                                                                  FEED_GET_SPECIFIC_RESP,
-                                                                 FEED_GET_SPECIFIC_FROM_WATCHLIST_RESP)
+                                                                 FEED_GET_SPECIFIC_FROM_WATCHLIST_RESP,
+                                                                 IOC_GET_IGNORED,
+                                                                 REPORT_BUILT_VIA_BUILDER,
+                                                                 REPORT_INIT,
+                                                                 REPORT_GET_IGNORED,
+                                                                 REPORT_GET_SEVERITY,
+                                                                 REPORT_UPDATE_AFTER_ADD_IOC,
+                                                                 REPORT_UPDATE_AFTER_REMOVE_IOC)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
+GUID_PATTERN = '[0-9A-Fa-f]{8}(-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}'
 
 
 @pytest.fixture(scope="function")
@@ -330,3 +341,279 @@ def test_feed_query_specific(cbcsdk_mock):
     feed = api.select(Feed, "pv65TYVQy8YWMX9KsQUg")
     assert isinstance(feed, Feed)
     assert feed.id == "pv65TYVQy8YWMX9KsQUg"
+
+
+def test_create_query_ioc(cb):
+    """Tests the creation of a 'query' IOC."""
+    with pytest.raises(ApiError):
+        IOC_V2.create_query(cb, "foo", None)
+
+    ioc = IOC_V2.create_query(cb, "foo", "process_name:evil.exe")
+    assert ioc._info == {'id': 'foo', 'match_type': 'query', 'values': ['process_name:evil.exe']}
+    ioc = IOC_V2.create_query(cb, None, "process_name:evil.exe")
+    assert ioc.match_type == 'query'
+    assert ioc.values == ['process_name:evil.exe']
+    assert re.fullmatch(GUID_PATTERN, ioc.id)
+
+
+def test_create_equality_ioc(cb):
+    """Tests the creation of an 'equality' IOC."""
+    with pytest.raises(ApiError):
+        IOC_V2.create_equality(cb, "foo", None, "Alpha")
+    with pytest.raises(ApiError):
+        IOC_V2.create_equality(cb, "foo", "process_name")
+
+    ioc = IOC_V2.create_equality(cb, "foo", "process_name", "Alpha", "Bravo", "Charlie")
+    assert ioc._info == {'id': 'foo', 'match_type': 'equality', 'field': 'process_name',
+                         'values': ['Alpha', 'Bravo', 'Charlie']}
+    ioc = IOC_V2.create_equality(cb, None, "process_name", "Alpha")
+    assert ioc.match_type == 'equality'
+    assert ioc.field == 'process_name'
+    assert ioc.values == ['Alpha']
+    assert re.fullmatch(GUID_PATTERN, ioc.id)
+
+
+def test_create_regex_ioc(cb):
+    """Tests the creation of a 'regex' IOC."""
+    with pytest.raises(ApiError):
+        IOC_V2.create_regex(cb, "foo", None, "Alpha")
+    with pytest.raises(ApiError):
+        IOC_V2.create_regex(cb, "foo", "process_name")
+
+    ioc = IOC_V2.create_regex(cb, "foo", "process_name", "Alpha", "Bravo", "Charlie")
+    assert ioc._info == {'id': 'foo', 'match_type': 'regex', 'field': 'process_name',
+                         'values': ['Alpha', 'Bravo', 'Charlie']}
+    ioc = IOC_V2.create_regex(cb, None, "process_name", "Alpha")
+    assert ioc.match_type == 'regex'
+    assert ioc.field == 'process_name'
+    assert ioc.values == ['Alpha']
+    assert re.fullmatch(GUID_PATTERN, ioc._info['id'])
+
+
+def test_ioc_read_ignored(cbcsdk_mock):
+    """Tests reading the ignore status of an IOC."""
+    cbcsdk_mock.mock_request("GET", "/threathunter/watchlistmgr/v3/orgs/test/reports/a1b2/iocs/foo/ignore",
+                             IOC_GET_IGNORED)
+    api = cbcsdk_mock.api
+    ioc = IOC_V2.create_equality(api, "foo", "process_name", "Alpha")
+    with pytest.raises(InvalidObjectError):
+        tmp = ioc.ignored
+    ioc._report_id = "a1b2"
+    assert ioc.ignored
+    ioc._info['id'] = None
+    with pytest.raises(InvalidObjectError):
+        tmp = ioc.ignored
+
+
+def test_ioc_set_ignored(cbcsdk_mock):
+    """Tests setting the ignore status of an IOC."""
+    cbcsdk_mock.mock_request("PUT", "/threathunter/watchlistmgr/v3/orgs/test/reports/a1b2/iocs/foo/ignore",
+                             IOC_GET_IGNORED)
+    api = cbcsdk_mock.api
+    ioc = IOC_V2.create_equality(api, "foo", "process_name", "Alpha")
+    with pytest.raises(InvalidObjectError):
+        ioc.ignore()
+    ioc._report_id = "a1b2"
+    ioc.ignore()
+    ioc._info['id'] = None
+    with pytest.raises(InvalidObjectError):
+        ioc.ignore()
+
+
+def test_ioc_clear_ignored(cbcsdk_mock):
+    """Tests clearing the ignore status of an IOC."""
+    cbcsdk_mock.mock_request("DELETE", "/threathunter/watchlistmgr/v3/orgs/test/reports/a1b2/iocs/foo/ignore",
+                             CBCSDKMock.StubResponse(None, 204))
+    api = cbcsdk_mock.api
+    ioc = IOC_V2.create_equality(api, "foo", "process_name", "Alpha")
+    with pytest.raises(InvalidObjectError):
+        ioc.unignore()
+    ioc._report_id = "a1b2"
+    ioc.unignore()
+    ioc._info['id'] = None
+    with pytest.raises(InvalidObjectError):
+        ioc.unignore()
+
+
+def test_report_builder_save_watchlist(cbcsdk_mock):
+    """Tests the operation of a ReportBuilder and saving the report as a watchlist report."""
+    my_info = None
+
+    def on_post(url, body, **kwargs):
+        assert my_info
+        assert body == my_info
+        my_info['id'] = "AaBbCcDdEeFfGg"
+        return my_info
+
+    cbcsdk_mock.mock_request("POST", "/threathunter/watchlistmgr/v3/orgs/test/reports", on_post)
+    api = cbcsdk_mock.api
+    builder = Report.create(api, "NotReal", "Not real description", 2)
+    builder.set_title("ReportTitle").set_description("The report description").set_timestamp(1234567890)
+    builder.set_severity(5).set_link('https://example.com').add_tag("Alpha").add_tag("Bravo")
+    builder.add_ioc(IOC_V2.create_equality(api, "foo", "process_name", "evil.exe"))
+    builder.add_ioc(IOC_V2.create_equality(api, "bar", "netconn_ipv4", "10.29.99.1"))
+    builder.set_visibility("visible")
+    report = builder.build()
+    report.validate()
+    my_info = copy.deepcopy(report._info)
+    assert my_info == REPORT_BUILT_VIA_BUILDER
+    report.save_watchlist()
+    assert report._from_watchlist
+    assert report._info['id'] == "AaBbCcDdEeFfGg"
+
+
+@pytest.mark.parametrize("init_data, feed, watchlist, do_request, expectation, result", [
+    (REPORT_INIT, None, True, True, does_not_raise(), True),
+    (REPORT_INIT, None, False, False, pytest.raises(InvalidObjectError), True),
+    (REPORT_BUILT_VIA_BUILDER, None, True, False, pytest.raises(InvalidObjectError), True)
+])
+def test_report_get_ignored(cbcsdk_mock, init_data, feed, watchlist, do_request, expectation, result):
+    """Tests the operation of the report.ignored() method."""
+    if do_request:
+        cbcsdk_mock.mock_request("GET", "/threathunter/watchlistmgr/v3/orgs/test/reports/"
+                                        "69e2a8d0-bc36-4970-9834-8687efe1aff7/ignore", REPORT_GET_IGNORED)
+    api = cbcsdk_mock.api
+    report = Report(api, None, init_data, feed, watchlist)
+    with expectation:
+        assert report.ignored == result
+
+
+@pytest.mark.parametrize("init_data, feed, watchlist, do_request, expectation", [
+    (REPORT_INIT, None, True, True, does_not_raise()),
+    (REPORT_INIT, None, False, False, pytest.raises(InvalidObjectError)),
+    (REPORT_BUILT_VIA_BUILDER, None, True, False, pytest.raises(InvalidObjectError))
+])
+def test_report_set_ignored(cbcsdk_mock, init_data, feed, watchlist, do_request, expectation):
+    """Tests the operation of the report.ignore() method."""
+    if do_request:
+        cbcsdk_mock.mock_request("PUT", "/threathunter/watchlistmgr/v3/orgs/test/reports/"
+                                        "69e2a8d0-bc36-4970-9834-8687efe1aff7/ignore", REPORT_GET_IGNORED)
+    api = cbcsdk_mock.api
+    report = Report(api, None, init_data, feed, watchlist)
+    with expectation:
+        report.ignore()
+
+
+@pytest.mark.parametrize("init_data, feed, watchlist, do_request, expectation", [
+    (REPORT_INIT, None, True, True, does_not_raise()),
+    (REPORT_INIT, None, False, False, pytest.raises(InvalidObjectError)),
+    (REPORT_BUILT_VIA_BUILDER, None, True, False, pytest.raises(InvalidObjectError))
+])
+def test_report_clear_ignored(cbcsdk_mock, init_data, feed, watchlist, do_request, expectation):
+    """Tests the operation of the report.unignore() method."""
+    if do_request:
+        cbcsdk_mock.mock_request("DELETE", "/threathunter/watchlistmgr/v3/orgs/test/reports/"
+                                           "69e2a8d0-bc36-4970-9834-8687efe1aff7/ignore",
+                                 CBCSDKMock.StubResponse(None, 204))
+    api = cbcsdk_mock.api
+    report = Report(api, None, init_data, feed, watchlist)
+    with expectation:
+        report.unignore()
+
+
+@pytest.mark.parametrize("init_data, feed, watchlist, call_url, expectation", [
+    (REPORT_INIT, None, True, "/threathunter/watchlistmgr/v3/orgs/test/reports/69e2a8d0-bc36-4970-9834-8687efe1aff7",
+     does_not_raise()),
+    (REPORT_INIT, "qwertyuiop", False, "/threathunter/feedmgr/v2/orgs/test/feeds/qwertyuiop/reports/"
+                                       "69e2a8d0-bc36-4970-9834-8687efe1aff7", does_not_raise()),
+    (REPORT_INIT, None, False, None, pytest.raises(InvalidObjectError)),
+    (REPORT_BUILT_VIA_BUILDER, None, True, None, pytest.raises(InvalidObjectError)),
+    (REPORT_BUILT_VIA_BUILDER, "qwertyuiop", False, None, pytest.raises(InvalidObjectError))
+])
+def test_report_delete(cbcsdk_mock, init_data, feed, watchlist, call_url, expectation):
+    """Tests the operation of the report.delete() method."""
+    if call_url:
+        cbcsdk_mock.mock_request("DELETE", call_url, CBCSDKMock.StubResponse(None, 204))
+    api = cbcsdk_mock.api
+    report = Report(api, None, init_data, feed, watchlist)
+    with expectation:
+        report.delete()
+
+
+@pytest.mark.parametrize("init_data, feed, watchlist, do_request, expectation, result", [
+    (REPORT_INIT, "qwertyuiop", False, True, does_not_raise(), 8),
+    (REPORT_INIT, None, True, False, pytest.raises(InvalidObjectError), -1),
+    (REPORT_BUILT_VIA_BUILDER, "qwertyuiop", False, False, pytest.raises(InvalidObjectError), -1)
+])
+def test_report_get_custom_severity(cbcsdk_mock, init_data, feed, watchlist, do_request, expectation, result):
+    """Tests getting the custom severity for a report."""
+    if do_request:
+        cbcsdk_mock.mock_request("GET", "/threathunter/watchlistmgr/v3/orgs/test/reports/"
+                                        "69e2a8d0-bc36-4970-9834-8687efe1aff7/severity", REPORT_GET_SEVERITY)
+    api = cbcsdk_mock.api
+    report = Report(api, None, init_data, feed, watchlist)
+    with expectation:
+        severity = report.custom_severity
+        assert severity.report_id == report.id
+        assert severity.severity == result
+
+
+@pytest.mark.parametrize("init_data, feed, watchlist, input, http_method, http_return, expectation", [
+    (REPORT_INIT, "qwertyuiop", False, 8, "PUT", REPORT_GET_SEVERITY, does_not_raise()),
+    (REPORT_INIT, "qwertyuiop", False, None, "DELETE", CBCSDKMock.StubResponse(None, 204), does_not_raise()),
+    (REPORT_INIT, None, True, 8, None, None, pytest.raises(InvalidObjectError)),
+    (REPORT_BUILT_VIA_BUILDER, "qwertyuiop", False, 8, None, None, pytest.raises(InvalidObjectError))
+])
+def test_report_set_custom_severity(cbcsdk_mock, init_data, feed, watchlist, input, http_method,
+                                    http_return, expectation):
+    """Tests setting the custom severity for a report."""
+    if http_method:
+        cbcsdk_mock.mock_request(http_method, "/threathunter/watchlistmgr/v3/orgs/test/reports/"
+                                              "69e2a8d0-bc36-4970-9834-8687efe1aff7/severity", http_return)
+    api = cbcsdk_mock.api
+    report = Report(api, None, init_data, feed, watchlist)
+    with expectation:
+        report.custom_severity = input
+
+
+def test_report_add_ioc(cbcsdk_mock):
+    """Test appending a new IOC and then updating the report."""
+    def on_put(url, body, **kwargs):
+        match_data = copy.deepcopy(REPORT_UPDATE_AFTER_ADD_IOC)
+        match_data['timestamp'] = body['timestamp']
+        assert body == match_data
+        return body
+
+    cbcsdk_mock.mock_request("PUT", "/threathunter/watchlistmgr/v3/orgs/test/reports/"
+                                    "69e2a8d0-bc36-4970-9834-8687efe1aff7", on_put)
+    api = cbcsdk_mock.api
+    report = Report(api, None, copy.deepcopy(REPORT_INIT), None, True)
+    report.append_iocs([IOC_V2.create_query(api, "quux", "filemod_name: \"audio.dat\"")])
+    report.update()
+    assert len(report.iocs_) == 3
+
+
+def test_report_remove_ioc(cbcsdk_mock):
+    """Test removing an IOC and then updating the report."""
+    def on_put(url, body, **kwargs):
+        match_data = copy.deepcopy(REPORT_UPDATE_AFTER_REMOVE_IOC)
+        match_data['timestamp'] = body['timestamp']
+        assert body == match_data
+        return body
+
+    cbcsdk_mock.mock_request("PUT", "/threathunter/watchlistmgr/v3/orgs/test/reports/"
+                                    "69e2a8d0-bc36-4970-9834-8687efe1aff7", on_put)
+    api = cbcsdk_mock.api
+    report = Report(api, None, copy.deepcopy(REPORT_INIT), None, True)
+    ioc = report.iocs_[0]
+    assert ioc.id == "foo"
+    report.remove_iocs([ioc])
+    report.update()
+    assert len(report.iocs_) == 1
+
+
+def test_report_remove_nonexistent_ioc_id(cbcsdk_mock):
+    """Test removing an IOC by ID when that ID doesn't actually exist."""
+    def on_put(url, body, **kwargs):
+        match_data = copy.deepcopy(REPORT_INIT)
+        match_data['timestamp'] = body['timestamp']
+        assert body == match_data
+        return body
+
+    cbcsdk_mock.mock_request("PUT", "/threathunter/watchlistmgr/v3/orgs/test/reports/"
+                                    "69e2a8d0-bc36-4970-9834-8687efe1aff7", on_put)
+    api = cbcsdk_mock.api
+    report = Report(api, None, copy.deepcopy(REPORT_INIT), None, True)
+    report.remove_iocs_by_id(['notexist'])
+    report.update()
+    assert len(report.iocs_) == 2

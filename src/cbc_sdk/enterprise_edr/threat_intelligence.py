@@ -469,7 +469,7 @@ class Report(FeedModel):
             feed_id (str): The ID of the feed this report is for.
             from_watchlist (str): The ID of the watchlist this report is for.
         """
-        super(Report, self).__init__(cb, model_unique_id=initial_data.get("id"),
+        super(Report, self).__init__(cb, model_unique_id=initial_data.get("id", None),
                                      initial_data=initial_data,
                                      force_init=False, full_doc=True)
 
@@ -486,14 +486,166 @@ class Report(FeedModel):
             self._iocs = IOC(cb, initial_data=self.iocs, report_id=self.id)
         if self.iocs_v2:
             self._iocs_v2 = [IOC_V2(cb, initial_data=ioc, report_id=self.id) for ioc in self.iocs_v2]
+        self._iocs_v2_need_sync = False
+
+    class ReportBuilder:
+        """Helper class allowing Reports to be assembled."""
+        def __init__(self, cb, report_body):
+            """
+            Initialize a new ReportBuilder.
+
+            Args:
+                cb (CBCloudAPI): A reference to the CBCloudAPI object.
+                report_body (dict): Partial report body which should be filled in with all "required" fields.
+            """
+            self._cb = cb
+            self._report_body = report_body
+            self._report_body['tags'] = []
+            self._iocs = []
+
+        def set_title(self, title):
+            """
+            Set the title for the new report.
+
+            Args:
+                title (str): New title for the report.
+
+            Returns:
+                ReportBuilder: This object.
+            """
+            self._report_body['title'] = title
+            return self
+
+        def set_description(self, description):
+            """
+            Set the description for the new report.
+
+            Args:
+                description (str): New description for the report.
+
+            Returns:
+                ReportBuilder: This object.
+            """
+            self._report_body['description'] = description
+            return self
+
+        def set_timestamp(self, timestamp):
+            """
+            Set the timestamp for the new report.
+
+            Args:
+                timestamp (int): New timestamp for the report.
+
+            Returns:
+                ReportBuilder: This object.
+            """
+            self._report_body['timestamp'] = timestamp
+            return self
+
+        def set_severity(self, severity):
+            """
+            Set the severity for the new report.
+
+            Args:
+                severity (int): New severity for the report.
+
+            Returns:
+                ReportBuilder: This object.
+            """
+            self._report_body['severity'] = severity
+            return self
+
+        def set_link(self, link):
+            """
+            Set the link for the new report.
+
+            Args:
+                link (str): New link for the report.
+
+            Returns:
+                ReportBuilder: This object.
+            """
+            self._report_body['link'] = link
+            return self
+
+        def add_tag(self, tag):
+            """
+            Adds a tag value to the new report.
+
+            Args:
+                tag (str): The new tag for the object.
+
+            Returns:
+                ReportBuilder: This object.
+            """
+            self._report_body['tags'].append(tag)
+            return self
+
+        def add_ioc(self, ioc):
+            """
+            Adds an IOC to the new report.
+
+            Args:
+                ioc (IOC_V2): The IOC to be added to the report.
+
+            Returns:
+                ReportBuilder: This object.
+            """
+            self._iocs.append(ioc)
+            return self
+
+        def set_visibility(self, visibility):
+            """
+            Set the visibility for the new report.
+
+            Args:
+                visibility (str): New visibility for the report.
+
+            Returns:
+                ReportBuilder: This object.
+            """
+            self._report_body['visibility'] = visibility
+            return self
+
+        def build(self):
+            """
+            Builds the actual Report from the internal data of the ReportBuilder.
+
+            Returns:
+                Report: The new Report.
+            """
+            report = Report(self._cb, None, self._report_body)
+            report._iocs_v2 = self._iocs
+            report._iocs_v2_need_sync = True
+            return report
+
+    @classmethod
+    def create(cls, cb, title, description, severity, timestamp=None):
+        """
+        Begin creating a new Report by returning a ReportBuilder.
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            title (str): Title for the new report.
+            description (str): Description for the new report.
+            severity (int): Severity value for the new report.
+            timestamp (int): UNIX-epoch timestamp for the new report. If omitted, current time will be used.
+
+        Returns:
+            ReportBuilder: Reference to the ReportBuilder object.
+        """
+        if not timestamp:
+            timestamp = int(time.time())
+        return Report.ReportBuilder(cb, {'title': title, 'description': description, 'severity': severity,
+                                         'timestamp': timestamp})
 
     def save_watchlist(self):
-        """Saves this report *as a watchlist report*.
+        """
+        Saves this report *as a watchlist report*.
 
         Note:
-            This method **cannot** be used to save a feed report. To
-            save feed reports, create them with `cb.create` and use
-            `Feed.replace`.
+            This method **cannot** be used to save a feed report. To save feed reports, create them with `cb.create`
+            and use `Feed.replace`.
 
         Raises:
             InvalidObjectError: If Report.validate() fails.
@@ -513,18 +665,28 @@ class Report(FeedModel):
         return self
 
     def validate(self):
-        """Validates this report's state.
+        """
+        Validates this report's state.
 
         Raises:
-            InvalidObjectError: If the report's state is invalid
+            InvalidObjectError: If the report's state is invalid.
         """
+        id_substitute = False
+        if not self._info.get('id', None):
+            self._info['id'] = '*'
+            id_substitute = True
         super(Report, self).validate()
+        if id_substitute:
+            del self._info['id']
 
         if self.link and not validators.url(self.link):
             raise InvalidObjectError("link should be a valid URL")
 
         if self.iocs_v2:
             [ioc.validate() for ioc in self._iocs_v2]
+        if self._iocs_v2_need_sync:
+            self._info['iocs_v2'] = [ioc._info for ioc in self._iocs_v2]
+            self._iocs_v2_need_sync = False
 
     def update(self, **kwargs):
         """Update this Report with the given arguments.
@@ -540,8 +702,7 @@ class Report(FeedModel):
                 and this report is a Feed Report, or Report.validate() fails.
 
         Note:
-            The report's timestamp is always updated, regardless of whether
-            passed explicitly.
+            The report's timestamp is always updated, regardless of whether passed explicitly.
 
         >>> report.update(title="My new report title")
         """
@@ -562,14 +723,18 @@ class Report(FeedModel):
                 self.id
             )
 
+        iocs_v2_poked = False
         for key, value in kwargs.items():
             if key in self._info:
                 self._info[key] = value
+            if key == 'iocs_v2':
+                iocs_v2_poked = True
 
         if self.iocs:
             self._iocs = IOC(self._cb, initial_data=self.iocs, report_id=self.id)
-        if self.iocs_v2:
+        if self.iocs_v2 and iocs_v2_poked:
             self._iocs_v2 = [IOC_V2(self._cb, initial_data=ioc, report_id=self.id) for ioc in self.iocs_v2]
+            self._iocs_v2_need_sync = False
 
         # NOTE(ww): Updating reports on the watchlist API appears to require
         # updated timestamps.
@@ -759,6 +924,42 @@ class Report(FeedModel):
         # methods.
         return self._iocs_v2
 
+    def append_iocs(self, iocs):
+        """
+        Append a list of IOCs to this Report.
+
+        Args:
+            iocs (list[IOC_V2]): List of IOCs to be added.
+        """
+        if self.iocs_v2:
+            self._iocs_v2 += iocs
+        else:
+            self._iocs_v2 = iocs
+        self._iocs_v2_need_sync = True
+
+    def remove_iocs_by_id(self, ids_list):
+        """
+        Remove IOCs from this report by specifying their IDs.
+
+        Args:
+            ids_list (list[str]): List of IDs of the IOCs to be removed.
+        """
+        if self.iocs_v2:
+            id_set = set(ids_list)
+            old_len = len(self._iocs_v2)
+            self._iocs_v2 = [ioc for ioc in self._iocs_v2 if ioc._info['id'] not in id_set]
+            self._iocs_v2_need_sync = (old_len > len(self._iocs_v2))
+
+    def remove_iocs(self, iocs):
+        """
+        Remove a list of IOCs from this Report.
+
+        Args:
+            iocs (list[IOC_V2]): List of IOCs to be removed.
+        """
+        if self.iocs_v2:
+            self.remove_iocs_by_id([ioc._info['id'] for ioc in iocs])
+
 
 class ReportSeverity(FeedModel):
     """Represents severity information for a Watchlist Report."""
@@ -781,7 +982,17 @@ class ReportSeverity(FeedModel):
                                              full_doc=True)
 
     def _query_implementation(self, cb, **kwargs):
-        raise NonQueryableModel("IOC does not support querying")
+        """
+        Queries are not supported for report severity, so this raises an exception.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Additional arguments.
+
+        Raises:
+            NonQueryableModel: Always.
+        """
+        raise NonQueryableModel("ReportSeverity does not support querying")
 
 
 class IOC(FeedModel):
@@ -907,7 +1118,7 @@ class IOC_V2(FeedModel):
         if not query:
             raise ApiError("IOC must have a query string")
         if not iocid:
-            iocid = uuid.uuid4()
+            iocid = str(uuid.uuid4())
         return IOC_V2(cb, iocid, {'id': iocid, 'match_type': 'query', 'values': [query]})
 
     @classmethod
@@ -932,9 +1143,8 @@ class IOC_V2(FeedModel):
         if len(values) == 0:
             raise ApiError('IOC must have at least one value')
         if not iocid:
-            iocid = uuid.uuid4()
-        return IOC_V2(cb, iocid, {'id': iocid, 'match_type': 'equality', 'field': field,
-                                  'values': copy.deepcopy(values)})
+            iocid = str(uuid.uuid4())
+        return IOC_V2(cb, iocid, {'id': iocid, 'match_type': 'equality', 'field': field, 'values': list(values)})
 
     @classmethod
     def create_regex(cls, cb, iocid, field, *values):
@@ -958,8 +1168,8 @@ class IOC_V2(FeedModel):
         if len(values) == 0:
             raise ApiError('IOC must have at least one value')
         if not iocid:
-            iocid = uuid.uuid4()
-        return IOC_V2(cb, iocid, {'id': iocid, 'match_type': 'regex', 'field': field, 'values': copy.deepcopy(values)})
+            iocid = str(uuid.uuid4())
+        return IOC_V2(cb, iocid, {'id': iocid, 'match_type': 'regex', 'field': field, 'values': list(values)})
 
     def validate(self):
         """
