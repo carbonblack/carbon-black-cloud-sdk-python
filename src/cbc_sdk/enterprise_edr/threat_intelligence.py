@@ -266,10 +266,6 @@ class Feed(FeedModel):
     primary_key = "id"
     swagger_meta_file = "enterprise_edr/models/feed.yaml"
 
-    @classmethod
-    def _query_implementation(self, cb, **kwargs):
-        return FeedQuery(self, cb)
-
     def __init__(self, cb, model_unique_id=None, initial_data=None):
         """
         Initialize the Feed object.
@@ -304,8 +300,147 @@ class Feed(FeedModel):
 
         self._reports = [Report(cb, initial_data=report, feed_id=feed_id) for report in reports]
 
+    class FeedBuilder:
+        """Helper class allowing Feeds to be assembled."""
+        def __init__(self, cb, info):
+            """
+            Creates a new FeedBuilder object.
+
+            Args:
+                cb (CBCloudAPI): A reference to the CBCloudAPI object.
+                info (dict): The initial information for the new feed.
+            """
+            self._cb = cb
+            self._new_feedinfo = info
+            self._reports = []
+
+        def set_name(self, name):
+            """
+            Sets the name for the new feed.
+
+            Args:
+                name (str): New name for the feed.
+
+            Returns:
+                FeedBuilder: This object.
+            """
+            self._new_feedinfo['name'] = name
+            return self
+
+        def set_provider_url(self, provider_url):
+            """
+            Sets the provider URL for the new feed.
+
+            Args:
+                provider_url (str): New provider URL for the feed.
+
+            Returns:
+                FeedBuilder: This object.
+            """
+            self._new_feedinfo['provider_url'] = provider_url
+            return self
+
+        def set_summary(self, summary):
+            """
+            Sets the summary for the new feed.
+
+            Args:
+                summary (str): New summary for the feed.
+
+            Returns:
+                FeedBuilder: This object.
+            """
+            self._new_feedinfo['summary'] = summary
+            return self
+
+        def set_category(self, category):
+            """
+            Sets the category for the new feed.
+
+            Args:
+                category (str): New category for the feed.
+
+            Returns:
+                FeedBuilder: This object.
+            """
+            self._new_feedinfo['category'] = category
+            return self
+
+        def set_source_label(self, source_label):
+            """
+            Sets the source label for the new feed.
+
+            Args:
+                source_label (str): New source label for the feed.
+
+            Returns:
+                FeedBuilder: This object.
+            """
+            self._new_feedinfo['source_label'] = source_label
+            return self
+
+        def add_reports(self, reports):
+            """
+            Adds new reports to the new feed.
+
+            Args:
+                reports (list[Report]): New reports to be added to the feed.
+
+            Returns:
+                FeedBuilder: This object.
+            """
+            self._reports += reports
+            return self
+
+        def build(self):
+            """
+            Builds the new Feed.
+
+            Returns:
+                Feed: The new Feed.
+            """
+            report_data = []
+            for report in self._reports:
+                report.validate()
+                report_data.append(report._info)
+            init_data = {'feedinfo': self._new_feedinfo, 'reports': report_data}
+            return Feed(self._cb, None, init_data)
+
+    @classmethod
+    def create(cls, cb, name, provider_url, summary, category):
+        """
+        Begins creating a new feed by making a FeedBuilder to hold the new feed data.
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            name (str): Name for the new feed.
+            provider_url (str): Provider URL for the new feed.
+            summary (str): Summary for the new feed.
+            category (str): Category for the new feed.
+
+        Returns:
+            FeedBuilder: The new FeedBuilder object to be used to create the feed.
+        """
+        return Feed.FeedBuilder(cb, {'name': name, 'provider_url': provider_url, 'summary': summary,
+                                     'category': category})
+
+    @classmethod
+    def _query_implementation(self, cb, **kwargs):
+        """
+        Returns the appropriate query object for Feeds.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            FeedQuery: The query object for Feeds.
+        """
+        return FeedQuery(self, cb)
+
     def save(self, public=False):
-        """Saves this feed on the Enterprise EDR server.
+        """
+        Saves this feed on the Enterprise EDR server.
 
         Arguments:
             public (bool): Whether to make the feed publicly available.
@@ -327,18 +462,39 @@ class Feed(FeedModel):
             url = url + "/public"
 
         new_info = self._cb.post_object(url, body).json()
-        self._info.update(new_info)
+        self._info.update(new_info['feedinfo'])
+        self._reports = [Report(self._cb, initial_data=report, feed_id=new_info['feedinfo']['id'])
+                         for report in new_info['reports']]
         return self
 
     def validate(self):
-        """Validates this feed's state.
+        """
+        Validates this feed's state.
 
         Raises:
             InvalidObjectError: If the Feed's state is invalid.
         """
+        id_substitute = False
+        if not self._info.get('id', None):
+            self._info['id'] = '*'
+            id_substitute = True
+        owner_substitute = False
+        if not self._info.get('owner', None):
+            self._info['owner'] = '*'
+            owner_substitute = True
+        access_substitute = False
+        if not self._info.get('access', None):
+            self._info['access'] = '*'
+            access_substitute = True
         super(Feed, self).validate()
+        if id_substitute:
+            del self._info['id']
+        if owner_substitute:
+            del self._info['owner']
+        if access_substitute:
+            del self._info['access']
 
-        if self.access not in ["public", "private"]:
+        if self.access and self.access not in ["public", "private"]:
             raise InvalidObjectError("access should be public or private")
 
         if not validators.url(self.provider_url):
@@ -348,7 +504,8 @@ class Feed(FeedModel):
             report.validate()
 
     def delete(self):
-        """Deletes this feed from the Enterprise EDR server.
+        """
+        Deletes this feed from the Enterprise EDR server.
 
         Raises:
             InvalidObjectError: If `id` is missing.
@@ -363,7 +520,8 @@ class Feed(FeedModel):
         self._cb.delete_object(url)
 
     def update(self, **kwargs):
-        """Update this feed's metadata with the given arguments.
+        """
+        Update this feed's metadata with the given arguments.
 
         Arguments:
             **kwargs (dict(str, str)): The fields to update.
@@ -396,15 +554,38 @@ class Feed(FeedModel):
 
     @property
     def reports(self):
-        """Returns a list of Reports associated with this feed.
+        """
+        Returns a list of Reports associated with this feed.
 
         Returns:
             Reports ([Report]): List of Reports in this Feed.
         """
-        return self._cb.select(Report).where(feed_id=self.id)
+        self._reports = list(self._cb.select(Report).where(feed_id=self.id))
+        return self._reports
+
+    def _overwrite_reports(self, reports):
+        """
+        Overwrites the Reports in this Feed with the given Reports.
+
+        Arguments:
+            reports ([Report]): List of Reports to replace existing Reports with.
+        """
+        rep_dicts = []
+        for report in reports:
+            report.validate()
+            rep_dicts.append(report._info)
+        body = {"reports": rep_dicts}
+
+        url = "/threathunter/feedmgr/v2/orgs/{}/feeds/{}/reports".format(
+            self._cb.credentials.org_key,
+            self.id
+        )
+        self._cb.post_object(url, body)
+        self._reports = reports
 
     def replace_reports(self, reports):
-        """Replace this Feed's Reports with the given Reports.
+        """
+        Replace this Feed's Reports with the given Reports.
 
         Arguments:
             reports ([Report]): List of Reports to replace existing Reports with.
@@ -414,18 +595,11 @@ class Feed(FeedModel):
         """
         if not self.id:
             raise InvalidObjectError("missing feed ID")
-
-        rep_dicts = [report._info for report in reports]
-        body = {"reports": rep_dicts}
-
-        url = "/threathunter/feedmgr/v2/orgs/{}/feeds/{}/reports".format(
-            self._cb.credentials.org_key,
-            self.id
-        )
-        self._cb.post_object(url, body)
+        self._overwrite_reports(reports)
 
     def append_reports(self, reports):
-        """Append the given Reports to this Feed's current Reports.
+        """
+        Append the given Reports to this Feed's current Reports.
 
         Arguments:
             reports ([Report]): List of Reports to append to Feed.
@@ -435,16 +609,7 @@ class Feed(FeedModel):
         """
         if not self.id:
             raise InvalidObjectError("missing feed ID")
-
-        rep_dicts = [report._info for report in reports]
-        rep_dicts += [report._info for report in self.reports]
-        body = {"reports": rep_dicts}
-
-        url = "/threathunter/feedmgr/v2/orgs/{}/feeds/{}/reports".format(
-            self._cb.credentials.org_key,
-            self.id
-        )
-        self._cb.post_object(url, body)
+        self._overwrite_reports(self._reports + reports)
 
 
 class Report(FeedModel):
@@ -455,6 +620,16 @@ class Report(FeedModel):
 
     @classmethod
     def _query_implementation(self, cb, **kwargs):
+        """
+        Returns the appropriate query object for Reports.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            ReportQuery: The query object for Reports.
+        """
         return ReportQuery(self, cb)
 
     def __init__(self, cb, model_unique_id=None, initial_data=None,

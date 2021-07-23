@@ -1113,3 +1113,39 @@ REPORT_UPDATE_AFTER_REMOVE_IOC = {
     ],
     "visibility": "visible"
 }
+
+FEED_BUILT_VIA_BUILDER = {
+    "feedinfo": {
+        "name": "FeedName",
+        "provider_url": "http://example.com",
+        "summary": "Summary information",
+        "category": "Intrusion",
+        "source_label": "SourceLabel"
+    },
+    "reports": [REPORT_BUILT_VIA_BUILDER]
+}
+
+FEED_INIT = {
+    "feedinfo": {
+        "id": "qwertyuiop",
+        "name": "FeedName",
+        "provider_url": "http://example.com",
+        "summary": "Summary information",
+        "category": "Intrusion",
+        "source_label": "SourceLabel",
+        "owner": "JRN",
+        "access": "private"
+    },
+    "reports": [REPORT_INIT]
+}
+
+FEED_UPDATE_INFO_1 = {
+    "id": "qwertyuiop",
+    "name": "NewName",
+    "provider_url": "http://example.com",
+    "summary": "Summary information",
+    "category": "Intrusion",
+    "source_label": "SourceLabel",
+    "owner": "JRN",
+    "access": "private"
+}

@@ -25,7 +25,10 @@ from tests.unit.fixtures.enterprise_edr.mock_threatintel import (WATCHLIST_GET_R
                                                                  REPORT_GET_IGNORED,
                                                                  REPORT_GET_SEVERITY,
                                                                  REPORT_UPDATE_AFTER_ADD_IOC,
-                                                                 REPORT_UPDATE_AFTER_REMOVE_IOC)
+                                                                 REPORT_UPDATE_AFTER_REMOVE_IOC,
+                                                                 FEED_BUILT_VIA_BUILDER,
+                                                                 FEED_INIT,
+                                                                 FEED_UPDATE_INFO_1)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 GUID_PATTERN = '[0-9A-Fa-f]{8}(-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}'
@@ -617,3 +620,68 @@ def test_report_remove_nonexistent_ioc_id(cbcsdk_mock):
     report.remove_iocs_by_id(['notexist'])
     report.update()
     assert len(report.iocs_) == 2
+
+
+def test_feed_builder_save(cbcsdk_mock):
+    """Tests the operation of the FeedBuilder and the save() function."""
+    def on_post(url, body, **kwargs):
+        assert body == FEED_BUILT_VIA_BUILDER
+        return_value = copy.deepcopy(body)
+        return_value["feedinfo"]["id"] = "qwertyuiop"
+        return_value["feedinfo"]["owner"] = "JRN"
+        return_value["feedinfo"]["access"] = "private"
+        return return_value
+
+    cbcsdk_mock.mock_request("POST", "/threathunter/feedmgr/v2/orgs/test/feeds", on_post)
+    api = cbcsdk_mock.api
+    # Start by building a report for the new feed to contain.
+    report_builder = Report.create(api, "NotReal", "Not real description", 2)
+    report_builder.set_title("ReportTitle").set_description("The report description").set_timestamp(1234567890)
+    report_builder.set_severity(5).set_link('https://example.com').add_tag("Alpha").add_tag("Bravo")
+    report_builder.add_ioc(IOC_V2.create_equality(api, "foo", "process_name", "evil.exe"))
+    report_builder.add_ioc(IOC_V2.create_equality(api, "bar", "netconn_ipv4", "10.29.99.1"))
+    report_builder.set_visibility("visible")
+    report = report_builder.build()
+    # Now build the feed.
+    builder = Feed.create(api, "NotReal", "http://127.0.0.1", "Not a real summary", "Fake")
+    builder.set_name("FeedName").set_provider_url("http://example.com").set_summary("Summary information")
+    builder.set_category("Intrusion").set_source_label("SourceLabel").add_reports([report])
+    feed = builder.build()
+    feed.save()
+    assert feed.id == "qwertyuiop"
+    assert len(feed._reports) == 1
+
+
+@pytest.mark.parametrize("feed_init, do_operation, expectation", [
+    (FEED_INIT, True, does_not_raise()),
+    (FEED_BUILT_VIA_BUILDER, False, pytest.raises(InvalidObjectError))
+])
+def test_delete_feed(cbcsdk_mock, feed_init, do_operation, expectation):
+    """Tests the delete() function."""
+    if do_operation:
+        cbcsdk_mock.mock_request("DELETE", "/threathunter/feedmgr/v2/orgs/test/feeds/qwertyuiop",
+                                 CBCSDKMock.StubResponse(None, 204))
+    api = cbcsdk_mock.api
+    feed = Feed(api, initial_data=feed_init)
+    with expectation:
+        feed.delete()
+
+
+@pytest.mark.parametrize("feed_init, change_item, new_value, do_operation, new_info, expectation", [
+    (FEED_INIT, 'name', 'NewName', True, FEED_UPDATE_INFO_1, does_not_raise()),
+    (FEED_BUILT_VIA_BUILDER, 'name', 'NewName', False, None, pytest.raises(InvalidObjectError))
+])
+def test_update_feed_info(cbcsdk_mock, feed_init, change_item, new_value, do_operation, new_info, expectation):
+    """Tests the update() function."""
+    def on_put(url, body, **kwargs):
+        assert body == new_info
+        return new_info
+
+    if do_operation:
+        cbcsdk_mock.mock_request("PUT", "/threathunter/feedmgr/v2/orgs/test/feeds/qwertyuiop/feedinfo", on_put)
+    api = cbcsdk_mock.api
+    feed = Feed(api, initial_data=feed_init)
+    params = {change_item: new_value}
+    with expectation:
+        feed.update(**params)
+        assert feed._info[change_item] == new_value
