@@ -1149,3 +1149,80 @@ FEED_UPDATE_INFO_1 = {
     "owner": "JRN",
     "access": "private"
 }
+
+REPORT_INIT_2 = {
+    "id": "065fb68d-42a8-4b2e-8f91-17f925f54356",
+    "title": "SecondTitle",
+    "description": "The second description",
+    "timestamp": 1234567890,
+    "severity": 4,
+    "link": "https://example.com",
+    "tags": ["Alpha"],
+    "iocs_v2": [
+        {
+            "id": "1foo",
+            "match_type": "equality",
+            "field": "process_name",
+            "values": ["wicked.exe"],
+        },
+        {
+            "id": "1bar",
+            "match_type": "equality",
+            "field": "netconn_ipv4",
+            "values": ["10.29.99.64"],
+        }
+    ],
+    "visibility": "visible"
+}
+
+WATCHLIST_BUILDER_IN = {
+    "name": "NewWatchlist",
+    "description": "I am a watchlist",
+    "tags_enabled": False,
+    "alerts_enabled": True,
+    "report_ids": [
+        '47474d40-1f94-4995-b6d9-1d1eea3528b3',
+        "69e2a8d0-bc36-4970-9834-8687efe1aff7"
+    ]
+}
+
+WATCHLIST_BUILDER_OUT = {
+    "name": "NewWatchlist",
+    "description": "I am a watchlist",
+    "id": "ABCDEFGHabcdefgh",
+    "tags_enabled": False,
+    "alerts_enabled": True,
+    "create_timestamp": 1234567890,
+    "last_update_timestamp": 1234567890,
+    "classifier": None,
+    "report_ids": [
+        '47474d40-1f94-4995-b6d9-1d1eea3528b3',
+        "69e2a8d0-bc36-4970-9834-8687efe1aff7"
+    ]
+}
+
+WATCHLIST_FROM_FEED_IN = {
+    "name": "Feed FeedName",
+    "description": "Summary information",
+    "tags_enabled": True,
+    "alerts_enabled": False,
+    "classifier": {
+        "key": "feed_id",
+        "value": "qwertyuiop"
+    }
+}
+
+WATCHLIST_FROM_FEED_OUT = {
+    "name": "Feed FeedName",
+    "description": "Summary information",
+    "id": "ABCDEFGHabcdefgh",
+    "tags_enabled": True,
+    "alerts_enabled": False,
+    "create_timestamp": 1234567890,
+    "last_update_timestamp": 1234567890,
+    "report_ids": None,
+    "classifier": {
+        "key": "feed_id",
+        "value": "qwertyuiop"
+    }
+}

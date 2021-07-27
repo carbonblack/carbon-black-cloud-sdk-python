@@ -28,7 +28,12 @@ from tests.unit.fixtures.enterprise_edr.mock_threatintel import (WATCHLIST_GET_R
                                                                  REPORT_UPDATE_AFTER_REMOVE_IOC,
                                                                  FEED_BUILT_VIA_BUILDER,
                                                                  FEED_INIT,
-                                                                 FEED_UPDATE_INFO_1)
+                                                                 FEED_UPDATE_INFO_1,
+                                                                 REPORT_INIT_2,
+                                                                 WATCHLIST_BUILDER_IN,
+                                                                 WATCHLIST_BUILDER_OUT,
+                                                                 WATCHLIST_FROM_FEED_IN,
+                                                                 WATCHLIST_FROM_FEED_OUT)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 GUID_PATTERN = '[0-9A-Fa-f]{8}(-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}'
@@ -400,12 +405,12 @@ def test_ioc_read_ignored(cbcsdk_mock):
     api = cbcsdk_mock.api
     ioc = IOC_V2.create_equality(api, "foo", "process_name", "Alpha")
     with pytest.raises(InvalidObjectError):
-        tmp = ioc.ignored
+        assert ioc.ignored
     ioc._report_id = "a1b2"
     assert ioc.ignored
     ioc._info['id'] = None
     with pytest.raises(InvalidObjectError):
-        tmp = ioc.ignored
+        assert ioc.ignored
 
 
 def test_ioc_set_ignored(cbcsdk_mock):
@@ -436,6 +441,25 @@ def test_ioc_clear_ignored(cbcsdk_mock):
     ioc._info['id'] = None
     with pytest.raises(InvalidObjectError):
         ioc.unignore()
+
+
+@pytest.mark.parametrize("input, output, expectation", [
+    ('::1', '00000000000000000000000000000001', does_not_raise()),
+    ('2601:280:c300:294::6bd', '26010280C300029400000000000006BD', does_not_raise()),
+    ('fd9f:6dd0:e01b:0:1b7:daf8:b54d:4916', 'FD9F6DD0E01B000001B7DAF8B54D4916', does_not_raise()),
+    ('fe80::3c0c:73f:845b:8243', 'FE800000000000003C0C073F845B8243', does_not_raise()),
+    ('fd9f:6dd0:e01b:0:1b7:daf8:4916', None, pytest.raises(ApiError)),
+    ('fd9f:6dd0:e01b:0:1b7:daf8:b54d:4916:909', None, pytest.raises(ApiError)),
+    ('fd9f:6dd0:e01b:0:1b7:daef8:b54d:4916', None, pytest.raises(ApiError)),
+    ('fe80:3:C0:8080::3c0c:73f:845b:8243', None, pytest.raises(ApiError)),
+    ('2601::c300:294::6bd', None, pytest.raises(ApiError)),
+    ('fe80::3c0c:73g:845b:8243', None, pytest.raises(ApiError)),
+    ("10.8.16.254", None, pytest.raises(ApiError))
+])
+def test_ipv6_equality_format(input, output, expectation):
+    """Tests the ipv6_equality_format() function."""
+    with expectation:
+        assert IOC_V2.ipv6_equality_format(input) == output
 
 
 def test_report_builder_save_watchlist(cbcsdk_mock):
@@ -680,8 +704,99 @@ def test_update_feed_info(cbcsdk_mock, feed_init, change_item, new_value, do_ope
     if do_operation:
         cbcsdk_mock.mock_request("PUT", "/threathunter/feedmgr/v2/orgs/test/feeds/qwertyuiop/feedinfo", on_put)
     api = cbcsdk_mock.api
-    feed = Feed(api, initial_data=feed_init)
+    feed = Feed(api, initial_data=copy.deepcopy(feed_init))
     params = {change_item: new_value}
     with expectation:
         feed.update(**params)
         assert feed._info[change_item] == new_value
+
+
+@pytest.mark.parametrize("feed_init, do_request, expectation", [
+    (FEED_INIT, True, does_not_raise()),
+    (FEED_BUILT_VIA_BUILDER, False, pytest.raises(InvalidObjectError))
+])
+def test_get_feed_reports(cbcsdk_mock, feed_init, do_request, expectation):
+    """Tests the reports() property."""
+    if do_request:
+        cbcsdk_mock.mock_request("GET", "/threathunter/feedmgr/v2/orgs/test/feeds/qwertyuiop/reports", REPORT_GET_RESP)
+    api = cbcsdk_mock.api
+    feed = Feed(api, initial_data=feed_init)
+    with expectation:
+        reports = feed.reports
+        assert len(reports) == 1
+        assert reports[0].id == '109027d1-064c-477d-aa34-528606ef72a9'
+
+
+@pytest.mark.parametrize("feed_init, do_request, expectation", [
+    (FEED_INIT, True, does_not_raise()),
+    (FEED_BUILT_VIA_BUILDER, False, pytest.raises(InvalidObjectError))
+])
+def test_replace_reports(cbcsdk_mock, feed_init, do_request, expectation):
+    """Tests the replace_reports method."""
+    def on_post(url, body, **kwargs):
+        array = body['reports']
+        assert len(array) == 1
+        assert array[0]['id'] == "065fb68d-42a8-4b2e-8f91-17f925f54356"
+        return {"success": True}
+
+    if do_request:
+        cbcsdk_mock.mock_request("POST", "/threathunter/feedmgr/v2/orgs/test/feeds/qwertyuiop/reports", on_post)
+    api = cbcsdk_mock.api
+    feed = Feed(api, initial_data=feed_init)
+    new_report = Report(api, None, REPORT_INIT_2)
+    with expectation:
+        feed.replace_reports([new_report])
+
+
+@pytest.mark.parametrize("feed_init, do_request, expectation", [
+    (FEED_INIT, True, does_not_raise()),
+    (FEED_BUILT_VIA_BUILDER, False, pytest.raises(InvalidObjectError))
+])
+def test_append_reports(cbcsdk_mock, feed_init, do_request, expectation):
+    """Tests the append_reports method."""
+    def on_post(url, body, **kwargs):
+        array = body['reports']
+        assert len(array) == 2
+        assert array[0]['id'] == "69e2a8d0-bc36-4970-9834-8687efe1aff7"
+        assert array[1]['id'] == "065fb68d-42a8-4b2e-8f91-17f925f54356"
+        return {"success": True}
+
+    if do_request:
+        cbcsdk_mock.mock_request("POST", "/threathunter/feedmgr/v2/orgs/test/feeds/qwertyuiop/reports", on_post)
+    api = cbcsdk_mock.api
+    feed = Feed(api, initial_data=feed_init)
+    new_report = Report(api, None, REPORT_INIT_2)
+    with expectation:
+        feed.append_reports([new_report])
+
+
+def test_watchlist_builder(cbcsdk_mock):
+    """Tests the function of the watchlist builder."""
+    def on_post(url, body, **kwargs):
+        assert body == WATCHLIST_BUILDER_IN
+        return WATCHLIST_BUILDER_OUT
+
+    cbcsdk_mock.mock_request('POST', "/threathunter/watchlistmgr/v3/orgs/test/watchlists", on_post)
+    api = cbcsdk_mock.api
+    report = Report(api, None, REPORT_INIT)
+    report._from_watchlist = True
+    builder = Watchlist.create(api, "NameErased")
+    builder.set_name('NewWatchlist').set_description('I am a watchlist').set_tags_enabled(False)
+    builder.set_alerts_enabled(True).add_report_ids(['47474d40-1f94-4995-b6d9-1d1eea3528b3']).add_reports([report])
+    watchlist = builder.build()
+    watchlist.save()
+    assert watchlist.id == "ABCDEFGHabcdefgh"
+
+
+def test_create_watchlist_from_feed(cbcsdk_mock):
+    """Tests the function of create_from_feed()."""
+    def on_post(url, body, **kwargs):
+        assert body == WATCHLIST_FROM_FEED_IN
+        return WATCHLIST_FROM_FEED_OUT
+
+    cbcsdk_mock.mock_request('POST', "/threathunter/watchlistmgr/v3/orgs/test/watchlists", on_post)
+    api = cbcsdk_mock.api
+    feed = Feed(api, initial_data=FEED_INIT)
+    watchlist = Watchlist.create_from_feed(feed)
+    watchlist.save()
+    assert watchlist.id == "ABCDEFGHabcdefgh"

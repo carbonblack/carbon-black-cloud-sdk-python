@@ -15,7 +15,6 @@
 
 from __future__ import absolute_import
 
-import copy
 import uuid
 
 from cbc_sdk.errors import ApiError, InvalidObjectError, NonQueryableModel
@@ -43,10 +42,6 @@ class Watchlist(FeedModel):
     urlobject_single = "/threathunter/watchlistmgr/v2/watchlist/{}"
     swagger_meta_file = "enterprise_edr/models/watchlist.yaml"
 
-    @classmethod
-    def _query_implementation(self, cb, **kwargs):
-        return WatchlistQuery(self, cb)
-
     def __init__(self, cb, model_unique_id=None, initial_data=None):
         """
         Initialize the Watchlist object.
@@ -67,6 +62,162 @@ class Watchlist(FeedModel):
 
         super(Watchlist, self).__init__(cb, model_unique_id=feed_id, initial_data=item,
                                         force_init=False, full_doc=True)
+
+    class WatchlistBuilder:
+        """Helper class allowing Watchlists to be assembled."""
+        def __init__(self, cb, name):
+            """
+            Creates a new WatchlistBuilder object.
+
+            Args:
+                cb (CBCloudAPI): A reference to the CBCloudAPI object.
+                name (str): Name for the new watchlist.
+            """
+            self._cb = cb
+            self._new_info = {"name": name, "tags_enabled": True, "alerts_enabled": False, "report_ids": []}
+
+        def set_name(self, name):
+            """
+            Sets the name for the new watchlist.
+
+            Args:
+                name (str): New name for the watchlist.
+
+            Returns:
+                FeedBuilder: This object.
+            """
+            self._new_info['name'] = name
+            return self
+
+        def set_description(self, description):
+            """
+            Sets the description for the new watchlist.
+
+            Args:
+                description (str): New description for the watchlist.
+
+            Returns:
+                FeedBuilder: This object.
+            """
+            self._new_info['description'] = description
+            return self
+
+        def set_tags_enabled(self, flag):
+            """
+            Sets whether tags will be enabled on the new watchlist.
+
+            Args:
+                flag (bool): True to enable tags, False to disable them. Default is True.
+
+            Returns:
+                FeedBuilder: This object.
+            """
+            self._new_info['tags_enabled'] = bool(flag)
+            return self
+
+        def set_alerts_enabled(self, flag):
+            """
+            Sets whether alerts will be enabled on the new watchlist.
+
+            Args:
+                flag (bool): True to enable alerts, False to disable them. Default is False.
+
+            Returns:
+                FeedBuilder: This object.
+            """
+            self._new_info['alerts_enabled'] = bool(flag)
+            return self
+
+        def add_report_ids(self, report_ids):
+            """
+            Adds report IDs to the watchlist.
+
+            Args:
+                report_ids (list[str]): List of report IDs to add to the watchlist.
+
+            Returns:
+                FeedBuilder: This object.
+            """
+            self._new_info['report_ids'] += report_ids
+            return self
+
+        def add_reports(self, reports):
+            """
+            Adds reports to the watchlist.
+
+            Args:
+                reports (list[Report]): List of reports to be added to the watchlist.
+
+            Returns:
+                FeedBuilder: This object.
+            """
+            id_values = []
+            for report in reports:
+                if report._from_watchlist and 'id' in report._info:
+                    report.validate()
+                    id_values.append(report._info['id'])
+            return self.add_report_ids(id_values)
+
+        def build(self):
+            """
+            Builds the new Watchlist using information in the builder. The new watchlist must still be saved.
+
+            Returns:
+                Watchlist: The new Watchlist.
+            """
+            return Watchlist(self._cb, initial_data=self._new_info)
+
+    @classmethod
+    def create(cls, cb, name):
+        """
+        Starts creating a new Watchlist by returning a WatchlistBuilder that can be used to set attributes.
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            name (str): Name for the new watchlist.
+
+        Returns:
+            WatchlistBuilder: The builder for the new watchlist. Call build() to create the actual Watchlist.
+        """
+        return Watchlist.WatchlistBuilder(cb, name)
+
+    @classmethod
+    def create_from_feed(cls, feed, name=None, description=None):
+        """
+        Creates a new Watchlist that encapsulates a Feed.
+
+        Args:
+            feed (Feed): The feed to be encapsulated by this Watchlist.
+            name (str): Name for the new watchlist. The default is to use the Feed name.
+            description (str): Description for the new watchlist. The default is to use the Feed summary.
+
+        Returns:
+            Watchlist: A new Watchlist object, which must be saved to the server.
+        """
+        return Watchlist(feed._cb, initial_data={
+            "name": f"Feed {feed.name}" if not name else name,
+            "description": feed.summary if not description else description,
+            "tags_enabled": True,
+            "alerts_enabled": False,
+            "classifier": {
+                "key": "feed_id",
+                "value": feed.id
+            }
+        })
+
+    @classmethod
+    def _query_implementation(self, cb, **kwargs):
+        """
+        Returns the appropriate query object for Watchlists.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            WatchlistQuery: The query object for Watchlists.
+        """
+        return WatchlistQuery(self, cb)
 
     def save(self):
         """Saves this watchlist on the Enterprise EDR server.
@@ -92,7 +243,15 @@ class Watchlist(FeedModel):
         Raises:
             InvalidObjectError: If the Watchlist's state is invalid.
         """
+        if 'create_timestamp' not in self._info:
+            self._info['create_timestamp'] = -1
+        if 'last_update_timestamp' not in self._info:
+            self._info['last_update_timestamp'] = -1
         super(Watchlist, self).validate()
+        if self._info['create_timestamp'] == -1:
+            del self._info['create_timestamp']
+        if self._info['last_update_timestamp'] == -1:
+            del self._info['last_update_timestamp']
 
     def update(self, **kwargs):
         """Updates this watchlist with the given arguments.
@@ -560,6 +719,8 @@ class Feed(FeedModel):
         Returns:
             Reports ([Report]): List of Reports in this Feed.
         """
+        if not self.id:
+            raise InvalidObjectError("missing feed ID")
         self._reports = list(self._cb.select(Report).where(feed_id=self.id))
         return self._reports
 
@@ -1345,6 +1506,51 @@ class IOC_V2(FeedModel):
         if not iocid:
             iocid = str(uuid.uuid4())
         return IOC_V2(cb, iocid, {'id': iocid, 'match_type': 'regex', 'field': field, 'values': list(values)})
+
+    @classmethod
+    def ipv6_equality_format(cls, input):
+        """
+        Turns a canonically-formatted IPv6 address into a string suitable for use in an equality IOC.
+
+        Args:
+            input (str): The IPv6 address to be translated.
+
+        Returns:
+            str: The translated form of IPv6 address.
+
+        Raises:
+            ApiError: If the string is not in valid format.
+        """
+        def _check_components(array):
+            """If any component of an array is not valid for IPv6 (1-4 hex digits), raise an error"""
+            for element in array:
+                if len(element) not in range(1, 5):
+                    raise ApiError('invalid address format')
+                for ch in element:
+                    if ch not in '0123456789abcdefABCDEF':
+                        raise ApiError('invalid address format')
+
+        # try split on double colon first
+        segments = input.split('::', maxsplit=1)
+        if len(segments) == 2:
+            # take prefix and suffix part, add zeroes in between
+            prefix = segments[0].split(':') if segments[0] else []
+            suffix = segments[1].split(':') if segments[1] else []
+            if len(prefix) + len(suffix) >= 8:
+                raise ApiError('invalid address format')
+            _check_components(prefix)
+            _check_components(suffix)
+            num_blank = 8 - (len(prefix) + len(suffix))
+            parts = prefix + (['0000'] * num_blank) + suffix
+        else:
+            # split all on single colon
+            parts = input.split(':')
+            if len(parts) != 8:
+                raise ApiError('invalid address format')
+            _check_components(parts)
+        # left pad all parts with zeroes
+        processed_parts = [('0000' + part)[-4:] for part in parts]
+        return "".join(processed_parts).upper()
 
     def validate(self):
         """
