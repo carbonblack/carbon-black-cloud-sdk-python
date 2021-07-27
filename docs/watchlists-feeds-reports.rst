@@ -48,17 +48,11 @@ In this example, a report is created, adding one or more IOCs to it:
 ::
 
     >>> from cbc_sdk.enterprise_edr import Report
-    >>> report = Report(api, None, {"description": "Unsigned processes impersonating browsers",
-    ...                             "iocs_v2": [{
-    ...                                 "id": "unsigned-chrome",
-    ...                                 "match_type": "query",
-    ...                                 "values": [("process_name:chrome.exe NOT process_publisher_state:FILE_SIGNATURE_STATE_SIGNED")]
-    ...                                 }],
-    ...                             "link": None,
-    ...                             "severity": 5,
-    ...                             "tags": ["compliance", "unsigned browsers"],
-    ...                             "timestamp": 1601326338,
-    ...                             "title": "Unsigned Browsers"})
+    >>> builder = Report.create(api, "Unsigned Browsers", "Unsigned processes impersonating browsers", 5)
+    >>> builder.add_tag("compliance").add_tag("unsigned_browsers")
+    >>> builder.add_ioc(IOC_V2.create_query(api, "unsigned-chrome",
+    ...                 "process_name:chrome.exe NOT process_publisher_state:FILE_SIGNATURE_STATE_SIGNED"))
+    >>> report = builder.build()
     >>> report.save_watchlist()
 
 Reports should always be given a ``title`` that's sufficiently unique within your organization, so as to minimize
@@ -75,15 +69,10 @@ Now, add the new Report to a new Watchlist:
 ::
 
     >>> from cbc_sdk.enterprise_edr import Watchlist
-    >>> watchlist = Watchlist(api, None, {"alerts_enabled": False,
-    ...                                   "classifier": None,
-    ...                                   "description": "Any signs of suspicious applications running on endpoints",
-    ...                                   "name": "Suspicious Applications",
-    ...                                   "report_ids": [report.id],
-    ...                                   "tags_enabled": True})
+    >>> builder = Watchlist.create(api, "Suspicious Applications")
+    >>> builder.set_description("Any signs of suspicious applications running on endpoints").add_reports([report])
+    >>> watchlist = builder.build()
     >>> watchlist.save()
-
-**Note:** ``classifier`` *must* be ``None``, unless the new watchlist is being subscribed to a feed.
 
 If you already have an existing Watchlist you wish to enhance, you can add Reports to the existing Watchlist.
 
@@ -227,16 +216,12 @@ A new feed may be created as follows (assuming the new report for that feed is s
 ::
 
     >>> from cbc_sdk.enterprise_edr import Feed
-    >>> feed_data = {
-    ...           'feedinfo': {
-    ...                 'name': 'Suspicious Applications',
-    ...                 'provider_url': 'http://example.com/location',
-    ...                 'summary': 'Any signs of suspicious applications running on our endpoints',
-    ...                 'category': 'external_threat_intel',
-    ...                 'source_label': 'Where the info is coming from'},
-    ...                 'reports': [ {...}, {...} ]
-    ...             }
-    >>> feed = api.create(Feed, feed_data)
+    >>> builder = Feed.create(api, 'Suspicious Applications', 'http://example.com/location',
+    ...                       'Any signs of suspicious applications running on our endpoints', 'external_threat_intel')
+    >>> builder.set_source_label('Where the info is coming from')
+    >>> builder.add_reports([...])
+    >>> feed = builder.build()
+    >>> feed.save()
 
 If you have an existing feed, a new report may be added to it as follows (assuming the new report is stored in the
 ``report`` variable):
@@ -256,11 +241,7 @@ To subscribe to a feed, a new watchlist must be created around it:
 
 ::
 
-    >>> watchlist = Watchlist(api, None, {"alerts_enabled": True,
-    ...                                   "classifier": {"feed_id": feed.id},
-    ...                                   "description": "Subscription to the new feed",
-    ...                                   "name": "Subscribed feed",
-    ...                                   "tags_enabled": True})
+    >>> watchlist = Watchlist.create_from_feed(feed, "Subscribed feed", "Subscription to the new feed")
     >>> watchlist.save()
 
 Limitations of Reports and Watchlists
