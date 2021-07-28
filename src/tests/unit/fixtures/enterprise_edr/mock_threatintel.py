@@ -1226,3 +1226,16 @@ WATCHLIST_FROM_FEED_OUT = {
         "value": "qwertyuiop"
     }
 }
+
+ADD_REPORT_IDS_LIST = [
+    '47474d40-1f94-4995-b6d9-1d1eea3528b3',
+    "69e2a8d0-bc36-4970-9834-8687efe1aff7",
+    '64414d1f-66d5-4b32-9b8a-b778e13ab836',
+    'c9826407-0d5a-467f-bc98-7da2035de1bc'
+]
+
+ADD_REPORTS_LIST = [
+    '47474d40-1f94-4995-b6d9-1d1eea3528b3',
+    "69e2a8d0-bc36-4970-9834-8687efe1aff7",
+    "065fb68d-42a8-4b2e-8f91-17f925f54356"
+]

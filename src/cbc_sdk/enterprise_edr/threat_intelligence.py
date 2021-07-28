@@ -417,6 +417,30 @@ class Watchlist(FeedModel):
 
         return reports_
 
+    def add_report_ids(self, report_ids):
+        """
+        Adds new report IDs to the watchlist.
+
+        Args:
+            report_ids (list[str]): List of report IDs to be added to the watchlist.
+        """
+        old_report_ids = self.report_ids if self._info.get('report_ids') else []
+        self.update(report_ids=(old_report_ids + report_ids))
+
+    def add_reports(self, reports):
+        """
+        Adds new reports to the watchlist.
+
+        Args:
+            reports (list[Report]): List of reports to be added to the watchlist.
+        """
+        report_ids = []
+        for report in reports:
+            report.validate()
+            if report._from_watchlist:
+                report_ids.append(report._info['id'])
+        self.add_report_ids(report_ids)
+
 
 class Feed(FeedModel):
     """Represents an Enterprise EDR feed's metadata."""

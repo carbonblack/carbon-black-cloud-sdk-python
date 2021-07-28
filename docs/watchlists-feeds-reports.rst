@@ -60,7 +60,16 @@ the chances of confusing two or more Reports with each other.  Carbon Black Clou
 for each report, but does not enforce any uniqueness constraint on the ``title`` of reports.
 
 Alternatively, you can update an existing report, adding more IOCs and/or replacing existing ones.  To find an existing
-report associated with a watchlist, you must look in the watchlist's ``reports`` collection.
+report associated with a watchlist, you must look in the watchlist's ``reports`` collection:
+
+::
+
+    >>> from cbc_sdk.enterprise_edr import Watchlist, Report
+    >>> watchlist = api.select('Watchlist', 'R4cMgFIhRaakgk749MRr6Q')
+    >>> rptlist = [report for report in watchlist.reports where report.id == '47474d40-1f94-4995-b6d9-1d1eea3528b3']
+    >>> report = rptlist[0]
+    >>> report.append_iocs([IOC_V2.create_query(api, 'evil-connect', 'netconn_ipv4:10.8.16.4')])
+    >>> report.save_watchlist()
 
 Adding the Report to a Watchlist
 ++++++++++++++++++++++++++++++++
@@ -74,7 +83,13 @@ Now, add the new Report to a new Watchlist:
     >>> watchlist = builder.build()
     >>> watchlist.save()
 
-If you already have an existing Watchlist you wish to enhance, you can add Reports to the existing Watchlist.
+If you already have an existing Watchlist you wish to enhance, you can add Reports to the existing Watchlist:
+
+::
+
+    >>> from cbc_sdk.enterprise_edr import Watchlist
+    >>> watchlist = api.select('Watchlist', 'R4cMgFIhRaakgk749MRr6Q')
+    >>> watchlist.add_reports([report])
 
 Enabling Alerting on a Watchlist
 ++++++++++++++++++++++++++++++++

@@ -33,7 +33,9 @@ from tests.unit.fixtures.enterprise_edr.mock_threatintel import (WATCHLIST_GET_R
                                                                  WATCHLIST_BUILDER_IN,
                                                                  WATCHLIST_BUILDER_OUT,
                                                                  WATCHLIST_FROM_FEED_IN,
-                                                                 WATCHLIST_FROM_FEED_OUT)
+                                                                 WATCHLIST_FROM_FEED_OUT,
+                                                                 ADD_REPORT_IDS_LIST,
+                                                                 ADD_REPORTS_LIST)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 GUID_PATTERN = '[0-9A-Fa-f]{8}(-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}'
@@ -800,3 +802,35 @@ def test_create_watchlist_from_feed(cbcsdk_mock):
     watchlist = Watchlist.create_from_feed(feed)
     watchlist.save()
     assert watchlist.id == "ABCDEFGHabcdefgh"
+
+
+def test_watchlist_add_report_ids(cbcsdk_mock):
+    """Tests the add_report_ids() method."""
+    def on_put(url, body, **kwargs):
+        assert body['report_ids'] == ADD_REPORT_IDS_LIST
+        return_value = copy.deepcopy(WATCHLIST_BUILDER_OUT)
+        return_value['report_ids'] = ADD_REPORT_IDS_LIST
+        return return_value
+
+    cbcsdk_mock.mock_request("PUT", "/threathunter/watchlistmgr/v3/orgs/test/watchlists/ABCDEFGHabcdefgh", on_put)
+    api = cbcsdk_mock.api
+    watchlist = Watchlist(api, initial_data=copy.deepcopy(WATCHLIST_BUILDER_OUT))
+    watchlist.add_report_ids(['64414d1f-66d5-4b32-9b8a-b778e13ab836', 'c9826407-0d5a-467f-bc98-7da2035de1bc'])
+    assert watchlist.report_ids == ADD_REPORT_IDS_LIST
+
+
+def test_watchlist_add_reports(cbcsdk_mock):
+    """Tests the add_reports() method."""
+    def on_put(url, body, **kwargs):
+        assert body['report_ids'] == ADD_REPORTS_LIST
+        return_value = copy.deepcopy(WATCHLIST_BUILDER_OUT)
+        return_value['report_ids'] = ADD_REPORTS_LIST
+        return return_value
+
+    cbcsdk_mock.mock_request("PUT", "/threathunter/watchlistmgr/v3/orgs/test/watchlists/ABCDEFGHabcdefgh", on_put)
+    api = cbcsdk_mock.api
+    watchlist = Watchlist(api, initial_data=copy.deepcopy(WATCHLIST_BUILDER_OUT))
+    report = Report(api, None, REPORT_INIT_2)
+    report._from_watchlist = True
+    watchlist.add_reports([report])
+    assert watchlist.report_ids == ADD_REPORTS_LIST
