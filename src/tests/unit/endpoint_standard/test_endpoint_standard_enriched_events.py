@@ -8,6 +8,7 @@ from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.endpoint_standard.mock_enriched_events import (
+    GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_ZERO,
     POST_ENRICHED_EVENTS_SEARCH_JOB_RESP,
     GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_1,
     GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_2,
@@ -150,10 +151,38 @@ def test_enriched_event_select_details_sync(cbcsdk_mock):
     events = s_api.select(EnrichedEvent).where(process_pid=2000)
     event = events[0]
     results = event.get_details()
+    print(results)
     assert results['device_name'] is not None
     assert results.device_name is not None
     assert results.enriched is True
     assert results.process_pid[0] == 2000
+
+
+def test_enriched_event_select_details_sync_zero(cbcsdk_mock):
+    """Testing EnrichedEvent Querying with get_details"""
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/search_job",
+                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v1/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b",  # noqa: E501
+                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v2/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
+                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_1)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
+                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b",  # noqa: E501
+                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
+                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_ZERO)
+
+    s_api = cbcsdk_mock.api
+    events = s_api.select(EnrichedEvent).where(process_pid=2000)
+    event = events[0]
+    results = event.get_details()
+    assert results['device_name'] is not None
+    assert results.get('alert_id') is None
 
 
 def test_enriched_event_select_compound(cbcsdk_mock):

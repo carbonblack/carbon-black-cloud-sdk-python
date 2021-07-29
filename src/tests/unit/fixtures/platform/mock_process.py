@@ -2446,6 +2446,14 @@ GET_PROCESS_DETAILS_JOB_RESULTS_RESP = {
     ]
 }
 
+GET_PROCESS_DETAILS_JOB_RESULTS_RESP_ZERO = {
+    'contacted': 0,
+    'completed': 0,
+    'num_available': 0,
+    'num_found': 0,
+    'results': []
+}
+
 GET_FACET_SEARCH_RESULTS_RESP = {
     "ranges": [
         {
