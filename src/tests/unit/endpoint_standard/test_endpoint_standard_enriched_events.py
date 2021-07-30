@@ -151,7 +151,6 @@ def test_enriched_event_select_details_sync(cbcsdk_mock):
     events = s_api.select(EnrichedEvent).where(process_pid=2000)
     event = events[0]
     results = event.get_details()
-    print(results)
     assert results['device_name'] is not None
     assert results.device_name is not None
     assert results.enriched is True
