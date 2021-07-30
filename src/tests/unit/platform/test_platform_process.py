@@ -40,7 +40,8 @@ from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_SUMMARY_RESP,
                                                        EXPECTED_PROCESS_FACETS,
                                                        EXPECTED_PROCESS_RANGES_FACETS,
                                                        GET_PROCESS_TREE_STR,
-                                                       GET_PROCESS_SUMMARY_STR)
+                                                       GET_PROCESS_SUMMARY_STR,
+                                                       GET_PROCESS_DETAILS_JOB_RESULTS_RESP_ZERO)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -1104,6 +1105,25 @@ def test_process_get_details(cbcsdk_mock):
     assert results['process_guid'] == '80dab519-3b5f-4502-afad-da87cd58a4c3'
     assert results['process_cmdline'][0] == '/usr/bin/gitea'
     assert 10222 in results['process_pid']
+
+
+def test_process_get_details_zero(cbcsdk_mock):
+    """Test get_details on a process."""
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/detail_jobs",
+                             POST_PROCESS_DETAILS_JOB_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v2/orgs/test/processes/detail_jobs/ccc47a52-9a61-4c77-8652-8a03dc187b98",  # noqa: E501
+                             GET_PROCESS_DETAILS_JOB_STATUS_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v2/orgs/test/processes/detail_jobs/ccc47a52-9a61-4c77-8652-8a03dc187b98/results",  # noqa: E501
+                             GET_PROCESS_DETAILS_JOB_RESULTS_RESP_ZERO)
+
+    api = cbcsdk_mock.api
+    process = Process(api, '80dab519-3b5f-4502-afad-da87cd58a4c3',
+                      {'process_guid': '80dab519-3b5f-4502-afad-da87cd58a4c3'})
+    results = process.get_details()
+    assert results['process_guid'] == '80dab519-3b5f-4502-afad-da87cd58a4c3'
+    assert results.get('device_id') is None
 
 
 def test_process_get_details_async(cbcsdk_mock):
