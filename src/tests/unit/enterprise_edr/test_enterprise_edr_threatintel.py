@@ -856,6 +856,7 @@ def test_watchlist_add_reports(cbcsdk_mock):
      "error in IOC 'match_type' value: Invalid match type"),
 ])
 def test_feed_base_validation(data, expectation, message):
+    """Tests the _validate_against_criteria method against the IOC criteria."""
     look_at_message = True
     with expectation as e:
         Feed._validate_against_criteria(data, Feed.IOCV2_VALIDATION, 'IOC')
@@ -956,6 +957,7 @@ def test_feed_base_validation(data, expectation, message):
       "visibility": "visible"}, pytest.raises(InvalidObjectError), "query IOC should have one and only one value"),
 ])
 def test_feed_report_validation(data, expectation, message):
+    """Tests the _validate_report_rawdata method."""
     look_at_message = True
     with expectation as e:
         Feed._validate_report_rawdata([data])
