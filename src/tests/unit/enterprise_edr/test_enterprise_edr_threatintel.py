@@ -834,3 +834,173 @@ def test_watchlist_add_reports(cbcsdk_mock):
     report._from_watchlist = True
     watchlist.add_reports([report])
     assert watchlist.report_ids == ADD_REPORTS_LIST
+
+
+@pytest.mark.parametrize("data, expectation, message", [
+    ({'id': 'foo', 'match_type': 'query', 'values': ['foo']}, does_not_raise(), None),
+    ({'id': 'foo', 'match_type': 'query', 'values': ['foo'], 'field': 'bar', 'link': 'bar'}, does_not_raise(), None),
+    ({'match_type': 'query', 'values': ['foo']}, pytest.raises(InvalidObjectError), "value 'id' missing from IOC"),
+    ({'id': 'foo', 'values': ['foo']}, pytest.raises(InvalidObjectError), "value 'match_type' missing from IOC"),
+    ({'id': 'foo', 'match_type': 'query'}, pytest.raises(InvalidObjectError), "value 'values' missing from IOC"),
+    ({'id': 14, 'match_type': 'query', 'values': ['foo']}, pytest.raises(InvalidObjectError),
+     "IOC value 'id' is of wrong type"),
+    ({'id': 'foo', 'match_type': 303, 'values': ['foo']}, pytest.raises(InvalidObjectError),
+     "IOC value 'match_type' is of wrong type"),
+    ({'id': 'foo', 'match_type': 'query', 'values': 'blort'}, pytest.raises(InvalidObjectError),
+     "IOC value 'values' is of wrong type"),
+    ({'id': 'foo', 'match_type': 'query', 'values': ['foo'], 'field': 15}, pytest.raises(InvalidObjectError),
+     "IOC value 'field' is of wrong type"),
+    ({'id': 'foo', 'match_type': 'query', 'values': ['foo'], 'link': 15}, pytest.raises(InvalidObjectError),
+     "IOC value 'link' is of wrong type"),
+    ({'id': 'foo', 'match_type': 'notdef', 'values': ['foo']}, pytest.raises(InvalidObjectError),
+     "error in IOC 'match_type' value: Invalid match type"),
+])
+def test_feed_base_validation(data, expectation, message):
+    look_at_message = True
+    with expectation as e:
+        Feed._validate_against_criteria(data, Feed.IOCV2_VALIDATION, 'IOC')
+        look_at_message = False
+    if look_at_message:
+        assert e.type is InvalidObjectError
+        assert e.value.args[0] == message
+
+
+@pytest.mark.parametrize("data, expectation, message", [
+    ({"id": "69e2a8d0-bc36-4970-9834-8687efe1aff7", "title": "ReportTitle", "description": "The report description",
+      "timestamp": 1234567890, "severity": 5, "link": "https://example.com", "tags": ["Alpha", "Bravo"],
+      "iocs_v2": [{"id": "foo", "match_type": "equality", "field": "process_name", "values": ["evil.exe"]}],
+      "visibility": "visible"}, does_not_raise(), None),
+    ({"title": "ReportTitle", "description": "The report description",
+      "timestamp": 1234567890, "severity": 5, "link": "https://example.com", "tags": ["Alpha", "Bravo"],
+      "iocs_v2": [{"id": "foo", "match_type": "equality", "field": "process_name", "values": ["evil.exe"]}],
+      "visibility": "visible"}, pytest.raises(InvalidObjectError), "value 'id' missing from report"),
+    ({"id": "69e2a8d0-bc36-4970-9834-8687efe1aff7", "description": "The report description",
+      "timestamp": 1234567890, "severity": 5, "link": "https://example.com", "tags": ["Alpha", "Bravo"],
+      "iocs_v2": [{"id": "foo", "match_type": "equality", "field": "process_name", "values": ["evil.exe"]}],
+      "visibility": "visible"}, pytest.raises(InvalidObjectError), "value 'title' missing from report"),
+    ({"id": "69e2a8d0-bc36-4970-9834-8687efe1aff7", "title": "ReportTitle",
+      "timestamp": 1234567890, "severity": 5, "link": "https://example.com", "tags": ["Alpha", "Bravo"],
+      "iocs_v2": [{"id": "foo", "match_type": "equality", "field": "process_name", "values": ["evil.exe"]}],
+      "visibility": "visible"}, pytest.raises(InvalidObjectError), "value 'description' missing from report"),
+    ({"id": "69e2a8d0-bc36-4970-9834-8687efe1aff7", "title": "ReportTitle", "description": "The report description",
+      "severity": 5, "link": "https://example.com", "tags": ["Alpha", "Bravo"],
+      "iocs_v2": [{"id": "foo", "match_type": "equality", "field": "process_name", "values": ["evil.exe"]}],
+      "visibility": "visible"}, pytest.raises(InvalidObjectError), "value 'timestamp' missing from report"),
+    ({"id": "69e2a8d0-bc36-4970-9834-8687efe1aff7", "title": "ReportTitle", "description": "The report description",
+      "timestamp": 1234567890, "link": "https://example.com", "tags": ["Alpha", "Bravo"],
+      "iocs_v2": [{"id": "foo", "match_type": "equality", "field": "process_name", "values": ["evil.exe"]}],
+      "visibility": "visible"}, pytest.raises(InvalidObjectError), "value 'severity' missing from report"),
+    ({"id": 123, "title": "ReportTitle", "description": "The report description",
+      "timestamp": 1234567890, "severity": 5, "link": "https://example.com", "tags": ["Alpha", "Bravo"],
+      "iocs_v2": [{"id": "foo", "match_type": "equality", "field": "process_name", "values": ["evil.exe"]}],
+      "visibility": "visible"}, pytest.raises(InvalidObjectError), "report value 'id' is of wrong type"),
+    ({"id": "69e2a8d0-bc36-4970-9834-8687efe1aff7", "title": 6781, "description": "The report description",
+      "timestamp": 1234567890, "severity": 5, "link": "https://example.com", "tags": ["Alpha", "Bravo"],
+      "iocs_v2": [{"id": "foo", "match_type": "equality", "field": "process_name", "values": ["evil.exe"]}],
+      "visibility": "visible"}, pytest.raises(InvalidObjectError), "report value 'title' is of wrong type"),
+    ({"id": "69e2a8d0-bc36-4970-9834-8687efe1aff7", "title": "ReportTitle", "description": 8,
+      "timestamp": 1234567890, "severity": 5, "link": "https://example.com", "tags": ["Alpha", "Bravo"],
+      "iocs_v2": [{"id": "foo", "match_type": "equality", "field": "process_name", "values": ["evil.exe"]}],
+      "visibility": "visible"}, pytest.raises(InvalidObjectError), "report value 'description' is of wrong type"),
+    ({"id": "69e2a8d0-bc36-4970-9834-8687efe1aff7", "title": "ReportTitle", "description": "The report description",
+      "timestamp": "1234567890", "severity": 5, "link": "https://example.com", "tags": ["Alpha", "Bravo"],
+      "iocs_v2": [{"id": "foo", "match_type": "equality", "field": "process_name", "values": ["evil.exe"]}],
+      "visibility": "visible"}, pytest.raises(InvalidObjectError), "report value 'timestamp' is of wrong type"),
+    ({"id": "69e2a8d0-bc36-4970-9834-8687efe1aff7", "title": "ReportTitle", "description": "The report description",
+      "timestamp": 1234567890, "severity": "5", "link": "https://example.com", "tags": ["Alpha", "Bravo"],
+      "iocs_v2": [{"id": "foo", "match_type": "equality", "field": "process_name", "values": ["evil.exe"]}],
+      "visibility": "visible"}, pytest.raises(InvalidObjectError), "report value 'severity' is of wrong type"),
+    ({"id": "69e2a8d0-bc36-4970-9834-8687efe1aff7", "title": "ReportTitle", "description": "The report description",
+      "timestamp": 1234567890, "severity": 5, "link": 8888, "tags": ["Alpha", "Bravo"],
+      "iocs_v2": [{"id": "foo", "match_type": "equality", "field": "process_name", "values": ["evil.exe"]}],
+      "visibility": "visible"}, pytest.raises(InvalidObjectError), "report value 'link' is of wrong type"),
+    ({"id": "69e2a8d0-bc36-4970-9834-8687efe1aff7", "title": "ReportTitle", "description": "The report description",
+      "timestamp": 1234567890, "severity": 5, "link": "https://example.com", "tags": "Alpha",
+      "iocs_v2": [{"id": "foo", "match_type": "equality", "field": "process_name", "values": ["evil.exe"]}],
+      "visibility": "visible"}, pytest.raises(InvalidObjectError), "report value 'tags' is of wrong type"),
+    ({"id": "69e2a8d0-bc36-4970-9834-8687efe1aff7", "title": "ReportTitle", "description": "The report description",
+      "timestamp": 1234567890, "severity": 5, "link": "https://example.com", "tags": ["Alpha", "Bravo"],
+      "iocs_v2": {"id": "foo", "match_type": "equality", "field": "process_name", "values": ["evil.exe"]},
+      "visibility": "visible"}, pytest.raises(InvalidObjectError), "report value 'iocs_v2' is of wrong type"),
+    ({"id": "69e2a8d0-bc36-4970-9834-8687efe1aff7", "title": "ReportTitle", "description": "The report description",
+      "timestamp": 1234567890, "severity": 5, "link": "https://example.com", "tags": ["Alpha", "Bravo"],
+      "iocs_v2": [{"id": "foo", "match_type": "equality", "field": "process_name", "values": ["evil.exe"]}],
+      "visibility": 6681}, pytest.raises(InvalidObjectError), "report value 'visibility' is of wrong type"),
+    ({"id": "69e2a8d0-bc36-4970-9834-8687efe1aff7", "title": "ReportTitle", "description": "The report description",
+      "timestamp": 1234567890, "severity": 18, "link": "https://example.com", "tags": ["Alpha", "Bravo"],
+      "iocs_v2": [{"id": "foo", "match_type": "equality", "field": "process_name", "values": ["evil.exe"]}],
+      "visibility": "visible"}, pytest.raises(InvalidObjectError),
+     "error in report 'severity' value: Severity value out of range"),
+    ({"id": "69e2a8d0-bc36-4970-9834-8687efe1aff7", "title": "ReportTitle", "description": "The report description",
+      "timestamp": 1234567890, "severity": 5, "link": "https://example.com", "tags": ["Alpha", 16],
+      "iocs_v2": [{"id": "foo", "match_type": "equality", "field": "process_name", "values": ["evil.exe"]}],
+      "visibility": "visible"}, pytest.raises(InvalidObjectError), "tag value is not a string"),
+    ({"id": "69e2a8d0-bc36-4970-9834-8687efe1aff7", "title": "ReportTitle", "description": "The report description",
+      "timestamp": 1234567890, "severity": 5, "link": "https://example.com", "tags": ["Alpha", "Bravo"],
+      "visibility": "visible"}, pytest.raises(InvalidObjectError), "report should have at least one IOC"),
+    ({"id": "69e2a8d0-bc36-4970-9834-8687efe1aff7", "title": "ReportTitle", "description": "The report description",
+      "timestamp": 1234567890, "severity": 5, "link": "https://example.com", "tags": ["Alpha", "Bravo"],
+      "iocs_v2": [],
+      "visibility": "visible"}, pytest.raises(InvalidObjectError), "report should have at least one IOC"),
+    ({"id": "69e2a8d0-bc36-4970-9834-8687efe1aff7", "title": "ReportTitle", "description": "The report description",
+      "timestamp": 1234567890, "severity": 5, "link": "https://example.com", "tags": ["Alpha", "Bravo"],
+      "iocs_v2": [{"id": "foo", "match_type": "equality", "values": ["evil.exe"]}],
+      "visibility": "visible"}, pytest.raises(InvalidObjectError), "IOC of type equality must have a 'field' value"),
+    ({"id": "69e2a8d0-bc36-4970-9834-8687efe1aff7", "title": "ReportTitle", "description": "The report description",
+      "timestamp": 1234567890, "severity": 5, "link": "https://example.com", "tags": ["Alpha", "Bravo"],
+      "iocs_v2": [{"id": "foo", "match_type": "equality", "field": "process_name", "values": ["evil.exe", 9]}],
+      "visibility": "visible"}, pytest.raises(InvalidObjectError), "IOC value is not a string"),
+    ({"id": "69e2a8d0-bc36-4970-9834-8687efe1aff7", "title": "ReportTitle", "description": "The report description",
+      "timestamp": 1234567890, "severity": 5, "link": "https://example.com", "tags": ["Alpha", "Bravo"],
+      "iocs_v2": [{"id": "foo", "match_type": "query", "values": ["process_name:evil.exe", "netconn_ipv4:10.0.0.1"]}],
+      "visibility": "visible"}, pytest.raises(InvalidObjectError), "query IOC should have one and only one value"),
+])
+def test_feed_report_validation(data, expectation, message):
+    look_at_message = True
+    with expectation as e:
+        Feed._validate_report_rawdata([data])
+        look_at_message = False
+    if look_at_message:
+        assert e.type is InvalidObjectError
+        assert e.value.args[0] == message
+
+
+@pytest.mark.parametrize("feed_init, do_request, expectation", [
+    (FEED_INIT, True, does_not_raise()),
+    (FEED_BUILT_VIA_BUILDER, False, pytest.raises(InvalidObjectError))
+])
+def test_replace_reports_rawdata(cbcsdk_mock, feed_init, do_request, expectation):
+    """Tests the replace_reports_rawdata method."""
+    def on_post(url, body, **kwargs):
+        array = body['reports']
+        assert len(array) == 1
+        assert array[0]['id'] == "065fb68d-42a8-4b2e-8f91-17f925f54356"
+        return {"success": True}
+
+    if do_request:
+        cbcsdk_mock.mock_request("POST", "/threathunter/feedmgr/v2/orgs/test/feeds/qwertyuiop/reports", on_post)
+    api = cbcsdk_mock.api
+    feed = Feed(api, initial_data=feed_init)
+    with expectation:
+        feed.replace_reports_rawdata([REPORT_INIT_2])
+
+
+@pytest.mark.parametrize("feed_init, do_request, expectation", [
+    (FEED_INIT, True, does_not_raise()),
+    (FEED_BUILT_VIA_BUILDER, False, pytest.raises(InvalidObjectError))
+])
+def test_append_reports_rawdata(cbcsdk_mock, feed_init, do_request, expectation):
+    """Tests the append_reports_rawdata method."""
+    def on_post(url, body, **kwargs):
+        array = body['reports']
+        assert len(array) == 2
+        assert array[0]['id'] == "69e2a8d0-bc36-4970-9834-8687efe1aff7"
+        assert array[1]['id'] == "065fb68d-42a8-4b2e-8f91-17f925f54356"
+        return {"success": True}
+
+    if do_request:
+        cbcsdk_mock.mock_request("POST", "/threathunter/feedmgr/v2/orgs/test/feeds/qwertyuiop/reports", on_post)
+    api = cbcsdk_mock.api
+    feed = Feed(api, initial_data=feed_init)
+    with expectation:
+        feed.append_reports_rawdata([REPORT_INIT_2])

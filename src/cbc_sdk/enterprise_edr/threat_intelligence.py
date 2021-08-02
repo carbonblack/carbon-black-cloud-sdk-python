@@ -448,6 +448,26 @@ class Feed(FeedModel):
     urlobject_single = "/threathunter/feedmgr/v2/orgs/{}/feeds/{}"
     primary_key = "id"
     swagger_meta_file = "enterprise_edr/models/feed.yaml"
+    REPORT_VALIDATION = [
+        {'key': 'id', 'required': True, 'type': str},
+        {'key': 'title', 'required': True, 'type': str},
+        {'key': 'description', 'required': True, 'type': str},
+        {'key': 'timestamp', 'required': True, 'type': int},
+        {'key': 'severity', 'required': True, 'type': int,
+         'valid': lambda x: None if x in range(1, 11) else "Severity value out of range"},
+        {'key': 'link', 'required': False, 'type': str},
+        {'key': 'tags', 'required': False, 'type': list},
+        {'key': 'iocs_v2', 'required': False, 'type': list},
+        {'key': 'visibility', 'required': False, 'type': str}
+    ]
+    IOCV2_VALIDATION = [
+        {'key': 'id', 'required': True, 'type': str},
+        {'key': 'match_type', 'required': True, 'type': str,
+         'valid': lambda x: None if x in ['equality', 'regex', 'query'] else "Invalid match type"},
+        {'key': 'values', 'required': True, 'type': list},
+        {'key': 'field', 'required': False, 'type': str},
+        {'key': 'link', 'required': False, 'type': str}
+    ]
 
     def __init__(self, cb, model_unique_id=None, initial_data=None):
         """
@@ -748,25 +768,27 @@ class Feed(FeedModel):
         self._reports = list(self._cb.select(Report).where(feed_id=self.id))
         return self._reports
 
-    def _overwrite_reports(self, reports):
+    def _overwrite_reports(self, reports, raw_reports):
         """
         Overwrites the Reports in this Feed with the given Reports.
 
         Arguments:
             reports ([Report]): List of Reports to replace existing Reports with.
+            raw_reports (list[dict]): List of raw report data to incorporate into the reports.
         """
         rep_dicts = []
         for report in reports:
             report.validate()
             rep_dicts.append(report._info)
-        body = {"reports": rep_dicts}
+        body = {"reports": rep_dicts + raw_reports}
 
         url = "/threathunter/feedmgr/v2/orgs/{}/feeds/{}/reports".format(
             self._cb.credentials.org_key,
             self.id
         )
         self._cb.post_object(url, body)
-        self._reports = reports
+        self._reports = reports + [Report(self._cb, initial_data=report, feed_id=self._info['id'])
+                                   for report in raw_reports]
 
     def replace_reports(self, reports):
         """
@@ -780,7 +802,7 @@ class Feed(FeedModel):
         """
         if not self.id:
             raise InvalidObjectError("missing feed ID")
-        self._overwrite_reports(reports)
+        self._overwrite_reports(reports, [])
 
     def append_reports(self, reports):
         """
@@ -794,7 +816,99 @@ class Feed(FeedModel):
         """
         if not self.id:
             raise InvalidObjectError("missing feed ID")
-        self._overwrite_reports(self._reports + reports)
+        self._overwrite_reports(self._reports + reports, [])
+
+    @classmethod
+    def _validate_against_criteria(cls, value_dict, criteria, tag):
+        """
+        Validate the data in a supplied dictionary against a list of criteria.
+
+        Args:
+            value_dict (dict): The dict of values to be checked.
+            criteria (list[dict]): A list of criteria, names of fields to be checked, valid type, and required state.
+            tag (str): An indicator of what the supplied value_dict represents, used in generating error messages.
+
+        Raises:
+            InvalidObjectError: If validation fails for any specified field in the dict.
+        """
+        for element in criteria:
+            if element['key'] in value_dict:
+                value = value_dict[element['key']]
+                if not isinstance(value, element['type']):
+                    raise InvalidObjectError(f"{tag} value '{element['key']}' is of wrong type")
+                if 'valid' in element:
+                    error_msg = (element['valid'])(value)
+                    if error_msg:
+                        raise InvalidObjectError(f"error in {tag} '{element['key']}' value: {error_msg}")
+            elif element['required']:
+                raise InvalidObjectError(f"value '{element['key']}' missing from {tag}")
+
+    @classmethod
+    def _validate_report_rawdata(cls, report_data):
+        """
+        Evaluate specified report raw data to make sure it's valid.
+
+        Args:
+            report_data (list[dict]): List of raw report data specified as dicts.
+
+        Raises:
+            InvalidObjectError: If validation fails for any part of the report data.
+        """
+        for report in report_data:
+            Feed._validate_against_criteria(report, Feed.REPORT_VALIDATION, 'report')
+
+            if 'tags' in report:
+                for tag in report['tags']:
+                    if not isinstance(tag, str):
+                        raise InvalidObjectError("tag value is not a string")
+
+            at_least_one_ioc = False
+            if 'iocs_v2' in report:
+                for ioc in report['iocs_v2']:
+                    Feed._validate_against_criteria(ioc, Feed.IOCV2_VALIDATION, 'IOC')
+                    if ioc['match_type'] in ['equality', 'regex'] and 'field' not in ioc:
+                        raise InvalidObjectError(f"IOC of type {ioc['match_type']} must have a 'field' value")
+
+                    for value in ioc['values']:
+                        if not isinstance(value, str):
+                            raise InvalidObjectError("IOC value is not a string")
+
+                    if ioc['match_type'] == 'query' and len(ioc['values']) != 1:
+                        raise InvalidObjectError("query IOC should have one and only one value")
+                    at_least_one_ioc = True
+
+            if not at_least_one_ioc:
+                raise InvalidObjectError("report should have at least one IOC")
+
+    def replace_reports_rawdata(self, report_data):
+        """
+        Replace this Feed's Reports with the given reports, specified as raw data.
+
+        Arguments:
+            report_data (list[dict]) A list of report data, formatted as per the API documentation for reports.
+
+        Raises:
+            InvalidObjectError: If `id` is missing or validation of the data fails.
+        """
+        if not self.id:
+            raise InvalidObjectError("missing feed ID")
+        Feed._validate_report_rawdata(report_data)
+        self._overwrite_reports([], report_data)
+
+    def append_reports_rawdata(self, report_data):
+        """
+        Append the given report data, formatted as per the API documentation for reports, to this Feed's Reports.
+
+        Arguments:
+            report_data (list[dict]) A list of report data, formatted as per the API documentation for reports.
+
+        Raises:
+            InvalidObjectError: If `id` is missing or validation of the data fails.
+        """
+        if not self.id:
+            raise InvalidObjectError("missing feed ID")
+        Feed._validate_report_rawdata(report_data)
+        self._overwrite_reports(self._reports, report_data)
 
 
 class Report(FeedModel):
