@@ -84,7 +84,7 @@ class Watchlist(FeedModel):
                 name (str): New name for the watchlist.
 
             Returns:
-                FeedBuilder: This object.
+                WatchlistBuilder: This object.
             """
             self._new_info['name'] = name
             return self
@@ -97,7 +97,7 @@ class Watchlist(FeedModel):
                 description (str): New description for the watchlist.
 
             Returns:
-                FeedBuilder: This object.
+                WatchlistBuilder: This object.
             """
             self._new_info['description'] = description
             return self
@@ -110,7 +110,7 @@ class Watchlist(FeedModel):
                 flag (bool): True to enable tags, False to disable them. Default is True.
 
             Returns:
-                FeedBuilder: This object.
+                WatchlistBuilder: This object.
             """
             self._new_info['tags_enabled'] = bool(flag)
             return self
@@ -123,7 +123,7 @@ class Watchlist(FeedModel):
                 flag (bool): True to enable alerts, False to disable them. Default is False.
 
             Returns:
-                FeedBuilder: This object.
+                WatchlistBuilder: This object.
             """
             self._new_info['alerts_enabled'] = bool(flag)
             return self
@@ -136,7 +136,7 @@ class Watchlist(FeedModel):
                 report_ids (list[str]): List of report IDs to add to the watchlist.
 
             Returns:
-                FeedBuilder: This object.
+                WatchlistBuilder: This object.
             """
             self._new_info['report_ids'] += report_ids
             return self
@@ -149,7 +149,7 @@ class Watchlist(FeedModel):
                 reports (list[Report]): List of reports to be added to the watchlist.
 
             Returns:
-                FeedBuilder: This object.
+                WatchlistBuilder: This object.
             """
             id_values = []
             for report in reports:
