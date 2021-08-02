@@ -61,6 +61,7 @@ def test_binary_query(cbcsdk_mock):
     url = binary.download_url(expiration_seconds=10)
     assert url is not None
 
+
 def test_binary_query_case_insensitive(cbcsdk_mock):
     """Testing Binary Querying"""
     called = False
