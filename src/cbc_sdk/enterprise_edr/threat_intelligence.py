@@ -976,7 +976,8 @@ class Report(FeedModel):
             """
             self._cb = cb
             self._report_body = report_body
-            self._report_body['tags'] = []
+            if 'tags' not in report_body or not isinstance(report_body['tags'], list):
+                self._report_body['tags'] = []
             self._iocs = []
 
         def set_title(self, title):
