@@ -182,7 +182,7 @@ class Watchlist(FeedModel):
         return Watchlist.WatchlistBuilder(cb, name)
 
     @classmethod
-    def create_from_feed(cls, feed, name=None, description=None):
+    def create_from_feed(cls, feed, name=None, description=None, enable_alerts=False, enable_tags=True):
         """
         Creates a new Watchlist that encapsulates a Feed.
 
@@ -190,6 +190,8 @@ class Watchlist(FeedModel):
             feed (Feed): The feed to be encapsulated by this Watchlist.
             name (str): Name for the new watchlist. The default is to use the Feed name.
             description (str): Description for the new watchlist. The default is to use the Feed summary.
+            enable_alerts (bool) - True to enable alerts, False to disable them.  The default is False.
+            enable_tags (bool) - True to enable tags, False to disable them.  The default is True.
 
         Returns:
             Watchlist: A new Watchlist object, which must be saved to the server.
@@ -197,8 +199,8 @@ class Watchlist(FeedModel):
         return Watchlist(feed._cb, initial_data={
             "name": f"Feed {feed.name}" if not name else name,
             "description": feed.summary if not description else description,
-            "tags_enabled": True,
-            "alerts_enabled": False,
+            "tags_enabled": enable_tags,
+            "alerts_enabled": enable_alerts,
             "classifier": {
                 "key": "feed_id",
                 "value": feed.id
