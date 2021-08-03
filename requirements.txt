@@ -7,6 +7,7 @@ prompt_toolkit
 pygments
 python-dateutil
 protobuf
+schema
 solrq
 validators
 

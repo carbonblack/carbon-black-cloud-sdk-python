@@ -23,6 +23,7 @@ from cbc_sdk.base import CreatableModelMixin, MutableBaseModel, UnrefreshableMod
 import logging
 import time
 import validators
+from schema import And, Optional, Schema, SchemaError
 
 log = logging.getLogger(__name__)
 
@@ -450,26 +451,35 @@ class Feed(FeedModel):
     urlobject_single = "/threathunter/feedmgr/v2/orgs/{}/feeds/{}"
     primary_key = "id"
     swagger_meta_file = "enterprise_edr/models/feed.yaml"
-    REPORT_VALIDATION = [
-        {'key': 'id', 'required': True, 'type': str},
-        {'key': 'title', 'required': True, 'type': str},
-        {'key': 'description', 'required': True, 'type': str},
-        {'key': 'timestamp', 'required': True, 'type': int},
-        {'key': 'severity', 'required': True, 'type': int,
-         'valid': lambda x: None if x in range(1, 11) else "Severity value out of range"},
-        {'key': 'link', 'required': False, 'type': str},
-        {'key': 'tags', 'required': False, 'type': list},
-        {'key': 'iocs_v2', 'required': False, 'type': list},
-        {'key': 'visibility', 'required': False, 'type': str}
-    ]
-    IOCV2_VALIDATION = [
-        {'key': 'id', 'required': True, 'type': str},
-        {'key': 'match_type', 'required': True, 'type': str,
-         'valid': lambda x: None if x in ['equality', 'regex', 'query'] else "Invalid match type"},
-        {'key': 'values', 'required': True, 'type': list},
-        {'key': 'field', 'required': False, 'type': str},
-        {'key': 'link', 'required': False, 'type': str}
-    ]
+    SCHEMA_IOCV2 = Schema(
+        {
+            "id": And(And(str, error="IOC field 'id' is not a string"), len),
+            "match_type": And(And(str, error="IOC field 'match_type' is not a string"),
+                              And(lambda type: type in ["query", "equality", "regex"],
+                                  error="error in IOC 'match_type' value: Invalid match type")),
+            "values": And(And(list, error="IOC field 'values' is not a list"),
+                          [And(str, error="IOC value is not a string")], len),
+            Optional("field"): And(str, error="IOC field 'field' is not a string"),
+            Optional("link"): And(str, error="IOC field 'link' is not a string")
+        }
+    )
+    SCHEMA_REPORT = Schema(
+        {
+            "id": And(And(str, error="Report field 'id' is not a string"), len),
+            "timestamp": And(And(int, error="Report field 'timestamp' is not an integer"),
+                             And(lambda n: n > 0, error="Timestamp cannot be negative")),
+            "title": And(And(str, error="Report field 'title' is not a string"), len),
+            "description": And(And(str, error="Report field 'description' is not a string"), len),
+            "severity": And(And(int, error="Report field 'severity' is not an integer"),
+                            And(lambda n: 0 < n < 11, error="Severity value out of range")),
+            Optional("link"): And(str, error="Report field 'link' is not a string"),
+            Optional("tags"): And(And(list, error="Report field 'tags' is not a list"),
+                                  [And(str, error="Report tag is not a string")]),
+            "iocs_v2": And(And(list, error="Report field 'iocs_v2' is not a list"), [SCHEMA_IOCV2],
+                           And(len, error="Report should have at least one IOC")),
+            Optional("visibility"): And(str, error="Report field 'visibility' is not a string")
+        }
+    )
 
     def __init__(self, cb, model_unique_id=None, initial_data=None):
         """
@@ -821,31 +831,6 @@ class Feed(FeedModel):
         self._overwrite_reports(self._reports + reports, [])
 
     @classmethod
-    def _validate_against_criteria(cls, value_dict, criteria, tag):
-        """
-        Validate the data in a supplied dictionary against a list of criteria.
-
-        Args:
-            value_dict (dict): The dict of values to be checked.
-            criteria (list[dict]): A list of criteria, names of fields to be checked, valid type, and required state.
-            tag (str): An indicator of what the supplied value_dict represents, used in generating error messages.
-
-        Raises:
-            InvalidObjectError: If validation fails for any specified field in the dict.
-        """
-        for element in criteria:
-            if element['key'] in value_dict:
-                value = value_dict[element['key']]
-                if not isinstance(value, element['type']):
-                    raise InvalidObjectError(f"{tag} value '{element['key']}' is of wrong type")
-                if 'valid' in element:
-                    error_msg = (element['valid'])(value)
-                    if error_msg:
-                        raise InvalidObjectError(f"error in {tag} '{element['key']}' value: {error_msg}")
-            elif element['required']:
-                raise InvalidObjectError(f"value '{element['key']}' missing from {tag}")
-
-    @classmethod
     def _validate_report_rawdata(cls, report_data):
         """
         Evaluate specified report raw data to make sure it's valid.
@@ -857,30 +842,16 @@ class Feed(FeedModel):
             InvalidObjectError: If validation fails for any part of the report data.
         """
         for report in report_data:
-            Feed._validate_against_criteria(report, Feed.REPORT_VALIDATION, 'report')
+            try:
+                Feed.SCHEMA_REPORT.validate(report)
+            except SchemaError as e:
+                raise InvalidObjectError(e.errors[-1] if e.errors[-1] else e.autos[-1])
 
-            if 'tags' in report:
-                for tag in report['tags']:
-                    if not isinstance(tag, str):
-                        raise InvalidObjectError("tag value is not a string")
-
-            at_least_one_ioc = False
-            if 'iocs_v2' in report:
-                for ioc in report['iocs_v2']:
-                    Feed._validate_against_criteria(ioc, Feed.IOCV2_VALIDATION, 'IOC')
-                    if ioc['match_type'] in ['equality', 'regex'] and 'field' not in ioc:
-                        raise InvalidObjectError(f"IOC of type {ioc['match_type']} must have a 'field' value")
-
-                    for value in ioc['values']:
-                        if not isinstance(value, str):
-                            raise InvalidObjectError("IOC value is not a string")
-
-                    if ioc['match_type'] == 'query' and len(ioc['values']) != 1:
-                        raise InvalidObjectError("query IOC should have one and only one value")
-                    at_least_one_ioc = True
-
-            if not at_least_one_ioc:
-                raise InvalidObjectError("report should have at least one IOC")
+            for ioc in report['iocs_v2']:
+                if ioc['match_type'] in ['equality', 'regex'] and 'field' not in ioc:
+                    raise InvalidObjectError(f"IOC of type {ioc['match_type']} must have a 'field' value")
+                if ioc['match_type'] == 'query' and len(ioc['values']) != 1:
+                    raise InvalidObjectError("query IOC should have one and only one value")
 
     def replace_reports_rawdata(self, report_data):
         """
