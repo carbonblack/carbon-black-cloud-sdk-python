@@ -1142,10 +1142,10 @@ class Report(FeedModel):
 
     def validate(self):
         """
-        Validates this report's state.
+        Checks to ensure this report contains valid data.
 
         Raises:
-            InvalidObjectError: If the report's state is invalid.
+            InvalidObjectError: If the report contains invalid data.
         """
         id_substitute = False
         if not self._info.get('id', None):
