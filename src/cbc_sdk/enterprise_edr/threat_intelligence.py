@@ -241,10 +241,11 @@ class Watchlist(FeedModel):
         return self
 
     def validate(self):
-        """Validates this watchlist's state.
+        """
+        Checks to ensure this watchlist contains valid data.
 
         Raises:
-            InvalidObjectError: If the Watchlist's state is invalid.
+            InvalidObjectError: If the watchlist contains invalid data.
         """
         if 'create_timestamp' not in self._info:
             self._info['create_timestamp'] = -1
@@ -684,10 +685,10 @@ class Feed(FeedModel):
 
     def validate(self):
         """
-        Validates this feed's state.
+        Checks to ensure this feed contains valid data.
 
         Raises:
-            InvalidObjectError: If the Feed's state is invalid.
+            InvalidObjectError: If the feed contains invalid data.
         """
         id_substitute = False
         if not self._info.get('id', None):
@@ -1479,10 +1480,10 @@ class IOC(FeedModel):
 
     def validate(self):
         """
-        Validates this IOC structure's state.
+        Checks to ensure this IOC contains valid data.
 
         Raises:
-            InvalidObjectError: If the IOC structure's state is invalid.
+            InvalidObjectError: If the IOC contains invalid data.
         """
         super(IOC, self).validate()
 
@@ -1662,10 +1663,10 @@ class IOC_V2(FeedModel):
 
     def validate(self):
         """
-        Validates this IOC_V2's state.
+        Checks to ensure this IOC contains valid data.
 
         Raises:
-            InvalidObjectError: If the IOC_V2's state is invalid.
+            InvalidObjectError: If the IOC contains invalid data.
         """
         super(IOC_V2, self).validate()
 
