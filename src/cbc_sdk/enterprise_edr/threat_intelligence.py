@@ -934,7 +934,8 @@ class Report(FeedModel):
             self._iocs = IOC(cb, initial_data=self.iocs, report_id=self.id)
         if self.iocs_v2:
             self._iocs_v2 = [IOC_V2(cb, initial_data=ioc, report_id=self.id) for ioc in self.iocs_v2]
-        self._iocs_v2_need_sync = False
+        # this flag is set when we need to rebuild the 'ioc_v2' element of _info from the _iocs_v2 array
+        self._iocs_v2_need_rebuild = False
 
     class ReportBuilder:
         """Helper class allowing Reports to be assembled."""
@@ -1063,7 +1064,7 @@ class Report(FeedModel):
             """
             report = Report(self._cb, None, self._report_body)
             report._iocs_v2 = self._iocs
-            report._iocs_v2_need_sync = True
+            report._iocs_v2_need_rebuild = True
             return report
 
     @classmethod
@@ -1132,9 +1133,9 @@ class Report(FeedModel):
 
         if self.iocs_v2:
             [ioc.validate() for ioc in self._iocs_v2]
-        if self._iocs_v2_need_sync:
+        if self._iocs_v2_need_rebuild:
             self._info['iocs_v2'] = [ioc._info for ioc in self._iocs_v2]
-            self._iocs_v2_need_sync = False
+            self._iocs_v2_need_rebuild = False
 
     def update(self, **kwargs):
         """Update this Report with the given arguments.
@@ -1179,7 +1180,7 @@ class Report(FeedModel):
             self._iocs = IOC(self._cb, initial_data=self.iocs, report_id=self.id)
         if self.iocs_v2 and 'iocs_v2' in kwargs:
             self._iocs_v2 = [IOC_V2(self._cb, initial_data=ioc, report_id=self.id) for ioc in self.iocs_v2]
-            self._iocs_v2_need_sync = False
+            self._iocs_v2_need_rebuild = False
 
         # NOTE(ww): Updating reports on the watchlist API appears to require
         # updated timestamps.
@@ -1380,7 +1381,7 @@ class Report(FeedModel):
             self._iocs_v2 += iocs
         else:
             self._iocs_v2 = iocs
-        self._iocs_v2_need_sync = True
+        self._iocs_v2_need_rebuild = True
 
     def remove_iocs_by_id(self, ids_list):
         """
@@ -1393,7 +1394,7 @@ class Report(FeedModel):
             id_set = set(ids_list)
             old_len = len(self._iocs_v2)
             self._iocs_v2 = [ioc for ioc in self._iocs_v2 if ioc._info['id'] not in id_set]
-            self._iocs_v2_need_sync = (old_len > len(self._iocs_v2))
+            self._iocs_v2_need_rebuild = (old_len > len(self._iocs_v2))
 
     def remove_iocs(self, iocs):
         """
