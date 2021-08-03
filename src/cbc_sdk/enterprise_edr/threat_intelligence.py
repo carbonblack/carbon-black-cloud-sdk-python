@@ -976,8 +976,6 @@ class Report(FeedModel):
             """
             self._cb = cb
             self._report_body = report_body
-            if 'tags' not in report_body or not isinstance(report_body['tags'], list):
-                self._report_body['tags'] = []
             self._iocs = []
 
         def set_title(self, title):
@@ -1097,7 +1095,7 @@ class Report(FeedModel):
             return report
 
     @classmethod
-    def create(cls, cb, title, description, severity, timestamp=None):
+    def create(cls, cb, title, description, severity, timestamp=None, tags=None):
         """
         Begin creating a new Report by returning a ReportBuilder.
 
@@ -1107,6 +1105,7 @@ class Report(FeedModel):
             description (str): Description for the new report.
             severity (int): Severity value for the new report.
             timestamp (int): UNIX-epoch timestamp for the new report. If omitted, current time will be used.
+            tags (list[str]): Tags to be added to the report. If omitted, there will be none.
 
         Returns:
             ReportBuilder: Reference to the ReportBuilder object.
@@ -1114,7 +1113,7 @@ class Report(FeedModel):
         if not timestamp:
             timestamp = int(time.time())
         return Report.ReportBuilder(cb, {'title': title, 'description': description, 'severity': severity,
-                                         'timestamp': timestamp})
+                                         'timestamp': timestamp, 'tags': tags if tags else []})
 
     def save_watchlist(self):
         """
