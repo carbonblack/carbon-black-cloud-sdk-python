@@ -83,10 +83,12 @@ Now, add the new Report to a new Watchlist:
     >>> watchlist = builder.build()
     >>> watchlist.save()
 
-If you already have an existing Watchlist you wish to enhance, you can add Reports to the existing Watchlist:
+If you already have an existing Watchlist you wish to enhance, you can add Reports to the existing Watchlist. Assume a
+new Report is stored in the ``report`` variable):
 
 ::
 
+    >>> # assume variable "report" contains a Report
     >>> from cbc_sdk.enterprise_edr import Watchlist
     >>> watchlist = api.select('Watchlist', 'R4cMgFIhRaakgk749MRr6Q')
     >>> watchlist.add_reports([report])
@@ -234,7 +236,7 @@ A new feed may be created as follows (assuming the new report for that feed is s
     >>> builder = Feed.create(api, 'Suspicious Applications', 'http://example.com/location',
     ...                       'Any signs of suspicious applications running on our endpoints', 'external_threat_intel')
     >>> builder.set_source_label('Where the info is coming from')
-    >>> builder.add_reports([...])
+    >>> builder.add_reports([report])
     >>> feed = builder.build()
     >>> feed.save()
 
