@@ -1199,16 +1199,13 @@ class Report(FeedModel):
                 self.id
             )
 
-        iocs_v2_poked = False
         for key, value in kwargs.items():
             if key in self._info:
                 self._info[key] = value
-            if key == 'iocs_v2':
-                iocs_v2_poked = True
 
         if self.iocs:
             self._iocs = IOC(self._cb, initial_data=self.iocs, report_id=self.id)
-        if self.iocs_v2 and iocs_v2_poked:
+        if self.iocs_v2 and 'iocs_v2' in kwargs:
             self._iocs_v2 = [IOC_V2(self._cb, initial_data=ioc, report_id=self.id) for ioc in self.iocs_v2]
             self._iocs_v2_need_sync = False
 
