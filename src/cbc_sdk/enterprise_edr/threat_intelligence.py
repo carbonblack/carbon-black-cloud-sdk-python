@@ -275,15 +275,7 @@ class Watchlist(FeedModel):
         Raises:
             InvalidObjectError: If the watchlist contains invalid data.
         """
-        if 'create_timestamp' not in self._info:
-            self._info['create_timestamp'] = -1
-        if 'last_update_timestamp' not in self._info:
-            self._info['last_update_timestamp'] = -1
         super(Watchlist, self).validate()
-        if self._info['create_timestamp'] == -1:
-            del self._info['create_timestamp']
-        if self._info['last_update_timestamp'] == -1:
-            del self._info['last_update_timestamp']
 
     def update(self, **kwargs):
         """Updates this watchlist with the given arguments.
@@ -689,25 +681,7 @@ class Feed(FeedModel):
         Raises:
             InvalidObjectError: If the feed contains invalid data.
         """
-        id_substitute = False
-        if not self._info.get('id', None):
-            self._info['id'] = '*'
-            id_substitute = True
-        owner_substitute = False
-        if not self._info.get('owner', None):
-            self._info['owner'] = '*'
-            owner_substitute = True
-        access_substitute = False
-        if not self._info.get('access', None):
-            self._info['access'] = '*'
-            access_substitute = True
         super(Feed, self).validate()
-        if id_substitute:
-            del self._info['id']
-        if owner_substitute:
-            del self._info['owner']
-        if access_substitute:
-            del self._info['access']
 
         if self.access and self.access not in ["public", "private"]:
             raise InvalidObjectError("access should be public or private")
@@ -1119,13 +1093,7 @@ class Report(FeedModel):
         Raises:
             InvalidObjectError: If the report contains invalid data.
         """
-        id_substitute = False
-        if not self._info.get('id', None):
-            self._info['id'] = '*'
-            id_substitute = True
         super(Report, self).validate()
-        if id_substitute:
-            del self._info['id']
 
         if self.link and not validators.url(self.link):
             raise InvalidObjectError("link should be a valid URL")
