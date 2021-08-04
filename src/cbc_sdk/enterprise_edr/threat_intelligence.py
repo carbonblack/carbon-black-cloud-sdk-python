@@ -33,7 +33,35 @@ log = logging.getLogger(__name__)
 
 class FeedModel(UnrefreshableModel, CreatableModelMixin, MutableBaseModel):
     """A common base class for models used by the Feed and Watchlist APIs."""
-    pass
+    SCHEMA_IOCV2 = Schema(
+        {
+            "id": And(And(str, error="IOC field 'id' is not a string"), len),
+            "match_type": And(And(str, error="IOC field 'match_type' is not a string"),
+                              And(lambda type: type in ["query", "equality", "regex"],
+                                  error="error in IOC 'match_type' value: Invalid match type")),
+            "values": And(And(list, error="IOC field 'values' is not a list"),
+                          [And(str, error="IOC value is not a string")], len),
+            Optional("field"): And(str, error="IOC field 'field' is not a string"),
+            Optional("link"): And(str, error="IOC field 'link' is not a string")
+        }
+    )
+    SCHEMA_REPORT = Schema(
+        {
+            "id": And(And(str, error="Report field 'id' is not a string"), len),
+            "timestamp": And(And(int, error="Report field 'timestamp' is not an integer"),
+                             And(lambda n: n > 0, error="Timestamp cannot be negative")),
+            "title": And(And(str, error="Report field 'title' is not a string"), len),
+            "description": And(And(str, error="Report field 'description' is not a string"), len),
+            "severity": And(And(int, error="Report field 'severity' is not an integer"),
+                            And(lambda n: 0 < n < 11, error="Severity value out of range")),
+            Optional("link"): And(str, error="Report field 'link' is not a string"),
+            Optional("tags"): And(And(list, error="Report field 'tags' is not a list"),
+                                  [And(str, error="Report tag is not a string")]),
+            "iocs_v2": And(And(list, error="Report field 'iocs_v2' is not a list"), [SCHEMA_IOCV2],
+                           And(len, error="Report should have at least one IOC")),
+            Optional("visibility"): And(str, error="Report field 'visibility' is not a string")
+        }
+    )
 
 
 class Watchlist(FeedModel):
@@ -452,35 +480,6 @@ class Feed(FeedModel):
     urlobject_single = "/threathunter/feedmgr/v2/orgs/{}/feeds/{}"
     primary_key = "id"
     swagger_meta_file = "enterprise_edr/models/feed.yaml"
-    SCHEMA_IOCV2 = Schema(
-        {
-            "id": And(And(str, error="IOC field 'id' is not a string"), len),
-            "match_type": And(And(str, error="IOC field 'match_type' is not a string"),
-                              And(lambda type: type in ["query", "equality", "regex"],
-                                  error="error in IOC 'match_type' value: Invalid match type")),
-            "values": And(And(list, error="IOC field 'values' is not a list"),
-                          [And(str, error="IOC value is not a string")], len),
-            Optional("field"): And(str, error="IOC field 'field' is not a string"),
-            Optional("link"): And(str, error="IOC field 'link' is not a string")
-        }
-    )
-    SCHEMA_REPORT = Schema(
-        {
-            "id": And(And(str, error="Report field 'id' is not a string"), len),
-            "timestamp": And(And(int, error="Report field 'timestamp' is not an integer"),
-                             And(lambda n: n > 0, error="Timestamp cannot be negative")),
-            "title": And(And(str, error="Report field 'title' is not a string"), len),
-            "description": And(And(str, error="Report field 'description' is not a string"), len),
-            "severity": And(And(int, error="Report field 'severity' is not an integer"),
-                            And(lambda n: 0 < n < 11, error="Severity value out of range")),
-            Optional("link"): And(str, error="Report field 'link' is not a string"),
-            Optional("tags"): And(And(list, error="Report field 'tags' is not a list"),
-                                  [And(str, error="Report tag is not a string")]),
-            "iocs_v2": And(And(list, error="Report field 'iocs_v2' is not a list"), [SCHEMA_IOCV2],
-                           And(len, error="Report should have at least one IOC")),
-            Optional("visibility"): And(str, error="Report field 'visibility' is not a string")
-        }
-    )
 
     def __init__(self, cb, model_unique_id=None, initial_data=None):
         """

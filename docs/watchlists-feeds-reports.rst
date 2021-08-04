@@ -83,12 +83,11 @@ Now, add the new Report to a new Watchlist:
     >>> watchlist = builder.build()
     >>> watchlist.save()
 
-If you already have an existing Watchlist you wish to enhance, you can add Reports to the existing Watchlist. Assume a
-new Report is stored in the ``report`` variable):
+If you already have an existing Watchlist you wish to enhance, you can add Reports to the existing Watchlist:
 
 ::
 
-    >>> # assume variable "report" contains a Report
+    >>> # "report" contains the Report that was created in the previous example
     >>> from cbc_sdk.enterprise_edr import Watchlist
     >>> watchlist = api.select('Watchlist', 'R4cMgFIhRaakgk749MRr6Q')
     >>> watchlist.add_reports([report])
