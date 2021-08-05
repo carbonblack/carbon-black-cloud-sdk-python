@@ -47,7 +47,7 @@ In this example, a report is created, adding one or more IOCs to it:
 
 ::
 
-    >>> from cbc_sdk.enterprise_edr import Report
+    >>> from cbc_sdk.enterprise_edr import Report, IOC_V2
     >>> builder = Report.create(api, "Unsigned Browsers", "Unsigned processes impersonating browsers", 5)
     >>> builder.add_tag("compliance").add_tag("unsigned_browsers")
     >>> builder.add_ioc(IOC_V2.create_query(api, "unsigned-chrome",
@@ -64,7 +64,7 @@ report associated with a watchlist, you must look in the watchlist's ``reports``
 
 ::
 
-    >>> from cbc_sdk.enterprise_edr import Watchlist, Report
+    >>> from cbc_sdk.enterprise_edr import Watchlist, Report, IOC_V2
     >>> watchlist = api.select('Watchlist', 'R4cMgFIhRaakgk749MRr6Q')
     >>> report_list = [report for report in watchlist.reports where report.id == '47474d40-1f94-4995-b6d9-1d1eea3528b3']
     >>> report = report_list[0]
