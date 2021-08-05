@@ -651,11 +651,16 @@ def test_report_remove_nonexistent_ioc_id(cbcsdk_mock):
 def test_feed_builder_save(cbcsdk_mock):
     """Tests the operation of the FeedBuilder and the save() function."""
     def on_post(url, body, **kwargs):
-        assert body == FEED_BUILT_VIA_BUILDER
-        return_value = copy.deepcopy(body)
-        return_value["feedinfo"]["id"] = "qwertyuiop"
-        return_value["feedinfo"]["owner"] = "JRN"
-        return_value["feedinfo"]["access"] = "private"
+        body_data = copy.deepcopy(body)
+        for r in body_data['reports']:
+            if 'id' in r:
+                assert re.fullmatch(GUID_PATTERN, r['id'])
+                del r['id']
+        assert body_data == FEED_BUILT_VIA_BUILDER
+        return_value = copy.deepcopy(body['feedinfo'])
+        return_value["id"] = "qwertyuiop"
+        return_value["owner"] = "JRN"
+        return_value["access"] = "private"
         return return_value
 
     cbcsdk_mock.mock_request("POST", "/threathunter/feedmgr/v2/orgs/test/feeds", on_post)

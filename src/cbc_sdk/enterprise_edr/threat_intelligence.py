@@ -657,9 +657,17 @@ class Feed(FeedModel):
         """
         self.validate()
 
+        # Reports don't get assigned IDs by default when they get saved to a Feed. Make sure they have some.
+        report_data = []
+        for report in self._reports:
+            info = report._info
+            if not info.get('id', None):
+                info['id'] = str(uuid.uuid4())
+            report_data.append(info)
+
         body = {
             'feedinfo': self._info,
-            'reports': [report._info for report in self._reports],
+            'reports': report_data,
         }
 
         url = "/threathunter/feedmgr/v2/orgs/{}/feeds".format(
@@ -669,9 +677,9 @@ class Feed(FeedModel):
             url = url + "/public"
 
         new_info = self._cb.post_object(url, body).json()
-        self._info.update(new_info['feedinfo'])
-        self._reports = [Report(self._cb, initial_data=report, feed_id=new_info['feedinfo']['id'])
-                         for report in new_info['reports']]
+        self._info.update(new_info)
+        self._reports = [Report(self._cb, initial_data=report, feed_id=new_info['id'])
+                         for report in report_data]
         return self
 
     def validate(self):
