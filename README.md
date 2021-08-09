@@ -56,6 +56,7 @@ _Note: Support for the latest products such as Containers are planned for early 
 - pygments
 - python-dateutil
 - protobuf
+- schema
 - solrq
 - validators
 
