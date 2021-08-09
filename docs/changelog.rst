@@ -1,6 +1,6 @@
 Changelog
 ================================
-CBC SDK 1.3.2 - Released August 10, 2021
+CBC SDK 1.3.3 - Released August 10, 2021
 --------------------------------
 
 New Features:
