@@ -24,6 +24,7 @@ install_requires = [
     'pygments',
     'python-dateutil',
     'protobuf',
+    'schema',
     'solrq',
     'validators'
 ]

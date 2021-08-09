@@ -1,6 +1,6 @@
 # VMware Carbon Black Cloud Python SDK
 
-**Latest Version:** 1.3.2
+**Latest Version:** 1.3.3
 <br>
 **Release Date:** 10 August 2021
 
@@ -56,6 +56,7 @@ _Note: Support for the latest products such as Containers are planned for early 
 - pygments
 - python-dateutil
 - protobuf
+- schema
 - solrq
 - validators
 
