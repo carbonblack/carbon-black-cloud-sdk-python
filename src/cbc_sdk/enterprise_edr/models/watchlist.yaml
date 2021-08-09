@@ -2,8 +2,6 @@ type: object
 required:
   - name
   - description
-  - create_timestamp
-  - last_update_timestamp
 properties:
   name:
     type: string

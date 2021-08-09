@@ -47,18 +47,12 @@ In this example, a report is created, adding one or more IOCs to it:
 
 ::
 
-    >>> from cbc_sdk.enterprise_edr import Report
-    >>> report = Report(api, None, {"description": "Unsigned processes impersonating browsers",
-    ...                             "iocs_v2": [{
-    ...                                 "id": "unsigned-chrome",
-    ...                                 "match_type": "query",
-    ...                                 "values": [("process_name:chrome.exe NOT process_publisher_state:FILE_SIGNATURE_STATE_SIGNED")]
-    ...                                 }],
-    ...                             "link": None,
-    ...                             "severity": 5,
-    ...                             "tags": ["compliance", "unsigned browsers"],
-    ...                             "timestamp": 1601326338,
-    ...                             "title": "Unsigned Browsers"})
+    >>> from cbc_sdk.enterprise_edr import Report, IOC_V2
+    >>> builder = Report.create(api, "Unsigned Browsers", "Unsigned processes impersonating browsers", 5)
+    >>> builder.add_tag("compliance").add_tag("unsigned_browsers")
+    >>> builder.add_ioc(IOC_V2.create_query(api, "unsigned-chrome",
+    ...                 "process_name:chrome.exe NOT process_publisher_state:FILE_SIGNATURE_STATE_SIGNED"))
+    >>> report = builder.build()
     >>> report.save_watchlist()
 
 Reports should always be given a ``title`` that's sufficiently unique within your organization, so as to minimize
@@ -66,7 +60,16 @@ the chances of confusing two or more Reports with each other.  Carbon Black Clou
 for each report, but does not enforce any uniqueness constraint on the ``title`` of reports.
 
 Alternatively, you can update an existing report, adding more IOCs and/or replacing existing ones.  To find an existing
-report associated with a watchlist, you must look in the watchlist's ``reports`` collection.
+report associated with a watchlist, you must look in the watchlist's ``reports`` collection:
+
+::
+
+    >>> from cbc_sdk.enterprise_edr import Watchlist, Report, IOC_V2
+    >>> watchlist = api.select('Watchlist', 'R4cMgFIhRaakgk749MRr6Q')
+    >>> report_list = [report for report in watchlist.reports where report.id == '47474d40-1f94-4995-b6d9-1d1eea3528b3']
+    >>> report = report_list[0]
+    >>> report.append_iocs([IOC_V2.create_query(api, 'evil-connect', 'netconn_ipv4:10.8.16.4')])
+    >>> report.save_watchlist()
 
 Adding the Report to a Watchlist
 ++++++++++++++++++++++++++++++++
@@ -75,17 +78,19 @@ Now, add the new Report to a new Watchlist:
 ::
 
     >>> from cbc_sdk.enterprise_edr import Watchlist
-    >>> watchlist = Watchlist(api, None, {"alerts_enabled": False,
-    ...                                   "classifier": None,
-    ...                                   "description": "Any signs of suspicious applications running on endpoints",
-    ...                                   "name": "Suspicious Applications",
-    ...                                   "report_ids": [report.id],
-    ...                                   "tags_enabled": True})
+    >>> builder = Watchlist.create(api, "Suspicious Applications")
+    >>> builder.set_description("Any signs of suspicious applications running on endpoints").add_reports([report])
+    >>> watchlist = builder.build()
     >>> watchlist.save()
 
-**Note:** ``classifier`` *must* be ``None``, unless the new watchlist is being subscribed to a feed.
+If you already have an existing Watchlist you wish to enhance, you can add Reports to the existing Watchlist:
 
-If you already have an existing Watchlist you wish to enhance, you can add Reports to the existing Watchlist.
+::
+
+    >>> # "report" contains the Report that was created in the previous example
+    >>> from cbc_sdk.enterprise_edr import Watchlist
+    >>> watchlist = api.select('Watchlist', 'R4cMgFIhRaakgk749MRr6Q')
+    >>> watchlist.add_reports([report])
 
 Enabling Alerting on a Watchlist
 ++++++++++++++++++++++++++++++++
@@ -227,16 +232,12 @@ A new feed may be created as follows (assuming the new report for that feed is s
 ::
 
     >>> from cbc_sdk.enterprise_edr import Feed
-    >>> feed_data = {
-    ...           'feedinfo': {
-    ...                 'name': 'Suspicious Applications',
-    ...                 'provider_url': 'http://example.com/location',
-    ...                 'summary': 'Any signs of suspicious applications running on our endpoints',
-    ...                 'category': 'external_threat_intel',
-    ...                 'source_label': 'Where the info is coming from'},
-    ...                 'reports': [ {...}, {...} ]
-    ...             }
-    >>> feed = api.create(Feed, feed_data)
+    >>> builder = Feed.create(api, 'Suspicious Applications', 'http://example.com/location',
+    ...                       'Any signs of suspicious applications running on our endpoints', 'external_threat_intel')
+    >>> builder.set_source_label('Where the info is coming from')
+    >>> builder.add_reports([report])
+    >>> feed = builder.build()
+    >>> feed.save()
 
 If you have an existing feed, a new report may be added to it as follows (assuming the new report is stored in the
 ``report`` variable):
@@ -256,11 +257,7 @@ To subscribe to a feed, a new watchlist must be created around it:
 
 ::
 
-    >>> watchlist = Watchlist(api, None, {"alerts_enabled": True,
-    ...                                   "classifier": {"feed_id": feed.id},
-    ...                                   "description": "Subscription to the new feed",
-    ...                                   "name": "Subscribed feed",
-    ...                                   "tags_enabled": True})
+    >>> watchlist = Watchlist.create_from_feed(feed, "Subscribed feed", "Subscription to the new feed")
     >>> watchlist.save()
 
 Limitations of Reports and Watchlists
