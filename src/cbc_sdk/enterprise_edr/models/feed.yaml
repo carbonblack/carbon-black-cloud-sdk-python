@@ -1,11 +1,9 @@
 type: object
 required:
   - name
-  - owner
   - provider_url
   - summary
   - category
-  - access
 properties:
   name:
     type: string

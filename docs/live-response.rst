@@ -8,6 +8,77 @@ You can use Live Response with the Carbon Black Cloud Python SDK to:
 * Dump contents of physical memory
 * Execute, terminate and list processes
 
+Before any commands are sent to the live response session, the proper permissions need to be configured for the Custom Key that is used.
+The below table explains what permissions are needed for each of the SDK commands.
+
++---------------------------------------------------+--------------------------------------------------------+------------------------------------------------------+
+|               Command                             | Required Permissions                                   |  Explanation                                         |
++===================================================+========================================================+======================================================+
+| | Create LR session for device                    | **CREATE**, **READ** org.liveresponse.session          | CREATE is needed to start the LR session and         |
+| | device.lr_session()                             |                                                        | READ is needed to check the status of the command    |
++---------------------------------------------------+--------------------------------------------------------+------------------------------------------------------+
+| | Close session                                   | **READ**, **DELETE** org.liveresponse.session          | DELETE is needed to terminate the LR session and     |
+| | lr_session.close()                              |                                                        | READ is needed to check the status of the command    |
++---------------------------------------------------+--------------------------------------------------------+------------------------------------------------------+
+| | Get Raw File                                    | **READ** org.liveresponse.file                         |                                                      |
+| | lr_session.get_raw_file(...)                    |                                                        |                                                      |
++---------------------------------------------------+--------------------------------------------------------+------------------------------------------------------+
+| | Get File                                        | **READ** org.liveresponse.file                         |                                                      |
+| | lr_session.get_file(...)                        |                                                        |                                                      |
++---------------------------------------------------+--------------------------------------------------------+------------------------------------------------------+
+| | Upload File                                     | **CREATE**, **READ** org.liveresponse.file             | CREATE is needed to upload the file and READ is      |
+| | lr_session.put_file(...)                        |                                                        | needed to check the status of the command            |
++---------------------------------------------------+--------------------------------------------------------+------------------------------------------------------+
+| | Delete file                                     | **READ**, **DELETE** org.liveresponse.file             | DELETE is needed to delete the file and READ is      |
+| | lr_session.delete_file(...)                     |                                                        | needed to check the status of the command            |
++---------------------------------------------------+--------------------------------------------------------+------------------------------------------------------+
+| | List Directory                                  | **READ** org.liveresponse.file                         |                                                      |
+| | lr_session.list_directory(...)                  |                                                        |                                                      |
++---------------------------------------------------+--------------------------------------------------------+------------------------------------------------------+
+| | Create Directory                                | **CREATE**, **READ** org.liveresponse.file             | CREATE is needed to create the directory and         |
+| | lr_session.create_directory(...)                |                                                        | READ is needed to check the status of the command    |
++---------------------------------------------------+--------------------------------------------------------+------------------------------------------------------+
+| | Walk Directory                                  | **READ** org.liveresponse.file                         |                                                      |
+| | lr_session.walk(...)                            |                                                        |                                                      |
++---------------------------------------------------+--------------------------------------------------------+------------------------------------------------------+
+| | Kill Process                                    | **READ**, **DELETE** org.liveresponse.process          | DELETE is needed to kill the process and READ is     |
+| | lr_session.kill_process(...)                    |                                                        | needed to check the status of the command            |
++---------------------------------------------------+--------------------------------------------------------+------------------------------------------------------+
+| | Create Process                                  | | **EXECUTE** org.liveresponse.process                 | If wait_for_completion = False, wait_for_output =    |
+| | lr_session.create_process(...)                  | | OR                                                   | False only EXECUTE is needed.                        |
+|                                                   | | **EXECUTE** org.liveresponse.process                 | Otherwise also file permissions are needed.          |
+|                                                   | | **READ**, **DELETE** org.liveresponse.file           |                                                      |
++---------------------------------------------------+--------------------------------------------------------+------------------------------------------------------+
+| | List Processes                                  | **READ** org.liveresponse.process                      |                                                      |
+| | lr_session.list_processes(...)                  |                                                        |                                                      |
++---------------------------------------------------+--------------------------------------------------------+------------------------------------------------------+
+| | List Registry Keys and Values                   | **READ** org.liveresponse.registry                     |                                                      |
+| | lr_session.list_registry_keys_and_values(...)   |                                                        |                                                      |
++---------------------------------------------------+--------------------------------------------------------+------------------------------------------------------+
+| | List Registry Values                            | **READ** org.liveresponse.registry                     |                                                      |
+| | lr_session.list_registry_values(...)            |                                                        |                                                      |
++---------------------------------------------------+--------------------------------------------------------+------------------------------------------------------+
+| | Get Registry Value                              | **READ** org.liveresponse.registry                     |                                                      |
+| | lr_session.get_registry_value(...)              |                                                        |                                                      |
++---------------------------------------------------+--------------------------------------------------------+------------------------------------------------------+
+| | Set Registry                                    | **READ**, **UPDATE** org.liveresponse.registry         | UPDATE is needed to set/create the value for the     |
+| | lr_session.set_registry_value(...)              |                                                        | registry and READ to check the status of the command |
++---------------------------------------------------+--------------------------------------------------------+------------------------------------------------------+
+| | Create Registry Key                             | **CREATE**, **READ** org.liveresponse.registry         | CREATE is needed to create the key and READ to       |
+| | lr_session.create_registry_key(...)             |                                                        | check the status of the command.                     |
++---------------------------------------------------+--------------------------------------------------------+------------------------------------------------------+
+| | Delete Registry Key                             | **READ**, **DELETE** org.liveresponse.registry         | DELETE is needed to delete the key and READ to       |
+| | lr_session.delete_registry_key(...)             |                                                        | check the status of the command.                     |
++---------------------------------------------------+--------------------------------------------------------+------------------------------------------------------+
+| | Delete Registry Value                           | **READ**, **DELETE** org.liveresponse.registry         | DELETE is needed to delete the value and READ to     |
+| | lr_session.delete_registry_value(...)           |                                                        | check the status of the command.                     |
++---------------------------------------------------+--------------------------------------------------------+------------------------------------------------------+
+| | Memdump                                         | **READ** org.liveresponse.memdump                      | The command to dump the memory includes three        |
+| | lr_session.memdump(...)                         | **READ**, **DELETE** org.liveresponse.file             | commands - dumping the memory in a file on the       |
+|                                                   |                                                        | remote machine, downloading the file on the local    |
+|                                                   |                                                        | machine and deleting the file.                       |
++---------------------------------------------------+--------------------------------------------------------+------------------------------------------------------+
+
 To send commands to an endpoint, first establish a "session" with a device.
 
 Establish A Session With A Device

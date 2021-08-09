@@ -316,6 +316,10 @@ class EnrichedEvent(UnrefreshableModel):
         while still_fetching:
             result = self._cb.get_object(result_url, query_parameters=query_parameters)
             total_results = result.get('num_available', 0)
+            found_results = result.get('num_found', 0)
+            # if found is 0, then no enriched events
+            if found_results == 0:
+                return self
             if total_results != 0:
                 results = result.get('results', [])
                 self._info = results[0]

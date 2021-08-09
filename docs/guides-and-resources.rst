@@ -20,6 +20,7 @@ Guides
 * :doc:`live-response` - Live Response allows security operators to collect information and take action on remote endpoints in real time.
 * :doc:`unified-binary-store` - The unified binary store (UBS) is responsible for storing all binaries and corresponding metadata for those binaries.
 * :doc:`users-grants` - Work with users and access grants.
+* :doc:`watchlists-feeds-reports` - Work with Enterprise EDR watchlists, feeds, reports, and Indicators of Compromise (IOCs).
 
 Examples
 --------

@@ -194,7 +194,7 @@ def enriched_events_details(cb, event_id):
     print(f"event_id: {event_id}\n")
 
     events = cb.select(EnrichedEvent).where(event_id=event_id)
-    pprint(events[0].get_details())
+    pprint(events[0].get_details()._info)
 
     print("\nCompare results manually with Postman")
     print("----------------------------------------------------------")

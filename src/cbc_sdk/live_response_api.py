@@ -14,23 +14,20 @@
 """The Live Response API and associated objects."""
 
 from __future__ import absolute_import
-
+from collections import defaultdict
+from concurrent.futures import _base, ThreadPoolExecutor
 import json
+import logging
+import queue
 import random
+import shutil
 import string
 import threading
 import time
-import logging
-from collections import defaultdict
-
-import shutil
 
 from cbc_sdk.platform import Device
 from cbc_sdk.errors import TimeoutError, ObjectNotFoundError, ApiError
-from concurrent.futures import _base
 from cbc_sdk import winerror
-
-import queue
 
 OS_LIVE_RESPONSE_ENUM = {
     "WINDOWS": 1,
@@ -93,7 +90,7 @@ class CbLRSessionBase(object):
 
     MAX_RETRY_COUNT = 5
 
-    def __init__(self, cblr_manager, session_id, device_id, session_data=None):
+    def __init__(self, cblr_manager, session_id, device_id, session_data=None, thread_pool_count=5):
         """
         Initialize the CbLRSessionBase.
 
@@ -102,11 +99,14 @@ class CbLRSessionBase(object):
             session_id (str): The ID of this session.
             device_id (int): The ID of the device (remote machine) we're connected to.
             session_data (dict): Additional session data.
+            thread_pool_count (int): number of workers for async commands (optional)
         """
         self.session_id = session_id
         self.device_id = device_id
         self._cblr_manager = cblr_manager
         self._cb = cblr_manager._cb
+        self._async_executor = None
+        self._thread_pool_count = thread_pool_count
         # TODO: refcount should be in a different object in the scheduler
         self._refcount = 1
         self._closed = False
@@ -130,6 +130,51 @@ class CbLRSessionBase(object):
         """
         self.close()
 
+    def _async_submit(self, func, *args, **kwargs):
+        """
+        Submit a task to the executor, creating it if it doesn't yet exist.
+
+        Args:
+            func (func): A callable to be executed as a background task.
+            *args (list): Arguments to be passed to the callable.
+            **kwargs (dict): Keyword arguments to be passed to the callable.
+
+        Returns:
+            Future: A future object representing the background task, which will pass along the result.
+        """
+        if not self._async_executor:
+            self._async_executor = ThreadPoolExecutor(max_workers=self._thread_pool_count)
+        return self._async_executor.submit(func, args, kwargs)
+
+    def command_status(self, command_id):
+        """
+        Check the status of async command
+
+        Args:
+            command_id (int): command_id
+
+        Returns:
+            status of the command
+        """
+        url = "{cblr_base}/sessions/{0}/commands/{1}".format(self.session_id, command_id, cblr_base=self.cblr_base)
+        res = self._cb.get_object(url)
+        return res["status"].upper()
+
+    def cancel_command(self, command_id):
+        """
+        Cancel command if it is in status PENDING.
+
+        Args:
+            command_id (int): command_id
+        """
+        url = "{cblr_base}/sessions/{0}/commands/{1}".format(self.session_id, command_id, cblr_base=self.cblr_base)
+        res = self._cb.get_object(url)
+        if res["status"].upper() == 'PENDING':
+            self._cb.delete_object(url)
+        else:
+            raise ApiError(f'Cannot cancel command in status {res["status"].upper()}.'
+                           ' Only commands in status PENDING can be cancelled.')
+
     def close(self):
         """Close the Live Response session."""
         self._cblr_manager.close_session(self.device_id, self.session_id)
@@ -138,18 +183,8 @@ class CbLRSessionBase(object):
     #
     # File operations
     #
-    def get_raw_file(self, file_name, timeout=None, delay=None):
-        """
-        Retrieve contents of the specified file on the remote machine.
-
-        Args:
-            file_name (str): Name of the file to be retrieved.
-            timeout (int): Timeout for the operation.
-            delay (float): Delay in seconds to wait before command complete.
-
-        Returns:
-            object: Contains the data of the file.
-        """
+    def _submit_get_file(self, file_name):
+        """Helper function for submitting get file command"""
         data = {"name": "get file", "path": file_name}
 
         resp = self._lr_post_command(data).json()
@@ -157,14 +192,10 @@ class CbLRSessionBase(object):
         if file_details:
             file_id = file_details.get('file_id', None)
             command_id = resp.get('id', None)
-            self._poll_command(command_id, timeout=timeout, delay=delay)
+            return file_id, command_id
+        return None, None
 
-            response = self._cb.session.get("{cblr_base}/sessions/{0}/files/{1}/content".format(
-                self.session_id, file_id, cblr_base=self.cblr_base), stream=True)
-            response.raw.decode_content = True
-            return response.raw
-
-    def get_file(self, file_name, timeout=None, delay=None):
+    def get_raw_file(self, file_name, timeout=None, delay=None, async_mode=False):
         """
         Retrieve contents of the specified file on the remote machine.
 
@@ -172,29 +203,75 @@ class CbLRSessionBase(object):
             file_name (str): Name of the file to be retrieved.
             timeout (int): Timeout for the operation.
             delay (float): Delay in seconds to wait before command complete.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
 
         Returns:
+            command_id, future if ran async
+            or
+            object: Contains the data of the file.
+        """
+        file_id, command_id = self._submit_get_file(file_name)
+        if file_id and command_id:
+            if async_mode:
+                return command_id, self._async_submit(lambda arg, kwarg: self._get_raw_file(command_id,
+                                                                                            file_id,
+                                                                                            timeout,
+                                                                                            delay))
+            else:
+                return self._get_raw_file(command_id, file_id, timeout, delay)
+
+    def _get_raw_file(self, command_id, file_id, timeout=None, delay=None):
+        self._poll_command(command_id, timeout=timeout, delay=delay)
+        response = self._cb.session.get("{cblr_base}/sessions/{0}/files/{1}/content".format(
+            self.session_id, file_id, cblr_base=self.cblr_base), stream=True)
+        response.raw.decode_content = True
+        return response.raw
+
+    def get_file(self, file_name, timeout=None, delay=None, async_mode=False):
+        """
+        Retrieve contents of the specified file on the remote machine.
+
+        Args:
+            file_name (str): Name of the file to be retrieved.
+            timeout (int): Timeout for the operation.
+            delay (float): Delay in seconds to wait before command complete.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
+
+        Returns:
+            command_id, future if ran async
             str: Contents of the specified file.
         """
-        fp = self.get_raw_file(file_name, timeout=timeout, delay=delay)
-        content = fp.read()
-        fp.close()
+        def _get_file():
+            """Helper function to get the content of a file"""
+            fp = self._get_raw_file(command_id, file_id, timeout=timeout, delay=delay)
+            content = fp.read()
+            fp.close()
+            return content
 
-        return content
+        file_id, command_id = self._submit_get_file(file_name)
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: _get_file())
+        return _get_file()
 
-    def delete_file(self, filename):
+    def delete_file(self, filename, async_mode=False):
         """
         Delete the specified file name on the remote machine.
 
         Args:
             filename (str): Name of the file to be deleted.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
+
+        Returns:
+            command_id, future if ran async
         """
         data = {"name": "delete file", "path": filename}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id))
         self._poll_command(command_id)
 
-    def put_file(self, infp, remote_filename):
+    def put_file(self, infp, remote_filename, async_mode=False):
         r"""
         Create a new file on the remote machine with the specified data.
 
@@ -205,6 +282,10 @@ class CbLRSessionBase(object):
         Args:
             infp (object): Python file-like containing data to upload to the remote endpoint.
             remote_filename (str): File name to create on the remote endpoint.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
+
+        Returns:
+            command_id, future if ran async
         """
         data = {"name": "put file", "path": remote_filename}
         file_id = self._upload_file(infp)
@@ -212,9 +293,11 @@ class CbLRSessionBase(object):
 
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id))
         self._poll_command(command_id)
 
-    def list_directory(self, dir_name):
+    def list_directory(self, dir_name, async_mode=False):
         r"""
         List the contents of a directory on the remote machine.
 
@@ -242,26 +325,36 @@ class CbLRSessionBase(object):
 
         Args:
             dir_name (str): Directory to list.  This parameter should end with the path separator.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
 
         Returns:
+            command_id, future if ran async
+            or
             list: A list of dicts, each one describing a directory entry.
-
         """
         data = {"name": "directory list", "path": dir_name}
         resp = self._lr_post_command(data).json()
         command_id = resp.get("id")
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id).get("files", []))
         return self._poll_command(command_id).get("files", [])
 
-    def create_directory(self, dir_name):
+    def create_directory(self, dir_name, async_mode=False):
         """
         Create a directory on the remote machine.
 
         Args:
             dir_name (str): The new directory name.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
+
+        Returns:
+            command_id, future if ran async
         """
         data = {"name": "create directory", "path": dir_name}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id))
         self._poll_command(command_id)
 
     def _pathsep(self):
@@ -315,6 +408,7 @@ class CbLRSessionBase(object):
         r"""
         Perform a full directory walk with recursion into subdirectories on the remote machine.
 
+        Note: walk does not support async_mode due to its behaviour, it can only be invoked synchronously
         Example:
         >>> with c.select(Device, 1).lr_session() as lr_session:
         ...     for entry in lr_session.walk(directory_name):
@@ -363,20 +457,25 @@ class CbLRSessionBase(object):
     # Process operations
     #
 
-    def kill_process(self, pid):
+    def kill_process(self, pid, async_mode=False):
         """
         Terminate a process on the remote machine.
 
         Args:
             pid (int): Process ID to be terminated.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
 
         Returns:
+            command_id, future if ran async
             bool: True if success, False if failure.
         """
         data = {"name": "kill", "pid": pid}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
-
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id,
+                                                                                        timeout=10,
+                                                                                        delay=0.1))
         try:
             self._poll_command(command_id, timeout=10, delay=0.1)
         except TimeoutError:
@@ -385,7 +484,7 @@ class CbLRSessionBase(object):
         return True
 
     def create_process(self, command_string, wait_for_output=True, remote_output_file_name=None,
-                       working_directory=None, wait_timeout=30, wait_for_completion=True):
+                       working_directory=None, wait_timeout=30, wait_for_completion=True, async_mode=False):
         """
         Create a new process on the remote machine with the specified command string.
 
@@ -403,8 +502,10 @@ class CbLRSessionBase(object):
             working_directory (str): The working directory of the create process operation.
             wait_timeout (int): Timeout used for this command.
             wait_for_completion (bool): True to wait until the process is completed before returning.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
 
         Returns:
+            command_id, future if ran async
             str: The output of the process.
         """
         # process is:
@@ -413,6 +514,19 @@ class CbLRSessionBase(object):
         # - wait for the process to complete
         # - get the temporary file from the endpoint
         # - delete the temporary file
+        def wait_to_complete_command():
+            if wait_for_completion:
+                self._poll_command(command_id, timeout=wait_timeout)
+
+            if wait_for_output:
+                # now the file is ready to be read
+                file_content = self.get_file(data["output_file"])
+                # delete the file
+                self._lr_post_command({"name": "delete file", "path": data["output_file"]})
+
+                return file_content
+            else:
+                return None
 
         if wait_for_output:
             wait_for_completion = True
@@ -431,22 +545,12 @@ class CbLRSessionBase(object):
 
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
-
-        if wait_for_completion:
-            self._poll_command(command_id, timeout=wait_timeout)
-
-        if wait_for_output:
-            # now the file is ready to be read
-
-            file_content = self.get_file(data["output_file"])
-            # delete the file
-            self._lr_post_command({"name": "delete file", "path": data["output_file"]})
-
-            return file_content
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: wait_to_complete_command())
         else:
-            return None
+            return wait_to_complete_command()
 
-    def list_processes(self):
+    def list_processes(self, async_mode=False):
         r"""
         List currently running processes on the remote machine.
 
@@ -463,13 +567,20 @@ class CbLRSessionBase(object):
          u'sid': u's-1-5-18',
          u'username': u'NT AUTHORITY\\SYSTEM'}
 
+        Args:
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
+
         Returns:
+            command_id, future if ran async
+            or
             list: A list of dicts describing the processes.
         """
         data = {"name": "process list"}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
-
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id).get(
+                "processes", []))
         return self._poll_command(command_id).get("processes", [])
 
     #
@@ -478,7 +589,7 @@ class CbLRSessionBase(object):
     # returns dictionary with 2 entries ("values" and "sub_keys")
     #  "values" is a list containing a dictionary for each registry value in the key
     #  "sub_keys" is a list containing one entry for each sub_key
-    def list_registry_keys_and_values(self, regkey):
+    def list_registry_keys_and_values(self, regkey, async_mode=False):
         r"""
         Enumerate subkeys and values of the specified registry key on the remote machine.
 
@@ -513,36 +624,49 @@ class CbLRSessionBase(object):
 
         Args:
             regkey (str): The registry key to enumerate.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
 
         Returns:
+            command_id, future if ran async
+            or
             dict: A dictionary with two keys, 'sub_keys' (a list of subkey names) and 'values' (a list of dicts
                 containing value data, name, and type).
         """
+        def _list_registry_keys_and_values():
+            """Helper function for list registry keys and values"""
+            raw_output = self._poll_command(command_id)
+            return {'values': raw_output.get('values', []), 'sub_keys': raw_output.get('sub_keys', [])}
         data = {"name": "reg enum key", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
-        raw_output = self._poll_command(command_id)
-        return {'values': raw_output.get('values', []), 'sub_keys': raw_output.get('sub_keys', [])}
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: _list_registry_keys_and_values())
+        return _list_registry_keys_and_values()
 
     # returns a list containing a dictionary for each registry value in the key
-    def list_registry_values(self, regkey):
+    def list_registry_values(self, regkey, async_mode=False):
         """
         Enumerate all registry values from the specified registry key on the remote machine.
 
         Args:
             regkey (str): The registry key to enumerate.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
 
         Returns:
+            command_id, future if ran async
+            or
             list: List of values for the registry key.
         """
         data = {"name": "reg enum key", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
-
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id).get(
+                "values", []))
         return self._poll_command(command_id).get("values", [])
 
     # returns a dictionary with the registry value
-    def get_registry_value(self, regkey):
+    def get_registry_value(self, regkey, async_mode=False):
         r"""
         Return the associated value of the specified registry key on the remote machine.
 
@@ -553,17 +677,22 @@ class CbLRSessionBase(object):
 
         Args:
             regkey (str): The registry key to retrieve.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
 
         Returns:
+            command_id, future if ran async
+            or
             dict: A dictionary with keys of: value_data, value_name, value_type.
         """
         data = {"name": "reg query value", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
-
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id).get(
+                "value", {}))
         return self._poll_command(command_id).get("value", {})
 
-    def set_registry_value(self, regkey, value, overwrite=True, value_type=None):
+    def set_registry_value(self, regkey, value, overwrite=True, value_type=None, async_mode=False):
         r"""
         Set a registry value on the specified registry key on the remote machine.
 
@@ -576,6 +705,10 @@ class CbLRSessionBase(object):
             value (object): The value data.
             overwrite (bool): If True, any existing value will be overwritten.
             value_type (str): The type of value.  Examples: REG_DWORD, REG_MULTI_SZ, REG_SZ
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
+
+        Returns:
+            command_id, future if ran async
         """
         real_value = value
         if value_type is None:
@@ -592,48 +725,68 @@ class CbLRSessionBase(object):
                 "value_data": real_value}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id))
         self._poll_command(command_id)
 
-    def create_registry_key(self, regkey):
+    def create_registry_key(self, regkey, async_mode=False):
         """
         Create a new registry key on the remote machine.
 
         Args:
             regkey (str): The registry key to create.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
+
+        Returns:
+            command_id, future if ran async
         """
         data = {"name": "reg create key", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id))
         self._poll_command(command_id)
 
-    def delete_registry_key(self, regkey):
+    def delete_registry_key(self, regkey, async_mode=False):
         """
         Delete a registry key on the remote machine.
 
         Args:
             regkey (str): The registry key to delete.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
+
+        Returns:
+            command_id, future if ran async
         """
         data = {"name": "reg delete key", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id))
         self._poll_command(command_id)
 
-    def delete_registry_value(self, regkey):
+    def delete_registry_value(self, regkey, async_mode=False):
         """
         Delete a registry value on the remote machine.
 
         Args:
             regkey (str): The registry value to delete.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
+
+        Returns:
+            command_id, future if ran async
         """
         data = {"name": "reg delete value", "path": regkey}
         resp = self._lr_post_command(data).json()
         command_id = resp.get('id')
+        if async_mode:
+            return command_id, self._async_submit(lambda arg, kwarg: self._poll_command(command_id))
         self._poll_command(command_id)
 
     #
     # Physical memory capture
     #
-    def memdump(self, local_filename, remote_filename=None, compress=False):
+    def memdump(self, local_filename, remote_filename=None, compress=False, async_mode=False):
         """
         Perform a memory dump operation on the remote machine.
 
@@ -641,11 +794,20 @@ class CbLRSessionBase(object):
             local_filename (str): Name of the file the memory dump will be transferred to on the local machine.
             remote_filename (str): Name of the file the memory dump will be stored in on the remote machine.
             compress (bool): True to compress the file on the remote system.
+            async_mode (bool): Flag showing whether the command should be executed asynchronously
+
+        Returns:
+            command_id, future if ran async
         """
+        def _memdump():
+            """Helper function for memdump"""
+            dump_object.wait()
+            dump_object.get(local_filename)
+            dump_object.delete()
         dump_object = self.start_memdump(remote_filename=remote_filename, compress=compress)
-        dump_object.wait()
-        dump_object.get(local_filename)
-        dump_object.delete()
+        if async_mode:
+            return dump_object.memdump_id, self._async_submit(lambda arg, kwarg: _memdump())
+        _memdump()
 
     def start_memdump(self, remote_filename=None, compress=True):
         """
@@ -1016,7 +1178,7 @@ class CbLRManagerBase(object):
     cblr_base = ""  # override in subclass for each product
     cblr_session_cls = NotImplemented  # override in subclass for each product
 
-    def __init__(self, cb, timeout=30, keepalive_sessions=False):
+    def __init__(self, cb, timeout=30, keepalive_sessions=False, thread_pool_count=5):
         """
         Initialize the CbLRManagerBase object.
 
@@ -1024,6 +1186,7 @@ class CbLRManagerBase(object):
             cb (BaseAPI): The CBC SDK object reference.
             timeout (int): Timeout to use for requests, in seconds.
             keepalive_sessions (bool): If True, "ping" sessions occasionally to ensure they stay alive.
+            thread_pool_count (int): number of workers for async commands (optional)
         """
         self._timeout = timeout
         self._cb = cb
@@ -1032,6 +1195,8 @@ class CbLRManagerBase(object):
         self._keepalive_sessions = keepalive_sessions
         self._init_poll_delay = 1
         self._init_poll_timeout = 360
+        self._async_executor = None
+        self._thread_pool_count = thread_pool_count
 
         if keepalive_sessions:
             self._cleanup_thread_running = True
@@ -1041,6 +1206,22 @@ class CbLRManagerBase(object):
             self._cleanup_thread.start()
 
         self._job_scheduler = None
+
+    def _async_submit(self, func, *args, **kwargs):
+        """
+        Submit a task to the executor, creating it if it doesn't yet exist.
+
+        Args:
+            func (func): A callable to be executed as a background task.
+            *args (list): Arguments to be passed to the callable.
+            **kwargs (dict): Keyword arguments to be passed to the callable.
+
+        Returns:
+            Future: A future object representing the background task, which will pass along the result.
+        """
+        if not self._async_executor:
+            self._async_executor = ThreadPoolExecutor(max_workers=self._thread_pool_count)
+        return self._async_executor.submit(func, args, kwargs)
 
     def submit_job(self, job, device):
         """
@@ -1100,7 +1281,7 @@ class CbLRManagerBase(object):
             self._cleanup_thread_running = False
             self._cleanup_thread_event.set()
 
-    def request_session(self, device_id):
+    def request_session(self, device_id, async_mode=False):
         """
         Initiate a new Live Response session.
 
@@ -1110,20 +1291,37 @@ class CbLRManagerBase(object):
         Returns:
             CbLRSessionBase: The new Live Response session.
         """
+        def _return_existing_session():
+            self._sessions[device_id]._refcount += 1
+            return session
+
+        def _get_session_obj():
+            _, session_data = self._wait_create_session(device_id, session_id)
+            session = self.cblr_session_cls(self, session_id, device_id, session_data=session_data)
+            return session
+
+        def _create_and_store_session():
+            session = _get_session_obj()
+            self._sessions[device_id] = session
+            return session
+
         if self._keepalive_sessions:
             with self._session_lock:
                 if device_id in self._sessions:
                     session = self._sessions[device_id]
-                    self._sessions[device_id]._refcount += 1
+                    if async_mode:
+                        return session.session_id, self._async_submit(lambda arg, kwarg: _return_existing_session())
+                    return _return_existing_session()
                 else:
-                    session_id, session_data = self._get_or_create_session(device_id)
-                    session = self.cblr_session_cls(self, session_id, device_id, session_data=session_data)
-                    self._sessions[device_id] = session
+                    session_id = self._create_session(device_id)
+                    if async_mode:
+                        return session_id, self._async_submit(lambda arg, kwarg: _create_and_store_session())
+                    return _create_and_store_session()
         else:
-            session_id, session_data = self._get_or_create_session(device_id)
-            session = self.cblr_session_cls(self, session_id, device_id, session_data=session_data)
-
-        return session
+            session_id = self._create_session(device_id)
+            if async_mode:
+                return session_id, self._async_submit(lambda arg, kwarg: _get_session_obj())
+            return _get_session_obj()
 
     def close_session(self, device_id, session_id):
         """
@@ -1197,7 +1395,23 @@ class LiveResponseSessionManager(CbLRManagerBase):
 
     def _get_or_create_session(self, device_id):
         session_id = self._create_session(device_id)
+        return self._wait_create_session(device_id, session_id)
 
+    def session_status(self, session_id):
+        """
+        Check the status of a lr session
+
+        Args:
+            session_id (str): The id of the session.
+
+        Returns:
+            str: Status of the session
+        """
+        url = "{cblr_base}/sessions/{0}".format(session_id, cblr_base=self.cblr_base)
+        res = self._cb.get_object(url)
+        return res['status'].upper()
+
+    def _wait_create_session(self, device_id, session_id):
         try:
             res = poll_status(self._cb, "{cblr_base}/sessions/{0}".format(session_id,
                               cblr_base=self.cblr_base),
@@ -1222,8 +1436,7 @@ class LiveResponseSessionManager(CbLRManagerBase):
     def _create_session(self, device_id):
         response = self._cb.post_object("{cblr_base}/sessions".format(cblr_base=self.cblr_base),
                                         {"device_id": device_id}).json()
-        session_id = response["id"]
-        return session_id
+        return response["id"]
 
 
 class GetFileJob(object):
@@ -1285,6 +1498,8 @@ def poll_status(cb, url, desired_status="COMPLETE", timeout=None, delay=None):
             return res
         elif res["status"].upper() == "ERROR":
             raise LiveResponseError(res)
+        elif res["status"].upper() == "CANCELLED":
+            raise ApiError('The command has been cancelled.')
         else:
             time.sleep(delay)
 

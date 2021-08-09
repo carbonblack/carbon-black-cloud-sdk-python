@@ -81,7 +81,7 @@ class Device(PlatformModel):
         self._last_refresh_time = time.time()
         return True
 
-    def lr_session(self):
+    def lr_session(self, async_mode=False):
         """
         Retrieve a Live Response session object for this Device.
 
@@ -91,7 +91,7 @@ class Device(PlatformModel):
         Raises:
             ApiError: If there is an error establishing a Live Response session for this Device.
         """
-        return self._cb._request_lr_session(self._model_unique_id)
+        return self._cb._request_lr_session(self._model_unique_id, async_mode=async_mode)
 
     def background_scan(self, flag):
         """

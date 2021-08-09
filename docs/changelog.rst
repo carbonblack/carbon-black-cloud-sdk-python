@@ -1,5 +1,23 @@
 Changelog
 ================================
+CBC SDK 1.3.2 - Released August 10, 2021
+--------------------------------
+
+New Features:
+
+* Added asynchronous query options to Live Response APIs.
+* Added functionality for Watchlists, Reports, and Feeds to simplify developer interaction.
+
+Updates:
+
+* Added documentation on the mapping between permissions and Live Response commands.
+
+Bug Fixes:
+
+* Fixed an error using the STIX/TAXII example with Cabby.
+* Fixed a potential infinite loop in getting detailed search results for enriched events and processes.
+* Comparison now case-insensitive on UBS download.
+
 CBC SDK 1.3.1 - Released June 15, 2021
 --------------------------------
 

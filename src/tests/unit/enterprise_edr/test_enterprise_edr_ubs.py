@@ -62,6 +62,34 @@ def test_binary_query(cbcsdk_mock):
     assert url is not None
 
 
+def test_binary_query_case_insensitive(cbcsdk_mock):
+    """Testing Binary Querying"""
+    called = False
+
+    def post_validate(url, body, **kwargs):
+        nonlocal called
+        if not called:
+            called = True
+            assert body['expiration_seconds'] == 3600
+        else:
+            assert body['expiration_seconds'] == 10
+        return BINARY_GET_FILE_RESP
+
+    sha256 = "00A16C806FF694B64E566886BBA5122655EFF89B45226CDDC8651DF7860E4524"
+    cbcsdk_mock.mock_request("GET", f"/ubs/v1/orgs/test/sha256/{sha256}", BINARY_GET_METADATA_RESP)
+    api = cbcsdk_mock.api
+    binary = api.select(Binary, sha256)
+    assert isinstance(binary, Binary)
+    cbcsdk_mock.mock_request("GET", f"/ubs/v1/orgs/test/sha256/{sha256}/summary/device", BINARY_GET_DEVICE_SUMMARY_RESP)
+    summary = binary.summary
+    cbcsdk_mock.mock_request("POST", "/ubs/v1/orgs/test/file/_download", post_validate)
+    url = binary.download_url()
+    assert summary is not None
+    assert url is not None
+    url = binary.download_url(expiration_seconds=10)
+    assert url is not None
+
+
 def test_binary_query_error(cbcsdk_mock):
     """Testing Binary Querying Error"""
     api = cbcsdk_mock.api

@@ -10,7 +10,7 @@ Get Download URL
 ::
 
     >>> from cbc_sdk import CBCloudAPI
-    >>> api = CBCloudAPI(profile='sample')
+    >>> cb = CBCloudAPI(profile='sample')
     >>> from cbc_sdk.enterprise_edr.ubs import Binary
     >>> sha256_hash = '8005557c1614c1e2c89f7db3702199de2b1e4605718fa32ff6ffdb2b41ed3759'
     >>> binary = Binary(cb, sha256_hash)
@@ -29,7 +29,7 @@ We could set expiration period for the download link (in seconds).
 ::
 
     >>> from cbc_sdk import CBCloudAPI
-    >>> api = CBCloudAPI(profile='sample')
+    >>> cb = CBCloudAPI(profile='sample')
     >>> from cbc_sdk.enterprise_edr.ubs import Binary
     >>> sha256_hash = '8005557c1614c1e2c89f7db3702199de2b1e4605718fa32ff6ffdb2b41ed3759'
     >>> binary = Binary(cb, sha256_hash)
@@ -48,7 +48,7 @@ Currently querying binaries is not possible, but we could use the following synt
 ::
 
     >>> from cbc_sdk import CBCloudAPI
-    >>> api = CBCloudAPI(profile='sample')
+    >>> cb = CBCloudAPI(profile='sample')
     >>> from cbc_sdk.enterprise_edr.ubs import Binary
     >>> sha256_hash = '8005557c1614c1e2c89f7db3702199de2b1e4605718fa32ff6ffdb2b41ed3759'
     >>> binary = cb.select(Binary, sha256_hash)
@@ -56,8 +56,7 @@ Currently querying binaries is not possible, but we could use the following synt
     ...
     https://cdc-file-storage-staging-us-east-1.s3.amazonaws.com/80/05/55/7c/16/14/c1/<trancated>
 
-*Note: If we try to use* :code:`binary = cb.select(Binary)` *, it will fail with exception that the model is non queryable model.* 
+*Note: If we try to use* :code:`binary = cb.select(Binary)` *, it will fail with exception that the model is non queryable model.*
 
 Find the full documentation at
 `Unified Binary Store <https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/cbc_sdk.enterprise_edr/#module-cbc_sdk.enterprise_edr.ubs>`_.
-
