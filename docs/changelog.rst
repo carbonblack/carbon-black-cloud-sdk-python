@@ -3,6 +3,13 @@ Changelog
 CBC SDK 1.3.3 - Released August 10, 2021
 --------------------------------
 
+Bug Fixes:
+
+* Dependency fix on schema library.
+
+CBC SDK 1.3.2 - Released August 10, 2021
+--------------------------------
+
 New Features:
 
 * Added asynchronous query options to Live Response APIs.
