@@ -55,7 +55,7 @@ from cbc_sdk.errors import ApiError
 HEADERS = {'X-Auth-Token': '', 'Content-Type': 'application/json'}
 ORG_KEY = ''
 HOSTNAME = ''
-DEVICE_ID = 8612331
+DEVICE_ID = 11457613
 
 # Files constants
 LOCAL_FILE = 'memdump.txt'
