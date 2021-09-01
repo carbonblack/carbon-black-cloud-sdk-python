@@ -1,0 +1,8 @@
+type: object
+properties:
+  type:
+    type: string
+    description: Application type
+  value:
+    type: string
+    description: Application value

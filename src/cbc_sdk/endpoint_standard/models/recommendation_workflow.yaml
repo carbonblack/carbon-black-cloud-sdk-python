@@ -1,0 +1,24 @@
+type: object
+properties:
+  changed_by:
+    type: string
+    description: Who made the last update to the workflow
+  create_time:
+    type: string
+    description: The time the recommendation was created
+  ref_id:
+    type: string
+    description: Reference id for an accepted Recommendation which is the id of the created Reputation Override
+  status:
+    type: string
+    description: Status of the recommendation
+    enum:
+      - NEW
+      - REJECTED
+      - ACCEPTED
+  update_time:
+    type: string
+    description: The last time the recommendation was updated
+  comment:
+    type: string
+    description: A comment added when the recommendation was updated
