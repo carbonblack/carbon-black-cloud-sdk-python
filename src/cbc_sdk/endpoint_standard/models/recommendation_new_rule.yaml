@@ -1,0 +1,42 @@
+type: object
+properties:
+  action:
+    type: string
+    description: Rule action
+  application:
+    type: object
+    description: Rule application
+    properties:
+      type:
+        type: string
+        description: Application type
+      value:
+        type: string
+        description: Application value
+  certificate_authority:
+    type: string
+    description: Certificate authority
+  filename:
+    type: string
+    description: File name
+  include_child_processes:
+    type: boolean
+    description: Include child processes
+  operation:
+    type: string
+    description: Operation
+  override_list:
+    type: string
+    description: Override list
+  override_type:
+    type: string
+    description: Override type
+  path:
+    type: string
+    description: File path
+  sha256_hash:
+    type: string
+    description: SHA256 hash
+  signed_by:
+    type: string
+    description: Signed by
