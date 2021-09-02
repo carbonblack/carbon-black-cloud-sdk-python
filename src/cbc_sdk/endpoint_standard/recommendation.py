@@ -33,6 +33,138 @@ class Recommendation(UnrefreshableModel):
     primary_key = "recommendation_id"
     swagger_meta_file = "endpoint_standard/models/recommendation.yaml"
 
+    class RecommendationImpact(UnrefreshableModel):
+        """Represents metadata about a recommendation to be used in the decision to accept or reject it."""
+        swagger_meta_file = "endpoint_standard/models/recommendation_impact.yaml"
+
+        def __init__(self, cb, model_unique_id, initial_data=None):
+            """
+            Initialize the RecommendationImpact object.
+
+            Args:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+                model_unique_id (str): Should be None.
+                initial_data (dict): Initial data used to populate the object.
+            """
+            super(Recommendation.RecommendationImpact, self).__init__(cb, model_unique_id, initial_data, full_doc=True)
+
+        @classmethod
+        def _query_implementation(cls, cb, **kwargs):
+            """
+            This model is not queryable, raise an error.
+
+            Args:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+                **kwargs (dict): Not used, retained for compatibility.
+
+            Raises:
+                NonQueryableModel: Always.
+            """
+            raise NonQueryableModel('RecommendationImpact is not queryable')
+
+    class RecommendationNewRule(UnrefreshableModel):
+        """Represents the proposed change to an organization's policies from a recommendation."""
+        swagger_meta_file = "endpoint_standard/models/recommendation_new_rule.yaml"
+
+        def __init__(self, cb, model_unique_id, initial_data=None):
+            """
+            Initialize the RecommendationNewRule object.
+
+            Args:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+                model_unique_id (str): Should be None.
+                initial_data (dict): Initial data used to populate the object.
+            """
+            super(Recommendation.RecommendationNewRule, self).__init__(cb, model_unique_id, initial_data,
+                                                                       full_doc=True)
+            self._application = Recommendation.RecommendationApplication(cb, None,
+                                                                         initial_data.get('application', None)) \
+                if initial_data else None
+
+        @classmethod
+        def _query_implementation(cls, cb, **kwargs):
+            """
+            This model is not queryable, raise an error.
+
+            Args:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+                **kwargs (dict): Not used, retained for compatibility.
+
+            Raises:
+                NonQueryableModel: Always.
+            """
+            raise NonQueryableModel('RecommendationNewRule is not queryable')
+
+        @property
+        def application_(self):
+            """
+            Return the object representing the rule application of a proposed change to an organization's policies.
+
+            Returns:
+                RecommendationApplication: The object representing the rule application of a proposed change.
+            """
+            return self._application
+
+    class RecommendationApplication(UnrefreshableModel):
+        """Represents the rule application of a proposed change to an organization's policies."""
+        swagger_meta_file = "endpoint_standard/models/recommendation_application.yaml"
+
+        def __init__(self, cb, model_unique_id, initial_data=None):
+            """
+            Initialize the RecommendationApplication object.
+
+            Args:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+                model_unique_id (str): Should be None.
+                initial_data (dict): Initial data used to populate the object.
+            """
+            super(Recommendation.RecommendationApplication, self).__init__(cb, model_unique_id, initial_data,
+                                                                           full_doc=True)
+
+        @classmethod
+        def _query_implementation(cls, cb, **kwargs):
+            """
+            This model is not queryable, raise an error.
+
+            Args:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+                **kwargs (dict): Not used, retained for compatibility.
+
+            Raises:
+                NonQueryableModel: Always.
+            """
+            raise NonQueryableModel('RecommendationApplication is not queryable')
+
+    class RecommendationWorkflow(UnrefreshableModel):
+        """Represents the lifecycle state of a recommendation."""
+        swagger_meta_file = "endpoint_standard/models/recommendation_workflow.yaml"
+
+        def __init__(self, cb, model_unique_id, initial_data=None):
+            """
+            Initialize the RecommendationWorkflow object.
+
+            Args:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+                model_unique_id (str): Should be None.
+                initial_data (dict): Initial data used to populate the object.
+            """
+            super(Recommendation.RecommendationWorkflow, self).__init__(cb, model_unique_id, initial_data,
+                                                                        full_doc=True)
+
+        @classmethod
+        def _query_implementation(cls, cb, **kwargs):
+            """
+            This model is not queryable, raise an error.
+
+            Args:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+                **kwargs (dict): Not used, retained for compatibility.
+
+            Raises:
+                NonQueryableModel: Always.
+            """
+            raise NonQueryableModel('RecommendationWorkflow is not queryable')
+
     def __init__(self, cb, model_unique_id, initial_data=None):
         """
         Initialize the Recommendation object.
@@ -43,9 +175,12 @@ class Recommendation(UnrefreshableModel):
             initial_data (dict): Initial data used to populate the recommendation.
         """
         super(Recommendation, self).__init__(cb, model_unique_id, initial_data, full_doc=True)
-        self._impact = RecommendationImpact(cb, None, initial_data.get('impact', None)) if initial_data else None
-        self._new_rule = RecommendationNewRule(cb, None, initial_data.get('new_rule', None)) if initial_data else None
-        self._workflow = RecommendationWorkflow(cb, None, initial_data.get('workflow', None)) if initial_data else None
+        self._impact = Recommendation.RecommendationImpact(cb, None, initial_data.get('impact', None)) \
+            if initial_data else None
+        self._new_rule = Recommendation.RecommendationNewRule(cb, None, initial_data.get('new_rule', None)) \
+            if initial_data else None
+        self._workflow = Recommendation.RecommendationWorkflow(cb, None, initial_data.get('workflow', None)) \
+            if initial_data else None
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -131,138 +266,6 @@ class Recommendation(UnrefreshableModel):
             comment (str): Optional comment associated with the action.
         """
         self._take_action('RESET', comment)
-
-
-class RecommendationImpact(UnrefreshableModel):
-    """Represents metadata about a recommendation to be used in the decision to accept or reject it."""
-    swagger_meta_file = "endpoint_standard/models/recommendation_impact.yaml"
-
-    def __init__(self, cb, model_unique_id, initial_data=None):
-        """
-        Initialize the RecommendationImpact object.
-
-        Args:
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-            model_unique_id (str): Should be None.
-            initial_data (dict): Initial data used to populate the object.
-        """
-        super(RecommendationImpact, self).__init__(cb, model_unique_id, initial_data, full_doc=True)
-
-    @classmethod
-    def _query_implementation(cls, cb, **kwargs):
-        """
-        This model is not queryable, raise an error.
-
-        Args:
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-            **kwargs (dict): Not used, retained for compatibility.
-
-        Raises:
-            NonQueryableModel: Always.
-        """
-        raise NonQueryableModel('RecommendationImpact is not queryable')
-
-
-class RecommendationNewRule(UnrefreshableModel):
-    """Represents the proposed change to an organization's policies from a recommendation."""
-    swagger_meta_file = "endpoint_standard/models/recommendation_new_rule.yaml"
-
-    def __init__(self, cb, model_unique_id, initial_data=None):
-        """
-        Initialize the RecommendationNewRule object.
-
-        Args:
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-            model_unique_id (str): Should be None.
-            initial_data (dict): Initial data used to populate the object.
-        """
-        super(RecommendationNewRule, self).__init__(cb, model_unique_id, initial_data, full_doc=True)
-        self._application = RecommendationApplication(cb, None, initial_data.get('application', None)) \
-            if initial_data else None
-
-    @classmethod
-    def _query_implementation(cls, cb, **kwargs):
-        """
-        This model is not queryable, raise an error.
-
-        Args:
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-            **kwargs (dict): Not used, retained for compatibility.
-
-        Raises:
-            NonQueryableModel: Always.
-        """
-        raise NonQueryableModel('RecommendationNewRule is not queryable')
-
-    @property
-    def application_(self):
-        """
-        Return the object representing the rule application of a proposed change to an organization's policies.
-
-        Returns:
-            RecommendationApplication: The object representing the rule application of a proposed change.
-        """
-        return self._application
-
-
-class RecommendationApplication(UnrefreshableModel):
-    """Represents the rule application of a proposed change to an organization's policies."""
-    swagger_meta_file = "endpoint_standard/models/recommendation_application.yaml"
-
-    def __init__(self, cb, model_unique_id, initial_data=None):
-        """
-        Initialize the RecommendationApplication object.
-
-        Args:
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-            model_unique_id (str): Should be None.
-            initial_data (dict): Initial data used to populate the object.
-        """
-        super(RecommendationApplication, self).__init__(cb, model_unique_id, initial_data, full_doc=True)
-
-    @classmethod
-    def _query_implementation(cls, cb, **kwargs):
-        """
-        This model is not queryable, raise an error.
-
-        Args:
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-            **kwargs (dict): Not used, retained for compatibility.
-
-        Raises:
-            NonQueryableModel: Always.
-        """
-        raise NonQueryableModel('RecommendationApplication is not queryable')
-
-
-class RecommendationWorkflow(UnrefreshableModel):
-    """Represents the lifecycle state of a recommendation."""
-    swagger_meta_file = "endpoint_standard/models/recommendation_workflow.yaml"
-
-    def __init__(self, cb, model_unique_id, initial_data=None):
-        """
-        Initialize the RecommendationWorkflow object.
-
-        Args:
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-            model_unique_id (str): Should be None.
-            initial_data (dict): Initial data used to populate the object.
-        """
-        super(RecommendationWorkflow, self).__init__(cb, model_unique_id, initial_data, full_doc=True)
-
-    @classmethod
-    def _query_implementation(cls, cb, **kwargs):
-        """
-        This model is not queryable, raise an error.
-
-        Args:
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-            **kwargs (dict): Not used, retained for compatibility.
-
-        Raises:
-            NonQueryableModel: Always.
-        """
-        raise NonQueryableModel('RecommendationWorkflow is not queryable')
 
 
 """Recommendation Query"""
