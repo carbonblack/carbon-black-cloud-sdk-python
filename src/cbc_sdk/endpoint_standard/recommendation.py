@@ -79,7 +79,7 @@ class Recommendation(UnrefreshableModel):
                                                                        full_doc=True)
             self._application = Recommendation.RecommendationApplication(cb, None,
                                                                          initial_data.get('application', None)) \
-                if initial_data else None
+                if initial_data and 'application' in initial_data else None
 
         @classmethod
         def _query_implementation(cls, cb, **kwargs):
@@ -176,11 +176,11 @@ class Recommendation(UnrefreshableModel):
         """
         super(Recommendation, self).__init__(cb, model_unique_id, initial_data, full_doc=True)
         self._impact = Recommendation.RecommendationImpact(cb, None, initial_data.get('impact', None)) \
-            if initial_data else None
+            if initial_data and 'impact' in initial_data else None
         self._new_rule = Recommendation.RecommendationNewRule(cb, None, initial_data.get('new_rule', None)) \
-            if initial_data else None
+            if initial_data and 'new_rule' in initial_data else None
         self._workflow = Recommendation.RecommendationWorkflow(cb, None, initial_data.get('workflow', None)) \
-            if initial_data else None
+            if initial_data and 'workflow' in initial_data else None
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
