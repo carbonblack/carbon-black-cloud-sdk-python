@@ -146,7 +146,7 @@ def search_recommendations_raw(config_data):
         dict: JSON output from the "search recommendations" API.
     """
     url = "{0}recommendation-service/v1/orgs/{1}/recommendation/_search".format(config_data['hostname'],
-                                                                                 config_data['org_key'])
+                                                                                config_data['org_key'])
     request_body = {'criteria': {}, 'sort': [{'field': 'impact_score', 'order': 'DESC'}]}
     request_headers = {'X-Auth-Token': config_data['apikey']}
     response = requests.post(url, json=request_body, headers=request_headers)
