@@ -13,9 +13,10 @@
 
 """Model and query APIs for Recommendations"""
 
-from cbc_sdk.base import (UnrefreshableModel, BaseQuery, CriteriaBuilderSupportMixin, IterableQueryMixin,
+from cbc_sdk.base import (NewBaseModel, UnrefreshableModel, BaseQuery, CriteriaBuilderSupportMixin, IterableQueryMixin,
                           AsyncQueryMixin)
 from cbc_sdk.errors import ApiError, NonQueryableModel
+from cbc_sdk.platform.reputation import ReputationOverride
 from cbc_sdk.platform.devices import DeviceSearchQuery
 import logging
 
@@ -26,7 +27,7 @@ log = logging.getLogger(__name__)
 """Recommendation models"""
 
 
-class Recommendation(UnrefreshableModel):
+class Recommendation(NewBaseModel):
     """Represents a recommended proposed policy change for the organization."""
     urlobject = "/recommendation-service/v1/orgs/{0}/recommendation"
     urlobject_single = "/recommendation-service/v1/orgs/{0}/recommendation/{1}"
@@ -196,6 +197,23 @@ class Recommendation(UnrefreshableModel):
         """
         return RecommendationQuery(cls, cb)
 
+    def _refresh(self):
+        """
+        Reload the Recommendation from the server.
+
+        Returns:
+            bool: True if refresh was successful, False if not.
+        """
+        query = self._cb.select(Recommendation).set_policy_types([self.rule_type])
+        query = query.set_hashes([self._new_rule.sha256_hash])
+        recs = [rec for rec in query if rec.recommendation_id == self.recommendation_id]
+        if len(recs) == 1:
+            self._info = recs[0]._info
+            self._impact = recs[0]._impact
+            self._new_rule = recs[0]._new_rule
+            self._workflow = recs[0]._workflow
+        return len(recs) == 1
+
     @property
     def impact_(self):
         """
@@ -233,12 +251,16 @@ class Recommendation(UnrefreshableModel):
         Args:
             action (str): The action to take, either 'ACCEPT', 'REJECT', or 'RESET'.
             comment (str): Optional comment associated with the action.
+
+        Returns:
+            bool: True if we successfully refreshed this Recommendation's state, False if not.
         """
         req_body = {'action': action}
         if comment:
             req_body['comment'] = comment
         url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id) + '/workflow'
         self._cb.put_object(url, body=req_body)
+        return self._refresh()
 
     def accept(self, comment=None):
         """
@@ -246,8 +268,11 @@ class Recommendation(UnrefreshableModel):
 
         Args:
             comment (str): Optional comment associated with the action.
+
+        Returns:
+            bool: True if we successfully refreshed this Recommendation's state, False if not.
         """
-        self._take_action('ACCEPT', comment)
+        return self._take_action('ACCEPT', comment)
 
     def reject(self, comment=None):
         """
@@ -255,8 +280,11 @@ class Recommendation(UnrefreshableModel):
 
         Args:
             comment (str): Optional comment associated with the action.
+
+        Returns:
+            bool: True if we successfully refreshed this Recommendation's state, False if not.
         """
-        self._take_action('REJECT', comment)
+        return self._take_action('REJECT', comment)
 
     def reset(self, comment=None):
         """
@@ -264,8 +292,21 @@ class Recommendation(UnrefreshableModel):
 
         Args:
             comment (str): Optional comment associated with the action.
+
+        Returns:
+            bool: True if we successfully refreshed this Recommendation's state, False if not.
         """
-        self._take_action('RESET', comment)
+        return self._take_action('RESET', comment)
+
+    def reputation_override(self):
+        """
+        Returns the reputation override associated with the recommendation (if the recommendation was accepted).
+
+        Returns:
+            ReputationOverride: The associated reputation override, or None if there is none.
+        """
+        return self._cb.select(ReputationOverride, self._workflow.ref_id) \
+            if self._workflow and self._workflow.ref_id else None
 
 
 """Recommendation Query"""

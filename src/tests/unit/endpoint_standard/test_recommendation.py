@@ -16,12 +16,16 @@
 
 import pytest
 import logging
+import copy
 from cbc_sdk.endpoint_standard import Recommendation
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.endpoint_standard.mock_recommendation import (SEARCH_REQ, SEARCH_RESP, ACTION_INIT,
-                                                                       ACTION_REQS)
+                                                                       ACTION_REQS, ACTION_REFRESH_SEARCH,
+                                                                       ACTION_SEARCH_RESP, ACTION_REFRESH_STATUS,
+                                                                       ACTION_INIT_ACCEPTED)
+from tests.unit.fixtures.platform.mock_reputation_override import REPUTATION_OVERRIDE_SHA256_RESPONSE
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -107,19 +111,46 @@ def test_search_bogus_parameters(cb):
 
 def test_actions(cbcsdk_mock):
     """Tests the three "action" methods."""
-    count = 0
+    count_put = 0
+    count_post = 0
 
     def put_validate(url, body, **kwargs):
-        nonlocal count
-        assert body == ACTION_REQS[count]
-        count += 1
+        nonlocal count_put
+        assert body == ACTION_REQS[count_put]
+        count_put += 1
         return None
+
+    def post_validate(url, body, **kwargs):
+        nonlocal count_post
+        assert body == ACTION_REFRESH_SEARCH
+        rc = copy.deepcopy(ACTION_SEARCH_RESP)
+        rc['results'][0]['workflow']['status'] = ACTION_REFRESH_STATUS[count_post]
+        count_post += 1
+        return rc
 
     cbcsdk_mock.mock_request("PUT", "/recommendation-service/v1/orgs/test/recommendation/"
                                     "0d9da444-cfa7-4488-9fad-e2abab099b68/workflow", put_validate)
+    cbcsdk_mock.mock_request("POST", "/recommendation-service/v1/orgs/test/recommendation/_search", post_validate)
     api = cbcsdk_mock.api
     recommendation = Recommendation(api, ACTION_INIT['recommendation_id'], ACTION_INIT)
     recommendation.accept('Alpha')
+    assert recommendation.workflow_.status == 'ACCEPTED'
     recommendation.reset()
+    assert recommendation.workflow_.status == 'NEW'
     recommendation.reject('Charlie')
-    assert count == 3
+    assert recommendation.workflow_.status == 'REJECTED'
+    assert count_put == 3
+    assert count_post == 3
+
+
+def test_get_reputation_override(cbcsdk_mock):
+    """Tests retrieving a reputation override from a recommendation."""
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/reputations/overrides/e9410b754ea011ebbfd0db2585a41b07",
+                             REPUTATION_OVERRIDE_SHA256_RESPONSE)
+    api = cbcsdk_mock.api
+    recommendation = Recommendation(api, ACTION_INIT_ACCEPTED['recommendation_id'], ACTION_INIT_ACCEPTED)
+    reputation_override = recommendation.reputation_override()
+    assert reputation_override is not None
+    assert reputation_override.id == "e9410b754ea011ebbfd0db2585a41b07"
+    recommendation = Recommendation(api, ACTION_INIT['recommendation_id'], ACTION_INIT)
+    assert recommendation.reputation_override() is None
