@@ -204,7 +204,8 @@ class Recommendation(NewBaseModel):
         Returns:
             bool: True if refresh was successful, False if not.
         """
-        query = self._cb.select(Recommendation).set_policy_types([self.rule_type])
+        query = self._cb.select(Recommendation)
+        query = query.set_policy_types([self.rule_type])
         query = query.set_hashes([self._new_rule.sha256_hash])
         recs = [rec for rec in query if rec.recommendation_id == self.recommendation_id]
         if len(recs) == 1:

@@ -130,8 +130,9 @@ def compare_new_rule(context, new_rule, raw_data):
     result = compare(context, new_rule.path, raw_data, 'path') and result
     result = compare(context, new_rule.sha256_hash, raw_data, 'sha256_hash') and result
     result = compare(context, new_rule.signed_by, raw_data, 'signed_by') and result
-    if new_rule.application:
-        result = compare_application(f"{context}.application", new_rule.application, raw_data['application']) and result
+    if new_rule.application_:
+        result = compare_application(f"{context}.application", new_rule.application_,
+                                     raw_data['application']) and result
     else:
         result = check_not_present(context, raw_data, 'application') and result
     return result
@@ -173,16 +174,16 @@ def compare_recommendation(context, recommendation, raw_data):
     result = compare(context, recommendation.policy_id, raw_data, 'policy_id')
     result = compare(context, recommendation.recommendation_id, raw_data, 'recommendation_id') and result
     result = compare(context, recommendation.rule_type, raw_data, 'rule_type') and result
-    if recommendation.impact:
-        result = compare_impact(f"{context}.impact", recommendation.impact, raw_data['impact']) and result
+    if recommendation.impact_:
+        result = compare_impact(f"{context}.impact", recommendation.impact_, raw_data['impact']) and result
     else:
         result = check_not_present(context, raw_data, 'impact') and result
-    if recommendation.new_rule:
-        result = compare_new_rule(f"{context}.new_rule", recommendation.new_rule, raw_data['new_rule']) and result
+    if recommendation.new_rule_:
+        result = compare_new_rule(f"{context}.new_rule", recommendation.new_rule_, raw_data['new_rule']) and result
     else:
         result = check_not_present(context, raw_data, 'new_rule') and result
-    if recommendation.workflow:
-        result = compare_workflow(f"{context}.workflow", recommendation.workflow, raw_data['workflow']) and result
+    if recommendation.workflow_:
+        result = compare_workflow(f"{context}.workflow", recommendation.workflow_, raw_data['workflow']) and result
     else:
         result = check_not_present(context, raw_data, 'workflow') and result
     return result
@@ -209,6 +210,8 @@ def compare_list_of_recommendations(recommendations, raw_data, verbose):
     index = 0
     success = 0
     for recommendation, raw_segment in zip(recommendations, raw_data):
+        if verbose:
+            print(f"Comparing item at index #{index}")
         if compare_recommendation(f"recommendations[{index}]", recommendation, raw_segment):
             success += 1
         index += 1
@@ -249,6 +252,76 @@ def search_recommendations_api(api):
     return list(query)
 
 
+def validate_status_via_raw(recommendation, config_data):
+    """
+    Runs validation checks against the recommendation status and associated reputation override.
+
+    Args:
+        recommendation (Recommendation): The recommendation object to be tested.
+        config_data (dict): Contains configuration data for the request.
+
+    Returns:
+        bool: True if verification was successful, False if not.
+    """
+    url = "{0}recommendation-service/v1/orgs/{1}/recommendation/_search".format(config_data['hostname'],
+                                                                                config_data['org_key'])
+    request_body = {'criteria': {}, 'rows': 50}
+    request_headers = {'X-Auth-Token': config_data['apikey']}
+    response = requests.post(url, json=request_body, headers=request_headers)
+    if response.status_code != 200:
+        print(f"attempt to get recommendation data failed with code {response.status_code}")
+        return False
+
+    result_array = response.json()['results']
+    good_results = [block for block in result_array if block['recommendation_id'] == recommendation.recommendation_id]
+    if len(good_results) != 1:
+        print(f"Unable to re-locate recommendation with ID {recommendation.recommendation_id}")
+        return False
+
+    new_status = good_results[0]['workflow']['status']
+    if new_status != recommendation.workflow_.status:
+        print(f"Recommendation status incorrect - is {new_status}, should be {recommendation.workflow_.status}")
+        return False
+
+    if new_status == 'ACCEPTED':
+        new_ref_id = good_results[0]['workflow'].get('ref_id', None)
+        if not new_ref_id:
+            print(f"Reputation Override reference ID is not present when it should be")
+            return False
+
+        rep_override = recommendation.reputation_override()
+        if not rep_override:
+            print(f"Reputation Override object is not present when it should be")
+            return False
+
+        url = "{0}appservices/v6/orgs/{1}/reputations/overrides/{2}".format(config_data['hostname'],
+                                                                            config_data['org_key'], new_ref_id)
+        response = requests.get(url, headers=request_headers)
+        if response.status_code != 200:
+            print(f"attempt to get reputation override data failed with code {response.status_code}")
+            return False
+
+        raw_rep_override = response.json()
+        if raw_rep_override['id'] != rep_override.id:
+            print(f"Reputation override ID incorrect - is {raw_rep_override['id']}, should be {rep_override.id}")
+            return False
+
+        if raw_rep_override['sha256_hash'] != rep_override.sha256_hash:
+            print(f"Reputation override hash incorrect - is {raw_rep_override['sha256_hash']}, "
+                  f"should be {rep_override.sha256_hash}")
+            return False
+    else:
+        if good_results[0]['workflow'].get('ref_id', None):
+            print(f"Reputation Override reference ID is present when it shouldn't be")
+            return False
+
+        if recommendation.reputation_override():
+            print(f"Reputation Override object is present when it shouldn't be")
+            return False
+
+    return True
+
+
 def main():
     """Script entry point"""
     parser = build_cli_parser()
@@ -263,9 +336,36 @@ def main():
 
     recommendations = search_recommendations_api(cb)
     raw_data = search_recommendations_raw(config_data)
-    result = compare_list_of_recommendations(recommendations, raw_data['results'], print_detail)
-    print(f'Search Recommendations......{"OK" if result else "FAIL"}')
-    return 0 if result else 1
+    result_search = compare_list_of_recommendations(recommendations, raw_data['results'], print_detail)
+    print(f'Search Recommendations......{"OK" if result_search else "FAIL"}')
+
+    result_workflow = True
+    rec_candidates = [rec for rec in recommendations
+                      if rec.rule_type == 'reputation_override' and rec.workflow_.status == 'NEW']
+    if len(rec_candidates) > 0:
+        recommendation = rec_candidates[0]  # arbitrary choice
+        result_workflow = validate_status_via_raw(recommendation, config_data) and result_workflow
+        if print_detail:
+            print("--- Accepting recommendation")
+        recommendation.accept()
+        result_workflow = validate_status_via_raw(recommendation, config_data) and result_workflow
+        if print_detail:
+            print("--- Resetting recommendation")
+        recommendation.reset()
+        result_workflow = validate_status_via_raw(recommendation, config_data) and result_workflow
+        if print_detail:
+            print("--- Rejecting recommendation")
+        recommendation.reject()
+        result_workflow = validate_status_via_raw(recommendation, config_data) and result_workflow
+        if print_detail:
+            print("--- Resetting recommendation (again)")
+        recommendation.reset()
+        result_workflow = validate_status_via_raw(recommendation, config_data) and result_workflow
+        print(f'Search Workflow.............{"OK" if result_workflow else "FAIL"}')
+    else:
+        print('Search Workflow.............Unable to run test (no candidate recommendations)')
+
+    return 0 if result_search and result_workflow else 1
 
 
 if __name__ == "__main__":
