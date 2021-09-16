@@ -265,7 +265,7 @@ def validate_status_via_raw(recommendation, config_data):
     """
     url = "{0}recommendation-service/v1/orgs/{1}/recommendation/_search".format(config_data['hostname'],
                                                                                 config_data['org_key'])
-    request_body = {'criteria': {}, 'rows': 50}
+    request_body = {'criteria': {'status': ['NEW', 'REJECTED', 'ACCEPTED']}, 'rows': 50}
     request_headers = {'X-Auth-Token': config_data['apikey']}
     response = requests.post(url, json=request_body, headers=request_headers)
     if response.status_code != 200:
