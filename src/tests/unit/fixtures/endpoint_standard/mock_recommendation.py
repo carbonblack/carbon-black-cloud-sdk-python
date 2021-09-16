@@ -142,8 +142,8 @@ ACTION_REQS = [
 
 ACTION_REFRESH_SEARCH = {
     "criteria": {
-        "policy_type": ['reputation_override'],
-        "hashes": ['2272c5221e90f9762dfa38786da01b36a28a7da5556b07dec3523d1abc292124']
+        "status": ['NEW', 'REJECTED', 'ACCEPTED'],
+        "policy_type": ['reputation_override']
     },
     "rows": 50
 }

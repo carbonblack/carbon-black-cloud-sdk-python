@@ -287,12 +287,12 @@ def validate_status_via_raw(recommendation, config_data):
     if new_status == 'ACCEPTED':
         new_ref_id = good_results[0]['workflow'].get('ref_id', None)
         if not new_ref_id:
-            print(f"Reputation Override reference ID is not present when it should be")
+            print("Reputation Override reference ID is not present when it should be")
             return False
 
         rep_override = recommendation.reputation_override()
         if not rep_override:
-            print(f"Reputation Override object is not present when it should be")
+            print("Reputation Override object is not present when it should be")
             return False
 
         url = "{0}appservices/v6/orgs/{1}/reputations/overrides/{2}".format(config_data['hostname'],
@@ -309,11 +309,11 @@ def validate_status_via_raw(recommendation, config_data):
 
     else:
         if good_results[0]['workflow'].get('ref_id', None):
-            print(f"Reputation Override reference ID is present when it shouldn't be")
+            print("Reputation Override reference ID is present when it shouldn't be")
             return False
 
         if recommendation.reputation_override():
-            print(f"Reputation Override object is present when it shouldn't be")
+            print("Reputation Override object is present when it shouldn't be")
             return False
 
     return True

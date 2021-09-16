@@ -207,7 +207,6 @@ class Recommendation(NewBaseModel):
         query = self._cb.select(Recommendation)
         query = query.set_statuses(RecommendationQuery.VALID_STATUSES)
         query = query.set_policy_types([self.rule_type])
-        #query = query.set_hashes([self._new_rule.sha256_hash])
         recs = [rec for rec in query if rec.recommendation_id == self.recommendation_id]
         if len(recs) == 1:
             self._info = recs[0]._info
