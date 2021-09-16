@@ -232,7 +232,8 @@ def search_recommendations_raw(config_data):
     """
     url = "{0}recommendation-service/v1/orgs/{1}/recommendation/_search".format(config_data['hostname'],
                                                                                 config_data['org_key'])
-    request_body = {'criteria': {}, 'sort': [{'field': 'impact_score', 'order': 'DESC'}]}
+    request_body = {'criteria': {'status': ['NEW', 'REJECTED', 'ACCEPTED']},
+                    'sort': [{'field': 'impact_score', 'order': 'DESC'}]}
     request_headers = {'X-Auth-Token': config_data['apikey']}
     response = requests.post(url, json=request_body, headers=request_headers)
     return response.json()
@@ -248,7 +249,7 @@ def search_recommendations_api(api):
     Returns:
         list[Recommendation]: A list of Recommendation objects.
     """
-    query = api.select(Recommendation).sort_by('impact_score', 'DESC')
+    query = api.select(Recommendation).set_statuses(['NEW', 'REJECTED', 'ACCEPTED']).sort_by('impact_score', 'DESC')
     return list(query)
 
 
@@ -306,10 +307,6 @@ def validate_status_via_raw(recommendation, config_data):
             print(f"Reputation override ID incorrect - is {raw_rep_override['id']}, should be {rep_override.id}")
             return False
 
-        if raw_rep_override['sha256_hash'] != rep_override.sha256_hash:
-            print(f"Reputation override hash incorrect - is {raw_rep_override['sha256_hash']}, "
-                  f"should be {rep_override.sha256_hash}")
-            return False
     else:
         if good_results[0]['workflow'].get('ref_id', None):
             print(f"Reputation Override reference ID is present when it shouldn't be")
@@ -320,6 +317,75 @@ def validate_status_via_raw(recommendation, config_data):
             return False
 
     return True
+
+
+def locate_candidate_recommendation(recommendation_list):
+    """
+    Locates a candidate recommendation for workflow testing in our recommendation list.
+
+    Args:
+        recommendation_list (list[Recommendation]): List of possible recommendations to be our candidate.
+
+    Returns:
+        Recommendation: A candidate recommendation for testing. Looks for a recommendation with NEW status by
+                        preference, then REJECTED, and then ACCEPTED. If none is found, returns None.
+    """
+    for initial_status in ['NEW', 'REJECTED', 'ACCEPTED']:
+        rec_candidates = [rec for rec in recommendation_list
+                          if rec.rule_type == 'reputation_override' and rec.workflow_.status == initial_status]
+        if len(rec_candidates) > 0:
+            return rec_candidates[0]
+    return None
+
+
+def exercise_workflow(recommendation, config_data, verbose):
+    """
+    Exercises workflow operations on a recommendation.
+
+    Args:
+        recommendation (Recommendation): The recommendation value under test.
+        config_data (dict): Contains configuration data for the request.
+        verbose (bool): True to print slightly more information.
+
+    Returns:
+        bool: True if exercise was successful, False if it failed.
+    """
+    initial_status = recommendation.workflow_.status
+    result_workflow = validate_status_via_raw(recommendation, config_data)
+    if initial_status != 'NEW':
+        if verbose:
+            print("--- Resetting recommendation")
+        recommendation.reset()
+        result_workflow = validate_status_via_raw(recommendation, config_data) and result_workflow
+    if initial_status != 'ACCEPTED':
+        if verbose:
+            print("--- Accepting recommendation")
+        recommendation.accept()
+        result_workflow = validate_status_via_raw(recommendation, config_data) and result_workflow
+        if verbose:
+            print("--- Resetting recommendation")
+        recommendation.reset()
+        result_workflow = validate_status_via_raw(recommendation, config_data) and result_workflow
+    if initial_status != 'REJECTED':
+        if verbose:
+            print("--- Rejecting recommendation")
+        recommendation.reject()
+        result_workflow = validate_status_via_raw(recommendation, config_data) and result_workflow
+        if verbose:
+            print("--- Resetting recommendation")
+        recommendation.reset()
+        result_workflow = validate_status_via_raw(recommendation, config_data) and result_workflow
+    if initial_status == 'ACCEPTED':
+        if verbose:
+            print("--- Accepting recommendation")
+        recommendation.accept()
+        result_workflow = validate_status_via_raw(recommendation, config_data) and result_workflow
+    elif initial_status == 'REJECTED':
+        if verbose:
+            print("--- Rejecting recommendation")
+        recommendation.reject()
+        result_workflow = validate_status_via_raw(recommendation, config_data) and result_workflow
+    return result_workflow
 
 
 def main():
@@ -340,27 +406,9 @@ def main():
     print(f'Search Recommendations......{"OK" if result_search else "FAIL"}')
 
     result_workflow = True
-    rec_candidates = [rec for rec in recommendations
-                      if rec.rule_type == 'reputation_override' and rec.workflow_.status == 'NEW']
-    if len(rec_candidates) > 0:
-        recommendation = rec_candidates[0]  # arbitrary choice
-        result_workflow = validate_status_via_raw(recommendation, config_data) and result_workflow
-        if print_detail:
-            print("--- Accepting recommendation")
-        recommendation.accept()
-        result_workflow = validate_status_via_raw(recommendation, config_data) and result_workflow
-        if print_detail:
-            print("--- Resetting recommendation")
-        recommendation.reset()
-        result_workflow = validate_status_via_raw(recommendation, config_data) and result_workflow
-        if print_detail:
-            print("--- Rejecting recommendation")
-        recommendation.reject()
-        result_workflow = validate_status_via_raw(recommendation, config_data) and result_workflow
-        if print_detail:
-            print("--- Resetting recommendation (again)")
-        recommendation.reset()
-        result_workflow = validate_status_via_raw(recommendation, config_data) and result_workflow
+    recommendation = locate_candidate_recommendation(recommendations)
+    if recommendation:
+        result_workflow = exercise_workflow(recommendation, config_data, print_detail)
         print(f'Search Workflow.............{"OK" if result_workflow else "FAIL"}')
     else:
         print('Search Workflow.............Unable to run test (no candidate recommendations)')

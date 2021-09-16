@@ -205,8 +205,9 @@ class Recommendation(NewBaseModel):
             bool: True if refresh was successful, False if not.
         """
         query = self._cb.select(Recommendation)
+        query = query.set_statuses(RecommendationQuery.VALID_STATUSES)
         query = query.set_policy_types([self.rule_type])
-        query = query.set_hashes([self._new_rule.sha256_hash])
+        #query = query.set_hashes([self._new_rule.sha256_hash])
         recs = [rec for rec in query if rec.recommendation_id == self.recommendation_id]
         if len(recs) == 1:
             self._info = recs[0]._info
@@ -357,7 +358,8 @@ class RecommendationQuery(BaseQuery, CriteriaBuilderSupportMixin, IterableQueryM
         Restricts the recommendations that this query is performed on to the specified status values.
 
         Args:
-            statuses (list): List of status values to restrict the search to.
+            statuses (list): List of status values to restrict the search to.  If no statuses are specified, the search
+                             defaults to NEW only.
 
         Returns:
             RecommendationQuery: This instance.
