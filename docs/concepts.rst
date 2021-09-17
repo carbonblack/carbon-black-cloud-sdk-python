@@ -48,6 +48,8 @@ to USB devices is through the Endpoint Standard package ``from cbc_sdk.endpoint_
 ::
 
   # USB device information is accessible with Endpoint Standard
+  >>> from cbc_sdk import CBCloudAPI
+  >>> from cbc_sdk.endpoint_standard import USBDevice
   >>> api = CBCloudAPI(profile='endpoint_standard')
   >>> usb_devices = api.select(USBDevice).set_statuses(['APPROVED'])
   >>> for usb in usb_devices:
