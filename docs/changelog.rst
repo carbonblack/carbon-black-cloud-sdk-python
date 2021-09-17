@@ -1,14 +1,14 @@
 Changelog
 ================================
 CBC SDK 1.3.3 - Released August 10, 2021
---------------------------------
+----------------------------------------
 
 Bug Fixes:
 
 * Dependency fix on schema library.
 
 CBC SDK 1.3.2 - Released August 10, 2021
---------------------------------
+----------------------------------------
 
 New Features:
 
@@ -26,7 +26,7 @@ Bug Fixes:
 * Comparison now case-insensitive on UBS download.
 
 CBC SDK 1.3.1 - Released June 15, 2021
---------------------------------
+--------------------------------------
 
 New Features:
 
@@ -37,7 +37,7 @@ Bug Fixes:
 * Fix functions in ``Grant`` object for adding a new access profile to a user access grant.
 
 CBC SDK 1.3.0 - Released June 8, 2021
---------------------------------
+-------------------------------------
 
 New Features
 
@@ -68,21 +68,21 @@ Bug Fixes
 * Fix DeviceSearchQuery from duplicating Device due to base index of 1
 
 CBC SDK 1.2.3 - Released April 19, 2021
---------------------------------------
+---------------------------------------
 
 Bug Fixes
 
 * Prevent alert query from retrieving past 10k limit
 
 CBC SDK 1.2.3 - Released April 19, 2021
---------------------------------------
+---------------------------------------
 
 Bug Fixes
 
 * Prevent alert query from retrieving past 10k limit
 
 CBC SDK 1.2.2 - Released April 5, 2021
---------------------------------------
+---------------------------------------
 
 Bug Fixes
 
@@ -90,7 +90,7 @@ Bug Fixes
 
 
 CBC SDK 1.2.1 - Released March 31, 2021
---------------------------------------
+---------------------------------------
 
 New Features
 
@@ -139,7 +139,7 @@ Bug Fixes
 
 
 CBC SDK 1.1.0 - Released January 27, 2021
-------------------------------------
+-----------------------------------------
 
 New Features
 
@@ -157,7 +157,7 @@ Bug Fixes
 * Refactor add and update criteria to use CriteriaBuilderSupportMixin
 
 CBC SDK 1.0.1 - Released December 17, 2020
-------------------------------------
+------------------------------------------
 
 Bug Fixes
 
@@ -165,7 +165,7 @@ Bug Fixes
 * Few ReadTheDocs fixes
 
 CBC SDK 1.0.0 - Released December 16, 2020
-------------------------------------
+------------------------------------------
 
 New Features
 

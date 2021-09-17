@@ -392,7 +392,7 @@ class Grant(MutableBaseModel):
 
             Returns:
                 Profile: If a template was specified, return the new Profile object.
-                ProfileBuilder: If template was None, returns a ProfileBuilder object.  Call methods on it to set
+                ProfileBuilder: If template was None, returns a ProfileBuilder object. Call methods on it to set
                                 up the new profile, and then call build() to create the new profile.
             """
             if template:
