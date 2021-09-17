@@ -689,7 +689,7 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
         Args:
             reps (list): List of string reputation values.  Valid values are "KNOWN_MALWARE", "SUSPECT_MALWARE",
                          "PUP", "NOT_LISTED", "ADAPTIVE_WHITE_LIST", "COMMON_WHITE_LIST", "TRUSTED_WHITE_LIST",
-                          and "COMPANY_BLACK_LIST".
+                         and "COMPANY_BLACK_LIST".
 
         Returns:
             BaseAlertSearchQuery: This instance.

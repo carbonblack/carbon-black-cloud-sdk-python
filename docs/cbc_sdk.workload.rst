@@ -20,14 +20,6 @@ cbc\_sdk.workload.vm\_workloads\_search module
    :undoc-members:
    :show-inheritance:
 
-cbc\_sdk.workload.vulnerability\_assessment module
---------------------------------------------------
-
-.. automodule:: cbc_sdk.workload.vulnerability_assessment
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Module contents
 ---------------
 
