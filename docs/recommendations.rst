@@ -46,13 +46,17 @@ Individual recommendations in the ``NEW`` state may be accepted or rejected by c
 
 ::
 
-    # Continued from first example
-    >>> sublist = [rec for rec in recslist if rec.workflow_.status == 'NEW']
-    >>> sublist[0].accept('Comment for acceptance')
-    >>> print(sublist[0].workflow_.status)
+    >>> from cbc_sdk import CBCloudAPI
+    >>> api = CBCloudAPI(profile='sample')
+    >>> from cbc_sdk.endpoint_standard import Recommendation
+    >>> query = api.select(Recommendation).set_statuses(['NEW'])
+    >>> recommendation = query[0]
+    >>> recommendation.accept('Comment for acceptance')
+    >>> print(recommendation.workflow_.status)
     ACCEPTED
-    >>> sublist[1].reject('Comment for rejection')
-    >>> print(sublist[1].workflow_.status)
+    >>> recommendation = query[1]
+    >>> recommendation.reject('Comment for rejection')
+    >>> print(recommendation.workflow_.status)
     REJECTED
 
 Individual recommendations in the ``ACCEPTED`` or ``REJECTED`` states may be reverted to the ``NEW`` state by calling
@@ -60,10 +64,13 @@ their ``reset()`` method.
 
 ::
 
-    # Continued from first example
-    >>> sublist = [rec for rec in recslist if rec.workflow_.status == 'REJECTED']
-    >>> sublist[0].reset()
-    >>> print(sublist[0].workflow_.status)
+    >>> from cbc_sdk import CBCloudAPI
+    >>> api = CBCloudAPI(profile='sample')
+    >>> from cbc_sdk.endpoint_standard import Recommendation
+    >>> query = api.select(Recommendation).set_statuses(['REJECTED'])
+    >>> recommendation = query.first()
+    >>> recommendation.reset()
+    >>> print(recommendation.workflow_.status)
     NEW
 
 Recommendations and Reputation Overrides
@@ -74,8 +81,12 @@ object with the ``reputation_override()`` method.
 
 ::
 
-    # Continued from first example
-    >>> sublist = [rec for rec in recslist if rec.workflow_.status == 'ACCEPTED']
-    >>> reputation_override = sublist[0].reputation_override()
+    >>> from cbc_sdk import CBCloudAPI
+    >>> api = CBCloudAPI(profile='sample')
+    >>> from cbc_sdk.endpoint_standard import Recommendation
+    >>> query = api.select(Recommendation).set_statuses(['ACCEPTED'])
+    >>> reputation_override = query.first().reputation_override()
     >>> print(reputation_override.id)
     add2969714b811ecbf7c61c0c0ef6d2a
+
+More information about reputation overrides may be found in :doc:`reputation-override`.
