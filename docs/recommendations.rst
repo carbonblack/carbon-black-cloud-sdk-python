@@ -86,7 +86,20 @@ object with the ``reputation_override()`` method.
     >>> from cbc_sdk.endpoint_standard import Recommendation
     >>> query = api.select(Recommendation).set_statuses(['ACCEPTED'])
     >>> reputation_override = query.first().reputation_override()
-    >>> print(reputation_override.id)
-    add2969714b811ecbf7c61c0c0ef6d2a
+    >>> print(reputation_override)
+    ReputationOverride object, bound to https://example.org.
+     Last refreshed at Wed Sep 22 14:15:55 2021
+    -------------------------------------------------------------------------------
+
+                 create_time: 2021-09-11T07:12:12.064Z
+                  created_by: estark@example.com
+                 description: test_recommendation_review
+                          id: 95b1f2b112cf11eca7813f4ceaa27a41
+        include_child_processes: False
+               override_list: WHITE_LIST
+               override_type: IT_TOOL
+                        path: c:\windows\ccm\*
+                      source: RECOMMENDATION
+                  source_ref: c9221b98-f64c-45dc-acb4-93caacd9dcee
 
 More information about reputation overrides may be found in :doc:`reputation-override`.
