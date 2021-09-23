@@ -21,6 +21,7 @@ Guides
 * :doc:`unified-binary-store` - The unified binary store (UBS) is responsible for storing all binaries and corresponding metadata for those binaries.
 * :doc:`users-grants` - Work with users and access grants.
 * :doc:`watchlists-feeds-reports` - Work with Enterprise EDR watchlists, feeds, reports, and Indicators of Compromise (IOCs).
+* :doc:`alerts` - Work and manage different types of alerts such as CB Analytics Alert, Watchlist Alerts and Device Control Alerts.
 
 Examples
 --------
