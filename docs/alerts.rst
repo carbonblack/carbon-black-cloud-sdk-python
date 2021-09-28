@@ -230,7 +230,7 @@ Those settings shown in the screenshot can be replicated with the following code
 .. code-block:: python
 
     >>> from cbc_sdk import CBCloudAPI
-    >>> from cbc_sdk.platform import WatchlistAlert, Process
+    >>> from cbc_sdk.platform import BaseAlert
     >>> from solrq import Q
     >>> api = CBCloudAPI(profile='sample')
     >>> alerts = api.select(BaseAlert).where((Q(category='INFO') | Q(category='THREAT')), policy_name='Standard').set_minimum_severity(7)[:5]
