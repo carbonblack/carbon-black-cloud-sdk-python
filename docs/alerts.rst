@@ -1,11 +1,11 @@
 Alerts
 ======
 
-Alerts can be used to notify you about important App Control-monitored activities, such as the
+Use alerts to get notifications about important App Control-monitored activities, such as the
 appearance or spread of risky files on your endpoints. The Carbon Black Cloud Python SDK provides
 all of the functionalities you might need to use them efficiently.
 You can use all of the operations shown in the API such as retrieving, filtering, dismissing, creating and updating.
-The full list of operations and attributes that are available and can be used, can be found in the :py:mod:`BaseAlert() <cbc_sdk.platform.alerts.BaseAlert>` class.
+The full list of operations and attributes can be found in the :py:mod:`BaseAlert() <cbc_sdk.platform.alerts.BaseAlert>` class.
 
 For more information see
 `the developer documentation <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alerts-api/>`_
@@ -13,7 +13,7 @@ For more information see
 Retrieving of Alerts
 --------------------
 
-In the example below we can retrieve alerts with the minimum severity of ``7``.
+With the example below, you can retrieve alerts with the minimum severity of ``7``.
 
 .. code-block:: python
 
@@ -28,8 +28,8 @@ In the example below we can retrieve alerts with the minimum severity of ``7``.
 Filtering
 ^^^^^^^^^
 
-Alerts can filtered, based on their fields. You can find more about those fields in the
-`official API schemas <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alerts-api/#alert-search>`_.
+Filter alerts using the fields described in the
+`Alert Search Schema <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alerts-api/#alert-search>`_.
 
 You can use the ``where`` method to filter the alerts. The ``where`` supports strings as well as ``solrq`` query objects
 for more complex searches. The example below will search for alerts where the ``category`` would be
@@ -54,7 +54,7 @@ either ``THREAT`` or ``INFO``. The ``^2`` simply means that it would prioritize 
     More information about the ``solrq`` and what exactly those ``Q`` objects are doing can be found in the
     their `documentation <https://solrq.readthedocs.io/en/latest/index.html>`_.
 
-We can also filter on different kind of **TTPs** (*Tools Techniques Procedures*) and *Policy Actions**.
+You can also filter on different kind of **TTPs** (*Tools Techniques Procedures*) and *Policy Actions**.
 
 .. code-block:: python
 
