@@ -5,7 +5,7 @@ import logging
 from cbc_sdk.endpoint_standard import EnrichedEvent
 from cbc_sdk.endpoint_standard.base import EnrichedEventQuery
 from cbc_sdk.rest_api import CBCloudAPI
-from cbc_sdk.errors import ApiError
+from cbc_sdk.errors import ApiError, TimeoutError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.endpoint_standard.mock_enriched_events import (
     GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_ZERO,
