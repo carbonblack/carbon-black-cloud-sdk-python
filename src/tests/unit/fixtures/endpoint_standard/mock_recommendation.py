@@ -139,3 +139,45 @@ ACTION_REQS = [
         "comment": "Charlie"
     },
 ]
+
+ACTION_REFRESH_SEARCH = {
+    "criteria": {
+        "status": ['NEW', 'REJECTED', 'ACCEPTED'],
+        "policy_type": ['reputation_override']
+    },
+    "rows": 50
+}
+
+ACTION_SEARCH_RESP = {
+    "results": [ACTION_INIT],
+    "num_found": 1
+}
+
+ACTION_REFRESH_STATUS = ['ACCEPTED', 'NEW', 'REJECTED']
+
+ACTION_INIT_ACCEPTED = {
+    "recommendation_id": "0d9da444-cfa7-4488-9fad-e2abab099b68",
+    "rule_type": "reputation_override",
+    "policy_id": 0,
+    "new_rule": {
+        "override_type": "SHA256",
+        "override_list": "WHITE_LIST",
+        "sha256_hash": "2272c5221e90f9762dfa38786da01b36a28a7da5556b07dec3523d1abc292124",
+        "filename": "mimecast for outlook 7.8.0.125 (x86).msi"
+    },
+    "workflow": {
+        "status": "ACCEPTED",
+        "ref_id": "e9410b754ea011ebbfd0db2585a41b07",
+        "changed_by": "estark@example.com",
+        "create_time": "2021-05-18T16:37:07.000Z",
+        "update_time": "2021-08-31T15:13:40.000Z",
+        "comment": "Winter is coming"
+    },
+    "impact": {
+        "org_adoption": "MEDIUM",
+        "impacted_devices": 45,
+        "event_count": 79,
+        "impact_score": 0,
+        "update_time": "2021-05-18T16:37:07.000Z"
+    }
+}

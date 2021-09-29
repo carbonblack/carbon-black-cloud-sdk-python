@@ -68,6 +68,14 @@ cbc\_sdk.platform.users module
   :undoc-members:
   :show-inheritance:
 
+cbc\_sdk.platform.vulnerability\_assessment module
+--------------------------------------------------
+
+.. automodule:: cbc_sdk.platform.vulnerability_assessment
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 
