@@ -169,8 +169,8 @@ GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_2 = {
 GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING = {
     "num_found": 808,
     "num_available": 1,
-    "contacted": 0,
-    "completed": 6,
+    "contacted": 6,
+    "completed": 0,
     "results": [],
 }
 

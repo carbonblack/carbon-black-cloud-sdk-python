@@ -17,7 +17,7 @@ from cbc_sdk.base import (MutableBaseModel, UnrefreshableModel, CreatableModelMi
                           PaginatedQuery, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin)
 from cbc_sdk.base import Query as BaseEventQuery
 from cbc_sdk.utils import convert_query_params
-from cbc_sdk.errors import ApiError
+from cbc_sdk.errors import ApiError, TimeoutError
 from cbc_sdk.platform.reputation import ReputationOverride
 from copy import deepcopy
 from pathlib import Path

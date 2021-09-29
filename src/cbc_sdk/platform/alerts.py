@@ -14,7 +14,7 @@
 """Model and Query Classes for Platform Alerts and Workflows"""
 import time
 
-from cbc_sdk.errors import ApiError
+from cbc_sdk.errors import ApiError, TimeoutError
 from cbc_sdk.platform import PlatformModel
 from cbc_sdk.base import (BaseQuery,
                           UnrefreshableModel,
