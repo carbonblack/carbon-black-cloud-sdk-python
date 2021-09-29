@@ -52,5 +52,12 @@ GET_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_2 = {
     'num_found': 116,
     'contacted': 34,
     'completed': 34
+}
 
+GET_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING = {
+    'ranges': [],
+    'terms': [],
+    'num_found': 0,
+    'contacted': 34,
+    'completed': 0
 }
