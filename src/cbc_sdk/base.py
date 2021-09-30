@@ -551,24 +551,100 @@ class NewBaseModel(object, metaclass=CbMetaModel):
             return "<%s.%s object at %s> @ %s" % (self.__class__.__module__, self.__class__.__name__, hex(id(self)),
                                                   self._cb.session.server)
 
-    def __str__(self):
+    def _subobject(self, name):
         """
-        Returns a string representation of the object.
+        Returns the "subobject value" of the given attribute.
+
+        Args:
+            name (str): Name of the subobject value to be returned.
 
         Returns:
-            str: A string representation of the object.
+            Any: Subobject value for the attribute, or None if there is none.
+
+        Notes:
+            Should be overridden for any class wanting to use subobject reporting capabilities.
+            If the attribute is a list of subobjects, this method should return that list.
+            If the attribute is a single subobject, this method should return that subobject.
+        """
+        return None
+
+    @classmethod
+    def _str_stringize(cls, value):
+        """
+        Returns the "stringized" representation of an attribute value, truncated if it's too long.
+
+        Args:
+            value (Any): Value to be stringized.
+
+        Returns:
+            str: The string equivalent.
+        """
+        try:
+            string_value = str(value)
+        except UnicodeDecodeError:
+            string_value = repr(value)
+        if len(string_value) > 50:
+            string_value = string_value[:47] + u"..."
+        return string_value
+
+    def _str_attr_line(self, name, value, top_level=True):
+        """
+        Returns the representation of a single attribute within an object (which may be multiple lines).
+
+        Args:
+            name (str): The name of this attribute.
+            value (Any): The value of this attribute.
+            top_level (bool): True if this is a "top level" object being rendered as lines of text.
+
+        Returns:
+            list[str]: The list of lines of test in the attribute representation.
         """
         lines = []
-        lines.append("{0:s} object, bound to {1:s}.".format(self.__class__.__name__, self._cb.session.server))
-        if not issubclass(type(self), UnrefreshableModel):
-            if self._last_refresh_time:
-                lines.append(" Last refreshed at {0:s}".format(time.ctime(self._last_refresh_time)))
-            if not self._full_init:
-                lines.append(" Partially initialized. Use .refresh() to load all attributes")
-        lines.append("-" * 79)
-        lines.append("")
+        format_str = u"{0:s} {1:>20s}: {2:s}" if top_level else u"{1:>20s}: {2:s}"
+        status = ' ' * 3
+        if top_level and name in self._dirty_attributes:
+            if self._dirty_attributes[name] is None:
+                status = "(+)"
+            else:
+                status = "(*)"
+        subobject_value = self._subobject(name) if top_level else None
+        if isinstance(value, list):
+            # this is a list - render the first three items, then [...] if we have more
+            target = value if subobject_value is None else subobject_value
+            lines.append(format_str.format(status, name, f"[list:{len(target)} items]:"))
+            for index, item in enumerate(target):
+                if index >= 3:
+                    # punt the rest of the list
+                    lines.append(f"{' ' * 23}[...]")
+                    break
+                if subobject_value is not None:
+                    # render item as a subobject
+                    lines.append(format_str.format(' ' * 5, f"[{index}]", f"[{item.__class__.__name__} object]:"))
+                    lines.extend([f"{' ' * 28}{sub_line}" for sub_line in item._str_attr_lines(False)])
+                else:
+                    # render item normally
+                    lines.append(format_str.format(' ' * 5, f"[{index}]", self._str_stringize(item)))
+        elif subobject_value is not None:
+            # this is a subobject
+            lines.append(format_str.format(status, name, f"[{subobject_value.__class__.__name__} object]:"))
+            lines.extend([f"{' ' * 26}{sub_line}" for sub_line in subobject_value._str_attr_lines(False)])
+        else:
+            # ordinary case
+            lines.append(format_str.format(status, name, self._str_stringize(value)))
+        return lines
 
+    def _str_attr_lines(self, top_level=True):
+        """
+        Returns the representation of all attributes within this object.
+
+        Args:
+            top_level (bool): True if this is a "top level" object being rendered as lines of text.
+
+        Returns:
+            list[str]: The list of lines of test in the attribute representation.
+        """
         # for dictionaries that can be sorted, sort them
+        lines = []
         try:
             attributes = sorted(self._info)
         # dictionaries containing dictionaries cannot be sorted, so leave as is
@@ -578,36 +654,34 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         for attr in attributes:
             # typical case, where the info dictionary value for this `attr` is a string
             if isinstance(attr, str):
-                status = "   "
-                if attr in self._dirty_attributes:
-                    if self._dirty_attributes[attr] is None:
-                        status = "(+)"
-                    else:
-                        status = "(*)"
-                try:
-                    val = str(self._info[attr])
-                except UnicodeDecodeError:
-                    val = repr(self._info[attr])
-                if len(val) > 50:
-                    val = val[:47] + u"..."
-                lines.append(u"{0:s} {1:>20s}: {2:s}".format(status, attr, val))
+                lines.extend(self._str_attr_line(attr, self._info[attr], top_level))
             # edge case (seen in Facet searches) where the info dictionary value for this `attr` is a dictionary
             elif isinstance(attr, dict):
                 # go through each attribute in the `attr` dictionary
                 for att in attr:
-                    status = "   "
-                    if att in self._dirty_attributes:
-                        if self._dirty_attributes[att] is None:
-                            status = "(+)"
-                        else:
-                            status = "(*)"
-                    try:
-                        val = str(attr[att])
-                    except UnicodeDecodeError:
-                        val = repr(attr[att])
-                    if len(val) > 50:
-                        val = val[:47] + u"..."
-                    lines.append(u"{0:s} {1:>20s}: {2:s}".format(status, att, val))
+                    lines.extend(self._str_attr_line(att, attr[att], top_level))
+
+        return lines
+
+    def __str__(self):
+        """
+        Returns a string representation of the object.
+
+        Returns:
+            str: A string representation of the object.
+        """
+        # generate the "header"
+        lines = ["{0:s} object, bound to {1:s}.".format(self.__class__.__name__, self._cb.session.server)]
+        if not issubclass(type(self), UnrefreshableModel):
+            if self._last_refresh_time:
+                lines.append(" Last refreshed at {0:s}".format(time.ctime(self._last_refresh_time)))
+            if not self._full_init:
+                lines.append(" Partially initialized. Use .refresh() to load all attributes")
+        lines.append('-' * 79)
+        lines.append('')
+
+        # add the attribute lines
+        lines.extend(self._str_attr_lines())
 
         return "\n".join(lines)
 
