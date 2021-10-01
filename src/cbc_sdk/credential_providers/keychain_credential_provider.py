@@ -20,7 +20,6 @@ from cbc_sdk.errors import CredentialError
 
 class KeychainCredentialProvider(CredentialProvider):
     """This credential provider reads from the macOS's Keychain."""
-    
     def __init__(self, keychain_name, keychain_username):
         """
         Initialize the KeychainCredentialProvider.
@@ -42,7 +41,7 @@ class KeychainCredentialProvider(CredentialProvider):
     def _get_keyring_credentials(self):
         """
         Reading the credentials from the macOS's Keychain.
-        
+
         Returns:
             str: The raw entry from the keychain.
                 May return None if there is no match from the keychain.
