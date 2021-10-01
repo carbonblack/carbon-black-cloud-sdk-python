@@ -5,7 +5,7 @@ import logging
 from cbc_sdk.endpoint_standard import EnrichedEvent
 from cbc_sdk.endpoint_standard.base import EnrichedEventQuery
 from cbc_sdk.rest_api import CBCloudAPI
-from cbc_sdk.errors import ApiError
+from cbc_sdk.errors import ApiError, TimeoutError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.endpoint_standard.mock_enriched_events import (
     GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_ZERO,
@@ -126,6 +126,21 @@ def test_enriched_event_details_only(cbcsdk_mock):
     assert results._info["device_name"] is not None
     assert results._info["enriched"] is not None
     assert results._info["process_pid"][0] == 2000
+
+
+def test_enriched_event_details_timeout(cbcsdk_mock):
+    """Testing EnrichedEvent get_details() timeout handling"""
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
+                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b",  # noqa: E501
+                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ZERO_COMP)
+
+    api = cbcsdk_mock.api
+    event = EnrichedEvent(api, initial_data={'event_id': 'test'})
+    event._details_timeout = 1
+    with pytest.raises(TimeoutError):
+        event._get_detailed_results()
 
 
 def test_enriched_event_select_details_sync(cbcsdk_mock):
@@ -275,6 +290,23 @@ def test_enriched_event_timeout(cbcsdk_mock):
     assert query._timeout == 0
     query.timeout(msecs=500)
     assert query._timeout == 500
+
+
+def test_enriched_event_timeout_error(cbcsdk_mock):
+    """Testing that a timeout in EnrichedEvent querying throws a TimeoutError correctly"""
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/search_job",
+                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v1/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b",  # noqa: E501
+                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING)
+
+    api = cbcsdk_mock.api
+    events = api.select(EnrichedEvent).where("event_id:27a278d5150911eb86f1011a55e73b72").timeout(1)
+    with pytest.raises(TimeoutError):
+        list(events)
+    events = api.select(EnrichedEvent).where("event_id:27a278d5150911eb86f1011a55e73b72").timeout(1)
+    with pytest.raises(TimeoutError):
+        events._count()
 
 
 def test_enriched_event_query_sort(cbcsdk_mock):

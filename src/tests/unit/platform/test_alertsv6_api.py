@@ -13,7 +13,7 @@
 from datetime import datetime
 import pytest
 
-from cbc_sdk.errors import ApiError
+from cbc_sdk.errors import ApiError, TimeoutError
 from cbc_sdk.platform import BaseAlert, CBAnalyticsAlert, WatchlistAlert, DeviceControlAlert, WorkflowStatus
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.stubresponse import StubResponse, patch_cbc_sdk_api
@@ -749,6 +749,23 @@ def test_get_events_zero_found(cbcsdk_mock):
     alert = api.select(CBAnalyticsAlert, '86123310980efd0b38111eba4bfa5e98aa30b19')
     events = alert.get_events()
     assert len(events) == 0
+
+
+def test_get_events_timeout(cbcsdk_mock):
+    """Test that get_events() throws a timeout appropriately."""
+    cbcsdk_mock.mock_request("GET",
+                             "/appservices/v6/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
+                             GET_ALERT_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
+                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b",  # noqa: E501
+                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING)
+
+    api = cbcsdk_mock.api
+    alert = api.select(CBAnalyticsAlert, '86123310980efd0b38111eba4bfa5e98aa30b19')
+    with pytest.raises(TimeoutError):
+        alert.get_events(timeout=1)
 
 
 def test_get_events_detail_jobs_resp_handling(cbcsdk_mock):
