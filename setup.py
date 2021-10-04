@@ -26,7 +26,7 @@ install_requires = [
     'protobuf',
     'schema',
     'solrq',
-    'validators'
+    'validators',
     'keyring'
 ]
 
