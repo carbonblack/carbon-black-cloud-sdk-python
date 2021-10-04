@@ -36,7 +36,7 @@ class KeychainCredentialProvider(CredentialProvider):
             raise CredentialError("Keychain credential provider is only usable on macOS systems")
         self._keychain_name = keychain_name
         self._keychain_username = keychain_username
-        self._cached_credentials = {}
+        self._cached_credentials = None
 
     def _get_keyring_credentials(self):
         """

@@ -27,6 +27,7 @@ install_requires = [
     'schema',
     'solrq',
     'validators'
+    'keyring'
 ]
 
 tests_requires = [
