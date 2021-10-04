@@ -22,7 +22,7 @@ from .utils import convert_from_cb, convert_to_cb
 import yaml
 import json
 import time
-from .errors import ApiError, ServerError, InvalidObjectError, MoreThanOneResultError, ObjectNotFoundError
+from .errors import ApiError, ServerError, InvalidObjectError, MoreThanOneResultError, ObjectNotFoundError, TimeoutError
 import logging
 from datetime import datetime
 from solrq import Q
