@@ -351,6 +351,10 @@ class NewBaseModel(object, metaclass=CbMetaModel):
     """Base class of all model objects within the Carbon Black Cloud SDK."""
     primary_key = "id"
 
+    # Constants for tuning string representations
+    MAX_VALUE_WIDTH = 50
+    MAX_LIST_ITEM_RENDER = 3
+
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
         """
         Initialize the NewBaseModel object.
@@ -364,6 +368,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         """
         self._cb = cb
         self._last_refresh_time = 0
+        self._max_name_len = 0
 
         if initial_data is not None:
             self._info = initial_data
@@ -583,9 +588,26 @@ class NewBaseModel(object, metaclass=CbMetaModel):
             string_value = str(value)
         except UnicodeDecodeError:
             string_value = repr(value)
-        if len(string_value) > 50:
-            string_value = string_value[:47] + u"..."
+        if len(string_value) > NewBaseModel.MAX_VALUE_WIDTH:
+            string_value = string_value[:NewBaseModel.MAX_VALUE_WIDTH - 3] + "..."
         return string_value
+
+    def _str_max_name_len(self):
+        """
+        Returns the maximum length of the attribute names for this object.
+
+        Returns:
+            int: The maximum length of the attribute names for this object.
+        """
+        if self._max_name_len == 0:
+            attr_names = []
+            for attr in self._info:
+                if isinstance(attr, str):
+                    attr_names.append(attr)
+                elif isinstance(attr, dict):
+                    attr_names.extend(attr.keys())
+            self._max_name_len = max([len(s) for s in attr_names])
+        return self._max_name_len
 
     def _str_attr_line(self, name, value, top_level=True):
         """
@@ -597,40 +619,48 @@ class NewBaseModel(object, metaclass=CbMetaModel):
             top_level (bool): True if this is a "top level" object being rendered as lines of text.
 
         Returns:
-            list[str]: The list of lines of test in the attribute representation.
+            list[str]: The list of lines of text in the attribute representation.
         """
         lines = []
-        format_str = u"{0:s} {1:>20s}: {2:s}" if top_level else u"{1:>20s}: {2:s}"
-        status = ' ' * 3
+        sub_format_str = "{1:s}: {2:s}"
+        format_str = "{0:3s} " + sub_format_str if top_level else sub_format_str
+        status = ''
         if top_level and name in self._dirty_attributes:
             if self._dirty_attributes[name] is None:
                 status = "(+)"
             else:
                 status = "(*)"
         subobject_value = self._subobject(name) if top_level else None
+        status_space = 4 if top_level else 0  # status + space
+        spacing = self._str_max_name_len() + status_space + 2  # (status) + name + colon + space
         if isinstance(value, list):
             # this is a list - render the first three items, then [...] if we have more
             target = value if subobject_value is None else subobject_value
-            lines.append(format_str.format(status, name, f"[list:{len(target)} items]:"))
+            lines.append(format_str.format(status, name.rjust(self._str_max_name_len()),
+                                           f"[list:{len(target)} {'item' if len(target) == 1 else 'items'}]:"))
             for index, item in enumerate(target):
-                if index >= 3:
+                if index >= NewBaseModel.MAX_LIST_ITEM_RENDER:
                     # punt the rest of the list
-                    lines.append(f"{' ' * 23}[...]")
+                    lines.append(f"{' ' * spacing}[...]")
                     break
                 if subobject_value is not None:
-                    # render item as a subobject
-                    lines.append(format_str.format(' ' * 5, f"[{index}]", f"[{item.__class__.__name__} object]:"))
-                    lines.extend([f"{' ' * 28}{sub_line}" for sub_line in item._str_attr_lines(False)])
+                    # render the item as a subobject
+                    lines.append((' ' * spacing) + sub_format_str.format('', f"[{index}]",
+                                                                         f"[{item.__class__.__name__} object]:"))
+                    lines.extend([f"{' ' * (spacing + 5)}{sub_line}" for sub_line in item._str_attr_lines(False)])
+                    lines.append('')
                 else:
                     # render item normally
-                    lines.append(format_str.format(' ' * 5, f"[{index}]", self._str_stringize(item)))
+                    lines.append((' ' * spacing) + sub_format_str.format('', f"[{index}]", self._str_stringize(item)))
         elif subobject_value is not None:
             # this is a subobject
-            lines.append(format_str.format(status, name, f"[{subobject_value.__class__.__name__} object]:"))
-            lines.extend([f"{' ' * 26}{sub_line}" for sub_line in subobject_value._str_attr_lines(False)])
+            lines.append(format_str.format(status, name.rjust(self._str_max_name_len()),
+                                                              f"[{subobject_value.__class__.__name__} object]:"))
+            lines.extend([f"{' ' * spacing}{sub_line}" for sub_line in subobject_value._str_attr_lines(False)])
+            lines.append('')
         else:
             # ordinary case
-            lines.append(format_str.format(status, name, self._str_stringize(value)))
+            lines.append(format_str.format(status, name.rjust(self._str_max_name_len()), self._str_stringize(value)))
         return lines
 
     def _str_attr_lines(self, top_level=True):
