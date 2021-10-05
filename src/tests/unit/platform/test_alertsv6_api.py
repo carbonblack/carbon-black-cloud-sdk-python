@@ -261,7 +261,7 @@ def test_query_basealert_invalid_create_time_combinations():
 
 
 @pytest.mark.parametrize("method, arg", [
-    ("set_categories", ["DOUBLE_DARE"]),
+    ("set_categories", ["SERIOUS", "CRITICAL"]),
     ("set_device_ids", ["Bogus"]),
     ("set_device_names", [42]),
     ("set_device_os", ["TI994A"]),
