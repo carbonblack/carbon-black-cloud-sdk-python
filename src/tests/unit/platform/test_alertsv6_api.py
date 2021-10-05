@@ -56,7 +56,7 @@ def test_query_basealert_with_all_bells_and_whistles(monkeypatch):
         assert url == "/appservices/v6/orgs/Z100/alerts/_search"
         assert body == {"query": "Blort",
                         "rows": 100,
-                        "criteria": {"category": ["SERIOUS", "CRITICAL"], "device_id": [6023], "device_name": ["HAL"],
+                        "criteria": {"category": ["MONITORED", "THREAT"], "device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
                                      "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
                                      "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
@@ -71,7 +71,7 @@ def test_query_basealert_with_all_bells_and_whistles(monkeypatch):
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
-    query = api.select(BaseAlert).where("Blort").set_categories(["SERIOUS", "CRITICAL"]).set_device_ids([6023]) \
+    query = api.select(BaseAlert).where("Blort").set_categories(["MONITORED", "THREAT"]).set_device_ids([6023]) \
         .set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
         .set_device_username(["JRN"]).set_group_results(True).set_alert_ids(["S0L0"]) \
         .set_legacy_alert_ids(["S0L0_1"]).set_minimum_severity(6).set_policy_ids([8675309]) \
@@ -298,7 +298,7 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(monkeypatch):
         assert url == "/appservices/v6/orgs/Z100/alerts/cbanalytics/_search"
         assert body == {"query": "Blort",
                         "rows": 100,
-                        "criteria": {"category": ["SERIOUS", "CRITICAL"], "device_id": [6023], "device_name": ["HAL"],
+                        "criteria": {"category": ["THREAT", "MONITORED"], "device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
                                      "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
                                      "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
@@ -317,7 +317,7 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(monkeypatch):
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
-    query = api.select(CBAnalyticsAlert).where("Blort").set_categories(["SERIOUS", "CRITICAL"]) \
+    query = api.select(CBAnalyticsAlert).where("Blort").set_categories(["THREAT", "MONITORED"]) \
         .set_device_ids([6023]).set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
         .set_device_username(["JRN"]).set_group_results(True).set_alert_ids(["S0L0"]).set_legacy_alert_ids(["S0L0_1"]) \
         .set_minimum_severity(6).set_policy_ids([8675309]).set_policy_names(["Strict"]) \
@@ -390,7 +390,7 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(monkeypatch):
         assert url == "/appservices/v6/orgs/Z100/alerts/devicecontrol/_search"
         assert body == {"query": "Blort",
                         "rows": 100,
-                        "criteria": {"category": ["SERIOUS", "CRITICAL"], "device_id": [6023], "device_name": ["HAL"],
+                        "criteria": {"category": ["MONITORED", "THREAT"], "device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
                                      "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
                                      "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
@@ -409,7 +409,7 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(monkeypatch):
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
-    query = api.select(DeviceControlAlert).where("Blort").set_categories(["SERIOUS", "CRITICAL"]) \
+    query = api.select(DeviceControlAlert).where("Blort").set_categories(["MONITORED", "THREAT"]) \
         .set_device_ids([6023]).set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
         .set_device_username(["JRN"]).set_group_results(True).set_alert_ids(["S0L0"]) \
         .set_legacy_alert_ids(["S0L0_1"]).set_minimum_severity(6).set_policy_ids([8675309]) \
@@ -479,7 +479,7 @@ def test_query_watchlistalert_with_all_bells_and_whistles(monkeypatch):
         assert url == "/appservices/v6/orgs/Z100/alerts/watchlist/_search"
         assert body == {"query": "Blort",
                         "rows": 100,
-                        "criteria": {"category": ["SERIOUS", "CRITICAL"], "device_id": [6023], "device_name": ["HAL"],
+                        "criteria": {"category": ["THREAT", "MONITORED"], "device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
                                      "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
                                      "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
@@ -495,7 +495,7 @@ def test_query_watchlistalert_with_all_bells_and_whistles(monkeypatch):
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
-    query = api.select(WatchlistAlert).where("Blort").set_categories(["SERIOUS", "CRITICAL"]).set_device_ids([6023]) \
+    query = api.select(WatchlistAlert).where("Blort").set_categories(["THREAT", "MONITORED"]).set_device_ids([6023]) \
         .set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
         .set_device_username(["JRN"]).set_group_results(True).set_alert_ids(["S0L0"]) \
         .set_legacy_alert_ids(["S0L0_1"]).set_minimum_severity(6).set_policy_ids([8675309]) \
