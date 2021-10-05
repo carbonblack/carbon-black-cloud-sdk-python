@@ -631,13 +631,13 @@ class NewBaseModel(object, metaclass=CbMetaModel):
             else:
                 status = "(*)"
         subobject_value = self._subobject(name) if top_level else None
-        status_space = 4 if top_level else 0  # status + space
-        spacing = self._str_max_name_len() + status_space + 2  # (status) + name + colon + space
+        spacing = self._str_max_name_len() + (6 if top_level else 2)  # (status + space) + name + colon + space
         if isinstance(value, list):
             # this is a list - render the first three items, then [...] if we have more
             target = value if subobject_value is None else subobject_value
-            lines.append(format_str.format(status, name.rjust(self._str_max_name_len()),
-                                           f"[list:{len(target)} {'item' if len(target) == 1 else 'items'}]:"))
+            list_header = f"[list:{len(target)} {'item' if len(target) == 1 else 'items'}]" \
+                          f"{':' if len(target) > 0 else ''}"
+            lines.append(format_str.format(status, name.rjust(self._str_max_name_len()), list_header))
             for index, item in enumerate(target):
                 if index >= NewBaseModel.MAX_LIST_ITEM_RENDER:
                     # punt the rest of the list
