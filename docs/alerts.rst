@@ -13,7 +13,7 @@ For more information see
 Retrieving of Alerts
 --------------------
 
-With the example below, you can retrieve alerts with the minimum severity of ``7``.
+With the example below, you can retrieve the last 5 ``[:5]`` alerts with the minimum severity of ``7``.
 
 .. code-block:: python
 
@@ -31,27 +31,25 @@ Filtering
 Filter alerts using the fields described in the
 `Alert Search Schema <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alerts-api/#alert-search>`_.
 
-You can use the ``where`` method to filter the alerts. The ``where`` supports strings as well as ``solrq`` query objects
-for more complex searches. The example below will search for alerts where the ``category`` would be
-either ``THREAT`` or ``INFO``. The ``^2`` simply means that it would prioritize the alerts within the ``INFO`` category.
+You can use the ``where`` method to filter the alerts. The ``where`` supports strings and solr like queries, alternatively you can use the ``solrq`` query objects
+for more complex searches. The example below will search with a solr query search string for alerts within the ``MONITORED`` and ``THREAT`` category.
 
 .. code-block:: python
 
     >>> from cbc_sdk import CBCloudAPI
     >>> from cbc_sdk.platform import BaseAlert
-    >>> from solrq import Q
     >>> api = CBCloudAPI(profile='sample')
-    >>> alerts = api.select(BaseAlert).where((Q(category='INFO')^2) | Q(category='THREAT'))[:5]
+    >>> alerts = api.select(BaseAlert).query("category:THREAT or category:MONITORED")[:5]
     >>> for alert in alerts:
     ...     print(alert.id, alert.device_os, alert.device_name, alert.category)
-    179a5c6f-e343-<truncated> WINDOWS TEST-WIN INFO
-    c025b8ff-a8f4-<truncated> WINDOWS TEST-WIN INFO
-    dfb26aa6-3d0a-<truncated> WINDOWS TEST-WIN THREAT
-    b574dd6b-fc0f-<truncated> WINDOWS TEST-WIN THREAT
-    99c7b1f9-6a11-<truncated> WINDOWS TEST-WIN THREAT
+    e45330ae-<truncated> WINDOWS WINDOWS-TEST THREAT
+    8791878a-<truncated> WINDOWS WINDOWS-TEST MONITORED
+    9d7caee4-<truncated> WINDOWS WINDOWS-TEST MONITORED
+    9d327888-<truncated> WINDOWS WINDOWS-TEST THREAT
+    aab3c640-<truncated> WINDOWS WINDOWS-TEST THREAT
 
 .. tip::
-    More information about the ``solrq`` and what exactly those ``Q`` objects are doing can be found in the
+    More information about the ``solrq`` can be found in the
     their `documentation <https://solrq.readthedocs.io/en/latest/index.html>`_.
 
 You can also filter on different kind of **TTPs** (*Tools Techniques Procedures*) and *Policy Actions**.
@@ -92,7 +90,7 @@ The full list of all the attributes can be found in the
     EnrichedEvent object, bound to <truncated>
     -------------------------------------------------------------------------------
 
-              alert_category: ['OBSERVED']
+              alert_category: ['MONITORED']
                     alert_id: ['<truncated>']
          associated_alert_id: ['<truncated>']
            backend_timestamp: 2021-09-20T10:06:06.728Z
@@ -233,7 +231,7 @@ Those settings shown in the screenshot can be replicated with the following code
     >>> from cbc_sdk.platform import BaseAlert
     >>> from solrq import Q
     >>> api = CBCloudAPI(profile='sample')
-    >>> alerts = api.select(BaseAlert).where((Q(category='INFO') | Q(category='THREAT')), policy_name='Standard').set_minimum_severity(7)[:5]
+    >>> alerts = api.select(BaseAlert).where("category:MONITORED or category:THREAT and policy_name:Standard").set_minimum_severity(7)[:5]
 
 
 Advanced usage of alerts
