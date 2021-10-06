@@ -1,5 +1,28 @@
 Changelog
 ================================
+CBC SDK 1.3.4 - Released [TBD]
+------------------------------
+
+New Features:
+
+* Recommendations API - suggested reputation overrides for policy configuration
+
+Updates:
+
+* Improved string representation of objects through ``__str__()`` mechanism.
+
+Bug Fixes:
+
+* Ensure proper ``TimeoutError`` is raised in several places where the wrong exception was being raised.
+* Fix to allowed categories when performing alert queries.
+
+Documentation Fixes:
+
+* Live Response documentation updated to note use of custom API keys.
+* Clarified query examples in Concepts.
+* Note that vulnerability assessment has been moved from ``workload`` to ``platform.``
+* Small typo fixes in watchlists, feeds, and reports guide.
+
 CBC SDK 1.3.3 - Released August 10, 2021
 ----------------------------------------
 
