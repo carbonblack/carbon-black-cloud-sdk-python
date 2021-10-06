@@ -655,7 +655,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         elif subobject_value is not None:
             # this is a subobject
             lines.append(format_str.format(status, name.rjust(self._str_max_name_len()),
-                                                              f"[{subobject_value.__class__.__name__} object]:"))
+                                           f"[{subobject_value.__class__.__name__} object]:"))
             lines.extend([f"{' ' * spacing}{sub_line}" for sub_line in subobject_value._str_attr_lines(False)])
             lines.append('')
         else:
