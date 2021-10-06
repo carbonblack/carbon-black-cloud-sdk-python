@@ -22,13 +22,114 @@ the Carbon Black Cloud.
     >>> query = api.select(Recommendation).set_statuses(['NEW', 'ACCEPTED', 'REJECTED']).sort_by('impact_score', 'DESC')
     >>> recslist = list(query)
     >>> for rec in recslist:
-    ...     print(f"{rec.recommendation_id}/{rec.new_rule_.filename}/{rec.new_rule_.override_list} - "
-    ...           f"{rec.workflow_.status} - {rec.impact_.impact_score}")
+    ...     print(rec)
     ...
-    5e6926d4-0c55-4757-a94d-e05883d5ee4c/zoom.exe/WHITE_LIST - ACCEPTED - 1.1710311
-    100503cd-1897-425f-93b5-1ccba320438d/cxuiuexe.exe/WHITE_LIST - NEW - 0.2678737
-    3f89a837-034c-4b81-9f4c-f673a36ccb5c/mbcloudea.exe/WHITE_LIST - ACCEPTED - 0.11177378
-    26ddb565-aff6-4b68-895c-fc286aa5f101/svctcom.exe/WHITE_LIST - REJECTED - 0.05499694
+    Recommendation object, bound to https://example.org.
+    -------------------------------------------------------------------------------
+
+                   impact: [RecommendationImpact object]:
+                                event_count: 2
+                               impact_score: 1.1710311
+                           impacted_devices: 44
+                               org_adoption: HIGH
+                                update_time: 2021-05-18T16:37:07.000Z
+
+                 new_rule: [RecommendationNewRule object]:
+                                filename: zoom.exe
+                           override_list: WHITE_LIST
+                           override_type: SHA256
+                             sha256_hash: 56f560d8254ebb453daeaf9abe5c3c6de2e18eafaa5a9e4...
+
+                policy_id: 0
+        recommendation_id: 5e6926d4-0c55-4757-a94d-e05883d5ee4c
+                rule_type: reputation_override
+                 workflow: [RecommendationWorkflow object]:
+                            changed_by: estark@example.com
+                               comment: test_recommendation_review_dismissed
+                           create_time: 2021-05-18T16:37:07.000Z
+                                ref_id: 6d90188a0d4f11ecb02e15835b040340
+                                status: ACCEPTED
+                           update_time: 2021-09-04T07:12:13.000Z
+
+    Recommendation object, bound to https://example.org.
+    -------------------------------------------------------------------------------
+
+                   impact: [RecommendationImpact object]:
+                                event_count: 9
+                               impact_score: 0.2678737
+                           impacted_devices: 5
+                               org_adoption: HIGH
+                                update_time: 2021-05-18T16:37:07.000Z
+
+                 new_rule: [RecommendationNewRule object]:
+                                filename: cxuiuexe.exe
+                           override_list: WHITE_LIST
+                           override_type: SHA256
+                             sha256_hash: 90b196987fe62657bfce2627ab0a08a7096737363e13806...
+
+                policy_id: 0
+        recommendation_id: 100503cd-1897-425f-93b5-1ccba320438d
+                rule_type: reputation_override
+                 workflow: [RecommendationWorkflow object]:
+                            changed_by: jbaratheon@example.com
+                               comment:
+                           create_time: 2021-05-18T16:37:07.000Z
+                                status: NEW
+                           update_time: 2021-09-14T07:12:13.000Z
+
+    Recommendation object, bound to https://example.org.
+    -------------------------------------------------------------------------------
+
+                   impact: [RecommendationImpact object]:
+                                event_count: 12
+                               impact_score: 0.11177378
+                           impacted_devices: 315
+                               org_adoption: MEDIUM
+                                update_time: 2021-05-18T16:37:07.000Z
+
+                 new_rule: [RecommendationNewRule object]:
+                                filename: mbcloudea.exe
+                           override_list: WHITE_LIST
+                           override_type: SHA256
+                             sha256_hash: 0a2190c4ccfde82ef950836d014f31b2b188423bb67b51a...
+
+                policy_id: 0
+        recommendation_id: 3f89a837-034c-4b81-9f4c-f673a36ccb5c
+                rule_type: reputation_override
+                 workflow: [RecommendationWorkflow object]:
+                            changed_by: tlannister@example.com
+                               comment: test_recommendation_review_dismissed
+                           create_time: 2021-05-18T16:37:07.000Z
+                                ref_id: 16e842eb152b11eca8407fb13248831f
+                                status: ACCEPTED
+                           update_time: 2021-09-14T07:12:15.000Z
+
+    Recommendation object, bound to https://example.org.
+    -------------------------------------------------------------------------------
+
+                   impact: [RecommendationImpact object]:
+                                event_count: 20
+                               impact_score: 0.05499694
+                           impacted_devices: 44
+                               org_adoption: MEDIUM
+                                update_time: 2021-05-18T16:37:07.000Z
+
+                 new_rule: [RecommendationNewRule object]:
+                                filename: svctcom.exe
+                           override_list: WHITE_LIST
+                           override_type: SHA256
+                             sha256_hash: d49a2beb44a603faf8aab2f5dfae3a292497c63f0b30d0e...
+
+                policy_id: 0
+        recommendation_id: 26ddb565-aff6-4b68-895c-fc286aa5f101
+                rule_type: reputation_override
+                 workflow: [RecommendationWorkflow object]:
+                            changed_by: mtyrell@example.com
+                               comment: test_recommendation_review_dismissed
+                           create_time: 2021-05-18T16:37:07.000Z
+                                status: REJECTED
+                           update_time: 2021-09-11T07:12:14.000Z
+
 
 **N.B.:** If you do not set status values on the recommendation query with ``set_statuses()``, the search defaults to
 looking for ``NEW`` recommendations *only.*
@@ -83,18 +184,18 @@ object with the ``reputation_override()`` method.
     >>> reputation_override = query.first().reputation_override()
     >>> print(reputation_override)
     ReputationOverride object, bound to https://example.org.
-     Last refreshed at Wed Sep 22 14:15:55 2021
+     Last refreshed at Wed Oct  6 08:51:49 2021
     -------------------------------------------------------------------------------
 
-                 create_time: 2021-09-11T07:12:12.064Z
-                  created_by: estark@example.com
-                 description: test_recommendation_review
-                          id: 95b1f2b112cf11eca7813f4ceaa27a41
-        include_child_processes: False
-               override_list: WHITE_LIST
-               override_type: IT_TOOL
-                        path: c:\windows\ccm\*
-                      source: RECOMMENDATION
-                  source_ref: c9221b98-f64c-45dc-acb4-93caacd9dcee
+          create_time: 2021-09-15T07:12:12.594Z
+           created_by: estark@example.com
+          description: test_recommendation_review
+             filename: pangphip.exe
+                   id: 3fa9f84515f411ecb2525dd14785e643
+        override_list: WHITE_LIST
+        override_type: SHA256
+          sha256_hash: 6a2cac7f36af5cebe0debbdb161d4f66b694b75192f1af4...
+               source: RECOMMENDATION
+           source_ref: 7b4e20d9-db28-408b-b7e9-af4008fa65cc
 
 More information about reputation overrides may be found in :doc:`reputation-override`.
