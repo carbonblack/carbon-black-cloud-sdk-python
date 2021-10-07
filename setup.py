@@ -27,7 +27,7 @@ install_requires = [
     'schema',
     'solrq',
     'validators',
-    'keyring'
+    "keyring;platform_system=='Darwin'"
 ]
 
 tests_requires = [

@@ -54,13 +54,8 @@ def import_from_file(file):
     parser.read(file)
     for section in parser.sections():
         # reusing the parsing of the credentials because it is redundant to implement it twice
-        credentials = FileCredentialProvider(credential_file=file).get_credentials(section=section)
-        json_obj = {}
-        # replacing the CredentialValue's __str__ representation to get the default names.
-        for k, v in vars(credentials)["_values"].items():
-            _k = str(k).replace("CredentialValue.", "").lower()
-            json_obj[_k] = v
-        keyring.set_password("CBC SDK API", section, json.dumps(json_obj))
+        credentials = FileCredentialProvider(credential_file=file).get_credentials(section=section).to_dict()
+        keyring.set_password(f"CBC SDK API [{section}]", section, json.dumps(credentials))
 
 
 def set_from_input():
