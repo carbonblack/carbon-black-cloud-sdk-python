@@ -27,6 +27,9 @@ install_requires = [
     'schema',
     'solrq',
     'validators',
+    # Keyring supports other platforms and tools such as "KDE4/5 Wallet, Freedesktop Service, Windows Credential Locker"
+    # in case of a future integrations with those tools the platform system should be changed.
+    # Ref: https://keyring.readthedocs.io/en/latest/
     "keyring;platform_system=='Darwin'"
 ]
 
