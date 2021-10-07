@@ -13,7 +13,11 @@
 
 import sys
 import pytest
-from cbc_sdk.credential_providers.keychain_credential_provider import KeychainCredentialProvider
+import platform
+
+if platform.system() == 'Darwin':
+    from cbc_sdk.credential_providers.keychain_credential_provider import KeychainCredentialProvider
+
 from cbc_sdk.errors import CredentialError
 
 INVALID_JSON = """{\nurl: "http://example.test/",\n"token" : "TTTTT/TTTTT",\n"org_key": "TT123TT",
@@ -24,6 +28,7 @@ VALID_JSON = """{\n"url": "http://example.test/",\n"token" : "TTTTT/TTTTT",\n"or
     \n"proxy": "proxy.example",\n"ignore_system_proxy": true,\n"integration": "test"\n} """
 
 
+@pytest.mark.skipif(platform.system() != 'Darwin', reason="only run on mac os")
 def test_breaks_not_on_macos(monkeypatch):
     """Test that creating the KeychainCredentialProvider breaks if we're not on macOS."""
     monkeypatch.setattr(sys, "platform", "linux")
@@ -31,6 +36,7 @@ def test_breaks_not_on_macos(monkeypatch):
         KeychainCredentialProvider("test", "test")
 
 
+@pytest.mark.skipif(platform.system() != 'Darwin', reason="only run on mac os")
 def test_password_parser(monkeypatch):
     """Test that checks if the password is parsed correctly."""
     monkeypatch.setattr(sys, "platform", "darwin")
@@ -48,6 +54,7 @@ def test_password_parser(monkeypatch):
     assert parsed["integration"] == "test"
 
 
+@pytest.mark.skipif(platform.system() != 'Darwin', reason="only run on mac os")
 def test_password_parser_invalid_json(monkeypatch):
     """Test that checks if the password is parsed correctly."""
     monkeypatch.setattr(sys, "platform", "darwin")
@@ -55,6 +62,7 @@ def test_password_parser_invalid_json(monkeypatch):
         KeychainCredentialProvider("test", "test")._parse_credentials(INVALID_JSON)
 
 
+@pytest.mark.skipif(platform.system() != 'Darwin', reason="only run on mac os")
 def test_get_credentials_valid(monkeypatch):
     """Tests if it parses the Credential data correctly."""
     monkeypatch.setattr(sys, "platform", "darwin")
@@ -72,6 +80,7 @@ def test_get_credentials_valid(monkeypatch):
     assert keychain_provider.integration == "test"
 
 
+@pytest.mark.skipif(platform.system() != 'Darwin', reason="only run on mac os")
 def test_get_credentials_invalid(monkeypatch):
     """Tests if it raises the CredentialError with the given invalid json."""
     monkeypatch.setattr(sys, "platform", "darwin")
@@ -80,6 +89,7 @@ def test_get_credentials_invalid(monkeypatch):
         KeychainCredentialProvider("test", "test").get_credentials()
 
 
+@pytest.mark.skipif(platform.system() != 'Darwin', reason="only run on mac os")
 def test_get_credentials_none_found(monkeypatch):
     """Tests if it raises the CredentialError if credentials are not found."""
     monkeypatch.setattr(sys, "platform", "darwin")
