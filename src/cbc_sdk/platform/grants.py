@@ -434,6 +434,20 @@ class Grant(MutableBaseModel):
         """
         return GrantQuery(cls, cb)
 
+    def _subobject(self, name):
+        """
+        Returns the "subobject value" of the given attribute.
+
+        Args:
+            name (str): Name of the subobject value to be returned.
+
+        Returns:
+            Any: Subobject value for the attribute, or None if there is none.
+        """
+        if name == 'profiles':
+            return self._profiles
+        return super(Grant, self)._subobject(name)
+
     def _refresh(self):
         """
         Rereads the grant data from the server.

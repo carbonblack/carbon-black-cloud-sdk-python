@@ -215,6 +215,24 @@ class Recommendation(NewBaseModel):
             self._workflow = recs[0]._workflow
         return len(recs) == 1
 
+    def _subobject(self, name):
+        """
+        Returns the "subobject value" of the given attribute.
+
+        Args:
+            name (str): Name of the subobject value to be returned.
+
+        Returns:
+            Any: Subobject value for the attribute, or None if there is none.
+        """
+        if name == 'impact':
+            return self._impact
+        if name == 'new_rule':
+            return self._new_rule
+        if name == 'workflow':
+            return self._workflow
+        return super(Recommendation, self)._subobject(name)
+
     @property
     def impact_(self):
         """
