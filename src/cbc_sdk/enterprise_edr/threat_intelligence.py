@@ -645,6 +645,20 @@ class Feed(FeedModel):
         """
         return FeedQuery(self, cb)
 
+    def _subobject(self, name):
+        """
+        Returns the "subobject value" of the given attribute.
+
+        Args:
+            name (str): Name of the subobject value to be returned.
+
+        Returns:
+            Any: Subobject value for the attribute, or None if there is none.
+        """
+        if name == 'reports':
+            return self._reports
+        return super(Feed, self)._subobject(name)
+
     def save(self, public=False):
         """
         Saves this feed on the Enterprise EDR server.
@@ -911,10 +925,9 @@ class Report(FeedModel):
         self._feed_id = feed_id
         self._from_watchlist = from_watchlist
 
-        if self.iocs:
-            self._iocs = IOC(cb, initial_data=self.iocs, report_id=self.id)
-        if self.iocs_v2:
-            self._iocs_v2 = [IOC_V2(cb, initial_data=ioc, report_id=self.id) for ioc in self.iocs_v2]
+        self._iocs = IOC(cb, initial_data=self.iocs, report_id=self.id) if self.iocs else None
+        self._iocs_v2 = [IOC_V2(cb, initial_data=ioc, report_id=self.id) for ioc in self.iocs_v2] \
+            if self.iocs_v2 else None
         # this flag is set when we need to rebuild the 'ioc_v2' element of _info from the _iocs_v2 array
         self._iocs_v2_need_rebuild = False
 
@@ -1068,6 +1081,22 @@ class Report(FeedModel):
             timestamp = int(time.time())
         return Report.ReportBuilder(cb, {'title': title, 'description': description, 'severity': severity,
                                          'timestamp': timestamp, 'tags': tags if tags else []})
+
+    def _subobject(self, name):
+        """
+        Returns the "subobject value" of the given attribute.
+
+        Args:
+            name (str): Name of the subobject value to be returned.
+
+        Returns:
+            Any: Subobject value for the attribute, or None if there is none.
+        """
+        if name == 'iocs':
+            return self._iocs
+        if name == 'iocs_v2':
+            return self._iocs_v2
+        return super(Report, self)._subobject(name)
 
     def save_watchlist(self):
         """
