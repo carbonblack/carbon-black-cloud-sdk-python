@@ -10,7 +10,7 @@ protobuf
 schema
 solrq
 validators
-keyring; sys_platform == 'darwin'
+keyring
 
 # Dev dependencies
 pytest==5.4.2

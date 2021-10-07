@@ -6,5 +6,6 @@ WORKDIR /app
 
 RUN dnf install -y redhat-rpm-config gcc libffi-devel python3-devel openssl-devel cargo
 RUN pip3 install setuptools-rust
+RUN pip3 install --upgrade pip
 RUN pip3 install -r requirements.txt
 RUN pip3 install .
