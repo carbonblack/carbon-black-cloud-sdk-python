@@ -383,6 +383,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         if model_unique_id is not None:
             self._info[self.primary_key] = model_unique_id
 
+        self._last_refresh_time = 0
         self._dirty_attributes = {}
         self._full_init = full_doc
 
