@@ -456,14 +456,14 @@ class NewBaseModel(object, metaclass=CbMetaModel):
 
     def get(self, attrname, default_val=None):
         """
-        Return an item value from this object's data collection.
+        Return an attribute value from this object's data collection.
 
         Args:
-            attrname (str): Name of the item to be returned.
-            default_val (Any): Default value to be used if the item is not found.
+            attrname (str): Name of the attribute to be returned.
+            default_val (Any): Default value to be used if the attribute is not set.
 
         Returns:
-            Any: The returned item value, which may be defaulted.
+            Any: The returned attribute value, which may be defaulted.
         """
         try:
             return self[attrname]
