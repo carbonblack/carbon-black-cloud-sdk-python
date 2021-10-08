@@ -135,14 +135,10 @@ class FieldDescriptor(object):
             Any: Value of the field.
         """
         if instance is not None:
-            if self.att_name not in instance._info and not instance._full_init:
-                instance.refresh()
-
-            value = instance._info.get(self.att_name, self.default_value)
-            coerce_type = self.coerce_to or type(value)
-            if value is None:
-                return None
-            return coerce_type(value)
+            value = instance.get(self.att_name, self.default_value)
+            if value is not None:
+                coerce_type = self.coerce_to or type(value)
+                return coerce_type(value)
 
     def __set__(self, instance, value):
         """
@@ -153,7 +149,8 @@ class FieldDescriptor(object):
             value (Any): New value for the field.
         """
         coerce_type = self.coerce_to or type(value)
-        value = coerce_type(value)
+        if value is not None:
+            value = coerce_type(value)
         instance._set(self.att_name, value)
 
 
@@ -349,7 +346,9 @@ class BinaryFieldDescriptor(FieldDescriptor):
 
 class NewBaseModel(object, metaclass=CbMetaModel):
     """Base class of all model objects within the Carbon Black Cloud SDK."""
+    urlobject = ""
     primary_key = "id"
+    query_results_key = ""
 
     # Constants for tuning string representations
     MAX_VALUE_WIDTH = 50
@@ -370,13 +369,19 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         self._last_refresh_time = 0
         self._max_name_len = 0
 
+        urlobject = self.urlobject
+        try:
+            self._urlobject = urlobject.format(self._cb.credentials.org_key)
+        except (IndexError, KeyError):
+            self._urlobject = urlobject
+
         if initial_data is not None:
             self._info = initial_data
         else:
             self._info = {}
 
         if model_unique_id is not None:
-            self._info[self.__class__.primary_key] = model_unique_id
+            self._info[self.primary_key] = model_unique_id
 
         self._dirty_attributes = {}
         self._full_init = full_doc
@@ -386,7 +391,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
 
     @property
     def _model_unique_id(self):
-        return self._info.get(self.__class__.primary_key, None)
+        return self._info.get(self.primary_key, None)
 
     @classmethod
     def new_object(cls, cb, item, **kwargs):
@@ -421,53 +426,49 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         except AttributeError:
             pass  # fall through to the rest of the logic...
 
-        # try looking up via self._info, if we already have it.
-        if item in self._info:
-            return self._info[item]
-
-        # if we're still here, let's load the object if we haven't done so already.
-        if not self._full_init:
-            self._refresh()
-
-        # try one more time.
-        if item in self._info:
-            return self._info[item]
-        else:
-            raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
-                                                                              item))
+        try:
+            return self[item]
+        except:
+            raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__, item))
 
     def __getitem__(self, item):
         """
-        Return an attribute of this object.
+        Return an item value from this object's data collection.
 
         Args:
-            item (str): Name of the attribute to be returned.
+            item (str): Name of the item to be returned.
 
         Returns:
-            Any: The returned attribute value.
+            Any: The returned item value.
+        """
+        # try looking up via self._info, if we already have it
+        if item in self._info:
+            value = self._info[item]
+        # or load the object if we haven't done so already.
+        else:
+            value = self.original_document[item]
 
-        Raises:
-            AttributeError: If the object has no such attribute.
+        # presume change for mutable object value
+        if item not in self._dirty_attributes and hasattr(value, "copy"):
+            self._dirty_attributes[item] = copy.deepcopy(value)
+
+        return value
+
+    def get(self, attrname, default_val=None):
+        """
+        Return an attribute value from this object's data collection.
+
+        Args:
+            attrname (str): Name of the attribute to be returned.
+            default_val (Any): Default value to be used if the attribute is not set.
+
+        Returns:
+            Any: The returned attribute value, which may be defaulted.
         """
         try:
-            super(NewBaseModel, self).__getattribute__(item)
-        except AttributeError:
-            pass  # fall through to the rest of the logic...
-
-        # try looking up via self._info, if we already have it.
-        if item in self._info:
-            return self._info[item]
-
-        # if we're still here, let's load the object if we haven't done so already.
-        if not self._full_init:
-            self._refresh()
-
-        # try one more time.
-        if item in self._info:
-            return self._info[item]
-        else:
-            raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
-                                                                              item))
+            return self[attrname]
+        except KeyError:
+            return default_val
 
     def __setattr__(self, attrname, val):
         """
@@ -485,19 +486,6 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         else:
             raise AttributeError("Field {0:s} is immutable".format(attrname))
 
-    def get(self, attrname, default_val=None):
-        """
-        Return an attribute of this object.
-
-        Args:
-            attrname (str): Name of the attribute to be returned.
-            default_val (Any): Default value to be used if the attribute is not set.
-
-        Returns:
-            Any: The returned attribute value, which may be defaulted.
-        """
-        return getattr(self, attrname, default_val)
-
     def _set(self, attrname, new_value):
         pass
 
@@ -506,7 +494,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         return self._refresh()
 
     def _refresh(self):
-        if self._model_unique_id is not None and self.__class__.primary_key not in self._dirty_attributes.keys():
+        if self._model_unique_id is not None and self.primary_key not in self._dirty_attributes.keys():
             # info = self._retrieve_cb_info()
             # print(f"self: {self}, self._retrieve_cb_info: {self._retrieve_cb_info()}")
             self._info = self._parse(self._retrieve_cb_info())
@@ -516,7 +504,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         return False
 
     def _build_api_request_uri(self, http_method="GET"):
-        baseuri = self.__class__.__dict__.get('urlobject', None)
+        baseuri = self._urlobject
         if self._model_unique_id is not None:
             return baseuri + "/%s" % self._model_unique_id
         else:
@@ -754,14 +742,11 @@ class MutableBaseModel(NewBaseModel):
         if isinstance(propobj, property) and propobj.fset:
             return propobj.fset(self, val)
 
-        if not attrname.startswith("_") and attrname not in self.__class__._valid_fields:
-            if attrname in self._info:
-                log.warning("Changing field not included in Swagger definition: {0:s}".format(attrname))
-                self._set(attrname, val)
-            else:
-                print("Trying to set attribute {0:s}".format(attrname))
-        else:
+        if attrname.startswith("_") or attrname in self.__class__._valid_fields:
             object.__setattr__(self, attrname, val)
+        else:
+            log.warning("Changing field not included in Swagger definition: {0:s}".format(attrname))
+            self._set(attrname, val)
 
     def _set(self, attrname, new_value):
         # ensure that we are operating on the full object first
@@ -792,7 +777,7 @@ class MutableBaseModel(NewBaseModel):
 
     def touch(self):
         """Force this object to be considered as changed."""
-        self._dirty_attributes = {key: self._info.get(key, None) for key in self.__class__._valid_fields}
+        self._dirty_attributes = self._info
 
     def is_dirty(self):
         """
@@ -801,19 +786,21 @@ class MutableBaseModel(NewBaseModel):
         Returns:
             bool: True if any fields of this object have been changed, False if not.
         """
-        return len(self._dirty_attributes) > 0
+        touched = self._dirty_attributes is self._info
+        modified = any(self._info.get(key) != value for key, value in self._dirty_attributes.items())
+        return touched or modified
 
     def _update_object(self):
-        if self.__class__.primary_key in self._dirty_attributes.keys() or self._model_unique_id is None:
+        if self.primary_key in self._dirty_attributes.keys() or self._model_unique_id is None:
             new_object_info = copy.deepcopy(self._info)
             try:
                 if not self._new_object_needs_primary_key:
-                    del (new_object_info[self.__class__.primary_key])
+                    del (new_object_info[self.primary_key])
             except Exception:
                 pass
             log.debug("Creating a new {0:s} object".format(self.__class__.__name__))
             http_method = self.__class__._new_object_http_method
-            ret = self._cb.api_json_request(http_method, self.urlobject,
+            ret = self._cb.api_json_request(http_method, self._urlobject,
                                             data=new_object_info)
         else:
             log.debug("Updating {0:s} with unique ID {1:s}".format(self.__class__.__name__, str(self._model_unique_id)))
@@ -1064,11 +1051,13 @@ class SimpleQuery(BaseQuery, IterableQueryMixin):
         super(SimpleQuery, self).__init__()
 
         self._doc_class = cls
-        if not urlobject:
-            self._urlobject = cls.urlobject
-        else:
-            self._urlobject = urlobject
         self._cb = cb
+        if not urlobject:
+            urlobject = cls.urlobject
+        try:
+            self._urlobject = urlobject.format(self._cb.credentials.org_key)
+        except (IndexError, KeyError):
+            self._urlobject = urlobject
         self._full_init = False
         self._results = []
         self._query = {}
@@ -1102,6 +1091,19 @@ class SimpleQuery(BaseQuery, IterableQueryMixin):
         else:
             return result_set
 
+    def _get_object_results(self):
+        """
+        Returns the GET object results data,
+        either in its entirety (default)
+        or the contents of an optional JSON item key,
+        set using `cls.query_results_key`.
+
+        Returns:
+            list: The GET object results data.
+        """
+        results = self._cb.get_object(self._urlobject, default=[])
+        return results.get(self._doc_class.query_results_key, results)
+
     @property
     def results(self):
         """
@@ -1112,7 +1114,7 @@ class SimpleQuery(BaseQuery, IterableQueryMixin):
         """
         if not self._full_init:
             self._results = []
-            for item in self._cb.get_object(self._urlobject, default=[]):
+            for item in self._get_object_results():
                 t = self._doc_class.new_object(self._cb, item, full_doc=self._returns_full_doc)
                 if self._match_query(t):
                     self._results.append(t)

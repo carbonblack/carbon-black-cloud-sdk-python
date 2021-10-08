@@ -132,7 +132,8 @@ def test_get_nbm(cbcsdk_mock):
     assert nbm.get("_mutable_attr", default_val="def") == "def"
 
     nbm.__setattr__("_mutable_attr", "new_value")
-    assert nbm.get("_mutable_attr", default_val="def") == "new_value"
+    assert nbm.get("_mutable_attr", default_val="def") == "def"
+    assert nbm._mutable_attr == "new_value"
 
 
 def test_refresh_nbm(cbcsdk_mock):
