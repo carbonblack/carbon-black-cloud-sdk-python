@@ -58,6 +58,7 @@ def test_simple_query(monkeypatch):
 
     simpleQuery = SimpleQuery(Feed, api)
     assert simpleQuery._doc_class == Feed
+    assert str(simpleQuery._doc_class.urlobject) == "/threathunter/feedmgr/v2/orgs/{}/feeds"
     assert str(simpleQuery._urlobject) == "/threathunter/feedmgr/v2/orgs/WNEX/feeds"
     assert isinstance(simpleQuery, SimpleQuery)
     assert simpleQuery._cb == api
