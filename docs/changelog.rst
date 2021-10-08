@@ -17,7 +17,7 @@ Bug Fixes:
 * Ensure proper ``TimeoutError`` is raised in several places where the wrong exception was being raised.
 * Fix to allowed categories when performing alert queries.
 
-Documentation Fixes:
+Documentation Changes:
 
 * Added guide page for alerts.
 * Live Response documentation updated to note use of custom API keys.
