@@ -259,8 +259,64 @@ variables, they must be set before the application is run (at least ``CBC_URL`` 
 ``CBAPI_TOKEN``), and the ``credential_file`` keyword parameter to :py:mod:`CBCloudAPI <cbc_sdk.rest_api.CBCloudAPI>` must be either ``None`` or left
 unspecified. (The ``profile`` keyword parameter will be ignored.)
 
+
 **N.B.:** Passing credentials via the environment can be insecure, and, if this method is used, a warning message to
 that effect will be generated in the log.
+
+With macOS's Keychain Access
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The SDK also supports the usage of macOS's Keychain Access. It works in a similar manner as our other authentication
+methods. Keychain Access is a key-value based password storage and since we have more than one key-value based entry
+we are going to use JSON to store our other entries, the JSON is going to be stored under the password value.
+
+.. note::
+    You can start first by creating the JSON object, you can do that by using our
+    CLI tool(``<SDK_ROOT>/bin/set-macos-keychain.py``) or by manually creating it.
+    The tool can:
+
+        * Automatically import all of your profiles set in the ``credentials.cbc`` file. Or by setting a custom path to a file.
+        * Manually input the values of your credentials via prompt or by using system arguments.
+
+    Find out how to use the script in its docstring or by using ``--help``.
+
+You can remove the keys that you won't be using or leave them empty. Reference our :ref:`Explanation of API Credential Components`.
+
+.. code-block:: javascript
+
+    {
+        "url": "<URL>",
+        "token" : "<TOKEN>",
+        "org_key": "<ORG_KEY>",A
+        "ssl_verify": true,
+        "ssl_verify_hostname": true,
+        "ssl_cert_file": "<FILE_PATH>",
+        "ssl_force_tls_1_2": true,
+        "proxy": "<NAME_OF_THE_PROXY_HOST>",
+        "ignore_system_proxy": true,
+        "integration": "<INTEGRATION_NAME>"
+    }
+
+.. note::
+    When you are storing a JSON object under the password's input in Keychain it is possible to see only the ``{``
+    in the input field, you can navigate with the arrows to check if the rest of the JSON is there.
+
+
+Then we can move to storing that entry into the Keychain, create a new entry which looks like that:
+
+.. image:: _static/keychain_new_entry.png
+  :alt: Storing a new entry into the Keychain Access
+  :align: center
+
+After we've set the entry in the Keychain Access we can now authenticate our SDK using the ``KeychainCredentialProvider``.
+
+.. code-block:: python
+
+    >>> from cbc_sdk.credential_providers.keychain_credential_provider import KeychainCredentialProvider
+    >>> provider = KeychainCredentialProvider('CBC API Credentials', 'default')
+    >>> cbc_api = CBCloudAPI(credential_provider=provider)
+
+
+You will be prompted to type your password so that python can access the keychain in order to obtain the credentials.
 
 Explanation of API Credential Components
 ----------------------------------------

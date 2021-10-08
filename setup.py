@@ -26,7 +26,8 @@ install_requires = [
     'protobuf',
     'schema',
     'solrq',
-    'validators'
+    'validators',
+    "keyring;platform_system=='Darwin'"
 ]
 
 tests_requires = [

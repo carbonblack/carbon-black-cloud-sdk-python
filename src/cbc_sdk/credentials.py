@@ -145,6 +145,18 @@ class Credentials(object):
         else:
             raise AttributeError(f"Attribute {name} not found")
 
+    def to_dict(self):
+        """
+        Serializes the credentials into a dictionary.
+
+        Returns:
+            dict: Dictionary with the credentials.
+
+        """
+        _dict = {}
+        for i in list(CredentialValue):
+            _dict[i.name.lower()] = self.get_value(i)
+        return _dict
 
 # === THE INTERFACES IMPLEMENTED BY CREDENTIAL PROVIDERS === #
 
