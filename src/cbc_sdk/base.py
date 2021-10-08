@@ -349,6 +349,7 @@ class BinaryFieldDescriptor(FieldDescriptor):
 
 class NewBaseModel(object, metaclass=CbMetaModel):
     """Base class of all model objects within the Carbon Black Cloud SDK."""
+    urlobject = ""
     primary_key = "id"
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
@@ -363,7 +364,12 @@ class NewBaseModel(object, metaclass=CbMetaModel):
             full_doc (bool): True to mark the object as fully initialized.
         """
         self._cb = cb
-        self._last_refresh_time = 0
+
+        urlobject = self.urlobject
+        try:
+            self._urlobject = urlobject.format(self._cb.credentials.org_key)
+        except (IndexError, KeyError):
+            self._urlobject = urlobject
 
         if initial_data is not None:
             self._info = initial_data
@@ -373,6 +379,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         if model_unique_id is not None:
             self._info[self.__class__.primary_key] = model_unique_id
 
+        self._last_refresh_time = 0
         self._dirty_attributes = {}
         self._full_init = full_doc
 
@@ -511,7 +518,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         return False
 
     def _build_api_request_uri(self, http_method="GET"):
-        baseuri = self.__class__.__dict__.get('urlobject', None)
+        baseuri = self._urlobject
         if self._model_unique_id is not None:
             return baseuri + "/%s" % self._model_unique_id
         else:
@@ -709,7 +716,7 @@ class MutableBaseModel(NewBaseModel):
                 pass
             log.debug("Creating a new {0:s} object".format(self.__class__.__name__))
             http_method = self.__class__._new_object_http_method
-            ret = self._cb.api_json_request(http_method, self.urlobject,
+            ret = self._cb.api_json_request(http_method, self._urlobject,
                                             data=new_object_info)
         else:
             log.debug("Updating {0:s} with unique ID {1:s}".format(self.__class__.__name__, str(self._model_unique_id)))
@@ -960,11 +967,13 @@ class SimpleQuery(BaseQuery, IterableQueryMixin):
         super(SimpleQuery, self).__init__()
 
         self._doc_class = cls
-        if not urlobject:
-            self._urlobject = cls.urlobject
-        else:
-            self._urlobject = urlobject
         self._cb = cb
+        if not urlobject:
+            urlobject = cls.urlobject
+        try:
+            self._urlobject = urlobject.format(self._cb.credentials.org_key)
+        except (IndexError, KeyError):
+            self._urlobject = urlobject
         self._full_init = False
         self._results = []
         self._query = {}
