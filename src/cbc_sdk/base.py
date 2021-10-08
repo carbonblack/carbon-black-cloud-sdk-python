@@ -351,6 +351,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
     """Base class of all model objects within the Carbon Black Cloud SDK."""
     urlobject = ""
     primary_key = "id"
+    results_key = ""
 
     # Constants for tuning string representations
     MAX_VALUE_WIDTH = 50
@@ -1111,6 +1112,18 @@ class SimpleQuery(BaseQuery, IterableQueryMixin):
         else:
             return result_set
 
+    def _get_object_results(self):
+        """
+        Returns the GET object results data,
+        either in its entirety (default)
+        or the contents of a JSON item key set using `cls.results_key`.
+
+        Returns:
+            list: The GET object results data.
+        """
+        results = self._cb.get_object(self._urlobject, default=[])
+        return results.get(self._doc_class.results_key, results)
+
     @property
     def results(self):
         """
@@ -1121,7 +1134,7 @@ class SimpleQuery(BaseQuery, IterableQueryMixin):
         """
         if not self._full_init:
             self._results = []
-            for item in self._cb.get_object(self._urlobject, default=[]):
+            for item in self._get_object_results():
                 t = self._doc_class.new_object(self._cb, item, full_doc=self._returns_full_doc)
                 if self._match_query(t):
                     self._results.append(t)
