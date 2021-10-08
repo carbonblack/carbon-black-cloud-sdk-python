@@ -22,7 +22,7 @@ Documentation Fixes:
 * Live Response documentation updated to note use of custom API keys.
 * Clarified query examples in Concepts.
 * Note that vulnerability assessment has been moved from ``workload`` to ``platform.``
-* Small typo fixes in watchlists, feeds, and reports guide.
+* Small typo fixes in watchlists, feeds, UBS, and reports guide.
 
 CBC SDK 1.3.3 - Released August 10, 2021
 ----------------------------------------
