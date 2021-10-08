@@ -448,6 +448,10 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         else:
             value = self.original_document[item]
 
+        # presume change for mutable object value
+        if item not in self._dirty_attributes and hasattr(value, "copy"):
+            self._dirty_attributes[item] = copy.deepcopy(value)
+
         return value
 
     def get(self, attrname, default_val=None):
@@ -773,7 +777,7 @@ class MutableBaseModel(NewBaseModel):
 
     def touch(self):
         """Force this object to be considered as changed."""
-        self._dirty_attributes = {key: self._info.get(key, None) for key in self.__class__._valid_fields}
+        self._dirty_attributes = self._info
 
     def is_dirty(self):
         """
@@ -782,7 +786,9 @@ class MutableBaseModel(NewBaseModel):
         Returns:
             bool: True if any fields of this object have been changed, False if not.
         """
-        return len(self._dirty_attributes) > 0
+        touched = self._dirty_attributes is self._info
+        modified = any(self._info.get(key) != value for key, value in self._dirty_attributes.items())
+        return touched or modified
 
     def _update_object(self):
         if self.primary_key in self._dirty_attributes.keys() or self._model_unique_id is None:
