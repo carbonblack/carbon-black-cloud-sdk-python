@@ -139,10 +139,9 @@ class FieldDescriptor(object):
                 instance.refresh()
 
             value = instance._info.get(self.att_name, self.default_value)
-            coerce_type = self.coerce_to or type(value)
-            if value is None:
-                return None
-            return coerce_type(value)
+            if value is not None:
+                coerce_type = self.coerce_to or type(value)
+                return coerce_type(value)
 
     def __set__(self, instance, value):
         """
@@ -153,7 +152,8 @@ class FieldDescriptor(object):
             value (Any): New value for the field.
         """
         coerce_type = self.coerce_to or type(value)
-        value = coerce_type(value)
+        if value is not None:
+            value = coerce_type(value)
         instance._set(self.att_name, value)
 
 
