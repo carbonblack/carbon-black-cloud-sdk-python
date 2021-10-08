@@ -5,6 +5,7 @@ CBC SDK 1.3.4 - Released [TBD]
 
 New Features:
 
+* New CredentialProvider supporting Keychain storage of credentials (Mac OS only).
 * Recommendations API - suggested reputation overrides for policy configuration.
 
 Updates:
