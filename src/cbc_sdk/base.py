@@ -135,10 +135,7 @@ class FieldDescriptor(object):
             Any: Value of the field.
         """
         if instance is not None:
-            if self.att_name not in instance._info and not instance._full_init:
-                instance.refresh()
-
-            value = instance._info.get(self.att_name, self.default_value)
+            value = instance.get(self.att_name, self.default_value)
             if value is not None:
                 coerce_type = self.coerce_to or type(value)
                 return coerce_type(value)
@@ -424,53 +421,45 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         except AttributeError:
             pass  # fall through to the rest of the logic...
 
-        # try looking up via self._info, if we already have it.
-        if item in self._info:
-            return self._info[item]
-
-        # if we're still here, let's load the object if we haven't done so already.
-        if not self._full_init:
-            self._refresh()
-
-        # try one more time.
-        if item in self._info:
-            return self._info[item]
-        else:
-            raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
-                                                                              item))
+        try:
+            return self[item]
+        except:
+            raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__, item))
 
     def __getitem__(self, item):
         """
-        Return an attribute of this object.
+        Return an item value from this object's data collection.
 
         Args:
-            item (str): Name of the attribute to be returned.
+            item (str): Name of the item to be returned.
 
         Returns:
-            Any: The returned attribute value.
+            Any: The returned item value.
+        """
+        # try looking up via self._info, if we already have it
+        if item in self._info:
+            value = self._info[item]
+        # or load the object if we haven't done so already.
+        else:
+            value = self.original_document[item]
 
-        Raises:
-            AttributeError: If the object has no such attribute.
+        return value
+
+    def get(self, attrname, default_val=None):
+        """
+        Return an item value from this object's data collection.
+
+        Args:
+            attrname (str): Name of the item to be returned.
+            default_val (Any): Default value to be used if the item is not found.
+
+        Returns:
+            Any: The returned item value, which may be defaulted.
         """
         try:
-            super(NewBaseModel, self).__getattribute__(item)
-        except AttributeError:
-            pass  # fall through to the rest of the logic...
-
-        # try looking up via self._info, if we already have it.
-        if item in self._info:
-            return self._info[item]
-
-        # if we're still here, let's load the object if we haven't done so already.
-        if not self._full_init:
-            self._refresh()
-
-        # try one more time.
-        if item in self._info:
-            return self._info[item]
-        else:
-            raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
-                                                                              item))
+            return self[attrname]
+        except KeyError:
+            return default_val
 
     def __setattr__(self, attrname, val):
         """
@@ -487,19 +476,6 @@ class NewBaseModel(object, metaclass=CbMetaModel):
             super(NewBaseModel, self).__setattr__(attrname, val)
         else:
             raise AttributeError("Field {0:s} is immutable".format(attrname))
-
-    def get(self, attrname, default_val=None):
-        """
-        Return an attribute of this object.
-
-        Args:
-            attrname (str): Name of the attribute to be returned.
-            default_val (Any): Default value to be used if the attribute is not set.
-
-        Returns:
-            Any: The returned attribute value, which may be defaulted.
-        """
-        return getattr(self, attrname, default_val)
 
     def _set(self, attrname, new_value):
         pass
@@ -658,14 +634,11 @@ class MutableBaseModel(NewBaseModel):
         if isinstance(propobj, property) and propobj.fset:
             return propobj.fset(self, val)
 
-        if not attrname.startswith("_") and attrname not in self.__class__._valid_fields:
-            if attrname in self._info:
-                log.warning("Changing field not included in Swagger definition: {0:s}".format(attrname))
-                self._set(attrname, val)
-            else:
-                print("Trying to set attribute {0:s}".format(attrname))
-        else:
+        if attrname.startswith("_") or attrname in self.__class__._valid_fields:
             object.__setattr__(self, attrname, val)
+        else:
+            log.warning("Changing field not included in Swagger definition: {0:s}".format(attrname))
+            self._set(attrname, val)
 
     def _set(self, attrname, new_value):
         # ensure that we are operating on the full object first
