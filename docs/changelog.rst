@@ -5,7 +5,7 @@ CBC SDK 1.3.4 - Released [TBD]
 
 New Features:
 
-* Recommendations API - suggested reputation overrides for policy configuration
+* Recommendations API - suggested reputation overrides for policy configuration.
 
 Updates:
 
@@ -18,6 +18,7 @@ Bug Fixes:
 
 Documentation Fixes:
 
+* Added guide page for alerts.
 * Live Response documentation updated to note use of custom API keys.
 * Clarified query examples in Concepts.
 * Note that vulnerability assessment has been moved from ``workload`` to ``platform.``
