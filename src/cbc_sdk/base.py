@@ -377,7 +377,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
             self._info = {}
 
         if model_unique_id is not None:
-            self._info[self.__class__.primary_key] = model_unique_id
+            self._info[self.primary_key] = model_unique_id
 
         self._last_refresh_time = 0
         self._dirty_attributes = {}
@@ -388,7 +388,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
 
     @property
     def _model_unique_id(self):
-        return self._info.get(self.__class__.primary_key, None)
+        return self._info.get(self.primary_key, None)
 
     @classmethod
     def new_object(cls, cb, item, **kwargs):
@@ -508,7 +508,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         return self._refresh()
 
     def _refresh(self):
-        if self._model_unique_id is not None and self.__class__.primary_key not in self._dirty_attributes.keys():
+        if self._model_unique_id is not None and self.primary_key not in self._dirty_attributes.keys():
             # info = self._retrieve_cb_info()
             # print(f"self: {self}, self._retrieve_cb_info: {self._retrieve_cb_info()}")
             self._info = self._parse(self._retrieve_cb_info())
@@ -707,11 +707,11 @@ class MutableBaseModel(NewBaseModel):
         return len(self._dirty_attributes) > 0
 
     def _update_object(self):
-        if self.__class__.primary_key in self._dirty_attributes.keys() or self._model_unique_id is None:
+        if self.primary_key in self._dirty_attributes.keys() or self._model_unique_id is None:
             new_object_info = copy.deepcopy(self._info)
             try:
                 if not self._new_object_needs_primary_key:
-                    del (new_object_info[self.__class__.primary_key])
+                    del (new_object_info[self.primary_key])
             except Exception:
                 pass
             log.debug("Creating a new {0:s} object".format(self.__class__.__name__))
