@@ -26,8 +26,8 @@ Examples:
     $ ./set-macos-keychain.py -e CBC_SDK -a default -t <TOKEN> -k <ORG_KEY> -u <URL>
 
     By using credentials file:
-    $ ./set-macos-keychain.py -i 
-    
+    $ ./set-macos-keychain.py -i
+
     By manually inputting the values:
     $ ./set-macos-keychain.py
 """
@@ -84,11 +84,10 @@ def set_from_kwargs(args):
         args (Namespace): The parsed args from the ArgumentParser.
     """
     _args = vars(args)
-    if not _args["keychain_entry"]:
-        _args["keychain_entry"] = "CBC SDK API"
-    if not _args["keychain_account"]:
-        _args["keychain_account"] = "default"
-    keyring.set_password(_args["keychain_entry"], _args["keychain_account"], json.dumps(_args))
+    keychain_entry = _args.pop("keychain_entry", "CBC SDK API")
+    keychain_account = _args.pop("keychain_account", "default")
+
+    keyring.set_password(keychain_entry, keychain_account, json.dumps(_args))
     print("Successfully set the entry into the Keychain!")
 
 
