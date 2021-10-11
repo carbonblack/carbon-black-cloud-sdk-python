@@ -16,7 +16,7 @@
 from cbc_sdk.base import (UnrefreshableModel, BaseQuery, Query, FacetQuery,
                           QueryBuilderSupportMixin, QueryBuilder,
                           AsyncQueryMixin)
-from cbc_sdk.platform import Event
+from cbc_sdk.platform.events import Event
 from cbc_sdk.platform.reputation import ReputationOverride
 from cbc_sdk.errors import ApiError, TimeoutError
 from pathlib import Path

@@ -14,7 +14,7 @@
 """Model and Query Classes for Platform Alerts and Workflows"""
 import time
 
-from cbc_sdk.errors import ApiError, TimeoutError
+from cbc_sdk.errors import ApiError, TimeoutError, ObjectNotFoundError
 from cbc_sdk.platform import PlatformModel
 from cbc_sdk.base import (BaseQuery,
                           UnrefreshableModel,
@@ -24,6 +24,7 @@ from cbc_sdk.base import (BaseQuery,
                           CriteriaBuilderSupportMixin)
 from cbc_sdk.endpoint_standard.base import EnrichedEvent
 from cbc_sdk.platform.devices import DeviceSearchQuery
+from cbc_sdk.platform.processes import AsyncProcessQuery, Process
 
 """Alert Models"""
 
@@ -206,13 +207,17 @@ class WatchlistAlert(BaseAlert):
 
     def _get_process(self, *args, **kwargs):
         """
-        Implementation of the get_process
+        Implementation of the get_process.
 
         Returns:
-            Process: The process corresponding to the alert.
+            Process: The process corresponding to the alert. May return None if no process is found.
         """
         process_guid = self._info.get("process_guid")
-        # TODO: RE_Implement the searching for processguid and jobs in order to retrieve information
+        try:
+            process = AsyncProcessQuery(Process, self._cb).where(process_guid=process_guid).one()
+        except ObjectNotFoundError:
+            return None
+        return process
 
 
 class CBAnalyticsAlert(BaseAlert):
