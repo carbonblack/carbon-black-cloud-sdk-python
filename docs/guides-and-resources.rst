@@ -22,6 +22,7 @@ Guides
 * :doc:`users-grants` - Work with users and access grants.
 * :doc:`watchlists-feeds-reports` - Work with Enterprise EDR watchlists, feeds, reports, and Indicators of Compromise (IOCs).
 * :doc:`recommendations` - Work with Endpoint Standard recommendations for reputation override.
+* :doc:`alerts` - Work and manage different types of alerts such as CB Analytics Alert, Watchlist Alerts and Device Control Alerts.
 
 Examples
 --------
