@@ -31,7 +31,9 @@ from tests.unit.fixtures.platform.mock_process import (
     GET_PROCESS_SUMMARY_RESP,
     GET_PROCESS_SUMMARY_STR,
     GET_PROCESS_NOT_FOUND,
-    GET_PROCESS_SUMMARY_NOT_FOUND,
+    GET_PROCESS_SUMMARY_NOT_FOUND, GET_PROCESS_SEARCH_JOB_RESP_WATCHLIST_ALERT,
+    GET_PROCESS_SUMMARY_RESP_WATCHLIST_ALERT, GET_PROCESS_SUMMARY_STR_WATCHLIST_ALERT,
+    GET_PROCESS_SUMMARY_RESP_STILL_QUERYING, GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT,
 )
 from tests.unit.fixtures.stubresponse import StubResponse, patch_cbc_sdk_api
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -733,7 +735,7 @@ def test_load_workflow(monkeypatch):
 def test_get_process(cbcsdk_mock):
     """Test of getting process through a WatchlistAlert"""
     # mock the alert request
-    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/alerts/6b2348cb-87c1-4076-bc8e-7c717e8af608",
                              GET_ALERT_TYPE_WATCHLIST)
     # mock the search validation
     cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
@@ -748,7 +750,7 @@ def test_get_process(cbcsdk_mock):
     # mock the GET to get search results
     cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
                                      "2c292717-80ed-4f0d-845f-779e09470920/results"),
-                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
+                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT)
     # mock the POST of a summary search (using same Job ID)
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/summary_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -761,7 +763,7 @@ def test_get_process(cbcsdk_mock):
                                      "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
                              GET_PROCESS_SUMMARY_STR)
     api = cbcsdk_mock.api
-    alert = api.select(WatchlistAlert, "86123310980efd0b38111eba4bfa5e98aa30b19")
+    alert = api.select(WatchlistAlert, "6b2348cb-87c1-4076-bc8e-7c717e8af608")
     process = alert.get_process()
     assert isinstance(process, Process)
     assert process.process_guid == "WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00"
@@ -785,7 +787,7 @@ def test_get_process_zero_found(cbcsdk_mock):
     # mock the GET to get search results
     cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
                                      "2c292717-80ed-4f0d-845f-779e09470920/results"),
-                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
+                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT)
     # mock the POST of a summary search (using same Job ID)
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/summary_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -806,13 +808,13 @@ def test_get_process_zero_found(cbcsdk_mock):
 def test_get_process_raises_api_error(cbcsdk_mock):
     """Test of getting process through a WatchlistAlert"""
     # mock the alert request
-    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/alerts/6b2348cb-87c1-4076-bc8e-7c717e8af608",
                              GET_ALERT_TYPE_WATCHLIST_INVALID)
     # mock the search validation
     cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
                              GET_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_job",
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
     # mock the GET to check search status
     cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
@@ -822,20 +824,9 @@ def test_get_process_raises_api_error(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
                                      "2c292717-80ed-4f0d-845f-779e09470920/results"),
                              GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
-    # mock the POST of a summary search (using same Job ID)
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/summary_jobs",
-                             POST_PROCESS_SEARCH_JOB_RESP)
-    # mock the GET to check summary search status
-    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
-                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
-                             GET_PROCESS_SUMMARY_RESP)
-    # mock the GET to get summary search results
-    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
-                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
-                             GET_PROCESS_SUMMARY_STR)
     api = cbcsdk_mock.api
     with pytest.raises(ApiError):
-        alert = api.select(WatchlistAlert, "86123310980efd0b38111eba4bfa5e98aa30b19")
+        alert = api.select(WatchlistAlert, "6b2348cb-87c1-4076-bc8e-7c717e8af608")
         process = alert.get_process()
 
 
@@ -857,7 +848,7 @@ def test_get_process_async(cbcsdk_mock):
     # mock the GET to get search results
     cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
                                      "2c292717-80ed-4f0d-845f-779e09470920/results"),
-                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
+                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT)
     # mock the POST of a summary search (using same Job ID)
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/summary_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)

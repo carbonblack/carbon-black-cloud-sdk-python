@@ -151,7 +151,7 @@ GET_ALERT_TYPE_WATCHLIST = {
     "ioc_field": None,
     "ioc_hit": "(process_name:msedge.exe)",
     "watchlists": [{"id": "zDCzWnQL2YmGh5OlbF6Q", "name": "edge"}],
-    "process_guid": "test-0034d5f2-00000ba0-00000000-1d68709850fe522getprocjobres",
+    "process_guid": "WNEXFKQ7-000309c2-00000478-00000000-1d6a1c1f2b02805",
     "process_name": "msedge.exe",
     "run_state": "RAN",
     "threat_indicators": [
