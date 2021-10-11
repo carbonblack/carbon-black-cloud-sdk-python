@@ -31,9 +31,8 @@ from tests.unit.fixtures.platform.mock_process import (
     GET_PROCESS_SUMMARY_RESP,
     GET_PROCESS_SUMMARY_STR,
     GET_PROCESS_NOT_FOUND,
-    GET_PROCESS_SUMMARY_NOT_FOUND, GET_PROCESS_SEARCH_JOB_RESP_WATCHLIST_ALERT,
-    GET_PROCESS_SUMMARY_RESP_WATCHLIST_ALERT, GET_PROCESS_SUMMARY_STR_WATCHLIST_ALERT,
-    GET_PROCESS_SUMMARY_RESP_STILL_QUERYING, GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT,
+    GET_PROCESS_SUMMARY_NOT_FOUND,
+    GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT,
 )
 from tests.unit.fixtures.stubresponse import StubResponse, patch_cbc_sdk_api
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -827,7 +826,7 @@ def test_get_process_raises_api_error(cbcsdk_mock):
     api = cbcsdk_mock.api
     with pytest.raises(ApiError):
         alert = api.select(WatchlistAlert, "6b2348cb-87c1-4076-bc8e-7c717e8af608")
-        process = alert.get_process()
+        alert.get_process()
 
 
 def test_get_process_async(cbcsdk_mock):
