@@ -64,8 +64,8 @@ def set_from_input():
     keychain_account_name = input("Keychain Account Name: ")
     url = input("URL to the Carbon Black Cloud API server (do not include '/integrationServices') [https://hostname]: ")
     ssl_verify = True
-    connector_id = input("Connector ID: ")
-    token = input("API key: ")
+    connector_id = input("API ID: ")
+    token = input("API Secret Key: ")
     org_key = input("Org Key: ")
     json_obj = {
         "url": url,
