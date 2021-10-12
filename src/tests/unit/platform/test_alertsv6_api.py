@@ -13,7 +13,7 @@
 from datetime import datetime
 import pytest
 
-from cbc_sdk.errors import ApiError
+from cbc_sdk.errors import ApiError, TimeoutError
 from cbc_sdk.platform import BaseAlert, CBAnalyticsAlert, WatchlistAlert, DeviceControlAlert, WorkflowStatus
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.stubresponse import StubResponse, patch_cbc_sdk_api
@@ -56,7 +56,7 @@ def test_query_basealert_with_all_bells_and_whistles(monkeypatch):
         assert url == "/appservices/v6/orgs/Z100/alerts/_search"
         assert body == {"query": "Blort",
                         "rows": 100,
-                        "criteria": {"category": ["SERIOUS", "CRITICAL"], "device_id": [6023], "device_name": ["HAL"],
+                        "criteria": {"category": ["MONITORED", "THREAT"], "device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
                                      "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
                                      "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
@@ -71,7 +71,7 @@ def test_query_basealert_with_all_bells_and_whistles(monkeypatch):
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
-    query = api.select(BaseAlert).where("Blort").set_categories(["SERIOUS", "CRITICAL"]).set_device_ids([6023]) \
+    query = api.select(BaseAlert).where("Blort").set_categories(["MONITORED", "THREAT"]).set_device_ids([6023]) \
         .set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
         .set_device_username(["JRN"]).set_group_results(True).set_alert_ids(["S0L0"]) \
         .set_legacy_alert_ids(["S0L0_1"]).set_minimum_severity(6).set_policy_ids([8675309]) \
@@ -261,7 +261,7 @@ def test_query_basealert_invalid_create_time_combinations():
 
 
 @pytest.mark.parametrize("method, arg", [
-    ("set_categories", ["DOUBLE_DARE"]),
+    ("set_categories", ["SERIOUS", "CRITICAL"]),
     ("set_device_ids", ["Bogus"]),
     ("set_device_names", [42]),
     ("set_device_os", ["TI994A"]),
@@ -298,7 +298,7 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(monkeypatch):
         assert url == "/appservices/v6/orgs/Z100/alerts/cbanalytics/_search"
         assert body == {"query": "Blort",
                         "rows": 100,
-                        "criteria": {"category": ["SERIOUS", "CRITICAL"], "device_id": [6023], "device_name": ["HAL"],
+                        "criteria": {"category": ["THREAT", "MONITORED"], "device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
                                      "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
                                      "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
@@ -317,7 +317,7 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(monkeypatch):
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
-    query = api.select(CBAnalyticsAlert).where("Blort").set_categories(["SERIOUS", "CRITICAL"]) \
+    query = api.select(CBAnalyticsAlert).where("Blort").set_categories(["THREAT", "MONITORED"]) \
         .set_device_ids([6023]).set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
         .set_device_username(["JRN"]).set_group_results(True).set_alert_ids(["S0L0"]).set_legacy_alert_ids(["S0L0_1"]) \
         .set_minimum_severity(6).set_policy_ids([8675309]).set_policy_names(["Strict"]) \
@@ -390,7 +390,7 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(monkeypatch):
         assert url == "/appservices/v6/orgs/Z100/alerts/devicecontrol/_search"
         assert body == {"query": "Blort",
                         "rows": 100,
-                        "criteria": {"category": ["SERIOUS", "CRITICAL"], "device_id": [6023], "device_name": ["HAL"],
+                        "criteria": {"category": ["MONITORED", "THREAT"], "device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
                                      "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
                                      "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
@@ -409,7 +409,7 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(monkeypatch):
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
-    query = api.select(DeviceControlAlert).where("Blort").set_categories(["SERIOUS", "CRITICAL"]) \
+    query = api.select(DeviceControlAlert).where("Blort").set_categories(["MONITORED", "THREAT"]) \
         .set_device_ids([6023]).set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
         .set_device_username(["JRN"]).set_group_results(True).set_alert_ids(["S0L0"]) \
         .set_legacy_alert_ids(["S0L0_1"]).set_minimum_severity(6).set_policy_ids([8675309]) \
@@ -479,7 +479,7 @@ def test_query_watchlistalert_with_all_bells_and_whistles(monkeypatch):
         assert url == "/appservices/v6/orgs/Z100/alerts/watchlist/_search"
         assert body == {"query": "Blort",
                         "rows": 100,
-                        "criteria": {"category": ["SERIOUS", "CRITICAL"], "device_id": [6023], "device_name": ["HAL"],
+                        "criteria": {"category": ["THREAT", "MONITORED"], "device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
                                      "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
                                      "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
@@ -495,7 +495,7 @@ def test_query_watchlistalert_with_all_bells_and_whistles(monkeypatch):
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
-    query = api.select(WatchlistAlert).where("Blort").set_categories(["SERIOUS", "CRITICAL"]).set_device_ids([6023]) \
+    query = api.select(WatchlistAlert).where("Blort").set_categories(["THREAT", "MONITORED"]).set_device_ids([6023]) \
         .set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
         .set_device_username(["JRN"]).set_group_results(True).set_alert_ids(["S0L0"]) \
         .set_legacy_alert_ids(["S0L0_1"]).set_minimum_severity(6).set_policy_ids([8675309]) \
@@ -749,6 +749,23 @@ def test_get_events_zero_found(cbcsdk_mock):
     alert = api.select(CBAnalyticsAlert, '86123310980efd0b38111eba4bfa5e98aa30b19')
     events = alert.get_events()
     assert len(events) == 0
+
+
+def test_get_events_timeout(cbcsdk_mock):
+    """Test that get_events() throws a timeout appropriately."""
+    cbcsdk_mock.mock_request("GET",
+                             "/appservices/v6/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
+                             GET_ALERT_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
+                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b",  # noqa: E501
+                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING)
+
+    api = cbcsdk_mock.api
+    alert = api.select(CBAnalyticsAlert, '86123310980efd0b38111eba4bfa5e98aa30b19')
+    with pytest.raises(TimeoutError):
+        alert.get_events(timeout=1)
 
 
 def test_get_events_detail_jobs_resp_handling(cbcsdk_mock):

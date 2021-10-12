@@ -54,7 +54,7 @@ from cbc_sdk.live_response_api import LiveResponseError
 HEADERS = {'X-Auth-Token': '', 'Content-Type': 'application/json'}
 ORG_KEY = ''
 HOSTNAME = ''
-DEVICE_ID = 8612331
+DEVICE_ID = 11457613
 
 # Files constants
 LOCAL_FILE = 'memdump.txt'

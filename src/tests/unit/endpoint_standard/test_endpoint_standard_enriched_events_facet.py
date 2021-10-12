@@ -5,12 +5,13 @@ import logging
 from cbc_sdk.endpoint_standard import EnrichedEventFacet
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.base import FacetQuery
-from cbc_sdk.errors import ApiError
+from cbc_sdk.errors import ApiError, TimeoutError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.endpoint_standard.mock_enriched_events_facet import (
     POST_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESP,
     GET_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_1,
-    GET_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_2)
+    GET_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_2,
+    GET_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -111,6 +112,23 @@ def test_enriched_event_facet_timeout(cbcsdk_mock):
     assert query._timeout == 0
     query.timeout(msecs=500)
     assert query._timeout == 500
+
+
+def test_enriched_event_facet_timeout_error(cbcsdk_mock):
+    """Testing that a timeout in EnrichedEventQuery throws the right TimeoutError."""
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/facet_jobs",
+                             POST_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v2/orgs/test/enriched_events/facet_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
+                             GET_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING)
+
+    api = cbcsdk_mock.api
+    query = api.select(EnrichedEventFacet).where("process_name:some_name").add_facet_field("process_name").timeout(1)
+    with pytest.raises(TimeoutError):
+        query.results()
+    query = api.select(EnrichedEventFacet).where("process_name:some_name").add_facet_field("process_name").timeout(1)
+    with pytest.raises(TimeoutError):
+        query._count()
 
 
 def test_enriched_event_facet_query_add_range(cbcsdk_mock):

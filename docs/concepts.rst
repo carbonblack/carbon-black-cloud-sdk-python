@@ -1,17 +1,19 @@
 Concepts
 ================================
 
-Platform Devices vs Endpoint Standard Devices
+Live Response with Platform Devices
 ---------------------------------------------
-For most use cases, Platform Devices are sufficient to access information about devices
-and change that information. If you want to connect to a device using Live Response,
-then you must use Endpoint Standard Devices and a Live Response API Key.
+As of version 1.3.0 Live Response has been changed to support CUSTOM type API Keys which enables
+the platform Device model and Live Response session to be used with a single API key. Ensure your
+API key has the ``Device READ`` permission along with the desired :doc:`live-response` permissions
 
 ::
 
   # Device information is accessible with Platform Devices
+  >>> from cbc_sdk import CBCloudAPI
+  >>> from cbc_sdk.platform import Device
   >>> api = CBCloudAPI(profile='platform')
-  >>> platform_devices = api.select(platform.Device).set_os(["WINDOWS", "LINUX"])
+  >>> platform_devices = api.select(Device).set_os(["WINDOWS", "LINUX"])
   >>> for device in platform_devices:
   ...   print(
         f'''
@@ -26,24 +28,28 @@ then you must use Endpoint Standard Devices and a Live Response API Key.
   Device Name: UbuntuDev
 
 
-  # Live Response is accessible with Endpoint Standard Devices
-  >>> api = CBCloudAPI(profile='live_response')
-  >>> endpoint_standard_device = api.select(endpoint_standard.Device, 1234)
-  >>> endpoint_standard_device.lr_session()
+  # Live Response is accessible with Platform Devices
+  >>> from cbc_sdk import CBCloudAPI
+  >>> from cbc_sdk.platform import Device
+  >>> api = CBCloudAPI(profile='platform')
+  >>> platform_device = api.select(Device, 1234)
+  >>> platform_device.lr_session()
   url: /appservices/v6/orgs/{org_key}/liveresponse/sessions/428:1234 -> status: PENDING
   [...]
 
-  For more examples on Live Response, check :doc:`live-response`
+For more examples on Live Response, check :doc:`live-response`
 
 USB Devices
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Note that ``USBDevice`` is distinct from either the Platform API ``Device`` or the Endpoint Standard ``Device``. Access
-to USB devices is through the Endpoint Standard package ``from cbc_sdk.endpoint_standard import from cbc_sdk.endpoint_standard``.
+to USB devices is through the Endpoint Standard package ``from cbc_sdk.endpoint_standard import USBDevice``.
 
 ::
 
   # USB device information is accessible with Endpoint Standard
+  >>> from cbc_sdk import CBCloudAPI
+  >>> from cbc_sdk.endpoint_standard import USBDevice
   >>> api = CBCloudAPI(profile='endpoint_standard')
   >>> usb_devices = api.select(USBDevice).set_statuses(['APPROVED'])
   >>> for usb in usb_devices:
@@ -76,7 +82,8 @@ A ``select()`` statement creates a ``query``, which can be further `refined with
 ::
 
   # Create a query for devices
-  >>> device_query = api.select(platform.Device).where('avStatus:AV_ACTIVE')
+  >>> from cbc_sdk.platform import Device
+  >>> device_query = api.select(Device).where('avStatus:AV_ACTIVE')
 
   # The query has not yet been executed
   >>> type(device_query)
@@ -96,7 +103,8 @@ Queries can be refined during or after declaration with
 ::
 
   # Create a query for events
-  >>> event_query = api.select(endpoint_standard.Event).where(hostName='Win10').and_(ipAddress='10.0.0.1')
+  >>> from cbc_sdk.endpoint_standard import Event
+  >>> event_query = api.select(Event).where(hostName='Win10').and_(ipAddress='10.0.0.1')
 
   # Refine the query
   >>> event_query.and_(applicationName='googleupdate.exe')
@@ -116,8 +124,9 @@ raw string-based queries , or keyword arguments.
 ::
 
   # Equivalent queries
-  >>> string_query = api.select(platform.Device).where("avStatus:AV_ACTIVE")
-  >>> keyword_query = api.select(platform.Device).where(avStatus="AV_ACTIVE").
+  >>> from cbc_sdk.platform import Device
+  >>> string_query = api.select(Device).where("avStatus:AV_ACTIVE")
+  >>> keyword_query = api.select(Device).where(avStatus="AV_ACTIVE").
 
 Queries must be
 consistent in their use of strings or keywords; do not mix strings and keywords.
@@ -125,7 +134,8 @@ consistent in their use of strings or keywords; do not mix strings and keywords.
 ::
 
   # Not allowed
-  >>> mixed_query = api.select(platform.Device).where(avStatus='Win7x').and_("virtualMachine:true")
+  >>> from cbc_sdk.platform import Device
+  >>> mixed_query = api.select(Device).where(avStatus='Win7x').and_("virtualMachine:true")
   cbc_sdk.errors.ApiError: Cannot modify a structured query with a raw parameter
 
 Execute a Query
@@ -138,7 +148,8 @@ A query is not executed on the server until it's accessed, either as an iterator
 ::
 
   # Create and Refine a query
-  >>> device_query = api.select(platform.Device).where('avStatus:AV_ACTIVE').set_os(["WINDOWS"])
+  >>> from cbc_sdk.platform import Device
+  >>> device_query = api.select(Device).where('avStatus:AV_ACTIVE').set_os(["WINDOWS"])
 
   # Execute the query by accessing as a list
   >>> matching_devices = [device for device in device_query]
@@ -194,7 +205,8 @@ When using CBC SDK, there are API-specific methods you can use to add criteria t
 ::
 
   # Create a query for alerts
-  >>> alert_query = api.select(cbc_sdk.Platform.Alert)
+  >>> from cbc_sdk.platform import Alert
+  >>> alert_query = api.select(Alert)
 
   # Refine the query with parameters
   >>> alert_query.where(alert_severity=9).or_(alert_severity=10)
@@ -461,8 +473,9 @@ We can return the details for the enriched event for a specific event or we coul
 Get details per event
 ^^^^^^^^^^^^^^^^^^^^^
 
-:: 
+::
 
+  >>> from cbc_sdk.endpoint_standard import EnrichedEvent
   >>> query = cb.select(EnrichedEvent).where(alert_category='THREAT')
   >>> # get the first event returned by the query
   >>> item = query[0]
@@ -483,6 +496,8 @@ Get details for all events per alert
 ::
 
   # Alert information is accessible with Platform CBAnalyticsAlert
+  >>> from cbc_sdk import CBCloudAPI
+  >>> from cbc_sdk.platform import CBAnalyticsAlert
   >>> api = CBCloudAPI(profile='platform')
   >>> query = cb.select(CBAnalyticsAlert).set_create_time(range="-4w")
   >>> # get the first alert returned by the query
@@ -497,7 +512,7 @@ Get details for all events per alert
   Category: ['OBSERVED']
   Type: SYSTEM_API_CALL
   Alert Id: ['BE084638']
-            
+
   Category: ['OBSERVED']
   Type: NETWORK
   Alert Id: ['BE084638']

@@ -392,7 +392,7 @@ class Grant(MutableBaseModel):
 
             Returns:
                 Profile: If a template was specified, return the new Profile object.
-                ProfileBuilder: If template was None, returns a ProfileBuilder object.  Call methods on it to set
+                ProfileBuilder: If template was None, returns a ProfileBuilder object. Call methods on it to set
                                 up the new profile, and then call build() to create the new profile.
             """
             if template:
@@ -433,6 +433,20 @@ class Grant(MutableBaseModel):
             GrantQuery: The query object for this alert type.
         """
         return GrantQuery(cls, cb)
+
+    def _subobject(self, name):
+        """
+        Returns the "subobject value" of the given attribute.
+
+        Args:
+            name (str): Name of the subobject value to be returned.
+
+        Returns:
+            Any: Subobject value for the attribute, or None if there is none.
+        """
+        if name == 'profiles':
+            return self._profiles
+        return super(Grant, self)._subobject(name)
 
     def _refresh(self):
         """

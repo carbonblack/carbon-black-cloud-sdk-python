@@ -89,3 +89,27 @@ def test_credential_boolean_parsing_failure():
     init_dict = {"url": "http://example.com", "ssl_verify": "bogus"}
     with pytest.raises(CredentialError):
         Credentials(init_dict)
+
+
+@pytest.mark.parametrize(["input_dict"], [
+    ({CredentialValue.URL: "http://example.com", CredentialValue.TOKEN: "ABCDEFGH",
+      CredentialValue.ORG_KEY: "A1B2C3D4", CredentialValue.SSL_VERIFY: False,
+      CredentialValue.SSL_VERIFY_HOSTNAME: False, CredentialValue.SSL_CERT_FILE: "foo.certs",
+      CredentialValue.SSL_FORCE_TLS_1_2: True, CredentialValue.PROXY: "proxy.example",
+      CredentialValue.IGNORE_SYSTEM_PROXY: True, CredentialValue.INTEGRATION: 'Bronski'}, ),
+    ({"url": "http://example.com", "token": "ABCDEFGH", "org_key": "A1B2C3D4", "ssl_verify": "false",
+      "ssl_verify_hostname": "no", "ssl_cert_file": "foo.certs", "ssl_force_tls_1_2": "1",
+      "proxy": "proxy.example", "ignore_system_proxy": "on", "integration": 'Bronski'}, )
+])
+def test_credential_get_dict(input_dict):
+    """Tests if we get the correct dictionary."""
+    creds = Credentials(input_dict).to_dict()
+    assert creds["url"] == "http://example.com"
+    assert creds["token"] == "ABCDEFGH"
+    assert creds["org_key"] == "A1B2C3D4"
+    assert not creds["ssl_verify"]
+    assert not creds["ssl_verify_hostname"]
+    assert creds["ssl_cert_file"] == "foo.certs"
+    assert creds["ssl_force_tls_1_2"]
+    assert creds["proxy"] == "proxy.example"
+    assert creds["ignore_system_proxy"]
