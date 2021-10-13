@@ -14,7 +14,7 @@
 """Model and Query Classes for Platform Alerts and Workflows"""
 import time
 
-from cbc_sdk.errors import ApiError, TimeoutError
+from cbc_sdk.errors import ApiError, TimeoutError, ObjectNotFoundError
 from cbc_sdk.platform import PlatformModel
 from cbc_sdk.base import (BaseQuery,
                           UnrefreshableModel,
@@ -24,6 +24,7 @@ from cbc_sdk.base import (BaseQuery,
                           CriteriaBuilderSupportMixin)
 from cbc_sdk.endpoint_standard.base import EnrichedEvent
 from cbc_sdk.platform.devices import DeviceSearchQuery
+from cbc_sdk.platform.processes import AsyncProcessQuery, Process
 
 """Alert Models"""
 
@@ -187,6 +188,37 @@ class WatchlistAlert(BaseAlert):
         """
         return WatchlistAlertSearchQuery(cls, cb)
 
+    def get_process(self, async_mode=False):
+        """
+        Gets the process corresponding with the alert.
+
+        Args:
+            async_mode: True to request process in an asynchronous manner.
+
+        Returns:
+            Process: The process corresponding to the alert.
+        """
+        process_guid = self._info.get("process_guid")
+        if not process_guid:
+            raise ApiError(f"Trying to get process details on an invalid process_id {process_guid}")
+        if async_mode:
+            return self._cb._async_submit(self._get_process)
+        return self._get_process()
+
+    def _get_process(self, *args, **kwargs):
+        """
+        Implementation of the get_process.
+
+        Returns:
+            Process: The process corresponding to the alert. May return None if no process is found.
+        """
+        process_guid = self._info.get("process_guid")
+        try:
+            process = AsyncProcessQuery(Process, self._cb).where(process_guid=process_guid).one()
+        except ObjectNotFoundError:
+            return None
+        return process
+
 
 class CBAnalyticsAlert(BaseAlert):
     """Represents CB Analytics alerts."""
@@ -221,23 +253,28 @@ class CBAnalyticsAlert(BaseAlert):
               You can call result() on the future object to wait for completion and get the results.
         """
         self._details_timeout = timeout
-        alert_id = self._info.get('legacy_alert_id')
+        alert_id = self._info.get("legacy_alert_id")
         if not alert_id:
             raise ApiError("Trying to get event details on an invalid alert_id {}".format(alert_id))
         if async_mode:
-            return self._cb._async_submit(lambda arg, kwarg: self._get_events_detailed_results())
+            return self._cb._async_submit(self._get_events_detailed_results)
         return self._get_events_detailed_results()
 
-    def _get_events_detailed_results(self):
-        """Actual search details implementation"""
-        """Flow:
-        1. Start the job by providing alert_id
-        2. Check the status of the job - wait until contacted and complete are equal
-        3. Retrieve the results - it is possible for num_found to be 0, because enreached events are
-           kept for specific period, so return empty list in that case.
+    def _get_events_detailed_results(self, *args, **kwargs):
+        """
+        Actual search details implementation.
+
+        Returns:
+            list[EnrichedEvent]: List of enriched events.
+
+        Flow:
+            1. Start the job by providing alert_id
+            2. Check the status of the job - wait until contacted and complete are equal
+            3. Retrieve the results - it is possible for num_found to be 0, because enriched events are
+            kept for specific period, so return empty list in that case.
         """
         url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs".format(self._cb.credentials.org_key)
-        query_start = self._cb.post_object(url, body={"alert_id": self._info.get('legacy_alert_id')})
+        query_start = self._cb.post_object(url, body={"alert_id": self._info.get("legacy_alert_id")})
         job_id = query_start.json().get("job_id")
         timed_out = False
         submit_time = time.time() * 1000
