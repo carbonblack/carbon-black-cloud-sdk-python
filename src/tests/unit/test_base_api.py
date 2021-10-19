@@ -279,7 +279,7 @@ def test_BaseAPI_post_multipart(mox):
 
     def validate_files(files):
         assert len(files) == 2
-        assert files[--'name'][0] == 'name.txt'
+        assert files['name'][0] == 'name.txt'
         assert files['name'][1] == 'Cheeseburger'
         assert files['name'][2] == 'text/plain'
         assert files['config'][0] is None
