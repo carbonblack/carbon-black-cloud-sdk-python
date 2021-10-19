@@ -560,6 +560,7 @@ class User(MutableBaseModel):
             grant.delete()
         return self._delete_object()
 
+
 """User Queries"""
 
 
