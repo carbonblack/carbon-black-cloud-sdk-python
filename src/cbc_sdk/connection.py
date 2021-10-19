@@ -44,11 +44,11 @@ import urllib
 from .credentials import Credentials
 from .credential_providers.default import default_credential_provider
 from .errors import ClientError, QuerySyntaxError, ServerError, TimeoutError, ApiError, ObjectNotFoundError, \
-    UnauthorizedError, ConnectionError
+    UnauthorizedError, ConnectionError, ModelNotFound
 from . import __version__
 
 from .cache.lru import lru_cache_function
-from .base import CreatableModelMixin
+from .base import CreatableModelMixin, NewBaseModel
 from .utils import convert_query_params
 
 log = logging.getLogger(__name__)
@@ -611,6 +611,8 @@ class BaseAPI(object):
         Returns:
             object: An instance of the Model class if a unique_id is provided, otherwise a Query object
         """
+        if isinstance(cls, str):
+            cls = select_class_instance(cls)
         if unique_id is not None:
             return select_instance(self, cls, unique_id, *args, **kwargs)
         else:
@@ -671,3 +673,29 @@ def select_instance(api, cls, unique_id, *args, **kwargs):
         object: New object instance.
     """
     return cls(api, unique_id, *args, **kwargs)
+
+
+def select_class_instance(cls: str):
+    """
+    Selecting the appropriate class based on the passed string.
+
+    Args:
+        cls: The class name represented in a string.
+
+    Returns:
+        Object[]:
+    """
+    subclasses = set()
+    _base_subclasses = NewBaseModel.__subclasses__().copy()
+    while _base_subclasses:
+        parent = _base_subclasses.pop()
+        for child in parent.__subclasses__():
+            if child not in subclasses:
+                subclasses.add(child)
+                _base_subclasses.append(child)
+
+    # Probably could be better
+    _lookup_dict = {k.__name__: k for k in subclasses}
+    if cls in _lookup_dict.keys():
+        return _lookup_dict[cls]
+    raise ModelNotFound()

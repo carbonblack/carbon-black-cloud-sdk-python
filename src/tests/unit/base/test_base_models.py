@@ -147,7 +147,7 @@ def test_refresh_nbm(cbcsdk_mock):
     object_with_dirty_model_unique_id._dirty_attributes["id"] = 2
     assert object_with_dirty_model_unique_id.primary_key == "id"
     assert "id" in object_with_dirty_model_unique_id._dirty_attributes
-    object_with_dirty_model_unique_id.refresh() is False
+    assert object_with_dirty_model_unique_id.refresh() is False
 
     # refresh() should return True if there's a _model_unique_id and primary_key hasn't been changed
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/event/a1e12604d67b11ea920d3d9192a785d1",
