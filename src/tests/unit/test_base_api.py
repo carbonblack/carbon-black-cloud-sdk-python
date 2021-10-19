@@ -14,12 +14,11 @@
 import pytest
 import json
 import sys
-from cbc_sdk import __version__, CBCloudAPI
+from cbc_sdk import __version__
 from cbc_sdk.connection import BaseAPI
 from cbc_sdk.credentials import Credentials
 from cbc_sdk.errors import CredentialError, ServerError
 from cbc_sdk.credential_providers.default import default_provider_object
-from cbc_sdk.platform import BaseAlert
 from tests.unit.fixtures.mock_credentials import MockCredentialProvider
 from tests.unit.fixtures.stubresponse import StubResponse
 from mox import Func

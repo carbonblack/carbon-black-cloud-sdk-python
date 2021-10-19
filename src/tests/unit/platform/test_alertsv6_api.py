@@ -104,7 +104,7 @@ def test_get_alert_class_dynamic_select(monkeypatch):
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
     query = api.select("BaseAlert").where("Blort").set_create_time(start="2019-09-30T12:34:56",
-                                                                 end="2019-10-01T12:00:12")
+                                                                   end="2019-10-01T12:00:12")
     a = query.one()
     assert _was_called
     assert isinstance(a, BaseAlert)
