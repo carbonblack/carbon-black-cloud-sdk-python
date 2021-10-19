@@ -553,6 +553,12 @@ class User(MutableBaseModel):
             if self._internal_set_profile_expiration(my_profiles, expiration_date):
                 raise ApiError("legacy user has no grant")
 
+    def delete(self):
+        """Delete this object."""
+        grant = self.grant()  # CBAPI-3122 - remove grant first if present
+        if grant:
+            grant.delete()
+        return self._delete_object()
 
 """User Queries"""
 

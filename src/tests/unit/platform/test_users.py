@@ -13,7 +13,7 @@ from tests.unit.fixtures.platform.mock_users import (GET_USERS_RESP, GET_USERS_A
                                                      EXPECT_USER_ADD, EXPECT_USER_ADD_SMALL, EXPECT_USER_ADD_V1,
                                                      EXPECT_USER_ADD_V2, EXPECT_USER_ADD_BULK1, EXPECT_USER_ADD_BULK2,
                                                      USER_ADD_SUCCESS_RESP, USER_ADD_FAILURE_RESP)
-from tests.unit.fixtures.platform.mock_grants import (DETAILS_GRANT1, EXPECT_CHANGE_ROLE_GRANT1,
+from tests.unit.fixtures.platform.mock_grants import (DETAILS_GRANT1, EXPECT_CHANGE_ROLE_GRANT1, EXPECT_DELETE_GRANT1,
                                                       DETAILS_GRANT2, EXPECT_CHANGE_ROLE_GRANT2A,
                                                       EXPECT_CHANGE_ROLE_GRANT2B, EXPECT_DISABLE_ALL_GRANT2,
                                                       DETAILS_GRANT3, PROFILE_TEMPLATES_A, EXPECT_ADD_PROFILES_3A,
@@ -92,20 +92,6 @@ def test_get_and_modify_user(cbcsdk_mock):
     assert user.first_name == 'John'
     assert user.login_name == 'jsheridan@babylon5.com'
     assert user.email == 'jsheridan@zhadum.net'
-
-
-def test_get_and_delete_user(cbcsdk_mock):
-    """Tests retrieving and deleting a user."""
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
-    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/users/3978', None)
-    api = cbcsdk_mock.api
-    user = api.select(User, 3978)
-    assert user.last_name == 'Mariner'
-    assert user.first_name == 'Beckett'
-    assert user.login_name == 'bmariner@cerritos.starfleet.mil'
-    assert user.email == 'bmariner@cerritos.starfleet.mil'
-    assert user.urn == 'psc:user:test:3978'
-    user.delete()
 
 
 def test_get_user_and_reset_googleauth(cbcsdk_mock):
@@ -269,6 +255,27 @@ def test_get_grant(cbcsdk_mock):
     assert grant.roles == ["psc:role::SECOPS_ROLE_MANAGER", "psc:role:test:APP_SERVICE_ROLE"]
 
 
+def test_delete_user_without_grant(cbcsdk_mock):
+    """Tests deleting a user that does not have a grant."""
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', wrap_grant(None))
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/users/3911', None)
+    api = cbcsdk_mock.api
+    user = api.select(User).user_ids([3911]).one()
+    user.delete()
+
+
+def test_delete_user_with_grant(cbcsdk_mock):
+    """Tests deleting a user that DOES have a grant."""
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', wrap_grant(DETAILS_GRANT1))
+    cbcsdk_mock.mock_request('DELETE', '/access/v2/orgs/test/grants/psc:user:test:3911', EXPECT_DELETE_GRANT1)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/users/3911', None)
+    api = cbcsdk_mock.api
+    user = api.select(User).user_ids([3911]).one()
+    user.delete()
+
+
 def test_bulk_create(cbcsdk_mock):
     """Tests the User.bulk_create API."""
     count_posts = 0
@@ -428,7 +435,17 @@ def test_bulk_delete(cbcsdk_mock):
     def checkoff(userid):
         return lambda url, body: _checkoff(userid, url, body)
 
+    def get_grant(url, body, **kwargs):
+        assert len(body) == 1
+        assert body[0]['org_ref'] == 'psc:org:test'
+        rc = None
+        if body[0]['principal'] == 'psc:user:test:3911':
+            rc = DETAILS_GRANT1
+        return wrap_grant(rc)
+
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', get_grant)
+    cbcsdk_mock.mock_request('DELETE', '/access/v2/orgs/test/grants/psc:user:test:3911', EXPECT_DELETE_GRANT1)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/users/3911', checkoff(3911))
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/users/3934', checkoff(3934))
     api = cbcsdk_mock.api
