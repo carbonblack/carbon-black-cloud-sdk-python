@@ -247,7 +247,7 @@ def test_get_grant(cbcsdk_mock):
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
     cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', wrap_grant(DETAILS_GRANT1))
     api = cbcsdk_mock.api
-    user = api.select(User).user_ids([3911]).one()
+    user = api.select(User, 3911)
     grant = user.grant()
     assert grant.principal == 'psc:user:test:3911'
     assert grant.org_ref == 'psc:org:test'
@@ -273,7 +273,7 @@ def test_delete_user_without_grant(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', on_fetch_grant)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/users/3911', on_delete)
     api = cbcsdk_mock.api
-    user = api.select(User).user_ids([3911]).one()
+    user = api.select(User, 3911)
     user.delete()
 
 
@@ -305,7 +305,7 @@ def test_delete_user_with_grant(cbcsdk_mock):
     cbcsdk_mock.mock_request('DELETE', '/access/v2/orgs/test/grants/psc:user:test:3911', on_delete_grant)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/users/3911', on_delete)
     api = cbcsdk_mock.api
-    user = api.select(User).user_ids([3911]).one()
+    user = api.select(User, 3911)
     user.delete()
 
 
@@ -508,7 +508,7 @@ def test_disable_all_access(cbcsdk_mock, login_id, grant_get, expect_put, except
     cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', wrap_grant(grant_get))
     cbcsdk_mock.mock_request('PUT', f'/access/v2/orgs/test/grants/psc:user:test:{login_id}', on_put)
     api = cbcsdk_mock.api
-    user = api.select(User).user_ids([login_id]).one()
+    user = api.select(User, login_id)
     with except_context:
         user.disable_all_access()
     if expect_put is None:
@@ -613,7 +613,7 @@ def test_add_profiles(cbcsdk_mock, login_id, grant_get, new_profiles, expect_put
     cbcsdk_mock.mock_request('POST', f'/access/v2/orgs/test/grants/psc:user:test:{login_id}/profiles', on_profile_post)
     cbcsdk_mock.mock_request('PUT', f'/access/v2/orgs/test/grants/psc:user:test:{login_id}', on_put)
     api = cbcsdk_mock.api
-    user = api.select(User).user_ids([login_id]).one()
+    user = api.select(User, login_id)
     user.add_profiles(new_profiles)
     if expect_put is None:
         assert not put_was_called
@@ -637,7 +637,7 @@ def test_add_profiles_with_new_grant(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', wrap_grant(None))
     cbcsdk_mock.mock_request('POST', '/access/v2/orgs/test/grants', on_grant_post)
     api = cbcsdk_mock.api
-    user = api.select(User).user_ids([3978]).one()
+    user = api.select(User, 3978)
     user.add_profiles(PROFILE_TEMPLATES_A)
     assert post_was_called
 
@@ -695,7 +695,7 @@ def test_set_profile_expiration(cbcsdk_mock, login_id, grant_get, profiles, expe
     cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', wrap_grant(grant_get))
     cbcsdk_mock.mock_request('PUT', f'/access/v2/orgs/test/grants/psc:user:test:{login_id}', on_put)
     api = cbcsdk_mock.api
-    user = api.select(User).user_ids([login_id]).one()
+    user = api.select(User, login_id)
     with except_context:
         user.set_profile_expiration(profiles, '20111031T12:34:56')
     if expect_put is None:
