@@ -257,9 +257,21 @@ def test_get_grant(cbcsdk_mock):
 
 def test_delete_user_without_grant(cbcsdk_mock):
     """Tests deleting a user that does not have a grant."""
+    grant_fetched = False
+
+    def on_fetch_grant(url, body, **kwargs):
+        nonlocal grant_fetched
+        grant_fetched = True
+        return wrap_grant(None)
+
+    def on_delete(url, body, **kwargs):
+        nonlocal grant_fetched
+        assert grant_fetched, "Grant should have been checked for prior to deleting user"
+        return None
+
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
-    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', wrap_grant(None))
-    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/users/3911', None)
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', on_fetch_grant)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/users/3911', on_delete)
     api = cbcsdk_mock.api
     user = api.select(User).user_ids([3911]).one()
     user.delete()
@@ -267,10 +279,31 @@ def test_delete_user_without_grant(cbcsdk_mock):
 
 def test_delete_user_with_grant(cbcsdk_mock):
     """Tests deleting a user that DOES have a grant."""
+    grant_fetched = False
+    grant_deleted = False
+
+    def on_fetch_grant(url, body, **kwargs):
+        nonlocal grant_fetched
+        grant_fetched = True
+        return wrap_grant(DETAILS_GRANT1)
+
+    def on_delete_grant(url, body, **kwargs):
+        nonlocal grant_fetched, grant_deleted
+        assert grant_fetched, "Grant should have been checked for before we can delete it"
+        assert grant_deleted is False, "Grant should not be deleted twice"
+        grant_deleted = True
+        return EXPECT_DELETE_GRANT1
+
+    def on_delete(url, body, **kwargs):
+        nonlocal grant_fetched, grant_deleted
+        assert grant_fetched, "Grant should have been checked for prior to deleting user"
+        assert grant_deleted, "Grant should have been deleted prior to deleting user"
+        return None
+
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/users', GET_USERS_RESP)
-    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', wrap_grant(DETAILS_GRANT1))
-    cbcsdk_mock.mock_request('DELETE', '/access/v2/orgs/test/grants/psc:user:test:3911', EXPECT_DELETE_GRANT1)
-    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/users/3911', None)
+    cbcsdk_mock.mock_request('POST', '/access/v2/grants/_fetch', on_fetch_grant)
+    cbcsdk_mock.mock_request('DELETE', '/access/v2/orgs/test/grants/psc:user:test:3911', on_delete_grant)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/users/3911', on_delete)
     api = cbcsdk_mock.api
     user = api.select(User).user_ids([3911]).one()
     user.delete()
