@@ -28,6 +28,15 @@ Major Features
     the cache when you make future requests for the resource. This reduces the
     time required to access the resource later.
 
+Audience for the SDK
+--------------------
+
+In general, the Carbon Black Cloud Python SDK is directed at those that:
+
+- Have a working knowledge of Python.
+- Have a basic understanding of what the Carbon Black Cloud does, and its basic terminology such as events, alerts,
+  and watchlists.
+
 API Credentials
 ---------------
 
