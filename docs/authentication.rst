@@ -105,7 +105,7 @@ CBAPI, so older files can continue to be used.  This is an example of a credenti
     ssl_force_tls_1_2=1
     proxy=proxy.example
     ignore_system_proxy=on
-    integration_name=MyScript/0.9.0
+    integration=MyScript/0.9.0
 
     [production]
     url=http://example.com
@@ -117,7 +117,7 @@ CBAPI, so older files can continue to be used.  This is an example of a credenti
     ssl_force_tls_1_2=1
     proxy=proxy.example
     ignore_system_proxy=on
-    integration_name=MyApplication/1.3.1
+    integration=MyApplication/1.3.1
 
 Individual profiles or sections are delimited in the file by placing their name within square brackets: ``[profile_name]``.  Within
 each section, individual credential values are supplied in a ``keyword=value`` format.
@@ -191,7 +191,7 @@ be specified:
 +-------------------------+----------------+---------+
 |``proxy``                | ``REG_SZ``     |         |
 +-------------------------+----------------+---------+
-|``integration_name``     | ``REG_SZ``     |         |
+|``integration``          | ``REG_SZ``     |         |
 +-------------------------+----------------+---------+
 
 Unrecognized named values are ignored.
@@ -362,7 +362,7 @@ or :ref:`with Windows Registry <With Windows Registry>`, the credentials include
 |``proxy``                | If specified, this is the name of a proxy host to be |         |
 |                         | used in making the connection.                       |         |
 +-------------------------+------------------------------------------------------+---------+
-|``integration_name``     | The name of the integration to use these credentials.|         |
+|``integration``          | The name of the integration to use these credentials.|         |
 |                         | The string may optionally end with a slash character,|         |
 |                         | followed by the integration's version number.  Passed|         |
 |                         | as part of the ``User-Agent:`` HTTP header on all    |         |
