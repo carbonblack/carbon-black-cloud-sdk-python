@@ -686,16 +686,17 @@ def select_class_instance(cls: str):
         Object[]:
     """
     subclasses = set()
-    _base_subclasses = NewBaseModel.__subclasses__().copy()
-    while _base_subclasses:
-        parent = _base_subclasses.pop()
+    base_subclasses = NewBaseModel.__subclasses__().copy()
+    while base_subclasses:
+        parent = base_subclasses.pop()
+        subclasses.add(parent)
         for child in parent.__subclasses__():
             if child not in subclasses:
                 subclasses.add(child)
-                _base_subclasses.append(child)
+                base_subclasses.append(child)
 
-    # Probably could be better
-    _lookup_dict = {k.__name__: k for k in subclasses}
-    if cls in _lookup_dict.keys():
-        return _lookup_dict[cls]
+    # https://www.python.org/dev/peps/pep-3155/#rationale
+    lookup_dict = {klass.__qualname__: klass for klass in subclasses}
+    if cls in lookup_dict.keys():
+        return lookup_dict[cls]
     raise ModelNotFound()
