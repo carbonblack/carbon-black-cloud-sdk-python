@@ -125,10 +125,8 @@ def test_Event_select(cbcsdk_mock):
     )
     search_validate_url = "/api/investigate/v1/orgs/Z100/events/search_validation"
     cbcsdk_mock.mock_request("GET", search_validate_url, EVENT_SEARCH_VALIDATION_RESP)
-    events = cbcsdk_mock.api.select("Event").where("hostNameExact:Win7x64")
-    results = [event for event in events._perform_query()]
-    event = results[0]
-    assert type(event).__qualname__ == "Event"
+    events = cbcsdk_mock.api.select("Event")
+    assert type(events).__qualname__ == "EventQuery"
 
 
 class TestReferenceProcess:
