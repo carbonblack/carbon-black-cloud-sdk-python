@@ -296,6 +296,23 @@ EXPECT_CHANGE_ROLE_GRANT1 = {
     "update_time": "2021-03-20T12:56:31.645Z"
 }
 
+EXPECT_DELETE_GRANT1 = {
+    "principal": "psc:user:test:3911",
+    "expires": 0,
+    "revoked": True,
+    "roles": [
+        "psc:role::SECOPS_ROLE_MANAGER",
+        "psc:role:test:APP_SERVICE_ROLE"
+    ],
+    "profiles": [],
+    "org_ref": "psc:org:test",
+    "principal_name": "Ed Mercer",
+    "created_by": "psc:user:FOO:BAR",
+    "updated_by": "psc:user:FOO:BAR",
+    "create_time": "2021-03-20T12:56:31.645Z",
+    "update_time": "2021-03-20T12:56:31.645Z"
+}
+
 DETAILS_GRANT2 = {
     "principal": "psc:user:test:3934",
     "expires": 0,

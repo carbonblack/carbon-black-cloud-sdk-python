@@ -4,6 +4,12 @@ Users and Grants
 Using the Carbon Black Cloud SDK, you can work with the users in your organization, as well as their access grants
 and profiles.
 
+Audience for This Guide
+-----------------------
+
+This guide is geared towards SDK users seeking to automate specialized management tasks in the Carbon Black Cloud.
+Typically, they will have administrative privilege.
+
 Uniform Resource Names (URNs)
 -----------------------------
 

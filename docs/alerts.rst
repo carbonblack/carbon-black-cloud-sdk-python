@@ -39,7 +39,7 @@ for more complex searches. The example below will search with a solr query searc
     >>> from cbc_sdk import CBCloudAPI
     >>> from cbc_sdk.platform import BaseAlert
     >>> api = CBCloudAPI(profile='sample')
-    >>> alerts = api.select(BaseAlert).query("category:THREAT or category:MONITORED")[:5]
+    >>> alerts = api.select(BaseAlert).where("category:THREAT or category:MONITORED")[:5]
     >>> for alert in alerts:
     ...     print(alert.id, alert.device_os, alert.device_name, alert.category)
     e45330ae-<truncated> WINDOWS WINDOWS-TEST THREAT
