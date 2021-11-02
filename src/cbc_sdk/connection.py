@@ -603,7 +603,7 @@ class BaseAPI(object):
         Prepare a query against the Carbon Black data store.
 
         Args:
-            cls (class): The Model class (for example, Computer, Process, Binary, FileInstance) to query
+            cls (class | str): The Model class (for example, Computer, Process, Binary, FileInstance) to query
             unique_id (optional): The unique id of the object to retrieve, to retrieve a single object by ID
             *args:
             **kwargs:

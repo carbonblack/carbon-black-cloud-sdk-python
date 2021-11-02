@@ -1,7 +1,10 @@
 """Testing the Query objects of cbc_sdk.base"""
+import pytest
+from unittest.mock import patch
 
 from cbc_sdk.base import BaseQuery, SimpleQuery
 from cbc_sdk.enterprise_edr import Feed, FeedQuery
+from cbc_sdk.errors import ModelNotFound
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.stubresponse import patch_cbc_sdk_api
 
@@ -68,3 +71,76 @@ def test_simple_query(monkeypatch):
     assert clonedSimple._cb == simpleQuery._cb
     assert clonedSimple._results == simpleQuery._results
     assert clonedSimple._query == simpleQuery._query
+
+
+def test_select_calls_select_class_instance():
+    """Test if the `select` method calls the `select_class_instance` function."""
+    with patch("cbc_sdk.connection.select_class_instance") as fn:
+        api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="WNEX", ssl_verify=True)
+        api.select("a")
+        fn.assert_called()
+
+
+def test_raise_ModelNotFound():
+    """Test ModelNotFound exception when a class isn't found."""
+    with pytest.raises(ModelNotFound):
+        api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="WNEX", ssl_verify=True)
+        api.select("NON_EXISTENT")
+
+
+@pytest.mark.parametrize(
+    "klass_name, query_expected", [
+        # Audit and Remediation
+        ("DeviceSummary", "ResultQuery"),
+        ("DeviceSummaryFacet", "FacetQuery"),
+        ("Result", "ResultQuery"),
+        ("ResultFacet", "FacetQuery"),
+        ("Run", "RunQuery"),
+        ("RunHistory", "RunHistoryQuery"),
+        ("Template", "RunQuery"),
+        ("TemplateHistory", "TemplateHistoryQuery"),
+
+        # Endpoint Standard
+        ("EnrichedEvent", "EnrichedEventQuery"),
+        ("EnrichedEventFacet", "FacetQuery"),
+
+        # TODO: Clashes with `platform.event`
+        ("Event", "EventQuery"),
+
+        ("Policy", "Query"),
+        ("USBDevice", "USBDeviceQuery"),
+        ("USBDeviceApproval", "USBDeviceApprovalQuery"),
+        ("USBDeviceBlock", "USBDeviceBlockQuery"),
+
+        # Enterprise EDR
+        ("Feed", "FeedQuery"),
+        ("Report", "ReportQuery"),
+        ("Watchlist", "WatchlistQuery"),
+
+        # Platform
+        ("BaseAlert", "BaseAlertSearchQuery"),
+        ("CBAnalyticsAlert", "CBAnalyticsAlertSearchQuery"),
+        ("DeviceControlAlert", "DeviceControlAlertSearchQuery"),
+        ("WatchlistAlert", "WatchlistAlertSearchQuery"),
+        ("Device", "DeviceSearchQuery"),
+
+        # TODO: Clashes with `endpoint_standard.event`
+        ("Event", "Query"),
+
+        ("EventFacet", "EventFacetQuery"),
+        ("Grant", "GrantQuery"),
+        ("Process", "AsyncProcessQuery"), # TODO: Summary, Tree
+        ("ProcessFacet", "FacetQuery"),
+        ("ReputationOverride", "ReputationOverrideQuery"),
+        ("User", "UserQuery"),
+        ("Vulnerability", "VulnerabilityQuery"), # TODO: OrgSummary, AssetView
+
+        # Workload
+        ("SensorKit", "SensorKitQuery"), # TODO: ModelNotFound
+        ("ComputeResource", "ComputeResourceQuery"), # TODO: ModelNotFound
+    ],
+)
+def test_select_class_instance(klass_name, query_expected):
+    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="WNEX", ssl_verify=True)
+    q = api.select(str(klass_name))
+    assert type(q).__qualname__ == query_expected
