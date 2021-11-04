@@ -16,7 +16,7 @@
 from __future__ import absolute_import
 from cbc_sdk.base import (UnrefreshableModel, NewBaseModel, QueryBuilder,
                           QueryBuilderSupportMixin, IterableQueryMixin, BaseQuery,
-                          CriteriaBuilderSupportMixin)
+                          CriteriaBuilderSupportMixin, AsyncQueryMixin)
 from cbc_sdk.errors import ApiError, ServerError
 import logging
 import time
@@ -99,7 +99,8 @@ class Run(NewBaseModel):
         return False
 
     def delete(self):
-        """Delete a query.
+        """
+        Delete a query.
 
         Returns:
             (bool): True if the query was deleted successfully, False otherwise.
@@ -112,6 +113,39 @@ class Run(NewBaseModel):
             self._is_deleted = True
             return True
         return False
+
+    def query_results(self):
+        """
+        Create a Result query that searches for all results on this run.
+
+        The query may be further augmented with additional criteria prior to enumerating its results.
+
+        Returns:
+            ResultQuery: A query object which will search for all results for this run.
+        """
+        return self._cb.select(Result).run_id(self.id)
+
+    def query_device_summaries(self):
+        """
+        Create a DeviceSummary query that searches for all device summaries on this run.
+
+        The query may be further augmented with additional criteria prior to enumerating its results.
+
+        Returns:
+            ResultQuery: A query object which will search for all device summaries for this run.
+        """
+        return self._cb.select(DeviceSummary).run_id(self.id)
+
+    def query_facets(self):
+        """
+        Create a ResultFacet query that searches for all result facets on this run.
+
+        The query may be further augmented with additional criteria prior to enumerating its results.
+
+        Returns:
+            FacetQuery: A query object which will search for all result facets for this run.
+        """
+        return self._cb.select(ResultFacet).run_id(self.id)
 
 
 class RunHistory(Run):
@@ -378,6 +412,17 @@ class Template(Run):
                 raise ServerError(result.status_code, "Cannot parse response as JSON: {0:s}".format(result.content))
         return False
 
+    def query_runs(self):
+        """
+        Create a RunHistory query that searches for all runs created by this template ID.
+
+        The query may be further augmented with additional criteria prior to enumerating its results.
+
+        Returns:
+            RunHistoryQuery: A query object which will search for all runs based on this template.
+        """
+        return self._cb.select(RunHistory).set_template_ids([self.id])
+
 
 class TemplateHistory(Template):
     """Represents a historical Audit and Remediation `Template`."""
@@ -399,7 +444,7 @@ class TemplateHistory(Template):
 """Audit and Remediation Queries"""
 
 
-class RunQuery(BaseQuery):
+class RunQuery(BaseQuery, AsyncQueryMixin):
     """Represents a query that either creates or retrieves the status of a LiveQuery run."""
 
     def __init__(self, doc_class, cb):
@@ -564,14 +609,14 @@ class RunQuery(BaseQuery):
         return self
 
     def submit(self):
-        """Submits this Audit and Remediation run.
+        """
+        Submits this Audit and Remediation run.
 
         Returns:
-            A new `Run` instance containing the run's status.
+            Run: A new `Run` instance containing the run's status.
 
         Raises:
-            ApiError: If the Run does not have SQL set, or if the Run
-                has already been submitted.
+            ApiError: If the Run does not have SQL set, or if the Run has already been submitted.
         """
         if self._query_token is not None:
             raise ApiError(
@@ -588,8 +633,36 @@ class RunQuery(BaseQuery):
 
         return self._doc_class(self._cb, initial_data=resp.json())
 
+    def _init_async_query(self):
+        """
+        Initialize an async query and return a context for running in the background. Optional.
 
-class RunHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin):
+        Returns:
+            Run: Context for running in the background.
+        """
+        return self.submit()
+
+    def _run_async_query(self, context):
+        """
+        Executed in the background to run an asynchronous query. Must be implemented in any inheriting classes.
+
+        Args:
+            context (object): The context returned by _init_async_query. May be None.
+
+        Returns:
+            Any: Result of the async query, which is then returned by the future.
+        """
+        while context.status == 'ACTIVE':
+            time.sleep(.5)
+            context.refresh()
+        if context.status == 'COMPLETE':
+            query = context.query_results()
+            return query._run_async_query(query._init_async_query())
+        raise ApiError(f"Async query terminated with status {context.status}")
+
+
+class RunHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin,
+                      AsyncQueryMixin):
     """Represents a query that retrieves historic LiveQuery runs."""
     def __init__(self, doc_class, cb):
         """Initialize a RunHistoryQuery object."""
@@ -692,8 +765,36 @@ class RunHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
                 still_querying = False
                 break
 
+    def _run_async_query(self, context):
+        """
+        Executed in the background to run an asynchronous query. Must be implemented in any inheriting classes.
 
-class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin):
+        Args:
+            context (object): The context returned by _init_async_query. May be None.
+
+        Returns:
+            Any: Result of the async query, which is then returned by the future.
+        """
+        url = self._doc_class.urlobject_history.format(self._cb.credentials.org_key)
+        self._total_results = 0
+        self._count_valid = False
+        output = []
+        while not self._count_valid or len(output) < self._total_results:
+            request = self._build_request(len(output), -1)
+            resp = self._cb.post_object(url, body=request)
+            result = resp.json()
+
+            if not self._count_valid:
+                self._total_results = result["num_found"]
+                self._count_valid = True
+
+            results = result.get("results", [])
+            output += [self._doc_class(self._cb, item) for item in results]
+        return output
+
+
+class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin,
+                  AsyncQueryMixin):
     """Represents a query that retrieves results from a LiveQuery run."""
     def __init__(self, doc_class, cb):
         """Initialize a ResultQuery object."""
@@ -895,8 +996,47 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
                 still_querying = False
                 break
 
+    def _init_async_query(self):
+        """
+        Initialize an async query and return a context for running in the background. Optional.
 
-class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin):
+        Returns:
+            str: Context for running in the background.
+        """
+        if self._run_id is None:
+            raise ApiError("Can't retrieve results without a run ID")
+        return self._run_id
+
+    def _run_async_query(self, context):
+        """
+        Executed in the background to run an asynchronous query. Must be implemented in any inheriting classes.
+
+        Args:
+            context (object): The context returned by _init_async_query. May be None.
+
+        Returns:
+            Any: Result of the async query, which is then returned by the future.
+        """
+        url = self._doc_class.urlobject.format(self._cb.credentials.org_key, context)
+        self._total_results = 0
+        self._count_valid = False
+        output = []
+        while not self._count_valid or len(output) < self._total_results:
+            request = self._build_request(len(output), -1)
+            resp = self._cb.post_object(url, body=request)
+            result = resp.json()
+
+            if not self._count_valid:
+                self._total_results = min(result["num_found"], MAX_RESULTS_LIMIT)
+                self._count_valid = True
+
+            results = result.get("results", [])
+            output += [self._doc_class(self._cb, item) for item in results]
+        return output
+
+
+
+class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin, AsyncQueryMixin):
     """Represents a query that receives facet information from a LiveQuery run."""
     def __init__(self, doc_class, cb):
         """Initialize a FacetQuery object."""
@@ -1056,8 +1196,37 @@ class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Criter
         for item in results:
             yield self._doc_class(self._cb, item)
 
+    def _init_async_query(self):
+        """
+        Initialize an async query and return a context for running in the background. Optional.
 
-class TemplateHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin):
+        Returns:
+            str: Context for running in the background.
+        """
+        if self._run_id is None:
+            raise ApiError("Can't retrieve results without a run ID")
+        return self._run_id
+
+    def _run_async_query(self, context):
+        """
+        Executed in the background to run an asynchronous query. Must be implemented in any inheriting classes.
+
+        Args:
+            context (object): The context returned by _init_async_query. May be None.
+
+        Returns:
+            Any: Result of the async query, which is then returned by the future.
+        """
+        url = self._doc_class.urlobject.format(self._cb.credentials.org_key, context)
+        request = self._build_request(0)
+        resp = self._cb.post_object(url, body=request)
+        result = resp.json()
+        results = result.get("terms", [])
+        return [self._doc_class(self._cb, item) for item in results]
+
+
+class TemplateHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin,
+                           AsyncQueryMixin):
     """Represents a query that retrieves historic LiveQuery templates."""
     def __init__(self, doc_class, cb):
         """Initialize a TemplateHistoryQuery object."""
@@ -1145,3 +1314,32 @@ class TemplateHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
             if current >= self._total_results:
                 still_querying = False
                 break
+
+    def _run_async_query(self, context):
+        """
+        Executed in the background to run an asynchronous query. Must be implemented in any inheriting classes.
+
+        Args:
+            context (object): The context returned by _init_async_query. May be None.
+
+        Returns:
+            Any: Result of the async query, which is then returned by the future.
+        """
+        url = self._doc_class.urlobject_history.format(
+            self._cb.credentials.org_key
+        )
+        self._total_results = 0
+        self._count_valid = False
+        output = []
+        while not self._count_valid or len(output) < self._total_results:
+            request = self._build_request(len(output), -1)
+            resp = self._cb.post_object(url, body=request)
+            result = resp.json()
+
+            if not self._count_valid:
+                self._total_results = result["num_found"]
+                self._count_valid = True
+
+            results = result.get("results", [])
+            output += [self._doc_class(self._cb, item) for item in results]
+        return output
