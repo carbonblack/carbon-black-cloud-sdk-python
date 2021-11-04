@@ -31,7 +31,8 @@ MAX_RESULTS_LIMIT = 10000
 
 
 class Run(NewBaseModel):
-    """Represents an Audit and Remediation run.
+    """
+    Represents an Audit and Remediation run.
 
     Example:
     >>> run = cb.select(Run, run_id)
@@ -46,7 +47,17 @@ class Run(NewBaseModel):
     _is_deleted = False
 
     def __init__(self, cb, model_unique_id=None, initial_data=None):
-        """Initialize a Run object with initial_data."""
+        """
+        Initialize a Run object with initial_data.
+
+        Required Permissions:
+            livequery.manage(READ)
+
+        Arguments:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            model_unique_id (str): ID of the query run represented.
+            initial_data (dict): Initial data used to populate the query run.
+        """
         if initial_data is not None:
             item = initial_data
         elif model_unique_id is not None:
@@ -65,9 +76,28 @@ class Run(NewBaseModel):
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
+        """
+        Returns the appropriate query object for the Run type.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            RunQuery: The query object for the Run type.
+        """
         return RunQuery(cls, cb)
 
     def _refresh(self):
+        """
+        Rereads the Run data from the server.
+
+        Required Permissions:
+            livequery.manage(READ)
+
+        Returns:
+            bool: True if refresh was successful, False if not.
+        """
         if self._is_deleted:
             raise ApiError("cannot refresh a deleted query")
         url = self.urlobject_single.format(self._cb.credentials.org_key, self.id)
@@ -77,10 +107,14 @@ class Run(NewBaseModel):
         return True
 
     def stop(self):
-        """Stop a running query.
+        """
+        Stop a running query.
+
+        Required Permissions:
+            livequery.manage(UPDATE)
 
         Returns:
-            (bool): True if query was stopped successfully, False otherwise.
+            bool: True if query was stopped successfully, False otherwise.
 
         Raises:
             ServerError: If the server response cannot be parsed as JSON.
@@ -89,7 +123,7 @@ class Run(NewBaseModel):
             raise ApiError("cannot stop a deleted query")
         url = self.urlobject_single.format(self._cb.credentials.org_key, self.id) + "/status"
         result = self._cb.put_object(url, {'status': 'CANCELLED'})
-        if (result.status_code == 200):
+        if result.status_code == 200:
             try:
                 self._info = result.json()
                 self._last_refresh_time = time.time()
@@ -102,8 +136,11 @@ class Run(NewBaseModel):
         """
         Delete a query.
 
+        Required Permissions:
+            livequery.manage(DELETE)
+
         Returns:
-            (bool): True if the query was deleted successfully, False otherwise.
+            bool: True if the query was deleted successfully, False otherwise.
         """
         if self._is_deleted:
             return True  # already deleted
@@ -122,7 +159,12 @@ class Run(NewBaseModel):
 
         Returns:
             ResultQuery: A query object which will search for all results for this run.
+
+        Raises:
+            ApiError: If the query has been deleted.
         """
+        if self._is_deleted:
+            raise ApiError("query is deleted")
         return self._cb.select(Result).run_id(self.id)
 
     def query_device_summaries(self):
@@ -133,7 +175,12 @@ class Run(NewBaseModel):
 
         Returns:
             ResultQuery: A query object which will search for all device summaries for this run.
+
+        Raises:
+            ApiError: If the query has been deleted.
         """
+        if self._is_deleted:
+            raise ApiError("query is deleted")
         return self._cb.select(DeviceSummary).run_id(self.id)
 
     def query_facets(self):
@@ -144,7 +191,12 @@ class Run(NewBaseModel):
 
         Returns:
             FacetQuery: A query object which will search for all result facets for this run.
+
+        Raises:
+            ApiError: If the query has been deleted.
         """
+        if self._is_deleted:
+            raise ApiError("query is deleted")
         return self._cb.select(ResultFacet).run_id(self.id)
 
 
@@ -153,15 +205,29 @@ class RunHistory(Run):
     urlobject_history = "/livequery/v1/orgs/{}/runs/_search"
 
     def __init__(self, cb, initial_data=None):
-        """Initialize a RunHistory object with initial_data."""
+        """
+        Initialize a RunHistory object with initial_data.
+
+        Arguments:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            initial_data (dict): Initial data used to populate the history object.
+        """
         item = initial_data
         model_unique_id = item.get("id")
-        super(Run, self).__init__(cb,
-                                  model_unique_id, initial_data=item,
-                                  force_init=False, full_doc=True)
+        super(Run, self).__init__(cb, model_unique_id, initial_data=item, force_init=False, full_doc=True)
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
+        """
+        Returns the appropriate query object for the RunHistory type.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            RunHistoryQuery: The query object for the Run type.
+        """
         return RunHistoryQuery(cls, cb)
 
 
@@ -176,7 +242,13 @@ class Result(UnrefreshableModel):
         primary_key = "id"
 
         def __init__(self, cb, initial_data):
-            """Initialize a Device Result object with initial_data."""
+            """
+            Initialize a Device Result object with initial_data.
+
+            Arguments:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+                initial_data (dict): Initial data used to populate the result.
+            """
             super(Result.Device, self).__init__(
                 cb,
                 model_unique_id=initial_data["id"],
@@ -188,7 +260,13 @@ class Result(UnrefreshableModel):
     class Fields(UnrefreshableModel):
         """Represents the fields of a result."""
         def __init__(self, cb, initial_data):
-            """Initialize a Result Fields object with initial_data."""
+            """
+            Initialize a Result Fields object with initial_data.
+
+            Arguments:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+                initial_data (dict): Initial data used to populate the result.
+            """
             super(Result.Fields, self).__init__(
                 cb,
                 model_unique_id=None,
@@ -200,7 +278,13 @@ class Result(UnrefreshableModel):
     class Metrics(UnrefreshableModel):
         """Represents the metrics of a result."""
         def __init__(self, cb, initial_data):
-            """Initialize a Result Metrics object with initial_data."""
+            """
+            Initialize a Result Metrics object with initial_data.
+
+            Arguments:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+                initial_data (dict): Initial data used to populate the result.
+            """
             super(Result.Metrics, self).__init__(
                 cb,
                 model_unique_id=None,
@@ -211,12 +295,27 @@ class Result(UnrefreshableModel):
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
+        """
+        Returns the appropriate query object for the Result type.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            ResultQuery: The query object for the Result type.
+        """
         return ResultQuery(cls, cb)
 
     def __init__(self, cb, initial_data):
-        """Initialize a Result object with initial_data.
+        """
+        Initialize a Result object with initial_data.
 
         Device, Fields, and Metrics objects are attached using initial_data.
+
+        Arguments:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            initial_data (dict): Initial data used to populate the result.
         """
         super(Result, self).__init__(
             cb,
@@ -249,23 +348,38 @@ class Result(UnrefreshableModel):
         return self._metrics
 
     def query_device_summaries(self):
-        """Returns a ResultQuery for a DeviceSummary.
+        """
+        Returns a ResultQuery for a DeviceSummary.
 
-        This represents the search for a summary of results from a single device of a `Run`.
+        This represents the search for a summary of results from a single device of a `Run`.  The query may be further
+        augmented with additional criteria prior to enumerating its results.
+
+        Returns:
+            ResultQuery: The query object returned by this operation.
         """
         return self._cb.select(DeviceSummary).run_id(self._run_id)
 
     def query_result_facets(self):
-        """Returns a ResultQuery for a ResultFacet.
+        """
+        Returns a ResultQuery for a ResultFacet.
 
-        This represents the search for a summary of results from a single field of a `Run`.
+        This represents the search for a summary of results from a single field of a `Run`. The query may be further
+        augmented with additional criteria prior to enumerating its results.
+
+        Returns:
+            ResultQuery: The query object returned by this operation.
         """
         return self._cb.select(ResultFacet).run_id(self._run_id)
 
     def query_device_summary_facets(self):
-        """Returns a ResultQuery for a DeviceSummaryFacet.
+        """
+        Returns a ResultQuery for a DeviceSummaryFacet.
 
-        This represents the search for a summary of a single device summary of a `Run`.
+        This represents the search for a summary of a single device summary of a `Run`. The query may be further
+        augmented with additional criteria prior to enumerating its results.
+
+        Returns:
+            ResultQuery: The query object returned by this operation.
         """
         return self._cb.select(DeviceSummaryFacet).run_id(self._run_id)
 
@@ -279,7 +393,13 @@ class DeviceSummary(UnrefreshableModel):
     class Metrics(UnrefreshableModel):
         """Represents the metrics for a result."""
         def __init__(self, cb, initial_data):
-            """Initialize a DeviceSummary Metrics object with initial_data."""
+            """
+            Initialize a DeviceSummary Metrics object with initial_data.
+
+            Arguments:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+                initial_data (dict): Initial data used to populate the result.
+            """
             super(DeviceSummary.Metrics, self).__init__(
                 cb,
                 model_unique_id=None,
@@ -290,10 +410,26 @@ class DeviceSummary(UnrefreshableModel):
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
+        """
+        Returns the appropriate query object for the DeviceSummary type.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            ResultQuery: The query object for the DeviceSummary type.
+        """
         return ResultQuery(cls, cb)
 
     def __init__(self, cb, initial_data):
-        """Initialize a DeviceSummary object with initial_data."""
+        """
+        Initialize a DeviceSummary object with initial_data.
+
+        Arguments:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            initial_data (dict): Initial data used to populate the result.
+        """
         super(DeviceSummary, self).__init__(
             cb,
             model_unique_id=initial_data["device"]["id"],
@@ -318,7 +454,13 @@ class ResultFacet(UnrefreshableModel):
     class Values(UnrefreshableModel):
         """Represents the values associated with a field."""
         def __init__(self, cb, initial_data):
-            """Initialize a ResultFacet Values object with initial_data."""
+            """
+            Initialize a ResultFacet Values object with initial_data.
+
+            Arguments:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+                initial_data (dict): Initial data used to populate the result.
+            """
             super(ResultFacet.Values, self).__init__(
                 cb,
                 model_unique_id=None,
@@ -329,10 +471,26 @@ class ResultFacet(UnrefreshableModel):
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
+        """
+        Returns the appropriate query object for the ResultFacet type.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            FacetQuery: The query object for the ResultFacet type.
+        """
         return FacetQuery(cls, cb)
 
     def __init__(self, cb, initial_data):
-        """Initialize a ResultFacet object with initial_data."""
+        """
+        Initialize a ResultFacet object with initial_data.
+
+        Arguments:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            initial_data (dict): Initial data used to populate the result.
+        """
         super(ResultFacet, self).__init__(
             cb,
             model_unique_id=None,
@@ -353,12 +511,19 @@ class DeviceSummaryFacet(ResultFacet):
     urlobject = "/livequery/v1/orgs/{}/runs/{}/results/device_summaries/_facet"
 
     def __init__(self, cb, initial_data):
-        """Initialize a DeviceSummaryFacet object with initial_data."""
+        """
+        Initialize a DeviceSummaryFacet object with initial_data.
+
+        Arguments:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            initial_data (dict): Initial data used to populate the result.
+        """
         super(DeviceSummaryFacet, self).__init__(cb, initial_data)
 
 
 class Template(Run):
-    """Represents an Audit and Remediation Live Query Template .
+    """
+    Represents an Audit and Remediation Live Query Template .
 
     Example:
     >>> template = cb.select(Template, template_id)
@@ -373,7 +538,17 @@ class Template(Run):
     _is_deleted = False
 
     def __init__(self, cb, model_unique_id=None, initial_data=None):
-        """Initialize a Template object with initial_data."""
+        """
+        Initialize a Template object with initial_data.
+
+        Required Permissions:
+            livequery.manage(READ)
+
+        Arguments:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            model_unique_id (str): ID of the query run represented.
+            initial_data (dict): Initial data used to populate the query run.
+        """
         if initial_data is not None:
             item = initial_data
         elif model_unique_id is not None:
@@ -389,10 +564,14 @@ class Template(Run):
         )
 
     def stop(self):
-        """Stop a template.
+        """
+        Stop a template.
+
+        Required Permissions:
+            livequery.manage(UPDATE)
 
         Returns:
-            (bool): True if query was stopped successfully, False otherwise.
+            bool: True if query was stopped successfully, False otherwise.
 
         Raises:
             ServerError: If the server response cannot be parsed as JSON.
@@ -429,7 +608,16 @@ class TemplateHistory(Template):
     urlobject_history = "/livequery/v1/orgs/{}/templates/_search"
 
     def __init__(self, cb, initial_data=None):
-        """Initialize a TemplateHistory object with initial_data."""
+        """
+        Initialize a Template object with initial_data.
+
+        Required Permissions:
+            livequery.manage(READ)
+
+        Arguments:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            initial_data (dict): Initial data used to populate the query run.
+        """
         item = initial_data
         model_unique_id = item.get("id")
         super(Run, self).__init__(cb,
@@ -438,6 +626,16 @@ class TemplateHistory(Template):
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
+        """
+        Returns the appropriate query object for the TemplateHistory type.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            TemplateHistoryQuery: The query object for the TemplateHistory type.
+        """
         return TemplateHistoryQuery(cls, cb)
 
 
@@ -448,7 +646,13 @@ class RunQuery(BaseQuery, AsyncQueryMixin):
     """Represents a query that either creates or retrieves the status of a LiveQuery run."""
 
     def __init__(self, doc_class, cb):
-        """Initialize a RunQuery object."""
+        """
+        Initialize the RunQuery.
+
+        Args:
+            doc_class (class): The model class that will be returned by this query.
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+        """
         self._doc_class = doc_class
         self._cb = cb
         self._count_valid = False
@@ -516,7 +720,7 @@ class RunQuery(BaseQuery, AsyncQueryMixin):
             timezone (string): The timezone database name to use as a base for the rrule
 
         Returns:
-            The RunQuery with a recurrence schedule.
+            RunQuery: The RunQuery with a recurrence schedule.
         """
         self._query_body["schedule"] = {}
         self._query_body["schedule"]["rrule"] = rrule
@@ -524,13 +728,14 @@ class RunQuery(BaseQuery, AsyncQueryMixin):
         return self
 
     def device_ids(self, device_ids):
-        """Restricts the devices that this Audit and Remediation run is performed on to the given IDs.
+        """
+        Restricts the devices that this Audit and Remediation run is performed on to the given IDs.
 
         Arguments:
             device_ids ([int]): Device IDs to perform the Run on.
 
         Returns:
-            The RunQuery with specified device_ids.
+            RunQuery: The RunQuery with specified device_ids.
         """
         if not all(isinstance(device_id, int) for device_id in device_ids):
             raise ApiError("One or more invalid device IDs")
@@ -538,13 +743,14 @@ class RunQuery(BaseQuery, AsyncQueryMixin):
         return self
 
     def device_types(self, device_types):
-        """Restricts the devices that this Audit and Remediation run is performed on to the given OS.
+        """
+        Restricts the devices that this Audit and Remediation run is performed on to the given OS.
 
         Arguments:
             device_types ([str]): Device types to perform the Run on.
 
         Returns:
-            The RunQuery object with specified device_types.
+            RunQuery: The RunQuery object with specified device_types.
 
         Note:
             Device type can be one of ["WINDOWS", "MAC", "LINUX"].
@@ -556,13 +762,14 @@ class RunQuery(BaseQuery, AsyncQueryMixin):
         return self
 
     def policy_id(self, policy_id):
-        """Restricts this Audit and Remediation run to the given policy ID.
+        """
+        Restricts this Audit and Remediation run to the given policy ID.
 
         Arguments:
             policy_id (int) or (list[int]): Policy ID to perform the Run on.
 
         Returns:
-            The RunQuery object with specified policy_id.
+            RunQuery: The RunQuery object with specified policy_id.
         """
         if isinstance(policy_id, list) and isinstance(policy_id[0], int):
             self._device_filter["policy_id"] = policy_id
@@ -574,19 +781,21 @@ class RunQuery(BaseQuery, AsyncQueryMixin):
         return self
 
     def where(self, sql):
-        """Sets this Audit and Remediation run's underlying SQL.
+        """
+        Sets this Audit and Remediation run's underlying SQL.
 
         Arguments:
             sql (str): The SQL to execute for the Run.
 
         Returns:
-            The RunQuery object with specified sql.
+            RunQuery: The RunQuery object with specified sql.
         """
         self._query_body["sql"] = sql
         return self
 
     def name(self, name):
-        """Sets this Audit and Remediation run's name.
+        """
+        Sets this Audit and Remediation run's name.
 
         If no name is explicitly set, the run is named after its SQL.
 
@@ -594,16 +803,17 @@ class RunQuery(BaseQuery, AsyncQueryMixin):
             name (str): The name for this Run.
 
         Returns:
-            The RunQuery object with specified name.
+            RunQuery: The RunQuery object with specified name.
         """
         self._query_body["name"] = name
         return self
 
     def notify_on_finish(self):
-        """Sets the notify-on-finish flag on this Audit and Remediation run.
+        """
+        Sets the notify-on-finish flag on this Audit and Remediation run.
 
         Returns:
-            The RunQuery object with `notify_on_finish` set to True.
+            RunQuery: The RunQuery object with `notify_on_finish` set to True.
         """
         self._query_body["notify_on_finish"] = True
         return self
@@ -665,7 +875,13 @@ class RunHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
                       AsyncQueryMixin):
     """Represents a query that retrieves historic LiveQuery runs."""
     def __init__(self, doc_class, cb):
-        """Initialize a RunHistoryQuery object."""
+        """
+        Initialize the RunHistoryQuery.
+
+        Args:
+            doc_class (class): The model class that will be returned by this query.
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+        """
         self._doc_class = doc_class
         self._cb = cb
         self._count_valid = False
@@ -675,13 +891,14 @@ class RunHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
         self._criteria = {}
 
     def set_template_ids(self, template_ids):
-        """Sets the template_id criteria filter.
+        """
+        Sets the template_id criteria filter.
 
         Arguments:
             template_ids ([str]): Template IDs to filter on.
 
         Returns:
-            The ResultQuery with specified template_id.
+            RunHistoryQuery: The RunHistoryQuery with specified template_id.
         """
         if not all(isinstance(template_id, str) for template_id in template_ids):
             raise ApiError("One or more invalid template IDs")
@@ -689,14 +906,15 @@ class RunHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
         return self
 
     def sort_by(self, key, direction="ASC"):
-        """Sets the sorting behavior on a query's results.
+        """
+        Sets the sorting behavior on a query's results.
 
         Arguments:
             key (str): The key in the schema to sort by.
             direction (str): The sort order, either "ASC" or "DESC".
 
         Returns:
-            RunHistoryQuery object with specified sorting key and order.
+            RunHistoryQuery: RunHistoryQuery object with specified sorting key and order.
 
         Example:
 
@@ -706,6 +924,16 @@ class RunHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
         return self
 
     def _build_request(self, start, rows):
+        """
+        Creates the request body for an API call.
+
+        Args:
+            start (int): The row to start the query at.
+            rows (int): The maximum number of rows to be returned.
+
+        Returns:
+            dict: The complete request body.
+        """
         request = {"start": start}
 
         if self._query_builder:
@@ -720,6 +948,12 @@ class RunHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
         return request
 
     def _count(self):
+        """
+        Returns the number of results from the run of this query.
+
+        Returns:
+            int: The number of results from the run of this query.
+        """
         if self._count_valid:
             return self._total_results
 
@@ -736,6 +970,16 @@ class RunHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
         return self._total_results
 
     def _perform_query(self, start=0, rows=0):
+        """
+        Performs the query and returns the results of the query in an iterable fashion.
+
+        Args:
+            start (int): The row to start the query at (default 0).
+            rows (int): The maximum number of rows to be returned (default 0, meaning "all").
+
+        Returns:
+            Iterable: The iterated query.
+        """
         url = self._doc_class.urlobject_history.format(
             self._cb.credentials.org_key
         )
@@ -797,7 +1041,13 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
                   AsyncQueryMixin):
     """Represents a query that retrieves results from a LiveQuery run."""
     def __init__(self, doc_class, cb):
-        """Initialize a ResultQuery object."""
+        """
+        Initialize the ResultQuery.
+
+        Args:
+            doc_class (class): The model class that will be returned by this query.
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+        """
         self._doc_class = doc_class
         self._cb = cb
         self._count_valid = False
@@ -810,13 +1060,14 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         self._run_id = None
 
     def set_device_ids(self, device_ids):
-        """Sets the device.id criteria filter.
+        """
+        Sets the device.id criteria filter.
 
         Arguments:
             device_ids ([int]): Device IDs to filter on.
 
         Returns:
-            The ResultQuery with specified device.id.
+            ResultQuery: The ResultQuery with specified device.id.
         """
         if not all(isinstance(device_id, int) for device_id in device_ids):
             raise ApiError("One or more invalid device IDs")
@@ -824,13 +1075,14 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         return self
 
     def set_device_names(self, device_names):
-        """Sets the device.name criteria filter.
+        """
+        Sets the device.name criteria filter.
 
         Arguments:
             device_names ([str]): Device names to filter on.
 
         Returns:
-            The ResultQuery with specified device.name.
+            ResultQuery: The ResultQuery with specified device.name.
         """
         if not all(isinstance(name, str) for name in device_names):
             raise ApiError("One or more invalid device names")
@@ -838,13 +1090,14 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         return self
 
     def set_device_os(self, device_os):
-        """Sets the device.os criteria.
+        """
+        Sets the device.os criteria.
 
         Arguments:
             device_os ([str]): Device OS's to filter on.
 
         Returns:
-            The ResultQuery object with specified device_os.
+            ResultQuery: The ResultQuery object with specified device_os.
 
         Note:
             Device OS's can be one or more of ["WINDOWS", "MAC", "LINUX"].
@@ -856,13 +1109,14 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         return self
 
     def set_policy_ids(self, policy_ids):
-        """Sets the device.policy_id criteria.
+        """
+        Sets the device.policy_id criteria.
 
         Arguments:
             policy_ids ([int]): Device policy ID's to filter on.
 
         Returns:
-            The ResultQuery object with specified policy_ids.
+            ResultQuery: The ResultQuery object with specified policy_ids.
         """
         if not all(isinstance(id, int) for id in policy_ids):
             raise ApiError("policy_ids must be a list of integers.")
@@ -870,13 +1124,14 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         return self
 
     def set_policy_names(self, policy_names):
-        """Sets the device.policy_name criteria.
+        """
+        Sets the device.policy_name criteria.
 
         Arguments:
             policy_names ([str]): Device policy names to filter on.
 
         Returns:
-            The ResultQuery object with specified policy_names.
+            ResultQuery: The ResultQuery object with specified policy_names.
         """
         if not all(isinstance(name, str) for name in policy_names):
             raise ApiError("policy_names must be a list of strings.")
@@ -884,13 +1139,14 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         return self
 
     def set_statuses(self, statuses):
-        """Sets the status criteria.
+        """
+        Sets the status criteria.
 
         Arguments:
             statuses ([str]): Query statuses to filter on.
 
         Returns:
-            The ResultQuery object with specified statuses.
+            ResultQuery: The ResultQuery object with specified statuses.
         """
         if not all(isinstance(status, str) for status in statuses):
             raise ApiError("statuses must be a list of strings.")
@@ -898,14 +1154,15 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         return self
 
     def sort_by(self, key, direction="ASC"):
-        """Sets the sorting behavior on a query's results.
+        """
+        Sets the sorting behavior on a query's results.
 
         Arguments:
             key (str): The key in the schema to sort by.
             direction (str): The sort order, either "ASC" or "DESC".
 
         Returns:
-            ResultQuery object with specified sorting key and order.
+            ResultQuery: ResultQuery object with specified sorting key and order.
 
         Example:
 
@@ -915,13 +1172,14 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         return self
 
     def run_id(self, run_id):
-        """Sets the run ID to query results for.
+        """
+        Sets the run ID to query results for.
 
         Arguments:
             run_id (int): The run ID to retrieve results for.
 
         Returns:
-            ResultQuery object with specified run_id.
+            ResultQuery: ResultQuery object with specified run_id.
 
         Example:
 
@@ -931,6 +1189,16 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         return self
 
     def _build_request(self, start, rows):
+        """
+        Creates the request body for an API call.
+
+        Args:
+            start (int): The row to start the query at.
+            rows (int): The maximum number of rows to be returned.
+
+        Returns:
+            dict: The complete request body.
+        """
         request = {"start": start, "query": self._query_builder._collapse()}
 
         if rows != 0:
@@ -943,6 +1211,12 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         return request
 
     def _count(self):
+        """
+        Returns the number of results from the run of this query.
+
+        Returns:
+            int: The number of results from the run of this query.
+        """
         if self._count_valid:
             return self._total_results
 
@@ -962,6 +1236,16 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         return self._total_results
 
     def _perform_query(self, start=0, rows=0):
+        """
+        Performs the query and returns the results of the query in an iterable fashion.
+
+        Args:
+            start (int): The row to start the query at (default 0).
+            rows (int): The maximum number of rows to be returned (default 0, meaning "all").
+
+        Returns:
+            Iterable: The iterated query.
+        """
         if self._run_id is None:
             raise ApiError("Can't retrieve results without a run ID")
 
@@ -1035,11 +1319,16 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         return output
 
 
-
 class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin, AsyncQueryMixin):
     """Represents a query that receives facet information from a LiveQuery run."""
     def __init__(self, doc_class, cb):
-        """Initialize a FacetQuery object."""
+        """
+        Initialize the FacetQuery.
+
+        Args:
+            doc_class (class): The model class that will be returned by this query.
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+        """
         self._doc_class = doc_class
         self._cb = cb
         self._count_valid = False
@@ -1051,13 +1340,14 @@ class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Criter
         self._run_id = None
 
     def facet_field(self, field):
-        """Sets the facet fields to be received by this query.
+        """
+        Sets the facet fields to be received by this query.
 
         Arguments:
             field (str or [str]): Field(s) to be received.
 
         Returns:
-            FacetQuery that will receive field(s) facet_field.
+            FacetQuery: FacetQuery that will receive field(s) facet_field.
 
         Example:
 
@@ -1071,13 +1361,14 @@ class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Criter
         return self
 
     def set_device_ids(self, device_ids):
-        """Sets the device.id criteria filter.
+        """
+        Sets the device.id criteria filter.
 
         Arguments:
             device_ids ([int]): Device IDs to filter on.
 
         Returns:
-            The FacetQuery with specified device.id.
+            FacetQuery: The FacetQuery with specified device.id.
         """
         if not all(isinstance(device_id, int) for device_id in device_ids):
             raise ApiError("One or more invalid device IDs")
@@ -1085,13 +1376,14 @@ class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Criter
         return self
 
     def set_device_names(self, device_names):
-        """Sets the device.name criteria filter.
+        """
+        Sets the device.name criteria filter.
 
         Arguments:
             device_names ([str]): Device names to filter on.
 
         Returns:
-            The FacetQuery with specified device.name.
+            FacetQuery: The FacetQuery with specified device.name.
         """
         if not all(isinstance(name, str) for name in device_names):
             raise ApiError("One or more invalid device names")
@@ -1099,13 +1391,14 @@ class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Criter
         return self
 
     def set_device_os(self, device_os):
-        """Sets the device.os criteria.
+        """
+        Sets the device.os criteria.
 
         Arguments:
             device_os ([str]): Device OS's to filter on.
 
         Returns:
-            The FacetQuery object with specified device_os.
+            FacetQuery: The FacetQuery object with specified device_os.
 
         Note:
             Device OS's can be one or more of ["WINDOWS", "MAC", "LINUX"].
@@ -1117,13 +1410,14 @@ class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Criter
         return self
 
     def set_policy_ids(self, policy_ids):
-        """Sets the device.policy_id criteria.
+        """
+        Sets the device.policy_id criteria.
 
         Arguments:
             policy_ids ([int]): Device policy ID's to filter on.
 
         Returns:
-            The FacetQuery object with specified policy_ids.
+            FacetQuery: The FacetQuery object with specified policy_ids.
         """
         if not all(isinstance(id, int) for id in policy_ids):
             raise ApiError("policy_ids must be a list of integers.")
@@ -1131,13 +1425,14 @@ class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Criter
         return self
 
     def set_policy_names(self, policy_names):
-        """Sets the device.policy_name criteria.
+        """
+        Sets the device.policy_name criteria.
 
         Arguments:
             policy_names ([str]): Device policy names to filter on.
 
         Returns:
-            The FacetQuery object with specified policy_names.
+            FacetQuery: The FacetQuery object with specified policy_names.
         """
         if not all(isinstance(name, str) for name in policy_names):
             raise ApiError("policy_names must be a list of strings.")
@@ -1145,13 +1440,14 @@ class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Criter
         return self
 
     def set_statuses(self, statuses):
-        """Sets the status criteria.
+        """
+        Sets the status criteria.
 
         Arguments:
             statuses ([str]): Query statuses to filter on.
 
         Returns:
-            The FacetQuery object with specified statuses.
+            FacetQuery: The FacetQuery object with specified statuses.
         """
         if not all(isinstance(status, str) for status in statuses):
             raise ApiError("statuses must be a list of strings.")
@@ -1159,13 +1455,14 @@ class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Criter
         return self
 
     def run_id(self, run_id):
-        """Sets the run ID to query results for.
+        """
+        Sets the run ID to query results for.
 
         Arguments:
             run_id (int): The run ID to retrieve results for.
 
         Returns:
-            FacetQuery object with specified run_id.
+            FacetQuery: FacetQuery object with specified run_id.
 
         Example:
         >>> cb.select(ResultFacet).run_id(my_run)
@@ -1174,6 +1471,15 @@ class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Criter
         return self
 
     def _build_request(self, rows):
+        """
+        Creates the request body for an API call.
+
+        Args:
+            rows (int): The maximum number of rows to be returned.
+
+        Returns:
+            dict: The complete request body.
+        """
         terms = {"fields": self._facet_fields}
         if rows != 0:
             terms["rows"] = rows
@@ -1183,6 +1489,15 @@ class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Criter
         return request
 
     def _perform_query(self, rows=0):
+        """
+        Performs the query and returns the results of the query in an iterable fashion.
+
+        Args:
+            rows (int): The maximum number of rows to be returned (default 0, meaning "all").
+
+        Returns:
+            Iterable: The iterated query.
+        """
         if self._run_id is None:
             raise ApiError("Can't retrieve results without a run ID")
 
@@ -1229,7 +1544,13 @@ class TemplateHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
                            AsyncQueryMixin):
     """Represents a query that retrieves historic LiveQuery templates."""
     def __init__(self, doc_class, cb):
-        """Initialize a TemplateHistoryQuery object."""
+        """
+        Initialize the TemplateHistoryQuery.
+
+        Args:
+            doc_class (class): The model class that will be returned by this query.
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+        """
         self._doc_class = doc_class
         self._cb = cb
         self._count_valid = False
@@ -1239,14 +1560,15 @@ class TemplateHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
         self._criteria = {}
 
     def sort_by(self, key, direction="ASC"):
-        """Sets the sorting behavior on a query's results.
+        """
+        Sets the sorting behavior on a query's results.
 
         Arguments:
             key (str): The key in the schema to sort by.
             direction (str): The sort order, either "ASC" or "DESC".
 
         Returns:
-            RunHistoryQuery object with specified sorting key and order.
+            TemplateHistoryQuery: object with specified sorting key and order.
 
         Example:
 
@@ -1256,6 +1578,16 @@ class TemplateHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
         return self
 
     def _build_request(self, start, rows):
+        """
+        Creates the request body for an API call.
+
+        Args:
+            start (int): The row to start the query at.
+            rows (int): The maximum number of rows to be returned.
+
+        Returns:
+            dict: The complete request body.
+        """
         request = {"start": start}
 
         if self._query_builder:
@@ -1270,6 +1602,12 @@ class TemplateHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
         return request
 
     def _count(self):
+        """
+        Returns the number of results from the run of this query.
+
+        Returns:
+            int: The number of results from the run of this query.
+        """
         if self._count_valid:
             return self._total_results
 
@@ -1286,6 +1624,16 @@ class TemplateHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
         return self._total_results
 
     def _perform_query(self, start=0, rows=0):
+        """
+        Performs the query and returns the results of the query in an iterable fashion.
+
+        Args:
+            start (int): The row to start the query at (default 0).
+            rows (int): The maximum number of rows to be returned (default 0, meaning "all").
+
+        Returns:
+            Iterable: The iterated query.
+        """
         url = self._doc_class.urlobject_history.format(
             self._cb.credentials.org_key
         )
