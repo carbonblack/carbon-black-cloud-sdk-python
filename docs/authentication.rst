@@ -30,14 +30,14 @@ Store the Key with profile name, and reference the profile name when creating CB
   >>> platform_api = CBCloudAPI(profile='platform')
 
   # search for specific devices with Platform Devices API
-  >>> important_devs = platform_api.select(Device).set_target_priorities("MISSION_CRITICAL")
+  >>> important_devs = platform_api.select(Device).set_target_priorities(["MISSION_CRITICAL"])
 
   # execute commands with Live Response API
   >>> for device in important_devs:
   ...      lr_session = platform_api.live_response.request_session(device.id)
   ...      lr_session.create_process(r'cmd.exe /c "ping.exe 192.168.1.1"'))
   ...      lr_session.close()
-  
+
 For more examples on Live Response, check :doc:`live-response`
 
 
