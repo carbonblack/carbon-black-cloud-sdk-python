@@ -17,7 +17,7 @@ from __future__ import absolute_import
 from cbc_sdk.base import (UnrefreshableModel, NewBaseModel, QueryBuilder,
                           QueryBuilderSupportMixin, IterableQueryMixin, BaseQuery,
                           CriteriaBuilderSupportMixin, AsyncQueryMixin)
-from cbc_sdk.errors import ApiError, ServerError
+from cbc_sdk.errors import ApiError, ServerError, TimeoutError, OperationCancelled
 import logging
 import time
 
@@ -862,13 +862,18 @@ class RunQuery(BaseQuery, AsyncQueryMixin):
         Returns:
             Any: Result of the async query, which is then returned by the future.
         """
+        context.refresh()  # always do at least one pre-check of context status
         while context.status == 'ACTIVE':
             time.sleep(.5)
             context.refresh()
         if context.status == 'COMPLETE':
             query = context.query_results()
             return query._run_async_query(query._init_async_query())
-        raise ApiError(f"Async query terminated with status {context.status}")
+        elif context.status == 'TIMED_OUT':
+            raise TimeoutError("Async query timed out")
+        elif context.status == 'CANCELLED':
+            raise OperationCancelled("Async query was canceled")
+        raise ApiError(f"Async query terminated with unknown status {context.status}")
 
 
 class RunHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin,
