@@ -600,6 +600,8 @@ class Template(Run):
         Returns:
             RunHistoryQuery: A query object which will search for all runs based on this template.
         """
+        if self._is_deleted:
+            raise ApiError("cannot query runs for a deleted query")
         return self._cb.select(RunHistory).set_template_ids([self.id])
 
 
@@ -872,7 +874,7 @@ class RunQuery(BaseQuery, AsyncQueryMixin):
         elif context.status == 'TIMED_OUT':
             raise TimeoutError("Async query timed out")
         elif context.status == 'CANCELLED':
-            raise OperationCancelled("Async query was canceled")
+            raise OperationCancelled("Async query was cancelled")
         raise ApiError(f"Async query terminated with unknown status {context.status}")
 
 

@@ -2,7 +2,7 @@
 
 import pytest
 import logging
-from cbc_sdk.audit_remediation import Run, Result, ResultQuery, DeviceSummary, ResultFacet, RunHistory
+from cbc_sdk.audit_remediation import Run, Result, Template, ResultQuery, DeviceSummary, ResultFacet, RunHistory
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ServerError, ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -87,9 +87,11 @@ def test_result_fields_with_metrics(cbcsdk_mock):
 def test_result_query_criteria(cbcsdk_mock):
     """Testing set_* criteria methods for ResultQuery."""
     api = cbcsdk_mock.api
-    result_q = api.select(Result).run_id(1).set_device_os(["WINDOWS"]).set_device_ids([1, 2, 3]) \
+    run = Run(api, "1", {"org_key": "test", "name": "FoobieBletch", "id": "1", "status": "COMPLETE"})
+    result_q = run.query_results().set_device_os(["WINDOWS"]).set_device_ids([1, 2, 3]) \
         .set_device_names(["Win7x64", "Win10"]).set_policy_ids([1, 2]).set_policy_names(["default", "policy2"]) \
         .set_statuses(["not_started", "matched"])
+    assert result_q._run_id == "1"
     assert result_q._build_request(start=0, rows=100) == {"criteria": {
         "device.os": ["WINDOWS"],
         "device.id": [1, 2, 3],
@@ -113,9 +115,11 @@ def test_result_query_update_criteria(cbcsdk_mock):
 def test_facet_query_criteria(cbcsdk_mock):
     """Testing set_* criteria for FacetQuery."""
     api = cbcsdk_mock.api
-    facet_q = api.select(ResultFacet).run_id(1).set_device_os(["WINDOWS"]).set_device_ids([1, 2, 3]) \
+    run = Run(api, "1", {"org_key": "test", "name": "FoobieBletch", "id": "1", "status": "COMPLETE"})
+    facet_q = run.query_facets().set_device_os(["WINDOWS"]).set_device_ids([1, 2, 3]) \
         .set_device_names(["Win7x64", "Win10"]).set_policy_ids([1, 2]).set_policy_names(["default", "policy2"]) \
         .set_statuses(["not_started", "matched"])
+    assert facet_q._run_id == "1"
     assert facet_q._build_request(rows=100) == {"criteria": {
         "device.os": ["WINDOWS"],
         "device.id": [1, 2, 3],
@@ -145,6 +149,21 @@ def test_device_summary_metrics(cbcsdk_mock):
     summaries = res0.query_device_summaries()
     cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/runs/run_id/results/device_summaries/_search",
                              GET_DEVICE_SUMMARY_RESP_1)
+    for summary in summaries:
+        metrics = summary.metrics_
+        assert isinstance(metrics, DeviceSummary.Metrics)
+        assert isinstance(summary, DeviceSummary)
+        assert isinstance(metrics.total_cpu_peak, float)
+        assert "average_system_memory_in_use" in metrics._info
+
+
+def test_device_summary_metrics_alternate_route(cbcsdk_mock):
+    """Testing getting device summaries through Run."""
+    cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/runs/run_id/results/device_summaries/_search",
+                             GET_DEVICE_SUMMARY_RESP_1)
+    api = cbcsdk_mock.api
+    run = Run(api, "run_id", {"org_key": "test", "name": "FoobieBletch", "id": "run_id", "status": "COMPLETE"})
+    summaries = run.query_device_summaries()
     for summary in summaries:
         metrics = summary.metrics_
         assert isinstance(metrics, DeviceSummary.Metrics)
@@ -264,7 +283,7 @@ def test_run_history_criteria(cbcsdk_mock):
         assert body["custom"][0] == "values"
 
     api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("POST",
-                             "/livequery/v1/orgs/test/runs//_search",
-                             _test_request)
-    api.select(RunHistory).set_template_ids(["TEST_ID"]).update_criteria("custom", ["values"])
+    cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/runs//_search", _test_request)
+    template = Template(api, "TEST_ID", {"org_key": "test", "name": "FoobieBletch", "id": "TEST_ID",
+                                         "status": "COMPLETE"})
+    template.query_runs().update_criteria("custom", ["values"])

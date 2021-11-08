@@ -3,6 +3,7 @@
 import pytest
 import logging
 from cbc_sdk.audit_remediation import Template, TemplateHistory
+from cbc_sdk.errors import ApiError
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.audit_remediation.mock_templates import (EXAMPLE_TEMPLATE,
@@ -98,6 +99,11 @@ def test_template_delete(cbcsdk_mock):
 
     template.delete()
     assert template._is_deleted
+    # Now ensure that certain operations that don't make sense on a deleted object raise ApiError
+    with pytest.raises(ApiError):
+        template.stop()
+    with pytest.raises(ApiError):
+        template.query_runs()
 
 
 def test_template_history(cbcsdk_mock):
