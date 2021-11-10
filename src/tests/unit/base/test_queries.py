@@ -103,7 +103,6 @@ def test_raise_ModelNotFound():
         ("Recommendation", "RecommendationQuery"),
         ("EnrichedEvent", "EnrichedEventQuery"),
         ("EnrichedEventFacet", "FacetQuery"),
-        ("EndPointStandardEvent", "Query"),
         ("Policy", "Query"),
         ("USBDevice", "USBDeviceQuery"),
         ("USBDeviceApproval", "USBDeviceApprovalQuery"),
@@ -118,7 +117,8 @@ def test_raise_ModelNotFound():
         ("DeviceControlAlert", "DeviceControlAlertSearchQuery"),
         ("WatchlistAlert", "WatchlistAlertSearchQuery"),
         ("Device", "DeviceSearchQuery"),
-        ("Event", "EventQuery"),
+        # TODO: The comment has to be removed after the deprecation of the Endpoint Standard's Event
+        # ("Event", "EventQuery"),
         ("EventFacet", "EventFacetQuery"),
         ("Grant", "GrantQuery"),
         ("Process", "AsyncProcessQuery"),

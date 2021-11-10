@@ -22,6 +22,7 @@ from cbc_sdk.platform.reputation import ReputationOverride
 from copy import deepcopy
 from pathlib import Path
 
+import deprecation
 import logging
 import json
 import time
@@ -133,7 +134,7 @@ class EndpointStandardMutableModel(MutableBaseModel):
         return self._model_unique_id
 
 
-class EndPointStandardEvent(NewBaseModel):
+class Event(NewBaseModel):
     """Represents an Endpoint Standard Event."""
     urlobject = "/integrationServices/v3/event"
     primary_key = "eventId"
@@ -143,9 +144,10 @@ class EndPointStandardEvent(NewBaseModel):
         if type(obj) == dict and self.info_key in obj:
             return obj[self.info_key]
 
+    @deprecation.deprecated(deprecated_in="", removed_in="", current_version="", details="")
     def __init__(self, cb, model_unique_id, initial_data=None):
         """Initialize an Event with model_unique_id and initial_data."""
-        super(EndPointStandardEvent, self).__init__(cb, model_unique_id, initial_data)
+        super(Event, self).__init__(cb, model_unique_id, initial_data)
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):

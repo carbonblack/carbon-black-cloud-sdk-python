@@ -11,6 +11,7 @@ schema
 solrq
 validators
 keyring;platform_system=='Darwin'
+deprecation
 
 # Dev dependencies
 pytest==5.4.2
