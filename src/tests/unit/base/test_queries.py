@@ -99,7 +99,6 @@ def test_raise_ModelNotFound():
         ("RunHistory", "RunHistoryQuery"),
         ("Template", "RunQuery"),
         ("TemplateHistory", "TemplateHistoryQuery"),
-
         # Endpoint Standard
         ("Recommendation", "RecommendationQuery"),
         ("EnrichedEvent", "EnrichedEventQuery"),
@@ -109,12 +108,10 @@ def test_raise_ModelNotFound():
         ("USBDevice", "USBDeviceQuery"),
         ("USBDeviceApproval", "USBDeviceApprovalQuery"),
         ("USBDeviceBlock", "USBDeviceBlockQuery"),
-
         # Enterprise EDR
         ("Feed", "FeedQuery"),
         ("Report", "ReportQuery"),
         ("Watchlist", "WatchlistQuery"),
-
         # Platform
         ("BaseAlert", "BaseAlertSearchQuery"),
         ("CBAnalyticsAlert", "CBAnalyticsAlertSearchQuery"),
@@ -132,13 +129,13 @@ def test_raise_ModelNotFound():
         ("User", "UserQuery"),
         ("Vulnerability", "VulnerabilityQuery"),
         ("Vulnerability.OrgSummary", "VulnerabilityOrgSummaryQuery"),
-
         # Workload
-        ("SensorKit", "SensorKitQuery"), # TODO: ModelNotFound
-        ("ComputeResource", "ComputeResourceQuery"), # TODO: ModelNotFound
+        ("SensorKit", "SensorKitQuery"),
+        ("ComputeResource", "ComputeResourceQuery"),
     ],
 )
 def test_select_class_instance(klass_name, query_expected):
+    """Test the `select_class_instance` function"""
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="WNEX", ssl_verify=True)
     q = api.select(str(klass_name))
     assert type(q).__qualname__ == query_expected
