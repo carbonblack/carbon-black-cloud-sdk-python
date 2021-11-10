@@ -12,20 +12,20 @@ Fork, then clone the repo:
 It is recommended to use [virtualenv](https://virtualenv.pypa.io/en/latest/) to set up the project. Once you have that
 you can use it to generate a virtual environment, activate it and install the package.
 
-    $ python3 -m virtualenv ./venv
-    $ source venv/bin/activate
-    $ (venv) python setup.py develop
+    python3 -m virtualenv ./venv
+    source venv/bin/activate
+    python3 setup.py develop
 
 Make sure the tests pass:
 
-    $ (venv) pytest
+    pytest
 
 ## Developing
 
 Install the dev dependencies and after that it is highly recommended installing `pre-commit`. 
 
-    $ (venv) pip install -r requirements.txt 
-    $ (venv) pre-commit install
+    pip install -r requirements.txt 
+    pre-commit install
     ...
 
 The `pre-commit` will make sure that you have the right code quality before committing your changes. 
