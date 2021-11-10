@@ -101,12 +101,10 @@ def test_raise_ModelNotFound():
         ("TemplateHistory", "TemplateHistoryQuery"),
 
         # Endpoint Standard
+        ("Recommendation", "RecommendationQuery"),
         ("EnrichedEvent", "EnrichedEventQuery"),
         ("EnrichedEventFacet", "FacetQuery"),
-
-        # TODO: Clashes with `platform.event`
-        ("Event", "EventQuery"),
-
+        ("EndPointStandardEvent", "Query"),
         ("Policy", "Query"),
         ("USBDevice", "USBDeviceQuery"),
         ("USBDeviceApproval", "USBDeviceApprovalQuery"),
@@ -123,17 +121,17 @@ def test_raise_ModelNotFound():
         ("DeviceControlAlert", "DeviceControlAlertSearchQuery"),
         ("WatchlistAlert", "WatchlistAlertSearchQuery"),
         ("Device", "DeviceSearchQuery"),
-
-        # TODO: Clashes with `endpoint_standard.event`
-        ("Event", "Query"),
-
+        ("Event", "EventQuery"),
         ("EventFacet", "EventFacetQuery"),
         ("Grant", "GrantQuery"),
-        ("Process", "AsyncProcessQuery"), # TODO: Summary, Tree
+        ("Process", "AsyncProcessQuery"),
+        ("Process.Summary", "SummaryQuery"),
+        ("Process.Tree", "SummaryQuery"),
         ("ProcessFacet", "FacetQuery"),
         ("ReputationOverride", "ReputationOverrideQuery"),
         ("User", "UserQuery"),
-        ("Vulnerability", "VulnerabilityQuery"), # TODO: OrgSummary, AssetView
+        ("Vulnerability", "VulnerabilityQuery"),
+        ("Vulnerability.OrgSummary", "VulnerabilityOrgSummaryQuery"),
 
         # Workload
         ("SensorKit", "SensorKitQuery"), # TODO: ModelNotFound

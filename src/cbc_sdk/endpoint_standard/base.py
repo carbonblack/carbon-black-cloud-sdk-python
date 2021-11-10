@@ -133,7 +133,7 @@ class EndpointStandardMutableModel(MutableBaseModel):
         return self._model_unique_id
 
 
-class Event(NewBaseModel):
+class EndPointStandardEvent(NewBaseModel):
     """Represents an Endpoint Standard Event."""
     urlobject = "/integrationServices/v3/event"
     primary_key = "eventId"
@@ -145,7 +145,7 @@ class Event(NewBaseModel):
 
     def __init__(self, cb, model_unique_id, initial_data=None):
         """Initialize an Event with model_unique_id and initial_data."""
-        super(Event, self).__init__(cb, model_unique_id, initial_data)
+        super(EndPointStandardEvent, self).__init__(cb, model_unique_id, initial_data)
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):

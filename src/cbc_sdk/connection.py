@@ -18,6 +18,7 @@ from __future__ import absolute_import
 import requests
 import sys
 from requests.adapters import HTTPAdapter, DEFAULT_POOLBLOCK, DEFAULT_RETRIES, DEFAULT_POOLSIZE, DEFAULT_POOL_TIMEOUT
+from importlib import import_module
 
 try:
     from requests.packages.urllib3.util.ssl_ import create_urllib3_context
@@ -685,6 +686,14 @@ def select_class_instance(cls: str):
     Returns:
         Object[]:
     """
+    # Initialize the packages, so that all of the models can load.
+    _ = [
+        import_module("cbc_sdk.audit_remediation"),
+        import_module("cbc_sdk.endpoint_standard"),
+        import_module("cbc_sdk.enterprise_edr"),
+        import_module("cbc_sdk.platform"),
+        import_module("cbc_sdk.workload"),
+    ]
     subclasses = set()
     base_subclasses = NewBaseModel.__subclasses__().copy()
     while base_subclasses:
