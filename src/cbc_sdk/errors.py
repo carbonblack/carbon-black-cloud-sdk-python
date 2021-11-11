@@ -281,4 +281,3 @@ class NonQueryableModel(ApiError):
 class OperationCancelled(ApiError):
     """An operation in the background was canceled."""
     pass
-
