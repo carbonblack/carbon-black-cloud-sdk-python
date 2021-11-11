@@ -59,6 +59,7 @@ _Note: Support for the latest products such as Containers are planned for early 
 - schema
 - solrq
 - validators
+- keyring (for MacOS)
 
 If developing the SDK, you also need:
 
@@ -69,6 +70,7 @@ If developing the SDK, you also need:
 - flake8==3.8.1
 - flake8-colors==0.1.6
 - flake8-docstrings==1.5.0
+- pre-commit>=2.15.0
 
 
 ## Getting Started
@@ -93,7 +95,7 @@ cd carbon-black-cloud-sdk-python
 pip install -r requirements.txt
 ```
 
-If you want to test/execute the eample scripts from the repo then install the SDK with the following command. This will install the SDK in editable mode so changes to the repo modify the installed package.
+If you want to test/execute the example scripts from the repo then install the SDK with the following command. This will install the SDK in editable mode so changes to the repo modify the installed package.
 
 ```
 pip install -e .
@@ -112,7 +114,6 @@ ReadTheDocs hosts [the documentation for the SDK](https://carbon-black-cloud-pyt
 
 ```
 pip install sphinxcontrib-apidoc
-pip install sphinx_rtd_theme
 ```
 
 Then, build the docs locally with the following commands:
