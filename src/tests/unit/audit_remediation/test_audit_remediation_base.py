@@ -4,16 +4,15 @@ import pytest
 import logging
 from cbc_sdk.audit_remediation import Run, Result, Template, ResultQuery, DeviceSummary, ResultFacet, RunHistory
 from cbc_sdk.rest_api import CBCloudAPI
-from cbc_sdk.errors import ServerError, ApiError
+from cbc_sdk.errors import ServerError, ApiError, TimeoutError, OperationCancelled
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.audit_remediation.mock_runs import (GET_RUN_RESP,
-                                                             GET_RUN_RESULTS_RESP,
-                                                             GET_RUN_RESULTS_RESP_1,
-                                                             GET_RUN_RESULTS_RESP_2,
-                                                             GET_DEVICE_SUMMARY_RESP_1,
-                                                             GET_RESULTS_FACETS_RESP,
-                                                             POST_RUN_HISTORY_RESP,
-                                                             GET_RUN_RESULTS_RESP_OVER_10k)
+from tests.unit.fixtures.audit_remediation.mock_runs import (GET_RUN_RESP, GET_RUN_RESULTS_RESP, GET_RUN_RESULTS_RESP_1,
+                                                             GET_RUN_RESULTS_RESP_2, GET_DEVICE_SUMMARY_RESP_1,
+                                                             GET_RESULTS_FACETS_RESP, POST_RUN_HISTORY_RESP,
+                                                             GET_RUN_RESULTS_RESP_OVER_10k, ASYNC_START_QUERY,
+                                                             ASYNC_GET_QUERY_1, ASYNC_GET_QUERY_2, ASYNC_GET_RESULTS,
+                                                             ASYNC_BROKEN_1, ASYNC_BROKEN_2, ASYNC_BROKEN_3,
+                                                             ASYNC_FACETING)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -228,6 +227,16 @@ def test_run_history_query_count(cbcsdk_mock):
     assert run_history_query._count() == run_history_query._total_results
 
 
+def test_run_history_query_async(cbcsdk_mock):
+    """Test RunHistoryQuery running asynchronously."""
+    cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/runs/_search", POST_RUN_HISTORY_RESP)
+    api = cbcsdk_mock.api
+    run_history_query = api.select(RunHistory).where("SELECT path FROM file;")
+    future = run_history_query.execute_async()
+    result = future.result()
+    assert len(result) == 7
+
+
 def test_result_query_build_request(cbcsdk_mock):
     """Testing Result._build_request() rows."""
     api = cbcsdk_mock.api
@@ -248,6 +257,16 @@ def test_result_query_count(cbcsdk_mock):
     assert result_query._count_valid is True
     assert num_results == 6
     assert result_query._count() == result_query._total_results
+
+
+def test_result_query_async(cbcsdk_mock):
+    """Testing ResultQuery running asynchronously."""
+    cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/runs/run_id/results/_search", GET_RUN_RESULTS_RESP_2)
+    api = cbcsdk_mock.api
+    result_query = api.select(Result).run_id("run_id")
+    future = result_query.execute_async()
+    result = future.result()
+    assert len(result) == 6
 
 
 def test_result_query_no_run_id_exception(cbcsdk_mock):
@@ -287,3 +306,67 @@ def test_run_history_criteria(cbcsdk_mock):
     template = Template(api, "TEST_ID", {"org_key": "test", "name": "FoobieBletch", "id": "TEST_ID",
                                          "status": "COMPLETE"})
     template.query_runs().update_criteria("custom", ["values"])
+
+
+def test_run_async_query(cbcsdk_mock):
+    """Tests running an asynchronous LiveQuery."""
+    get_calls = 0
+
+    def on_status_get(url, params, default):
+        nonlocal get_calls
+        get_calls += 1
+        if get_calls >= 3:
+            return ASYNC_GET_QUERY_2
+        return ASYNC_GET_QUERY_1
+
+    cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/runs", ASYNC_START_QUERY)
+    cbcsdk_mock.mock_request("GET", "/livequery/v1/orgs/test/runs/abcdefghijklmnopqrstuvwxyz123456", on_status_get)
+    cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/runs/abcdefghijklmnopqrstuvwxyz123456/results/_search",
+                             ASYNC_GET_RESULTS)
+    api = cbcsdk_mock.api
+    query = api.select(Run).where("SELECT * FROM kernel_info;")
+    future = query.execute_async()
+    results = future.result()
+    assert len(results) == 4
+    assert results[0].fields['version'] == "5.11.0-38-generic"
+    assert results[1].fields['version'] == "10.0.19041.1288"
+    assert results[2].fields['version'] == "17.7.0"
+    assert results[3].fields['version'] == "4.14.186-146.268.amzn2.x86_64"
+
+
+@pytest.mark.parametrize("response, expectation", [
+    (ASYNC_BROKEN_1, pytest.raises(TimeoutError)),
+    (ASYNC_BROKEN_2, pytest.raises(OperationCancelled)),
+    (ASYNC_BROKEN_3, pytest.raises(ApiError))
+])
+def test_run_async_query_breaks(cbcsdk_mock, response, expectation):
+    """Tests running an asynchronous LiveQuery that returns a broken response."""
+    get_calls = 0
+
+    def on_status_get(url, params, default):
+        nonlocal get_calls
+        get_calls += 1
+        if get_calls >= 3:
+            return response
+        return ASYNC_GET_QUERY_1
+
+    cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/runs", ASYNC_START_QUERY)
+    cbcsdk_mock.mock_request("GET", "/livequery/v1/orgs/test/runs/abcdefghijklmnopqrstuvwxyz123456", on_status_get)
+    api = cbcsdk_mock.api
+    query = api.select(Run).where("SELECT * FROM kernel_info;")
+    future = query.execute_async()
+    with expectation:
+        future.result()
+
+
+def test_run_async_faceting_query(cbcsdk_mock):
+    """Tests running a FacetQuery asynchronously."""
+    cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/runs/abcdefghijklmnopqrstuvwxyz123456/results/_facet",
+                             ASYNC_FACETING)
+    api = cbcsdk_mock.api
+    query = api.select(ResultFacet).run_id("abcdefghijklmnopqrstuvwxyz123456").facet_field("fields.version")
+    future = query.execute_async()
+    result = future.result()
+    assert len(result) == 1
+    assert result[0].field == 'fields.version'
+    assert len(result[0].values) == 4

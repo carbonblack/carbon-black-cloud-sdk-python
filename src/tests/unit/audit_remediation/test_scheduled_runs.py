@@ -119,3 +119,18 @@ def test_template_history(cbcsdk_mock):
     template = api.select(TemplateHistory).where("CBC SDK").first()
 
     assert template.id == "xzllqfvlie2bzghqqfkxk9xizqniwcvr"
+
+
+def test_template_history_async(cbcsdk_mock):
+    """Testing search of existing templates done asynchronously."""
+    def _search_template(url, body, **kwargs):
+        assert body["query"] == "CBC SDK"
+        return EXAMPLE_TEMPLATE_HISTORY
+
+    cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/templates/_search", _search_template)
+    api = cbcsdk_mock.api
+    query = api.select(TemplateHistory).where("CBC SDK")
+    future = query.execute_async()
+    result = future.result()
+    assert len(result) == 1
+    assert result[0].id == "xzllqfvlie2bzghqqfkxk9xizqniwcvr"
