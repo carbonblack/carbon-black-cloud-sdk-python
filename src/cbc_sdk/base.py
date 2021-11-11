@@ -422,7 +422,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
             AttributeError: If the object has no such attribute.
         """
         try:
-            super(NewBaseModel, self).__getattribute__(item)
+            return super(NewBaseModel, self).__getattribute__(item)
         except AttributeError:
             pass  # fall through to the rest of the logic...
 
