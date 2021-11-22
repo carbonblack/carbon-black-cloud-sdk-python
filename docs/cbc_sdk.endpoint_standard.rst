@@ -12,8 +12,16 @@ cbc\_sdk.endpoint\_standard.base module
    :undoc-members:
    :show-inheritance:
 
-cbc\_sdk.endpoint\_standard.usb_device_control module
------------------------------------------------------
+cbc\_sdk.endpoint\_standard.recommendation module
+-------------------------------------------------
+
+.. automodule:: cbc_sdk.endpoint_standard.recommendation
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+cbc\_sdk.endpoint\_standard.usb\_device\_control module
+-------------------------------------------------------
 
 .. automodule:: cbc_sdk.endpoint_standard.usb_device_control
    :members:
