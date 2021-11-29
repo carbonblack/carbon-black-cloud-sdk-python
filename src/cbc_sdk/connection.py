@@ -52,6 +52,7 @@ from .base import CreatableModelMixin
 from .utils import convert_query_params
 
 log = logging.getLogger(__name__)
+DEFAULT_STREAM_BUFFER_SIZE = 1024
 
 
 def try_json(resp):
@@ -210,6 +211,7 @@ class Connection(object):
             credentials.use_custom_proxy_session = False
 
         self._timeout = timeout
+        self.stream_buffer_size = DEFAULT_STREAM_BUFFER_SIZE
 
         if max_retries is None:
             max_retries = MAX_RETRIES
@@ -269,6 +271,7 @@ class Connection(object):
 
         verify_ssl = kwargs.pop('verify', None) or self.ssl_verify
         proxies = kwargs.pop('proxies', None) or self.proxies
+        stream_output = kwargs.pop('stream_output', None)
 
         new_headers = kwargs.pop('headers', None)
         if new_headers:
@@ -283,8 +286,15 @@ class Connection(object):
             raw_data = kwargs.get("data", None)
             if raw_data:
                 log.debug("Sending HTTP {0} {1} with {2}".format(method, url, raw_data))
-            r = self.session.request(method, uri, headers=headers, verify=verify_ssl, proxies=proxies,
-                                     timeout=self._timeout, **kwargs)
+            if stream_output:
+                with self.session.request(method, uri, headers=headers, verify=verify_ssl, proxies=proxies,
+                                          timeout=self._timeout, stream=True, **kwargs) as r:
+                    if r.status_code < 400:
+                        for block in r.iter_content(self.stream_buffer_size):
+                            stream_output.write(block)
+            else:
+                r = self.session.request(method, uri, headers=headers, verify=verify_ssl, proxies=proxies,
+                                         timeout=self._timeout, **kwargs)
             log.debug('HTTP {0:s} {1:s} took {2:.3f}s (response {3:d})'.format(method, url,
                                                                                r.elapsed.total_seconds(),
                                                                                r.status_code))
@@ -501,6 +511,7 @@ class BaseAPI(object):
              ServerError: If there's an error output from the server.
         """
         headers = kwargs.pop("headers", {})
+        no_parse = kwargs.pop("no_parse", False)
         raw_data = None
 
         if method in ("POST", "PUT", "PATCH"):
@@ -512,6 +523,8 @@ class BaseAPI(object):
                 del headers["Content-Type"]  # let the request library set it since we passed files=
 
         result = self.session.http_request(method, uri, headers=headers, data=raw_data, **kwargs)
+        if no_parse:
+            return result
 
         try:
             resp = result.json()
@@ -530,12 +543,27 @@ class BaseAPI(object):
         Args:
             uri (str): The URI to send the POST request to.
             body (object): The data to be sent in the body of the POST request.
-            **kwargs:
+            **kwargs (dict): Additional arguments for the HTTP POST.
 
         Returns:
             object: The return data from the POST request.
         """
         return self.api_json_request("POST", uri, data=body, **kwargs)
+
+    def post_and_get_stream(self, uri, body, stream_output, **kwargs):
+        """
+        Send a POST request  to the specified URI and stream the results back into the given stream object.
+
+        Args:
+            uri (str): The URI to send the POST request to.
+            body (object): The data to be sent in the body of the POST request.
+            stream_output (RawIOBase): The output stream to write the data to.
+            **kwargs (dict): Additional arguments for the HTTP POST.
+
+        Returns:
+            object: The return data from the POST request.
+        """
+        return self.api_json_request("POST", uri, data=body, no_parse=True, stream_output=stream_output, **kwargs)
 
     @classmethod
     def _map_multipart_param(cls, table_entry, value):
