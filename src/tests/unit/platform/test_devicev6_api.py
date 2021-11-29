@@ -240,7 +240,12 @@ def test_query_device_with_last_contact_time_as_range(monkeypatch):
     def _run_query(url, body, **kwargs):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/devices/_search"
-        assert body == {"query": "foobar", "rows": 2, "criteria": {"last_contact_time": {"range": "-3w"}}, "exclusions": {}}
+        assert body == {
+            "query": "foobar",
+            "rows": 2,
+            "criteria": {"last_contact_time": {"range": "-3w"}},
+            "exclusions": {}
+        }
         _was_called = True
         return StubResponse({"results": [{"id": 6023, "organization_name": "thistestworks"}],
                              "num_found": 1})

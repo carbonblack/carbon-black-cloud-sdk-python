@@ -77,7 +77,9 @@ class TestQuery(BaseQuery, IterableQueryMixin):
         """Mock Count"""
         pass
 
+
 def test_query_index(monkeypatch):
+    """Test query by index"""
 
     def _mock_query(**kwargs):
         assert kwargs.get("from_row") == 5
@@ -88,7 +90,9 @@ def test_query_index(monkeypatch):
     monkeypatch.setattr(query, "_perform_query", _mock_query)
     query[5] == 5
 
+
 def test_query_slice_start_and_stop(monkeypatch):
+    """Test query by start and stop slicing"""
 
     def _mock_query(**kwargs):
         assert kwargs.get("from_row") == 5
@@ -99,7 +103,9 @@ def test_query_slice_start_and_stop(monkeypatch):
     monkeypatch.setattr(query, "_perform_query", _mock_query)
     query[5:10]
 
+
 def test_query_slice_start(monkeypatch):
+    """Test query by start slicing"""
 
     def _mock_query(**kwargs):
         assert kwargs.get("from_row") == 5
@@ -110,7 +116,9 @@ def test_query_slice_start(monkeypatch):
     monkeypatch.setattr(query, "_perform_query", _mock_query)
     query[5:]
 
+
 def test_query_slice_stop(monkeypatch):
+    """Test query by stop slicing"""
 
     def _mock_query(**kwargs):
         assert kwargs.get("from_row") == 0
@@ -121,13 +129,14 @@ def test_query_slice_stop(monkeypatch):
     monkeypatch.setattr(query, "_perform_query", _mock_query)
     query[:1]
 
-def test_query_slice_neg_start(monkeypatch):
 
+def test_query_slice_neg_start(monkeypatch):
+    """Test query by negative start slicing"""
     mock_list = [0, 1, 2, 3]
 
     def _mock_query(**kwargs):
-        assert kwargs.get("from_row") == None
-        assert kwargs.get("max_rows") == None
+        assert kwargs.get("from_row") is None
+        assert kwargs.get("max_rows") is None
         for item in mock_list:
             yield item
 
@@ -139,13 +148,14 @@ def test_query_slice_neg_start(monkeypatch):
     monkeypatch.setattr(query, "_count", _mock_count)
     assert query[-2:] == [2, 3]
 
-def test_query_slice_neg_stop(monkeypatch):
 
+def test_query_slice_neg_stop(monkeypatch):
+    """Test query by negative stop slicing"""
     mock_list = [0, 1, 2, 3]
 
     def _mock_query(**kwargs):
-        assert kwargs.get("from_row") == None
-        assert kwargs.get("max_rows") == None
+        assert kwargs.get("from_row") is None
+        assert kwargs.get("max_rows") is None
         for item in mock_list:
             yield item
 
@@ -157,8 +167,9 @@ def test_query_slice_neg_stop(monkeypatch):
     monkeypatch.setattr(query, "_count", _mock_count)
     assert query[:-2] == [0, 1]
 
-def test_query_slice_type_error(monkeypatch):
 
+def test_query_slice_type_error(monkeypatch):
+    """Test query where _perform_query returns TypeError"""
     mock_list = [0, 1, 2, 3]
 
     def _mock_query():
