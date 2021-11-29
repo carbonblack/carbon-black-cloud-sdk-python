@@ -280,3 +280,8 @@ class NonQueryableModel(ApiError):
     """A model that attempted to be queried which is not queryable"""
 
     pass
+
+
+class OperationCancelled(ApiError):
+    """An operation in the background was canceled."""
+    pass

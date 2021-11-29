@@ -43,13 +43,19 @@ class CBCSDKMock:
 
         def __init__(self, contents, scode=200, text="", json_parsable=True):
             """Init default properties"""
-            self.content = contents
-            self.status_code = scode
-            if json_parsable and not text:
-                self.text = json.dumps(contents)
+            if isinstance(contents, CBCSDKMock.StubResponse):
+                self.content = contents.content
+                self.status_code = contents.status_code
+                self.text = contents.text
+                self._json_parsable = contents._json_parsable
             else:
-                self.text = text
-            self._json_parsable = json_parsable
+                self.content = contents
+                self.status_code = scode
+                if json_parsable and not text:
+                    self.text = json.dumps(contents)
+                else:
+                    self.text = text
+                self._json_parsable = json_parsable
 
         def json(self):
             """Mimics request package"""
