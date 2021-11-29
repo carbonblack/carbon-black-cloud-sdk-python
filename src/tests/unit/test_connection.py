@@ -14,6 +14,7 @@
 import pytest
 import requests
 import ssl
+import io
 from cbc_sdk.connection import try_json, Connection
 from cbc_sdk.credentials import Credentials
 from cbc_sdk.errors import (ApiError, ClientError, ConnectionError, ObjectNotFoundError, QuerySyntaxError, ServerError,
@@ -160,6 +161,26 @@ def test_http_request_happy_path(mox):
     mox.ReplayAll()
     resp = conn.http_request('get', '/path', headers={'X-Test': 'yes'})
     assert resp.json()['ok']
+    mox.VerifyAll()
+
+
+def test_http_request_with_stream(mox):
+    """Test the HTTP request going to a stream."""
+    def validate_headers(hdrs):
+        assert hdrs['X-Auth-Token'] == 'ABCDEFGH'
+        assert hdrs['User-Agent'].startswith("CBC_SDK/")
+        return True
+
+    creds = Credentials({'url': 'https://example.com', 'token': 'ABCDEFGH'})
+    conn = Connection(creds)
+    mox.StubOutWithMock(conn.session, 'request')
+    conn.session.request('POST', 'https://example.com/path', headers=Func(validate_headers), verify=True,
+                         proxies=conn.proxies, timeout=conn._timeout, stream=True) \
+        .AndReturn(StubResponse(None, 200, "ThisIsFine"))
+    mox.ReplayAll()
+    with io.BytesIO() as stream:
+        conn.http_request('POST', '/path', stream_output=stream)
+        assert str(stream.getvalue(), encoding='utf-8') == "ThisIsFine"
     mox.VerifyAll()
 
 

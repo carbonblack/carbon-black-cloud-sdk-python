@@ -21,9 +21,32 @@ class StubResponse(object):
         self.content = self.text
         self.elapsed = StubElapsed()
 
+    def __enter__(self):
+        """Enter context on this response."""
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Exit context on this response."""
+        return None
+
     def json(self):
         """Return the JSON contents of the response."""
         return self._contents or json.loads(self.text)
+
+    def iter_content(self, buffer_size):
+        """Create iterated content from the 'content' parameter."""
+        a = bytes(self.content, 'utf-8')
+        return_list = []
+        index = 0
+        while index < len(a):
+            if (len(a) - index) <= buffer_size:
+                part = a[index:]
+                index = len(a)
+            else:
+                part = a[index:index + buffer_size]
+                index += buffer_size
+            return_list.append(part)
+        return return_list
 
 
 def _failing_get_object(url, parms=None, default=None):
