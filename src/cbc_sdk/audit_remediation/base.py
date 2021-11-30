@@ -1330,6 +1330,9 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         """
         Export the results from the run as CSV, writing the CSV to the given stream.
 
+        Required Permissions:
+            livequery.manage(READ)
+
         Args:
             output (RawIOBase): Stream to write the CSV data from the request to.
             compressed (bool): True to download as a compressed ZIP file, False to download as CSV.
@@ -1347,6 +1350,9 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         """
         Export the results from the run as CSV, returning the CSV data as a string.
 
+        Required Permissions:
+            livequery.manage(READ)
+
         Returns:
             str: The CSV data as one big string.
         """
@@ -1360,6 +1366,9 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         """
         Export the results from the run as CSV, writing the CSV to the named file.
 
+        Required Permissions:
+            livequery.manage(READ)
+
         Args:
             filename (str): Name of the file to write the results to.
         """
@@ -1371,6 +1380,9 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
     def export_zipped_csv(self, filename):
         """
         Export the results from the run as a zipped CSV, writing the zip data to the named file.
+
+        Required Permissions:
+            livequery.manage(READ)
 
         Args:
             filename (str): Name of the file to write the results to.
