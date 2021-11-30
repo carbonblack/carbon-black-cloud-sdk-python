@@ -200,8 +200,6 @@ class Run(NewBaseModel):
             raise ApiError("query is deleted")
         return self._cb.select(ResultFacet).run_id(self.id)
 
-    # TODO: add export functions here
-
 
 class RunHistory(Run):
     """Represents a historical Audit and Remediation `Run`."""
@@ -1328,7 +1326,6 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
             output += [self._doc_class(self._cb, item) for item in results]
         return output
 
-    # TODO: export results functions here
     def export_csv_as_stream(self, output, compressed=False):
         """
         Export the results from the run as CSV, writing the CSV to the given stream.
@@ -1355,9 +1352,9 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         """
         if self._run_id is None:
             raise ApiError("Can't retrieve results without a run ID")
-        with io.StringIO() as buffer:
+        with io.BytesIO() as buffer:
             self.export_csv_as_stream(buffer)
-            return buffer.getvalue()
+            return str(buffer.getvalue(), 'utf-8')
 
     def export_csv_as_file(self, filename):
         """
