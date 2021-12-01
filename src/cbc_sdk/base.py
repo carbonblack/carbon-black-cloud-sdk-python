@@ -1029,10 +1029,23 @@ class IterableQueryMixin:
         Returns:
             object: Either an item or a list of items.
         """
-        results = list(self)
         if isinstance(item, slice):
+            try:
+                if item.start is not None and item.start >= 0 or item.stop is not None and item.stop >= 0:
+                    from_row = 0
+                    max_rows = -1
+                    if item.start:
+                        from_row = item.start
+                    if item.stop:
+                        max_rows = item.stop - from_row
+                    results = list(self._perform_query(from_row=from_row, max_rows=max_rows))
+                    return results
+            except TypeError:
+                log.debug(f"Unable to perform optimized query for {self.__class__.__name__}")
+            results = list(self)
             return [results[ii] for ii in range(*item.indices(len(results)))]
         elif isinstance(item, int):
+            results = list(self._perform_query(from_row=item, max_rows=1))
             return results[item]
         else:
             raise TypeError("Invalid argument type")
