@@ -511,7 +511,7 @@ class BaseAPI(object):
              ServerError: If there's an error output from the server.
         """
         headers = kwargs.pop("headers", {})
-        no_parse = kwargs.pop("no_parse", False)
+        raw_result = kwargs.pop("raw_result", False)
         raw_data = None
 
         if method in ("POST", "PUT", "PATCH"):
@@ -523,7 +523,7 @@ class BaseAPI(object):
                 del headers["Content-Type"]  # let the request library set it since we passed files=
 
         result = self.session.http_request(method, uri, headers=headers, data=raw_data, **kwargs)
-        if no_parse:
+        if raw_result:
             return result
 
         try:
@@ -563,7 +563,7 @@ class BaseAPI(object):
         Returns:
             object: The return data from the POST request.
         """
-        return self.api_json_request("POST", uri, data=body, no_parse=True, stream_output=stream_output, **kwargs)
+        return self.api_json_request("POST", uri, data=body, raw_result=True, stream_output=stream_output, **kwargs)
 
     @classmethod
     def _map_multipart_param(cls, table_entry, value):
