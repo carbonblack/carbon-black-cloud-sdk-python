@@ -33,18 +33,19 @@ class StubResponse(object):
         """Return the JSON contents of the response."""
         return self._contents or json.loads(self.text)
 
-    def iter_content(self, buffer_size):
+    def iter_content(self, buffer_size=-1):
         """Create iterated content from the 'content' parameter."""
         a = bytes(self.content, 'utf-8')
+        bsize = len(a) if buffer_size <= 0 else buffer_size
         return_list = []
         index = 0
         while index < len(a):
-            if (len(a) - index) <= buffer_size:
+            if (len(a) - index) <= bsize:
                 part = a[index:]
                 index = len(a)
             else:
-                part = a[index:index + buffer_size]
-                index += buffer_size
+                part = a[index:index + bsize]
+                index += bsize
             return_list.append(part)
         return return_list
 

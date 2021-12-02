@@ -274,8 +274,6 @@ def test_BaseAPI_post_object(mox):
 
 def test_BaseAPI_post_and_get_stream(mox):
     """Test the operation of post_and_get_stream."""
-    captured_stream = None
-
     def validate_header(hdrs):
         assert hdrs['Content-Type'] == 'application/json'
         return True
@@ -285,22 +283,10 @@ def test_BaseAPI_post_and_get_stream(mox):
         assert real_data == {'a': 1, 'b': 2}
         return True
 
-    def capture_stream(stream):
-        nonlocal captured_stream
-        captured_stream = stream
-        return True
-
-    def write_to_stream(*args, **kwargs):
-        nonlocal captured_stream
-        content = "ThisIsFine"
-        assert captured_stream, 'No stream captured before return set up'
-        captured_stream.write(bytes(content, 'utf-8'))
-
     sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
     mox.StubOutWithMock(sut.session, 'http_request')
-    sut.session.http_request('POST', '/path', headers=Func(validate_header), data=Func(validate_data),
-                             stream_output=Func(capture_stream)) \
-        .WithSideEffects(write_to_stream).AndReturn(StubResponse(None, 200, "ThisIsFine"))
+    sut.session.http_request('POST', '/path', headers=Func(validate_header), data=Func(validate_data), stream=True) \
+        .AndReturn(StubResponse(None, 200, "ThisIsFine"))
     mox.ReplayAll()
     with io.BytesIO() as output:
         sut.post_and_get_stream('/path', {'a': 1, 'b': 2}, output)

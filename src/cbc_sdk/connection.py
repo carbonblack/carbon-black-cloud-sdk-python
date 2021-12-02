@@ -271,7 +271,7 @@ class Connection(object):
 
         verify_ssl = kwargs.pop('verify', None) or self.ssl_verify
         proxies = kwargs.pop('proxies', None) or self.proxies
-        stream_output = kwargs.pop('stream_output', None)
+        stream = kwargs.pop('stream', False)
 
         new_headers = kwargs.pop('headers', None)
         if new_headers:
@@ -286,15 +286,8 @@ class Connection(object):
             raw_data = kwargs.get("data", None)
             if raw_data:
                 log.debug("Sending HTTP {0} {1} with {2}".format(method, url, raw_data))
-            if stream_output:
-                with self.session.request(method, uri, headers=headers, verify=verify_ssl, proxies=proxies,
-                                          timeout=self._timeout, stream=True, **kwargs) as r:
-                    if r.status_code < 400:
-                        for block in r.iter_content(self.stream_buffer_size):
-                            stream_output.write(block)
-            else:
-                r = self.session.request(method, uri, headers=headers, verify=verify_ssl, proxies=proxies,
-                                         timeout=self._timeout, **kwargs)
+            r = self.session.request(method, uri, headers=headers, verify=verify_ssl, proxies=proxies,
+                                     timeout=self._timeout, stream=stream, **kwargs)
             log.debug('HTTP {0:s} {1:s} took {2:.3f}s (response {3:d})'.format(method, url,
                                                                                r.elapsed.total_seconds(),
                                                                                r.status_code))
@@ -563,7 +556,10 @@ class BaseAPI(object):
         Returns:
             object: The return data from the POST request.
         """
-        return self.api_json_request("POST", uri, data=body, raw_result=True, stream_output=stream_output, **kwargs)
+        with self.api_json_request("POST", uri, data=body, raw_result=True, stream=True, **kwargs) as resp:
+            for block in resp.iter_content(self.session.stream_buffer_size):
+                stream_output.write(block)
+        return resp
 
     @classmethod
     def _map_multipart_param(cls, table_entry, value):
