@@ -504,7 +504,6 @@ class BaseAPI(object):
              ServerError: If there's an error output from the server.
         """
         headers = kwargs.pop("headers", {})
-        raw_result = kwargs.pop("raw_result", False)
         raw_data = None
 
         if method in ("POST", "PUT", "PATCH"):
@@ -516,8 +515,6 @@ class BaseAPI(object):
                 del headers["Content-Type"]  # let the request library set it since we passed files=
 
         result = self.session.http_request(method, uri, headers=headers, data=raw_data, **kwargs)
-        if raw_result:
-            return result
 
         try:
             resp = result.json()
@@ -556,7 +553,10 @@ class BaseAPI(object):
         Returns:
             object: The return data from the POST request.
         """
-        with self.api_json_request("POST", uri, data=body, raw_result=True, stream=True, **kwargs) as resp:
+        headers = kwargs.pop("headers", {})
+        headers["Content-Type"] = "application/json"
+        with self.session.http_request("POST", uri, headers=headers, data=json.dumps(body, sort_keys=True),
+                                       stream=True, **kwargs) as resp:
             for block in resp.iter_content(self.session.stream_buffer_size):
                 stream_output.write(block)
         return resp
