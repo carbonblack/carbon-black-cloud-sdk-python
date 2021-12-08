@@ -73,6 +73,9 @@ def test_simple_query(monkeypatch):
 class TestQuery(BaseQuery, IterableQueryMixin):
     """Test Query for Slicing"""
 
+    # Prevent pytest from trying to collect webtest's TestApp as tests:
+    __test__ = False
+
     def _count():
         """Mock Count"""
         pass

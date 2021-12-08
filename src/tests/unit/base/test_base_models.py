@@ -41,6 +41,10 @@ def cbcsdk_mock(monkeypatch, cb):
 
 class TestBaseModel(NewBaseModel):
     """Test class allowing testing of multiple scenarios of string representation."""
+
+    # Prevent pytest from trying to collect webtest's TestApp as tests:
+    __test__ = False
+
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
         """
         Initialize the TestBaseModel.
