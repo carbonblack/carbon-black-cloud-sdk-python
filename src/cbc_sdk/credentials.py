@@ -90,7 +90,7 @@ class Credentials(object):
             CredentialValue.CSP_OAUTH_APP_ID: None,
             CredentialValue.CSP_OAUTH_APP_SECRET: None,
             CredentialValue.CSP_API_TOKEN: None,
-            CredentialValue.CSP_URL_OVERRIDE: None
+            CredentialValue.CSP_URL_OVERRIDE: "https://console.cloud.vmware.com"
         }
         if values is not None:
             for k in list(CredentialValue):
@@ -204,8 +204,7 @@ class Credentials(object):
         elif self._token_type == "API_KEY":
             return self._values[CredentialValue.TOKEN]
 
-        DEFAULT_CSP_URL = "https://console.cloud.vmware.com"
-        CSP_URL = self._values.get(CredentialValue.CSP_URL_OVERRIDE, DEFAULT_CSP_URL).rstrip("/")
+        CSP_URL = self._values.get(CredentialValue.CSP_URL_OVERRIDE).rstrip("/")
 
         if self._token_type == "API_TOKEN":
             API_TOKEN_URL = f"{CSP_URL}/csp/gateway/am/api/auth/api-tokens/authorize"
