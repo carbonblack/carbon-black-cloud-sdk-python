@@ -14,6 +14,7 @@
 import pytest
 import json
 import sys
+import io
 from cbc_sdk import __version__
 from cbc_sdk.connection import BaseAPI
 from cbc_sdk.credentials import Credentials
@@ -268,6 +269,28 @@ def test_BaseAPI_post_object(mox):
     mox.ReplayAll()
     rc = sut.post_object('/path', {'a': 1, 'b': 2})
     assert rc.json() == {'zyx': 100}
+    mox.VerifyAll()
+
+
+def test_BaseAPI_post_and_get_stream(mox):
+    """Test the operation of post_and_get_stream."""
+    def validate_header(hdrs):
+        assert hdrs['Content-Type'] == 'application/json'
+        return True
+
+    def validate_data(data):
+        real_data = json.loads(data)
+        assert real_data == {'a': 1, 'b': 2}
+        return True
+
+    sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
+    mox.StubOutWithMock(sut.session, 'http_request')
+    sut.session.http_request('POST', '/path', headers=Func(validate_header), data=Func(validate_data), stream=True) \
+        .AndReturn(StubResponse(None, 200, "ThisIsFine"))
+    mox.ReplayAll()
+    with io.BytesIO() as output:
+        sut.post_and_get_stream('/path', {'a': 1, 'b': 2}, output)
+        assert str(output.getvalue(), encoding='utf-8') == "ThisIsFine"
     mox.VerifyAll()
 
 

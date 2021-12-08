@@ -2,6 +2,9 @@
 
 import pytest
 import logging
+import io
+import os
+from tempfile import mkstemp
 from cbc_sdk.audit_remediation import Run, Result, Template, ResultQuery, DeviceSummary, ResultFacet, RunHistory
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ServerError, ApiError, TimeoutError, OperationCancelled
@@ -30,6 +33,19 @@ def cb():
 def cbcsdk_mock(monkeypatch, cb):
     """Mocks CBC SDK for unit tests"""
     return CBCSDKMock(monkeypatch, cb)
+
+
+def new_tempfile():
+    """Create a temporary file and return the name of it."""
+    rc = mkstemp()
+    os.close(rc[0])
+    return rc[1]
+
+
+def file_contents(filename):
+    """Return a string containing the contents of the file."""
+    with io.open(filename, "r", encoding="utf-8") as f:
+        return f.read()
 
 
 # ==================================== UNIT TESTS BELOW ====================================
@@ -267,6 +283,59 @@ def test_result_query_async(cbcsdk_mock):
     future = result_query.execute_async()
     result = future.result()
     assert len(result) == 6
+
+
+def test_result_query_export_string(cbcsdk_mock):
+    """Tests exporting the results of a query as a string."""
+    cbcsdk_mock.mock_request("POST_STREAM", "/livequery/v1/orgs/test/runs/run_id/results/_search?format=csv",
+                             CBCSDKMock.StubResponse("ThisIsFine", 200, "ThisIsFine", False))
+    api = cbcsdk_mock.api
+    result_query = api.select(Result).run_id("run_id")
+    output = result_query.export_csv_as_string()
+    assert output == "ThisIsFine"
+
+
+def test_result_query_export_file(cbcsdk_mock):
+    """Tests exporting the results of a query as a file."""
+    cbcsdk_mock.mock_request("POST_STREAM", "/livequery/v1/orgs/test/runs/run_id/results/_search?format=csv",
+                             CBCSDKMock.StubResponse("ThisIsFine", 200, "ThisIsFine", False))
+    api = cbcsdk_mock.api
+    result_query = api.select(Result).run_id("run_id")
+    tempfile = new_tempfile()
+    try:
+        result_query.export_csv_as_file(tempfile)
+        assert file_contents(tempfile) == "ThisIsFine"
+    finally:
+        os.remove(tempfile)
+
+
+def test_result_query_export_zip(cbcsdk_mock):
+    """Tests exporting the results of a query as a zip file."""
+    cbcsdk_mock.mock_request("POST_STREAM",
+                             "/livequery/v1/orgs/test/runs/run_id/results/_search?format=csv&download=true",
+                             CBCSDKMock.StubResponse("ThisIsFine", 200, "ThisIsFine", False))
+    api = cbcsdk_mock.api
+    result_query = api.select(Result).run_id("run_id")
+    tempfile = new_tempfile()
+    try:
+        result_query.export_zipped_csv(tempfile)
+        assert file_contents(tempfile) == "ThisIsFine"
+    finally:
+        os.remove(tempfile)
+
+
+def test_result_query_exports_fail_without_run_id(cb):
+    """Tests that the export methods fail if the run ID is not specified."""
+    result_query = cb.select(Result)
+    with io.BytesIO() as stream:
+        with pytest.raises(ApiError):
+            result_query.export_csv_as_stream(stream)
+    with pytest.raises(ApiError):
+        result_query.export_csv_as_string()
+    with pytest.raises(ApiError):
+        result_query.export_csv_as_file('blort.txt')
+    with pytest.raises(ApiError):
+        result_query.export_zipped_csv('blort.zip')
 
 
 def test_result_query_no_run_id_exception(cbcsdk_mock):
