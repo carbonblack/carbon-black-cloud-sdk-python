@@ -12,6 +12,8 @@
 """Tests for the Credentials object."""
 
 import pytest
+import requests_mock
+
 from cbc_sdk.credentials import CredentialValue, Credentials
 from cbc_sdk.errors import CredentialError
 
@@ -113,3 +115,57 @@ def test_credential_get_dict(input_dict):
     assert creds["ssl_force_tls_1_2"]
     assert creds["proxy"] == "proxy.example"
     assert creds["ignore_system_proxy"]
+
+
+def test_get_token_api_key():
+    """Test get token with Carbon Black Cloud API_KEY"""
+    values = {
+        "token": "api-key"
+    }
+    creds = Credentials(values)
+    assert creds.get_token_type() == "API_KEY"
+    assert creds.get_token() == "api-key"
+
+
+def test_get_token_missing():
+    """Test get token with no token configured"""
+    creds = Credentials({})
+    assert creds.get_token_type() == "UNKNOWN"
+    assert creds.get_token() is None
+
+
+def test_get_token_api_token():
+    """Test get token with CSP API Token configured"""
+    with requests_mock.Mocker() as mock_request:
+        mock_request.register_uri("POST",
+                                  "https://console.cloud.vmware.com/csp/gateway/am/api/auth/api-tokens/authorize",
+                                  json={"access_token": "valid-token", "scope": "valid-scope"})
+        values = {
+            "csp_api_token": "test-token"
+        }
+        creds = Credentials(values)
+        assert creds.get_token_type() == "BEARER"
+        assert creds.get_token() == "valid-token"
+
+        # Verify Request
+        assert mock_request.last_request.text == "api_token=test-token"
+
+
+def test_get_token_oauth_app():
+    """Test get token with CSP OAuth Server App configured"""
+    with requests_mock.Mocker() as mock_request:
+        mock_request.register_uri("POST",
+                                  "http://example.com/csp/gateway/am/api/auth/token",
+                                  json={"access_token": "valid-token", "scope": "valid-scope"})
+        values = {
+            "csp_oauth_app_id": "client-id",
+            "csp_oauth_app_secret": "client-secret",
+            "csp_url_override": "http://example.com"
+        }
+        creds = Credentials(values)
+        assert creds.get_token_type() == "BEARER"
+        assert creds.get_token() == "valid-token"
+
+        # Verify Request
+        assert mock_request.last_request.text == "grant_type=client_credentials"
+        assert mock_request.last_request.headers.get("Authorization") == "Basic Y2xpZW50LWlkOmNsaWVudC1zZWNyZXQ="
