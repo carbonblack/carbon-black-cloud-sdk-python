@@ -643,7 +643,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
             lines.extend([f"{' ' * spacing}{sub_line}"
                           for sub_line in self._str_dict_lines(subobject_value._info, False)])
             lines.append('')
-        elif isinstance(value, dict):
+        elif isinstance(value, dict) and top_level:
             # append the dict elements
             lines.append(format_str.format(status, name.rjust(name_field_len), '{'))
             lines.extend([f"{' ' * (spacing + 4)}{sub_line}" for sub_line in self._str_dict_lines(value, False)])
