@@ -212,7 +212,7 @@ def test_read_credentials_defaults(monkeypatch, mox):
     assert creds.csp_oauth_app_id is None
     assert creds.csp_oauth_app_secret is None
     assert creds.csp_api_token is None
-    assert creds.csp_url_override is None
+    assert creds.csp_url_override == "https://console.cloud.vmware.com"
 
 
 def test_get_credentials(monkeypatch, mox):
