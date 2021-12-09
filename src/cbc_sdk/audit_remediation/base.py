@@ -1377,6 +1377,22 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         with io.open(filename, 'wb') as file:
             self.export_csv_as_stream(file)
 
+    def export_csv_as_lines(self):
+        """
+        Export the results from the run as CSV, returning the CSV data as iterated lines.
+
+        Required Permissions:
+            livequery.manage(READ)
+
+        Returns:
+            iterator: An iterator that can be used to get each line of CSV text in turn as a string.
+        """
+        if self._run_id is None:
+            raise ApiError("Can't retrieve results without a run ID")
+        url = self._doc_class.urlobject.format(self._cb.credentials.org_key, self._run_id) + '?format=csv'
+        request = self._build_request(0, -1)
+        return self._cb.post_and_get_lines(url, request, headers={'Accept': 'text/csv'})
+
     def export_zipped_csv(self, filename):
         """
         Export the results from the run as a zipped CSV, writing the zip data to the named file.

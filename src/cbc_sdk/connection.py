@@ -542,7 +542,7 @@ class BaseAPI(object):
 
     def post_and_get_stream(self, uri, body, stream_output, **kwargs):
         """
-        Send a POST request  to the specified URI and stream the results back into the given stream object.
+        Send a POST request to the specified URI and stream the results back into the given stream object.
 
         Args:
             uri (str): The URI to send the POST request to.
@@ -560,6 +560,25 @@ class BaseAPI(object):
             for block in resp.iter_content(self.session.stream_buffer_size):
                 stream_output.write(block)
         return resp
+
+    def post_and_get_lines(self, uri, body, **kwargs):
+        """
+        Send a POST request to the specified URI and iterate over the response as lines of text.
+
+        Args:
+            uri (str): The URI to send the POST request to.
+            body (object): The data to be sent in the body of the POST request.
+            **kwargs (dict): Additional arguments for the HTTP POST.
+
+        Returns:
+            iterator: An iterator that can be used to get each line of text in turn as a string.
+        """
+        headers = kwargs.pop("headers", {})
+        headers["Content-Type"] = "application/json"
+        with self.session.http_request("POST", uri, headers=headers, data=json.dumps(body, sort_keys=True),
+                                       stream=True, **kwargs) as resp:
+            for line in resp.iter_lines(decode_unicode=True):
+                yield line
 
     @classmethod
     def _map_multipart_param(cls, table_entry, value):
