@@ -11,6 +11,7 @@
 
 """Test code for the helper functions"""
 import pytest
+import requests_mock
 
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object, read_iocs, get_object_by_name_or_id
 from cbc_sdk.rest_api import CBCloudAPI
@@ -64,6 +65,56 @@ def test_apicloudapi_object_with_command_line_arguments():
     api = get_cb_cloud_object(args)
 
     assert api.credential_profile_name is None
+
+
+def test_apicloudapi_object_with_command_line_arguments_csp_api_token():
+    """Test init credentials from BaseAPI for CSP API Token options"""
+    with requests_mock.Mocker() as mock_request:
+        mock_request.register_uri("POST",
+                                  "https://console.cloud.vmware.com/csp/gateway/am/api/auth/api-tokens/authorize",
+                                  json={"access_token": "valid-token", "scope": "valid-scope"})
+
+        parser = build_cli_parser("Test helpers.py")
+        args = parser.parse_known_args()[0]
+
+        args.cburl = 'https://example.com'
+        args.csp_api_token = 'test-token'
+        args.orgkey = 'A1B2C3D4'
+        args.no_ssl_verify = 'false'
+        args.verbose = True
+
+        api = get_cb_cloud_object(args)
+
+        assert api.session.token == "valid-token"
+
+        # Verify Request
+        assert mock_request.last_request.text == "api_token=test-token"
+
+
+def test_apicloudapi_object_with_command_line_arguments_csp_oauth_app():
+    """Test init credentials from BaseAPI for CSP OAuth App options"""
+    with requests_mock.Mocker() as mock_request:
+        mock_request.register_uri("POST",
+                                  "https://console.cloud.vmware.com/csp/gateway/am/api/auth/token",
+                                  json={"access_token": "valid-token", "scope": "valid-scope"})
+        parser = build_cli_parser("Test helpers.py")
+        args = parser.parse_known_args()[0]
+
+        args.cburl = 'https://example.com'
+        args.csp_oauth_app_id = 'client-id'
+        args.csp_oauth_app_secret = 'client-secret'
+        args.orgkey = 'A1B2C3D4'
+        args.no_ssl_verify = 'false'
+        args.verbose = True
+
+        api = get_cb_cloud_object(args)
+
+        assert api.session.token == "valid-token"
+
+        # Verify Request
+        assert mock_request.last_request.text == "grant_type=client_credentials"
+        assert mock_request.last_request.headers.get("Authorization") == "Basic Y2xpZW50LWlkOmNsaWVudC1zZWNyZXQ="
+
 
 
 def test_apicloudapi_object_with_default_arguments():
