@@ -53,7 +53,10 @@ def build_cli_parser(description="Cb Example Script"):
     parser = argparse.ArgumentParser(description=description)
 
     parser.add_argument("--cburl", help="CB server's URL.  e.g., http://127.0.0.1 ")
-    parser.add_argument("--apitoken", help="API Token for Carbon Black server")
+    parser.add_argument("--apitoken", help="API Token for VMware Carbon Black Cloud")
+    parser.add_argument("--csp-api-token", help="CSP API Token for VMware Carbon Black Cloud")
+    parser.add_argument("--csp-oauth-app-id", help="CSP OAuth App ID for VMware Carbon Black Cloud")
+    parser.add_argument("--csp-oauth-app-secret", help="CSP OAuth App Secret for VMware Carbon Black Cloud")
     parser.add_argument("--orgkey", help="Organization key value for Carbon Black server")
     parser.add_argument("--no-ssl-verify", help="Do not verify server SSL certificate.", action="store_true",
                         default=False)
@@ -86,6 +89,19 @@ def get_cb_cloud_object(args):
 
     if args.cburl and args.apitoken and args.orgkey:
         cb = CBCloudAPI(url=args.cburl, token=args.apitoken, org_key=args.orgkey, ssl_verify=(not args.no_ssl_verify))
+
+    elif args.cburl and args.csp_api_token and args.orgkey:
+        cb = CBCloudAPI(url=args.cburl,
+                        csp_api_token=args.csp_api_token,
+                        org_key=args.orgkey,
+                        ssl_verify=(not args.no_ssl_verify))
+
+    elif args.cburl and args.csp_oauth_app_id and args.csp_oauth_app_secret and args.orgkey:
+        cb = CBCloudAPI(url=args.cburl,
+                        csp_oauth_app_id=args.csp_oauth_app_id,
+                        csp_oauth_app_secret=args.csp_oauth_app_secret,
+                        org_key=args.orgkey,
+                        ssl_verify=(not args.no_ssl_verify))
     else:
         cb = CBCloudAPI(profile=args.profile)
 
