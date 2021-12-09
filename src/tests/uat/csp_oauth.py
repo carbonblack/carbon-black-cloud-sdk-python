@@ -32,7 +32,7 @@ url = ''
 csp_api_token = ''
 csp_oauth_app_id = ''
 csp_oauth_app_secret = ''
-csp_url_override = None
+csp_url_override = "https://console.cloud.vmware.com"
 org_key = ''
 proxy = ''
 
@@ -48,6 +48,7 @@ def main():
     cb_oauth_app = CBCloudAPI(url=url,
                               csp_oauth_app_id=csp_oauth_app_id,
                               csp_oauth_app_secret=csp_oauth_app_secret,
+                              csp_url_override=csp_url_override,
                               org_key=org_key,
                               ssl_verify=False)
 
