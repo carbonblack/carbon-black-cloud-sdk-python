@@ -309,6 +309,17 @@ def test_result_query_export_file(cbcsdk_mock):
         os.remove(tempfile)
 
 
+def test_result_query_export_lines(cbcsdk_mock):
+    """Tests exporting the results of a query as a list of lines."""
+    input = "AAA\r\nBBB\r\nCCC"
+    cbcsdk_mock.mock_request("POST_LINES", "/livequery/v1/orgs/test/runs/run_id/results/_search?format=csv",
+                             CBCSDKMock.StubResponse(input, 200, input, False))
+    api = cbcsdk_mock.api
+    result_query = api.select(Result).run_id("run_id")
+    output = result_query.export_csv_as_lines()
+    assert output == ["AAA", "BBB", "CCC"]
+
+
 def test_result_query_export_zip(cbcsdk_mock):
     """Tests exporting the results of a query as a zip file."""
     cbcsdk_mock.mock_request("POST_STREAM",
@@ -334,6 +345,8 @@ def test_result_query_exports_fail_without_run_id(cb):
         result_query.export_csv_as_string()
     with pytest.raises(ApiError):
         result_query.export_csv_as_file('blort.txt')
+    with pytest.raises(ApiError):
+        result_query.export_csv_as_lines()
     with pytest.raises(ApiError):
         result_query.export_zipped_csv('blort.zip')
 

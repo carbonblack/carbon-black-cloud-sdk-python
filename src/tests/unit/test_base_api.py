@@ -294,6 +294,27 @@ def test_BaseAPI_post_and_get_stream(mox):
     mox.VerifyAll()
 
 
+def test_BaseAPI_post_and_get_lines(mox):
+    """Test the operation of post_and_get_lines."""
+    def validate_header(hdrs):
+        assert hdrs['Content-Type'] == 'application/json'
+        return True
+
+    def validate_data(data):
+        real_data = json.loads(data)
+        assert real_data == {'a': 1, 'b': 2}
+        return True
+
+    sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
+    mox.StubOutWithMock(sut.session, 'http_request')
+    sut.session.http_request('POST', '/path', headers=Func(validate_header), data=Func(validate_data), stream=True) \
+        .AndReturn(StubResponse(None, 200, "AAA\r\nBBB\r\nCCC"))
+    mox.ReplayAll()
+    output = list(sut.post_and_get_lines('/path', {'a': 1, 'b': 2}))
+    assert output == ["AAA", "BBB", "CCC"]
+    mox.VerifyAll()
+
+
 def test_BaseAPI_post_multipart(mox):
     """Test the operation of post_multipart."""
     def validate_header(hdrs):
