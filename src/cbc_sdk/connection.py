@@ -401,8 +401,13 @@ class BaseAPI(object):
         integration_name = kwargs.pop("integration_name", None)
         self.credential_provider = kwargs.pop("credential_provider", None)
 
-        url, token = kwargs.get("url", None), kwargs.get("token", None)
-        if url and token:
+        url = kwargs.get("url", None)
+        token = kwargs.get("token", None)
+        csp_api_token = kwargs.get("csp_api_token", None)
+        csp_oauth_app_id = kwargs.get("csp_oauth_app_id", None)
+        csp_oauth_app_secret = kwargs.get("csp_oauth_app_secret", None)
+
+        if url and (token or csp_api_token or (csp_oauth_app_id and csp_oauth_app_secret)):
             self.credentials = Credentials(kwargs)
             self.credentials.integration = integration_name
             self.credential_profile_name = None
