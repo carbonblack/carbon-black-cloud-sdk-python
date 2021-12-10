@@ -49,6 +49,11 @@ class StubResponse(object):
             return_list.append(part)
         return return_list
 
+    def iter_lines(self, **kwargs):
+        """Create iterated lines from the 'content' parameter."""
+        for line in self.content.splitlines():
+            yield line
+
 
 def _failing_get_object(url, parms=None, default=None):
     pytest.fail("GET called for %s when it shouldn't be" % url)
