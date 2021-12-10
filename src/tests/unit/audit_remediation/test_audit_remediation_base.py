@@ -346,7 +346,7 @@ def test_result_query_exports_fail_without_run_id(cb):
     with pytest.raises(ApiError):
         result_query.export_csv_as_file('blort.txt')
     with pytest.raises(ApiError):
-        result_query.export_csv_as_lines()
+        list(result_query.export_csv_as_lines())
     with pytest.raises(ApiError):
         result_query.export_zipped_csv('blort.zip')
 

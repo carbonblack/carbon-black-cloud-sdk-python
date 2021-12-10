@@ -1385,13 +1385,13 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
             livequery.manage(READ)
 
         Returns:
-            iterator: An iterator that can be used to get each line of CSV text in turn as a string.
+            iterable: An iterable that can be used to get each line of CSV text in turn as a string.
         """
         if self._run_id is None:
             raise ApiError("Can't retrieve results without a run ID")
         url = self._doc_class.urlobject.format(self._cb.credentials.org_key, self._run_id) + '?format=csv'
         request = self._build_request(0, -1)
-        return self._cb.post_and_get_lines(url, request, headers={'Accept': 'text/csv'})
+        yield from self._cb.post_and_get_lines(url, request, headers={'Accept': 'text/csv'})
 
     def export_zipped_csv(self, filename):
         """
