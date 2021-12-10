@@ -316,7 +316,7 @@ def test_result_query_export_lines(cbcsdk_mock):
                              CBCSDKMock.StubResponse(input, 200, input, False))
     api = cbcsdk_mock.api
     result_query = api.select(Result).run_id("run_id")
-    output = result_query.export_csv_as_lines()
+    output = list(result_query.export_csv_as_lines())
     assert output == ["AAA", "BBB", "CCC"]
 
 

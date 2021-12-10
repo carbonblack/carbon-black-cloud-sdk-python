@@ -51,7 +51,8 @@ class StubResponse(object):
 
     def iter_lines(self, **kwargs):
         """Create iterated lines from the 'content' parameter."""
-        return self.content.splitlines()
+        for line in self.content.splitlines():
+            yield line
 
 
 def _failing_get_object(url, parms=None, default=None):

@@ -571,7 +571,7 @@ class BaseAPI(object):
             **kwargs (dict): Additional arguments for the HTTP POST.
 
         Returns:
-            iterator: An iterator that can be used to get each line of text in turn as a string.
+            iterable: An iterable that can be used to get each line of text in turn as a string.
         """
         headers = kwargs.pop("headers", {})
         headers["Content-Type"] = "application/json"
