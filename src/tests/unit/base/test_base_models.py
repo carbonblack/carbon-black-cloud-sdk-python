@@ -3,7 +3,7 @@
 import pytest
 import logging
 from cbc_sdk.base import MutableBaseModel, NewBaseModel
-from cbc_sdk.endpoint_standard import Policy, Event, Recommendation
+from cbc_sdk.endpoint_standard import Policy, Event
 from cbc_sdk.platform import Process
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ServerError, InvalidObjectError, ApiError
@@ -14,7 +14,6 @@ from tests.unit.fixtures.endpoint_standard.mock_events import EVENT_GET_SPECIFIC
 from tests.unit.fixtures.endpoint_standard.mock_policy import (POLICY_GET_SPECIFIC_RESP, POLICY_GET_RESP,
                                                                POLICY_UPDATE_RESP, POLICY_GET_RESP_1,
                                                                POLICY_GET_RESP_2, POLICY_POST_RESP)
-from tests.unit.fixtures.endpoint_standard.mock_recommendation import ACTION_INIT
 from tests.unit.fixtures.enterprise_edr.mock_threatintel import FEED_GET_SPECIFIC_RESP
 from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_VALIDATION_RESP,
                                                        POST_PROCESS_SEARCH_JOB_RESP,
