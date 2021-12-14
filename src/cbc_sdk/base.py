@@ -591,6 +591,25 @@ class NewBaseModel(object, metaclass=CbMetaModel):
             string_value = string_value[:NewBaseModel.MAX_VALUE_WIDTH - 3] + "..."
         return string_value
 
+    @classmethod
+    def _str_name_field_len(cls, attributes):
+        """
+        Given an attribute dictionary, returns the maximum length of its "name" field.
+
+        Args:
+            attributes (dict): A dictionary to check.
+
+        Returns:
+            int: The maximum length of any key in the dictionary.
+        """
+        attr_names = []
+        for attr in attributes:
+            if isinstance(attr, str):
+                attr_names.append(attr)
+            elif isinstance(attr, dict):
+                attr_names.extend(attr.keys())
+        return max([len(s) for s in attr_names])
+
     def _str_attr_line(self, name, value, name_field_len, top_level=True):
         """
         Returns the representation of a single attribute within an object (which may be multiple lines).
@@ -645,7 +664,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
             lines.append('')
         elif isinstance(value, dict) and top_level:
             # append the dict elements
-            lines.append(format_str.format(status, name.rjust(name_field_len), '{'))
+            lines.append(format_str.format(status, name.rjust(name_field_len), '[dict] {'))
             lines.extend([f"{' ' * (spacing + 4)}{sub_line}" for sub_line in self._str_dict_lines(value, False)])
             lines.append(f"{' ' * spacing}{'}'}")
         else:
@@ -673,13 +692,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
             attributes = d
 
         # Compute the name field length.
-        attr_names = []
-        for attr in attributes:
-            if isinstance(attr, str):
-                attr_names.append(attr)
-            elif isinstance(attr, dict):
-                attr_names.extend(attr.keys())
-        name_field_len = max([len(s) for s in attr_names])
+        name_field_len = self._str_name_field_len(attributes)
 
         for attr in attributes:
             # typical case, where the info dictionary value for this `attr` is a string

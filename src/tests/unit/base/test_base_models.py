@@ -460,15 +460,6 @@ def test_str_stringize():
         == 'If this had been an actual emergency, we would ...'
 
 
-def test_str_max_name_len(cb):
-    """Test the _str_max_name_len() method"""
-    recommendation = Recommendation(cb, ACTION_INIT['recommendation_id'], ACTION_INIT)
-    assert recommendation._str_max_name_len() == 17
-    assert recommendation.workflow_._str_max_name_len() == 11
-    assert recommendation.impact_._str_max_name_len() == 16
-    assert recommendation.new_rule_._str_max_name_len() == 13
-
-
 def test_str_attr_line(cb):
     """Test the _str_attr_line method"""
     subobject_data = {
@@ -490,6 +481,7 @@ def test_str_attr_line(cb):
         "objlong": "If this had been an actual emergency, we would all be dead by now",
         "objlist": [1, 2, 3, 5, 8, 13],
         "empty": [],
+        "objdict": {"a": 1, "b": 2, "c": 3},
         "mini_me": subobject_data,
         "List1": [listobj_data],
         "List2": [listobj_data, listobj2_data]
@@ -502,63 +494,76 @@ def test_str_attr_line(cb):
     my_object._my_subobjects["List1"] = [my_listobj]
     my_object._my_subobjects["List2"] = [my_listobj, my_listobj2]
     # Test rendering of basic data (subobject mode)
-    rendering = my_object._str_attr_line('objint', object_data['objint'], False)
+    name_field_len = my_object._str_name_field_len(object_data)
+    rendering = my_object._str_attr_line('objint', object_data['objint'], name_field_len, False)
     assert len(rendering) == 1
     assert rendering[0] == '   objint: 105'
-    rendering = my_object._str_attr_line('objstring', object_data['objstring'], False)
+    rendering = my_object._str_attr_line('objstring', object_data['objstring'], name_field_len, False)
     assert len(rendering) == 1
     assert rendering[0] == 'objstring: KMFMS'
-    rendering = my_object._str_attr_line('objlong', object_data['objlong'], False)
+    rendering = my_object._str_attr_line('objlong', object_data['objlong'], name_field_len, False)
     assert len(rendering) == 1
     assert rendering[0] == '  objlong: If this had been an actual emergency, we would ...'
     # Test rendering of list data (subobject mode)
-    rendering = my_object._str_attr_line('objlist', object_data['objlist'], False)
+    rendering = my_object._str_attr_line('objlist', object_data['objlist'], name_field_len, False)
     assert len(rendering) == 5
     assert rendering[0] == '  objlist: [list:6 items]:'
     assert rendering[1] == '           [0]: 1'
     assert rendering[2] == '           [1]: 2'
     assert rendering[3] == '           [2]: 3'
     assert rendering[4] == '           [...]'
-    rendering = my_object._str_attr_line('empty', object_data['empty'], False)
+    rendering = my_object._str_attr_line('empty', object_data['empty'], name_field_len, False)
     assert len(rendering) == 1
     assert rendering[0] == '    empty: [list:0 items]'
+    # Test rendering of dict data (subobject mode)
+    rendering = my_object._str_attr_line('objdict', object_data['objdict'], name_field_len, False)
+    assert len(rendering) == 1
+    assert rendering[0].startswith('  objdict: {')
     # Test rendering of subobject data (subobject mode)
-    rendering = my_object._str_attr_line('mini_me', object_data['mini_me'], False)
+    rendering = my_object._str_attr_line('mini_me', object_data['mini_me'], name_field_len, False)
     assert len(rendering) == 1
     assert rendering[0].startswith('  mini_me: {')
     # Test rendering of list-of-subobjects data (subobject mode)
-    rendering = my_object._str_attr_line('List1', object_data['List1'], False)
+    rendering = my_object._str_attr_line('List1', object_data['List1'], name_field_len, False)
     assert len(rendering) == 2
     assert rendering[0] == '    List1: [list:1 item]:'
     assert rendering[1].startswith('           [0]: {')
-    rendering = my_object._str_attr_line('List2', object_data['List2'], False)
+    rendering = my_object._str_attr_line('List2', object_data['List2'], name_field_len, False)
     assert len(rendering) == 3
     assert rendering[0] == '    List2: [list:2 items]:'
     assert rendering[1].startswith('           [0]: {')
     assert rendering[2].startswith('           [1]: {')
     # Test rendering of basic data (top-level mode)
-    rendering = my_object._str_attr_line('objint', object_data['objint'])
+    rendering = my_object._str_attr_line('objint', object_data['objint'], name_field_len)
     assert len(rendering) == 1
     assert rendering[0] == '       objint: 105'
-    rendering = my_object._str_attr_line('objstring', object_data['objstring'])
+    rendering = my_object._str_attr_line('objstring', object_data['objstring'], name_field_len)
     assert len(rendering) == 1
     assert rendering[0] == '    objstring: KMFMS'
-    rendering = my_object._str_attr_line('objlong', object_data['objlong'])
+    rendering = my_object._str_attr_line('objlong', object_data['objlong'], name_field_len)
     assert len(rendering) == 1
     assert rendering[0] == '      objlong: If this had been an actual emergency, we would ...'
     # Test rendering of list data (top-level mode)
-    rendering = my_object._str_attr_line('objlist', object_data['objlist'])
+    rendering = my_object._str_attr_line('objlist', object_data['objlist'], name_field_len)
     assert len(rendering) == 5
     assert rendering[0] == '      objlist: [list:6 items]:'
     assert rendering[1] == '               [0]: 1'
     assert rendering[2] == '               [1]: 2'
     assert rendering[3] == '               [2]: 3'
     assert rendering[4] == '               [...]'
-    rendering = my_object._str_attr_line('empty', object_data['empty'])
+    rendering = my_object._str_attr_line('empty', object_data['empty'], name_field_len)
     assert len(rendering) == 1
     assert rendering[0] == '        empty: [list:0 items]'
+    # Test rendering of dict data (top-level mode)
+    rendering = my_object._str_attr_line('objdict', object_data['objdict'], name_field_len)
+    assert len(rendering) == 5
+    assert rendering[0] == '      objdict: [dict] {'
+    assert rendering[1] == '                   a: 1'
+    assert rendering[2] == '                   b: 2'
+    assert rendering[3] == '                   c: 3'
+    assert rendering[4] == '               }'
     # Test rendering of subobject data (top-level mode) including lists in subobject
-    rendering = my_object._str_attr_line('mini_me', object_data['mini_me'])
+    rendering = my_object._str_attr_line('mini_me', object_data['mini_me'], name_field_len)
     assert len(rendering) == 10
     assert rendering[0] == '      mini_me: [TestBaseModel object]:'
     assert rendering[1] == '                     id: 4096'
@@ -571,13 +576,13 @@ def test_str_attr_line(cb):
     assert rendering[8] == '               sostring: Boom!'
     assert rendering[9] == ''
     # Test rendering of list-of-subobjects data (top-level mode)
-    rendering = my_object._str_attr_line('List1', object_data['List1'])
+    rendering = my_object._str_attr_line('List1', object_data['List1'], name_field_len)
     assert len(rendering) == 4
     assert rendering[0] == '        List1: [list:1 item]:'
     assert rendering[1] == '               [0]: [TestBaseModel object]:'
     assert rendering[2] == '                    id: 64'
     assert rendering[3] == ''
-    rendering = my_object._str_attr_line('List2', object_data['List2'])
+    rendering = my_object._str_attr_line('List2', object_data['List2'], name_field_len)
     assert len(rendering) == 7
     assert rendering[0] == '        List2: [list:2 items]:'
     assert rendering[1] == '               [0]: [TestBaseModel object]:'
