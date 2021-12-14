@@ -18,6 +18,7 @@ from cbc_sdk.base import (UnrefreshableModel, NewBaseModel, QueryBuilder,
                           QueryBuilderSupportMixin, IterableQueryMixin, BaseQuery,
                           CriteriaBuilderSupportMixin, AsyncQueryMixin)
 from cbc_sdk.errors import ApiError, ServerError, TimeoutError, OperationCancelled
+import io
 import logging
 import time
 
@@ -1324,6 +1325,88 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
             results = result.get("results", [])
             output += [self._doc_class(self._cb, item) for item in results]
         return output
+
+    def export_csv_as_stream(self, output, compressed=False):
+        """
+        Export the results from the run as CSV, writing the CSV to the given stream.
+
+        Required Permissions:
+            livequery.manage(READ)
+
+        Args:
+            output (RawIOBase): Stream to write the CSV data from the request to.
+            compressed (bool): True to download as a compressed ZIP file, False to download as CSV.
+        """
+        if self._run_id is None:
+            raise ApiError("Can't retrieve results without a run ID")
+        url = self._doc_class.urlobject.format(self._cb.credentials.org_key, self._run_id) + '?format=csv'
+        if compressed:
+            url += '&download=true'
+        request = self._build_request(0, -1)
+        self._cb.post_and_get_stream(url, request, output,
+                                     headers={'Accept': 'application/octet-stream' if compressed else 'text/csv'})
+
+    def export_csv_as_string(self):
+        """
+        Export the results from the run as CSV, returning the CSV data as a string.
+
+        Required Permissions:
+            livequery.manage(READ)
+
+        Returns:
+            str: The CSV data as one big string.
+        """
+        if self._run_id is None:
+            raise ApiError("Can't retrieve results without a run ID")
+        with io.BytesIO() as buffer:
+            self.export_csv_as_stream(buffer)
+            return str(buffer.getvalue(), 'utf-8')
+
+    def export_csv_as_file(self, filename):
+        """
+        Export the results from the run as CSV, writing the CSV to the named file.
+
+        Required Permissions:
+            livequery.manage(READ)
+
+        Args:
+            filename (str): Name of the file to write the results to.
+        """
+        if self._run_id is None:
+            raise ApiError("Can't retrieve results without a run ID")
+        with io.open(filename, 'wb') as file:
+            self.export_csv_as_stream(file)
+
+    def export_csv_as_lines(self):
+        """
+        Export the results from the run as CSV, returning the CSV data as iterated lines.
+
+        Required Permissions:
+            livequery.manage(READ)
+
+        Returns:
+            iterable: An iterable that can be used to get each line of CSV text in turn as a string.
+        """
+        if self._run_id is None:
+            raise ApiError("Can't retrieve results without a run ID")
+        url = self._doc_class.urlobject.format(self._cb.credentials.org_key, self._run_id) + '?format=csv'
+        request = self._build_request(0, -1)
+        yield from self._cb.post_and_get_lines(url, request, headers={'Accept': 'text/csv'})
+
+    def export_zipped_csv(self, filename):
+        """
+        Export the results from the run as a zipped CSV, writing the zip data to the named file.
+
+        Required Permissions:
+            livequery.manage(READ)
+
+        Args:
+            filename (str): Name of the file to write the results to.
+        """
+        if self._run_id is None:
+            raise ApiError("Can't retrieve results without a run ID")
+        with io.open(filename, 'wb') as file:
+            self.export_csv_as_stream(file, True)
 
 
 class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin, AsyncQueryMixin):
