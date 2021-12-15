@@ -7,6 +7,7 @@ import urllib3
 import copy
 import yaml
 import os
+from urllib.parse import urlparse
 from cabby.exceptions import NoURIProvidedError, ClientException
 from requests.exceptions import ConnectionError
 from cbc_sdk.errors import ApiError
@@ -367,7 +368,7 @@ class StixTaxii():
                     title=title,
                     description=description)
                 for ioc_key, ioc_val in ioc_dict.items():
-                    result.attach_ioc_v2(values=ioc_val, field=ioc_key, link=link)
+                    result.attach_ioc_v2(values=ioc_val, field=ioc_key, link=urlparse(link).netloc)
             except handled_exceptions as e:
                 logging.warning(f"Problem in report formatting: {e}")
                 result = self.result(
