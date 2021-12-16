@@ -10,30 +10,33 @@
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
 """Tests for the AWSCredentialProvider"""
-
-from unittest import mock
 import json
 
 import pytest
+
+from boto3.session import Session
 
 from cbc_sdk.credential_providers.aws_sm_credential_provider import AWSCredentialProvider
 from cbc_sdk.credentials import CredentialError
 
 
-@mock.patch("boto3.session.Session")
-def test_raising_exception_on_emtpy_secret(mock_session_class):
+class ClientMock:  # noqa: D101
+    def __init__(self, *args, **kwargs):  # noqa: D107
+        pass
+
+    def get_secret_value(self, *args, **kwargs):  # noqa: D102
+        pass
+
+
+def test_raising_exception_on_emtpy_secret(monkeypatch):
     """Test for raising the CredentialError."""
-    mock_session_object = mock.Mock()
-    mock_client = mock.Mock()
-    mock_client.get_secret_value.return_value = {}
-    mock_session_object.client.return_value = mock_client
-    mock_session_class.return_value = mock_session_object
+    monkeypatch.setattr(Session, "client", ClientMock)
+    monkeypatch.setattr(ClientMock, "get_secret_value", lambda *args, **kwargs: {})
     with pytest.raises(CredentialError):
         AWSCredentialProvider(secret_arn="test").get_credentials()
 
 
-@mock.patch("boto3.session.Session")
-def test_aws_getting_credentials(mock_session_class):
+def test_aws_getting_credentials(monkeypatch):
     """Test for getting credentials."""
     test_data = {
         "url": "<URL>",
@@ -47,10 +50,8 @@ def test_aws_getting_credentials(mock_session_class):
         "ignore_system_proxy": True,
         "integration": "<INTEGRATION_NAME>"
     }
-    mock_session_object = mock.Mock()
-    mock_client = mock.Mock()
-    mock_client.get_secret_value.return_value = {"SecretString": json.dumps(test_data)}
-    mock_session_object.client.return_value = mock_client
-    mock_session_class.return_value = mock_session_object
+
+    monkeypatch.setattr(Session, "client", ClientMock)
+    monkeypatch.setattr(ClientMock, "get_secret_value", lambda *args, **kwargs: {"SecretString": json.dumps(test_data)})
     credentials = AWSCredentialProvider(secret_arn="test").get_credentials()
     assert credentials.to_dict() == test_data
