@@ -1229,13 +1229,11 @@ class Report(FeedModel):
     def ignored(self):
         """Returns the ignore status for this report.
 
-        Only watchlist reports have an ignore status.
-
         Returns:
             (bool): True if this Report is ignored, False otherwise.
 
         Raises:
-            InvalidObjectError: If `id` is missing or this Report is not from a Watchlist.
+            InvalidObjectError: If `id` is missing or feed ID is missing.
 
         Example:
 
@@ -1244,12 +1242,16 @@ class Report(FeedModel):
         """
         if not self.id:
             raise InvalidObjectError("missing Report ID")
-        if not self._from_watchlist:
-            raise InvalidObjectError("ignore status only applies to watchlist reports")
+        if self._from_watchlist:
+            send_id = self.id
+        else:
+            if not self._feed_id:
+                raise InvalidObjectError("missing Feed ID")
+            send_id = f"{self._feed_id}-{self.id}"
 
         url = "/threathunter/watchlistmgr/v3/orgs/{}/reports/{}/ignore".format(
             self._cb.credentials.org_key,
-            self.id
+            send_id
         )
         resp = self._cb.get_object(url)
         return resp["ignored"]
@@ -1257,40 +1259,42 @@ class Report(FeedModel):
     def ignore(self):
         """Sets the ignore status on this report.
 
-        Only watchlist reports have an ignore status.
-
         Raises:
-            InvalidObjectError: If `id` is missing or this Report is not from a Watchlist.
+            InvalidObjectError: If `id` is missing or feed ID is missing.
         """
         if not self.id:
             raise InvalidObjectError("missing Report ID")
-
-        if not self._from_watchlist:
-            raise InvalidObjectError("ignoring only applies to watchlist reports")
+        if self._from_watchlist:
+            send_id = self.id
+        else:
+            if not self._feed_id:
+                raise InvalidObjectError("missing Feed ID")
+            send_id = f"{self._feed_id}-{self.id}"
 
         url = "/threathunter/watchlistmgr/v3/orgs/{}/reports/{}/ignore".format(
             self._cb.credentials.org_key,
-            self.id
+            send_id
         )
         self._cb.put_object(url, None)
 
     def unignore(self):
         """Removes the ignore status on this report.
 
-        Only watchlist reports have an ignore status.
-
         Raises:
-            InvalidObjectError: If `id` is missing or this Report is not from a Watchlist.
+            InvalidObjectError: If `id` is missing or feed ID is missing.
         """
         if not self.id:
             raise InvalidObjectError("missing Report ID")
-
-        if not self._from_watchlist:
-            raise InvalidObjectError("ignoring only applies to watchlist reports")
+        if self._from_watchlist:
+            send_id = self.id
+        else:
+            if not self._feed_id:
+                raise InvalidObjectError("missing Feed ID")
+            send_id = f"{self._feed_id}-{self.id}"
 
         url = "/threathunter/watchlistmgr/v3/orgs/{}/reports/{}/ignore".format(
             self._cb.credentials.org_key,
-            self.id
+            send_id
         )
         self._cb.delete_object(url)
 
