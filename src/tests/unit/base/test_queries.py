@@ -101,6 +101,7 @@ def test_raise_ModelNotFound():
         ("TemplateHistory", "TemplateHistoryQuery"),
         # Endpoint Standard
         ("Recommendation", "RecommendationQuery"),
+        ("Event", "Query"),
         ("EnrichedEvent", "EnrichedEventQuery"),
         ("EnrichedEventFacet", "FacetQuery"),
         ("Policy", "Query"),
@@ -117,8 +118,6 @@ def test_raise_ModelNotFound():
         ("DeviceControlAlert", "DeviceControlAlertSearchQuery"),
         ("WatchlistAlert", "WatchlistAlertSearchQuery"),
         ("Device", "DeviceSearchQuery"),
-        # TODO: The comment has to be removed after the deprecation of the Endpoint Standard's Event
-        # ("Event", "EventQuery"),
         ("EventFacet", "EventFacetQuery"),
         ("Grant", "GrantQuery"),
         ("Process", "AsyncProcessQuery"),
