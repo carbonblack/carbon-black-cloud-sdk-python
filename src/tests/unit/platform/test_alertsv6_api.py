@@ -77,7 +77,7 @@ def test_query_basealert_with_all_bells_and_whistles(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/alerts/_search"
         assert body == {"query": "Blort",
-                        "rows": 100,
+                        "rows": 2,
                         "criteria": {"category": ["MONITORED", "THREAT"], "device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
                                      "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
@@ -117,7 +117,7 @@ def test_query_basealert_with_create_time_as_start_end(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/alerts/_search"
         assert body == {"query": "Blort",
-                        "rows": 100,
+                        "rows": 2,
                         "criteria": {"create_time": {"start": "2019-09-30T12:34:56", "end": "2019-10-01T12:00:12"}}}
         _was_called = True
         return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
@@ -145,7 +145,7 @@ def test_query_basealert_with_create_time_as_start_end_as_objs(monkeypatch):
         nonlocal _timestamp
         assert url == "/appservices/v6/orgs/Z100/alerts/_search"
         assert body == {"query": "Blort",
-                        "rows": 100,
+                        "rows": 2,
                         "criteria": {"create_time": {"start": _timestamp.isoformat(), "end": _timestamp.isoformat()}}}
         _was_called = True
         return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
@@ -171,7 +171,7 @@ def test_query_basealert_with_create_time_as_range(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/alerts/_search"
         assert body == {"query": "Blort", "criteria": {"create_time": {"range": "-3w"}},
-                        "rows": 100}
+                        "rows": 2}
         _was_called = True
         return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
                                           "workflow": {"state": "OPEN"}}], "num_found": 1})
@@ -198,7 +198,7 @@ def test_query_basealert_with_time_range(monkeypatch):
         assert url == "/appservices/v6/orgs/Z100/alerts/_search"
         assert body == {"query": "Blort", "criteria": {"last_update_time": {"start": _timestamp.isoformat(),
                                                                             "end": _timestamp.isoformat()}},
-                        "rows": 100}
+                        "rows": 2}
         _was_called = True
         return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
                                           "workflow": {"state": "OPEN"}}], "num_found": 1})
@@ -224,7 +224,7 @@ def test_query_basealert_with_time_range_start_end(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/alerts/_search"
         assert body == {"query": "Blort", "criteria": {"last_update_time": {"range": "-3w"}},
-                        "rows": 100}
+                        "rows": 2}
         _was_called = True
         return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
                                           "workflow": {"state": "OPEN"}}], "num_found": 1})
@@ -319,7 +319,7 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/alerts/cbanalytics/_search"
         assert body == {"query": "Blort",
-                        "rows": 100,
+                        "rows": 2,
                         "criteria": {"category": ["THREAT", "MONITORED"], "device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
                                      "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
@@ -411,7 +411,7 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/alerts/devicecontrol/_search"
         assert body == {"query": "Blort",
-                        "rows": 100,
+                        "rows": 2,
                         "criteria": {"category": ["MONITORED", "THREAT"], "device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
                                      "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
@@ -500,7 +500,7 @@ def test_query_watchlistalert_with_all_bells_and_whistles(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/alerts/watchlist/_search"
         assert body == {"query": "Blort",
-                        "rows": 100,
+                        "rows": 2,
                         "criteria": {"category": ["THREAT", "MONITORED"], "device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
                                      "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],

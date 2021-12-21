@@ -93,7 +93,7 @@ def test_reputation_override_select(cbcsdk_mock):
                                    .sort_by("create_time", "asc")
 
     assert len(reputation_override_query) == 1
-    reputation_override = reputation_override_query.first()
+    reputation_override = list(reputation_override_query)[0]
     assert isinstance(reputation_override, ReputationOverride)
     assert reputation_override.sha256_hash == "af62e6b3d475879c4234fe7bd8ba67ff6544ce6510131a069aaac75aa92aee7a"
 

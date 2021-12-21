@@ -11,6 +11,7 @@ schema
 solrq
 validators
 keyring;platform_system=='Darwin'
+boto3
 deprecation
 
 # Dev dependencies

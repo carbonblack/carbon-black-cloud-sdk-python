@@ -188,6 +188,7 @@ def test_query_device_with_all_bells_and_whistles(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/devices/_search"
         assert body == {"query": "foobar",
+                        "rows": 2,
                         "criteria": {"ad_group_id": [14, 25], "os": ["LINUX"], "policy_id": [8675309],
                                      "status": ["ALL"], "target_priority": ["HIGH"], "deployment_type": ["ENDPOINT"]},
                         "exclusions": {"sensor_version": ["0.1"]},
@@ -215,6 +216,7 @@ def test_query_device_with_last_contact_time_as_start_end(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/devices/_search"
         assert body == {"query": "foobar",
+                        "rows": 2,
                         "criteria": {"last_contact_time": {"start": "2019-09-30T12:34:56",
                                                            "end": "2019-10-01T12:00:12"}}, "exclusions": {}}
         _was_called = True
@@ -238,7 +240,12 @@ def test_query_device_with_last_contact_time_as_range(monkeypatch):
     def _run_query(url, body, **kwargs):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/devices/_search"
-        assert body == {"query": "foobar", "criteria": {"last_contact_time": {"range": "-3w"}}, "exclusions": {}}
+        assert body == {
+            "query": "foobar",
+            "rows": 2,
+            "criteria": {"last_contact_time": {"range": "-3w"}},
+            "exclusions": {}
+        }
         _was_called = True
         return StubResponse({"results": [{"id": 6023, "organization_name": "thistestworks"}],
                              "num_found": 1})
@@ -452,6 +459,7 @@ def test_query_deployment_type(monkeypatch):
     def _valid_deployment_type(url, body, **kwargs):
         assert url == "/appservices/v6/orgs/Z100/devices/_search"
         assert body == {"query": "",
+                        "rows": 2,
                         "criteria": {"deployment_type": ["ENDPOINT"]},
                         "exclusions": {}}
         return StubResponse({"results": [{"id": 6023, "deployment_type": ["ENDPOINT"]}],

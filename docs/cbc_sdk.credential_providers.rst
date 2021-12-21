@@ -28,19 +28,18 @@ cbc\_sdk.credential\_providers.file\_credential\_provider module
    :undoc-members:
    :show-inheritance:
 
-cbc\_sdk.credential\_providers.registry\_credential\_provider module
---------------------------------------------------------------------
-
-.. automodule:: cbc_sdk.credential_providers.registry_credential_provider
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
 cbc\_sdk.credential\_providers.keychain\_credential\_provider module
 --------------------------------------------------------------------
 
 .. automodule:: cbc_sdk.credential_providers.keychain_credential_provider
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+cbc\_sdk.credential\_providers.registry\_credential\_provider module
+--------------------------------------------------------------------
+
+.. automodule:: cbc_sdk.credential_providers.registry_credential_provider
    :members:
    :undoc-members:
    :show-inheritance:

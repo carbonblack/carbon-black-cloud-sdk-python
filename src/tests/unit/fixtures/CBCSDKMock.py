@@ -33,6 +33,8 @@ class CBCSDKMock:
         monkeypatch.setattr(api, "get_object", self._self_get_object())
         monkeypatch.setattr(api, "get_raw_data", self._self_get_raw_data())
         monkeypatch.setattr(api, "post_object", self._self_post_object())
+        monkeypatch.setattr(api, "post_and_get_stream", self._self_post_and_get_stream())
+        monkeypatch.setattr(api, "post_and_get_lines", self._self_post_and_get_lines())
         monkeypatch.setattr(api, "post_multipart", self._self_post_multipart())
         monkeypatch.setattr(api, "put_object", self._self_put_object())
         monkeypatch.setattr(api, "delete_object", self._self_delete_object())
@@ -92,7 +94,7 @@ class CBCSDKMock:
         Mocks the VERB + URL by defining the response for that particular request
 
         Args:
-            verb (str): HTTP verb supported [ GET, RAW_GET, POST, POST_MULTIPART, PUT, DELETE ]
+            verb (str): HTTP verb supported [ GET, RAW_GET, POST, POST_STREAM, POST_LINES, POST_MULTIPART, PUT, DELETE ]
             url (str): The full path of to be mocked with support for regex
             body (?): Any value or object to be returned as mocked response
 
@@ -143,6 +145,42 @@ class CBCSDKMock:
             pytest.fail("POST called for %s when it shouldn't be" % url)
 
         return _post_object
+
+    def _self_post_and_get_stream(self):
+        def _post_and_get_stream(url, body, stream_output, **kwargs):
+            self._capture_data(body)
+            matched = self.match_key(self.get_mock_key("POST_STREAM", url))
+            if matched:
+                if callable(self.mocks[matched]):
+                    result = self.mocks[matched](url, body, **kwargs)
+                    return_data = self.StubResponse(result, 200, result, False)
+                elif self.mocks[matched] is Exception or self.mocks[matched] in Exception.__subclasses__():
+                    raise self.mocks[matched]
+                else:
+                    return_data = self.mocks[matched]
+                if return_data.status_code < 400:
+                    stream_output.write(bytes(return_data.text, 'utf-8'))
+                return return_data
+            pytest.fail("POST called for %s when it shouldn't be" % url)
+
+        return _post_and_get_stream
+
+    def _self_post_and_get_lines(self):
+        def _post_and_get_lines(url, body, **kwargs):
+            self._capture_data(body)
+            matched = self.match_key(self.get_mock_key("POST_LINES", url))
+            if callable(self.mocks[matched]):
+                result = self.mocks[matched](url, body, **kwargs)
+                return_data = self.StubResponse(result, 200, result, False)
+            elif self.mocks[matched] is Exception or self.mocks[matched] in Exception.__subclasses__():
+                raise self.mocks[matched]
+            else:
+                return_data = self.mocks[matched]
+            if return_data.status_code < 400:
+                return return_data.text.splitlines()
+            pytest.fail("POST called for %s when it shouldn't be" % url)
+
+        return _post_and_get_lines
 
     def _self_post_multipart(self):
         def _post_multipart(url, param_table, **kwargs):
