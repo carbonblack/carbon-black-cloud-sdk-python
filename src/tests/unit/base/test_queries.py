@@ -121,7 +121,7 @@ def test_raise_ModelNotFound():
         ("DeviceControlAlert", "DeviceControlAlertSearchQuery"),
         ("WatchlistAlert", "WatchlistAlertSearchQuery"),
         ("Device", "DeviceSearchQuery"),
-        ("Event", "EventQuery"),
+        ("Event", "Query"),
         ("EventFacet", "EventFacetQuery"),
         ("Grant", "GrantQuery"),
         ("Process", "AsyncProcessQuery"),
