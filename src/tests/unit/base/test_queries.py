@@ -99,25 +99,29 @@ def test_raise_ModelNotFound():
         ("RunHistory", "RunHistoryQuery"),
         ("Template", "RunQuery"),
         ("TemplateHistory", "TemplateHistoryQuery"),
+
         # Endpoint Standard
         ("Recommendation", "RecommendationQuery"),
-        ("Event", "Query"),
+        # ("Event", "Query"), Deprecated
         ("EnrichedEvent", "EnrichedEventQuery"),
         ("EnrichedEventFacet", "FacetQuery"),
         ("Policy", "Query"),
         ("USBDevice", "USBDeviceQuery"),
         ("USBDeviceApproval", "USBDeviceApprovalQuery"),
         ("USBDeviceBlock", "USBDeviceBlockQuery"),
+
         # Enterprise EDR
         ("Feed", "FeedQuery"),
         ("Report", "ReportQuery"),
         ("Watchlist", "WatchlistQuery"),
+
         # Platform
         ("BaseAlert", "BaseAlertSearchQuery"),
         ("CBAnalyticsAlert", "CBAnalyticsAlertSearchQuery"),
         ("DeviceControlAlert", "DeviceControlAlertSearchQuery"),
         ("WatchlistAlert", "WatchlistAlertSearchQuery"),
         ("Device", "DeviceSearchQuery"),
+        ("Event", "EventQuery"),
         ("EventFacet", "EventFacetQuery"),
         ("Grant", "GrantQuery"),
         ("Process", "AsyncProcessQuery"),
@@ -128,6 +132,7 @@ def test_raise_ModelNotFound():
         ("User", "UserQuery"),
         ("Vulnerability", "VulnerabilityQuery"),
         ("Vulnerability.OrgSummary", "VulnerabilityOrgSummaryQuery"),
+
         # Workload
         ("SensorKit", "SensorKitQuery"),
         ("ComputeResource", "ComputeResourceQuery"),
