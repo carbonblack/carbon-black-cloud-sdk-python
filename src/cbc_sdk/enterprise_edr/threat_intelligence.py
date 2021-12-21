@@ -1242,12 +1242,12 @@ class Report(FeedModel):
         """
         if not self.id:
             raise InvalidObjectError("missing Report ID")
-        if self._from_watchlist:
+        if self._feed_id:
+            send_id = f"{self._feed_id}-{self.id}"
+        elif self._from_watchlist:
             send_id = self.id
         else:
-            if not self._feed_id:
-                raise InvalidObjectError("missing Feed ID")
-            send_id = f"{self._feed_id}-{self.id}"
+            raise InvalidObjectError("missing Feed ID")
 
         url = "/threathunter/watchlistmgr/v3/orgs/{}/reports/{}/ignore".format(
             self._cb.credentials.org_key,
@@ -1264,12 +1264,12 @@ class Report(FeedModel):
         """
         if not self.id:
             raise InvalidObjectError("missing Report ID")
-        if self._from_watchlist:
+        if self._feed_id:
+            send_id = f"{self._feed_id}-{self.id}"
+        elif self._from_watchlist:
             send_id = self.id
         else:
-            if not self._feed_id:
-                raise InvalidObjectError("missing Feed ID")
-            send_id = f"{self._feed_id}-{self.id}"
+            raise InvalidObjectError("missing Feed ID")
 
         url = "/threathunter/watchlistmgr/v3/orgs/{}/reports/{}/ignore".format(
             self._cb.credentials.org_key,
@@ -1285,12 +1285,12 @@ class Report(FeedModel):
         """
         if not self.id:
             raise InvalidObjectError("missing Report ID")
-        if self._from_watchlist:
+        if self._feed_id:
+            send_id = f"{self._feed_id}-{self.id}"
+        elif self._from_watchlist:
             send_id = self.id
         else:
-            if not self._feed_id:
-                raise InvalidObjectError("missing Feed ID")
-            send_id = f"{self._feed_id}-{self.id}"
+            raise InvalidObjectError("missing Feed ID")
 
         url = "/threathunter/watchlistmgr/v3/orgs/{}/reports/{}/ignore".format(
             self._cb.credentials.org_key,

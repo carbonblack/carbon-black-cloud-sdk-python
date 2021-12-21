@@ -496,7 +496,7 @@ def test_report_builder_save_watchlist(cbcsdk_mock):
     (REPORT_INIT, None, True, True, "69e2a8d0-bc36-4970-9834-8687efe1aff7", does_not_raise(), True),
     (REPORT_INIT, None, False, False, "", pytest.raises(InvalidObjectError), True),
     (REPORT_BUILT_VIA_BUILDER, None, True, False, "", pytest.raises(InvalidObjectError), True),
-    (REPORT_INIT2, "abcdefgh", True, True, "Compound", does_not_raise(), True),
+    (REPORT_INIT2, "abcdefgh", True, True, "abcdefgh-Compound", does_not_raise(), True),
     (REPORT_INIT2, "abcdefgh", False, True, "abcdefgh-Compound", does_not_raise(), True)
 ])
 def test_report_get_ignored(cbcsdk_mock, init_data, feed, watchlist, do_request, url_id, expectation, result):
@@ -514,7 +514,7 @@ def test_report_get_ignored(cbcsdk_mock, init_data, feed, watchlist, do_request,
     (REPORT_INIT, None, True, True, "69e2a8d0-bc36-4970-9834-8687efe1aff7", does_not_raise()),
     (REPORT_INIT, None, False, False, "", pytest.raises(InvalidObjectError)),
     (REPORT_BUILT_VIA_BUILDER, None, True, False, "", pytest.raises(InvalidObjectError)),
-    (REPORT_INIT2, "abcdefgh", True, True, "Compound", does_not_raise()),
+    (REPORT_INIT2, "abcdefgh", True, True, "abcdefgh-Compound", does_not_raise()),
     (REPORT_INIT2, "abcdefgh", False, True, "abcdefgh-Compound", does_not_raise())
 ])
 def test_report_set_ignored(cbcsdk_mock, init_data, feed, watchlist, do_request, url_id, expectation):
@@ -532,7 +532,7 @@ def test_report_set_ignored(cbcsdk_mock, init_data, feed, watchlist, do_request,
     (REPORT_INIT, None, True, True, "69e2a8d0-bc36-4970-9834-8687efe1aff7", does_not_raise()),
     (REPORT_INIT, None, False, False, "", pytest.raises(InvalidObjectError)),
     (REPORT_BUILT_VIA_BUILDER, None, True, False, "", pytest.raises(InvalidObjectError)),
-    (REPORT_INIT2, "abcdefgh", True, True, "Compound", does_not_raise()),
+    (REPORT_INIT2, "abcdefgh", True, True, "abcdefgh-Compound", does_not_raise()),
     (REPORT_INIT2, "abcdefgh", False, True, "abcdefgh-Compound", does_not_raise())
 ])
 def test_report_clear_ignored(cbcsdk_mock, init_data, feed, watchlist, do_request, url_id, expectation):
