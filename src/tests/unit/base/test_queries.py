@@ -121,7 +121,8 @@ def test_raise_ModelNotFound():
         ("DeviceControlAlert", "DeviceControlAlertSearchQuery"),
         ("WatchlistAlert", "WatchlistAlertSearchQuery"),
         ("Device", "DeviceSearchQuery"),
-        ("Event", "Query"),
+        # TODO: Remove the comment after the deprecation of the `endpoint_standard.Event`
+        # ("Event", "EventQuery")
         ("EventFacet", "EventFacetQuery"),
         ("Grant", "GrantQuery"),
         ("Process", "AsyncProcessQuery"),
