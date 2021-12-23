@@ -1056,6 +1056,31 @@ REPORT_INIT = {
     "visibility": "visible"
 }
 
+REPORT_INIT2 = {
+    "id": "Compound",
+    "title": "ReportTitle",
+    "description": "The report description",
+    "timestamp": 1234567890,
+    "severity": 5,
+    "link": "https://example.com",
+    "tags": ["Alpha", "Bravo"],
+    "iocs_v2": [
+        {
+            "id": "foo",
+            "match_type": "equality",
+            "field": "process_name",
+            "values": ["evil.exe"],
+        },
+        {
+            "id": "bar",
+            "match_type": "equality",
+            "field": "netconn_ipv4",
+            "values": ["10.29.99.1"],
+        }
+    ],
+    "visibility": "visible"
+}
+
 REPORT_GET_IGNORED = {
     "ignored": True
 }
