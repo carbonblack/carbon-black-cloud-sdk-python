@@ -29,6 +29,7 @@ Guides
 * :doc:`device-control` - Control the blocking of USB devices on endpoints.
 * :doc:`workload` - Advanced protection purpose-built for securing modern workloads to reduce the attack surface and strengthen security posture.
 * :doc:`reputation-override` - Manage reputation overrides for known applications, IT tools or certs.
+* :doc:`live-query` - With Live Query, you can ask questions of endpoints
 * :doc:`live-response` - Live Response allows security operators to collect information and take action on remote endpoints in real time.
 * :doc:`unified-binary-store` - The unified binary store (UBS) is responsible for storing all binaries and corresponding metadata for those binaries.
 * :doc:`users-grants` - Work with users and access grants.
