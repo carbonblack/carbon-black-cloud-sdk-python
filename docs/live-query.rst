@@ -9,10 +9,9 @@ using Live Query via the Python SDK.
 
 More information about the Audit and Remediation product which uses Live Query is available in the
 `Carbon Black Cloud user guide
-<https://docs.vmware.com/en/VMware-Carbon-Black-Cloud/services/carbon-black-cloud-user-guide/GUID-129D4F84-1BF0-49F3-BF95-83002FD63217.html>`_
+<https://docs.vmware.com/en/VMware-Carbon-Black-Cloud/services/carbon-black-cloud-user-guide/GUID-129D4F84-1BF0-49F3-BF95-83002FD63217.html/>`_
 
-More information about Live Query APIs is available on the `Developer Network
-<https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/>`'.
+More information about Live Query APIs is available on the `Developer Network <https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/>`_.
 
 Overview
 --------
