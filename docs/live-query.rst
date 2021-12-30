@@ -8,22 +8,23 @@ powered by https://osquery.io, an open source project that uses an SQLite interf
 using Live Query via the Python SDK.
 
 More information about the Audit and Remediation product which uses Live Query is available in the
-Carbon Black Cloud user guide:
-https://docs.vmware.com/en/VMware-Carbon-Black-Cloud/services/carbon-black-cloud-user-guide/GUID-129D4F84-1BF0-49F3-BF95-83002FD63217.html
+`Carbon Black Cloud user guide
+<https://docs.vmware.com/en/VMware-Carbon-Black-Cloud/services/carbon-black-cloud-user-guide/GUID-129D4F84-1BF0-49F3-BF95-83002FD63217.html>`_
 
-More information about Live Query APIs is available on the Developer Network.
-https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/
+More information about Live Query APIs is available on the `Developer Network
+<https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/>`'.
 
 Overview
 --------
 This guide shows how to find specific files on a system. This is the same scenario as the Quick Start Guide for the
-APIs on the Developer Network.  https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/latest/livequery-api/
+APIs on the `Developer Network <https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/latest/livequery-api/>`_
 
 The steps we'll go through are:
-0. Set up the python imports and Carbon Black Cloud credentials
-1. Start the Query Run
-2. Get the Query Run by ID to check the status
-3. Get the results of the query
+
+#. Set up the python imports and Carbon Black Cloud credentials
+#. Start the Query Run
+#. Get the Query Run by ID to check the status
+#. Get the results of the query
 
 Setting up
 ----------
@@ -56,14 +57,14 @@ Get the Query Run to check status
 The run status returns all the information about the progress of query execution.  These are some of the interesting
 fields that show the number of devices available to be queried and progress.
 
-      active_org_devices: 93
-       in_progress_count: 6
-        last_result_time: 2021-12-23T21:21:26.437Z
-             match_count: 0
-          no_match_count: 45
-       not_started_count: 40
-                  status: ACTIVE
-           total_results: 0
+active_org_devices: 93
+in_progress_count: 6
+last_result_time: 2021-12-23T21:21:26.437Z
+match_count: 0
+no_match_count: 45
+not_started_count: 40
+status: ACTIVE
+    total_results: 0
 
 Get the results
 ---------------
@@ -79,6 +80,15 @@ information for each.
     Device: 3456789 has status error.  Device message: Error: database or disk is full
     Device: 8765432 has status matched.  Device message:
 
+Other options
+-------------
+For large result sets it is possible to export the results in several formats including csv, zipped csv and streaming
+lines.  These options are documented in :meth:`cbc_sdk.audit_remediation.base.ResultQuery`
+
+This snippet shows writing the results to a zipped csv file.
+
+   >>> api.select(Result).run_id(run.id).export_zipped_csv("/Users/myname/mydir/livequeryresults.zip")
+
 Clean up
 ---------
 Since this is a tutorial we'll clean up when we're done by first stopping the query and then deleting it.
@@ -86,11 +96,5 @@ Since this is a tutorial we'll clean up when we're done by first stopping the qu
     True
     >>> run.delete()
     True
-
-Other options
--------------
-For large result sets it is possible to request the results asynchronously.
-
-TO DO - add this code snippet
 
 

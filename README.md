@@ -114,7 +114,7 @@ From the parent directory `carbon-black-cloud-sdk-python`, run the command `pyte
 ReadTheDocs hosts [the documentation for the SDK](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/). If you make changes to the SDK that require an update to the documentation, first install the documentation packages from pip:
 
 ```
-pip install sphinxcontrib-apidoc
+pip install sphinxcontrib-apidoc sphinx-copybutton
 ```
 
 Then, build the docs locally with the following commands:
