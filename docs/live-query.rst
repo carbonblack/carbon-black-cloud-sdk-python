@@ -92,6 +92,7 @@ This snippet shows writing the results to a zipped csv file.
 Clean up
 ---------
 Since this is a tutorial we'll clean up when we're done by first stopping the query and then deleting it.
+
     >>> run.stop()
     True
     >>> run.delete()
