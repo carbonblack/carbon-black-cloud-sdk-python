@@ -1,16 +1,8 @@
-cbc\_sdk.credential\_providers package
-======================================
+Credential Providers
+====================
 
 Submodules
 ----------
-
-cbc\_sdk.credential\_providers.aws\_sm\_credential\_provider module
--------------------------------------------------------------------
-
-.. automodule:: cbc_sdk.credential_providers.aws_sm_credential_provider
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 cbc\_sdk.credential\_providers.default module
 ---------------------------------------------
