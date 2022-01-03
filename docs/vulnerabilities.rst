@@ -24,20 +24,54 @@ With the example below, you can retrieve the 5 most recent non-critical vulnerab
     >>> from cbc_sdk.platform import Vulnerability
     >>> api = CBCloudAPI(profile='sample')
     >>> vulnerabilities = api.select(Vulnerability).set_severity("CRITICAL", "NOT_EQUALS")[:5]
-    >>> print(vulnerabilities[0].cve_id, vulnerabilities[0].category, vulnerabilities[0].device_count, vulnerabilities[0].os_product_id,
-        vulnerabilities[0].os_info, vulnerabilities[0].affected_assets, vulnerabilities[0].product_info, vulnerabilities[0].vuln_info)
+    >>> print(vulnerabilities[0])
 
-    CVE-1999-0794 APP 1 37_282511
-    {'os_type': 'WINDOWS', 'os_name': 'Microsoft Windows 10 Pro', 'os_version': '10.0.18363', 'os_arch': '64-bit'}
-    ['DESKTOP-KLVRRM4']
-    {'vendor': 'Microsoft Corporation', 'product': 'Microsoft Office', 'version': '15.0.4693.1005', 'release': None, 'arch': ''}
-    {'cve_id': 'CVE-1999-0794', 'cve_description': 'Microsoft Excel does not warn a user when a macro is present in a Symbolic Link (SYLK) format file.',
-     'risk_meter_score': 1.6, 'severity': 'LOW', 'fixed_by': None, 'solution': None, 'created_at': '1999-10-01T04:00:00Z',
-     'nvd_link': 'https://nvd.nist.gov/vuln/detail/CVE-1999-0794', 'cvss_access_complexity': 'Low', 'cvss_access_vector': 'Local access',
-     'cvss_authentication': 'None required', 'cvss_availability_impact': 'Partial', 'cvss_confidentiality_impact': 'Partial', 'cvss_integrity_impact': 'Partial',
-     'easily_exploitable': False, 'malware_exploitable': False, 'active_internet_breach': False, 'cvss_exploit_subscore': 3.9, 'cvss_impact_subscore': 6.4,
-     'cvss_vector': 'AV:L/AC:L/Au:N/C:P/I:P/A:P', 'cvss_v3_exploit_subscore': None, 'cvss_v3_impact_subscore': None, 'cvss_v3_vector': None, 'cvss_score': 4.6,
-     'cvss_v3_score': None}
+      affected_assets: [list:1 item]:
+                     [0]: DESKTOP-KLVRRM4
+           category: APP
+             cve_id: CVE-1999-0794
+       device_count: 1
+            os_info: [dict] {
+                            os_arch: 64-bit
+                            os_name: Microsoft Windows 10 Pro
+                            os_type: WINDOWS
+                         os_version: 10.0.18363
+                     }
+      os_product_id: 37_282511
+       product_info: [dict] {
+                            arch:
+                         product: Microsoft Office
+                         release: None
+                          vendor: Microsoft Corporation
+                         version: 15.0.4693.1005
+                     }
+          vuln_info: [dict] {
+                              active_internet_breach: False
+                                          created_at: 1999-10-01T04:00:00Z
+                                     cve_description: Microsoft Excel does not warn a user when a mac...
+                                              cve_id: CVE-1999-0794
+                              cvss_access_complexity: Low
+                                  cvss_access_vector: Local access
+                                 cvss_authentication: None required
+                            cvss_availability_impact: Partial
+                         cvss_confidentiality_impact: Partial
+                               cvss_exploit_subscore: 3.9
+                                cvss_impact_subscore: 6.4
+                               cvss_integrity_impact: Partial
+                                          cvss_score: 4.6
+                            cvss_v3_exploit_subscore: None
+                             cvss_v3_impact_subscore: None
+                                       cvss_v3_score: None
+                                      cvss_v3_vector: None
+                                         cvss_vector: AV:L/AC:L/Au:N/C:P/I:P/A:P
+                                  easily_exploitable: False
+                                            fixed_by: None
+                                 malware_exploitable: False
+                                            nvd_link: https://nvd.nist.gov/vuln/detail/CVE-1999-0794
+                                    risk_meter_score: 1.6
+                                            severity: LOW
+                                            solution: None
+                     }
 
 With the example below, you can retrieve the most recent vulnerability for a specific device type and operating system type.
 
@@ -47,9 +81,55 @@ With the example below, you can retrieve the most recent vulnerability for a spe
     >>> from cbc_sdk.platform import Vulnerability
     >>> api = CBCloudAPI(profile='sample')
     >>> vulnerability = api.select(Vulnerability).set_device_type("ENDPOINT","EQUALS").set_os_type("WINDOWS","EQUALS").first()
-    >>> print(vulnerability.cve_id, vulnerability.category, vulnerability.device_count, vulnerability.os_product_id)
+    >>> print(vulnerability)
 
-    CVE-1999-0794 APP 1 37_282511
+     affected_assets: [list:1 item]:
+                     [0]: DESKTOP-KLVRRM4
+           category: APP
+             cve_id: CVE-1999-0794
+       device_count: 1
+            os_info: [dict] {
+                            os_arch: 64-bit
+                            os_name: Microsoft Windows 10 Pro
+                            os_type: WINDOWS
+                         os_version: 10.0.18363
+                     }
+      os_product_id: 37_282511
+       product_info: [dict] {
+                            arch:
+                         product: Microsoft Office
+                         release: None
+                          vendor: Microsoft Corporation
+                         version: 15.0.4693.1005
+                     }
+          vuln_info: [dict] {
+                              active_internet_breach: False
+                                          created_at: 1999-10-01T04:00:00Z
+                                     cve_description: Microsoft Excel does not warn a user when a mac...
+                                              cve_id: CVE-1999-0794
+                              cvss_access_complexity: Low
+                                  cvss_access_vector: Local access
+                                 cvss_authentication: None required
+                            cvss_availability_impact: Partial
+                         cvss_confidentiality_impact: Partial
+                               cvss_exploit_subscore: 3.9
+                                cvss_impact_subscore: 6.4
+                               cvss_integrity_impact: Partial
+                                          cvss_score: 4.6
+                            cvss_v3_exploit_subscore: None
+                             cvss_v3_impact_subscore: None
+                                       cvss_v3_score: None
+                                      cvss_v3_vector: None
+                                         cvss_vector: AV:L/AC:L/Au:N/C:P/I:P/A:P
+                                  easily_exploitable: False
+                                            fixed_by: None
+                                 malware_exploitable: False
+                                            nvd_link: https://nvd.nist.gov/vuln/detail/CVE-1999-0794
+                                    risk_meter_score: 1.6
+                                            severity: LOW
+                                            solution: None
+                     }
+
 
 With the example below you can retrieve the 5 most recent vulnerabilities for a device type sorted by status.
 
