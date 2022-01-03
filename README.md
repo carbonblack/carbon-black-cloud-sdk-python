@@ -110,6 +110,7 @@ From the parent directory `carbon-black-cloud-sdk-python`, run the command `pyte
 
 ### Building the documentation
 
+#### Locally
 ReadTheDocs hosts [the documentation for the SDK](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/). If you make changes to the SDK that require an update to the documentation, first install the documentation packages from pip:
 
 ```
@@ -125,6 +126,16 @@ make html
 ```
 
 The documentation is built in `docs/_build/html`.
+
+#### Using Docker
+
+Build the documentation by running:
+```shell
+$ docker-compose -f docker/docs/docker-compose.yml up --build docs
+```
+
+The service will start a local docs server at `:7000`. The server is using `sphinx-autobuild` with the `--watch` option 
+enabled, so you can live edit the documentation. Check the additional options and configs in the compose file.
 
 ### Development Flow
 

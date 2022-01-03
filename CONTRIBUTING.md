@@ -30,7 +30,10 @@ Install the dev dependencies and after that it is highly recommended installing 
 
 The `pre-commit` will make sure that you have the right code quality before committing your changes. 
 
-Make sure you have written the appropriate tests and make sure that all the other tests are passing. Then push to your fork and 
+Make sure to:
+* Write documentation and tests. 
+* Perform all the other tests. 
+* Push to your fork and 
 [submit a pull request](https://github.com/carbonblack/carbon-black-cloud-sdk-python/compare/).
 
 We try to respond to pull requests as quickly as possible. We may suggest
