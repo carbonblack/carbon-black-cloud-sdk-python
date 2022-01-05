@@ -20,42 +20,43 @@ To execute, ensure you have the following:
 * CSP OAuth App Secret
 * Organization Key
 
+To send the args to the test use the following cli template
+
+    python3 csp_oauth.py --cburl '' --csp-api-token '' --csp-oauth-app-id '' --csp-oauth-app-secret '' --orgkey ''
+
+Optionally add the following override if you are not using CSP production (https://console.cloud.vmware.com)
+
+    --csp-url-override ''
+
 If you don't have CSP credentials follow this [guide](TBD)
 """
 
 import sys
 
-from cbc_sdk import CBCloudAPI
+from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
 from cbc_sdk.platform import Device
-
-url = ''
-csp_api_token = ''
-csp_oauth_app_id = ''
-csp_oauth_app_secret = ''
-csp_url_override = "https://console.cloud.vmware.com"
-org_key = ''
-proxy = ''
 
 
 def main():
     """Script entry point"""
-    cb_api_token = CBCloudAPI(url=url,
-                              csp_api_token=csp_api_token,
-                              csp_url_override=csp_url_override,
-                              org_key=org_key,
-                              ssl_verify=False)
+    parser = build_cli_parser()
+    args = parser.parse_args()
+    print_detail = args.verbose
 
-    cb_oauth_app = CBCloudAPI(url=url,
-                              csp_oauth_app_id=csp_oauth_app_id,
-                              csp_oauth_app_secret=csp_oauth_app_secret,
-                              csp_url_override=csp_url_override,
-                              org_key=org_key,
-                              ssl_verify=False)
+    if print_detail:
+        print(f"profile being used is {args.__dict__}")
 
-    assert type(cb_api_token.select(Device).first()) is Device
+    cb_api_token = get_cb_cloud_object(args)
+
+    # Force second API object to use OAuth App
+    args.csp_api_token = None
+
+    cb_oauth_app = get_cb_cloud_object(args)
+
+    assert type(cb_api_token.select(Device).first()) is Device and cb_api_token.credentials._token_type == "API_TOKEN"
     print("Successfully fetched Device using CSP API Token!")
 
-    assert type(cb_oauth_app.select(Device).first()) is Device
+    assert type(cb_oauth_app.select(Device).first()) is Device and cb_oauth_app.credentials._token_type == "OAUTH_APP"
     print("Successfully fetched Device using CSP OAuth App!")
 
 
