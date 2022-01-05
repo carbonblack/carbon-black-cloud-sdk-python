@@ -100,14 +100,14 @@ class Credentials(object):
                     self._set_value(k, values[k.name.lower()])
 
         self._token_type = "UNKNOWN"
-        if self._values.get(CredentialValue.TOKEN) is not None:
+        if self.get_value(CredentialValue.TOKEN) is not None:
             self._token_type = "API_KEY"
 
-        elif self._values.get(CredentialValue.CSP_API_TOKEN) is not None:
+        elif self.get_value(CredentialValue.CSP_API_TOKEN) is not None:
             self._token_type = "API_TOKEN"
 
-        elif self._values.get(CredentialValue.CSP_OAUTH_APP_ID) is not None and \
-                self._values.get(CredentialValue.CSP_OAUTH_APP_SECRET) is not None:
+        elif self.get_value(CredentialValue.CSP_OAUTH_APP_ID) is not None and \
+                self.get_value(CredentialValue.CSP_OAUTH_APP_SECRET) is not None:
             self._token_type = "OAUTH_APP"
 
     def _set_value(self, key, value):
@@ -143,7 +143,7 @@ class Credentials(object):
         Returns:
             object: The credential's value, or a default value if the value was not explicitly set.
         """
-        return self._values[key]
+        return self._values.get(key)
 
     def __getattr__(self, name):
         """
@@ -202,13 +202,13 @@ class Credentials(object):
         if self._token_type == "UNKNOWN":
             return None
         elif self._token_type == "API_KEY":
-            return self._values[CredentialValue.TOKEN]
+            return self.get_value(CredentialValue.TOKEN)
 
-        CSP_URL = self._values.get(CredentialValue.CSP_URL_OVERRIDE).rstrip("/")
+        csp_url = self.get_value(CredentialValue.CSP_URL_OVERRIDE).rstrip("/")
 
         if self._token_type == "API_TOKEN":
-            API_TOKEN_URL = f"{CSP_URL}/csp/gateway/am/api/auth/api-tokens/authorize"
-            resp = requests.post(API_TOKEN_URL, {"api_token": self._values[CredentialValue.CSP_API_TOKEN]})
+            API_TOKEN_URL = f"{csp_url}/csp/gateway/am/api/auth/api-tokens/authorize"
+            resp = requests.post(API_TOKEN_URL, {"api_token": self.get_value(CredentialValue.CSP_API_TOKEN)})
             json_body = resp.json()
             if resp.status_code != 200:
                 raise CredentialError(json_body.get("message"))
@@ -219,15 +219,14 @@ class Credentials(object):
             return json_body.get("access_token")
 
         if self._token_type == "OAUTH_APP":
-            OAUTH_APP_TOKEN_URL = f"{CSP_URL}/csp/gateway/am/api/auth/token"
+            oauth_app_token_url = f"{csp_url}/csp/gateway/am/api/auth/token"
 
             # Construct Authorization header Basic Base64(client_id:client_secret)
-            client_id = self._values[CredentialValue.CSP_OAUTH_APP_ID]
-            client_secret = self._values[CredentialValue.CSP_OAUTH_APP_SECRET]
-            client_credentials = base64.b64encode(bytes(f"{client_id}:{client_secret}", "utf-8"))
-            headers = {"Authorization": f"Basic {client_credentials.decode('utf-8')}"}
+            client_id = self.get_value(CredentialValue.CSP_OAUTH_APP_ID)
+            client_secret = self.get_value(CredentialValue.CSP_OAUTH_APP_SECRET)
+            client_credentials = (client_id, client_secret)
 
-            resp = requests.post(OAUTH_APP_TOKEN_URL, {"grant_type": "client_credentials"}, headers=headers)
+            resp = requests.post(oauth_app_token_url, {"grant_type": "client_credentials"}, auth=client_credentials)
             json_body = resp.json()
             if resp.status_code != 200:
                 raise CredentialError(json_body.get("message"))

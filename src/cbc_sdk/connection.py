@@ -180,8 +180,6 @@ class Connection(object):
             ApiError: If there's an internal error initializing the connection.
             ConnectionError: If there's a problem with the credentials.
         """
-        self.credentials = credentials
-
         if not credentials.url or not credentials.url.startswith("https://"):
             raise ConnectionError("Server URL must be a URL: eg. https://localhost")
 
@@ -239,9 +237,9 @@ class Connection(object):
 
         def refresh_token(r, *args, **kwargs):
             """Hook to refresh expired OAuth tokens"""
-            if r.status_code == 401 and self.credentials.get_token_type() == "BEARER":
+            if r.status_code == 401 and credentials.get_token_type() == "BEARER":
                 log.debug("Fetching new bearer token as the previous token expired")
-                self.token = self.credentials.get_token()
+                self.token = credentials.get_token()
 
                 # Update Headers
                 self.token_header.update({"Authorization": f"Bearer {self.token}"})
@@ -249,7 +247,7 @@ class Connection(object):
                 r.request.headers["Authorization"] = self.session.headers["Authorization"]
 
                 # Resend Request
-                return self.session.send(r.request)
+                return self.session.send(r.request, **kwargs)
 
         self.session.hooks["response"].append(refresh_token)
 
