@@ -11,7 +11,6 @@
 
 """Credentials management for the CBC SDK."""
 
-import base64
 import logging
 import requests
 
