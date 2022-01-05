@@ -13,6 +13,7 @@
 
 """Model and Query Classes for Jobs API"""
 
+import io
 import logging
 from cbc_sdk.base import NewBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
 
@@ -21,12 +22,21 @@ log = logging.getLogger(__name__)
 
 
 class Job(NewBaseModel):
+    """Represents a job currently executing in the background."""
     urlobject = "/jobs/v1/orgs/{0}/jobs"
     urlobject_single = "/jobs/v1/orgs/{0}/jobs/{1}"
     primary_key = "id"
     swagger_meta_file = "platform/models/job.yaml"
 
     def __init__(self, cb, model_unique_id, initial_data=None):
+        """
+        Initialize the Job object.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            model_unique_id (int): ID of the job.
+            initial_data (dict): Initial data used to populate the job.
+        """
         super(Job, self).__init__(cb, model_unique_id, initial_data)
         if model_unique_id is not None and initial_data is None:
             self._refresh()
@@ -35,9 +45,20 @@ class Job(NewBaseModel):
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
+        """
+        Returns the appropriate query object for Jobs.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            JobQuery: The query object for this object type.
+        """
         return JobQuery(cls, cb)
 
     def _refresh(self):
+        """Reload this object from the server."""
         url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id)
         resp = self._cb.get_object(url)
         self._info = resp
@@ -46,14 +67,86 @@ class Job(NewBaseModel):
         return True
 
     def get_progress(self):
+        """
+        Get and return the current progress information for the job.
+
+        Required Permissions:
+            jobs.status(READ)
+
+        Returns:
+            int: Total number of items to be operated on by this job.
+            int: Total number of items for which operation has been completed.
+            str: Current status message for the job.
+        """
         url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id) + "/progress"
         resp = self._cb.get_object(url)
         self._info['progress'] = resp
         return resp['num_total'], resp['num_completed'], resp['message']
 
+    def get_output_as_stream(self, output):
+        """
+        Export the results from the job, writing the results to the given stream.
+
+        Required Permissions:
+            jobs.status(READ)
+
+        Args:
+            output (RawIOBase): Stream to write the CSV data from the request to.
+        """
+        url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id) + '/download'
+        self._cb.get_stream_data(url, output)
+
+    def get_output_as_string(self):
+        """
+        Export the results from the job, returning the results as a string.
+
+        Required Permissions:
+            jobs.status(READ)
+
+        Returns:
+            str: The results from the job.
+        """
+        with io.BytesIO() as buffer:
+            self.get_output_as_stream(buffer)
+            return str(buffer.getvalue(), 'utf-8')
+
+    def get_output_as_file(self, filename):
+        """
+        Export the results from the job, writing the results to the given file.
+
+        Required Permissions:
+            jobs.status(READ)
+
+        Args:
+            filename (str): Name of the file to write the results to.
+        """
+        with io.open(filename, 'wb') as file:
+            self.get_output_as_stream(file)
+
+    def get_output_as_lines(self):
+        """
+        Export the results from the job, returning the data as iterated lines of text.
+
+        Required Permissions:
+            jobs.status(READ)
+
+        Returns:
+            iterable: An iterable that can be used to get each line of text in turn as a string.
+        """
+        url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id) + '/download'
+        yield from self._cb.get_lines_data(self, url)
+
 
 class JobQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
+    """Query for retrieving current jobs."""
     def __init__(self, doc_class, cb):
+        """
+        Initialize the Query object.
+
+        Args:
+            doc_class (class): The class of the model this query returns.
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+        """
         super(JobQuery, self).__init__(None)
         self._doc_class = doc_class
         self._cb = cb
@@ -61,6 +154,9 @@ class JobQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
     def _execute(self):
         """
         Executes the query and returns the list of raw results.
+
+        Required Permissions:
+            jobs.status(READ)
 
         Returns:
             list[dict]: The raw results of the query, as a list of dicts.
@@ -71,6 +167,9 @@ class JobQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
     def _count(self):
         """
         Returns the number of results from the run of this query.
+
+        Required Permissions:
+            jobs.status(READ)
 
         Returns:
             int: The number of results from the run of this query.
@@ -84,6 +183,9 @@ class JobQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
     def _perform_query(self, from_row=0, max_rows=-1):
         """
         Performs the query and returns the results of the query in an iterable fashion.
+
+        Required Permissions:
+            jobs.status(READ)
 
         Args:
             from_row (int): Unused in this implementation, always 0.
@@ -101,6 +203,9 @@ class JobQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
     def _run_async_query(self, context):
         """
         Executed in the background to run an asynchronous query.
+
+        Required Permissions:
+            jobs.status(READ)
 
         Args:
             context (object): Not used; always None.

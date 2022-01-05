@@ -488,6 +488,52 @@ class BaseAPI(object):
         else:
             raise ServerError(error_code=result.status_code, message="Unknown error: {0}".format(result.content))
 
+    def get_stream_data(self, uri, stream_output, query_parameters=None, **kwargs):
+        """
+        Submit a GET request to the server and stream the result.
+
+        Args:
+            uri (str): The URI to send the GET request to.
+            stream_output (RawIOBase): The output stream to write the data to.
+            query_parameters (object): Parameters for the query.
+            **kwargs (dict): Additional arguments for the HTTP GET.
+
+        Returns:
+            object: The return data from the GET request.
+        """
+        if query_parameters:
+            if isinstance(query_parameters, dict):
+                query_parameters = convert_query_params(query_parameters)
+            uri += '?%s' % (urllib.parse.urlencode(sorted(query_parameters)))
+
+        hdrs = kwargs.pop("headers", {})
+        with self.session.http_request("GET", uri, headers=hdrs, stream=True, **kwargs) as resp:
+            for block in resp.iter_content(self.session.stream_buffer_size):
+                stream_output.write(block)
+        return resp
+
+    def get_lines_data(self, uri, query_parameters=None, **kwargs):
+        """
+        Submit a GET request to the server and iterate over the result as lines of text.
+
+        Args:
+            uri (str): The URI to send the GET request to.
+            query_parameters (object): Parameters for the query.
+            **kwargs (dict): Additional arguments for the HTTP GET.
+
+        Returns:
+            iterable: An iterable that can be used to get each line of text in turn as a string.
+        """
+        if query_parameters:
+            if isinstance(query_parameters, dict):
+                query_parameters = convert_query_params(query_parameters)
+            uri += '?%s' % (urllib.parse.urlencode(sorted(query_parameters)))
+
+        hdrs = kwargs.pop("headers", {})
+        with self.session.http_request("GET", uri, headers=hdrs, stream=True, **kwargs) as resp:
+            for line in resp.iter_lines(decode_unicode=True):
+                yield line
+
     def api_json_request(self, method, uri, **kwargs):
         """
         Submit a request to the server.
