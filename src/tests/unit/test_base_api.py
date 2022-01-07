@@ -22,7 +22,7 @@ from cbc_sdk.errors import CredentialError, ServerError
 from cbc_sdk.credential_providers.default import default_provider_object
 from tests.unit.fixtures.mock_credentials import MockCredentialProvider
 from tests.unit.fixtures.stubresponse import StubResponse
-from mox import Func
+from mox import Func, IgnoreArg
 
 
 def test_BaseAPI_init_with_raw_credential_params():
@@ -248,6 +248,39 @@ def test_BaseAPI_get_raw_data_raises_from_returns(mox, response, errcode, prefix
         sut.get_raw_data('/path')
     assert excinfo.value.error_code == errcode
     assert excinfo.value.message.startswith(prefix)
+    mox.VerifyAll()
+
+
+@pytest.mark.parametrize("qparam, actual_path", [
+    (None, '/path'),
+    ({'alpha': 'beta'}, '/path?alpha=beta'),
+    ({'a': 1, 'b': 2}, '/path?a=1&b=2')
+])
+def test_BaseAPI_get_stream_data(mox, qparam, actual_path):
+    sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
+    mox.StubOutWithMock(sut.session, 'http_request')
+    sut.session.http_request('GET', actual_path, headers=IgnoreArg(), stream=True) \
+        .AndReturn(StubResponse(None, 200, "ThisIsFine"))
+    mox.ReplayAll()
+    with io.BytesIO() as output:
+        sut.get_stream_data('/path', output, qparam)
+        assert str(output.getvalue(), encoding='utf-8') == "ThisIsFine"
+    mox.VerifyAll()
+
+
+@pytest.mark.parametrize("qparam, actual_path", [
+    (None, '/path'),
+    ({'alpha': 'beta'}, '/path?alpha=beta'),
+    ({'a': 1, 'b': 2}, '/path?a=1&b=2')
+])
+def test_BaseAPI_get_lines_data(mox, qparam, actual_path):
+    sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
+    mox.StubOutWithMock(sut.session, 'http_request')
+    sut.session.http_request('GET', actual_path, headers=IgnoreArg(), stream=True) \
+        .AndReturn(StubResponse(None, 200, "AAA\r\nBBB\r\nCCC"))
+    mox.ReplayAll()
+    output = list(sut.get_lines_data('/path', qparam))
+    assert output == ["AAA", "BBB", "CCC"]
     mox.VerifyAll()
 
 
