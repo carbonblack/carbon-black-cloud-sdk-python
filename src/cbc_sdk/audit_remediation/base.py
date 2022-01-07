@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from cbc_sdk.base import (UnrefreshableModel, NewBaseModel, QueryBuilder,
                           QueryBuilderSupportMixin, IterableQueryMixin, BaseQuery,
                           CriteriaBuilderSupportMixin, AsyncQueryMixin)
+from cbc_sdk.platform import Job
 from cbc_sdk.errors import ApiError, ServerError, TimeoutError, OperationCancelled
 import io
 import logging
@@ -1407,6 +1408,30 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
             raise ApiError("Can't retrieve results without a run ID")
         with io.open(filename, 'wb') as file:
             self.export_csv_as_stream(file, True)
+
+    def async_export(self):
+        """
+        Create an asynchronous job that exports the results from the run.
+
+        Required Permissions:
+            livequery.manage(READ), jobs.status(READ)
+
+        Returns:
+            Job: The Job object that represents the asynchronous job.
+        """
+        if self._run_id is None:
+            raise ApiError("Can't retrieve results without a run ID")
+        url = self._doc_class.urlobject.format(self._cb.credentials.org_key, self._run_id) + '?format=csv&async=true'
+        request = self._build_request(0, -1)
+        response = self._cb.post_object(url, request)
+        ref_url = response.get('ref_url', None)
+        try:
+            job_id = int(ref_url.rsplit('/', 1)[1]) if ref_url else -1
+        except ValueError:
+            job_id = -1
+        if job_id < 0:
+            raise ApiError(f"server sent back invalid job reference URL {ref_url}")
+        return Job(self._cb, job_id)
 
 
 class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin, AsyncQueryMixin):
