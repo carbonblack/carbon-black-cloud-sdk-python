@@ -257,6 +257,7 @@ def test_BaseAPI_get_raw_data_raises_from_returns(mox, response, errcode, prefix
     ({'a': 1, 'b': 2}, '/path?a=1&b=2')
 ])
 def test_BaseAPI_get_stream_data(mox, qparam, actual_path):
+    """Test the operation of get_stream_data."""
     sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
     mox.StubOutWithMock(sut.session, 'http_request')
     sut.session.http_request('GET', actual_path, headers=IgnoreArg(), stream=True) \
@@ -274,6 +275,7 @@ def test_BaseAPI_get_stream_data(mox, qparam, actual_path):
     ({'a': 1, 'b': 2}, '/path?a=1&b=2')
 ])
 def test_BaseAPI_get_lines_data(mox, qparam, actual_path):
+    """Test the operation of get_lines_data."""
     sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
     mox.StubOutWithMock(sut.session, 'http_request')
     sut.session.http_request('GET', actual_path, headers=IgnoreArg(), stream=True) \

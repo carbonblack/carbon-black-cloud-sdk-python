@@ -1424,7 +1424,7 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         url = self._doc_class.urlobject.format(self._cb.credentials.org_key, self._run_id) + '?format=csv&async=true'
         request = self._build_request(0, -1)
         response = self._cb.post_object(url, request)
-        ref_url = response.get('ref_url', None)
+        ref_url = response.json().get('ref_url', None)
         try:
             job_id = int(ref_url.rsplit('/', 1)[1]) if ref_url else -1
         except ValueError:

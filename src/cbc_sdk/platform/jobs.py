@@ -15,6 +15,7 @@
 
 import io
 import logging
+import time
 from cbc_sdk.base import NewBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
 
 
@@ -81,7 +82,7 @@ class Job(NewBaseModel):
         url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id) + "/progress"
         resp = self._cb.get_object(url)
         self._info['progress'] = resp
-        return resp['num_total'], resp['num_completed'], resp['message']
+        return resp['num_total'], resp['num_completed'], resp.get('message', None)
 
     def get_output_as_stream(self, output):
         """
@@ -134,7 +135,7 @@ class Job(NewBaseModel):
             iterable: An iterable that can be used to get each line of text in turn as a string.
         """
         url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id) + '/download'
-        yield from self._cb.get_lines_data(self, url)
+        yield from self._cb.get_lines_data(url)
 
 
 class JobQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
@@ -150,6 +151,8 @@ class JobQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
         super(JobQuery, self).__init__(None)
         self._doc_class = doc_class
         self._cb = cb
+        self._total_results = -1
+        self._count_valid = False
 
     def _execute(self):
         """

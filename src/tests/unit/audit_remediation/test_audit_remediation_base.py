@@ -4,6 +4,7 @@ import pytest
 import logging
 import io
 import os
+from contextlib import ExitStack as does_not_raise
 from tempfile import mkstemp
 from cbc_sdk.audit_remediation import Run, Result, Template, ResultQuery, DeviceSummary, ResultFacet, RunHistory
 from cbc_sdk.rest_api import CBCloudAPI
@@ -16,6 +17,8 @@ from tests.unit.fixtures.audit_remediation.mock_runs import (GET_RUN_RESP, GET_R
                                                              ASYNC_GET_QUERY_1, ASYNC_GET_QUERY_2, ASYNC_GET_RESULTS,
                                                              ASYNC_BROKEN_1, ASYNC_BROKEN_2, ASYNC_BROKEN_3,
                                                              ASYNC_FACETING)
+from tests.unit.fixtures.platform.mock_jobs import JOB_DETAILS_1
+
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -309,6 +312,27 @@ def test_result_query_export_file(cbcsdk_mock):
         os.remove(tempfile)
 
 
+@pytest.mark.parametrize("ref_url, func_raises, get_job", [
+    ('https://example.com/jobs/v1/orgs/test/jobs/12345', does_not_raise(), True),
+    ('https://example.com/jobs/v1/orgs/test/jobs/NOTVALID', pytest.raises(ApiError), False),
+    (None, pytest.raises(ApiError), False),
+])
+def test_result_query_async_export(cbcsdk_mock, ref_url, func_raises, get_job):
+    """Tests getting a Job from the SDK to asynchronously export a query's results."""
+    cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/runs/run_id/results/_search?format=csv&async=true",
+                             {"ref_url": ref_url})
+    if get_job:
+        cbcsdk_mock.mock_request('GET', '/jobs/v1/orgs/test/jobs/12345', JOB_DETAILS_1)
+    api = cbcsdk_mock.api
+    result_query = api.select(Result).run_id("run_id")
+    with func_raises:
+        job = result_query.async_export()
+        assert job.id == 12345
+        assert job.status == 'COMPLETED'
+        assert job.progress['num_total'] == 18
+        assert job.progress['num_completed'] == 18
+
+
 def test_result_query_export_lines(cbcsdk_mock):
     """Tests exporting the results of a query as a list of lines."""
     input = "AAA\r\nBBB\r\nCCC"
@@ -349,6 +373,8 @@ def test_result_query_exports_fail_without_run_id(cb):
         list(result_query.export_csv_as_lines())
     with pytest.raises(ApiError):
         result_query.export_zipped_csv('blort.zip')
+    with pytest.raises(ApiError):
+        result_query.async_export()
 
 
 def test_result_query_no_run_id_exception(cbcsdk_mock):
