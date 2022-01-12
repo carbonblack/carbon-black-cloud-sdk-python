@@ -1413,6 +1413,8 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         """
         Create an asynchronous job that exports the results from the run.
 
+        This is recommended if you are expecting a very large result set.
+
         Required Permissions:
             livequery.manage(READ), jobs.status(READ)
 

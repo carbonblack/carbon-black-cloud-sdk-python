@@ -128,6 +128,9 @@ class Job(NewBaseModel):
         """
         Export the results from the job, returning the data as iterated lines of text.
 
+        This is only intended for output that can reasonably be represented as lines of text, such as plain text or
+        CSV.  If a job outputs structured text like JSON or XML, this method should not be used.
+
         Required Permissions:
             jobs.status(READ)
 
