@@ -608,7 +608,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
                 attr_names.append(attr)
             elif isinstance(attr, dict):
                 attr_names.extend(attr.keys())
-        return max([len(s) for s in attr_names])
+        return max([len(s) for s in attr_names]) if attr_names else 0
 
     def _str_attr_line(self, name, value, name_field_len, top_level=True):
         """
@@ -665,7 +665,8 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         elif isinstance(value, dict) and top_level:
             # append the dict elements
             lines.append(format_str.format(status, name.rjust(name_field_len), '[dict] {'))
-            lines.extend([f"{' ' * (spacing + 4)}{sub_line}" for sub_line in self._str_dict_lines(value, False)])
+            if len(value) > 0:
+                lines.extend([f"{' ' * (spacing + 4)}{sub_line}" for sub_line in self._str_dict_lines(value, False)])
             lines.append(f"{' ' * spacing}{'}'}")
         else:
             # ordinary case
