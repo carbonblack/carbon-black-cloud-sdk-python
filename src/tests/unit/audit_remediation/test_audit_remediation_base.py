@@ -290,7 +290,7 @@ def test_result_query_async(cbcsdk_mock):
 
 def test_result_query_export_string(cbcsdk_mock):
     """Tests exporting the results of a query as a string."""
-    cbcsdk_mock.mock_request("POST_STREAM", "/livequery/v1/orgs/test/runs/run_id/results/_search?format=csv",
+    cbcsdk_mock.mock_request("STREAM:POST", "/livequery/v1/orgs/test/runs/run_id/results/_search?format=csv",
                              CBCSDKMock.StubResponse("ThisIsFine", 200, "ThisIsFine", False))
     api = cbcsdk_mock.api
     result_query = api.select(Result).run_id("run_id")
@@ -300,7 +300,7 @@ def test_result_query_export_string(cbcsdk_mock):
 
 def test_result_query_export_file(cbcsdk_mock):
     """Tests exporting the results of a query as a file."""
-    cbcsdk_mock.mock_request("POST_STREAM", "/livequery/v1/orgs/test/runs/run_id/results/_search?format=csv",
+    cbcsdk_mock.mock_request("STREAM:POST", "/livequery/v1/orgs/test/runs/run_id/results/_search?format=csv",
                              CBCSDKMock.StubResponse("ThisIsFine", 200, "ThisIsFine", False))
     api = cbcsdk_mock.api
     result_query = api.select(Result).run_id("run_id")
@@ -336,7 +336,7 @@ def test_result_query_async_export(cbcsdk_mock, ref_url, func_raises, get_job):
 def test_result_query_export_lines(cbcsdk_mock):
     """Tests exporting the results of a query as a list of lines."""
     input = "AAA\r\nBBB\r\nCCC"
-    cbcsdk_mock.mock_request("POST_LINES", "/livequery/v1/orgs/test/runs/run_id/results/_search?format=csv",
+    cbcsdk_mock.mock_request("ITERATE:POST", "/livequery/v1/orgs/test/runs/run_id/results/_search?format=csv",
                              CBCSDKMock.StubResponse(input, 200, input, False))
     api = cbcsdk_mock.api
     result_query = api.select(Result).run_id("run_id")
@@ -346,7 +346,7 @@ def test_result_query_export_lines(cbcsdk_mock):
 
 def test_result_query_export_zip(cbcsdk_mock):
     """Tests exporting the results of a query as a zip file."""
-    cbcsdk_mock.mock_request("POST_STREAM",
+    cbcsdk_mock.mock_request("STREAM:POST",
                              "/livequery/v1/orgs/test/runs/run_id/results/_search?format=csv&download=true",
                              CBCSDKMock.StubResponse("ThisIsFine", 200, "ThisIsFine", False))
     api = cbcsdk_mock.api

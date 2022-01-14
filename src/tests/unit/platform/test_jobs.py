@@ -99,7 +99,7 @@ def test_load_job_and_get_progress(cbcsdk_mock, jobid, total, completed, msg, lo
 def test_job_output_export_string(cbcsdk_mock):
     """Tests exporting the results of a job as a string."""
     cbcsdk_mock.mock_request('GET', '/jobs/v1/orgs/test/jobs/12345', JOB_DETAILS_1)
-    cbcsdk_mock.mock_request('GET_STREAM', '/jobs/v1/orgs/test/jobs/12345/download',
+    cbcsdk_mock.mock_request('STREAM:GET', '/jobs/v1/orgs/test/jobs/12345/download',
                              CBCSDKMock.StubResponse("ThisIsFine", 200, "ThisIsFine", False))
     api = cbcsdk_mock.api
     job = api.select(Job, 12345)
@@ -110,7 +110,7 @@ def test_job_output_export_string(cbcsdk_mock):
 def test_job_output_export_file(cbcsdk_mock):
     """Tests exporting the results of a job as a file."""
     cbcsdk_mock.mock_request('GET', '/jobs/v1/orgs/test/jobs/12345', JOB_DETAILS_1)
-    cbcsdk_mock.mock_request('GET_STREAM', '/jobs/v1/orgs/test/jobs/12345/download',
+    cbcsdk_mock.mock_request('STREAM:GET', '/jobs/v1/orgs/test/jobs/12345/download',
                              CBCSDKMock.StubResponse("ThisIsFine", 200, "ThisIsFine", False))
     api = cbcsdk_mock.api
     job = api.select(Job, 12345)
@@ -126,7 +126,7 @@ def test_job_output_export_lines(cbcsdk_mock):
     """Tests exporting the results of a query as a list of lines."""
     cbcsdk_mock.mock_request('GET', '/jobs/v1/orgs/test/jobs/12345', JOB_DETAILS_1)
     data = "AAA\r\nBBB\r\nCCC"
-    cbcsdk_mock.mock_request('GET_LINES', '/jobs/v1/orgs/test/jobs/12345/download',
+    cbcsdk_mock.mock_request('ITERATE:GET', '/jobs/v1/orgs/test/jobs/12345/download',
                              CBCSDKMock.StubResponse(data, 200, data, False))
     api = cbcsdk_mock.api
     job = api.select(Job, 12345)

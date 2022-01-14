@@ -95,7 +95,7 @@ class Job(NewBaseModel):
             output (RawIOBase): Stream to write the CSV data from the request to.
         """
         url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id) + '/download'
-        self._cb.get_stream_data(url, output)
+        self._cb.api_request_stream('GET', url, output)
 
     def get_output_as_string(self):
         """
@@ -138,7 +138,7 @@ class Job(NewBaseModel):
             iterable: An iterable that can be used to get each line of text in turn as a string.
         """
         url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id) + '/download'
-        yield from self._cb.get_lines_data(url)
+        yield from self._cb.api_request_iterate('GET', url)
 
 
 class JobQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):

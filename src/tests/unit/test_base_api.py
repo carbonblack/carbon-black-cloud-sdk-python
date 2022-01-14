@@ -251,41 +251,6 @@ def test_BaseAPI_get_raw_data_raises_from_returns(mox, response, errcode, prefix
     mox.VerifyAll()
 
 
-@pytest.mark.parametrize("qparam, actual_path", [
-    (None, '/path'),
-    ({'alpha': 'beta'}, '/path?alpha=beta'),
-    ({'a': 1, 'b': 2}, '/path?a=1&b=2')
-])
-def test_BaseAPI_get_stream_data(mox, qparam, actual_path):
-    """Test the operation of get_stream_data."""
-    sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
-    mox.StubOutWithMock(sut.session, 'http_request')
-    sut.session.http_request('GET', actual_path, headers=IgnoreArg(), stream=True) \
-        .AndReturn(StubResponse(None, 200, "ThisIsFine"))
-    mox.ReplayAll()
-    with io.BytesIO() as output:
-        sut.get_stream_data('/path', output, qparam)
-        assert str(output.getvalue(), encoding='utf-8') == "ThisIsFine"
-    mox.VerifyAll()
-
-
-@pytest.mark.parametrize("qparam, actual_path", [
-    (None, '/path'),
-    ({'alpha': 'beta'}, '/path?alpha=beta'),
-    ({'a': 1, 'b': 2}, '/path?a=1&b=2')
-])
-def test_BaseAPI_get_lines_data(mox, qparam, actual_path):
-    """Test the operation of get_lines_data."""
-    sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
-    mox.StubOutWithMock(sut.session, 'http_request')
-    sut.session.http_request('GET', actual_path, headers=IgnoreArg(), stream=True) \
-        .AndReturn(StubResponse(None, 200, "AAA\r\nBBB\r\nCCC"))
-    mox.ReplayAll()
-    output = list(sut.get_lines_data('/path', qparam))
-    assert output == ["AAA", "BBB", "CCC"]
-    mox.VerifyAll()
-
-
 def test_BaseAPI_post_object(mox):
     """Test the operation of post_object."""
     def validate_header(hdrs):
@@ -307,45 +272,61 @@ def test_BaseAPI_post_object(mox):
     mox.VerifyAll()
 
 
-def test_BaseAPI_post_and_get_stream(mox):
-    """Test the operation of post_and_get_stream."""
+@pytest.mark.parametrize("verb, inputdata", [
+    ('GET', None),
+    ('POST', {'a': 1, 'b': 2})
+])
+def test_BaseAPI_request_stream(mox, verb, inputdata):
+    """Test the operation of api_request_stream."""
     def validate_header(hdrs):
-        assert hdrs['Content-Type'] == 'application/json'
+        if verb == 'POST':
+            assert hdrs['Content-Type'] == 'application/json'
         return True
 
     def validate_data(data):
-        real_data = json.loads(data)
-        assert real_data == {'a': 1, 'b': 2}
+        if inputdata:
+            real_data = json.loads(data)
+            assert real_data == inputdata
+        else:
+            assert data is None
         return True
 
     sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
     mox.StubOutWithMock(sut.session, 'http_request')
-    sut.session.http_request('POST', '/path', headers=Func(validate_header), data=Func(validate_data), stream=True) \
+    sut.session.http_request(verb, '/path', headers=Func(validate_header), data=Func(validate_data), stream=True) \
         .AndReturn(StubResponse(None, 200, "ThisIsFine"))
     mox.ReplayAll()
     with io.BytesIO() as output:
-        sut.post_and_get_stream('/path', {'a': 1, 'b': 2}, output)
+        sut.api_request_stream(verb, '/path', output, data=inputdata)
         assert str(output.getvalue(), encoding='utf-8') == "ThisIsFine"
     mox.VerifyAll()
 
 
-def test_BaseAPI_post_and_get_lines(mox):
-    """Test the operation of post_and_get_lines."""
+@pytest.mark.parametrize("verb, inputdata", [
+    ('GET', None),
+    ('POST', {'a': 1, 'b': 2})
+])
+def test_BaseAPI_request_iterate(mox, verb, inputdata):
+    """Test the operation of api_request_iterate."""
     def validate_header(hdrs):
-        assert hdrs['Content-Type'] == 'application/json'
+        if verb == 'POST':
+            assert hdrs['Content-Type'] == 'application/json'
         return True
 
     def validate_data(data):
-        real_data = json.loads(data)
-        assert real_data == {'a': 1, 'b': 2}
+        if inputdata:
+            real_data = json.loads(data)
+            assert real_data == inputdata
+        else:
+            assert data is None
         return True
 
     sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
     mox.StubOutWithMock(sut.session, 'http_request')
-    sut.session.http_request('POST', '/path', headers=Func(validate_header), data=Func(validate_data), stream=True) \
+    sut.session.http_request(verb, '/path', headers=Func(validate_header), data=Func(validate_data), stream=True) \
         .AndReturn(StubResponse(None, 200, "AAA\r\nBBB\r\nCCC"))
     mox.ReplayAll()
-    output = list(sut.post_and_get_lines('/path', {'a': 1, 'b': 2}))
+    output = list(sut.api_request_iterate(verb, '/path', data=inputdata))
     assert output == ["AAA", "BBB", "CCC"]
     mox.VerifyAll()
 

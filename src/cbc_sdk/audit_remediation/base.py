@@ -1344,7 +1344,7 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         if compressed:
             url += '&download=true'
         request = self._build_request(0, -1)
-        self._cb.post_and_get_stream(url, request, output,
+        self._cb.api_request_stream('POST', url, output, data=request,
                                      headers={'Accept': 'application/octet-stream' if compressed else 'text/csv'})
 
     def export_csv_as_string(self):
@@ -1392,7 +1392,7 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
             raise ApiError("Can't retrieve results without a run ID")
         url = self._doc_class.urlobject.format(self._cb.credentials.org_key, self._run_id) + '?format=csv'
         request = self._build_request(0, -1)
-        yield from self._cb.post_and_get_lines(url, request, headers={'Accept': 'text/csv'})
+        yield from self._cb.api_request_iterate('POST', url, data=request, headers={'Accept': 'text/csv'})
 
     def export_zipped_csv(self, filename):
         """
