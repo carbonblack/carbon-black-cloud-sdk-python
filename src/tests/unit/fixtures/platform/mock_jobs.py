@@ -55,3 +55,21 @@ PROGRESS_2 = {
     "num_completed": 16,
     "message": "Foo"
 }
+
+AWAIT_COMPLETION_PROGRESS = [
+    {
+        "num_total": 18,
+        "num_completed": 0,
+        "message": ""
+    },
+    {
+        "num_total": 18,
+        "num_completed": 10,
+        "message": ""
+    },
+    {
+        "num_total": 18,
+        "num_completed": 18,
+        "message": ""
+    },
+]

@@ -17,6 +17,7 @@ import io
 import logging
 import time
 from cbc_sdk.base import NewBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
+from cbc_sdk.errors import ServerError
 
 
 log = logging.getLogger(__name__)
@@ -83,6 +84,45 @@ class Job(NewBaseModel):
         resp = self._cb.get_object(url)
         self._info['progress'] = resp
         return resp['num_total'], resp['num_completed'], resp.get('message', None)
+
+    def _await_completion(self):
+        """
+        Waits for this job to complete by examining the progress data.
+
+        Required Permissions:
+            jobs.status(READ)
+
+        Returns:
+            Job: This object.
+        """
+        progress_data = (1, 0, '')
+        sleep_time = 0.0
+        while progress_data[1] < progress_data[0]:
+            if sleep_time > 0.0:
+                time.sleep(sleep_time)
+            try:
+                progress_data = self.get_progress()
+            except ServerError:
+                progress_data = (1, 0, '')
+            if sleep_time > 0.0:
+                if sleep_time < 1.0:
+                    sleep_time *= 2.0
+            else:
+                sleep_time = 0.1
+        return self
+
+    def await_completion(self):
+        """
+        Waits for this job to complete in an asynchronous fashion.
+
+        Required Permissions:
+            jobs.status(READ)
+
+        Returns:
+            Future: A future which can be used to wait for this job's completion. When complete, the result of the
+                    Future will be this object.
+        """
+        return self._cb._async_submit(lambda arg, kwarg: arg[0]._await_completion(), self)
 
     def get_output_as_stream(self, output):
         """
