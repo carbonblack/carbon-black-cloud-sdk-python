@@ -20,3 +20,5 @@ from cbc_sdk.platform.grants import Grant
 from cbc_sdk.platform.users import User
 
 from cbc_sdk.platform.vulnerability_assessment import Vulnerability
+
+from cbc_sdk.platform.jobs import Job

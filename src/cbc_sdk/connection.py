@@ -526,6 +526,65 @@ class BaseAPI(object):
 
         return result
 
+    def api_request_stream(self, method, uri, stream_output, **kwargs):
+        """
+        Submit a request to the specified URI and stream the results back into the given stream object.
+
+        Args:
+            method (str): HTTP method to use.
+            uri (str): The URI to send the request to.
+            stream_output (RawIOBase): The output stream to write the data to.
+            **kwargs (dict): Additional arguments for the request.
+
+        Returns:
+            object: The return data from the request.
+        """
+        headers = kwargs.pop("headers", {})
+        raw_data = None
+
+        if method in ('POST', 'PUT', 'PATCH'):
+            if "Content-Type" not in headers:
+                headers["Content-Type"] = "application/json"
+                raw_data = json.dumps(kwargs.pop("data", {}), sort_keys=True)
+        else:
+            if 'data' in kwargs:
+                del kwargs['data']
+
+        with self.session.http_request(method, uri, headers=headers, data=raw_data, stream=True, **kwargs) as resp:
+            for block in resp.iter_content(self.session.stream_buffer_size):
+                stream_output.write(block)
+        return resp
+
+    def api_request_iterate(self, method, uri, **kwargs):
+        """
+        Submit a request to the specified URI and iterate over the response as lines of text.
+
+        Should only be used for requests that can be expressed as large amounts of text that can be broken into lines.
+        Since this is an iterator, call it with the 'yield from' syntax.
+
+        Args:
+            method (str): HTTP method to use.
+            uri (str): The URI to send the request to.
+            **kwargs (dict): Additional arguments for the request.
+
+        Returns:
+            iterable: An iterable that can be used to get each line of text in turn as a string.
+        """
+        headers = kwargs.pop("headers", {})
+        raw_data = None
+
+        if method in ('POST', 'PUT', 'PATCH'):
+            if "Content-Type" not in headers:
+                headers["Content-Type"] = "application/json"
+                raw_data = json.dumps(kwargs.pop("data", {}), sort_keys=True)
+        else:
+            if 'data' in kwargs:
+                del kwargs['data']
+
+        with self.session.http_request(method, uri, headers=headers, data=raw_data, stream=True, **kwargs) as resp:
+            for line in resp.iter_lines(decode_unicode=True):
+                yield line
+
     def post_object(self, uri, body, **kwargs):
         """
         Send a POST request to the specified URI.
@@ -539,46 +598,6 @@ class BaseAPI(object):
             object: The return data from the POST request.
         """
         return self.api_json_request("POST", uri, data=body, **kwargs)
-
-    def post_and_get_stream(self, uri, body, stream_output, **kwargs):
-        """
-        Send a POST request to the specified URI and stream the results back into the given stream object.
-
-        Args:
-            uri (str): The URI to send the POST request to.
-            body (object): The data to be sent in the body of the POST request.
-            stream_output (RawIOBase): The output stream to write the data to.
-            **kwargs (dict): Additional arguments for the HTTP POST.
-
-        Returns:
-            object: The return data from the POST request.
-        """
-        headers = kwargs.pop("headers", {})
-        headers["Content-Type"] = "application/json"
-        with self.session.http_request("POST", uri, headers=headers, data=json.dumps(body, sort_keys=True),
-                                       stream=True, **kwargs) as resp:
-            for block in resp.iter_content(self.session.stream_buffer_size):
-                stream_output.write(block)
-        return resp
-
-    def post_and_get_lines(self, uri, body, **kwargs):
-        """
-        Send a POST request to the specified URI and iterate over the response as lines of text.
-
-        Args:
-            uri (str): The URI to send the POST request to.
-            body (object): The data to be sent in the body of the POST request.
-            **kwargs (dict): Additional arguments for the HTTP POST.
-
-        Returns:
-            iterable: An iterable that can be used to get each line of text in turn as a string.
-        """
-        headers = kwargs.pop("headers", {})
-        headers["Content-Type"] = "application/json"
-        with self.session.http_request("POST", uri, headers=headers, data=json.dumps(body, sort_keys=True),
-                                       stream=True, **kwargs) as resp:
-            for line in resp.iter_lines(decode_unicode=True):
-                yield line
 
     @classmethod
     def _map_multipart_param(cls, table_entry, value):
