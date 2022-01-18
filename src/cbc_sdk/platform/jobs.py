@@ -115,7 +115,7 @@ class Job(NewBaseModel):
 
     def await_completion(self):
         """
-        Waits for this job to complete in an asynchronous fashion.
+        Create a Python Future to check for job completion and return results when available.
 
         Returns a Future object which can be used to await results that are ready to fetch. This function call
         does not block.
