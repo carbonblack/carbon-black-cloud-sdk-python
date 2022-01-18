@@ -97,12 +97,16 @@ class Job(NewBaseModel):
         """
         progress_data = (1, 0, '')
         do_sleep = False
+        errorcount = 0
         while progress_data[1] < progress_data[0]:
             if do_sleep:
                 time.sleep(0.5)
             try:
                 progress_data = self.get_progress()
             except ServerError:
+                errorcount += 1
+                if errorcount == 3:
+                    raise
                 progress_data = (1, 0, '')
             do_sleep = True
         return self

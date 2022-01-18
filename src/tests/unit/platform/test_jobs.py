@@ -123,6 +123,20 @@ def test_job_await_completion(cbcsdk_mock):
     assert pr_index == len(AWAIT_COMPLETION_PROGRESS)
 
 
+def test_job_await_completion_error(cbcsdk_mock):
+    """Test that await_completion() throws a ServerError if it gets too many ServerErrors internally."""
+    def on_progress(url, query_params, default):
+        raise ServerError(400, "Ain't happening")
+
+    cbcsdk_mock.mock_request('GET', '/jobs/v1/orgs/test/jobs/12345', JOB_DETAILS_1)
+    cbcsdk_mock.mock_request('GET', '/jobs/v1/orgs/test/jobs/12345/progress', on_progress)
+    api = cbcsdk_mock.api
+    job = api.select(Job, 12345)
+    future = job.await_completion()
+    with pytest.raises(ServerError):
+        future.result()
+
+
 def test_job_output_export_string(cbcsdk_mock):
     """Tests exporting the results of a job as a string."""
     cbcsdk_mock.mock_request('GET', '/jobs/v1/orgs/test/jobs/12345', JOB_DETAILS_1)
