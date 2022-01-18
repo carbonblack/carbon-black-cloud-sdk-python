@@ -104,6 +104,8 @@ class Job(NewBaseModel):
                 progress_data = self.get_progress()
             except ServerError:
                 progress_data = (1, 0, '')
+            # The sleep time starts at 0.1 seconds and doubles each time until it hits 1.6 seconds, providing a simple
+            # exponential backoff between progress calls.
             if sleep_time > 0.0:
                 if sleep_time < 1.0:
                     sleep_time *= 2.0
@@ -114,6 +116,9 @@ class Job(NewBaseModel):
     def await_completion(self):
         """
         Waits for this job to complete in an asynchronous fashion.
+
+        Returns a Future object which can be used to await results that are ready to fetch. This function call
+        does not block.
 
         Required Permissions:
             jobs.status(READ)
