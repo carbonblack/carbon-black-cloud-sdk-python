@@ -1345,7 +1345,7 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
             url += '&download=true'
         request = self._build_request(0, -1)
         self._cb.api_request_stream('POST', url, output, data=request,
-                                     headers={'Accept': 'application/octet-stream' if compressed else 'text/csv'})
+                                    headers={'Accept': 'application/octet-stream' if compressed else 'text/csv'})
 
     def export_csv_as_string(self):
         """

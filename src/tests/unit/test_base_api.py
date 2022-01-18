@@ -22,7 +22,7 @@ from cbc_sdk.errors import CredentialError, ServerError
 from cbc_sdk.credential_providers.default import default_provider_object
 from tests.unit.fixtures.mock_credentials import MockCredentialProvider
 from tests.unit.fixtures.stubresponse import StubResponse
-from mox import Func, IgnoreArg
+from mox import Func
 
 
 def test_BaseAPI_init_with_raw_credential_params():
