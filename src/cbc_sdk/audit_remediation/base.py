@@ -1413,7 +1413,9 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         """
         Create an asynchronous job that exports the results from the run.
 
-        This is recommended if you are expecting a very large result set.
+        This is recommended if you are expecting a very large result set.  Once the Job is created, wait for it to be
+        completed (using its await_completion() method or similar), then get the results from the Job using one of the
+        get_output_ methods on the Job object.
 
         Required Permissions:
             livequery.manage(READ), jobs.status(READ)
