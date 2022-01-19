@@ -476,9 +476,17 @@ class ProcessFacet(UnrefreshableModel):
     Access all of the Ranges facet data with ProcessFacet.ranges_.facets or see just
     the field names with ProcessFacet.ranges_.fields.
 
-    Process Facets can be queried for via `CBCloudAPI.select(ProcessFacet). Specify
-    a Process GUID with `.where(process_guid="example_guid")`, and facet field(s)
-    with `.add_facet_field("my_facet_field")`.
+    Process Facets can be queried for via `CBCloudAPI.select(ProcessFacet)`. Specify
+    facet field(s) with `.add_facet_field("my_facet_field")`.
+
+    Optionally you can limit the facet query to a single process with the following
+    two options. Using the solrq builder specify Process GUID with
+    `.where(process_guid="example_guid")` and modify the query with
+    `.or_(parent_effective_reputation="KNOWN_MALWARE")` and
+    `.and_(parent_effective_reputation="KNOWN_MALWARE")`.
+
+    If you want full control over the query string specify Process Guid in the query string
+    `.where("process_guid: example_guid OR parent_effective_reputation: KNOWN_MALWARE")`
 
     Examples:
         >>> process_facet_query = (api.select(ProcessFacet).where(process_guid=
