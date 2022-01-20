@@ -16,7 +16,7 @@ More information about Live Query APIs is available on the `Developer Network <h
 Overview
 --------
 This guide shows how to find specific files on a system. This is the same scenario as the Quick Start Guide for the
-APIs on the `Developer Network <https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/latest/livequery-api/>`_
+APIs on the `Developer Network <https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/latest/livequery-api/#quick-start>`_
 
 The steps we'll go through are:
 
