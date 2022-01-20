@@ -481,6 +481,7 @@ def test_str_attr_line(cb):
         "objlist": [1, 2, 3, 5, 8, 13],
         "empty": [],
         "objdict": {"a": 1, "b": 2, "c": 3},
+        "emptydict": {},
         "mini_me": subobject_data,
         "List1": [listobj_data],
         "List2": [listobj_data, listobj2_data]
@@ -518,6 +519,9 @@ def test_str_attr_line(cb):
     rendering = my_object._str_attr_line('objdict', object_data['objdict'], name_field_len, False)
     assert len(rendering) == 1
     assert rendering[0].startswith('  objdict: {')
+    rendering = my_object._str_attr_line('emptydict', object_data['emptydict'], name_field_len, False)
+    assert len(rendering) == 1
+    assert rendering[0].startswith('emptydict: {')
     # Test rendering of subobject data (subobject mode)
     rendering = my_object._str_attr_line('mini_me', object_data['mini_me'], name_field_len, False)
     assert len(rendering) == 1
@@ -561,6 +565,10 @@ def test_str_attr_line(cb):
     assert rendering[2] == '                   b: 2'
     assert rendering[3] == '                   c: 3'
     assert rendering[4] == '               }'
+    rendering = my_object._str_attr_line('emptydict', object_data['emptydict'], name_field_len)
+    assert len(rendering) == 2
+    assert rendering[0] == '    emptydict: [dict] {'
+    assert rendering[1] == '               }'
     # Test rendering of subobject data (top-level mode) including lists in subobject
     rendering = my_object._str_attr_line('mini_me', object_data['mini_me'], name_field_len)
     assert len(rendering) == 10

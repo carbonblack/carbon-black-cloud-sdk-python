@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from cbc_sdk.base import (UnrefreshableModel, NewBaseModel, QueryBuilder,
                           QueryBuilderSupportMixin, IterableQueryMixin, BaseQuery,
                           CriteriaBuilderSupportMixin, AsyncQueryMixin)
+from cbc_sdk.platform import Job
 from cbc_sdk.errors import ApiError, ServerError, TimeoutError, OperationCancelled
 import io
 import logging
@@ -1343,8 +1344,8 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         if compressed:
             url += '&download=true'
         request = self._build_request(0, -1)
-        self._cb.post_and_get_stream(url, request, output,
-                                     headers={'Accept': 'application/octet-stream' if compressed else 'text/csv'})
+        self._cb.api_request_stream('POST', url, output, data=request,
+                                    headers={'Accept': 'application/octet-stream' if compressed else 'text/csv'})
 
     def export_csv_as_string(self):
         """
@@ -1391,7 +1392,7 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
             raise ApiError("Can't retrieve results without a run ID")
         url = self._doc_class.urlobject.format(self._cb.credentials.org_key, self._run_id) + '?format=csv'
         request = self._build_request(0, -1)
-        yield from self._cb.post_and_get_lines(url, request, headers={'Accept': 'text/csv'})
+        yield from self._cb.api_request_iterate('POST', url, data=request, headers={'Accept': 'text/csv'})
 
     def export_zipped_csv(self, filename):
         """
@@ -1407,6 +1408,32 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
             raise ApiError("Can't retrieve results without a run ID")
         with io.open(filename, 'wb') as file:
             self.export_csv_as_stream(file, True)
+
+    def async_export(self):
+        """
+        Create an asynchronous job that exports the results from the run.
+
+        This is recommended if you are expecting a very large result set.
+
+        Required Permissions:
+            livequery.manage(READ), jobs.status(READ)
+
+        Returns:
+            Job: The Job object that represents the asynchronous job.
+        """
+        if self._run_id is None:
+            raise ApiError("Can't retrieve results without a run ID")
+        url = self._doc_class.urlobject.format(self._cb.credentials.org_key, self._run_id) + '?format=csv&async=true'
+        request = self._build_request(0, -1)
+        response = self._cb.post_object(url, request)
+        ref_url = response.json().get('ref_url', None)
+        try:
+            job_id = int(ref_url.rsplit('/', 1)[1]) if ref_url else -1
+        except ValueError:
+            job_id = -1
+        if job_id < 0:
+            raise ApiError(f"server sent back invalid job reference URL {ref_url}")
+        return Job(self._cb, job_id)
 
 
 class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin, AsyncQueryMixin):
