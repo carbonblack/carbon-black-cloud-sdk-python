@@ -1415,7 +1415,7 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
 
         This is recommended if you are expecting a very large result set.  Once the Job is created, wait for it to be
         completed, then get the results from the Job using one of the get_output methods on the
-        :py:meth:cbc_sdk.platform.jobs object. To wait asynchronously for the results, use the Job object's
+        :py:meth:`cbc_sdk.platform.jobs` object. To wait asynchronously for the results, use the Job object's
         await_completion() method.
 
         Required Permissions:
