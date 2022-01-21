@@ -44,6 +44,14 @@ cbc\_sdk.platform.grants module
    :undoc-members:
    :show-inheritance:
 
+cbc\_sdk.platform.jobs module
+-----------------------------
+
+.. automodule:: cbc_sdk.platform.jobs
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 cbc\_sdk.platform.processes module
 ----------------------------------
 
