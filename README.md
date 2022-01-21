@@ -127,6 +127,10 @@ make html
 
 The documentation is built in `docs/_build/html`.
 
+**N.B.:** If your documentation pages appear to generate incorrectly, check to see if you received the warning message
+`No module named 'cbc_sdk'`.  If so, set your `PYTHONPATH` to include the `src/` subdirectory of the SDK project
+directory before running `make html`, or the equivalent command `sphinx-build -M html . _build`.
+
 #### Using Docker
 
 Build the documentation by running:
