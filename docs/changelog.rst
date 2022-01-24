@@ -8,7 +8,7 @@ New Features:
 * Added asynchronous query support to Live Query.
 * Added the ability to export query results from Live Query, either synchronously or asynchronously (via the ``Job``
   object and the Jobs API).  Synchronous exports include full-file export, line-by-line export, and ZIP file export.
-  Asynchronous exports ionclude full-file export and line-by-line export.
+  Asynchronous exports include full-file export and line-by-line export.
 * Added a ``CredentialProvider`` that uses AWS Secrets Manager to store credential information.
 
 Updates:
