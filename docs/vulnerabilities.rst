@@ -1,5 +1,5 @@
 Managing Vulnerabilities
-======
+========================
 
 The Vulnerability Assessment API allows users to view asset (Endpoint or Workload) vulnerabilities,
 increase security visibility, and undertake prioritized proactive security patching on critical systems.
@@ -14,7 +14,7 @@ For more information see
 `the developer documentation <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/vulnerability-assessment/>`_
 
 Retrieving Vulnerabilities
---------------------
+--------------------------
 
 With the example below, you can retrieve the 5 most recent non-critical vulnerabilities for an organization.
 
@@ -176,7 +176,7 @@ for more complex searches. The example below will search with a solr query searc
     their `documentation <https://solrq.readthedocs.io/en/latest/index.html>`_.
 
 Retrieving Vulnerability Details
-------------------------
+--------------------------------
 
 With the example below, you can retrieve vulnerability details for the most recent vulnerability.
 
@@ -217,7 +217,7 @@ With the example below, you can retrieve vulnerability details for the most rece
     }
 
 Retrieving Affected Assets for a Vulnerability
---------------------------------------
+----------------------------------------------
 
 With the example below, you can retrieve a list of affected assets for the last 5 critical vulnerabilities.
 
