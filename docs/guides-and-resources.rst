@@ -34,6 +34,7 @@ Guides
 * :doc:`reputation-override` - Manage reputation overrides for known applications, IT tools or certs.
 * :doc:`unified-binary-store` - The unified binary store (UBS) is responsible for storing all binaries and corresponding metadata for those binaries.
 * :doc:`users-grants` - Work with users and access grants.
+* :doc:`vulnerabilities` - View asset (Endpoint or Workload) vulnerabilities to increase security visibility.
 * :doc:`watchlists-feeds-reports` - Work with Enterprise EDR watchlists, feeds, reports, and Indicators of Compromise (IOCs).
 * :doc:`workload` - Advanced protection purpose-built for securing modern workloads to reduce the attack surface and strengthen security posture.
 
