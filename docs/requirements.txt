@@ -1,2 +1,3 @@
 # Defining the exact version will make sure things don't break
+sphinxcontrib-apidoc
 sphinx-copybutton==0.4.0
