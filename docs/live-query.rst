@@ -111,17 +111,18 @@ The sequence of calls are:
     >>> from cbc_sdk.platform import Job
     >>> # then start the job
     >>> job = result_query.async_export()
-    >>> # show the status is progress
+    >>> # show the status in progress
     >>> print(job.status)
     IN_PROGRESS
     >>> # wait for it to finish and refresh the information in the SDK
-    >>> job.await_completion()
-    >>> job.refresh()
+    >>> job_future = job.await_completion()
+    >>> finished_job = job_future.result()
+    >>> finished_job.refresh()
     >>> # show the job has completed
-    >>> print(job.status)
+    >>> print(finished_job.status)
     COMPLETED
     >>> # write the results to a csv file
-    >>> job.get_output_as_file("/Users/myname/mydir/livequeryresults_async.csv")
+    >>> finished_job.get_output_as_file("/Users/myname/mydir/livequeryresults_async.csv")
 
 
 Clean up
