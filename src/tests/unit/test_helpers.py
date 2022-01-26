@@ -133,7 +133,6 @@ def test_apicloudapi_object_with_command_line_arguments_csp_oauth_app():
         assert mock_request.last_request.headers.get("Authorization") == "Basic Y2xpZW50LWlkOmNsaWVudC1zZWNyZXQ="
 
 
-
 def test_apicloudapi_object_with_default_arguments():
     """Tests the CBCloudAPI object with default arguments."""
     parser = build_cli_parser("Test helpers.py")
