@@ -14,8 +14,26 @@ from datetime import datetime
 import pytest
 
 from cbc_sdk.errors import ApiError, TimeoutError
-from cbc_sdk.platform import BaseAlert, CBAnalyticsAlert, WatchlistAlert, DeviceControlAlert, WorkflowStatus
+from cbc_sdk.platform import (
+    BaseAlert,
+    CBAnalyticsAlert,
+    WatchlistAlert,
+    DeviceControlAlert,
+    WorkflowStatus,
+    Process,
+)
 from cbc_sdk.rest_api import CBCloudAPI
+from tests.unit.fixtures.platform.mock_process import (
+    GET_PROCESS_VALIDATION_RESP,
+    POST_PROCESS_SEARCH_JOB_RESP,
+    GET_PROCESS_SEARCH_JOB_RESP,
+    GET_PROCESS_SEARCH_JOB_RESULTS_RESP,
+    GET_PROCESS_SUMMARY_RESP,
+    GET_PROCESS_SUMMARY_STR,
+    GET_PROCESS_NOT_FOUND,
+    GET_PROCESS_SUMMARY_NOT_FOUND,
+    GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT,
+)
 from tests.unit.fixtures.stubresponse import StubResponse, patch_cbc_sdk_api
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.endpoint_standard.mock_enriched_events import (
@@ -24,10 +42,14 @@ from tests.unit.fixtures.endpoint_standard.mock_enriched_events import (
     GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ZERO_COMP,
     GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_ZERO,
     GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP,
-    GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ALERTS
+    GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ALERTS,
 )
-from tests.unit.fixtures.platform.mock_alerts import (GET_ALERT_RESP,
-                                                      GET_ALERT_RESP_INVALID_ALERT_ID)
+from tests.unit.fixtures.platform.mock_alerts import (
+    GET_ALERT_RESP,
+    GET_ALERT_RESP_INVALID_ALERT_ID,
+    GET_ALERT_TYPE_WATCHLIST,
+    GET_ALERT_TYPE_WATCHLIST_INVALID,
+)
 
 
 @pytest.fixture(scope="function")
@@ -55,7 +77,7 @@ def test_query_basealert_with_all_bells_and_whistles(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/alerts/_search"
         assert body == {"query": "Blort",
-                        "rows": 100,
+                        "rows": 2,
                         "criteria": {"category": ["MONITORED", "THREAT"], "device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
                                      "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
@@ -95,7 +117,7 @@ def test_query_basealert_with_create_time_as_start_end(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/alerts/_search"
         assert body == {"query": "Blort",
-                        "rows": 100,
+                        "rows": 2,
                         "criteria": {"create_time": {"start": "2019-09-30T12:34:56", "end": "2019-10-01T12:00:12"}}}
         _was_called = True
         return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
@@ -123,7 +145,7 @@ def test_query_basealert_with_create_time_as_start_end_as_objs(monkeypatch):
         nonlocal _timestamp
         assert url == "/appservices/v6/orgs/Z100/alerts/_search"
         assert body == {"query": "Blort",
-                        "rows": 100,
+                        "rows": 2,
                         "criteria": {"create_time": {"start": _timestamp.isoformat(), "end": _timestamp.isoformat()}}}
         _was_called = True
         return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
@@ -149,7 +171,7 @@ def test_query_basealert_with_create_time_as_range(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/alerts/_search"
         assert body == {"query": "Blort", "criteria": {"create_time": {"range": "-3w"}},
-                        "rows": 100}
+                        "rows": 2}
         _was_called = True
         return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
                                           "workflow": {"state": "OPEN"}}], "num_found": 1})
@@ -176,7 +198,7 @@ def test_query_basealert_with_time_range(monkeypatch):
         assert url == "/appservices/v6/orgs/Z100/alerts/_search"
         assert body == {"query": "Blort", "criteria": {"last_update_time": {"start": _timestamp.isoformat(),
                                                                             "end": _timestamp.isoformat()}},
-                        "rows": 100}
+                        "rows": 2}
         _was_called = True
         return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
                                           "workflow": {"state": "OPEN"}}], "num_found": 1})
@@ -202,7 +224,7 @@ def test_query_basealert_with_time_range_start_end(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/alerts/_search"
         assert body == {"query": "Blort", "criteria": {"last_update_time": {"range": "-3w"}},
-                        "rows": 100}
+                        "rows": 2}
         _was_called = True
         return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
                                           "workflow": {"state": "OPEN"}}], "num_found": 1})
@@ -297,7 +319,7 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/alerts/cbanalytics/_search"
         assert body == {"query": "Blort",
-                        "rows": 100,
+                        "rows": 2,
                         "criteria": {"category": ["THREAT", "MONITORED"], "device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
                                      "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
@@ -389,7 +411,7 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/alerts/devicecontrol/_search"
         assert body == {"query": "Blort",
-                        "rows": 100,
+                        "rows": 2,
                         "criteria": {"category": ["MONITORED", "THREAT"], "device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
                                      "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
@@ -478,7 +500,7 @@ def test_query_watchlistalert_with_all_bells_and_whistles(monkeypatch):
         nonlocal _was_called
         assert url == "/appservices/v6/orgs/Z100/alerts/watchlist/_search"
         assert body == {"query": "Blort",
-                        "rows": 100,
+                        "rows": 2,
                         "criteria": {"category": ["THREAT", "MONITORED"], "device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
                                      "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
@@ -707,6 +729,141 @@ def test_load_workflow(monkeypatch):
     workflow = api.select(WorkflowStatus, "497ABX")
     assert _was_called
     assert workflow.id_ == "497ABX"
+
+
+def test_get_process(cbcsdk_mock):
+    """Test of getting process through a WatchlistAlert"""
+    # mock the alert request
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/alerts/6b2348cb-87c1-4076-bc8e-7c717e8af608",
+                             GET_ALERT_TYPE_WATCHLIST)
+    # mock the search validation
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+                             GET_PROCESS_VALIDATION_RESP)
+    # mock the POST of a search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_job",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT)
+    # mock the POST of a summary search (using same Job ID)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/summary_jobs",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check summary search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SUMMARY_RESP)
+    # mock the GET to get summary search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             GET_PROCESS_SUMMARY_STR)
+    api = cbcsdk_mock.api
+    alert = api.select(WatchlistAlert, "6b2348cb-87c1-4076-bc8e-7c717e8af608")
+    process = alert.get_process()
+    assert isinstance(process, Process)
+    assert process.process_guid == "WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00"
+
+
+def test_get_process_zero_found(cbcsdk_mock):
+    """Test of getting process through a WatchlistAlert"""
+    # mock the alert request
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
+                             GET_ALERT_TYPE_WATCHLIST)
+    # mock the search validation
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+                             GET_PROCESS_VALIDATION_RESP)
+    # mock the POST of a search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_job",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT)
+    # mock the POST of a summary search (using same Job ID)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/summary_jobs",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get process search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             GET_PROCESS_NOT_FOUND)
+    # mock the GET to get summary search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             GET_PROCESS_SUMMARY_NOT_FOUND)
+    api = cbcsdk_mock.api
+    alert = api.select(WatchlistAlert, "86123310980efd0b38111eba4bfa5e98aa30b19")
+    process = alert.get_process()
+    assert not process
+
+
+def test_get_process_raises_api_error(cbcsdk_mock):
+    """Test of getting process through a WatchlistAlert"""
+    # mock the alert request
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/alerts/6b2348cb-87c1-4076-bc8e-7c717e8af608",
+                             GET_ALERT_TYPE_WATCHLIST_INVALID)
+    # mock the search validation
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+                             GET_PROCESS_VALIDATION_RESP)
+    # mock the POST of a search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
+    api = cbcsdk_mock.api
+    with pytest.raises(ApiError):
+        alert = api.select(WatchlistAlert, "6b2348cb-87c1-4076-bc8e-7c717e8af608")
+        alert.get_process()
+
+
+def test_get_process_async(cbcsdk_mock):
+    """Test of getting process through a WatchlistAlert async"""
+    # mock the alert request
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/alerts/6b2348cb-87c1-4076-bc8e-7c717e8af608",
+                             GET_ALERT_TYPE_WATCHLIST)
+    # mock the search validation
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+                             GET_PROCESS_VALIDATION_RESP)
+    # mock the POST of a search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_job",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT)
+    # mock the POST of a summary search (using same Job ID)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/summary_jobs",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check summary search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+                             GET_PROCESS_SUMMARY_RESP)
+    # mock the GET to get summary search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
+                             GET_PROCESS_SUMMARY_STR)
+    api = cbcsdk_mock.api
+    alert = api.select(WatchlistAlert, "6b2348cb-87c1-4076-bc8e-7c717e8af608")
+    process = alert.get_process(async_mode=True).result()
+    assert isinstance(process, Process)
+    assert process.process_guid == "WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00"
 
 
 def test_get_events(cbcsdk_mock):

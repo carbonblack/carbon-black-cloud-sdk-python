@@ -11,17 +11,15 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-__doc__ = """
+"""
 Helper script for adding an entry into macos's keychain.
 
 Use the script by simply invoking it without any system arguments to
 import your configuration from a file or manually by inputs.
 
-Invoke it with system arguments to create an entry without having to type the credentials
-manually.
+Invoke it with system arguments to create an entry without having to type the credentials manually.
 
 Examples:
-
     Using system arguments:
     $ ./set-macos-keychain.py -e CBC_SDK -a default -t <TOKEN> -k <ORG_KEY> -u <URL>
 
@@ -64,8 +62,8 @@ def set_from_input():
     keychain_account_name = input("Keychain Account Name: ")
     url = input("URL to the Carbon Black Cloud API server (do not include '/integrationServices') [https://hostname]: ")
     ssl_verify = True
-    connector_id = input("Connector ID: ")
-    token = input("API key: ")
+    connector_id = input("API ID: ")
+    token = input("API Secret Key: ")
     org_key = input("Org Key: ")
     json_obj = {
         "url": url,

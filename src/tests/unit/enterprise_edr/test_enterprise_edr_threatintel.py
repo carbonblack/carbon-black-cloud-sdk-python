@@ -22,6 +22,7 @@ from tests.unit.fixtures.enterprise_edr.mock_threatintel import (WATCHLIST_GET_R
                                                                  IOC_GET_IGNORED,
                                                                  REPORT_BUILT_VIA_BUILDER,
                                                                  REPORT_INIT,
+                                                                 REPORT_INIT2,
                                                                  REPORT_GET_IGNORED,
                                                                  REPORT_GET_SEVERITY,
                                                                  REPORT_UPDATE_AFTER_ADD_IOC,
@@ -491,48 +492,53 @@ def test_report_builder_save_watchlist(cbcsdk_mock):
     assert report._info['id'] == "AaBbCcDdEeFfGg"
 
 
-@pytest.mark.parametrize("init_data, feed, watchlist, do_request, expectation, result", [
-    (REPORT_INIT, None, True, True, does_not_raise(), True),
-    (REPORT_INIT, None, False, False, pytest.raises(InvalidObjectError), True),
-    (REPORT_BUILT_VIA_BUILDER, None, True, False, pytest.raises(InvalidObjectError), True)
+@pytest.mark.parametrize("init_data, feed, watchlist, do_request, url_id, expectation, result", [
+    (REPORT_INIT, None, True, True, "69e2a8d0-bc36-4970-9834-8687efe1aff7", does_not_raise(), True),
+    (REPORT_INIT, None, False, False, "", pytest.raises(InvalidObjectError), True),
+    (REPORT_BUILT_VIA_BUILDER, None, True, False, "", pytest.raises(InvalidObjectError), True),
+    (REPORT_INIT2, "abcdefgh", True, True, "abcdefgh-Compound", does_not_raise(), True),
+    (REPORT_INIT2, "abcdefgh", False, True, "abcdefgh-Compound", does_not_raise(), True)
 ])
-def test_report_get_ignored(cbcsdk_mock, init_data, feed, watchlist, do_request, expectation, result):
+def test_report_get_ignored(cbcsdk_mock, init_data, feed, watchlist, do_request, url_id, expectation, result):
     """Tests the operation of the report.ignored() method."""
     if do_request:
-        cbcsdk_mock.mock_request("GET", "/threathunter/watchlistmgr/v3/orgs/test/reports/"
-                                        "69e2a8d0-bc36-4970-9834-8687efe1aff7/ignore", REPORT_GET_IGNORED)
+        cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v3/orgs/test/reports/{url_id}/ignore",
+                                 REPORT_GET_IGNORED)
     api = cbcsdk_mock.api
     report = Report(api, None, init_data, feed, watchlist)
     with expectation:
         assert report.ignored == result
 
 
-@pytest.mark.parametrize("init_data, feed, watchlist, do_request, expectation", [
-    (REPORT_INIT, None, True, True, does_not_raise()),
-    (REPORT_INIT, None, False, False, pytest.raises(InvalidObjectError)),
-    (REPORT_BUILT_VIA_BUILDER, None, True, False, pytest.raises(InvalidObjectError))
+@pytest.mark.parametrize("init_data, feed, watchlist, do_request, url_id, expectation", [
+    (REPORT_INIT, None, True, True, "69e2a8d0-bc36-4970-9834-8687efe1aff7", does_not_raise()),
+    (REPORT_INIT, None, False, False, "", pytest.raises(InvalidObjectError)),
+    (REPORT_BUILT_VIA_BUILDER, None, True, False, "", pytest.raises(InvalidObjectError)),
+    (REPORT_INIT2, "abcdefgh", True, True, "abcdefgh-Compound", does_not_raise()),
+    (REPORT_INIT2, "abcdefgh", False, True, "abcdefgh-Compound", does_not_raise())
 ])
-def test_report_set_ignored(cbcsdk_mock, init_data, feed, watchlist, do_request, expectation):
+def test_report_set_ignored(cbcsdk_mock, init_data, feed, watchlist, do_request, url_id, expectation):
     """Tests the operation of the report.ignore() method."""
     if do_request:
-        cbcsdk_mock.mock_request("PUT", "/threathunter/watchlistmgr/v3/orgs/test/reports/"
-                                        "69e2a8d0-bc36-4970-9834-8687efe1aff7/ignore", REPORT_GET_IGNORED)
+        cbcsdk_mock.mock_request("PUT", f"/threathunter/watchlistmgr/v3/orgs/test/reports/{url_id}/ignore",
+                                 REPORT_GET_IGNORED)
     api = cbcsdk_mock.api
     report = Report(api, None, init_data, feed, watchlist)
     with expectation:
         report.ignore()
 
 
-@pytest.mark.parametrize("init_data, feed, watchlist, do_request, expectation", [
-    (REPORT_INIT, None, True, True, does_not_raise()),
-    (REPORT_INIT, None, False, False, pytest.raises(InvalidObjectError)),
-    (REPORT_BUILT_VIA_BUILDER, None, True, False, pytest.raises(InvalidObjectError))
+@pytest.mark.parametrize("init_data, feed, watchlist, do_request, url_id, expectation", [
+    (REPORT_INIT, None, True, True, "69e2a8d0-bc36-4970-9834-8687efe1aff7", does_not_raise()),
+    (REPORT_INIT, None, False, False, "", pytest.raises(InvalidObjectError)),
+    (REPORT_BUILT_VIA_BUILDER, None, True, False, "", pytest.raises(InvalidObjectError)),
+    (REPORT_INIT2, "abcdefgh", True, True, "abcdefgh-Compound", does_not_raise()),
+    (REPORT_INIT2, "abcdefgh", False, True, "abcdefgh-Compound", does_not_raise())
 ])
-def test_report_clear_ignored(cbcsdk_mock, init_data, feed, watchlist, do_request, expectation):
+def test_report_clear_ignored(cbcsdk_mock, init_data, feed, watchlist, do_request, url_id, expectation):
     """Tests the operation of the report.unignore() method."""
     if do_request:
-        cbcsdk_mock.mock_request("DELETE", "/threathunter/watchlistmgr/v3/orgs/test/reports/"
-                                           "69e2a8d0-bc36-4970-9834-8687efe1aff7/ignore",
+        cbcsdk_mock.mock_request("DELETE", f"/threathunter/watchlistmgr/v3/orgs/test/reports/{url_id}/ignore",
                                  CBCSDKMock.StubResponse(None, 204))
     api = cbcsdk_mock.api
     report = Report(api, None, init_data, feed, watchlist)

@@ -25,7 +25,7 @@ GET_ALERT_RESP = {
         "remediation": "None",
         "last_update_time": "2021-05-13T00:20:46.474Z",
         "comment": "None",
-        "changed_by": "Carbon Black"
+        "changed_by": "Carbon Black",
     },
     "notes_present": False,
     "tags": "None",
@@ -42,8 +42,8 @@ GET_ALERT_RESP = {
                 "ACTIVE_SERVER",
                 "MITRE_T1046_NETWORK_SERVICE_SCANNING",
                 "NETWORK_ACCESS",
-                "PORTSCAN"
-            ]
+                "PORTSCAN",
+            ],
         }
     ],
     "threat_activity_dlp": "NOT_ATTEMPTED",
@@ -63,7 +63,7 @@ GET_ALERT_RESP = {
     "kill_chain_status": ["RECONNAISSANCE"],
     "sensor_action": "None",
     "run_state": "RAN",
-    "policy_applied": "NOT_APPLIED"
+    "policy_applied": "NOT_APPLIED",
 }
 
 GET_ALERT_RESP_INVALID_ALERT_ID = {
@@ -91,7 +91,7 @@ GET_ALERT_RESP_INVALID_ALERT_ID = {
         "remediation": "None",
         "last_update_time": "2021-05-13T00:20:46.474Z",
         "comment": "None",
-        "changed_by": "Carbon Black"
+        "changed_by": "Carbon Black",
     },
     "notes_present": False,
     "tags": "None",
@@ -108,8 +108,121 @@ GET_ALERT_RESP_INVALID_ALERT_ID = {
                 "ACTIVE_SERVER",
                 "MITRE_T1046_NETWORK_SERVICE_SCANNING",
                 "NETWORK_ACCESS",
-                "PORTSCAN"
-            ]
+                "PORTSCAN",
+            ],
         }
-    ]
+    ],
+}
+
+GET_ALERT_TYPE_WATCHLIST = {
+    "type": "WATCHLIST",
+    "id": "6b2348cb-87c1-4076-bc8e-7c717e8af608",
+    "legacy_alert_id": "6b2348cb-89b1-4076-bc8e-7c719e8af608",
+    "org_key": "4JDT3MX9Q",
+    "create_time": "2021-10-07T10:46:56.516Z",
+    "last_update_time": "2021-10-07T10:46:56.516Z",
+    "first_event_time": "2021-10-07T10:43:15.082Z",
+    "last_event_time": "2021-10-07T10:43:15.082Z",
+    "threat_id": "684285332DE159CA7BF925894E1FC953",
+    "severity": 4,
+    "category": "THREAT",
+    "device_id": 11545912,
+    "device_os": "WINDOWS",
+    "device_os_version": None,
+    "device_name": "TEST",
+    "device_username": "Administrator",
+    "policy_id": 7113786,
+    "policy_name": "Standard",
+    "target_value": "MEDIUM",
+    "workflow": {
+        "state": "OPEN",
+        "remediation": None,
+        "last_update_time": "2021-10-07T10:45:53.423Z",
+        "comment": None,
+        "changed_by": "Carbon Black",
+    },
+    "notes_present": False,
+    "tags": None,
+    "reason": 'Process msedge.exe was detected by the report.',
+    "count": 0,
+    "report_id": "QFFFabSGRrub94aetqjouQ",
+    "report_name": "edge",
+    "ioc_id": "66331b78-0259-4f57-857d-999d804c569e",
+    "ioc_field": None,
+    "ioc_hit": "(process_name:msedge.exe)",
+    "watchlists": [{"id": "zDCzWnQL2YmGh5OlbF6Q", "name": "edge"}],
+    "process_guid": "WNEXFKQ7-000309c2-00000478-00000000-1d6a1c1f2b02805",
+    "process_name": "msedge.exe",
+    "run_state": "RAN",
+    "threat_indicators": [
+        {
+            "process_name": "msedge.exe",
+            "sha256": "51470c146291697e5ee80b5409b013b414ea88da4c44fd0884723878f7e803ab",
+            "ttps": ["66331b78-0259-4f57-857d-999d804c569e"],
+        }
+    ],
+    "threat_cause_actor_sha256": "51470c146291697e5ee80b5409b013b414ea88da4c44fd0884723878f7e803ab",
+    "threat_cause_actor_md5": "16c4c388f84eadd55634c2147e36ce64",
+    "threat_cause_actor_name": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "threat_cause_reputation": "ADAPTIVE_WHITE_LIST",
+    "threat_cause_threat_category": "UNKNOWN",
+    "threat_cause_vector": "UNKNOWN",
+    "document_guid": "TYPjsqedQmqRddFHjjhQpQ",
+}
+
+
+GET_ALERT_TYPE_WATCHLIST_INVALID = {
+    "type": "WATCHLIST",
+    "id": "6b2348cb-87c1-4076-bc8e-7c717e8af608",
+    "legacy_alert_id": "6b2348cb-89b1-4076-bc8e-7c719e8af608",
+    "org_key": "4JDT3MX9Q",
+    "create_time": "2021-10-07T10:46:56.516Z",
+    "last_update_time": "2021-10-07T10:46:56.516Z",
+    "first_event_time": "2021-10-07T10:43:15.082Z",
+    "last_event_time": "2021-10-07T10:43:15.082Z",
+    "threat_id": "684285332DE159CA7BF925894E1FC953",
+    "severity": 4,
+    "category": "THREAT",
+    "device_id": 11545912,
+    "device_os": "WINDOWS",
+    "device_os_version": None,
+    "device_name": "TEST",
+    "device_username": "Administrator",
+    "policy_id": 7113786,
+    "policy_name": "Standard",
+    "target_value": "MEDIUM",
+    "workflow": {
+        "state": "OPEN",
+        "remediation": None,
+        "last_update_time": "2021-10-07T10:45:53.423Z",
+        "comment": None,
+        "changed_by": "Carbon Black",
+    },
+    "notes_present": False,
+    "tags": None,
+    "reason": 'Process msedge.exe was detected by the report.',
+    "count": 0,
+    "report_id": "QFFFabSGRrub94aetqjouQ",
+    "report_name": "edge",
+    "ioc_id": "66331b78-0259-4f57-857d-999d804c569e",
+    "ioc_field": None,
+    "ioc_hit": "(process_name:msedge.exe)",
+    "watchlists": [{"id": "zDCzWnQL2YmGh5OlbF6Q", "name": "edge"}],
+    "process_guid": "",
+    "process_name": "msedge.exe",
+    "run_state": "RAN",
+    "threat_indicators": [
+        {
+            "process_name": "msedge.exe",
+            "sha256": "51470c146291697e5ee80b5409b013b414ea88da4c44fd0884723878f7e803ab",
+            "ttps": ["66331b78-0259-4f57-857d-999d804c569e"],
+        }
+    ],
+    "threat_cause_actor_sha256": "51470c146291697e5ee80b5409b013b414ea88da4c44fd0884723878f7e803ab",
+    "threat_cause_actor_md5": "16c4c388f84eadd55634c2147e36ce64",
+    "threat_cause_actor_name": "c:\\program files (x86)\\microsoft\\edge\\application\\msedge.exe",
+    "threat_cause_reputation": "ADAPTIVE_WHITE_LIST",
+    "threat_cause_threat_category": "UNKNOWN",
+    "threat_cause_vector": "UNKNOWN",
+    "document_guid": "TYPjsqedQmqRddFHjjhQpQ",
 }

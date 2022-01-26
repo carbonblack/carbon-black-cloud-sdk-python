@@ -10,7 +10,7 @@ There are a few methods for authentication listed below. Every method requires
 an API Key. See the `Developer Network Authentication Guide`_ to learn how to
 generate an API Key.
 
-The SDK only uses one API Key at a time. It is recommeded to create API Keys for
+The SDK only uses one API Key at a time. It is recommended to create API Keys for
 specific actions, and use them as needed.
 
 For example, if using the
@@ -30,14 +30,14 @@ Store the Key with profile name, and reference the profile name when creating CB
   >>> platform_api = CBCloudAPI(profile='platform')
 
   # search for specific devices with Platform Devices API
-  >>> important_devs = platform_api.select(Device).set_target_priorities("MISSION_CRITICAL")
+  >>> important_devs = platform_api.select(Device).set_target_priorities(["MISSION_CRITICAL"])
 
   # execute commands with Live Response API
   >>> for device in important_devs:
   ...      lr_session = platform_api.live_response.request_session(device.id)
   ...      lr_session.create_process(r'cmd.exe /c "ping.exe 192.168.1.1"'))
   ...      lr_session.close()
-  
+
 For more examples on Live Response, check :doc:`live-response`
 
 
@@ -60,6 +60,21 @@ Authentication Methods
 
     >>> provider = RegistryCredentialProvider()
     >>> cbc_api = CBCloudAPI(credential_provider=provider, profile='default')
+
+:ref:`With macOS's Keychain Access`:
+
+    The Keychain Access which is built into macOS can also be used for authentication.
+
+    >>> provider = KeychainCredentialProvider('CBC API Credentials', 'default')
+    >>> cbc_api = CBCloudAPI(credential_provider=provider)
+
+:ref:`With Amazon Secrets Manger`:
+
+    There is a support for the Amazon Secrets Manager, navigate to the section for further details of how to
+    set it up.
+
+    >>> provider = AWSCredentialProvider(secret_arn='your-secret-arn-string')
+    >>> cbc_api = CBCloudAPI(credential_provider=provider)
 
 :ref:`With an External Credential Provider`:
 
@@ -105,7 +120,7 @@ CBAPI, so older files can continue to be used.  This is an example of a credenti
     ssl_force_tls_1_2=1
     proxy=proxy.example
     ignore_system_proxy=on
-    integration_name=MyScript/0.9.0
+    integration=MyScript/0.9.0
 
     [production]
     url=http://example.com
@@ -117,7 +132,7 @@ CBAPI, so older files can continue to be used.  This is an example of a credenti
     ssl_force_tls_1_2=1
     proxy=proxy.example
     ignore_system_proxy=on
-    integration_name=MyApplication/1.3.1
+    integration=MyApplication/1.3.1
 
 Individual profiles or sections are delimited in the file by placing their name within square brackets: ``[profile_name]``.  Within
 each section, individual credential values are supplied in a ``keyword=value`` format.
@@ -191,7 +206,7 @@ be specified:
 +-------------------------+----------------+---------+
 |``proxy``                | ``REG_SZ``     |         |
 +-------------------------+----------------+---------+
-|``integration_name``     | ``REG_SZ``     |         |
+|``integration``          | ``REG_SZ``     |         |
 +-------------------------+----------------+---------+
 
 Unrecognized named values are ignored.
@@ -286,7 +301,7 @@ You can remove the keys that you won't be using or leave them empty. Reference o
     {
         "url": "<URL>",
         "token" : "<TOKEN>",
-        "org_key": "<ORG_KEY>",A
+        "org_key": "<ORG_KEY>",
         "ssl_verify": true,
         "ssl_verify_hostname": true,
         "ssl_cert_file": "<FILE_PATH>",
@@ -311,12 +326,54 @@ After we've set the entry in the Keychain Access we can now authenticate our SDK
 
 .. code-block:: python
 
-    >>> from cbc_sdk.credential_providers.keychain_credential_provider import KeychainCredentialProvider
+    >>> from cbc_sdk.credential_providers import KeychainCredentialProvider
     >>> provider = KeychainCredentialProvider('CBC API Credentials', 'default')
     >>> cbc_api = CBCloudAPI(credential_provider=provider)
 
 
 You will be prompted to type your password so that python can access the keychain in order to obtain the credentials.
+
+With Amazon Secrets Manger
+--------------------------
+
+Configure the AWS credentials
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A full and comprehensive guide configuring the files and credentials regarding AWS can be found in their `official documentation. <https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html>`_
+
+Adding a secret to the AWS Secrets Manager
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+There is an official `guide for creating a secret <https://docs.aws.amazon.com/secretsmanager/latest/userguide/manage_create-basic-secret.html>`_ by AWS.
+
+.. note::
+    Add your secrets as a key/value pairs. In the :ref:`Explanation of API Credential Components` you can find full information on required fields and their purpose.
+
+
+Using our credential provider for the SDK
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+After the configuration of the AWS Credentials and storing your secret in the AWS Secret Manager, we can start using
+the credential provider.
+
+    >>> from cbc_sdk.credential_providers import AWSCredentialProvider
+    >>> from cbc_sdk import CBCloudAPI
+    >>> provider = AWSCredentialProvider(secret_arn='your-secret-arn-string')
+    >>> cbc_api = CBCloudAPI(credential_provider=provider)
+
+
+AWS Single Sign-On Provider (SSO)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you wish to set the SSO provider follow this `tutorial <https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html#aws-single-sign-on-provider-sso>`_ for setting the config.
+
+Then you can use the ``profile_name`` attribute in the ``AWSCredentialProvider`` like so:
+
+    >>> from cbc_sdk.credential_providers import AWSCredentialProvider
+    >>> from cbc_sdk import CBCloudAPI
+    >>> provider = AWSCredentialProvider(secret_arn='your-secret-arn-string', profile_name="my-sso-profile")
+    >>> cbc_api = CBCloudAPI(credential_provider=provider)
+
 
 Explanation of API Credential Components
 ----------------------------------------
@@ -362,7 +419,7 @@ or :ref:`with Windows Registry <With Windows Registry>`, the credentials include
 |``proxy``                | If specified, this is the name of a proxy host to be |         |
 |                         | used in making the connection.                       |         |
 +-------------------------+------------------------------------------------------+---------+
-|``integration_name``     | The name of the integration to use these credentials.|         |
+|``integration``          | The name of the integration to use these credentials.|         |
 |                         | The string may optionally end with a slash character,|         |
 |                         | followed by the integration's version number.  Passed|         |
 |                         | as part of the ``User-Agent:`` HTTP header on all    |         |

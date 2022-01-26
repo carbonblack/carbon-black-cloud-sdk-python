@@ -368,7 +368,6 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         """
         self._cb = cb
         self._last_refresh_time = 0
-        self._max_name_len = 0
 
         if initial_data is not None:
             self._info = initial_data
@@ -592,30 +591,33 @@ class NewBaseModel(object, metaclass=CbMetaModel):
             string_value = string_value[:NewBaseModel.MAX_VALUE_WIDTH - 3] + "..."
         return string_value
 
-    def _str_max_name_len(self):
+    @classmethod
+    def _str_name_field_len(cls, attributes):
         """
-        Returns the maximum length of the attribute names for this object.
+        Given an attribute dictionary, returns the maximum length of its "name" field.
+
+        Args:
+            attributes (dict): A dictionary to check.
 
         Returns:
-            int: The maximum length of the attribute names for this object.
+            int: The maximum length of any key in the dictionary.
         """
-        if self._max_name_len == 0:
-            attr_names = []
-            for attr in self._info:
-                if isinstance(attr, str):
-                    attr_names.append(attr)
-                elif isinstance(attr, dict):
-                    attr_names.extend(attr.keys())
-            self._max_name_len = max([len(s) for s in attr_names])
-        return self._max_name_len
+        attr_names = []
+        for attr in attributes:
+            if isinstance(attr, str):
+                attr_names.append(attr)
+            elif isinstance(attr, dict):
+                attr_names.extend(attr.keys())
+        return max([len(s) for s in attr_names]) if attr_names else 0
 
-    def _str_attr_line(self, name, value, top_level=True):
+    def _str_attr_line(self, name, value, name_field_len, top_level=True):
         """
         Returns the representation of a single attribute within an object (which may be multiple lines).
 
         Args:
             name (str): The name of this attribute.
             value (Any): The value of this attribute.
+            name_field_len (int): Size of the name field for this line.
             top_level (bool): True if this is a "top level" object being rendered as lines of text.
 
         Returns:
@@ -631,13 +633,13 @@ class NewBaseModel(object, metaclass=CbMetaModel):
             else:
                 status = "(*)"
         subobject_value = self._subobject(name) if top_level else None
-        spacing = self._str_max_name_len() + (6 if top_level else 2)  # (status + space) + name + colon + space
+        spacing = name_field_len + (6 if top_level else 2)  # (status + space) + name + colon + space
         if isinstance(value, list):
             # this is a list - render the first three items, then [...] if we have more
             target = value if subobject_value is None else subobject_value
             list_header = f"[list:{len(target)} {'item' if len(target) == 1 else 'items'}]" \
                           f"{':' if len(target) > 0 else ''}"
-            lines.append(format_str.format(status, name.rjust(self._str_max_name_len()), list_header))
+            lines.append(format_str.format(status, name.rjust(name_field_len), list_header))
             for index, item in enumerate(target):
                 if index >= NewBaseModel.MAX_LIST_ITEM_RENDER:
                     # punt the rest of the list
@@ -647,27 +649,36 @@ class NewBaseModel(object, metaclass=CbMetaModel):
                     # render the item as a subobject
                     lines.append((' ' * spacing) + sub_format_str.format('', f"[{index}]",
                                                                          f"[{item.__class__.__name__} object]:"))
-                    lines.extend([f"{' ' * (spacing + 5)}{sub_line}" for sub_line in item._str_attr_lines(False)])
+                    lines.extend([f"{' ' * (spacing + 5)}{sub_line}"
+                                  for sub_line in self._str_dict_lines(item._info, False)])
                     lines.append('')
                 else:
                     # render item normally
                     lines.append((' ' * spacing) + sub_format_str.format('', f"[{index}]", self._str_stringize(item)))
         elif subobject_value is not None:
             # this is a subobject
-            lines.append(format_str.format(status, name.rjust(self._str_max_name_len()),
+            lines.append(format_str.format(status, name.rjust(name_field_len),
                                            f"[{subobject_value.__class__.__name__} object]:"))
-            lines.extend([f"{' ' * spacing}{sub_line}" for sub_line in subobject_value._str_attr_lines(False)])
+            lines.extend([f"{' ' * spacing}{sub_line}"
+                          for sub_line in self._str_dict_lines(subobject_value._info, False)])
             lines.append('')
+        elif isinstance(value, dict) and top_level:
+            # append the dict elements
+            lines.append(format_str.format(status, name.rjust(name_field_len), '[dict] {'))
+            if len(value) > 0:
+                lines.extend([f"{' ' * (spacing + 4)}{sub_line}" for sub_line in self._str_dict_lines(value, False)])
+            lines.append(f"{' ' * spacing}{'}'}")
         else:
             # ordinary case
-            lines.append(format_str.format(status, name.rjust(self._str_max_name_len()), self._str_stringize(value)))
+            lines.append(format_str.format(status, name.rjust(name_field_len), self._str_stringize(value)))
         return lines
 
-    def _str_attr_lines(self, top_level=True):
+    def _str_dict_lines(self, d, top_level=True):
         """
-        Returns the representation of all attributes within this object.
+        Returns the representation of all attributes within a dictionary.
 
         Args:
+            d (dict): The dictionary from which the attributes are to be rendered.
             top_level (bool): True if this is a "top level" object being rendered as lines of text.
 
         Returns:
@@ -676,20 +687,23 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         # for dictionaries that can be sorted, sort them
         lines = []
         try:
-            attributes = sorted(self._info)
+            attributes = sorted(d)
         # dictionaries containing dictionaries cannot be sorted, so leave as is
         except:
-            attributes = self._info
+            attributes = d
+
+        # Compute the name field length.
+        name_field_len = self._str_name_field_len(attributes)
 
         for attr in attributes:
             # typical case, where the info dictionary value for this `attr` is a string
             if isinstance(attr, str):
-                lines.extend(self._str_attr_line(attr, self._info[attr], top_level))
+                lines.extend(self._str_attr_line(attr, d[attr], name_field_len, top_level))
             # edge case (seen in Facet searches) where the info dictionary value for this `attr` is a dictionary
             elif isinstance(attr, dict):
                 # go through each attribute in the `attr` dictionary
                 for att in attr:
-                    lines.extend(self._str_attr_line(att, attr[att], top_level))
+                    lines.extend(self._str_attr_line(att, attr[att], name_field_len, top_level))
 
         return lines
 
@@ -711,7 +725,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         lines.append('')
 
         # add the attribute lines
-        lines.extend(self._str_attr_lines())
+        lines.extend(self._str_dict_lines(self._info))
 
         return "\n".join(lines)
 
@@ -1029,10 +1043,23 @@ class IterableQueryMixin:
         Returns:
             object: Either an item or a list of items.
         """
-        results = list(self)
         if isinstance(item, slice):
+            try:
+                if item.start is not None and item.start >= 0 or item.stop is not None and item.stop >= 0:
+                    from_row = 0
+                    max_rows = -1
+                    if item.start:
+                        from_row = item.start
+                    if item.stop:
+                        max_rows = item.stop - from_row
+                    results = list(self._perform_query(from_row=from_row, max_rows=max_rows))
+                    return results
+            except TypeError:
+                log.debug(f"Unable to perform optimized query for {self.__class__.__name__}")
+            results = list(self)
             return [results[ii] for ii in range(*item.indices(len(results)))]
         elif isinstance(item, int):
+            results = list(self._perform_query(from_row=item, max_rows=1))
             return results[item]
         else:
             raise TypeError("Invalid argument type")
