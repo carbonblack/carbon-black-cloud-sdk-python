@@ -67,6 +67,23 @@ def test_apicloudapi_object_with_command_line_arguments():
     assert api.credential_profile_name is None
 
 
+def test_apicloudapi_object_with_proxy():
+    """Tests the CBCloudAPI object with command line arguments."""
+    parser = build_cli_parser("Test helpers.py")
+    args = parser.parse_known_args()[0]
+
+    args.cburl = 'https://example.com'
+    args.proxy = 'http://proxy.com'
+    args.apitoken = 'ABCDEFGH'
+    args.orgkey = 'A1B2C3D4'
+    args.no_ssl_verify = 'false'
+    args.verbose = True
+
+    api = get_cb_cloud_object(args)
+
+    assert api.credentials.proxy == 'http://proxy.com'
+
+
 def test_apicloudapi_object_with_command_line_arguments_csp_api_token():
     """Test init credentials from BaseAPI for CSP API Token options"""
     with requests_mock.Mocker() as mock_request:
