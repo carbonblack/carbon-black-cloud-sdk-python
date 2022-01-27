@@ -134,7 +134,7 @@ Build the documentation by running:
 $ docker-compose -f docker/docs/docker-compose.yml up --build docs
 ```
 
-The service will start a local docs server at `:7000`. The server is using `sphinx-autobuild` with the `--watch` option 
+The service will start a local docs server at `:7000`. The server is using `sphinx-autobuild` with the `--watch` option
 enabled, so you can live edit the documentation. Check the additional options and configs in the compose file.
 
 ### Development Flow
@@ -144,6 +144,8 @@ To begin a code change, start by creating a branch off of the develop branch.
 git checkout develop
 git checkout -b {branch-name}
 ```
+
+**Note: Make sure to read the [CONTRIBUTING](CODE-OF-CONDUCT.md) guide before contributing any code.**
 
 When the feature or bug fix is finished you will need to create a pull request to the CarbonBlack repo, the following will push your changes to Github.
 ```
