@@ -2,7 +2,7 @@
 
 **Latest Version:** 1.3.5
 <br>
-**Release Date:** TBD
+**Release Date:** January 26, 2022
 
 [![Coverage Status](https://coveralls.io/repos/github/carbonblack/carbon-black-cloud-sdk-python/badge.svg?t=Id6Baf)](https://coveralls.io/github/carbonblack/carbon-black-cloud-sdk-python)
 [![Codeship Status for carbonblack/carbon-black-cloud-sdk-python](https://app.codeship.com/projects/9e55a370-a772-0138-aae4-129773225755/status?branch=develop)](https://app.codeship.com/projects/402767)
@@ -116,7 +116,7 @@ From the parent directory `carbon-black-cloud-sdk-python`, run the command `pyte
 ReadTheDocs hosts [the documentation for the SDK](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/). If you make changes to the SDK that require an update to the documentation, first install the documentation packages from pip:
 
 ```
-pip install sphinxcontrib-apidoc sphinx-copybutton
+pip install sphinxcontrib-apidoc sphinx_rtd_theme sphinx-copybutton
 ```
 
 Then, build the docs locally with the following commands:
