@@ -186,13 +186,17 @@ class Policy(EndpointStandardMutableModel, CreatableModelMixin):
             - The dictionary keys have these possible values:
 
                 "action": ["IGNORE", "ALLOW", "DENY", "TERMINATE_PROCESS",
-                           "TERMINATE_THREAD", "TERMINATE"]
+                "TERMINATE_THREAD", "TERMINATE"]
+
                 "type": ["NAME_PATH", "SIGNED_BY", "REPUTATION"]
+
                 "value": Any string value to match on
+
                 "operation": ["BYPASS_ALL", "INVOKE_SCRIPT", "INVOKE_SYSAPP",
-                              "POL_INVOKE_NOT_TRUSTED", "INVOKE_CMD_INTERPRETER",
-                              "RANSOM", "NETWORK", "PROCESS_ISOLATION", "CODE_INJECTION",
-                              "MEMORY_SCRAPE", "RUN_INMEMORY_CODE", "ESCALATE", "RUN"]
+                "POL_INVOKE_NOT_TRUSTED", "INVOKE_CMD_INTERPRETER",
+                "RANSOM", "NETWORK", "PROCESS_ISOLATION", "CODE_INJECTION",
+                "MEMORY_SCRAPE", "RUN_INMEMORY_CODE", "ESCALATE", "RUN"]
+
                 "required": [True, False]
         """
         self._cb.post_object("{0}/rule".format(self._build_api_request_uri()), {"ruleInfo": new_rule})
@@ -460,15 +464,15 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
     the query.
 
     Example:
-    >>> from cbc_sdk import CBCloudAPI
-    >>> cb = CBCloudAPI()
+        >>> from cbc_sdk import CBCloudAPI
+        >>> cb = CBCloudAPI()
 
     Notes:
         - The slicing operator only supports start and end parameters, but not step. ``[1:-1]`` is legal, but
           ``[1:2:-1]`` is not.
         - You can chain where clauses together to create AND queries; only objects that match all ``where`` clauses
           will be returned.
-          - Device Queries with multiple search parameters only support AND operations, not OR. Use of
+        - Device Queries with multiple search parameters only support AND operations, not OR. Use of
           Query.or_(myParameter='myValue') will add 'AND myParameter:myValue' to the search query.
     """
 
@@ -652,7 +656,7 @@ class EnrichedEventQuery(BaseEventQuery):
                 parameter.
 
         Example:
-        >>> cb.select(EnrichedEvent).where(process_name="foo.exe").timeout(5000)
+            >>> cb.select(EnrichedEvent).where(process_name="foo.exe").timeout(5000)
         """
         self._timeout = msecs
         return self

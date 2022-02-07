@@ -231,8 +231,7 @@ class Process(UnrefreshableModel):
             Tree (cbc_sdk.enterprise_edr.Tree): Tree with children (and possibly siblings).
 
         Example:
-
-        >>> tree = process.tree
+            >>> tree = process.tree
         """
         return self._cb.select(Process.Tree).where(process_guid=self.process_guid).results
 
@@ -337,9 +336,8 @@ class Process(UnrefreshableModel):
                 search parameters for events
 
         Example:
-
-        >>> [print(event) for event in process.events()]
-        >>> [print(event) for event in process.events(event_type="modload")]
+            >>> [print(event) for event in process.events()]
+            >>> [print(event) for event in process.events(event_type="modload")]
         """
         query = self._cb.select(Event).where(process_guid=self.process_guid)
 
@@ -616,8 +614,7 @@ class AsyncProcessQuery(Query):
                 parameter.
 
         Example:
-
-        >>> cb.select(Process).where(process_name="foo.exe").timeout(5000)
+            >>> cb.select(Process).where(process_name="foo.exe").timeout(5000)
         """
         self._timeout = msecs
         return self
@@ -815,8 +812,7 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
                 parameter.
 
         Example:
-
-        >>> cb.select(Process).where(process_name="foo.exe").timeout(5000)
+            >>> cb.select(Process).where(process_name="foo.exe").timeout(5000)
         """
         self._timeout = msecs
         return self
@@ -835,9 +831,10 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
             - `window` will take precendent over `start` and `end` if provided.
 
         Examples:
-            query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z")
-            second_query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
-            third_query = api.select(Event).set_time_range(window='-3d')
+            >>> query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z")
+            >>> second_query = api.select(Event).set_time_range
+            ...     (start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
+            >>> third_query = api.select(Event).set_time_range(window='-3d')
         """
         if start:
             if not isinstance(start, str):

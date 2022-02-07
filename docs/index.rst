@@ -16,7 +16,10 @@ harness the full power of Carbon Black Cloud APIs.
 Major Features
 --------------
 - Supports the following Carbon Black Cloud Products with extensions for new features and products planned
-    Endpoint Standard, Audit and Remediation, and Enterprise EDR
+    * Endpoint Standard
+    * Audit and Remediation
+    * Enterprise EDR
+    * Workload
 - Reduced Complexity
     The SDK manages the differences among Carbon Black Cloud APIs
     behind a single, consistent Python interface. Spend less time

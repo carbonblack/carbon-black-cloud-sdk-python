@@ -567,7 +567,9 @@ class NewBaseModel(object, metaclass=CbMetaModel):
 
         Notes:
             Should be overridden for any class wanting to use subobject reporting capabilities.
+
             If the attribute is a list of subobjects, this method should return that list.
+
             If the attribute is a single subobject, this method should return that subobject.
         """
         return None
@@ -1345,11 +1347,11 @@ class QueryBuilder(object):
     through the CBCloudAPI.select API.
 
     Examples:
-    >>> from cbc_sdk.base import QueryBuilder
-    >>> # build a query with chaining
-    >>> query = QueryBuilder().where(process_name="malicious.exe").and_(device_name="suspect")
-    >>> # start with an initial query, and chain another condition to it
-    >>> query = QueryBuilder(device_os="WINDOWS").or_(process_username="root")
+        >>> from cbc_sdk.base import QueryBuilder
+        >>> # build a query with chaining
+        >>> query = QueryBuilder().where(process_name="malicious.exe").and_(device_name="suspect")
+        >>> # start with an initial query, and chain another condition to it
+        >>> query = QueryBuilder(device_os="WINDOWS").or_(process_username="root")
 
     """
 
@@ -1610,8 +1612,8 @@ class CriteriaBuilderSupportMixin:
             The query object with specified custom criteria.
 
         Example:
-            query = api.select(Event).add_criteria("event_type", ["filemod", "scriptload"])
-            query = api.select(Event).add_criteria("event_type", "filemod")
+            >>> query = api.select(Event).add_criteria("event_type", ["filemod", "scriptload"])
+            >>> query = api.select(Event).add_criteria("event_type", "filemod")
         """
         if not isinstance(newlist, list):
             if not isinstance(newlist, str):
@@ -1633,9 +1635,10 @@ class CriteriaBuilderSupportMixin:
             The query object with specified custom criteria.
 
         Example:
-            query = api.select(Alert).update_criteria("my.criteria.key", ["criteria_value"])
+            >>> query = api.select(Alert).update_criteria("my.criteria.key", ["criteria_value"])
 
-        Note: Use this method if there is no implemented method for your desired criteria.
+        Note:
+            Use this method if there is no implemented method for your desired criteria.
         """
         if not isinstance(newlist, list):
             if not isinstance(newlist, str):
@@ -1697,17 +1700,17 @@ class AsyncQueryMixin:
 
 
 class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin, CriteriaBuilderSupportMixin):
-    """Represents a prepared query to the Cb Enterprise EDR backend.
+    """Represents a prepared query to the Carbon Black Cloud.
 
-    This object is returned as part of a `CbEnterpriseEDRAPI.select`
-    operation on models requested from the Cb Enterprise EDR backend. You should not have to create this class yourself.
+    This object is returned as part of a `CBCCloudAPI.select`
+    operation on models requested from the Carbon Black Cloud backend.
+    You should not have to create this class yourself.
 
     The query is not executed on the server until it's accessed, either as an iterator (where it will generate values
     on demand as they're requested) or as a list (where it will retrieve the entire result set and save to a list).
     You can also call the Python built-in ``len()`` on this object to retrieve the total number of items matching
     the query.
 
-    Examples::
 
     >>> from cbc_sdk import CBCloudAPI
     >>> from cbc_sdk.enterprise_edr import Report
@@ -1756,8 +1759,8 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
             The ResultQuery with specified custom exclusion.
 
         Example:
-            query = api.select(Event).add_exclusions("netconn_domain", ["www.google.com"])
-            query = api.select(Event).add_exclusions("netconn_domain", "www.google.com")
+            >>> query = api.select(Event).add_exclusions("netconn_domain", ["www.google.com"])
+            >>> query = api.select(Event).add_exclusions("netconn_domain", "www.google.com")
         """
         if not isinstance(newlist, list):
             if not isinstance(newlist, str):
@@ -1835,9 +1838,10 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
             - `window` will take precendent over `start` and `end` if provided.
 
         Examples:
-            query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z")
-            second_query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
-            third_query = api.select(Event).set_time_range(window='-3d')
+            >>> query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z")
+            >>> second_query = api.select(Event).
+            ...     set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
+            >>> third_query = api.select(Event).set_time_range(window='-3d')
         """
         if start:
             if not isinstance(start, str):
@@ -2007,8 +2011,8 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
             The ResultQuery with specified custom exclusion.
 
         Example:
-            query = api.select(Event).add_exclusions("netconn_domain", ["www.google.com"])
-            query = api.select(Event).add_exclusions("netconn_domain", "www.google.com")
+            >>> query = api.select(Event).add_exclusions("netconn_domain", ["www.google.com"])
+            >>> query = api.select(Event).add_exclusions("netconn_domain", "www.google.com")
         """
         if not isinstance(newlist, list):
             if not isinstance(newlist, str):
@@ -2041,8 +2045,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
                 parameter.
 
         Example:
-
-        >>> cb.select(ProcessFacet).where(process_name="foo.exe").timeout(5000)
+            >>> cb.select(ProcessFacet).where(process_name="foo.exe").timeout(5000)
         """
         self._timeout = msecs
         return self
@@ -2059,7 +2062,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
             Query (AsyncQuery): The Query object with new limit parameter.
 
         Example:
-        >>> cb.select(ProcessFacet).where(process_name="foo.exe").limit(50)
+            >>> cb.select(ProcessFacet).where(process_name="foo.exe").limit(50)
         """
         self._limit = limit
         return self
@@ -2074,7 +2077,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
             Query (AsyncQuery): The Query object with the new rows parameter.
 
         Example:
-        >>> cb.select(ProcessFacet).set_rows(50)
+            >>> cb.select(ProcessFacet).set_rows(50)
         """
         self._facet_rows = rows
         return self
@@ -2089,7 +2092,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
             Query (AsyncQuery): The Query object that will receive the specified field(s).
 
         Example:
-        >>> cb.select(ProcessFacet).add_facet_field(["process_name", "process_username"])
+            >>> cb.select(ProcessFacet).add_facet_field(["process_name", "process_username"])
         """
         if isinstance(field, str):
             self._facet_fields.append(field)
@@ -2124,7 +2127,8 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
             raise ApiError("`bucket_size` should be either int or ISO8601 timestamp string")
 
     def add_range(self, range):
-        """Sets the facet ranges to be received by this query.
+        """
+        Sets the facet ranges to be received by this query.
 
         Arguments:
             range (dict or [dict]): Range(s) to be received.
@@ -2132,20 +2136,25 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
         Returns:
             Query (AsyncQuery): The Query object that will receive the specified range(s).
 
-        Note: The range parameter must be in this dictionary format:
+        Note:
+            The range parameter must be in this dictionary format:
+
             {
                 "bucket_size": "<object>",
+
                 "start": "<object>",
+
                 "end": "<object>",
+
                 "field": "<string>"
             },
+
             where "bucket_size", "start", and "end" can be numbers or ISO 8601 timestamps.
 
         Examples:
-        >>> cb.select(ProcessFacet).add_range({"bucket_size": 5, "start": 0, "end": 10, "field": "netconn_count"})
-        >>> cb.select(ProcessFacet).add_range({"bucket_size": "+1DAY", "start": "2020-11-01T00:00:00Z",
-                                               "end": "2020-11-12T00:00:00Z", "field": "backend_timestamp"})
-
+            >>> cb.select(ProcessFacet).add_range({"bucket_size": 5, "start": 0, "end": 10, "field": "netconn_count"})
+            >>> cb.select(ProcessFacet).add_range({"bucket_size": "+1DAY", "start": "2020-11-01T00:00:00Z",
+            ... "end": "2020-11-12T00:00:00Z", "field": "backend_timestamp"})
         """
         if isinstance(range, dict):
             self._check_range(range)
@@ -2170,9 +2179,10 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
             - `window` will take precendent over `start` and `end` if provided.
 
         Examples:
-            query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z")
-            second_query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
-            third_query = api.select(Event).set_time_range(window='-3d')
+            >>> query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z")
+            >>> second_query = api.select(Event).
+            ...     set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
+            >>> third_query = api.select(Event).set_time_range(window='-3d')
         """
         if start:
             if not isinstance(start, str):

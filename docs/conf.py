@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath('.'))
 # -- Project information -----------------------------------------------------
 
 project = 'Carbon Black Cloud Python SDK'
-copyright = '2020-2021, Developer Relations'
+copyright = '2020-2022, Developer Relations'
 author = 'Developer Relations'
 
 # The full version, including alpha/beta/rc tags
@@ -130,8 +130,12 @@ latex_elements = {
 
 autoclass_content = 'both'
 
-# options for sphinx generation
-copybutton_prompt_text = ">>> "
+# options for sphinx generation.
+# use a regular expression to strip standard prompt and continuation when copying an example
+copybutton_prompt_is_regexp = True
+copybutton_remove_prompts = True
+copybutton_prompt_text = r">>> |\.\.\. "
+
 
 def setup(app):
     """Setup Sphinx."""

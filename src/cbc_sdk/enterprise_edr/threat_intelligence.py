@@ -288,10 +288,7 @@ class Watchlist(FeedModel):
             ApiError: If `report_ids` is given and is empty.
 
         Example:
-
-        >>> watchlist.update(name="New Name")
-
-
+            >>> watchlist.update(name="New Name")
         """
         if not self.id:
             raise InvalidObjectError("missing Watchlist ID")
@@ -742,8 +739,7 @@ class Feed(FeedModel):
             ApiError: If an invalid field is specified.
 
         Example:
-
-        >>> feed.update(access="private")
+            >>> feed.update(access="private")
         """
         if not self.id:
             raise InvalidObjectError("missing feed ID")
@@ -1203,8 +1199,7 @@ class Report(FeedModel):
                 and this report is a Feed Report.
 
         Example:
-
-        >>> report.delete()
+            >>> report.delete()
         """
         if not self.id:
             raise InvalidObjectError("missing Report ID")
@@ -1236,9 +1231,8 @@ class Report(FeedModel):
             InvalidObjectError: If `id` is missing or feed ID is missing.
 
         Example:
-
-        >>> if report.ignored:
-        ...     report.unignore()
+            >>> if report.ignored:
+            ...     report.unignore()
         """
         if not self.id:
             raise InvalidObjectError("missing Report ID")
@@ -1365,9 +1359,8 @@ class Report(FeedModel):
             IOC_V2 ([IOC_V2]): List of IOC_V2's for associated with the Report.
 
         Example:
-
-        >>> for ioc in report.iocs_:
-        ...     print(ioc.values)
+            >>> for ioc in report.iocs_:
+            ...     print(ioc.values)
         """
         if not self.iocs_v2:
             return []
@@ -1696,9 +1689,8 @@ class IOC_V2(FeedModel):
             InvalidObjectError: If this IOC is missing an `id` or is not a Watchlist IOC.
 
         Example:
-
-        >>> if ioc.ignored:
-        ...     ioc.unignore()
+            >>> if ioc.ignored:
+            ...     ioc.unignore()
         """
         if not self.id:
             raise InvalidObjectError("missing IOC ID")
@@ -1797,10 +1789,10 @@ class ReportQuery(SimpleQuery):
 
     Note:
         Only feed reports can be queried. Watchlist reports should be interacted
-            with via Watchlist.reports().
+        with via Watchlist.reports().
 
     Example:
-    >>> cb.select(Report).where(feed_id=id)
+        >>> cb.select(Report).where(feed_id=id)
     """
     def __init__(self, doc_class, cb):
         """
