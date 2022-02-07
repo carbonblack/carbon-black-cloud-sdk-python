@@ -13,11 +13,11 @@
 
 """Model and Query Classes for Platform Devices"""
 
-from cbc_sdk.errors import ApiError, ServerError
+from cbc_sdk.errors import ApiError, ServerError, NonQueryableModel
 from cbc_sdk.platform import PlatformModel
 from cbc_sdk.platform.vulnerability_assessment import Vulnerability, VulnerabilityQuery
-from cbc_sdk.base import (BaseQuery, QueryBuilder, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
-                          IterableQueryMixin, AsyncQueryMixin)
+from cbc_sdk.base import (UnrefreshableModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
+                          CriteriaBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
 
 import time
 
@@ -72,6 +72,9 @@ class Device(PlatformModel):
         """
         Rereads the device data from the server.
 
+        Required Permissions:
+            device (READ)
+
         Returns:
             bool: True if refresh was successful, False if not.
         """
@@ -85,6 +88,9 @@ class Device(PlatformModel):
         """
         Retrieve a Live Response session object for this Device.
 
+        Required Permissions:
+            org.liveresponse.session (CREATE)
+
         Returns:
             LiveResponseSession: Live Response session for the Device.
 
@@ -96,6 +102,9 @@ class Device(PlatformModel):
     def background_scan(self, flag):
         """
         Set the background scan option for this device.
+
+        Required Permissions:
+            device.bg-scan (EXECUTE)
 
         Args:
             flag (bool): True to turn background scan on, False to turn it off.
@@ -109,6 +118,9 @@ class Device(PlatformModel):
         """
         Set the bypass option for this device.
 
+        Required Permissions:
+            device.bypass (EXECUTE)
+
         Args:
             flag (bool): True to enable bypass, False to disable it.
 
@@ -121,6 +133,9 @@ class Device(PlatformModel):
         """
         Delete this sensor device.
 
+        Required Permissions:
+            device.deregistered (DELETE)
+
         Returns:
             str: The JSON output from the request.
         """
@@ -130,6 +145,9 @@ class Device(PlatformModel):
         """
         Uninstall this sensor device.
 
+        Required Permissions:
+            device.uninstall (EXECUTE)
+
         Returns:
             str: The JSON output from the request.
         """
@@ -138,6 +156,9 @@ class Device(PlatformModel):
     def quarantine(self, flag):
         """
         Set the quarantine option for this device.
+
+        Required Permissions:
+            device.quarantine (EXECUTE)
 
         Args:
             flag (bool): True to enable quarantine, False to disable it.
@@ -151,6 +172,9 @@ class Device(PlatformModel):
         """
         Set the current policy for this device.
 
+        Required Permissions:
+            device.policy (UPDATE)
+
         Args:
             policy_id (int): ID of the policy to set for the devices.
 
@@ -163,6 +187,9 @@ class Device(PlatformModel):
         """
         Update the sensor version for this device.
 
+        Required Permissions:
+            org.kits (EXECUTE)
+
         Args:
             sensor_version (dict): New version properties for the sensor.
 
@@ -172,7 +199,12 @@ class Device(PlatformModel):
         return self._cb.device_update_sensor_version([self._model_unique_id], sensor_version)
 
     def vulnerability_refresh(self):
-        """Perform an action on a specific device. Only REFRESH is supported."""
+        """
+        Perform an action on a specific device. Only REFRESH is supported.
+
+        Required Permissions:
+            vulnerabilityAssessment.data (EXECUTE)
+        """
         request = {"action_type": 'REFRESH'}
         url = "/vulnerability/assessment/api/v1/orgs/{}".format(self._cb.credentials.org_key)
 
@@ -189,6 +221,9 @@ class Device(PlatformModel):
     def get_vulnerability_summary(self, category=None):
         """
         Get the vulnerabilities associated with this device
+
+        Required Permissions:
+            vulnerabilityAssessment.data (READ)
 
         Args:
             category (string): (optional) vulnerabilty category (OS, APP)
@@ -220,6 +255,77 @@ class Device(PlatformModel):
         return VulnerabilityQuery(Vulnerability, self._cb, self)
 
 
+class DeviceFacet(UnrefreshableModel):
+    """Represents a device field in a facet search."""
+    urlobject = "/appservices/v6/orgs/{0}/devices/_facet"
+    primary_key = "id"
+    swagger_meta_file = "platform/models/device_facet.yaml"
+
+    def __init__(self, cb, model_unique_id, initial_data=None):
+        """
+        Initialize the DeviceFacet object.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            model_unique_id (str): Not used.
+            initial_data (dict): Initial data used to populate the facet.
+        """
+        super(DeviceFacet, self).__init__(cb, model_unique_id, initial_data, force_init=False, full_doc=True)
+        self._values = [DeviceFacet.DeviceFacetValue(cb, item['id'], item) for item in initial_data['values']]
+
+    class DeviceFacetValue(UnrefreshableModel):
+        """Represents a value of a particular field."""
+        def __init__(self, cb, model_unique_id, initial_data):
+            """
+            Initialize the DeviceFacetValue object.
+
+            Args:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+                model_unique_id (str): Value ID.
+                initial_data (dict): Initial data used to populate the facet value.
+            """
+            super(DeviceFacet.DeviceFacetValue, self).__init__(cb, model_unique_id, initial_data, force_init=False,
+                                                               full_doc=True)
+
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
+        """
+        Returns the appropriate query object for the Device type.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            DeviceFacetQuery: The query object for this alert type.
+        """
+        raise NonQueryableModel("use facets() on DeviceQuery to get DeviceFacet")
+
+    def _subobject(self, name):
+        """
+        Returns the "subobject value" of the given attribute.
+
+        Args:
+            name (str): Name of the subobject value to be returned.
+
+        Returns:
+            Any: Subobject value for the attribute, or None if there is none.
+        """
+        if name == 'values':
+            return self._values
+        return super(DeviceFacet, self)._subobject(name)
+
+    @property
+    def values_(self):
+        """
+        Return the list of facet values for this facet.
+
+        Returns:
+            list[DeviceFacetValue]: The list of values for this facet.
+        """
+        return self._values
+
+
 ############################################
 # Device Queries
 
@@ -234,6 +340,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
     VALID_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "MISSION_CRITICAL"]
     VALID_DIRECTIONS = ["ASC", "DESC"]
     VALID_DEPLOYMENT_TYPES = ["ENDPOINT", "WORKLOAD"]
+    VALID_FACET_FIELDS = ["policy_id", "status", "os", "ad_group_id"]
 
     def __init__(self, doc_class, cb):
         """
@@ -533,6 +640,9 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         """
         Returns the number of results from the run of this query.
 
+        Required Permissions:
+            device (READ)
+
         Returns:
             int: The number of results from the run of this query.
         """
@@ -554,6 +664,9 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         Performs the query and returns the results of the query in an iterable fashion.
 
         Device v6 API uses base 1 instead of 0.
+
+        Required Permissions:
+            device (READ)
 
         Args:
             from_row (int): The row to start the query at (default 1).
@@ -593,6 +706,9 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         """
         Executed in the background to run an asynchronous query. Must be implemented in any inheriting classes.
 
+        Required Permissions:
+            device (READ)
+
         Args:
             context (object): The context returned by _init_async_query. May be None.
 
@@ -616,12 +732,49 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
             output += [self._doc_class(self._cb, item["id"], item) for item in results]
         return output
 
+    def facets(self, fieldlist, max_rows=0):
+        """
+        Return information about the facets for all known evices, using the defined criteria.
+
+        Required Permissions:
+            device (READ)
+
+        Args:
+            fieldlist (list[str]): List of facet field names. Valid names are "policy_id", "status", "os",
+                                   and "ad_group_id".
+            max_rows (int): The maximum number of rows to return. 0 means return all rows.
+
+        Returns:
+            list[DeviceFacet]: A list of facet information.
+        """
+        if not fieldlist:
+            raise ApiError("At least one term field must be specified")
+        if not all((field in DeviceSearchQuery.VALID_FACET_FIELDS) for field in fieldlist):
+            raise ApiError("One or more invalid term field names")
+        request = self._build_request(-1, -1)
+        if 'rows' in request:
+            del request['rows']
+        if 'sort' in request:
+            del request['sort']
+        terms = {'fields': fieldlist}
+        if max_rows > 0:
+            terms['rows'] = max_rows
+        request['terms'] = terms
+        url = self._build_url("/_facet")
+        resp = self._cb.post_object(url, body=request)
+        result = resp.json()
+        return [DeviceFacet(self._cb, None, item) for item in result['results']]
+
+
     def download(self):
         """
         Uses the query parameters that have been set to download all device listings in CSV format.
 
         Example:
             >>> cb.select(Device).set_status(["ALL"]).download()
+
+        Required Permissions:
+            device (READ)
 
         Returns:
             str: The CSV raw data as returned from the server.
@@ -655,6 +808,9 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         """
         Perform a bulk action on all devices matching the current search criteria.
 
+        Required Permissions:
+            Dependent on the action_type.
+
         Args:
             action_type (str): The action type to be performed.
             options (dict): Any options for the bulk device action.
@@ -671,6 +827,9 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         """
         Set the background scan option for the specified devices.
 
+        Required Permissions:
+            device.bg-scan (EXECUTE)
+
         Args:
             scan (bool): True to turn background scan on, False to turn it off.
 
@@ -682,6 +841,9 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
     def bypass(self, enable):
         """
         Set the bypass option for the specified devices.
+
+        Required Permissions:
+            device.bypass (EXECUTE)
 
         Args:
             enable (bool): True to enable bypass, False to disable it.
@@ -695,6 +857,9 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         """
         Delete the specified sensor devices.
 
+        Required Permissions:
+            device.deregistered (DELETE)
+
         Returns:
             str: The JSON output from the request.
         """
@@ -704,6 +869,9 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         """
         Uninstall the specified sensor devices.
 
+        Required Permissions:
+            device.uninstall (EXECUTE)
+
         Returns:
             str: The JSON output from the request.
         """
@@ -712,6 +880,9 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
     def quarantine(self, enable):
         """
         Set the quarantine option for the specified devices.
+
+        Required Permissions:
+            device.quarantine (EXECUTE)
 
         Args:
             enable (bool): True to enable quarantine, False to disable it.
@@ -725,6 +896,9 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         """
         Set the current policy for the specified devices.
 
+        Required Permissions:
+            device.policy (UPDATE)
+
         Args:
             policy_id (int): ID of the policy to set for the devices.
 
@@ -736,6 +910,9 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
     def update_sensor_version(self, sensor_version):
         """
         Update the sensor version for the specified devices.
+
+        Required Permissions:
+            org.kits (EXECUTE)
 
         Args:
             sensor_version (dict): New version properties for the sensor.
