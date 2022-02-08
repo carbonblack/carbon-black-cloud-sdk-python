@@ -133,6 +133,7 @@ autoclass_content = 'both'
 # options for sphinx generation
 copybutton_prompt_text = ">>> "
 
+
 def setup(app):
     """Setup Sphinx."""
     app.add_css_file('css/custom.css')

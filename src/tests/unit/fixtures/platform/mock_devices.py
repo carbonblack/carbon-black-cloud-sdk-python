@@ -273,3 +273,63 @@ POST_DEVICE_SEARCH_RESP = {
     ],
     "num_found": 1
 }
+
+FACET_RESPONSE = {
+    "results": [
+        {
+            "field": "policy_id",
+            "values": [
+                {
+                    "total": 788,
+                    "id": "6525",
+                    "name": "6525"
+                },
+                {
+                    "total": 25,
+                    "id": "7691",
+                    "name": "7691"
+                },
+                {
+                    "total": 9,
+                    "id": "68727",
+                    "name": "68727"
+                },
+                {
+                    "total": 7,
+                    "id": "65066",
+                    "name": "65066"
+                },
+                {
+                    "total": 4,
+                    "id": "69390",
+                    "name": "69390"
+                },
+                {
+                    "total": 1,
+                    "id": "35704",
+                    "name": "35704"
+                },
+                {
+                    "total": 1,
+                    "id": "6527",
+                    "name": "6527"
+                },
+                {
+                    "total": 1,
+                    "id": "71498",
+                    "name": "71498"
+                },
+                {
+                    "total": 1,
+                    "id": "78483",
+                    "name": "78483"
+                },
+                {
+                    "total": 1,
+                    "id": "86029",
+                    "name": "86029"
+                }
+            ]
+        }
+    ]
+}

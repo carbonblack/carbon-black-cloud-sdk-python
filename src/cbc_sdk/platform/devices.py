@@ -765,7 +765,6 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         result = resp.json()
         return [DeviceFacet(self._cb, None, item) for item in result['results']]
 
-
     def download(self):
         """
         Uses the query parameters that have been set to download all device listings in CSV format.
