@@ -20,6 +20,7 @@ from cbc_sdk.base import (BaseQuery, QueryBuilder, QueryBuilderSupportMixin, Cri
                           IterableQueryMixin, AsyncQueryMixin)
 
 import time
+import warnings
 
 
 """"Device Models"""
@@ -66,7 +67,8 @@ class Device(PlatformModel):
         Platform Device API's return 'id' in API responses, where Endpoint Standard
         API's return 'deviceId'.
         """
-        raise AttributeError("Platform Devices use .id property for device ID.")
+        warnings.warn("Platform Devices use .id property for device ID.", SyntaxWarning, stacklevel=2)
+        return self.id
 
     def _refresh(self):
         """
