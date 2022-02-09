@@ -2,7 +2,7 @@ Unified Binary Store
 ====================
 
 The unified binary store (UBS) is a centralized service that is part of the Carbon Black Cloud. The UBS is responsible
-for storing all binaries and corresponding metadata for those binaries. The UBS comes packaged in with Enterprise EDR.
+for storing all binaries and corresponding metadata for those binaries. The UBS is a feature of Enterprise EDR.
 
 Get Download URL
 ----------------
@@ -17,9 +17,9 @@ Get Download URL
     >>> download_url = binary.download_url()
     >>> print(download_url)
     ...
-    https://cdc-file-storage-staging-us-east-1.s3.amazonaws.com/80/05/55/7c/16/14/c1/<trancated>
+    https://cdc-file-storage-staging-us-east-1.s3.amazonaws.com/80/05/55/7c/16/14/c1/<...truncated...>
 
-*Note: This is going to generate download link for the binary that will be active for 1 hour (default expiration period).*
+*Note: The download link for the binary will be active for 1 hour (default expiration period).*
 
 Get Download URL Valid For Specific Period
 ------------------------------------------
@@ -36,14 +36,14 @@ We could set expiration period for the download link (in seconds).
     >>> download_url = binary.download_url(expiration_seconds=30)
     >>> print(download_url)
     ...
-    https://cdc-file-storage-staging-us-east-1.s3.amazonaws.com/80/05/55/7c/16/14/c1/<trancated>
+    https://cdc-file-storage-staging-us-east-1.s3.amazonaws.com/80/05/55/7c/16/14/c1/<...truncated...>
 
-*Note: This is going to generate download link for the binary that will be active for 30 seconds.*
+*Note: The download link for the binary will be active for 30 seconds.*
 
-Querying Binaries
+Searching Binaries
 -----------------
 
-Currently querying binaries is not possible, but we could use the following syntax to obtain a single binary.
+Currently searching binaries is not possible, but we could use the following syntax to obtain a single binary.
 
 ::
 
@@ -54,9 +54,9 @@ Currently querying binaries is not possible, but we could use the following synt
     >>> binary = cb.select(Binary, sha256_hash)
     >>> print(download_url)
     ...
-    https://cdc-file-storage-staging-us-east-1.s3.amazonaws.com/80/05/55/7c/16/14/c1/<trancated>
+    https://cdc-file-storage-staging-us-east-1.s3.amazonaws.com/80/05/55/7c/16/14/c1/<...truncated...>
 
-*Note: If we try to use* :code:`binary = cb.select(Binary)` *, it will fail with exception that the model is non queryable model.*
+*Note: If we try to use* :code:`binary = cb.select(Binary)` *, it will fail with exception that the model is a non queryable model.*
 
 Find the full documentation at
 `Unified Binary Store <https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/cbc_sdk.enterprise_edr/#module-cbc_sdk.enterprise_edr.ubs>`_.

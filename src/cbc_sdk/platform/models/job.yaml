@@ -1,0 +1,61 @@
+type: object
+properties:
+  connector_id:
+    type: string
+    description: Connector ID for the job
+  create_time:
+    type: string
+    format: date-time
+    description: Time this job was created
+  errors:
+    type: string
+    description: Errors for the job
+  id:
+    type: integer
+    format: int64
+    description: ID of the job
+  job_parameters:
+    type: object
+    description: Parameters that were used for this job
+  last_update_time:
+    type: string
+    format: date-time
+    description: Last time this job was updated
+  org_key:
+    type: string
+    description: Organization key of the org this job is being run against
+  owner_id:
+    type: integer
+    format: int64
+    description: ID of the job owner
+  progress:
+    type: object
+    properties:
+      num_total:
+        type: integer
+        format: int64
+        description: Number of items in total
+      num_completed:
+        type: integer
+        format: int64
+        description: Number of items completed
+      message:
+        type: string
+        description: Indicates the current progress of the job
+        enum:
+          - QUEUED
+          - IN_PROGRESS
+          - FINISHED
+  status:
+    type: string
+    description: Current job status
+    enum:
+      - CREATED
+      - FAILED
+      - COMPLETED
+  type:
+    type: string
+    description: Type of job this is
+    enum:
+      - event_export
+      - livequery_export

@@ -1,8 +1,8 @@
 # VMware Carbon Black Cloud Python SDK
 
-**Latest Version:** 1.3.4
+**Latest Version:** 1.3.5
 <br>
-**Release Date:** October 12, 2021
+**Release Date:** January 26, 2022
 
 [![Coverage Status](https://coveralls.io/repos/github/carbonblack/carbon-black-cloud-sdk-python/badge.svg?t=Id6Baf)](https://coveralls.io/github/carbonblack/carbon-black-cloud-sdk-python)
 [![Codeship Status for carbonblack/carbon-black-cloud-sdk-python](https://app.codeship.com/projects/9e55a370-a772-0138-aae4-129773225755/status?branch=develop)](https://app.codeship.com/projects/402767)
@@ -95,6 +95,8 @@ cd carbon-black-cloud-sdk-python
 pip install -r requirements.txt
 ```
 
+**Note: Before contributing any code please make sure to read the [CONTRIBUTING](CONTRIBUTING.md) page.**
+
 If you want to test/execute the example scripts from the repo then install the SDK with the following command. This will install the SDK in editable mode so changes to the repo modify the installed package.
 
 ```
@@ -114,7 +116,7 @@ From the parent directory `carbon-black-cloud-sdk-python`, run the command `pyte
 ReadTheDocs hosts [the documentation for the SDK](https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/). If you make changes to the SDK that require an update to the documentation, first install the documentation packages from pip:
 
 ```
-pip install sphinxcontrib-apidoc
+pip install sphinxcontrib-apidoc sphinx_rtd_theme sphinx-copybutton
 ```
 
 Then, build the docs locally with the following commands:
@@ -126,6 +128,10 @@ make html
 ```
 
 The documentation is built in `docs/_build/html`.
+
+**N.B.:** If your documentation pages appear to generate incorrectly, check to see if you received the warning message
+`No module named 'cbc_sdk'`.  If so, set your `PYTHONPATH` to include the `src/` subdirectory of the SDK project
+directory before running `make html`, or the equivalent command `sphinx-build -M html . _build`.
 
 #### Using Docker
 
