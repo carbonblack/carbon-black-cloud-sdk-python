@@ -293,8 +293,15 @@ class DeviceFacet(UnrefreshableModel):
             """
             Set up a device query to find all devices that match this facet value.
 
+            Example:
+                >>> facets = api.select(Device).where('').facets(['policy_id'])
+                >>> for value in facets[0].values_:
+                ...     print(f"Policy ID = {value.id}:")
+                ...     for dev in value.query_devices():
+                ...         print(f"    {dev.name} ({dev.last_external_ip_address})")
+
             Returns:
-                DeviceQuery: The new DeviceQuery, which may have additional criteria added to it.
+                DeviceQuery: A new DeviceQuery set with the criteria, which may have additional criteria added to it.
             """
             query = self._cb.select(Device)
             if self._outer.field == 'policy_id':
@@ -755,6 +762,12 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
     def facets(self, fieldlist, max_rows=0):
         """
         Return information about the facets for all known evices, using the defined criteria.
+
+        Example:
+            >>> query = api.select(Device).where('')
+            >>> facets = query.facets(['policy_id', 'status', 'os', 'ad_group_id'])
+            >>> for f in facets:
+            ...     print(f"Field {f.field} - {len(f.values_)} distinct values")
 
         Required Permissions:
             device (READ)
