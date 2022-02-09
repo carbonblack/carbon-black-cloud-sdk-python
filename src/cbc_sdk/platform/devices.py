@@ -271,21 +271,41 @@ class DeviceFacet(UnrefreshableModel):
             initial_data (dict): Initial data used to populate the facet.
         """
         super(DeviceFacet, self).__init__(cb, model_unique_id, initial_data, force_init=False, full_doc=True)
-        self._values = [DeviceFacet.DeviceFacetValue(cb, item['id'], item) for item in initial_data['values']]
+        self._values = [DeviceFacet.DeviceFacetValue(cb, self, item['id'], item) for item in initial_data['values']]
 
     class DeviceFacetValue(UnrefreshableModel):
         """Represents a value of a particular field."""
-        def __init__(self, cb, model_unique_id, initial_data):
+        def __init__(self, cb, outer, model_unique_id, initial_data):
             """
             Initialize the DeviceFacetValue object.
 
             Args:
                 cb (BaseAPI): Reference to API object used to communicate with the server.
+                outer (DeviceFacet): Reference to outer facet object.
                 model_unique_id (str): Value ID.
                 initial_data (dict): Initial data used to populate the facet value.
             """
             super(DeviceFacet.DeviceFacetValue, self).__init__(cb, model_unique_id, initial_data, force_init=False,
                                                                full_doc=True)
+            self._outer = outer
+
+        def query_devices(self):
+            """
+            Set up a device query to find all devices that match this facet value.
+
+            Returns:
+                DeviceQuery: The new DeviceQuery, which may have additional criteria added to it.
+            """
+            query = self._cb.select(Device)
+            if self._outer.field == 'policy_id':
+                query.set_policy_ids([int(self.id)])
+            elif self._outer.field == 'status':
+                query.set_status([self.id])
+            elif self._outer.field == 'os':
+                query.set_os([self.id.upper()])
+            elif self._outer.field == 'ad_group_id':
+                query.set_ad_group_ids([int(self.id)])
+            return query
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):

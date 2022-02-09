@@ -333,3 +333,47 @@ FACET_RESPONSE = {
         }
     ]
 }
+
+FACET_INIT_1 = {
+    "field": "policy_id",
+    "values": [
+        {
+            "total": 9,
+            "id": "68727",
+            "name": "68727"
+        }
+    ]
+}
+
+FACET_INIT_2 = {
+    "field": "status",
+    "values": [
+        {
+            "total": 115,
+            "id": "ACTIVE",
+            "name": "ACTIVE"
+        }
+    ]
+}
+
+FACET_INIT_3 = {
+    "field": "os",
+    "values": [
+        {
+            "total": 81,
+            "id": "linux",
+            "name": "linux"
+        }
+    ]
+}
+
+FACET_INIT_4 = {
+    "field": "ad_group_id",
+    "values": [
+        {
+            "total": 2,
+            "id": "955",
+            "name": "955"
+        }
+    ]
+}

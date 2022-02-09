@@ -13,10 +13,11 @@
 
 import pytest
 from cbc_sdk.errors import ApiError, ServerError
-from cbc_sdk.platform import Device
+from cbc_sdk.platform import Device, DeviceFacet
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.platform.mock_devices import FACET_RESPONSE
+from tests.unit.fixtures.platform.mock_devices import (FACET_RESPONSE, FACET_INIT_1, FACET_INIT_2, FACET_INIT_3,
+                                                       FACET_INIT_4)
 
 
 @pytest.fixture(scope="function")
@@ -243,6 +244,20 @@ def test_query_device_facet(cbcsdk_mock):
         query.facets(['notexist'])
     with pytest.raises(ApiError):
         query.facets([])
+
+
+@pytest.mark.parametrize('init_facet, desired_criteria', [
+    (FACET_INIT_1, {'policy_id': [68727]}),
+    (FACET_INIT_2, {'status': ['ACTIVE']}),
+    (FACET_INIT_3, {'os': ['LINUX']}),
+    (FACET_INIT_4, {'ad_group_id': [955]})
+])
+def test_facet_generated_queries(cb, init_facet, desired_criteria):
+    """Test to make sure the query_devices() API generates queries with the correct criteria."""
+    facet = DeviceFacet(cb, None, init_facet)
+    query = facet.values_[0].query_devices()
+    request = query._build_request(-1, -1)
+    assert request['criteria'] == desired_criteria
 
 
 def test_query_device_download(cbcsdk_mock):
