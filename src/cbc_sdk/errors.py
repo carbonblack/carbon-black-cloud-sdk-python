@@ -235,25 +235,21 @@ class UnauthorizedError(ApiError):
 
 class ConnectionError(ApiError):
     """There was an error in the connection to the server."""
-
     pass
 
 
 class CredentialError(ApiError):
     """The credentials had an unspecified error."""
-
     pass
 
 
 class InvalidObjectError(ApiError):
     """An invalid object was received by the server."""
-
     pass
 
 
 class InvalidHashError(Exception):
     """An invalid hash value was used."""
-
     pass
 
 
@@ -274,10 +270,16 @@ class MoreThanOneResultError(ApiError):
 
 class NonQueryableModel(ApiError):
     """A model that attempted to be queried which is not queryable"""
-
     pass
 
 
 class OperationCancelled(ApiError):
     """An operation in the background was canceled."""
     pass
+
+
+class FunctionalityDecommissioned(ApiError):
+    """Raised when a piece of decommissioned functionality is used."""
+    def __init__(self, functionality_tag, alternate=None):
+        super().__init__(message=f"The {functionality_tag} functionality has been decommissioned."
+                                 + f"\nReplacement: {alternate}" if alternate else "")
