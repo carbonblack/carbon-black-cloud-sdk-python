@@ -58,11 +58,11 @@ class CbMetaModel(type):
             model_data = yaml.safe_load(
                 open(os.path.join(mcs.model_base_directory, swagger_meta_file), 'rb').read())
 
-        clsdict["__doc__"] = "Represents a %s object in the Carbon Black server.\n\n" % (name,)
-        for field_name, field_info in iter(model_data.get("properties", {}).items()):
-            docstring = field_info.get("description", None)
-            if docstring:
-                clsdict["__doc__"] += ":ivar %s: %s\n" % (field_name, docstring)
+        # clsdict["__doc__"] = "Represents a %s object in the Carbon Black server.\n\n" % (name,)
+        # for field_name, field_info in iter(model_data.get("properties", {}).items()):
+        #    docstring = field_info.get("description", None)
+        #    if docstring:
+        #        clsdict["__doc__"] += ":ivar %s: %s\n" % (field_name, docstring)
 
         foreign_keys = clsdict.pop("foreign_keys", {})
 

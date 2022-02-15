@@ -525,7 +525,7 @@ class DeviceSummaryFacet(ResultFacet):
 
 class Template(Run):
     """
-    Represents an Audit and Remediation Live Query Template .
+    Represents an Audit and Remediation Live Query Template.
 
     Example:
         >>> template = cb.select(Template, template_id)
