@@ -281,5 +281,12 @@ class OperationCancelled(ApiError):
 class FunctionalityDecommissioned(ApiError):
     """Raised when a piece of decommissioned functionality is used."""
     def __init__(self, functionality_tag, alternate=None):
+        """
+        Initialize the FunctionalityDecommissioned exception.
+
+        Args:
+            functionality_tag (str): Should indicate which functionality has been decommissioned.
+            alternate (str): Optional indication of what the replacement for this functionality is.
+        """
         super().__init__(message=f"The {functionality_tag} functionality has been decommissioned."
                                  + f"\nReplacement: {alternate}" if alternate else "")

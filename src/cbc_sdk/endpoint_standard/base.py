@@ -17,7 +17,7 @@ from cbc_sdk.base import (MutableBaseModel, UnrefreshableModel, CreatableModelMi
                           PaginatedQuery, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin)
 from cbc_sdk.base import Query as BaseEventQuery
 from cbc_sdk.utils import convert_query_params
-from cbc_sdk.errors import ApiError, TimeoutError
+from cbc_sdk.errors import ApiError, TimeoutError, FunctionalityDecommissioned
 from cbc_sdk.platform.reputation import ReputationOverride
 from copy import deepcopy
 from pathlib import Path
@@ -144,12 +144,11 @@ class Event(NewBaseModel):
             return obj[self.info_key]
 
     def __init__(self, cb, model_unique_id, initial_data=None):
-        """Initialize an Event with model_unique_id and initial_data."""
-        super(Event, self).__init__(cb, model_unique_id, initial_data)
+        raise FunctionalityDecommissioned("Endpoint Standard events", "Platform enriched events")
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
-        return Query(cls, cb, kwargs.get("query_string", None))
+        raise FunctionalityDecommissioned("Endpoint Standard events", "Platform enriched events")
 
 
 class Policy(EndpointStandardMutableModel, CreatableModelMixin):
