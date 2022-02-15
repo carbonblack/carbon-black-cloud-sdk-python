@@ -36,7 +36,7 @@ class Process(UnrefreshableModel):
         >>> process = api.select(Process, "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb")
         # use the Process GUID in a where() clause
         >>> process_query = (api.select(Process).where(process_guid=
-                             "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb"))
+        "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb"))
         >>> process_query_results = [proc for proc in process_query]
         >>> process_2 = process_query_results[0]
     """
@@ -468,11 +468,11 @@ class ProcessFacet(UnrefreshableModel):
     ProcessFacet objects contain both Terms and Ranges. Each of those contain facet
     fields and values.
 
-    Access all of the Terms facet data with ProcessFacet.terms_.facets or see just
-    the field names with ProcessFacet.terms_.fields.
+    Access all of the Terms facet data with :func:`ProcessFacet.Terms.facets` or see just
+    the field names with :func:`ProcessFacet.Terms.fields`.
 
-    Access all of the Ranges facet data with ProcessFacet.ranges_.facets or see just
-    the field names with ProcessFacet.ranges_.fields.
+    Access all of the Ranges facet data with :func:`ProcessFacet.Ranges.facets` or see just
+    the field names with :func:`ProcessFacet.Fanges.fields`.
 
     Process Facets can be queried for via `CBCloudAPI.select(ProcessFacet)`. Specify
     facet field(s) with `.add_facet_field("my_facet_field")`.
