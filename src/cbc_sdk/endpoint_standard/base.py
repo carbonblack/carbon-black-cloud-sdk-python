@@ -460,7 +460,7 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
 
     The query is not executed on the server until it's accessed, either as an iterator (where it will generate values
     on demand as they're requested) or as a list (where it will retrieve the entire result set and save to a list).
-    You can also call the Python built-in `len() on this object to retrieve the total number of items matching
+    You can also call the Python built-in `len()` on this object to retrieve the total number of items matching
     the query.
 
     Example:
@@ -468,8 +468,8 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
         >>> cb = CBCloudAPI()
 
     Notes:
-        - The slicing operator only supports start and end parameters, but not step. ``[1:-1]`` is legal, but
-          ``[1:2:-1]`` is not.
+        - The slicing operator only supports start and end parameters, but not step. ``[1:-1]`` is legal,
+          but ``[1:2:-1]`` is not.
         - You can chain where clauses together to create AND queries; only objects that match all ``where`` clauses
           will be returned.
         - Device Queries with multiple search parameters only support AND operations, not OR. Use of
@@ -610,7 +610,7 @@ class EnrichedEventQuery(BaseEventQuery):
 
     def or_(self, **kwargs):
         """
-        or_ criteria are explicitly provided to EnrichedEvent queries although they are endpoint_standard.
+        :meth:`or_` criteria are explicitly provided to EnrichedEvent queries.
 
         This method overrides the base class in order to provide or_() functionality rather than raising an exception.
         """

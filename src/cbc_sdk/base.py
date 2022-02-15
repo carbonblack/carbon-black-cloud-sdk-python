@@ -1352,7 +1352,6 @@ class QueryBuilder(object):
         >>> query = QueryBuilder().where(process_name="malicious.exe").and_(device_name="suspect")
         >>> # start with an initial query, and chain another condition to it
         >>> query = QueryBuilder(device_os="WINDOWS").or_(process_username="root")
-
     """
 
     def __init__(self, **kwargs):
@@ -1889,8 +1888,7 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
             Query: The query with sorting parameters.
 
         Example:
-
-        >>> cb.select(Process).where(process_name="cmd.exe").sort_by("device_timestamp")
+            >>> cb.select(Process).where(process_name="cmd.exe").sort_by("device_timestamp")
         """
         found = False
 
@@ -2042,7 +2040,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
 
         Returns:
             Query (AsyncQuery): The Query object with new milliseconds
-                parameter.
+            parameter.
 
         Example:
             >>> cb.select(ProcessFacet).where(process_name="foo.exe").timeout(5000)
@@ -2140,6 +2138,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
             The range parameter must be in this dictionary format:
 
             {
+
                 "bucket_size": "<object>",
 
                 "start": "<object>",
@@ -2147,6 +2146,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
                 "end": "<object>",
 
                 "field": "<string>"
+
             },
 
             where "bucket_size", "start", and "end" can be numbers or ISO 8601 timestamps.
@@ -2173,7 +2173,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
             start (str in ISO 8601 timestamp): When to start the result search.
             end (str in ISO 8601 timestamp): When to end the result search.
             window (str): Time window to execute the result search, ending on the current time.
-                Should be in the form "-2w", where y=year, w=week, d=day, h=hour, m=minute, s=second.
+            Should be in the form "-2w", where y=year, w=week, d=day, h=hour, m=minute, s=second.
 
         Note:
             - `window` will take precendent over `start` and `end` if provided.

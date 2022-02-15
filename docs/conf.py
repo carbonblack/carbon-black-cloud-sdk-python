@@ -51,6 +51,8 @@ pygments_style = 'tango'
 # unit titles (such as .. function::).
 add_module_names = False
 
+# Generate unique labels
+autosectionlabel_prefix_document = True
 
 # -- Options for HTML output -------------------------------------------------
 
