@@ -40,7 +40,16 @@ class EndpointStandardMutableModel(MutableBaseModel):
     _change_object_key_name = None
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
-        """Initialize an EndpointStandardMutableModel with model_unique_id and initial_data."""
+        """
+        Initialize an EndpointStandardMutableModel with model_unique_id and initial_data.
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            model_unique_id (Any): The unique ID for this particular instance of the model object.
+            initial_data (dict): The data to use when initializing the model object.
+            force_init (bool): True to force object initialization.
+            full_doc (bool): True to mark the object as fully initialized.
+        """
         super(EndpointStandardMutableModel, self).__init__(cb, model_unique_id=model_unique_id,
                                                            initial_data=initial_data, force_init=force_init,
                                                            full_doc=full_doc)
@@ -48,6 +57,16 @@ class EndpointStandardMutableModel(MutableBaseModel):
             self._change_object_key_name = self.primary_key
 
     def _query_implementation(cls, cb, **kwargs):
+        """
+        Returns the appropriate query object for this object type.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            Query: The query object for this alert type.
+        """
         return Query(cls, cb, kwargs.get("query_string", None))
 
     def _parse(self, obj):
@@ -55,12 +74,24 @@ class EndpointStandardMutableModel(MutableBaseModel):
             return obj[self.info_key]
 
     def _update_object(self):
+        """
+        Updates the object data on the server.
+
+        Returns:
+            str: The unique ID of this object.
+        """
         if self._change_object_http_method != "PATCH":
             return self._update_entire_object()
         else:
             return self._patch_object()
 
     def _update_entire_object(self):
+        """
+        Updates the object data on the server in its entirety.
+
+        Returns:
+            str: The unique ID of this object.
+        """
         if self.__class__.primary_key in self._dirty_attributes.keys() or self._model_unique_id is None:
             new_object_info = deepcopy(self._info)
             try:
@@ -79,6 +110,12 @@ class EndpointStandardMutableModel(MutableBaseModel):
         return self._refresh_if_needed(ret)
 
     def _patch_object(self):
+        """
+        Updates the object data on the server by using a PATCH call to update only the changed items.
+
+        Returns:
+            str: The unique ID of this object.
+        """
         if self.__class__.primary_key in self._dirty_attributes.keys() or self._model_unique_id is None:
             log.debug("Creating a new {0:s} object".format(self.__class__.__name__))
             ret = self._cb.api_json_request(self.__class__._new_object_http_method, self.urlobject,
@@ -94,6 +131,15 @@ class EndpointStandardMutableModel(MutableBaseModel):
         return self._refresh_if_needed(ret)
 
     def _refresh_if_needed(self, request_ret):
+        """
+        Refreshes the object data from the server if it's required.
+
+        Args:
+            request_ret (Response): The response from the API call that updated this object.
+
+        Returns:
+            str: The unique ID of this object.
+        """
         refresh_required = True
 
         if request_ret.status_code not in range(200, 300):
@@ -134,7 +180,13 @@ class EndpointStandardMutableModel(MutableBaseModel):
 
 
 class Event(NewBaseModel):
-    """Represents an Endpoint Standard Event."""
+    """
+    Represents an Endpoint Standard Event.
+
+    This functionality has been decommissioned.  Please use EnrichedEvent instead.  More information may be found
+    here:
+    https://community.carbonblack.com/t5/Developer-Relations/Migration-Guide-Carbon-Black-Cloud-Events-API/m-p/95915/thread-id/2519
+    """
     urlobject = "/integrationServices/v3/event"
     primary_key = "eventId"
     info_key = "eventInfo"
@@ -144,10 +196,31 @@ class Event(NewBaseModel):
             return obj[self.info_key]
 
     def __init__(self, cb, model_unique_id, initial_data=None):
+        """
+        This functionality has been decommissioned.  Do not use.
+
+        Args:
+            cb (BaseAPI): Unused.
+            model_unique_id (int): Unused.
+            initial_data (dict): Unused.
+
+        Raises:
+            FunctionalityDecommissioned: Always.
+        """
         raise FunctionalityDecommissioned("Endpoint Standard events", "Platform enriched events")
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
+        """
+        This functionality has been decommissioned.  Do not use.
+
+        Args:
+            cb (BaseAPI): Unused.
+            **kwargs (dict): Unused.
+
+        Raises:
+            FunctionalityDecommissioned: Always.
+        """
         raise FunctionalityDecommissioned("Endpoint Standard events", "Platform enriched events")
 
 
@@ -161,6 +234,16 @@ class Policy(EndpointStandardMutableModel, CreatableModelMixin):
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
+        """
+        Returns the appropriate query object for this object type.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            Query: The query object for this alert type.
+        """
         return Query(cls, cb, kwargs.get("query_string", None))
 
     @property
@@ -216,6 +299,16 @@ class EnrichedEvent(UnrefreshableModel):
 
     @classmethod
     def _query_implementation(self, cb, **kwargs):
+        """
+        Returns the appropriate query object for this object type.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            Query: The query object for this alert type.
+        """
         # This will emulate a synchronous enriched event query, for now.
         return EnrichedEventQuery(self, cb)
 

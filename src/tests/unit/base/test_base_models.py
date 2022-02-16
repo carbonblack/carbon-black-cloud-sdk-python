@@ -19,7 +19,7 @@ from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_VALIDATION_RE
                                                        GET_PROCESS_SEARCH_JOB_RESP,
                                                        GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
 
-log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
+logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
 
 @pytest.fixture(scope="function")
