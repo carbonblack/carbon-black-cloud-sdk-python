@@ -1,0 +1,19 @@
+type: object
+properties:
+  field:
+    type: string
+    description: Name of the field being faceted
+  values:
+    type: array
+    description: The values of the faceted field.
+    items:
+      total:
+        type: integer
+        format: int64
+        description: Number of devices with this particular facet value
+      id:
+        type: string
+        description: ID of the facet value
+      name:
+        type: string
+        description: Name of the facet value

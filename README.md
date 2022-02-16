@@ -95,6 +95,8 @@ cd carbon-black-cloud-sdk-python
 pip install -r requirements.txt
 ```
 
+**Note: Before contributing any code please make sure to read the [CONTRIBUTING](CONTRIBUTING.md) page.**
+
 If you want to test/execute the example scripts from the repo then install the SDK with the following command. This will install the SDK in editable mode so changes to the repo modify the installed package.
 
 ```
