@@ -288,5 +288,5 @@ class FunctionalityDecommissioned(ApiError):
             functionality_tag (str): Should indicate which functionality has been decommissioned.
             alternate (str): Optional indication of what the replacement for this functionality is.
         """
-        super().__init__(message=f"The {functionality_tag} functionality has been decommissioned."
-                                 + f"\nReplacement: {alternate}" if alternate else "")
+        super().__init__(message=f"The {functionality_tag} functionality has been decommissioned." +
+                                 f"\nReplacement: {alternate}" if alternate else "")
