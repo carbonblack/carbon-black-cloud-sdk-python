@@ -33,6 +33,7 @@ HOSTNAME = ''
 ORG_KEY = ''
 HEADERS = {'X-Auth-Token': '', 'Content-Type': 'application/json'}
 SEARCH_DEVICES = '{}appservices/v6/orgs/{}/devices/_search'
+FACET_DEVICES = '{}appservices/v6/orgs/{}/devices/_facet'
 
 
 def search_devices_api_call():
@@ -51,6 +52,19 @@ def search_devices_api_call():
         ]
     }
     return requests.post(search_url, json=data, headers=HEADERS)
+
+
+def facet_devices_api_call():
+    """Facet devices with direct API call"""
+    facet_url = FACET_DEVICES.format(HOSTNAME, ORG_KEY)
+    data = {
+        'criteria': {},
+        'query': '',
+        'terms': {
+            'fields': ['policy_id', 'status']
+        }
+    }
+    return requests.post(facet_url, json=data, headers=HEADERS)
 
 
 def normalize_results(result):
@@ -85,6 +99,30 @@ def search_devices(cb):
     print('Search Devices.................................OK')
 
 
+def facet_devices(cb):
+    """Verify that the SDK returns the same result for Facet Devices as the respective API call"""
+    api_facet = facet_devices_api_call().json()
+
+    query = cb.select(Device).where('')
+    list_facets = query.facets(['policy_id', 'status'])
+
+    api_results = api_facet['results']
+    assert len(api_results) == len(list_facets), \
+        f"Test failed: API call returned {len(api_results)}, but SDK call returned {len(list_facets)}"
+
+    for api_facet, list_facet in zip(api_results, list_facets):
+        assert api_facet['field'] == list_facet.field, \
+            f"Test failed: field name from API {api_facet['field']} differs from SDK {list_facet.field}"
+        assert len(api_facet['values']) == len(list_facet.values_), \
+            f"Test failed: length of values for field {list_facet.field} differs - " \
+            f"API says {len(api_facet['values'])} but SDK says {len(list_facet.values_)}"
+        for vdict, val in zip(api_facet['values'], list_facet.values_):
+            assert vdict == val._info, \
+                f"Test failed: value differs: API is {vdict}, SDK is {val._info}"
+
+    print('Facet Devices..................................OK')
+
+
 def main():
     """Script entry point"""
     parser = build_cli_parser()
@@ -99,6 +137,7 @@ def main():
     HOSTNAME = cb.credentials.url
 
     search_devices(cb)
+    facet_devices(cb)
 
 
 if __name__ == "__main__":
