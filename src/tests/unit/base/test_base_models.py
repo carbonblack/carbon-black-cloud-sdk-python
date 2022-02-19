@@ -3,7 +3,7 @@
 import pytest
 import logging
 from cbc_sdk.base import MutableBaseModel, NewBaseModel
-from cbc_sdk.endpoint_standard import Policy, EnrichedEvent
+from cbc_sdk.endpoint_standard import Policy
 from cbc_sdk.platform import Process
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ServerError, InvalidObjectError, ApiError
