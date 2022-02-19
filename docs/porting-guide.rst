@@ -49,7 +49,8 @@ Import statements will need to change:
     from cbapi.psc.defense import Device, Event, Policy
 
     # CBC SDK
-    from cbc_sdk.endpoint_standard import Device, Event, Policy
+    # note that the original "Event" has been decommissioned
+    from cbc_sdk.endpoint_standard import Device, EnrichedEvent, Policy
 
 ::
 
