@@ -67,8 +67,8 @@ class FeedModel(UnrefreshableModel, CreatableModelMixin, MutableBaseModel):
 class Watchlist(FeedModel):
     """Represents an Enterprise EDR watchlist."""
     # NOTE(ww): Not documented.
-    urlobject = "/threathunter/watchlistmgr/v2/watchlist"
-    urlobject_single = "/threathunter/watchlistmgr/v2/watchlist/{}"
+    urlobject = "/threathunter/watchlistmgr/v3/orgs/{}/watchlists"
+    urlobject_single = "/threathunter/watchlistmgr/v3/orgs/{}/watchlists/{}"
     swagger_meta_file = "enterprise_edr/models/watchlist.yaml"
 
     def __init__(self, cb, model_unique_id=None, initial_data=None):
@@ -85,7 +85,7 @@ class Watchlist(FeedModel):
         if initial_data:
             item = initial_data
         elif model_unique_id:
-            item = cb.get_object(self.urlobject_single.format(model_unique_id))
+            item = cb.get_object(self.urlobject_single.format(cb.credentials.org_key, model_unique_id))
 
         feed_id = item.get("id")
 
@@ -1856,6 +1856,6 @@ class WatchlistQuery(SimpleQuery):
         """Return a list of all Watchlist objects."""
         log.debug("Fetching all watchlists")
 
-        resp = self._cb.get_object(self._doc_class.urlobject)
+        resp = self._cb.get_object(self._doc_class.urlobject.format(self._cb.credentials.org_key))
         results = resp.get("results", [])
         return [self._doc_class(self._cb, initial_data=item) for item in results]

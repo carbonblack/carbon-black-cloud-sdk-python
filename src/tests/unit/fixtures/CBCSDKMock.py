@@ -37,11 +37,13 @@ class CBCSDKMock:
         monkeypatch.setattr(api, "get_raw_data", self._self_get_raw_data())
         monkeypatch.setattr(api, "api_request_stream", self._self_api_request_stream())
         monkeypatch.setattr(api, "api_request_iterate", self._self_api_request_iterate())
-        monkeypatch.setattr(api, "post_object", self._self_post_object())
+        post_func = self._self_post_object()
+        monkeypatch.setattr(api, "post_object", post_func)
         monkeypatch.setattr(api, "post_multipart", self._self_post_multipart())
-        monkeypatch.setattr(api, "put_object", self._self_put_object())
+        put_func = self._self_put_object()
+        monkeypatch.setattr(api, "put_object", put_func)
         monkeypatch.setattr(api, "delete_object", self._self_delete_object())
-        monkeypatch.setattr(api, "api_json_request", self._self_patch_object())
+        monkeypatch.setattr(api, "api_json_request", self._self_patch_object(post_func, put_func))
 
     class StubResponse(object):
         """Stubbed response to object to support json function similar to requests package"""
@@ -264,9 +266,17 @@ class CBCSDKMock:
 
         return _delete_object
 
-    def _self_patch_object(self):
+    def _self_patch_object(self, post_func, put_func):
         def _patch_object(method, url, **kwargs):
             self._check_for_decommission(url)
+            if method == 'POST':
+                body = kwargs.pop('body', None)
+                return post_func(url, body, **kwargs)
+            if method == 'PUT':
+                body = kwargs.pop('body', None)
+                return put_func(url, body, **kwargs)
+            if method != 'PATCH':
+                pytest.fail(f"api_json_request called for method {method} on url {url} when it shouldn't be")
             matched = self.match_key(self.get_mock_key("PATCH", url))
             if matched:
                 if callable(self.mocks[matched]):
