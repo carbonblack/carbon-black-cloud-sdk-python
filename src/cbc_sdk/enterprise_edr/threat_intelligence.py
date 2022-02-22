@@ -250,6 +250,21 @@ class Watchlist(FeedModel):
         """
         return WatchlistQuery(self, cb)
 
+    def _build_api_request_uri(self, http_method="GET"):
+        """
+        Returns the API request URI for this object.
+
+        Args:
+            http_method (str): Unused.
+
+        Returns:
+            str: The API request URI for this object.
+        """
+        if self._model_unique_id is not None:
+            return self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id)
+        else:
+            return self.urlobject.format(self._cb.credentials.org_key)
+
     def save(self):
         """Saves this watchlist on the Enterprise EDR server.
 

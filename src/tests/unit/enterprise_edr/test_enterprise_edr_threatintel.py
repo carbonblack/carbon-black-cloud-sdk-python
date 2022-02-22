@@ -108,8 +108,6 @@ def test_watchlist_update(cbcsdk_mock):
     assert watchlist._info["description"] == "Existing description for the watchlist."
     cbcsdk_mock.mock_request("PUT", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}",
                              WATCHLIST_GET_SPECIFIC_RESP)
-    cbcsdk_mock.mock_request("PATCH", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}",
-                             WATCHLIST_GET_SPECIFIC_RESP)
     watchlist.update(description="My New Description", nonexistant_key="This Is Ignored")
     assert watchlist._info["description"] == "My New Description"
     watchlist._update_object()
@@ -124,7 +122,7 @@ def test_watchlist_update_id(cbcsdk_mock):
     watchlist = Watchlist(cbcsdk_mock.api, model_unique_id="watchlistId2", initial_data=None)
     assert "description" in watchlist._info
     assert "nonexistant_key" not in watchlist._info
-    cbcsdk_mock.mock_request("PATCH", "/threathunter/watchlistmgr/v3/orgs/test/watchlists",
+    cbcsdk_mock.mock_request("POST", "/threathunter/watchlistmgr/v3/orgs/test/watchlists",
                              WATCHLIST_GET_SPECIFIC_RESP)
     watchlist.id = id2
     result_repr = watchlist.__repr__()
