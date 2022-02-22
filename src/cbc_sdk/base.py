@@ -64,6 +64,19 @@ class CbMetaModel(type):
         #    if docstring:
         #        clsdict["__doc__"] += ":ivar %s: %s\n" % (field_name, docstring)
 
+        class_docstr = clsdict.get('__doc__', None)
+        if not class_docstr:
+            class_docstr = f"Represents a {name} object in the Carbon Black Cloud."
+        need_header = True
+        for field_name, field_info in iter(model_data.get("properties", {}).items()):
+            docstring = field_info.get("description", None)
+            if docstring:
+                if need_header:
+                    class_docstr += "\n\nAttributes:"
+                    need_header = False
+                class_docstr += f"\n    {field_name}: {docstring}"
+        clsdict['__doc__'] = class_docstr
+
         foreign_keys = clsdict.pop("foreign_keys", {})
 
         cls = super(CbMetaModel, mcs).__new__(mcs, name, bases, clsdict)
