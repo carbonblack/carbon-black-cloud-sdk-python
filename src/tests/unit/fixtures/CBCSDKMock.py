@@ -22,6 +22,9 @@ import cbc_sdk
 
 class CBCSDKMock:
     """Mock framework for unit tests that need to fetch Carbon Black Cloud data"""
+    DEPRECATED_URL_PREFIXES = [
+        "/integrationServices/v3/event"
+    ]
 
     def __init__(self, monkeypatch, api):
         """Initializes monkey patch for HTTP VERB requests"""
@@ -85,6 +88,12 @@ class CBCSDKMock:
         """Erase the self.mocks dictionary."""
         self.mocks = {}
 
+    @classmethod
+    def _check_for_decommission(self, url):
+        for prefix in CBCSDKMock.DEPRECATED_URL_PREFIXES:
+            if url.startswith(prefix):
+                pytest.fail(f"decommissioned URL {url} called when it shouldn't be")
+
     def _capture_data(self, data):
         self._all_request_data.append(data)
         self._last_request_data = data
@@ -118,6 +127,7 @@ class CBCSDKMock:
 
     def _self_get_object(self):
         def _get_object(url, query_parameters=None, default=None):
+            self._check_for_decommission(url)
             self._capture_data(query_parameters)
             matched = self.match_key(self.get_mock_key("GET", url))
             if matched:
@@ -134,6 +144,7 @@ class CBCSDKMock:
 
     def _self_get_raw_data(self):
         def _get_raw_data(url, query_params=None, default=None, **kwargs):
+            self._check_for_decommission(url)
             self._capture_data(query_params)
             matched = self.match_key(self.get_mock_key("RAW_GET", url))
             if matched:
@@ -149,6 +160,7 @@ class CBCSDKMock:
 
     def _self_api_request_stream(self):
         def _api_request_stream(method, uri, stream_output, **kwargs):
+            self._check_for_decommission(uri)
             self._capture_data(kwargs)
             matched = self.match_key(self.get_mock_key(f"STREAM:{method}", uri))
             if matched:
@@ -168,6 +180,7 @@ class CBCSDKMock:
 
     def _self_api_request_iterate(self):
         def _api_request_iterate(method, uri, **kwargs):
+            self._check_for_decommission(uri)
             self._capture_data(kwargs)
             matched = self.match_key(self.get_mock_key(f"ITERATE:{method}", uri))
             if matched:
@@ -186,6 +199,7 @@ class CBCSDKMock:
 
     def _self_post_object(self):
         def _post_object(url, body, **kwargs):
+            self._check_for_decommission(url)
             self._capture_data(body)
             matched = self.match_key(self.get_mock_key("POST", url))
             if matched:
@@ -201,6 +215,7 @@ class CBCSDKMock:
 
     def _self_post_multipart(self):
         def _post_multipart(url, param_table, **kwargs):
+            self._check_for_decommission(url)
             self._capture_data(kwargs)
             matched = self.match_key(self.get_mock_key("POST_MULTIPART", url))
             if matched:
@@ -216,6 +231,7 @@ class CBCSDKMock:
 
     def _self_put_object(self):
         def _put_object(url, body, **kwargs):
+            self._check_for_decommission(url)
             self._capture_data(body)
             matched = self.match_key(self.get_mock_key("PUT", url))
             if matched:
@@ -234,6 +250,7 @@ class CBCSDKMock:
 
     def _self_delete_object(self):
         def _delete_object(url, body=None):
+            self._check_for_decommission(url)
             self._capture_data(body)
             matched = self.match_key(self.get_mock_key("DELETE", url))
             if matched:
@@ -249,6 +266,7 @@ class CBCSDKMock:
 
     def _self_patch_object(self):
         def _patch_object(method, url, **kwargs):
+            self._check_for_decommission(url)
             matched = self.match_key(self.get_mock_key("PATCH", url))
             if matched:
                 if callable(self.mocks[matched]):
