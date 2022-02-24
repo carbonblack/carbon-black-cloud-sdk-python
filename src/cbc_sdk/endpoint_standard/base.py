@@ -13,7 +13,7 @@
 
 """Model and Query Classes for Endpoint Standard"""
 
-from cbc_sdk.base import (MutableBaseModel, UnrefreshableModel, CreatableModelMixin, NewBaseModel, FacetQuery,
+from cbc_sdk.base import (MutableBaseModel, UnrefreshableModel, CreatableModelMixin, FacetQuery,
                           PaginatedQuery, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin)
 from cbc_sdk.base import Query as BaseEventQuery
 from cbc_sdk.utils import convert_query_params
@@ -22,7 +22,6 @@ from cbc_sdk.platform.reputation import ReputationOverride
 from copy import deepcopy
 from pathlib import Path
 
-import deprecation
 import logging
 import json
 import time
@@ -180,7 +179,7 @@ class EndpointStandardMutableModel(MutableBaseModel):
         return self._model_unique_id
 
 
-class Event(NewBaseModel):
+class Event:
     """
     Represents an Endpoint Standard Event.
 
@@ -196,7 +195,6 @@ class Event(NewBaseModel):
         if type(obj) == dict and self.info_key in obj:
             return obj[self.info_key]
 
-    @deprecation.deprecated(deprecated_in="", removed_in="", current_version="", details="")
     def __init__(self, cb, model_unique_id, initial_data=None):
         """
         This functionality has been decommissioned.  Do not use.
