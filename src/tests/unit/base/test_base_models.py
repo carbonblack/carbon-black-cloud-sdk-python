@@ -276,7 +276,7 @@ def test_update_object_mbm(cbcsdk_mock):
     # if primary_key hasn't been modified, we use the _change_object_http_method
     api = cbcsdk_mock.api
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30242", POLICY_GET_RESP_1)
-    cbcsdk_mock.mock_request("PATCH", "/integrationServices/v3/policy/30242", POLICY_UPDATE_RESP)
+    cbcsdk_mock.mock_request("PUT", "/integrationServices/v3/policy/30242", POLICY_UPDATE_RESP)
     policy = api.select(Policy, 30242)
     policy._set("name", "newFakeName")
     policy._set("testId", 1)
@@ -308,7 +308,7 @@ def test_update_entire_mbm(cbcsdk_mock):
         mutableBaseModelPolicy._model_unique_id = 30241
 
     mutableBaseModelPolicy.id = 30241
-    cbcsdk_mock.mock_request("PATCH", "/integrationServices/v3/policy", POLICY_POST_RESP)
+    cbcsdk_mock.mock_request("POST", "/integrationServices/v3/policy", POLICY_POST_RESP)
     assert mutableBaseModelPolicy._update_entire_object()
     assert mutableBaseModelPolicy.id == 30241
 
@@ -320,7 +320,7 @@ def test_patch_entire_mbm(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
     mutableBaseModelPolicy = Policy(api, 30242)
     mutableBaseModelPolicy.id = 30241
-    cbcsdk_mock.mock_request("PATCH", "/integrationServices/v3/policy", POLICY_POST_RESP)
+    cbcsdk_mock.mock_request("PUT", "/integrationServices/v3/policy", POLICY_POST_RESP)
     assert mutableBaseModelPolicy._patch_object()
     assert mutableBaseModelPolicy.id == 30241
 
