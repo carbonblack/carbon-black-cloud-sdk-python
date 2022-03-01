@@ -1121,6 +1121,9 @@ class Report(FeedModel):
             This method **cannot** be used to save a feed report. To save feed reports, create them with `cb.create`
             and use `Feed.replace`.
 
+            This method **cannot** be used to save a report that is *already* part of a watchlist.  Use the `update()`
+            method instead.
+
         Raises:
             InvalidObjectError: If Report.validate() fails.
         """
