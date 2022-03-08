@@ -842,7 +842,7 @@ class MutableBaseModel(NewBaseModel):
                 pass
             log.debug("Creating a new {0:s} object".format(self.__class__.__name__))
             http_method = self.__class__._new_object_http_method
-            ret = self._cb.api_json_request(http_method, self.urlobject,
+            ret = self._cb.api_json_request(http_method, self._build_api_request_uri(http_method=http_method),
                                             data=new_object_info)
         else:
             log.debug("Updating {0:s} with unique ID {1:s}".format(self.__class__.__name__, str(self._model_unique_id)))
