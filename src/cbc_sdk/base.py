@@ -72,7 +72,7 @@ class CbMetaModel(type):
             docstring = field_info.get("description", None)
             if docstring:
                 if need_header:
-                    class_docstr += "\n\nAttributes:"
+                    class_docstr += "\n\nParameters:"
                     need_header = False
                 class_docstr += f"\n    {field_name}: {docstring}"
         clsdict['__doc__'] = class_docstr
