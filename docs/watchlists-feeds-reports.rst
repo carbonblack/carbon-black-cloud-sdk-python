@@ -69,7 +69,7 @@ report associated with a watchlist, you must look in the watchlist's ``reports``
     >>> report_list = [report for report in watchlist.reports if report.id == '47474d40-1f94-4995-b6d9-1d1eea3528b3']
     >>> report = report_list[0]
     >>> report.append_iocs([IOC_V2.create_query(api, 'evil-connect', 'netconn_ipv4:10.8.16.4')])
-    >>> report.save_watchlist()
+    >>> report.update()
 
 Adding the Report to a Watchlist
 ++++++++++++++++++++++++++++++++
@@ -91,6 +91,7 @@ If you already have an existing Watchlist you wish to enhance, you can add Repor
     >>> from cbc_sdk.enterprise_edr import Watchlist
     >>> watchlist = api.select('Watchlist', 'R4cMgFIhRaakgk749MRr6Q')
     >>> watchlist.add_reports([report])
+    >>> watchlist.save()
 
 Enabling Alerting on a Watchlist
 ++++++++++++++++++++++++++++++++
