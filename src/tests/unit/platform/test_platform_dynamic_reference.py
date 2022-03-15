@@ -3,7 +3,6 @@ import pytest
 from cbc_sdk import CBCloudAPI
 from cbc_sdk.errors import ModelNotFound
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.endpoint_standard.mock_events import EVENT_GET_HOSTNAME_RESP
 from tests.unit.fixtures.platform.mock_events import EVENT_SEARCH_VALIDATION_RESP
 from tests.unit.fixtures.platform.mock_grants import QUERY_GRANT_RESP
 from tests.unit.fixtures.platform.mock_process import (
@@ -120,13 +119,13 @@ def test_Grant_select(cbcsdk_mock):
 
 def test_Event_select(cbcsdk_mock):
     """Test the dynamic reference for the `Event` class."""
-    cbcsdk_mock.mock_request(
-        "GET", "/integrationServices/v3/event", EVENT_GET_HOSTNAME_RESP
-    )
-    search_validate_url = "/api/investigate/v1/orgs/Z100/events/search_validation"
-    cbcsdk_mock.mock_request("GET", search_validate_url, EVENT_SEARCH_VALIDATION_RESP)
     events = cbcsdk_mock.api.select("Event")
     assert type(events).__qualname__ == "EventQuery"
+    assert type(events).__module__ == "cbc_sdk.platform.events"
+
+    events_by_process_guid = cbcsdk_mock.api.select("Event", "ABCD1234-0040bdb5-000009e0-00000000-1d82fe3b49a5b32")
+    assert type(events_by_process_guid).__qualname__ == "Event"
+    assert type(events).__module__ == "cbc_sdk.platform.events"
 
 
 class TestReferenceProcess:
