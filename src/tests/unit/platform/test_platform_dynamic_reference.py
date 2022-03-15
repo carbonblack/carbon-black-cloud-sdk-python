@@ -1,9 +1,10 @@
+"""Test dynamic class refrences"""
+
 import pytest
 
 from cbc_sdk import CBCloudAPI
 from cbc_sdk.errors import ModelNotFound
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.platform.mock_events import EVENT_SEARCH_VALIDATION_RESP
 from tests.unit.fixtures.platform.mock_grants import QUERY_GRANT_RESP
 from tests.unit.fixtures.platform.mock_process import (
     GET_PROCESS_VALIDATION_RESP,
