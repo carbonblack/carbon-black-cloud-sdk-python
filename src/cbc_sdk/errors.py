@@ -13,6 +13,10 @@
 """Exceptions that are thrown by CBC SDK operations."""
 
 
+class ModelNotFound(Exception):
+    """Exception for not finding a model while selecting dynamically."""
+
+
 class ApiError(Exception):
     """Base class for all CBC SDK errors; also raised for generic internal errors."""
 

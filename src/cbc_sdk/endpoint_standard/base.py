@@ -13,7 +13,7 @@
 
 """Model and Query Classes for Endpoint Standard"""
 
-from cbc_sdk.base import (MutableBaseModel, UnrefreshableModel, CreatableModelMixin, NewBaseModel, FacetQuery,
+from cbc_sdk.base import (MutableBaseModel, UnrefreshableModel, CreatableModelMixin, FacetQuery,
                           PaginatedQuery, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin)
 from cbc_sdk.base import Query as BaseEventQuery
 from cbc_sdk.utils import convert_query_params
@@ -179,7 +179,7 @@ class EndpointStandardMutableModel(MutableBaseModel):
         return self._model_unique_id
 
 
-class Event(NewBaseModel):
+class Event:
     """
     Represents an Endpoint Standard Event.
 
