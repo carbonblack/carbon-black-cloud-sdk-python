@@ -237,4 +237,4 @@ Those settings shown in the screenshot can be replicated with the following code
 Advanced usage of alerts
 ------------------------
 
-If you want near-real-time streaming of an alerts we advice you to referer our `Data Forwarded <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/data-forwarder-config-api/>`_.
+If you want near-real-time streaming of alerts we advise you to refer to our `Data Forwarder <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/data-forwarder-api/>`_.

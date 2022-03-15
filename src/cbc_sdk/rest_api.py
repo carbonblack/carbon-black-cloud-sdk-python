@@ -114,7 +114,7 @@ class CBCloudAPI(BaseAPI):
             sql (str): The SQL for the query.
 
         Returns:
-            Query: The query object.
+            cbc_sdk.base.Query: The query object.
         """
         return self.select(Run).where(sql=sql)
 
@@ -126,7 +126,7 @@ class CBCloudAPI(BaseAPI):
             query (str): The SQL for the query.
 
         Returns:
-            Query: The query object.
+            cbc_sdk.base.Query: The query object.
         """
         return self.select(RunHistory).where(query)
 
@@ -418,7 +418,7 @@ class CBCloudAPI(BaseAPI):
             object: An instance of `cls`.
 
         Examples:
-        >>> feed = cb.create(Feed, feed_data)
+            >>> feed = cb.create(Feed, feed_data)
         """
         return cls(self, initial_data=data)
 
@@ -433,7 +433,7 @@ class CBCloudAPI(BaseAPI):
             bool: True if the query is valid, False if not.
 
         Examples:
-        >>> cb.validate_process_query("process_name:chrome.exe") # True
+            >>> cb.validate_process_query("process_name:chrome.exe") # True
         """
         args = {"q": query}
         url = "/api/investigate/v1/orgs/{}/processes/search_validation".format(
@@ -481,8 +481,8 @@ class CBCloudAPI(BaseAPI):
         """Returns a dictionary containing API limiting information.
 
         Examples:
-        >>> cb.process_limits()
-        {u'status_code': 200, u'time_bounds': {u'upper': 1545335070095, u'lower': 1542779216139}}
+            >>> cb.process_limits()
+            {u'status_code': 200, u'time_bounds': {u'upper': 1545335070095, u'lower': 1542779216139}}
         """
         url = "/api/investigate/v1/orgs/{}/processes/limits".format(
             self.credentials.org_key

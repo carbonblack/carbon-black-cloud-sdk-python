@@ -41,7 +41,7 @@ We could set expiration period for the download link (in seconds).
 *Note: The download link for the binary will be active for 30 seconds.*
 
 Searching Binaries
------------------
+------------------
 
 Currently searching binaries is not possible, but we could use the following syntax to obtain a single binary.
 

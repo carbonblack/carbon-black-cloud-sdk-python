@@ -70,11 +70,11 @@ class EventFacet(UnrefreshableModel):
     EventFacet objects contain both Terms and Ranges. Each of those contain facet
     fields and values.
 
-    Access all of the Terms facet data with EventFacet.terms_.facets or see just
-    the field names with EventFacet.terms_.fields.
+    Access all of the Terms facet data with :func:`EventFacet.Terms.facets` or see just
+    the field names with :func:`EventFacet.Terms.fields`.
 
-    Access all of the Ranges facet data with EventFacet.ranges_.facets or see just
-    the field names with EventFacet.ranges_.fields.
+    Access all of the Ranges facet data with :meth:`EventFacet.Ranges.facets` or see just
+    the field names with :func:`EventFacet.Ranges.fields`.
 
     Event Facets can be queried for via `CBCloudAPI.select(EventFacet). Specify
     a Process GUID with `.where(process_guid="example_guid")`, and facet field(s)
@@ -82,7 +82,7 @@ class EventFacet(UnrefreshableModel):
 
     Examples:
         >>> event_facet_query = (api.select(EventFacet).where(process_guid=
-                                 "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb"))
+        "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb"))
         >>> event_facet_query.add_facet_field("event_type")
         # retrieve results synchronously
         >>> facet = event_facet_query.results

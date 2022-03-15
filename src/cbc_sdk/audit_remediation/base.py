@@ -37,10 +37,10 @@ class Run(NewBaseModel):
     Represents an Audit and Remediation run.
 
     Example:
-    >>> run = cb.select(Run, run_id)
-    >>> print(run.name, run.sql, run.create_time)
-    >>> print(run.status, run.match_count)
-    >>> run.refresh()
+        >>> run = cb.select(Run, run_id)
+        >>> print(run.name, run.sql, run.create_time)
+        >>> print(run.status, run.match_count)
+        >>> run.refresh()
     """
     primary_key = "id"
     swagger_meta_file = "audit_remediation/models/run.yaml"
@@ -525,13 +525,13 @@ class DeviceSummaryFacet(ResultFacet):
 
 class Template(Run):
     """
-    Represents an Audit and Remediation Live Query Template .
+    Represents an Audit and Remediation Live Query Template.
 
     Example:
-    >>> template = cb.select(Template, template_id)
-    >>> print(template.name, template.sql, template.create_time)
-    >>> print(template.status, template.match_count, template.schedule)
-    >>> template.refresh()
+        >>> template = cb.select(Template, template_id)
+        >>> print(template.name, template.sql, template.create_time)
+        >>> print(template.status, template.match_count, template.schedule)
+        >>> template.refresh()
     """
     primary_key = "id"
     swagger_meta_file = "audit_remediation/models/template.yaml"
@@ -1174,8 +1174,7 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
             ResultQuery: ResultQuery object with specified sorting key and order.
 
         Example:
-
-        >>> cb.select(Result).run_id(my_run).where(username="foobar").sort_by("uid")
+            >>> cb.select(Result).run_id(my_run).where(username="foobar").sort_by("uid")
         """
         self._sort.update({"field": key, "order": direction})
         return self
@@ -1191,8 +1190,7 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
             ResultQuery: ResultQuery object with specified run_id.
 
         Example:
-
-        >>> cb.select(Result).run_id(my_run)
+            >>> cb.select(Result).run_id(my_run)
         """
         self._run_id = run_id
         return self
@@ -1470,8 +1468,7 @@ class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Criter
             FacetQuery: FacetQuery that will receive field(s) facet_field.
 
         Example:
-
-        >>> cb.select(ResultFacet).run_id(my_run).facet_field(["device.policy_name", "device.os"])
+            >>> cb.select(ResultFacet).run_id(my_run).facet_field(["device.policy_name", "device.os"])
         """
         if isinstance(field, str):
             self._facet_fields.append(field)
@@ -1585,7 +1582,7 @@ class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Criter
             FacetQuery: FacetQuery object with specified run_id.
 
         Example:
-        >>> cb.select(ResultFacet).run_id(my_run)
+            >>> cb.select(ResultFacet).run_id(my_run)
         """
         self._run_id = run_id
         return self

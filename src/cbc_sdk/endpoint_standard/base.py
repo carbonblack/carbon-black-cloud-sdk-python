@@ -268,13 +268,17 @@ class Policy(EndpointStandardMutableModel, CreatableModelMixin):
             - The dictionary keys have these possible values:
 
                 "action": ["IGNORE", "ALLOW", "DENY", "TERMINATE_PROCESS",
-                           "TERMINATE_THREAD", "TERMINATE"]
+                "TERMINATE_THREAD", "TERMINATE"]
+
                 "type": ["NAME_PATH", "SIGNED_BY", "REPUTATION"]
+
                 "value": Any string value to match on
+
                 "operation": ["BYPASS_ALL", "INVOKE_SCRIPT", "INVOKE_SYSAPP",
-                              "POL_INVOKE_NOT_TRUSTED", "INVOKE_CMD_INTERPRETER",
-                              "RANSOM", "NETWORK", "PROCESS_ISOLATION", "CODE_INJECTION",
-                              "MEMORY_SCRAPE", "RUN_INMEMORY_CODE", "ESCALATE", "RUN"]
+                "POL_INVOKE_NOT_TRUSTED", "INVOKE_CMD_INTERPRETER",
+                "RANSOM", "NETWORK", "PROCESS_ISOLATION", "CODE_INJECTION",
+                "MEMORY_SCRAPE", "RUN_INMEMORY_CODE", "ESCALATE", "RUN"]
+
                 "required": [True, False]
         """
         self._cb.post_object("{0}/rule".format(self._build_api_request_uri()), {"ruleInfo": new_rule})
@@ -548,19 +552,19 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
 
     The query is not executed on the server until it's accessed, either as an iterator (where it will generate values
     on demand as they're requested) or as a list (where it will retrieve the entire result set and save to a list).
-    You can also call the Python built-in `len() on this object to retrieve the total number of items matching
+    You can also call the Python built-in `len()` on this object to retrieve the total number of items matching
     the query.
 
     Example:
-    >>> from cbc_sdk import CBCloudAPI
-    >>> cb = CBCloudAPI()
+        >>> from cbc_sdk import CBCloudAPI
+        >>> cb = CBCloudAPI()
 
     Notes:
-        - The slicing operator only supports start and end parameters, but not step. ``[1:-1]`` is legal, but
-          ``[1:2:-1]`` is not.
+        - The slicing operator only supports start and end parameters, but not step. ``[1:-1]`` is legal,
+          but ``[1:2:-1]`` is not.
         - You can chain where clauses together to create AND queries; only objects that match all ``where`` clauses
           will be returned.
-          - Device Queries with multiple search parameters only support AND operations, not OR. Use of
+        - Device Queries with multiple search parameters only support AND operations, not OR. Use of
           Query.or_(myParameter='myValue') will add 'AND myParameter:myValue' to the search query.
     """
 
@@ -698,7 +702,7 @@ class EnrichedEventQuery(BaseEventQuery):
 
     def or_(self, **kwargs):
         """
-        or_ criteria are explicitly provided to EnrichedEvent queries although they are endpoint_standard.
+        :meth:`or_` criteria are explicitly provided to EnrichedEvent queries.
 
         This method overrides the base class in order to provide or_() functionality rather than raising an exception.
         """
@@ -744,7 +748,7 @@ class EnrichedEventQuery(BaseEventQuery):
                 parameter.
 
         Example:
-        >>> cb.select(EnrichedEvent).where(process_name="foo.exe").timeout(5000)
+            >>> cb.select(EnrichedEvent).where(process_name="foo.exe").timeout(5000)
         """
         self._timeout = msecs
         return self
