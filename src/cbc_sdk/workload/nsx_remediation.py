@@ -40,6 +40,9 @@ class NSXRemediationJob:
         """
         Starts an NSX Remediation request and returns the job object.
 
+        Required Permissions:
+            appliances.nsx.remediation(EXECUTE)
+
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
             device_ids (int|list): The device ID(s) to run the remediation request on.
@@ -49,6 +52,10 @@ class NSXRemediationJob:
 
         Returns:
             NSXRemediationJob: The object representing all running jobs.
+
+        Raises:
+            ApiError: If the parameters to start the request are incorrect.
+            ServerError: If the request could not be successfully started.
         """
         if isinstance(device_ids, list):
             if not all(isinstance(device_id, int) for device_id in device_ids):
@@ -66,12 +73,16 @@ class NSXRemediationJob:
         url = "/applianceservice/v1/orgs/{}/device_actions".format(cb.credentials.org_key)
         response = cb.post_object(url, body=request_body)
         if response.status_code != 201:
-            raise ServerError(f"could not start remediation request, error code {response.status_code}")
+            raise ServerError(response.status_code,
+                              f"could not start remediation request, error code {response.status_code}")
         return NSXRemediationJob(cb, response.json().get('job_ids', []))
 
     def _poll_status(self):
         """
         Polls the current status of all running jobs, saves it, and eliminates all jobs that are no longer running.
+
+        Required Permissions:
+            appliances.registration(READ)
 
         Returns:
             bool: True if at least one job is still running, otherwise False.
@@ -92,6 +103,9 @@ class NSXRemediationJob:
         """
         Waits for all running jobs to be completed and returns the final status.
 
+        Required Permissions:
+            appliances.registration(READ)
+
         Returns:
             dict: The final status, mapping individual job IDs to status value dicts.
         """
@@ -102,6 +116,9 @@ class NSXRemediationJob:
     def async_await_result(self):
         """
         Sets up a Future which can be used to wait asynchronously for all running jobs to be completed.
+
+        Required Permissions:
+            appliances.registration(READ)
 
         Returns:
             Future: A future representing the job and its results.

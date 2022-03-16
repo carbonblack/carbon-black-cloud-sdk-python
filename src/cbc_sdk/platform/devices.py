@@ -18,6 +18,7 @@ from cbc_sdk.platform import PlatformModel
 from cbc_sdk.platform.vulnerability_assessment import Vulnerability, VulnerabilityQuery
 from cbc_sdk.base import (UnrefreshableModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
                           CriteriaBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
+from cbc_sdk.workload import NSXRemediationJob
 
 import time
 
@@ -253,6 +254,35 @@ class Device(PlatformModel):
             dict: vulnerabilities for this device
         """
         return VulnerabilityQuery(Vulnerability, self._cb, self)
+
+    @property
+    def nsx_available(self):
+        """
+        Returns whether NSX actions are available on this device.
+
+        Returns:
+            bool: True if NSX actions are available, False if not.
+        """
+        return self._info['deployment_type'] == 'WORKLOAD' and self._info['nsx_enabled']
+
+    def nsx_remediation(self, tag, set_tag=True):
+        """
+        Start an NSX Remediation job on this device.
+
+        Required Permissions:
+            appliances.nsx.remediation(EXECUTE)
+
+        Args:
+            tag (str): The NSX tag to apply to this device. Valid values are "CB-NSX-Quarantine",
+                       "CB-NSX-Isolate", and "CB-NSX-Custom".
+            set_tag (bool): True to toggle the specified tag on, False to toggle it off. Default True.
+
+        Returns:
+            NSXRemediationJob: The object representing all running jobs.
+        """
+        if self.nsx_available:
+            return NSXRemediationJob.start_request(self._cb, self.id, tag, set_tag)
+        raise ApiError("NSX actions are not available on this device")
 
 
 class DeviceFacet(UnrefreshableModel):
