@@ -34,9 +34,9 @@ Store the Key with profile name, and reference the profile name when creating CB
 
   # execute commands with Live Response API
   >>> for device in important_devs:
-  ...      lr_session = platform_api.live_response.request_session(device.id)
-  ...      lr_session.create_process(r'cmd.exe /c "ping.exe 192.168.1.1"'))
-  ...      lr_session.close()
+  ...     lr_session = platform_api.live_response.request_session(device.id)
+  ...     lr_session.create_process(r'cmd.exe /c "ping.exe 192.168.1.1"')
+  ...     lr_session.close()
 
 For more examples on Live Response, check :doc:`live-response`
 
@@ -92,8 +92,8 @@ Authentication Methods
   via keyword parameters. This method should be used with caution, taking care to not
   share your API credentials when managing code with source control.
 
-    >>> cbc_api = CBCloudAPI(url='defense.conferdeploy.net', token=ABCD/1234,
-    ...                         org_key='ABCDEFGH')
+    >>> cbc_api = CBCloudAPI(url='https://defense.conferdeploy.net', token='ABCD/1234',
+    ...     org_key='ABCDEFGH')
 
 **Not Recommended**:
 
