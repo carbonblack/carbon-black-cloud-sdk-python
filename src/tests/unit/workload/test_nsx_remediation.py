@@ -12,16 +12,21 @@
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
 """Unit test code for NSX remediation"""
+import copy
 
 import pytest
 import logging
 from cbc_sdk.errors import ApiError, ServerError
+from cbc_sdk.platform import Device
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from cbc_sdk.workload.nsx_remediation import NSXRemediationJob
 from tests.unit.fixtures.workload.mock_nsx_remediation import (NSX_REQUEST_1, NSX_RESPONSE_1, JOB_STATUS_RUNNING,
-                                                               NSX_REQUEST_2, NSX_RESPONSE_2, NSX_REQUEST_3,
-                                                               NSX_RESPONSE_3, NSX_LIFECYCLE_1)
+                                                               NSX_REQUEST_2, NSX_RESPONSE_2, NSX_REQUEST_2A,
+                                                               NSX_RESPONSE_2A, NSX_REQUEST_3, NSX_RESPONSE_3,
+                                                               NSX_LIFECYCLE_1, NSX_DEVICE_DATA_1,
+                                                               NSX_DEVICE_DATA_1A, NSX_DEVICE_DATA_2,
+                                                               NSX_DEVICE_DATA_3, NSX_DEVICE_DATA_3A)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -204,3 +209,53 @@ def test_poll_status_async_await_result(cbcsdk_mock):
         sblk = sut.status.get(jobid, None)
         cur_status = sblk['status'] if sblk else None
         assert cur_status == mockresp.current_status(jobid)
+
+
+@pytest.mark.parametrize("initdata, expected", [
+    (NSX_DEVICE_DATA_1, True),
+    (NSX_DEVICE_DATA_2, False),
+    (NSX_DEVICE_DATA_3, False)
+])
+def test_device_nsx_available(cb, initdata, expected):
+    """Tests the nsx_available property on devices."""
+    dev = Device(cb, initdata['id'], copy.deepcopy(initdata))
+    assert dev.nsx_available == expected
+
+
+@pytest.mark.parametrize("initdata, expected", [
+    (NSX_DEVICE_DATA_1, ['CB-NSX-Quarantine', 'CB-NSX-Custom']),
+    (NSX_DEVICE_DATA_1A, ['CB-NSX-Isolate']),
+    (NSX_DEVICE_DATA_2, []),
+    (NSX_DEVICE_DATA_3, []),
+    (NSX_DEVICE_DATA_3A, [])
+])
+def test_device_nsx_tags(cb, initdata, expected):
+    """Tests the nsx_tags property on devices."""
+    dev = Device(cb, initdata['id'], copy.deepcopy(initdata))
+    assert dev.nsx_tags == set(expected)
+
+
+def test_device_nsx_remediation_passthrough(cbcsdk_mock):
+    """Tests that an nsx_remediation call to a device is properly passed through."""
+
+    def on_post(url, body, **kwargs):
+        assert body == NSX_REQUEST_2A
+        return CBCSDKMock.StubResponse(NSX_RESPONSE_2A, 201)
+
+    cbcsdk_mock.mock_request("POST", "/applianceservice/v1/orgs/test/device_actions", on_post)
+    cbcsdk_mock.mock_request("GET", f"/applianceservice/v1/orgs/test/jobs/2da0bc0e-ed1e-4a98-b8fa-ccc1e30c9576/status",
+                             JOB_STATUS_RUNNING)
+    api = cbcsdk_mock.api
+    dev = Device(api, NSX_DEVICE_DATA_1['id'], copy.deepcopy(NSX_DEVICE_DATA_1))
+    output = dev.nsx_remediation("CB-NSX-Quarantine", False)
+    assert len(output._running_jobs) == 1
+    assert '2da0bc0e-ed1e-4a98-b8fa-ccc1e30c9576' in output._running_jobs
+    assert len(output._status) == 1
+    assert output._status['2da0bc0e-ed1e-4a98-b8fa-ccc1e30c9576']['status'] == "RUNNING"
+
+
+def test_device_nsx_remediation_fail(cb):
+    """Tests that an nsx_remediation call throws an ApiError correctly if NSX is not available."""
+    dev = Device(cb, NSX_DEVICE_DATA_2['id'], copy.deepcopy(NSX_DEVICE_DATA_2))
+    with pytest.raises(ApiError):
+        dev.nsx_remediation("CB-NSX-Quarantine", False)

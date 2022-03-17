@@ -36,6 +36,21 @@ NSX_RESPONSE_2 = {
     ]
 }
 
+NSX_REQUEST_2A = {
+    "device_ids": [98765],
+    "action_type": "NSX_REMEDIATION",
+    "options": {
+        "toggle": "OFF",
+        "tag": "CB-NSX-Quarantine"
+    }
+}
+
+NSX_RESPONSE_2A = {
+    "job_ids": [
+        "2da0bc0e-ed1e-4a98-b8fa-ccc1e30c9576"
+    ]
+}
+
 NSX_REQUEST_3 = {
     "device_ids": [12, 23, 34, 45, 56, 67, 78, 89, 90],
     "action_type": "NSX_REMEDIATION",
@@ -57,4 +72,39 @@ NSX_LIFECYCLE_1 = {
     '9a904df0-38fb-4246-a537-1dbca6829b7c': ['SCHEDULED', 'RUNNING', 'SUCCESSFUL'],
     '87ce65c0-8325-4e99-a0e1-cd7343dbc38d': ['FAILED'],
     'e881b4f3-680b-4a43-bc7e-043330e65d50': ['RUNNING', 'RUNNING', 'RUNNING', 'RUNNING', 'SUCCESSFUL']
+}
+
+NSX_DEVICE_DATA_1 = {
+    "deployment_type": "WORKLOAD",
+    "id": 98765,
+    "nsx_enabled": True,
+    "nsx_distributed_firewall_policy": "CB-NSX-Quarantine, CB-NSX-Custom"
+}
+
+NSX_DEVICE_DATA_1A = {
+    "deployment_type": "WORKLOAD",
+    "id": 99887,
+    "nsx_enabled": True,
+    "nsx_distributed_firewall_policy": "CB-NSX-Isolate"
+}
+
+NSX_DEVICE_DATA_2 = {
+    "deployment_type": "ENDPOINT",
+    "id": 13227,
+    "nsx_enabled": True,
+    "nsx_distributed_firewall_policy": "CB-NSX-Quarantine, CB-NSX-Custom"
+}
+
+NSX_DEVICE_DATA_3 = {
+    "deployment_type": "WORKLOAD",
+    "id": 16676,
+    "nsx_enabled": False,
+    "nsx_distributed_firewall_policy": ""
+}
+
+NSX_DEVICE_DATA_3A = {
+    "deployment_type": "WORKLOAD",
+    "id": 16676,
+    "nsx_enabled": True,
+    "nsx_distributed_firewall_policy": ""
 }

@@ -265,6 +265,19 @@ class Device(PlatformModel):
         """
         return self._info['deployment_type'] == 'WORKLOAD' and self._info['nsx_enabled']
 
+    @property
+    def nsx_tags(self):
+        """
+        Returns the current NSX tag(s) set for this workload.
+
+        Returns:
+            set[str]: All current NSX tags that are set for this workload.
+        """
+        if self.nsx_available:
+            return set([tag_name for tag_name in NSXRemediationJob.VALID_TAGS
+                        if tag_name in self._info['nsx_distributed_firewall_policy']])
+        return set()
+
     def nsx_remediation(self, tag, set_tag=True):
         """
         Start an NSX Remediation job on this device.
