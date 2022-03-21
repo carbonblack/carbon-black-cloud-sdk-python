@@ -340,6 +340,25 @@ class DeviceControlAlert(BaseAlert):
         return DeviceControlAlertSearchQuery(cls, cb)
 
 
+class ContainerRuntimeAlert(BaseAlert):
+    """Represents Container Runtime alerts."""
+    urlobject = "/appservices/v6/orgs/{0}/alerts/containerruntime"
+
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
+        """
+        Returns the appropriate query object for this alert type.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            ContainerRuntimeAlertSearchQuery: The query object for this alert type.
+        """
+        return ContainerRuntimeAlertSearchQuery(cls, cb)
+
+
 class Workflow(UnrefreshableModel):
     """Represents the workflow associated with alerts."""
     swagger_meta_file = "platform/models/workflow.yaml"
@@ -1272,7 +1291,7 @@ class DeviceControlAlertSearchQuery(BaseAlertSearchQuery):
 
     def __init__(self, doc_class, cb):
         """
-        Initialize the CBAnalyticsAlertSearchQuery.
+        Initialize the DeviceControlAlertSearchQuery.
 
         Args:
             doc_class (class): The model class that will be returned by this query.
@@ -1384,4 +1403,109 @@ class DeviceControlAlertSearchQuery(BaseAlertSearchQuery):
         if not all(isinstance(n, str) for n in names):
             raise ApiError("One or more invalid vendor name values")
         self._update_criteria("vendor_name", names)
+        return self
+
+
+class ContainerRuntimeAlertSearchQuery(BaseAlertSearchQuery):
+    """Represents a query that is used to locate ContainerRuntimeAlert objects."""
+
+    def __init__(self, doc_class, cb):
+        """
+        Initialize the ContainerRuntimeAlertSearchQuery.
+
+        Args:
+            doc_class (class): The model class that will be returned by this query.
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+        """
+        super().__init__(doc_class, cb)
+        self._bulkupdate_url = "/appservices/v6/orgs/{0}/alerts/cbanalytics/containerruntime/_criteria"
+
+    def set_cluster_names(self, names):
+        if not all(isinstance(n, str) for n in names):
+            raise ApiError("One or more invalid cluster name values")
+        self._update_criteria("cluster_name", names)
+        return self
+
+    def set_namespaces(self, namespaces):
+        if not all(isinstance(n, str) for n in namespaces):
+            raise ApiError("One or more invalid namespace values")
+        self._update_criteria("namespace", namespaces)
+        return self
+
+    def set_workload_kinds(self, kinds):
+        if not all(isinstance(n, str) for n in kinds):
+            raise ApiError("One or more invalid workload kind values")
+        self._update_criteria("workload_kind", kinds)
+        return self
+
+    def set_workload_ids(self, ids):
+        if not all(isinstance(n, str) for n in ids):
+            raise ApiError("One or more invalid workload ID values")
+        self._update_criteria("workload_id", ids)
+        return self
+
+    def set_workload_names(self, names):
+        if not all(isinstance(n, str) for n in names):
+            raise ApiError("One or more invalid workload name values")
+        self._update_criteria("workload_name", names)
+        return self
+
+    def set_replica_ids(self, ids):
+        if not all(isinstance(n, str) for n in ids):
+            raise ApiError("One or more invalid replica ID values")
+        self._update_criteria("replica_id", ids)
+        return self
+
+    def set_remote_ips(self, addrs):
+        if not all(isinstance(n, str) for n in addrs):
+            raise ApiError("One or more invalid remote IP values")
+        self._update_criteria("remote_ip", addrs)
+        return self
+
+    def set_remote_domains(self, domains):
+        if not all(isinstance(n, str) for n in domains):
+            raise ApiError("One or more invalid remote domain values")
+        self._update_criteria("remote_domain", domains)
+        return self
+
+    def set_protocols(self, protocols):
+        if not all(isinstance(n, str) for n in protocols):
+            raise ApiError("One or more invalid protocol values")
+        self._update_criteria("protocol", protocols)
+        return self
+
+    def set_ports(self, ports):
+        if not all(isinstance(n, int) for n in ports):
+            raise ApiError("One or more invalid port values")
+        self._update_criteria("port", ports)
+        return self
+
+    def set_egress_group_ids(self, ids):
+        if not all(isinstance(n, str) for n in ids):
+            raise ApiError("One or more invalid egress group ID values")
+        self._update_criteria("egress_group_id", ids)
+        return self
+
+    def set_egress_group_names(self, names):
+        if not all(isinstance(n, str) for n in names):
+            raise ApiError("One or more invalid egress group name values")
+        self._update_criteria("egress_group_name", names)
+        return self
+
+    def set_ip_reputations(self, reputations):
+        if not all(isinstance(n, int) for n in reputations):
+            raise ApiError("One or more invalid IP reputation values")
+        self._update_criteria("ip_reputation", reputations)
+        return self
+
+    def set_rule_ids(self, ids):
+        if not all(isinstance(n, str) for n in ids):
+            raise ApiError("One or more invalid rule ID values")
+        self._update_criteria("rule_id", ids)
+        return self
+
+    def set_rule_names(self, names):
+        if not all(isinstance(n, str) for n in names):
+            raise ApiError("One or more invalid rule name values")
+        self._update_criteria("rule_name", names)
         return self
