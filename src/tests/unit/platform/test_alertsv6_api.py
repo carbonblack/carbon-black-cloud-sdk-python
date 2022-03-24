@@ -19,6 +19,7 @@ from cbc_sdk.platform import (
     CBAnalyticsAlert,
     WatchlistAlert,
     DeviceControlAlert,
+    ContainerRuntimeAlert,
     WorkflowStatus,
     Process,
 )
@@ -34,7 +35,6 @@ from tests.unit.fixtures.platform.mock_process import (
     GET_PROCESS_SUMMARY_NOT_FOUND,
     GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT,
 )
-from tests.unit.fixtures.stubresponse import StubResponse, patch_cbc_sdk_api
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.endpoint_standard.mock_enriched_events import (
     POST_ENRICHED_EVENTS_SEARCH_JOB_RESP,
@@ -69,13 +69,10 @@ def cbcsdk_mock(monkeypatch, cb):
 
 # ==================================== UNIT TESTS BELOW ====================================
 
-def test_query_basealert_with_all_bells_and_whistles(monkeypatch):
+def test_query_basealert_with_all_bells_and_whistles(cbcsdk_mock):
     """Test an alert query with all options selected."""
-    _was_called = False
 
-    def _run_query(url, body, **kwargs):
-        nonlocal _was_called
-        assert url == "/appservices/v6/orgs/Z100/alerts/_search"
+    def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
                         "rows": 2,
                         "criteria": {"category": ["MONITORED", "THREAT"], "device_id": [6023], "device_name": ["HAL"],
@@ -87,12 +84,12 @@ def test_query_basealert_with_all_bells_and_whistles(monkeypatch):
                                      "reputation": ["SUSPECT_MALWARE"], "tag": ["Frood"], "target_value": ["HIGH"],
                                      "threat_id": ["B0RG"], "type": ["WATCHLIST"], "workflow": ["OPEN"]},
                         "sort": [{"field": "name", "order": "DESC"}]}
-        _was_called = True
-        return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
-                                          "workflow": {"state": "OPEN"}}], "num_found": 1})
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"state": "OPEN"}}], "num_found": 1}
 
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
     query = api.select(BaseAlert).where("Blort").set_categories(["MONITORED", "THREAT"]).set_device_ids([6023]) \
         .set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
         .set_device_username(["JRN"]).set_group_results(True).set_alert_ids(["S0L0"]) \
@@ -102,184 +99,155 @@ def test_query_basealert_with_all_bells_and_whistles(monkeypatch):
         .set_tags(["Frood"]).set_target_priorities(["HIGH"]).set_threat_ids(["B0RG"]).set_types(["WATCHLIST"]) \
         .set_workflows(["OPEN"]).sort_by("name", "DESC")
     a = query.one()
-    assert _was_called
     assert a.id == "S0L0"
-    assert a.org_key == "Z100"
+    assert a.org_key == "test"
     assert a.threat_id == "B0RG"
     assert a.workflow_.state == "OPEN"
 
 
-def test_query_basealert_with_create_time_as_start_end(monkeypatch):
+def test_query_basealert_with_create_time_as_start_end(cbcsdk_mock):
     """Test an alert query with the creation time specified as a start and end time."""
-    _was_called = False
 
-    def _run_query(url, body, **kwargs):
-        nonlocal _was_called
-        assert url == "/appservices/v6/orgs/Z100/alerts/_search"
+    def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
                         "rows": 2,
                         "criteria": {"create_time": {"start": "2019-09-30T12:34:56", "end": "2019-10-01T12:00:12"}}}
-        _was_called = True
-        return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
-                                          "workflow": {"state": "OPEN"}}], "num_found": 1})
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"state": "OPEN"}}], "num_found": 1}
 
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
     query = api.select(BaseAlert).where("Blort").set_create_time(start="2019-09-30T12:34:56",
                                                                  end="2019-10-01T12:00:12")
     a = query.one()
-    assert _was_called
     assert a.id == "S0L0"
-    assert a.org_key == "Z100"
+    assert a.org_key == "test"
     assert a.threat_id == "B0RG"
     assert a.workflow_.state == "OPEN"
 
 
-def test_query_basealert_with_create_time_as_start_end_as_objs(monkeypatch):
+def test_query_basealert_with_create_time_as_start_end_as_objs(cbcsdk_mock):
     """Test an alert query with the creation time specified as a start and end time."""
-    _was_called = False
     _timestamp = datetime.now()
 
-    def _run_query(url, body, **kwargs):
-        nonlocal _was_called
+    def on_post(url, body, **kwargs):
         nonlocal _timestamp
-        assert url == "/appservices/v6/orgs/Z100/alerts/_search"
         assert body == {"query": "Blort",
                         "rows": 2,
                         "criteria": {"create_time": {"start": _timestamp.isoformat(), "end": _timestamp.isoformat()}}}
-        _was_called = True
-        return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
-                                          "workflow": {"state": "OPEN"}}], "num_found": 1})
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"state": "OPEN"}}], "num_found": 1}
 
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
-    query = api.select(BaseAlert).where("Blort").set_create_time(start=_timestamp,
-                                                                 end=_timestamp)
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
+    query = api.select(BaseAlert).where("Blort").set_create_time(start=_timestamp, end=_timestamp)
     a = query.one()
-    assert _was_called
     assert a.id == "S0L0"
-    assert a.org_key == "Z100"
+    assert a.org_key == "test"
     assert a.threat_id == "B0RG"
     assert a.workflow_.state == "OPEN"
 
 
-def test_query_basealert_with_create_time_as_range(monkeypatch):
+def test_query_basealert_with_create_time_as_range(cbcsdk_mock):
     """Test an alert query with the creation time specified as a range."""
-    _was_called = False
 
-    def _run_query(url, body, **kwargs):
-        nonlocal _was_called
-        assert url == "/appservices/v6/orgs/Z100/alerts/_search"
-        assert body == {"query": "Blort", "criteria": {"create_time": {"range": "-3w"}},
-                        "rows": 2}
-        _was_called = True
-        return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
-                                          "workflow": {"state": "OPEN"}}], "num_found": 1})
+    def on_post(url, body, **kwargs):
+        assert body == {"query": "Blort", "criteria": {"create_time": {"range": "-3w"}}, "rows": 2}
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"state": "OPEN"}}], "num_found": 1}
 
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
     query = api.select(BaseAlert).where("Blort").set_create_time(range="-3w")
     a = query.one()
-    assert _was_called
     assert a.id == "S0L0"
-    assert a.org_key == "Z100"
+    assert a.org_key == "test"
     assert a.threat_id == "B0RG"
     assert a.workflow_.state == "OPEN"
 
 
-def test_query_basealert_with_time_range(monkeypatch):
+def test_query_basealert_with_time_range(cbcsdk_mock):
     """Test an alert query with the last_update_time specified as a range."""
-    _was_called = False
     _timestamp = datetime.now()
 
-    def _run_query(url, body, **kwargs):
-        nonlocal _was_called
+    def on_post(url, body, **kwargs):
         nonlocal _timestamp
-        assert url == "/appservices/v6/orgs/Z100/alerts/_search"
         assert body == {"query": "Blort", "criteria": {"last_update_time": {"start": _timestamp.isoformat(),
                                                                             "end": _timestamp.isoformat()}},
                         "rows": 2}
-        _was_called = True
-        return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
-                                          "workflow": {"state": "OPEN"}}], "num_found": 1})
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"state": "OPEN"}}], "num_found": 1}
 
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
     query = api.select(BaseAlert).where("Blort").set_time_range("last_update_time",
                                                                 start=_timestamp,
                                                                 end=_timestamp)
     a = query.one()
-    assert _was_called
     assert a.id == "S0L0"
-    assert a.org_key == "Z100"
+    assert a.org_key == "test"
     assert a.threat_id == "B0RG"
     assert a.workflow_.state == "OPEN"
 
 
-def test_query_basealert_with_time_range_start_end(monkeypatch):
+def test_query_basealert_with_time_range_start_end(cbcsdk_mock):
     """Test an alert query with the last_update_time specified as a range."""
-    _was_called = False
 
-    def _run_query(url, body, **kwargs):
-        nonlocal _was_called
-        assert url == "/appservices/v6/orgs/Z100/alerts/_search"
-        assert body == {"query": "Blort", "criteria": {"last_update_time": {"range": "-3w"}},
-                        "rows": 2}
-        _was_called = True
-        return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
-                                          "workflow": {"state": "OPEN"}}], "num_found": 1})
+    def on_post(url, body, **kwargs):
+        assert body == {"query": "Blort", "criteria": {"last_update_time": {"range": "-3w"}}, "rows": 2}
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"state": "OPEN"}}], "num_found": 1}
 
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
     query = api.select(BaseAlert).where("Blort").set_time_range("last_update_time", range="-3w")
     a = query.one()
-    assert _was_called
     assert a.id == "S0L0"
-    assert a.org_key == "Z100"
+    assert a.org_key == "test"
     assert a.threat_id == "B0RG"
     assert a.workflow_.state == "OPEN"
 
 
-def test_query_basealert_facets(monkeypatch):
+def test_query_basealert_facets(cbcsdk_mock):
     """Test an alert facet query."""
-    _was_called = False
 
-    def _run_facet_query(url, body, **kwargs):
-        nonlocal _was_called
-        assert url == "/appservices/v6/orgs/Z100/alerts/_facet"
+    def on_post(url, body, **kwargs):
         assert body["query"] == "Blort"
         t = body["criteria"]
         assert t["workflow"] == ["OPEN"]
         t = body["terms"]
         assert t["rows"] == 0
         assert t["fields"] == ["REPUTATION", "STATUS"]
-        _was_called = True
-        return StubResponse({"results": [{"field": {},
-                                          "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                                         {"field": {},
-                                          "values": [{"id": "status", "name": "statusX", "total": 9}]}]})
+        return {"results": [{"field": {},
+                             "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
+                            {"field": {},
+                             "values": [{"id": "status", "name": "statusX", "total": 9}]}]}
 
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbc_sdk_api(monkeypatch, api, POST=_run_facet_query)
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/alerts/_facet", on_post)
+    api = cbcsdk_mock.api
+
     query = api.select(BaseAlert).where("Blort").set_workflows(["OPEN"])
     f = query.facets(["REPUTATION", "STATUS"])
-    assert _was_called
     assert f == [{"field": {}, "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
                  {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
 
 
-def test_query_basealert_invalid_create_time_combinations():
+def test_query_basealert_invalid_create_time_combinations(cb):
     """Test invalid create time combinations being supplied to alert queries."""
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     with pytest.raises(ApiError):
-        api.select(BaseAlert).set_create_time()
+        cb.select(BaseAlert).set_create_time()
     with pytest.raises(ApiError):
-        api.select(BaseAlert).set_create_time(start="2019-09-30T12:34:56",
-                                              end="2019-10-01T12:00:12", range="-3w")
+        cb.select(BaseAlert).set_create_time(start="2019-09-30T12:34:56",
+                                             end="2019-10-01T12:00:12", range="-3w")
     with pytest.raises(ApiError):
-        api.select(BaseAlert).set_create_time(start="2019-09-30T12:34:56", range="-3w")
+        cb.select(BaseAlert).set_create_time(start="2019-09-30T12:34:56", range="-3w")
     with pytest.raises(ApiError):
-        api.select(BaseAlert).set_create_time(end="2019-10-01T12:00:12", range="-3w")
+        cb.select(BaseAlert).set_create_time(end="2019-10-01T12:00:12", range="-3w")
 
 
 @pytest.mark.parametrize("method, arg", [
@@ -302,22 +270,18 @@ def test_query_basealert_invalid_create_time_combinations():
     ("set_types", ["ERBOSOFT"]),
     ("set_workflows", ["IN_LIMBO"])
 ])
-def test_query_basealert_invalid_criteria_values(method, arg):
+def test_query_basealert_invalid_criteria_values(cb, method, arg):
     """Test invalid values being supplied to alert queries."""
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    query = api.select(BaseAlert)
+    query = cb.select(BaseAlert)
     meth = getattr(query, method, None)
     with pytest.raises(ApiError):
         meth(arg)
 
 
-def test_query_cbanalyticsalert_with_all_bells_and_whistles(monkeypatch):
+def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
     """Test a CB Analytics alert query with all options selected."""
-    _was_called = False
 
-    def _run_query(url, body, **kwargs):
-        nonlocal _was_called
-        assert url == "/appservices/v6/orgs/Z100/alerts/cbanalytics/_search"
+    def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
                         "rows": 2,
                         "criteria": {"category": ["THREAT", "MONITORED"], "device_id": [6023], "device_name": ["HAL"],
@@ -333,12 +297,12 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(monkeypatch):
                                      "not_blocked_threat_category": ["NEW_MALWARE"], "policy_applied": ["APPLIED"],
                                      "reason_code": ["ATTACK_VECTOR"], "run_state": ["RAN"], "sensor_action": ["DENY"],
                                      "threat_cause_vector": ["WEB"]}, "sort": [{"field": "name", "order": "DESC"}]}
-        _was_called = True
-        return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
-                                          "workflow": {"state": "OPEN"}}], "num_found": 1})
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"state": "OPEN"}}], "num_found": 1}
 
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/alerts/cbanalytics/_search", on_post)
+    api = cbcsdk_mock.api
+
     query = api.select(CBAnalyticsAlert).where("Blort").set_categories(["THREAT", "MONITORED"]) \
         .set_device_ids([6023]).set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
         .set_device_username(["JRN"]).set_group_results(True).set_alert_ids(["S0L0"]).set_legacy_alert_ids(["S0L0_1"]) \
@@ -351,34 +315,29 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(monkeypatch):
         .set_policy_applied(["APPLIED"]).set_reason_code(["ATTACK_VECTOR"]).set_run_states(["RAN"]) \
         .set_sensor_actions(["DENY"]).set_threat_cause_vectors(["WEB"]).sort_by("name", "DESC")
     a = query.one()
-    assert _was_called
     assert a.id == "S0L0"
-    assert a.org_key == "Z100"
+    assert a.org_key == "test"
     assert a.threat_id == "B0RG"
     assert a.workflow_.state == "OPEN"
 
 
-def test_query_cbanalyticsalert_facets(monkeypatch):
+def test_query_cbanalyticsalert_facets(cbcsdk_mock):
     """Test a CB Analytics alert facet query."""
-    _was_called = False
 
-    def _run_facet_query(url, body, **kwargs):
-        nonlocal _was_called
-        assert url == "/appservices/v6/orgs/Z100/alerts/cbanalytics/_facet"
+    def on_post(url, body, **kwargs):
         assert body == {"query": "Blort", "criteria": {"workflow": ["OPEN"]},
                         "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]},
                         "rows": 100}
-        _was_called = True
-        return StubResponse({"results": [{"field": {},
-                                          "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                                         {"field": {},
-                                          "values": [{"id": "status", "name": "statusX", "total": 9}]}]})
+        return {"results": [{"field": {},
+                             "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
+                            {"field": {},
+                             "values": [{"id": "status", "name": "statusX", "total": 9}]}]}
 
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbc_sdk_api(monkeypatch, api, POST=_run_facet_query)
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/alerts/cbanalytics/_facet", on_post)
+    api = cbcsdk_mock.api
+
     query = api.select(CBAnalyticsAlert).where("Blort").set_workflows(["OPEN"])
     f = query.facets(["REPUTATION", "STATUS"])
-    assert _was_called
     assert f == [{"field": {}, "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
                  {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
 
@@ -394,22 +353,18 @@ def test_query_cbanalyticsalert_facets(monkeypatch):
     ("set_sensor_actions", ["FLIP_A_COIN"]),
     ("set_threat_cause_vectors", ["NETWORK"])
 ])
-def test_query_cbanalyticsalert_invalid_criteria_values(method, arg):
+def test_query_cbanalyticsalert_invalid_criteria_values(cb, method, arg):
     """Test invalid values being supplied to CB Analytics alert queries."""
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    query = api.select(CBAnalyticsAlert)
+    query = cb.select(CBAnalyticsAlert)
     meth = getattr(query, method, None)
     with pytest.raises(ApiError):
         meth(arg)
 
 
-def test_query_devicecontrolalert_with_all_bells_and_whistles(monkeypatch):
+def test_query_devicecontrolalert_with_all_bells_and_whistles(cbcsdk_mock):
     """Test a device control alert query with all options selected."""
-    _was_called = False
 
-    def _run_query(url, body, **kwargs):
-        nonlocal _was_called
-        assert url == "/appservices/v6/orgs/Z100/alerts/devicecontrol/_search"
+    def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
                         "rows": 2,
                         "criteria": {"category": ["MONITORED", "THREAT"], "device_id": [6023], "device_name": ["HAL"],
@@ -425,12 +380,12 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(monkeypatch):
                                      "serial_number": ["4C531001331122115172"], "vendor_id": ["0x0781"],
                                      "vendor_name": ["SanDisk"]},
                         "sort": [{"field": "name", "order": "DESC"}]}
-        _was_called = True
-        return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
-                                          "workflow": {"state": "OPEN"}}], "num_found": 1})
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"state": "OPEN"}}], "num_found": 1}
 
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/alerts/devicecontrol/_search", on_post)
+    api = cbcsdk_mock.api
+
     query = api.select(DeviceControlAlert).where("Blort").set_categories(["MONITORED", "THREAT"]) \
         .set_device_ids([6023]).set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
         .set_device_username(["JRN"]).set_group_results(True).set_alert_ids(["S0L0"]) \
@@ -442,34 +397,29 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(monkeypatch):
         .set_product_ids(["0x5581"]).set_product_names(["Ultra"]).set_serial_numbers(["4C531001331122115172"]) \
         .set_vendor_ids(["0x0781"]).set_vendor_names(["SanDisk"]).sort_by("name", "DESC")
     a = query.one()
-    assert _was_called
     assert a.id == "S0L0"
-    assert a.org_key == "Z100"
+    assert a.org_key == "test"
     assert a.threat_id == "B0RG"
     assert a.workflow_.state == "OPEN"
 
 
-def test_query_devicecontrolalert_facets(monkeypatch):
+def test_query_devicecontrolalert_facets(cbcsdk_mock):
     """Test a Device Control alert facet query."""
-    _was_called = False
 
-    def _run_facet_query(url, body, **kwargs):
-        nonlocal _was_called
-        assert url == "/appservices/v6/orgs/Z100/alerts/devicecontrol/_facet"
+    def on_post(url, body, **kwargs):
         assert body == {"query": "Blort", "criteria": {"workflow": ["OPEN"]},
                         "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]},
                         "rows": 100}
-        _was_called = True
-        return StubResponse({"results": [{"field": {},
-                                          "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                                         {"field": {},
-                                          "values": [{"id": "status", "name": "statusX", "total": 9}]}]})
+        return {"results": [{"field": {},
+                             "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
+                            {"field": {},
+                             "values": [{"id": "status", "name": "statusX", "total": 9}]}]}
 
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbc_sdk_api(monkeypatch, api, POST=_run_facet_query)
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/alerts/devicecontrol/_facet", on_post)
+    api = cbcsdk_mock.api
+
     query = api.select(DeviceControlAlert).where("Blort").set_workflows(["OPEN"])
     f = query.facets(["REPUTATION", "STATUS"])
-    assert _was_called
     assert f == [{"field": {}, "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
                  {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
 
@@ -483,22 +433,18 @@ def test_query_devicecontrolalert_facets(monkeypatch):
     ("set_vendor_ids", [12345]),
     ("set_vendor_names", [12345])
 ])
-def test_query_devicecontrolalert_invalid_criteria_values(method, arg):
+def test_query_devicecontrolalert_invalid_criteria_values(cb, method, arg):
     """Test invalid values being supplied to DeviceControl alert queries."""
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    query = api.select(DeviceControlAlert)
+    query = cb.select(DeviceControlAlert)
     meth = getattr(query, method, None)
     with pytest.raises(ApiError):
         meth(arg)
 
 
-def test_query_watchlistalert_with_all_bells_and_whistles(monkeypatch):
+def test_query_watchlistalert_with_all_bells_and_whistles(cbcsdk_mock):
     """Test a watchlist alert query with all options selected."""
-    _was_called = False
 
-    def _run_query(url, body, **kwargs):
-        nonlocal _was_called
-        assert url == "/appservices/v6/orgs/Z100/alerts/watchlist/_search"
+    def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
                         "rows": 2,
                         "criteria": {"category": ["THREAT", "MONITORED"], "device_id": [6023], "device_name": ["HAL"],
@@ -511,12 +457,12 @@ def test_query_watchlistalert_with_all_bells_and_whistles(monkeypatch):
                                      "threat_id": ["B0RG"], "type": ["WATCHLIST"], "workflow": ["OPEN"],
                                      "watchlist_id": ["100"], "watchlist_name": ["Gandalf"]},
                         "sort": [{"field": "name", "order": "DESC"}]}
-        _was_called = True
-        return StubResponse({"results": [{"id": "S0L0", "org_key": "Z100", "threat_id": "B0RG",
-                                          "workflow": {"state": "OPEN"}}], "num_found": 1})
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"state": "OPEN"}}], "num_found": 1}
 
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbc_sdk_api(monkeypatch, api, POST=_run_query)
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/alerts/watchlist/_search", on_post)
+    api = cbcsdk_mock.api
+
     query = api.select(WatchlistAlert).where("Blort").set_categories(["THREAT", "MONITORED"]).set_device_ids([6023]) \
         .set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
         .set_device_username(["JRN"]).set_group_results(True).set_alert_ids(["S0L0"]) \
@@ -526,208 +472,208 @@ def test_query_watchlistalert_with_all_bells_and_whistles(monkeypatch):
         .set_tags(["Frood"]).set_target_priorities(["HIGH"]).set_threat_ids(["B0RG"]).set_types(["WATCHLIST"]) \
         .set_workflows(["OPEN"]).set_watchlist_ids(["100"]).set_watchlist_names(["Gandalf"]).sort_by("name", "DESC")
     a = query.one()
-    assert _was_called
     assert a.id == "S0L0"
-    assert a.org_key == "Z100"
+    assert a.org_key == "test"
     assert a.threat_id == "B0RG"
     assert a.workflow_.state == "OPEN"
 
 
-def test_query_watchlistalert_facets(monkeypatch):
+def test_query_watchlistalert_facets(cbcsdk_mock):
     """Test a watchlist alert facet query."""
-    _was_called = False
 
-    def _run_facet_query(url, body, **kwargs):
-        nonlocal _was_called
-        assert url == "/appservices/v6/orgs/Z100/alerts/watchlist/_facet"
+    def on_post(url, body, **kwargs):
         assert body == {"query": "Blort", "criteria": {"workflow": ["OPEN"]},
                         "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]},
                         "rows": 100}
-        _was_called = True
-        return StubResponse({"results": [{"field": {},
-                                          "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                                         {"field": {},
-                                          "values": [{"id": "status", "name": "statusX", "total": 9}]}]})
+        return {"results": [{"field": {},
+                             "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
+                            {"field": {},
+                             "values": [{"id": "status", "name": "statusX", "total": 9}]}]}
 
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbc_sdk_api(monkeypatch, api, POST=_run_facet_query)
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/alerts/watchlist/_facet", on_post)
+    api = cbcsdk_mock.api
+
     query = api.select(WatchlistAlert).where("Blort").set_workflows(["OPEN"])
     f = query.facets(["REPUTATION", "STATUS"])
-    assert _was_called
     assert f == [{"field": {}, "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
                  {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
 
 
-def test_query_watchlistalert_invalid_criteria_values():
+def test_query_watchlistalert_invalid_criteria_values(cb):
     """Test error messages for invalid watchlist alert criteria values."""
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     with pytest.raises(ApiError):
-        api.select(WatchlistAlert).set_watchlist_ids([888])
+        cb.select(WatchlistAlert).set_watchlist_ids([888])
     with pytest.raises(ApiError):
-        api.select(WatchlistAlert).set_watchlist_names([69])
+        cb.select(WatchlistAlert).set_watchlist_names([69])
 
 
-def test_alerts_bulk_dismiss(monkeypatch):
+def test_query_containeralert_with_all_bells_and_whistles(cbcsdk_mock):
+    """Test a container alert query with all options selected."""
+
+    def on_post(url, body, **kwargs):
+        assert body == {"query": "Blort",
+                        "rows": 2,
+                        "criteria": {"cluster_name": ["TURTLE"], "namespace": ["RG"], "workload_kind": ["Job"],
+                                     "workload_id": ["1234"], "workload_name": ["BUNNY"], "replica_id": ["FAKE"],
+                                     "remote_ip": ["10.29.99.1"], "remote_domain": ["example.com"], "protocol": ["TCP"],
+                                     "port": [12345], "egress_group_id": ["5150"], "egress_group_name": ["EGRET"],
+                                     "ip_reputation": [75], "rule_id": ["66"], "rule_name": ["KITTEH"]},
+                        "sort": [{"field": "name", "order": "DESC"}]}
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/alerts/containerruntime/_search", on_post)
+    api = cbcsdk_mock.api
+
+    query = api.select(ContainerRuntimeAlert).where("Blort").set_cluster_names(['TURTLE']).set_namespaces(['RG']) \
+        .set_workload_kinds(['Job']).set_workload_ids(['1234']).set_workload_names(['BUNNY']) \
+        .set_replica_ids(['FAKE']).set_remote_ips(['10.29.99.1']).set_remote_domains(['example.com']) \
+        .set_protocols(['TCP']).set_ports([12345]).set_egress_group_ids(['5150']).set_egress_group_names(['EGRET']) \
+        .set_ip_reputations([75]).set_rule_ids(['66']).set_rule_names(['KITTEH']).sort_by("name", "DESC")
+    a = query.one()
+    assert a.id == "S0L0"
+    assert a.org_key == "test"
+    assert a.threat_id == "B0RG"
+    assert a.workflow_.state == "OPEN"
+
+
+@pytest.mark.parametrize("method, arg", [
+    ("set_cluster_names", [12345]),
+    ("set_namespaces", [12345]),
+    ("set_workload_kinds", [12345]),
+    ("set_workload_ids", [12345]),
+    ("set_workload_names", [12345]),
+    ("set_replica_ids", [12345]),
+    ("set_remote_ips", [12345]),
+    ("set_remote_domains", [12345]),
+    ("set_protocols", [12345]),
+    ("set_ports", ["BLACKWATER"]),
+    ("set_egress_group_ids", [12345]),
+    ("set_egress_group_names", [12345]),
+    ("set_ip_reputations", ["BLACKWATER"]),
+    ("set_rule_ids", [12345]),
+    ("set_rule_names", [12345])
+])
+def test_query_containeralert_invalid_criteria_values(cb, method, arg):
+    """Test invalid values being supplied to DeviceControl alert queries."""
+    query = cb.select(ContainerRuntimeAlert)
+    meth = getattr(query, method, None)
+    with pytest.raises(ApiError):
+        meth(arg)
+
+
+
+def test_alerts_bulk_dismiss(cbcsdk_mock):
     """Test dismissing a batch of alerts."""
-    _was_called = False
 
-    def _do_dismiss(url, body, **kwargs):
-        nonlocal _was_called
-        assert url == "/appservices/v6/orgs/Z100/alerts/workflow/_criteria"
+    def on_post(url, body, **kwargs):
         assert body == {"query": "Blort", "state": "DISMISSED", "remediation_state": "Fixed", "comment": "Yessir",
                         "criteria": {"device_name": ["HAL9000"]}}
-        _was_called = True
-        return StubResponse({"request_id": "497ABX"})
+        return {"request_id": "497ABX"}
 
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbc_sdk_api(monkeypatch, api, POST=_do_dismiss)
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/alerts/workflow/_criteria", on_post)
+    api = cbcsdk_mock.api
+
     q = api.select(BaseAlert).where("Blort").set_device_names(["HAL9000"])
     reqid = q.dismiss("Fixed", "Yessir")
-    assert _was_called
     assert reqid == "497ABX"
 
 
-def test_alerts_bulk_undismiss(monkeypatch):
+def test_alerts_bulk_undismiss(cbcsdk_mock):
     """Test undismissing a batch of alerts."""
-    _was_called = False
 
-    def _do_update(url, body, **kwargs):
-        nonlocal _was_called
-        assert url == "/appservices/v6/orgs/Z100/alerts/workflow/_criteria"
+    def on_post(url, body, **kwargs):
         assert body == {"query": "Blort", "state": "OPEN", "remediation_state": "Fixed", "comment": "NoSir",
                         "criteria": {"device_name": ["HAL9000"]}}
-        _was_called = True
-        return StubResponse({"request_id": "497ABX"})
+        return {"request_id": "497ABX"}
 
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbc_sdk_api(monkeypatch, api, POST=_do_update)
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/alerts/workflow/_criteria", on_post)
+    api = cbcsdk_mock.api
+
     q = api.select(BaseAlert).where("Blort").set_device_names(["HAL9000"])
     reqid = q.update("Fixed", "NoSir")
-    assert _was_called
     assert reqid == "497ABX"
 
 
-def test_alerts_bulk_dismiss_watchlist(monkeypatch):
+def test_alerts_bulk_dismiss_watchlist(cbcsdk_mock):
     """Test dismissing a batch of watchlist alerts."""
-    _was_called = False
 
-    def _do_dismiss(url, body, **kwargs):
-        nonlocal _was_called
-        assert url == "/appservices/v6/orgs/Z100/alerts/watchlist/workflow/_criteria"
+    def on_post(url, body, **kwargs):
         assert body == {"query": "Blort", "state": "DISMISSED", "remediation_state": "Fixed", "comment": "Yessir",
                         "criteria": {"device_name": ["HAL9000"]}}
-        _was_called = True
-        return StubResponse({"request_id": "497ABX"})
+        return {"request_id": "497ABX"}
 
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbc_sdk_api(monkeypatch, api, POST=_do_dismiss)
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/alerts/watchlist/workflow/_criteria", on_post)
+    api = cbcsdk_mock.api
+
     q = api.select(WatchlistAlert).where("Blort").set_device_names(["HAL9000"])
     reqid = q.dismiss("Fixed", "Yessir")
-    assert _was_called
     assert reqid == "497ABX"
 
 
-def test_alerts_bulk_dismiss_cbanalytics(monkeypatch):
+def test_alerts_bulk_dismiss_cbanalytics(cbcsdk_mock):
     """Test dismissing a batch of CB Analytics alerts."""
-    _was_called = False
 
-    def _do_dismiss(url, body, **kwargs):
-        nonlocal _was_called
-        assert url == "/appservices/v6/orgs/Z100/alerts/cbanalytics/workflow/_criteria"
+    def on_post(url, body, **kwargs):
         assert body == {"query": "Blort", "state": "DISMISSED", "remediation_state": "Fixed", "comment": "Yessir",
                         "criteria": {"device_name": ["HAL9000"]}}
-        _was_called = True
-        return StubResponse({"request_id": "497ABX"})
+        return {"request_id": "497ABX"}
 
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbc_sdk_api(monkeypatch, api, POST=_do_dismiss)
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/alerts/cbanalytics/workflow/_criteria", on_post)
+    api = cbcsdk_mock.api
+
     q = api.select(CBAnalyticsAlert).where("Blort").set_device_names(["HAL9000"])
     reqid = q.dismiss("Fixed", "Yessir")
-    assert _was_called
     assert reqid == "497ABX"
 
 
-def test_alerts_bulk_dismiss_vmware(monkeypatch):
-    """Test dismissing a batch of VMware alerts."""
-    _was_called = False
-
-    def _do_dismiss(url, body, **kwargs):
-        nonlocal _was_called
-        assert url == "/appservices/v6/orgs/Z100/alerts/cbanalytics/workflow/_criteria"
-        assert body == {"query": "Blort", "state": "DISMISSED", "remediation_state": "Fixed", "comment": "Yessir",
-                        "criteria": {"device_name": ["HAL9000"]}}
-        _was_called = True
-        return StubResponse({"request_id": "497ABX"})
-
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbc_sdk_api(monkeypatch, api, POST=_do_dismiss)
-    q = api.select(CBAnalyticsAlert).where("Blort").set_device_names(["HAL9000"])
-    reqid = q.dismiss("Fixed", "Yessir")
-    assert _was_called
-    assert reqid == "497ABX"
-
-
-def test_alerts_bulk_dismiss_threat(monkeypatch):
+def test_alerts_bulk_dismiss_threat(cbcsdk_mock):
     """Test dismissing a batch of threat alerts."""
-    _was_called = False
 
-    def _do_dismiss(url, body, **kwargs):
-        nonlocal _was_called
-        assert url == "/appservices/v6/orgs/Z100/threat/workflow/_criteria"
+    def on_post(url, body, **kwargs):
         assert body == {"threat_id": ["B0RG", "F3R3NG1"], "state": "DISMISSED", "remediation_state": "Fixed",
                         "comment": "Yessir"}
-        _was_called = True
-        return StubResponse({"request_id": "497ABX"})
+        return {"request_id": "497ABX"}
 
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbc_sdk_api(monkeypatch, api, POST=_do_dismiss)
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/threat/workflow/_criteria", on_post)
+    api = cbcsdk_mock.api
+
     reqid = api.bulk_threat_dismiss(["B0RG", "F3R3NG1"], "Fixed", "Yessir")
-    assert _was_called
     assert reqid == "497ABX"
 
 
-def test_alerts_bulk_undismiss_threat(monkeypatch):
+def test_alerts_bulk_undismiss_threat(cbcsdk_mock):
     """Test undismissing a batch of threat alerts."""
-    _was_called = False
 
-    def _do_update(url, body, **kwargs):
-        nonlocal _was_called
-        assert url == "/appservices/v6/orgs/Z100/threat/workflow/_criteria"
+    def on_post(url, body, **kwargs):
         assert body == {"threat_id": ["B0RG", "F3R3NG1"], "state": "OPEN", "remediation_state": "Fixed",
                         "comment": "NoSir"}
-        _was_called = True
-        return StubResponse({"request_id": "497ABX"})
+        return {"request_id": "497ABX"}
 
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbc_sdk_api(monkeypatch, api, POST=_do_update)
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/threat/workflow/_criteria", on_post)
+    api = cbcsdk_mock.api
+
     reqid = api.bulk_threat_update(["B0RG", "F3R3NG1"], "Fixed", "NoSir")
-    assert _was_called
     assert reqid == "497ABX"
 
 
-def test_alerts_bulk_threat_error(monkeypatch):
+def test_alerts_bulk_threat_error(cb):
     """Test error raise from bulk threat update status"""
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     with pytest.raises(ApiError):
-        api.bulk_threat_dismiss([123], "Fixed", "Yessir")
+        cb.bulk_threat_dismiss([123], "Fixed", "Yessir")
 
 
-def test_load_workflow(monkeypatch):
+def test_load_workflow(cbcsdk_mock):
     """Test loading a workflow status."""
-    _was_called = False
 
-    def _get_workflow(url, parms=None, default=None):
-        nonlocal _was_called
-        assert url == "/appservices/v6/orgs/Z100/workflow/status/497ABX"
-        _was_called = True
-        return {"errors": [], "failed_ids": [], "id": "497ABX", "num_hits": 0, "num_success": 0, "status": "QUEUED",
-                "workflow": {"state": "DISMISSED", "remediation": "Fixed", "comment": "Yessir",
-                             "changed_by": "Robocop", "last_update_time": "2019-10-31T16:03:13.951Z"}}
+    cbcsdk_mock.mock_request('GET', "/appservices/v6/orgs/test/workflow/status/497ABX",
+                             {"errors": [], "failed_ids": [], "id": "497ABX", "num_hits": 0, "num_success": 0,
+                              "status": "QUEUED", "workflow": {"state": "DISMISSED", "remediation": "Fixed",
+                                                               "comment": "Yessir", "changed_by": "Robocop",
+                                                               "last_update_time": "2019-10-31T16:03:13.951Z"}})
+    api = cbcsdk_mock.api
 
-    api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
-    patch_cbc_sdk_api(monkeypatch, api, GET=_get_workflow)
     workflow = api.select(WorkflowStatus, "497ABX")
-    assert _was_called
     assert workflow.id_ == "497ABX"
 
 
