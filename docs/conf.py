@@ -139,7 +139,6 @@ copybutton_remove_prompts = True
 copybutton_prompt_text = r">>> |\.\.\. "
 
 
-
 def setup(app):
     """Setup Sphinx."""
     app.add_css_file('css/custom.css')

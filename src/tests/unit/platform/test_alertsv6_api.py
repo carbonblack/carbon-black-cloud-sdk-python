@@ -664,7 +664,6 @@ def test_alerts_bulk_threat_error(cb):
 
 def test_load_workflow(cbcsdk_mock):
     """Test loading a workflow status."""
-
     cbcsdk_mock.mock_request('GET', "/appservices/v6/orgs/test/workflow/status/497ABX",
                              {"errors": [], "failed_ids": [], "id": "497ABX", "num_hits": 0, "num_success": 0,
                               "status": "QUEUED", "workflow": {"state": "DISMISSED", "remediation": "Fixed",
