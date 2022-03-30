@@ -562,7 +562,6 @@ def test_query_containeralert_invalid_criteria_values(cb, method, arg):
         meth(arg)
 
 
-
 def test_alerts_bulk_dismiss(cbcsdk_mock):
     """Test dismissing a batch of alerts."""
 
