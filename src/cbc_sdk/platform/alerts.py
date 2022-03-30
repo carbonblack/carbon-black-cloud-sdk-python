@@ -471,7 +471,7 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
     VALID_CATEGORIES = ["THREAT", "MONITORED"]
     VALID_REPUTATIONS = ["KNOWN_MALWARE", "SUSPECT_MALWARE", "PUP", "NOT_LISTED", "ADAPTIVE_WHITE_LIST",
                          "COMMON_WHITE_LIST", "TRUSTED_WHITE_LIST", "COMPANY_BLACK_LIST"]
-    VALID_ALERT_TYPES = ["CB_ANALYTICS", "DEVICE_CONTROL", "WATCHLIST"]
+    VALID_ALERT_TYPES = ["CB_ANALYTICS", "DEVICE_CONTROL", "WATCHLIST", "CONTAINER_RUNTIME"]
     VALID_WORKFLOW_VALS = ["OPEN", "DISMISSED"]
     VALID_FACET_FIELDS = ["ALERT_TYPE", "CATEGORY", "REPUTATION", "WORKFLOW", "TAG", "POLICY_ID",
                           "POLICY_NAME", "DEVICE_ID", "DEVICE_NAME", "APPLICATION_HASH",
@@ -1418,7 +1418,7 @@ class ContainerRuntimeAlertSearchQuery(BaseAlertSearchQuery):
             cb (BaseAPI): Reference to API object used to communicate with the server.
         """
         super().__init__(doc_class, cb)
-        self._bulkupdate_url = "/appservices/v6/orgs/{0}/alerts/cbanalytics/containerruntime/_criteria"
+        self._bulkupdate_url = "/appservices/v6/orgs/{0}/alerts/containerruntime/_criteria"
 
     def set_cluster_names(self, names):
         """
