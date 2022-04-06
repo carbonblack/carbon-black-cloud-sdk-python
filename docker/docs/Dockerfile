@@ -3,9 +3,6 @@ FROM python:3.9-slim-buster
 ENV PYTHONUNBUFFERED 1
 ENV PYTHONDONTWRITEBYTECODE 1
 
-COPY ./docker/docs/start /start-docs
-COPY ./docs/requirements.txt /requirements.txt
-
 RUN apt-get update \
     # dependencies for building Python packages
     && apt-get install -y build-essential \
@@ -19,11 +16,11 @@ RUN apt-get update \
     && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
     && rm -rf /var/lib/apt/lists/*
 
-# All imports needed for autodoc.
+# Copy the application
+COPY . /app
+
 RUN pip install --no-input Sphinx sphinx-autobuild sphinx-rtd-theme \
-    && pip install -r /requirements.txt
+    && pip install -r app/docs/requirements.txt \
+    && pip install /app
 
-RUN sed -i 's/\r$//g' /start-docs
-RUN chmod +x /start-docs
-
-WORKDIR /docs
+WORKDIR /app/docs/
