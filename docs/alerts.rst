@@ -211,6 +211,11 @@ The Device Control Alerts are explained in the :doc:`device-control` guide.
 Container Runtime Alerts
 ------------------------
 
+These represent alerts for behavior noticed inside a Kubernetes container.  For these events, the ``type`` will be
+``CONTAINER_RUNTIME``, the ``device_id`` will always be 0, and the ``device_name``, ``device_os``,
+``device_os_version``, and ``device_username`` will always be ``None``. Instead, the workload generating the alert will
+be identified by the ``workload_id`` and ``workload_name`` attributes.
+
 **TK**
 
 Migrating from Notifications to Alerts
