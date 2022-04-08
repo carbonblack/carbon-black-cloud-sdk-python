@@ -14,13 +14,13 @@
 """NSX Remediation for Workloads"""
 
 import time
-from cbc_sdk.errors import ApiError, ServerError
+from cbc_sdk.errors import ApiError, ServerError, NSXJobError
 
 
 class NSXRemediationJob:
     """An object that runs and monitors an NSX Remediation operation."""
     VALID_TAGS = ['CB-NSX-Quarantine', 'CB-NSX-Isolate', 'CB-NSX-Custom']
-    RUNNING_STATUSES = ['SCHEDULED', 'RUNNING', 'RUNNING_UNDELIVERED']
+    RUNNING_STATUSES = ['UNASSIGNED', 'SCHEDULED', 'RUNNING', 'RUNNING_UNDELIVERED']
 
     def __init__(self, cb, running_jobs):
         """
@@ -75,7 +75,10 @@ class NSXRemediationJob:
         if response.status_code != 201:
             raise ServerError(response.status_code,
                               f"could not start remediation request, error code {response.status_code}")
-        return NSXRemediationJob(cb, response.json().get('job_ids', []))
+        job_ids = response.json().get('job_ids', [])
+        if job_ids:
+            return NSXRemediationJob(cb, job_ids)
+        raise NSXJobError("No jobs started")
 
     def _poll_status(self):
         """

@@ -282,6 +282,11 @@ class OperationCancelled(ApiError):
     pass
 
 
+class NSXJobError(ApiError):
+    """NSX remediation jobs were not started"""
+    pass
+
+
 class FunctionalityDecommissioned(ApiError):
     """Raised when a piece of decommissioned functionality is used."""
     def __init__(self, functionality_tag, alternate=None):
