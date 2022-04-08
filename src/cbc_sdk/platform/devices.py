@@ -273,7 +273,7 @@ class Device(PlatformModel):
         Returns:
             set[str]: All current NSX tags that are set for this workload.
         """
-        if self.nsx_available:
+        if self.nsx_available and self._info['nsx_distributed_firewall_policy']:
             return set([tag_name for tag_name in NSXRemediationJob.VALID_TAGS
                         if tag_name in self._info['nsx_distributed_firewall_policy']])
         return set()
