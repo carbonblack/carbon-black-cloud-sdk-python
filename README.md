@@ -137,11 +137,8 @@ directory before running `make html`, or the equivalent command `sphinx-build -M
 
 Build the documentation by running:
 ```shell
-$ docker-compose -f docker/docs/docker-compose.yml up --build docs
+$ docker run -p 7000:7000 -it $(docker build -f ./docker/docs/Dockerfile . -q) make livehtml
 ```
-
-The service will start a local docs server at `:7000`. The server is using `sphinx-autobuild` with the `--watch` option 
-enabled, so you can live edit the documentation. Check the additional options and configs in the compose file.
 
 ### Development Flow
 

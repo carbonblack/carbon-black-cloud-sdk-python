@@ -16,11 +16,11 @@ RUN apt-get update \
     && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
     && rm -rf /var/lib/apt/lists/*
 
-# All imports needed for autodoc.
-RUN pip install --no-input Sphinx sphinx-autobuild sphinx-rtd-theme
+# Copy the application
+COPY . /app
 
-COPY ./docs/start /start-docs
-RUN sed -i 's/\r$//g' /start-docs
-RUN chmod +x /start-docs
+RUN pip install --no-input Sphinx sphinx-autobuild sphinx-rtd-theme \
+    && pip install -r app/docs/requirements.txt \
+    && pip install /app
 
-WORKDIR /docs
+WORKDIR /app/docs/
