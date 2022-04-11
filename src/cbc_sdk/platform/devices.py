@@ -265,22 +265,9 @@ class Device(PlatformModel):
         """
         return self._info['deployment_type'] == 'WORKLOAD' and self._info['nsx_enabled']
 
-    @property
-    def nsx_tags(self):
-        """
-        Returns the current NSX tag(s) set for this workload.
-
-        Returns:
-            set[str]: All current NSX tags that are set for this workload.
-        """
-        if self.nsx_available and self._info['nsx_distributed_firewall_policy']:
-            return set([tag_name for tag_name in NSXRemediationJob.VALID_TAGS
-                        if tag_name in self._info['nsx_distributed_firewall_policy']])
-        return set()
-
     def nsx_remediation(self, tag, set_tag=True):
         """
-        Start an NSX Remediation job on this device.
+        Start an NSX Remediation job on this device to change the tag.
 
         Required Permissions:
             appliances.nsx.remediation(EXECUTE)
@@ -291,11 +278,22 @@ class Device(PlatformModel):
             set_tag (bool): True to toggle the specified tag on, False to toggle it off. Default True.
 
         Returns:
-            NSXRemediationJob: The object representing all running jobs.
+            NSXRemediationJob: The object representing all running jobs.  None if the operation is a no-op.
         """
-        if self.nsx_available:
-            return NSXRemediationJob.start_request(self._cb, self.id, tag, set_tag)
-        raise ApiError("NSX actions are not available on this device")
+        if not self.nsx_available:
+            raise ApiError("NSX actions are not available on this device")
+        current = self._info['nsx_distributed_firewall_policy']
+        if current is None:
+            if not set_tag:
+                return None  # clearing tag is a no-op if no tag is set
+        elif current == tag:
+            if set_tag:
+                return None  # setting tag is a no-op if already set
+        else:
+            if set_tag:
+                raise ApiError(f"NSX tag already set to {current}, cannot set another tag without clearing it")
+            return None  # clearing tag is a no-op in this case
+        return NSXRemediationJob.start_request(self._cb, self.id, tag, set_tag)
 
 
 class DeviceFacet(UnrefreshableModel):

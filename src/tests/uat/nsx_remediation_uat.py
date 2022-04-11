@@ -22,6 +22,7 @@ Workload:
 
 import sys
 import random
+import time
 
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
 from cbc_sdk.platform import Device
@@ -57,6 +58,42 @@ def get_devices(cb, ids):
     return devices
 
 
+def test_one_combo(device, tag, toggle):
+    """
+    Run an NSX remediation test on a specific combination of arguments.
+
+    Args:
+        device (Device): The device under test.
+        tag (str): The NSX tag being set.
+        toggle (bool): True if the tag is being set, False if it's being removed.
+
+    Returns:
+        bool: True if the test completed (possibly with errors printed), False if the device was not suitable for test.
+    """
+    print(f"Testing ({tag}, {toggle}) on device #{device.id}")
+    try:
+        job = device.nsx_remediation(tag, toggle)
+        if job is None:
+            print(f"Setting ({tag}, {toggle}) on device #{device.id} was a no-op")
+            return True
+        job.await_result()
+        device.refresh()
+        if toggle and device.nsx_distributed_firewall_policy != tag:
+            print(f"ERROR: after ({tag}, {toggle}) set, expected {tag}, got {device.nsx_distributed_firewall_policy}")
+        elif toggle is False and device.nsx_distributed_firewall_policy is not None:
+            print(f"ERROR: after ({tag}, {toggle}) set, expected None, got {device.nsx_distributed_firewall_policy}")
+        else:
+            print(f"Setting ({tag}, {toggle}) on device #{device.id} OK")
+    except NSXJobError:
+        print(f"...Device #{device.id} not suitable for testing or erroneous state, try again")
+        return False
+    except ServerError as e:
+        print(f"ERROR: setting ({tag}, {toggle}) on device #{device.id} failed: {e}")
+    except ApiError as e:
+        print(f"ERROR: setting ({tag}, {toggle}) on device #{device.id} failed: {e}")
+    return True
+
+
 def test_device(device):
     """
     Run a NSX test sequence on the specified device.
@@ -68,38 +105,29 @@ def test_device(device):
         bool: True if the test completed (possibly with errors printed), False if the device was not suitable for test.
     """
     print(f"Beginning test on device #{device.id}")
-    before_tags = device.nsx_tags
-    pass1_toggles = [(False if tag_val in before_tags else True) for tag_val in NSXRemediationJob.VALID_TAGS]
-    pass2_toggles = [not v for v in pass1_toggles]
-    new_state = set(before_tags)
-    for toggle_list in (pass1_toggles, pass2_toggles):
-        for tag, toggle in zip(NSXRemediationJob.VALID_TAGS, toggle_list):
-            if toggle:
-                new_state.add(tag)
-            else:
-                new_state.remove(tag)
-            try:
-                job = device.nsx_remediation(tag, toggle)
-                job.await_result()
-                device.refresh()
-                if device.nsx_tags != new_state:
-                    print(f"ERROR: after ({tag}, {toggle}) set, expected {new_state}, got {device.nsx_tags}")
-                else:
-                    print(f"Setting ({tag}, {toggle}) on device #{device.id} OK")
-                continue
-            except NSXJobError:
-                print(f"...Device #{device.id} not suitable for testing, try again")
-                return False
-            except ServerError as e:
-                print(f"ERROR: setting ({tag}, {toggle}) on device #{device.id} failed: {e}")
-                continue
-            except ApiError as e:
-                print(f"ERROR: setting ({tag}, {toggle}) on device #{device.id} failed: {e}")
-                continue
+    before_tag = device.nsx_distributed_firewall_policy
+    if before_tag:
+        if not test_one_combo(device, before_tag, False):
+            return False
 
     device.refresh()
-    if device.nsx_tags != before_tags:
-        print(f"ERROR: should have returned state of device #{device.id} to {before_tags}, but got {device.nsx_tags}")
+    if device.nsx_distributed_firewall_policy is not None:
+        print(f"ERROR: Device #{device.id} in invalid state pre-test")
+        return True
+
+    for tag in NSXRemediationJob.VALID_TAGS:
+        for toggle in (True, False):
+            if not test_one_combo(device, tag, toggle):
+                return False
+            time.sleep(2)
+
+    if before_tag:
+        if not test_one_combo(device, before_tag, True):
+            return False
+
+    device.refresh()
+    if device.nsx_distributed_firewall_policy != before_tag:
+        print(f"ERROR: Device #{device.id} in invalid state post-test")
     return True
 
 
