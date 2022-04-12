@@ -16,7 +16,8 @@ import copy
 
 import pytest
 import logging
-from cbc_sdk.errors import ApiError, ServerError
+from contextlib import ExitStack as does_not_raise
+from cbc_sdk.errors import ApiError, ServerError, NSXJobError
 from cbc_sdk.platform import Device
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -126,6 +127,19 @@ def test_start_request(cbcsdk_mock, reqbody, respbody, devid, tag, onoff, jobids
         assert output._status[jobid]['status'] == "RUNNING"
 
 
+def test_start_request_no_jobs(cbcsdk_mock):
+    """Tests what happens when the start request returns no jobs."""
+
+    def on_post(url, body, **kwargs):
+        assert body == NSX_REQUEST_1
+        return CBCSDKMock.StubResponse({}, 201)
+
+    cbcsdk_mock.mock_request("POST", "/applianceservice/v1/orgs/test/device_actions", on_post)
+    api = cbcsdk_mock.api
+    with pytest.raises(NSXJobError):
+        NSXRemediationJob.start_request(api, [142, 857], "CB-NSX-Quarantine", True)
+
+
 def test_start_request_with_errors(cbcsdk_mock):
     """Test error-raising behavior of start_request."""
     cbcsdk_mock.mock_request("POST", "/applianceservice/v1/orgs/test/device_actions",
@@ -222,24 +236,29 @@ def test_device_nsx_available(cb, initdata, expected):
     assert dev.nsx_available == expected
 
 
-@pytest.mark.parametrize("initdata, expected", [
-    (NSX_DEVICE_DATA_1, ['CB-NSX-Quarantine', 'CB-NSX-Custom']),
-    (NSX_DEVICE_DATA_1A, ['CB-NSX-Isolate']),
-    (NSX_DEVICE_DATA_2, []),
-    (NSX_DEVICE_DATA_3, []),
-    (NSX_DEVICE_DATA_3A, [])
+@pytest.mark.parametrize("current_policy, tag, toggle, exception, expect_job", [
+    (None, 'CB-NSX-Quarantine', True, does_not_raise(), True),
+    (None, 'CB-NSX-Quarantine', False, does_not_raise(), False),
+    (None, 'CB-NSX-Isolate', True, does_not_raise(), True),
+    (None, 'CB-NSX-Isolate', False, does_not_raise(), False),
+    (None, 'CB-NSX-Custom', True, does_not_raise(), True),
+    (None, 'CB-NSX-Custom', False, does_not_raise(), False),
+    ('CB-NSX-Quarantine', 'CB-NSX-Quarantine', True, does_not_raise(), False),
+    ('CB-NSX-Quarantine', 'CB-NSX-Quarantine', False, does_not_raise(), True),
+    ('CB-NSX-Quarantine', 'CB-NSX-Isolate', True, pytest.raises(ApiError), False),
+    ('CB-NSX-Quarantine', 'CB-NSX-Isolate', False, does_not_raise(), False),
+    ('CB-NSX-Quarantine', 'CB-NSX-Custom', True, pytest.raises(ApiError), False),
+    ('CB-NSX-Quarantine', 'CB-NSX-Custom', False, does_not_raise(), False)
 ])
-def test_device_nsx_tags(cb, initdata, expected):
-    """Tests the nsx_tags property on devices."""
-    dev = Device(cb, initdata['id'], copy.deepcopy(initdata))
-    assert dev.nsx_tags == set(expected)
-
-
-def test_device_nsx_remediation_passthrough(cbcsdk_mock):
-    """Tests that an nsx_remediation call to a device is properly passed through."""
+def test_device_nsx_remediation(cbcsdk_mock, current_policy, tag, toggle, exception, expect_job):
+    """Test the device.nsx_remediation call."""
 
     def on_post(url, body, **kwargs):
-        assert body == NSX_REQUEST_2A
+        assert body['device_ids'] == [98765]
+        assert body['action_type'] == 'NSX_REMEDIATION'
+        opts = body['options']
+        assert opts['toggle'] == ("ON" if toggle else "OFF")
+        assert opts['tag'] == tag
         return CBCSDKMock.StubResponse(NSX_RESPONSE_2A, 201)
 
     cbcsdk_mock.mock_request("POST", "/applianceservice/v1/orgs/test/device_actions", on_post)
@@ -247,14 +266,20 @@ def test_device_nsx_remediation_passthrough(cbcsdk_mock):
                              JOB_STATUS_RUNNING)
     api = cbcsdk_mock.api
     dev = Device(api, NSX_DEVICE_DATA_1['id'], copy.deepcopy(NSX_DEVICE_DATA_1))
-    output = dev.nsx_remediation("CB-NSX-Quarantine", False)
-    assert len(output._running_jobs) == 1
-    assert '2da0bc0e-ed1e-4a98-b8fa-ccc1e30c9576' in output._running_jobs
-    assert len(output._status) == 1
-    assert output._status['2da0bc0e-ed1e-4a98-b8fa-ccc1e30c9576']['status'] == "RUNNING"
+    dev._info['nsx_distributed_firewall_policy'] = current_policy
+    with exception:
+        job = dev.nsx_remediation(tag, toggle)
+        if expect_job:
+            assert job is not None
+            assert len(job._running_jobs) == 1
+            assert '2da0bc0e-ed1e-4a98-b8fa-ccc1e30c9576' in job._running_jobs
+            assert len(job._status) == 1
+            assert job._status['2da0bc0e-ed1e-4a98-b8fa-ccc1e30c9576']['status'] == "RUNNING"
+        else:
+            assert job is None
 
 
-def test_device_nsx_remediation_fail(cb):
+def test_device_nsx_remediation_fail_not_available(cb):
     """Tests that an nsx_remediation call throws an ApiError correctly if NSX is not available."""
     dev = Device(cb, NSX_DEVICE_DATA_2['id'], copy.deepcopy(NSX_DEVICE_DATA_2))
     with pytest.raises(ApiError):

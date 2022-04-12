@@ -78,7 +78,7 @@ NSX_DEVICE_DATA_1 = {
     "deployment_type": "WORKLOAD",
     "id": 98765,
     "nsx_enabled": True,
-    "nsx_distributed_firewall_policy": "CB-NSX-Quarantine, CB-NSX-Custom"
+    "nsx_distributed_firewall_policy": "CB-NSX-Quarantine"
 }
 
 NSX_DEVICE_DATA_1A = {
@@ -92,19 +92,19 @@ NSX_DEVICE_DATA_2 = {
     "deployment_type": "ENDPOINT",
     "id": 13227,
     "nsx_enabled": True,
-    "nsx_distributed_firewall_policy": "CB-NSX-Quarantine, CB-NSX-Custom"
+    "nsx_distributed_firewall_policy": "CB-NSX-Custom"
 }
 
 NSX_DEVICE_DATA_3 = {
     "deployment_type": "WORKLOAD",
     "id": 16676,
     "nsx_enabled": False,
-    "nsx_distributed_firewall_policy": ""
+    "nsx_distributed_firewall_policy": None
 }
 
 NSX_DEVICE_DATA_3A = {
     "deployment_type": "WORKLOAD",
     "id": 16676,
     "nsx_enabled": True,
-    "nsx_distributed_firewall_policy": ""
+    "nsx_distributed_firewall_policy": None
 }
