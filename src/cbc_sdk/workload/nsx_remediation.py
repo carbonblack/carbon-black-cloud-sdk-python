@@ -28,7 +28,7 @@ class NSXRemediationJob:
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
-            running_jobs (list[str]: The list of running job IDs.
+            running_jobs (list[str]): The list of running job IDs.
         """
         self._cb = cb
         self._status = {job: None for job in running_jobs}

@@ -17,7 +17,8 @@ The following API calls are tested in this script:
 
 Workload:
 * NSX Remediation
-  * https://developer.carbonblack.com/reference/carbon-black-cloud/workload-protection/latest/appliance-service/#nsx-remediation
+  * https://developer.carbonblack.com/reference/carbon-black-cloud/workload-protection/latest/
+            appliance-service/#nsx-remediation
 """
 
 import sys
@@ -145,7 +146,7 @@ def main():
         if test_result:
             print("Test completed")
             return 0
-    print(f"ERROR: no device found suitable for testing")
+    print("ERROR: no device found suitable for testing")
     return 1
 
 

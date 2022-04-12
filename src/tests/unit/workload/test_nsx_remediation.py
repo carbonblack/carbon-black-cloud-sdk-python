@@ -23,11 +23,10 @@ from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from cbc_sdk.workload.nsx_remediation import NSXRemediationJob
 from tests.unit.fixtures.workload.mock_nsx_remediation import (NSX_REQUEST_1, NSX_RESPONSE_1, JOB_STATUS_RUNNING,
-                                                               NSX_REQUEST_2, NSX_RESPONSE_2, NSX_REQUEST_2A,
+                                                               NSX_REQUEST_2, NSX_RESPONSE_2,
                                                                NSX_RESPONSE_2A, NSX_REQUEST_3, NSX_RESPONSE_3,
                                                                NSX_LIFECYCLE_1, NSX_DEVICE_DATA_1,
-                                                               NSX_DEVICE_DATA_1A, NSX_DEVICE_DATA_2,
-                                                               NSX_DEVICE_DATA_3, NSX_DEVICE_DATA_3A)
+                                                               NSX_DEVICE_DATA_2, NSX_DEVICE_DATA_3)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -51,6 +50,12 @@ def cbcsdk_mock(monkeypatch, cb):
 class MockResponseToJobStatus:
     """Handles getting a mock response to the job status call."""
     def __init__(self, job_states):
+        """
+        Initializes the mock response.
+
+        Args:
+            job_states (dict): Job states as they would have been retrieved from the server.
+        """
         self._job_states = job_states
         self._jobs_to_run = set(job_states.keys())
         self._phase = 0
@@ -262,7 +267,7 @@ def test_device_nsx_remediation(cbcsdk_mock, current_policy, tag, toggle, except
         return CBCSDKMock.StubResponse(NSX_RESPONSE_2A, 201)
 
     cbcsdk_mock.mock_request("POST", "/applianceservice/v1/orgs/test/device_actions", on_post)
-    cbcsdk_mock.mock_request("GET", f"/applianceservice/v1/orgs/test/jobs/2da0bc0e-ed1e-4a98-b8fa-ccc1e30c9576/status",
+    cbcsdk_mock.mock_request("GET", "/applianceservice/v1/orgs/test/jobs/2da0bc0e-ed1e-4a98-b8fa-ccc1e30c9576/status",
                              JOB_STATUS_RUNNING)
     api = cbcsdk_mock.api
     dev = Device(api, NSX_DEVICE_DATA_1['id'], copy.deepcopy(NSX_DEVICE_DATA_1))
