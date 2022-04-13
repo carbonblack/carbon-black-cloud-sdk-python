@@ -33,7 +33,7 @@ from cbc_sdk.errors import ApiError, ServerError, NSXJobError
 
 def get_devices(cb, ids):
     """
-    Gets the devices that can be tested with NSX Remediation.
+    Gets the devices that can be tested with NSX Remediation, i.e., for which nsx_available is True.
 
     Args:
         cb (CBCloudAPI): The API connection object.
@@ -106,6 +106,8 @@ def test_device(device):
         bool: True if the test completed (possibly with errors printed), False if the device was not suitable for test.
     """
     print(f"Beginning test on device #{device.id}")
+
+    # if the device has a current policy, unset it
     before_tag = device.nsx_distributed_firewall_policy
     if before_tag:
         if not test_one_combo(device, before_tag, False):
@@ -116,12 +118,14 @@ def test_device(device):
         print(f"ERROR: Device #{device.id} in invalid state pre-test")
         return True
 
+    # set, then unset, each policy in turn
     for tag in NSXRemediationJob.VALID_TAGS:
         for toggle in (True, False):
             if not test_one_combo(device, tag, toggle):
                 return False
             time.sleep(2)
 
+    # if the device had a current policy when we started, restore it
     if before_tag:
         if not test_one_combo(device, before_tag, True):
             return False

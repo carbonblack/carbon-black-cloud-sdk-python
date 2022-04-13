@@ -22,17 +22,17 @@ class NSXRemediationJob:
     VALID_TAGS = ['CB-NSX-Quarantine', 'CB-NSX-Isolate', 'CB-NSX-Custom']
     RUNNING_STATUSES = ['UNASSIGNED', 'SCHEDULED', 'RUNNING', 'RUNNING_UNDELIVERED']
 
-    def __init__(self, cb, running_jobs):
+    def __init__(self, cb, running_job_ids):
         """
         Creates a new NSXRemediationJob object.
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
-            running_jobs (list[str]): The list of running job IDs.
+            running_job_ids (list[str]): The list of running job IDs.
         """
         self._cb = cb
-        self._status = {job: None for job in running_jobs}
-        self._running_jobs = set(running_jobs)
+        self._status = {job: None for job in running_job_ids}
+        self._running_jobs = set(running_job_ids)
         self._poll_status()
 
     @classmethod
