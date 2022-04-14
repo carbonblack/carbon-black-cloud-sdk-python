@@ -106,11 +106,13 @@ class MockResponseToJobStatus:
 # ==================================== UNIT TESTS BELOW ====================================
 
 @pytest.mark.parametrize("reqbody, respbody, devid, tag, onoff, jobids", [
-    (NSX_REQUEST_1, NSX_RESPONSE_1, [142, 857], "CB-NSX-Quarantine", True, ["7ff05537-350a-420c-bfa8-3408ac70ce53"]),
-    (NSX_REQUEST_2, NSX_RESPONSE_2, 5150, "CB-NSX-Isolate", False, ["540d3f7f-65f6-47c7-b581-692d2c892e22"]),
+    (NSX_REQUEST_1, NSX_RESPONSE_1, [142, 857], "CB-NSX-Quarantine", True,
+     ["NSX_REMEDIATE_7ff05537-350a-420c-bfa8-3408ac70ce53"]),
+    (NSX_REQUEST_2, NSX_RESPONSE_2, 5150, "CB-NSX-Isolate", False,
+     ["NSX_REMEDIATE_540d3f7f-65f6-47c7-b581-692d2c892e22"]),
     (NSX_REQUEST_3, NSX_RESPONSE_3, [12, 23, 34, 45, 56, 67, 78, 89, 90], "CB-NSX-Custom", True,
-     ["8b45115f-2827-4b8e-a0ab-5919c00213ac", "18acf87a-9b92-4fd9-82a1-a3b75592e348",
-      "7fd50527-3cdb-4996-b316-6ad45ec18af6"])
+     ["NSX_REMEDIATE_8b45115f-2827-4b8e-a0ab-5919c00213ac", "NSX_REMEDIATE_18acf87a-9b92-4fd9-82a1-a3b75592e348",
+      "NSX_REMEDIATE_7fd50527-3cdb-4996-b316-6ad45ec18af6"])
 ])
 def test_start_request(cbcsdk_mock, reqbody, respbody, devid, tag, onoff, jobids):
     """Tests the start_request operation."""
@@ -267,7 +269,8 @@ def test_device_nsx_remediation(cbcsdk_mock, current_policy, tag, toggle, except
         return CBCSDKMock.StubResponse(NSX_RESPONSE_2A, 201)
 
     cbcsdk_mock.mock_request("POST", "/applianceservice/v1/orgs/test/device_actions", on_post)
-    cbcsdk_mock.mock_request("GET", "/applianceservice/v1/orgs/test/jobs/2da0bc0e-ed1e-4a98-b8fa-ccc1e30c9576/status",
+    cbcsdk_mock.mock_request("GET",
+                             "/applianceservice/v1/orgs/test/jobs/NSX_REMEDIATE_2da0bc0e-ed1e-4a98-b8fa-ccc1e30c9576/status",  # noqa: E501
                              JOB_STATUS_RUNNING)
     api = cbcsdk_mock.api
     dev = Device(api, NSX_DEVICE_DATA_1['id'], copy.deepcopy(NSX_DEVICE_DATA_1))
@@ -277,9 +280,9 @@ def test_device_nsx_remediation(cbcsdk_mock, current_policy, tag, toggle, except
         if expect_job:
             assert job is not None
             assert len(job._running_jobs) == 1
-            assert '2da0bc0e-ed1e-4a98-b8fa-ccc1e30c9576' in job._running_jobs
+            assert 'NSX_REMEDIATE_2da0bc0e-ed1e-4a98-b8fa-ccc1e30c9576' in job._running_jobs
             assert len(job._status) == 1
-            assert job._status['2da0bc0e-ed1e-4a98-b8fa-ccc1e30c9576']['status'] == "RUNNING"
+            assert job._status['NSX_REMEDIATE_2da0bc0e-ed1e-4a98-b8fa-ccc1e30c9576']['status'] == "RUNNING"
         else:
             assert job is None
 
