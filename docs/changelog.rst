@@ -1,5 +1,26 @@
 Changelog
 ================================
+CBC SDK 1.3.6 - Released (TBD)
+-----------------------------------------
+
+New Features:
+
+* Support for Device Facet API.
+* Dynamic reference of query classes--now you can do ``api.select("Device")`` in addition to ``api.select(Device)``.
+* Support for Container Runtime Alerts.
+* NSX Remediation functionality - set the NSX remediation state for workloads which support it.
+
+Updates:
+
+* Endpoint Standard specific ``Event``s have been decommissioned and removed.
+* SDK now uses Watchlist Manager apis ``v3`` instead of ``v2``.  ``v2`` APIs are being decommissioned.
+
+Documentation:
+
+* Added a ``CONTRIBUTING`` link to the ``README.md`` file.
+* Change to Watchlist/Report documentation to properly reflect how to update a ``Report`` in a ``Watchlist``.
+* Cleaned up formatting.
+
 CBC SDK 1.3.5 - Released January 26, 2022
 -----------------------------------------
 
