@@ -17,13 +17,8 @@ packages = [
 
 install_requires = [
     'requests',
-    'cachetools',
     'pyyaml',
-    'pika',
-    'prompt_toolkit',
-    'pygments',
     'python-dateutil',
-    'protobuf',
     'schema',
     'solrq',
     'validators',

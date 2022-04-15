@@ -49,13 +49,8 @@ _Note: Support for the latest products such as Containers are planned for early 
 ### Python Packages
 
 - requests
-- cachetools
 - pyyaml
-- pika
-- prompt_toolkit
-- pygments
 - python-dateutil
-- protobuf
 - schema
 - solrq
 - validators
