@@ -5,9 +5,6 @@
 - name: Tests
   type: parallel
   steps:
-  - name: testing python 3.6
-    service: testingpython36
-    command: pytest
   - name: testing python 3.7
     service: testingpython37
     command: pytest
