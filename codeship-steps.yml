@@ -11,6 +11,12 @@
   - name: testing python 3.8
     service: testingpython38
     command: bin/tests_n_reports.sh
+  - name: testing python 3.9
+    service: testingpython39
+    command: pytest
+  - name: testing python 3.10
+    service: testingpython310
+    command: pytest
   - name: testing red hat
     service: testingrhel
     command: pytest
