@@ -4,6 +4,14 @@ Workload
 Submodules
 ----------
 
+cbc\_sdk.workload.nsx\_remediation module
+------------------------------------------
+
+.. automodule:: cbc_sdk.workload.nsx_remediation
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 cbc\_sdk.workload.sensor\_lifecycle module
 ------------------------------------------
 
