@@ -8,6 +8,10 @@ testingpython38:
   encrypted_env_file:
     - env.encrypted
 
+testingpython39:
+  build:
+    dockerfile: ./docker/python3.9/Dockerfile
+
 testingrhel:
   build:
     dockerfile: ./docker/rhel/Dockerfile
