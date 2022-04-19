@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2021. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -67,8 +67,8 @@ class FeedModel(UnrefreshableModel, CreatableModelMixin, MutableBaseModel):
 class Watchlist(FeedModel):
     """Represents an Enterprise EDR watchlist."""
     # NOTE(ww): Not documented.
-    urlobject = "/threathunter/watchlistmgr/v2/watchlist"
-    urlobject_single = "/threathunter/watchlistmgr/v2/watchlist/{}"
+    urlobject = "/threathunter/watchlistmgr/v3/orgs/{}/watchlists"
+    urlobject_single = "/threathunter/watchlistmgr/v3/orgs/{}/watchlists/{}"
     swagger_meta_file = "enterprise_edr/models/watchlist.yaml"
 
     def __init__(self, cb, model_unique_id=None, initial_data=None):
@@ -85,7 +85,7 @@ class Watchlist(FeedModel):
         if initial_data:
             item = initial_data
         elif model_unique_id:
-            item = cb.get_object(self.urlobject_single.format(model_unique_id))
+            item = cb.get_object(self.urlobject_single.format(cb.credentials.org_key, model_unique_id))
 
         feed_id = item.get("id")
 
@@ -250,6 +250,21 @@ class Watchlist(FeedModel):
         """
         return WatchlistQuery(self, cb)
 
+    def _build_api_request_uri(self, http_method="GET"):
+        """
+        Returns the API request URI for this object.
+
+        Args:
+            http_method (str): Unused.
+
+        Returns:
+            str: The API request URI for this object.
+        """
+        if self._model_unique_id is not None:
+            return self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id)
+        else:
+            return self.urlobject.format(self._cb.credentials.org_key)
+
     def save(self):
         """Saves this watchlist on the Enterprise EDR server.
 
@@ -288,10 +303,7 @@ class Watchlist(FeedModel):
             ApiError: If `report_ids` is given and is empty.
 
         Example:
-
-        >>> watchlist.update(name="New Name")
-
-
+            >>> watchlist.update(name="New Name")
         """
         if not self.id:
             raise InvalidObjectError("missing Watchlist ID")
@@ -742,8 +754,7 @@ class Feed(FeedModel):
             ApiError: If an invalid field is specified.
 
         Example:
-
-        >>> feed.update(access="private")
+            >>> feed.update(access="private")
         """
         if not self.id:
             raise InvalidObjectError("missing feed ID")
@@ -1106,6 +1117,9 @@ class Report(FeedModel):
             This method **cannot** be used to save a feed report. To save feed reports, create them with `cb.create`
             and use `Feed.replace`.
 
+            This method **cannot** be used to save a report that is *already* part of a watchlist.  Use the `update()`
+            method instead.
+
         Raises:
             InvalidObjectError: If Report.validate() fails.
         """
@@ -1203,8 +1217,7 @@ class Report(FeedModel):
                 and this report is a Feed Report.
 
         Example:
-
-        >>> report.delete()
+            >>> report.delete()
         """
         if not self.id:
             raise InvalidObjectError("missing Report ID")
@@ -1236,9 +1249,8 @@ class Report(FeedModel):
             InvalidObjectError: If `id` is missing or feed ID is missing.
 
         Example:
-
-        >>> if report.ignored:
-        ...     report.unignore()
+            >>> if report.ignored:
+            ...     report.unignore()
         """
         if not self.id:
             raise InvalidObjectError("missing Report ID")
@@ -1365,9 +1377,8 @@ class Report(FeedModel):
             IOC_V2 ([IOC_V2]): List of IOC_V2's for associated with the Report.
 
         Example:
-
-        >>> for ioc in report.iocs_:
-        ...     print(ioc.values)
+            >>> for ioc in report.iocs_:
+            ...     print(ioc.values)
         """
         if not self.iocs_v2:
             return []
@@ -1696,9 +1707,8 @@ class IOC_V2(FeedModel):
             InvalidObjectError: If this IOC is missing an `id` or is not a Watchlist IOC.
 
         Example:
-
-        >>> if ioc.ignored:
-        ...     ioc.unignore()
+            >>> if ioc.ignored:
+            ...     ioc.unignore()
         """
         if not self.id:
             raise InvalidObjectError("missing IOC ID")
@@ -1797,10 +1807,10 @@ class ReportQuery(SimpleQuery):
 
     Note:
         Only feed reports can be queried. Watchlist reports should be interacted
-            with via Watchlist.reports().
+        with via Watchlist.reports().
 
     Example:
-    >>> cb.select(Report).where(feed_id=id)
+        >>> cb.select(Report).where(feed_id=id)
     """
     def __init__(self, doc_class, cb):
         """
@@ -1856,6 +1866,6 @@ class WatchlistQuery(SimpleQuery):
         """Return a list of all Watchlist objects."""
         log.debug("Fetching all watchlists")
 
-        resp = self._cb.get_object(self._doc_class.urlobject)
+        resp = self._cb.get_object(self._doc_class.urlobject.format(self._cb.credentials.org_key))
         results = resp.get("results", [])
         return [self._doc_class(self._cb, initial_data=item) for item in results]

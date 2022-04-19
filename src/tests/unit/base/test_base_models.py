@@ -3,14 +3,13 @@
 import pytest
 import logging
 from cbc_sdk.base import MutableBaseModel, NewBaseModel
-from cbc_sdk.endpoint_standard import Policy, Event
+from cbc_sdk.endpoint_standard import Policy
 from cbc_sdk.platform import Process
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ServerError, InvalidObjectError, ApiError
 from cbc_sdk.enterprise_edr.threat_intelligence import FeedModel
 from cbc_sdk.enterprise_edr import Feed
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.endpoint_standard.mock_events import EVENT_GET_SPECIFIC_RESP
 from tests.unit.fixtures.endpoint_standard.mock_policy import (POLICY_GET_SPECIFIC_RESP, POLICY_GET_RESP,
                                                                POLICY_UPDATE_RESP, POLICY_GET_RESP_1,
                                                                POLICY_GET_RESP_2, POLICY_POST_RESP)
@@ -20,7 +19,7 @@ from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_VALIDATION_RE
                                                        GET_PROCESS_SEARCH_JOB_RESP,
                                                        GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
 
-log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
+logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
 
 @pytest.fixture(scope="function")
@@ -106,16 +105,16 @@ def test_model_attributes_nbm(cbcsdk_mock):
 
 
 def test_new_object_nbm(cbcsdk_mock):
-    """Test new_object class method of NewBaseModel via an Event object"""
+    """Test new_object class method of NewBaseModel via a Policy object"""
     api = cbcsdk_mock.api
-    nbm_object = Event.new_object(api, {"eventId": "testEventId", "otherData": "test"})
-    assert nbm_object._model_unique_id == "testEventId"
+    nbm_object = Policy.new_object(api, {'id': 6681, 'otherData': 'test'})
+    assert nbm_object._model_unique_id == 6681
 
 
 def test_setattr_nbm(cbcsdk_mock):
     """Test __setattr__ method of NewBaseModel"""
     api = cbcsdk_mock.api
-    nbm = Event(api, 101)
+    nbm = NewBaseModel(api, 101)
     nbm.__setattr__("_my_attr", "attr_val")
     assert nbm._my_attr == "attr_val"
 
@@ -146,14 +145,13 @@ def test_refresh_nbm(cbcsdk_mock):
     object_with_dirty_model_unique_id._dirty_attributes["id"] = 2
     assert object_with_dirty_model_unique_id.primary_key == "id"
     assert "id" in object_with_dirty_model_unique_id._dirty_attributes
-    object_with_dirty_model_unique_id.refresh() is False
+    assert object_with_dirty_model_unique_id.refresh() is False
 
     # refresh() should return True if there's a _model_unique_id and primary_key hasn't been changed
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/event/a1e12604d67b11ea920d3d9192a785d1",
-                             EVENT_GET_SPECIFIC_RESP)
-    refreshable_object = Event(api, "a1e12604d67b11ea920d3d9192a785d1")
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
+    refreshable_object = Policy(api, 30241)
     assert refreshable_object._full_init is False
-    assert refreshable_object.refresh() is True
+    refreshable_object.refresh()
     assert refreshable_object._full_init is True
 
 
@@ -162,25 +160,23 @@ def test_build_api_request_uri_nbm(cbcsdk_mock):
     api = cbcsdk_mock.api
 
     # if there's no _model_unique_id, _build_api_request_uri should return just cls.urlobject
-    event = Event(api, model_unique_id=None)
-    assert event._build_api_request_uri() == "/integrationServices/v3/event"
+    policy = Policy(api, model_unique_id=None)
+    assert policy._build_api_request_uri() == "/integrationServices/v3/policy"
 
     # if there's a _model_unique_id, _build_api_request_uri should return cls.urlobect + _model_unique_id
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/event/a1e12604d67b11ea920d3d9192a785d1",
-                             EVENT_GET_SPECIFIC_RESP)
-    event = Event(api, "a1e12604d67b11ea920d3d9192a785d1")
-    assert event._build_api_request_uri() == "/integrationServices/v3/event/a1e12604d67b11ea920d3d9192a785d1"
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
+    policy = Policy(api, 30241)
+    assert policy._build_api_request_uri() == "/integrationServices/v3/policy/30241"
 
 
 def test_retrieve_cb_info_nbm(cbcsdk_mock):
     """Test _retrieve_cb_info method of NewBaseModel"""
     api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/event/a1e12604d67b11ea920d3d9192a785d1",
-                             EVENT_GET_SPECIFIC_RESP)
-    event = Event(api, "a1e12604d67b11ea920d3d9192a785d1")
-    assert event._build_api_request_uri() == "/integrationServices/v3/event/a1e12604d67b11ea920d3d9192a785d1"
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
+    policy = Policy(api, 30241)
+    assert policy._build_api_request_uri() == "/integrationServices/v3/policy/30241"
     # _retrieve_cb_info() calls cb.get_object, which makes the API call to retrieve the object
-    assert event._retrieve_cb_info() == EVENT_GET_SPECIFIC_RESP
+    assert policy._retrieve_cb_info() == POLICY_GET_RESP
 
 
 def test_parse_nbm(cbcsdk_mock):
@@ -194,14 +190,13 @@ def test_parse_nbm(cbcsdk_mock):
 def test_original_document_nbm(cbcsdk_mock):
     """Test original_document method/property of NewBaseModel"""
     api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/event/a1e12604d67b11ea920d3d9192a785d1",
-                             EVENT_GET_SPECIFIC_RESP)
-    event = api.select(Event, "a1e12604d67b11ea920d3d9192a785d1")
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
+    policy = api.select(Policy, 30241)
     # original_document refreshes (if _full_init == False), then returns self._info
-    assert event._full_init is False
-    assert event.original_document == event._info
-    assert event._full_init is True
-    assert event.original_document['eventId'] == "a1e12604d67b11ea920d3d9192a785d1"
+    assert policy._full_init is False
+    assert policy.original_document == policy._info
+    assert policy._full_init is True
+    assert policy.original_document['id'] == 30241
 
 
 def test_set_attr_mbm(cbcsdk_mock):
@@ -281,7 +276,7 @@ def test_update_object_mbm(cbcsdk_mock):
     # if primary_key hasn't been modified, we use the _change_object_http_method
     api = cbcsdk_mock.api
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30242", POLICY_GET_RESP_1)
-    cbcsdk_mock.mock_request("PATCH", "/integrationServices/v3/policy/30242", POLICY_UPDATE_RESP)
+    cbcsdk_mock.mock_request("PUT", "/integrationServices/v3/policy/30242", POLICY_UPDATE_RESP)
     policy = api.select(Policy, 30242)
     policy._set("name", "newFakeName")
     policy._set("testId", 1)
@@ -313,7 +308,7 @@ def test_update_entire_mbm(cbcsdk_mock):
         mutableBaseModelPolicy._model_unique_id = 30241
 
     mutableBaseModelPolicy.id = 30241
-    cbcsdk_mock.mock_request("PATCH", "/integrationServices/v3/policy", POLICY_POST_RESP)
+    cbcsdk_mock.mock_request("POST", "/integrationServices/v3/policy", POLICY_POST_RESP)
     assert mutableBaseModelPolicy._update_entire_object()
     assert mutableBaseModelPolicy.id == 30241
 
@@ -325,7 +320,7 @@ def test_patch_entire_mbm(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
     mutableBaseModelPolicy = Policy(api, 30242)
     mutableBaseModelPolicy.id = 30241
-    cbcsdk_mock.mock_request("PATCH", "/integrationServices/v3/policy", POLICY_POST_RESP)
+    cbcsdk_mock.mock_request("PUT", "/integrationServices/v3/policy", POLICY_POST_RESP)
     assert mutableBaseModelPolicy._patch_object()
     assert mutableBaseModelPolicy.id == 30241
 
@@ -333,19 +328,15 @@ def test_patch_entire_mbm(cbcsdk_mock):
 def test_getattr_nbm(cbcsdk_mock):
     """Test __getattr__ method of NewBaseModel"""
     api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
     policy = Policy(api, 30241)
+    assert 'name' not in policy._info
     assert policy._model_unique_id == 30241
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
     assert policy.__getattr__("name") == 'Lyon_test'
-
-    event = Event(api, 1234)
-    assert 'eventTime' not in event._info
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/event/1234", {"eventInfo": {"eventTime": 1}})
-    assert event.__getattr__("eventTime") == 1
-    assert 'eventTime' in event._info
+    assert 'name' in policy._info
 
     with pytest.raises(AttributeError):
-        assert event.__getattr__("missingInfoTag") is None
+        assert policy.__getattr__("NotExist") is None
 
 
 def test_reset_mbm(cbcsdk_mock):

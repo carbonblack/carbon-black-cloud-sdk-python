@@ -49,7 +49,8 @@ Import statements will need to change:
     from cbapi.psc.defense import Device, Event, Policy
 
     # CBC SDK
-    from cbc_sdk.endpoint_standard import Device, Event, Policy
+    # note that the original "Event" has been decommissioned
+    from cbc_sdk.endpoint_standard import Device, EnrichedEvent, Policy
 
 ::
 
@@ -135,7 +136,8 @@ For help beyond import statement changes, check out these resources:
 
 Endpoint Standard
 """""""""""""""""
-Endpoint Standard Events are being replaced with Enriched Events.
+Endpoint Standard Events have been replaced with Enriched Events and the old event functionality has been
+decommissioned.
 
 ::
 
@@ -143,6 +145,9 @@ Endpoint Standard Events are being replaced with Enriched Events.
 
     # CBAPI
     from cbapi.psc.defense import Event
+
+    # CBC SDK (decommissioned--do not use)
+    from cbc_sdk.endpoint_standard import Event
 
     # CBC SDK
     from cbc_sdk.endpoint_standard import EnrichedEvent

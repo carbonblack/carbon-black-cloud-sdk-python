@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2021. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -15,9 +15,12 @@
 
 from __future__ import absolute_import
 
+import pkgutil
+import cbc_sdk
 import requests
 import sys
 from requests.adapters import HTTPAdapter, DEFAULT_POOLBLOCK, DEFAULT_RETRIES, DEFAULT_POOLSIZE, DEFAULT_POOL_TIMEOUT
+
 
 try:
     from requests.packages.urllib3.util.ssl_ import create_urllib3_context
@@ -44,11 +47,11 @@ import urllib
 from .credentials import Credentials
 from .credential_providers.default import default_credential_provider
 from .errors import ClientError, QuerySyntaxError, ServerError, TimeoutError, ApiError, ObjectNotFoundError, \
-    UnauthorizedError, ConnectionError
+    UnauthorizedError, ConnectionError, ModelNotFound
 from . import __version__
 
 from .cache.lru import lru_cache_function
-from .base import CreatableModelMixin
+from .base import CreatableModelMixin, NewBaseModel
 from .utils import convert_query_params
 
 log = logging.getLogger(__name__)
@@ -665,7 +668,7 @@ class BaseAPI(object):
         Prepare a query against the Carbon Black data store.
 
         Args:
-            cls (class): The Model class (for example, Computer, Process, Binary, FileInstance) to query
+            cls (class | str): The Model class (for example, Computer, Process, Binary, FileInstance) to query
             unique_id (optional): The unique id of the object to retrieve, to retrieve a single object by ID
             *args:
             **kwargs:
@@ -673,6 +676,8 @@ class BaseAPI(object):
         Returns:
             object: An instance of the Model class if a unique_id is provided, otherwise a Query object
         """
+        if isinstance(cls, str):
+            cls = select_class_instance(cls)
         if unique_id is not None:
             return select_instance(self, cls, unique_id, *args, **kwargs)
         else:
@@ -733,3 +738,34 @@ def select_instance(api, cls, unique_id, *args, **kwargs):
         object: New object instance.
     """
     return cls(api, unique_id, *args, **kwargs)
+
+
+def select_class_instance(cls: str):
+    """
+    Selecting the appropriate class based on the passed string.
+
+    Args:
+        cls: The class name represented in a string.
+
+    Returns:
+        Object[]:
+    """
+    # Walk through all the packages contained in the `cbc_sdk`, ensures the loading
+    # of all the needed packages.
+    _ = [i for i in pkgutil.walk_packages(cbc_sdk.__path__, f"{cbc_sdk.__name__}.")]
+
+    subclasses = set()
+    base_subclasses = NewBaseModel.__subclasses__().copy()
+    while base_subclasses:
+        parent = base_subclasses.pop()
+        subclasses.add(parent)
+        for child in parent.__subclasses__():
+            if child not in subclasses:
+                subclasses.add(child)
+                base_subclasses.append(child)
+
+    # https://www.python.org/dev/peps/pep-3155/#rationale
+    lookup_dict = {klass.__qualname__: klass for klass in subclasses}
+    if cls in lookup_dict.keys():
+        return lookup_dict[cls]
+    raise ModelNotFound()

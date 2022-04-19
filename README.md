@@ -1,8 +1,8 @@
 # VMware Carbon Black Cloud Python SDK
 
-**Latest Version:** 1.3.5
+**Latest Version:** 1.3.6
 <br>
-**Release Date:** January 26, 2022
+**Release Date:** April 19, 2022
 
 [![Coverage Status](https://coveralls.io/repos/github/carbonblack/carbon-black-cloud-sdk-python/badge.svg?t=Id6Baf)](https://coveralls.io/github/carbonblack/carbon-black-cloud-sdk-python)
 [![Codeship Status for carbonblack/carbon-black-cloud-sdk-python](https://app.codeship.com/projects/9e55a370-a772-0138-aae4-129773225755/status?branch=develop)](https://app.codeship.com/projects/402767)
@@ -43,8 +43,6 @@ At least one Carbon Black Cloud product is required to use this SDK:
 * [Audit and Remediation](https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/)
 * [Enterprise EDR](https://developer.carbonblack.com/reference/carbon-black-cloud/cb-threathunter/)
 * [Workload](https://developer.carbonblack.com/reference/carbon-black-cloud/workload-protection/)
-
-_Note: Support for the latest products such as Containers are planned for early 2021_
 
 ### Python Packages
 
@@ -95,6 +93,8 @@ cd carbon-black-cloud-sdk-python
 pip install -r requirements.txt
 ```
 
+**Note: Before contributing any code please make sure to read the [CONTRIBUTING](CONTRIBUTING.md) page.**
+
 If you want to test/execute the example scripts from the repo then install the SDK with the following command. This will install the SDK in editable mode so changes to the repo modify the installed package.
 
 ```
@@ -135,11 +135,8 @@ directory before running `make html`, or the equivalent command `sphinx-build -M
 
 Build the documentation by running:
 ```shell
-$ docker-compose -f docker/docs/docker-compose.yml up --build docs
+$ docker run -p 7000:7000 -it $(docker build -f ./docker/docs/Dockerfile . -q) make livehtml
 ```
-
-The service will start a local docs server at `:7000`. The server is using `sphinx-autobuild` with the `--watch` option 
-enabled, so you can live edit the documentation. Check the additional options and configs in the compose file.
 
 ### Development Flow
 

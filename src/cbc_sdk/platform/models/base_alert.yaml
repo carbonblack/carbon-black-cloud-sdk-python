@@ -17,13 +17,13 @@ properties:
   device_id:
     type: integer
     format: int64
-    description: ID of the device
+    description: ID of the device (empty for Container Runtime alerts)
   device_name:
     type: string
-    description: Device name
+    description: Device name (empty for Container Runtime alerts)
   device_os:
     type: string
-    description: Device OS
+    description: Device OS (empty for Container Runtime alerts)
     enum:
     - WINDOWS
     - ANDROID
@@ -34,12 +34,12 @@ properties:
   device_os_version:
     type: string
     example: Windows 10 x64
-    description: Device OS Version
+    description: Device OS Version (empty for Container Runtime alerts)
   device_username:
     type: string
     description: Logged on user during the alert. This is filled on a best-effort
       approach. If the user is not available it may be populated with the device
-      owner
+      owner (empty for Container Runtime alerts)
   first_event_time:
     type: string
     format: date-time
@@ -113,6 +113,7 @@ properties:
     - CB_ANALYTICS
     - DEVICE_CONTROL
     - WATCHLIST
+    - CONTAINER_RUNTIME
   workflow:
     description: User-updatable status of the alert
     type: object

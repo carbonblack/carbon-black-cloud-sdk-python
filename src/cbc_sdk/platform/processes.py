@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2021. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -36,7 +36,7 @@ class Process(UnrefreshableModel):
         >>> process = api.select(Process, "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb")
         # use the Process GUID in a where() clause
         >>> process_query = (api.select(Process).where(process_guid=
-                             "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb"))
+        "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb"))
         >>> process_query_results = [proc for proc in process_query]
         >>> process_2 = process_query_results[0]
     """
@@ -231,8 +231,7 @@ class Process(UnrefreshableModel):
             Tree (cbc_sdk.enterprise_edr.Tree): Tree with children (and possibly siblings).
 
         Example:
-
-        >>> tree = process.tree
+            >>> tree = process.tree
         """
         return self._cb.select(Process.Tree).where(process_guid=self.process_guid).results
 
@@ -337,9 +336,8 @@ class Process(UnrefreshableModel):
                 search parameters for events
 
         Example:
-
-        >>> [print(event) for event in process.events()]
-        >>> [print(event) for event in process.events(event_type="modload")]
+            >>> [print(event) for event in process.events()]
+            >>> [print(event) for event in process.events(event_type="modload")]
         """
         query = self._cb.select(Event).where(process_guid=self.process_guid)
 
@@ -470,11 +468,11 @@ class ProcessFacet(UnrefreshableModel):
     ProcessFacet objects contain both Terms and Ranges. Each of those contain facet
     fields and values.
 
-    Access all of the Terms facet data with ProcessFacet.terms_.facets or see just
-    the field names with ProcessFacet.terms_.fields.
+    Access all of the Terms facet data with :func:`ProcessFacet.Terms.facets` or see just
+    the field names with :func:`ProcessFacet.Terms.fields`.
 
-    Access all of the Ranges facet data with ProcessFacet.ranges_.facets or see just
-    the field names with ProcessFacet.ranges_.fields.
+    Access all of the Ranges facet data with :func:`ProcessFacet.Ranges.facets` or see just
+    the field names with :func:`ProcessFacet.Fanges.fields`.
 
     Process Facets can be queried for via `CBCloudAPI.select(ProcessFacet)`. Specify
     facet field(s) with `.add_facet_field("my_facet_field")`.
@@ -616,8 +614,7 @@ class AsyncProcessQuery(Query):
                 parameter.
 
         Example:
-
-        >>> cb.select(Process).where(process_name="foo.exe").timeout(5000)
+            >>> cb.select(Process).where(process_name="foo.exe").timeout(5000)
         """
         self._timeout = msecs
         return self
@@ -815,8 +812,7 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
                 parameter.
 
         Example:
-
-        >>> cb.select(Process).where(process_name="foo.exe").timeout(5000)
+            >>> cb.select(Process).where(process_name="foo.exe").timeout(5000)
         """
         self._timeout = msecs
         return self
@@ -835,9 +831,10 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
             - `window` will take precendent over `start` and `end` if provided.
 
         Examples:
-            query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z")
-            second_query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
-            third_query = api.select(Event).set_time_range(window='-3d')
+            >>> query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z")
+            >>> second_query = api.select(Event).set_time_range
+            ...     (start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
+            >>> third_query = api.select(Event).set_time_range(window='-3d')
         """
         if start:
             if not isinstance(start, str):

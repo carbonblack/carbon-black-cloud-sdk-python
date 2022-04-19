@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2021. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -130,15 +130,15 @@ class USBDeviceApproval(MutableBaseModel):
             approvals (list): List of dicts containing approval data to be created, formatted as shown below.
 
         Example:
-            [
-              {
-                "approval_name": "string",
-                "notes": "string",
-                "product_id": "string",
-                "serial_number": "string",
-                "vendor_id": "string"
-              }
-            ]
+            >>> [
+                    {
+                        "approval_name": "string",
+                        "notes": "string",
+                        "product_id": "string",
+                        "serial_number": "string",
+                        "vendor_id": "string"
+                    }
+                ]
 
         Returns:
             list: A list of USBDeviceApproval objects representing the approvals that were created.

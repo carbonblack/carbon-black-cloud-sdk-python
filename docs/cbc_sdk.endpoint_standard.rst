@@ -1,6 +1,16 @@
 Endpoint Standard
 =================
 
+Decommissioned Functionality
+----------------------------
+
+The Endpoint Standard events (``cbc_sdk.endpoint_standard.Event``) have been decommissioned and should no longer be
+used.  Any attempt to use them will raise a ``FunctionalityDecommissioned`` exception.  Please use
+``cbc_sdk.endpoint_standard.EnrichedEvent`` instead.  Refer to
+`this migration guide
+<https://community.carbonblack.com/t5/Developer-Relations/Migration-Guide-Carbon-Black-Cloud-Events-API/m-p/95915/thread-id/2519>`_
+on the Carbon Black Developer Network Community for more information.
+
 Submodules
 ----------
 
