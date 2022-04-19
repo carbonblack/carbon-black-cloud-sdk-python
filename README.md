@@ -44,8 +44,6 @@ At least one Carbon Black Cloud product is required to use this SDK:
 * [Enterprise EDR](https://developer.carbonblack.com/reference/carbon-black-cloud/cb-threathunter/)
 * [Workload](https://developer.carbonblack.com/reference/carbon-black-cloud/workload-protection/)
 
-_Note: Support for the latest products such as Containers are planned for early 2021_
-
 ### Python Packages
 
 - requests
