@@ -1,7 +1,7 @@
 # ThreatIntel Module
 Python3 module that can be used in the development of Threat Intelligence Connectors for the Carbon Black Cloud.
 
-> **_NOTE:_** This connector is deprecated, it is recommended to use the [carbon-blac-cloud-stix-taxii-connector](https://github.com/carbonblack/carbon-black-cloud-stix-taxii-connector) instead!
+> **_NOTE:_** This connector is deprecated, it is recommended to use the [Carbon Black Cloud Threat Intelligence Connector](https://github.com/carbonblack/carbon-black-cloud-threat-intelligence-connector) instead!
 
 ## Requirements
 
