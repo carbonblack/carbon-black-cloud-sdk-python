@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # *******************************************************
-# Copyright (c) VMware, Inc. 2021. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2021-2022. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
