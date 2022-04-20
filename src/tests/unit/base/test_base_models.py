@@ -37,7 +37,7 @@ def cbcsdk_mock(monkeypatch, cb):
     return CBCSDKMock(monkeypatch, cb)
 
 
-class TestBaseModel(NewBaseModel):
+class _TestBaseModel(NewBaseModel):
     """Test class allowing testing of multiple scenarios of string representation."""
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
         """
@@ -50,7 +50,7 @@ class TestBaseModel(NewBaseModel):
             force_init (bool): True to force object initialization.
             full_doc (bool): True to mark the object as fully initialized.
         """
-        super(TestBaseModel, self).__init__(cb, model_unique_id, initial_data, force_init, full_doc)
+        super(_TestBaseModel, self).__init__(cb, model_unique_id, initial_data, force_init, full_doc)
         self._my_subobjects = {}
 
     def _subobject(self, name):
@@ -65,7 +65,7 @@ class TestBaseModel(NewBaseModel):
         """
         if name in self._my_subobjects:
             return self._my_subobjects[name]
-        return super(TestBaseModel, self)._subobject(name)
+        return super(_TestBaseModel, self)._subobject(name)
 
 
 # ==================================== UNIT TESTS BELOW ====================================
@@ -477,10 +477,10 @@ def test_str_attr_line(cb):
         "List1": [listobj_data],
         "List2": [listobj_data, listobj2_data]
     }
-    my_subobject = TestBaseModel(cb, subobject_data["id"], subobject_data)
-    my_listobj = TestBaseModel(cb, listobj_data["id"], listobj_data)
-    my_listobj2 = TestBaseModel(cb, listobj2_data["id"], listobj2_data)
-    my_object = TestBaseModel(cb, object_data["id"], object_data)
+    my_subobject = _TestBaseModel(cb, subobject_data["id"], subobject_data)
+    my_listobj = _TestBaseModel(cb, listobj_data["id"], listobj_data)
+    my_listobj2 = _TestBaseModel(cb, listobj2_data["id"], listobj2_data)
+    my_object = _TestBaseModel(cb, object_data["id"], object_data)
     my_object._my_subobjects["mini_me"] = my_subobject
     my_object._my_subobjects["List1"] = [my_listobj]
     my_object._my_subobjects["List2"] = [my_listobj, my_listobj2]
@@ -563,7 +563,7 @@ def test_str_attr_line(cb):
     # Test rendering of subobject data (top-level mode) including lists in subobject
     rendering = my_object._str_attr_line('mini_me', object_data['mini_me'], name_field_len)
     assert len(rendering) == 10
-    assert rendering[0] == '      mini_me: [TestBaseModel object]:'
+    assert rendering[0] == '      mini_me: [_TestBaseModel object]:'
     assert rendering[1] == '                     id: 4096'
     assert rendering[2] == '                  soint: 42'
     assert rendering[3] == '                 solist: [list:5 items]:'
@@ -577,15 +577,15 @@ def test_str_attr_line(cb):
     rendering = my_object._str_attr_line('List1', object_data['List1'], name_field_len)
     assert len(rendering) == 4
     assert rendering[0] == '        List1: [list:1 item]:'
-    assert rendering[1] == '               [0]: [TestBaseModel object]:'
+    assert rendering[1] == '               [0]: [_TestBaseModel object]:'
     assert rendering[2] == '                    id: 64'
     assert rendering[3] == ''
     rendering = my_object._str_attr_line('List2', object_data['List2'], name_field_len)
     assert len(rendering) == 7
     assert rendering[0] == '        List2: [list:2 items]:'
-    assert rendering[1] == '               [0]: [TestBaseModel object]:'
+    assert rendering[1] == '               [0]: [_TestBaseModel object]:'
     assert rendering[2] == '                    id: 64'
     assert rendering[3] == ''
-    assert rendering[4] == '               [1]: [TestBaseModel object]:'
+    assert rendering[4] == '               [1]: [_TestBaseModel object]:'
     assert rendering[5] == '                    id: 128'
     assert rendering[6] == ''

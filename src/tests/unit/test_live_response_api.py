@@ -164,6 +164,7 @@ def test_base_manager_submit_job(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request("POST", "/appservices/v6/orgs/test/devices/_search", POST_DEVICE_SEARCH_RESP)
     sut = CbLRManagerBase(cbcsdk_mock.api, timeout=35)
     assert sut._timeout == 35
     assert not sut._keepalive_sessions
@@ -177,6 +178,7 @@ def test_base_manager_submit_job_with_device_object(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
+    cbcsdk_mock.mock_request("POST", "/appservices/v6/orgs/test/devices/_search", POST_DEVICE_SEARCH_RESP)
     sut = CbLRManagerBase(cbcsdk_mock.api, timeout=35)
     assert sut._timeout == 35
     assert not sut._keepalive_sessions
@@ -268,6 +270,7 @@ def test_create_session_with_poll_error(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP_ERROR)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/devices/_search', POST_DEVICE_SEARCH_RESP)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
     with pytest.raises(TimeoutError) as excinfo:
         manager.request_session(2468)
@@ -280,6 +283,7 @@ def test_create_session_with_init_poll_timeout(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/devices/_search', POST_DEVICE_SEARCH_RESP)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
     manager._init_poll_delay = 1.25
     manager._init_poll_timeout = 1
