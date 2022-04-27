@@ -1,6 +1,8 @@
 # ThreatIntel Module
 Python3 module that can be used in the development of Threat Intelligence Connectors for the Carbon Black Cloud.
 
+> **_NOTE:_** This connector is deprecated, it is recommended to use the [Carbon Black Cloud Threat Intelligence Connector](https://github.com/carbonblack/carbon-black-cloud-threat-intelligence-connector) instead!
+
 ## Requirements
 
 The file `requirements.txt` contains a list of dependencies for this project. After cloning this repository, run the following command from the `examples/enterprise_edr/threat_intelligence` directory:
