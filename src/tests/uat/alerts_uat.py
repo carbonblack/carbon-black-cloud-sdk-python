@@ -232,6 +232,12 @@ def test_search_container_runtime(cb):
 
 
 def test_get_alert_by_id(cb):
+    """
+    Tests getting a specific alert by ID.
+
+    Args:
+        cb (CBCloudAPI): API object to use.
+    """
     try:
         query = cb.select(BaseAlert).set_create_time(range='-3d')
         alert_to_use = select_arbitrary_alert(query)
@@ -249,6 +255,30 @@ def test_get_alert_by_id(cb):
             print("test_get_alert_by_id: unable to run test, no alerts matching query")
     except ApiError as e:
         print(f"test_get_alert_by_id: error in test: {e}")
+
+
+def test_facet_alerts(cb):
+    """
+    Tests faceting alerts.
+
+    Args:
+        cb (CBCloudAPI): API object to use.
+    """
+    try:
+        query = cb.select(BaseAlert).set_create_time(range='-3d')
+        sdk_facets = query.facets(['CATEGORY', 'REPUTATION'], 1000)
+        body = {'criteria': {'create_time': {'range': '-3d'}}, 'query': '',
+                'terms': {'fields': ['CATEGORY', 'REPUTATION'], 'rows': 1000}}
+        output = invoke_post('{}/appservices/v6/orgs/{}/alerts/_facet', body)
+        raw_facets = output['results']
+        if sdk_facets != raw_facets:
+            print("test_facet_alerts: faceted output differs")
+            print(f"    sdk_facets = {json.dumps(sdk_facets, indent=2)}")
+            print(f"    raw_facets = {json.dumps(raw_facets, indent=2)}")
+        else:
+            print("test_facet_alerts: OK")
+    except ApiError as e:
+        print(f"test_facet_alerts: error in test: {e}")
 
 
 def main():
@@ -273,6 +303,7 @@ def main():
     test_search_device_control(cb)
     test_search_container_runtime(cb)
     test_get_alert_by_id(cb)
+    test_facet_alerts(cb)
 
 
 if __name__ == "__main__":

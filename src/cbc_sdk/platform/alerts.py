@@ -1015,6 +1015,7 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
         if not all((field in BaseAlertSearchQuery.VALID_FACET_FIELDS) for field in fieldlist):
             raise ApiError("One or more invalid term field names")
         request = self._build_request(0, -1, False)
+        del request['rows']
         request["terms"] = {"fields": fieldlist, "rows": max_rows}
         url = self._build_url("/_facet")
         resp = self._cb.post_object(url, body=request)
