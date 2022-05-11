@@ -12,6 +12,12 @@
 
 """
 The following API calls are tested in this script:
+
+Alerts:
+* Alert Search (on all alert subtypes)
+* Get Alert by ID
+* Facet Alerts
+* Create Workflow
 """
 
 import sys
