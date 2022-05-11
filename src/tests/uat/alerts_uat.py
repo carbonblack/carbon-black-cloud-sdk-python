@@ -281,6 +281,79 @@ def test_facet_alerts(cb):
         print(f"test_facet_alerts: error in test: {e}")
 
 
+def set_workflow(alert, state, remediation, comment):
+    """
+    Set the workflow of an alert.
+
+    Args:
+        alert (BaseAlert): The alert to set the workflow of.
+        state (str): Either OPEN or DISMISSED.
+        remediation (str): Remediation string to set as part of the workflow.
+        comment (str): Comment to set as part of the workflow.
+    """
+    if state == "DISMISSED":
+        alert.dismiss(remediation, comment)
+    else:
+        alert.update(remediation, comment)
+
+
+def compare_workflow_against(stage, workflow, state, remediation, comment):
+    """
+    Compare the returned workflow from a raw API call against parameters.
+
+    Args:
+        stage (str): The stage of the comparison, used for printing error messages.
+        workflow (dict): Raw workflow obtained from a "get by ID" API call.
+        state (str): Either OPEN or DISMISSED.
+        remediation (str): Remediation string set as part of the workflow.
+        comment (str): Comment set as part of the workflow.
+
+    Returns:
+        bool: True if everything is the same, False if one or more items differs.
+    """
+    same = True
+    if workflow['state'] != state:
+        print(f"test_workflow_updates: ({stage}) new state is {workflow['state']} but should be {state}")
+        same = False
+    if workflow['remediation'] != remediation:
+        print(f"test_workflow_updates: ({stage}) new remediation is {workflow['remediation']} "
+              f"but should be {remediation}")
+        same = False
+    if workflow['comment'] != comment:
+        print(f"test_workflow_updates: ({stage}) new comment is {workflow['comment']} but should be {comment}")
+        same = False
+    return same
+
+
+def test_workflow_updates(cb):
+    """
+    Tests updates to workflow status.
+
+    Args:
+        cb (CBCloudAPI): API object to use.
+    """
+    try:
+        query = cb.select(BaseAlert).set_create_time(range='-3d')
+        alert_to_use = select_arbitrary_alert(query)
+        if alert_to_use:
+            id_to_use = alert_to_use.id
+            saved_workflow = alert_to_use.workflow_
+            new_state = "DISMISSED" if saved_workflow.state == "OPEN" else "OPEN"
+            set_workflow(alert_to_use, new_state, "Testing Only", "Test Comment")
+            output = invoke_get('{}/appservices/v6/orgs/{}/alerts/' + id_to_use)
+            ok = compare_workflow_against("set", output['workflow'], new_state, "Testing Only", "Test Comment")
+            set_workflow(alert_to_use, saved_workflow.state, saved_workflow.remediation, saved_workflow.comment)
+            output = invoke_get('{}/appservices/v6/orgs/{}/alerts/' + id_to_use)
+            ok = compare_workflow_against("reset", output['workflow'], saved_workflow.state, saved_workflow.remediation,
+                                          saved_workflow.comment) and ok
+            if ok:
+                print("test_workflow_updates: OK")
+        else:
+            print("test_workflow_updates: unable to run test, no alerts matching query")
+    except ApiError as e:
+        print(f"test_workflow_updates: error in test: {e}")
+
+
 def main():
     """Script entry point"""
     parser = build_cli_parser()
@@ -304,6 +377,7 @@ def main():
     test_search_container_runtime(cb)
     test_get_alert_by_id(cb)
     test_facet_alerts(cb)
+    test_workflow_updates(cb)
 
 
 if __name__ == "__main__":
