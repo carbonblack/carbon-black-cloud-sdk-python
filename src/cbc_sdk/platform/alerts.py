@@ -841,7 +841,7 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
 
         Args:
             alerttypes (list): List of string alert type values.  Valid values are "CB_ANALYTICS",
-                               and "WATCHLIST".
+                               "WATCHLIST", "DEVICE_CONTROL", and "CONTAINER_RUNTIME".
 
         Returns:
             BaseAlertSearchQuery: This instance.
