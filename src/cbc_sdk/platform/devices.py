@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2021. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -18,6 +18,7 @@ from cbc_sdk.platform import PlatformModel
 from cbc_sdk.platform.vulnerability_assessment import Vulnerability, VulnerabilityQuery
 from cbc_sdk.base import (UnrefreshableModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
                           CriteriaBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
+from cbc_sdk.workload import NSXRemediationJob
 
 import time
 
@@ -253,6 +254,46 @@ class Device(PlatformModel):
             dict: vulnerabilities for this device
         """
         return VulnerabilityQuery(Vulnerability, self._cb, self)
+
+    @property
+    def nsx_available(self):
+        """
+        Returns whether NSX actions are available on this device.
+
+        Returns:
+            bool: True if NSX actions are available, False if not.
+        """
+        return self._info['deployment_type'] == 'WORKLOAD' and self._info['nsx_enabled']
+
+    def nsx_remediation(self, tag, set_tag=True):
+        """
+        Start an NSX Remediation job on this device to change the tag.
+
+        Required Permissions:
+            appliances.nsx.remediation(EXECUTE)
+
+        Args:
+            tag (str): The NSX tag to apply to this device. Valid values are "CB-NSX-Quarantine",
+                       "CB-NSX-Isolate", and "CB-NSX-Custom".
+            set_tag (bool): True to toggle the specified tag on, False to toggle it off. Default True.
+
+        Returns:
+            NSXRemediationJob: The object representing all running jobs.  None if the operation is a no-op.
+        """
+        if not self.nsx_available:
+            raise ApiError("NSX actions are not available on this device")
+        current = self._info['nsx_distributed_firewall_policy']
+        if current is None:
+            if not set_tag:
+                return None  # clearing tag is a no-op if no tag is set
+        elif current == tag:
+            if set_tag:
+                return None  # setting tag is a no-op if already set
+        else:
+            if set_tag:
+                raise ApiError(f"NSX tag already set to {current}, cannot set another tag without clearing it")
+            return None  # clearing tag is a no-op in this case
+        return NSXRemediationJob.start_request(self._cb, self.id, tag, set_tag)
 
 
 class DeviceFacet(UnrefreshableModel):

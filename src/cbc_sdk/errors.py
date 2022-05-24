@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2021. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -279,6 +279,11 @@ class NonQueryableModel(ApiError):
 
 class OperationCancelled(ApiError):
     """An operation in the background was canceled."""
+    pass
+
+
+class NSXJobError(ApiError):
+    """NSX remediation jobs were not started"""
     pass
 
 
