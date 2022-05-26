@@ -141,6 +141,7 @@ def test_usb_query_with_all_bells_and_whistles(cbcsdk_mock):
     assert usb.product_name == "Ultra"
     assert usb.status == "APPROVED"
 
+
 def test_usb_query_length_num_available(cbcsdk_mock):
     """Tests the USB query with all options set."""
     cbcsdk_mock.mock_request("POST", "/device_control/v3/orgs/test/devices/_search", USBDEVICE_MULTIPLE_QUERY_RESP)
@@ -149,6 +150,7 @@ def test_usb_query_length_num_available(cbcsdk_mock):
     assert len(query) == 10
     results = [result for result in query._perform_query()]
     assert len(results) == 10
+
 
 def test_usb_query_async(cbcsdk_mock):
     """Test running the query in asynchronous mode."""
