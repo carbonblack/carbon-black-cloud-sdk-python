@@ -514,12 +514,12 @@ class BaseAPI(object):
         result = self.session.http_request(method, uri, headers=headers, data=raw_data, **kwargs)
 
         try:
-            resp = result.json()
+            result_json = result.json()
         except ValueError:
-            return result
+            result_json = {}
 
-        if "errorMessage" in resp:
-            raise ServerError(error_code=result.status_code, message=resp["errorMessage"])
+        if "errorMessage" in result_json:
+            raise ServerError(error_code=result.status_code, message=result_json["errorMessage"])
 
         return result
 
