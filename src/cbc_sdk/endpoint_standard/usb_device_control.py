@@ -489,7 +489,7 @@ class USBDeviceApprovalQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilde
         resp = self._cb.post_object(url, body=request)
         result = resp.json()
 
-        self._total_results = result["num_found"]
+        self._total_results = result["num_available"]
         self._count_valid = True
 
         return self._total_results
@@ -514,7 +514,7 @@ class USBDeviceApprovalQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilde
             resp = self._cb.post_object(url, body=request)
             result = resp.json()
 
-            self._total_results = result["num_found"]
+            self._total_results = result["num_available"]
             self._count_valid = True
 
             results = result.get("results", [])
@@ -544,7 +544,7 @@ class USBDeviceApprovalQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilde
         request = self._build_request(0, -1)
         resp = self._cb.post_object(url, body=request)
         result = resp.json()
-        self._total_results = result["num_found"]
+        self._total_results = result["num_available"]
         self._count_valid = True
         results = result.get("results", [])
         return [self._doc_class(self._cb, item["id"], item) for item in results]
@@ -644,6 +644,7 @@ class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupport
         self._criteria = {}
         self._sortcriteria = {}
         self._total_results = 0
+        self.max_rows = -1
 
     def set_endpoint_names(self, endpoint_names):
         """
@@ -720,6 +721,24 @@ class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupport
         self._update_criteria("vendor_name", vendor_names)
         return self
 
+    def set_max_rows(self, max_rows):
+        """
+        Sets the max number of usb devices to fetch in a singular query
+
+        Args:
+            max_rows (integer): Max number of usb devices
+
+        Returns:
+            USBDeviceQuery: This instance.
+
+        Raises:
+            ApiError: If rows is negative or greater than 10000
+        """
+        if max_rows < 0 or max_rows > 10000:
+            raise ApiError("Max rows must be between 0 and 10000")
+        self.max_rows = max_rows
+        return self
+
     def sort_by(self, key, direction="ASC"):
         """
         Sets the sorting behavior on a query's results.
@@ -757,6 +776,9 @@ class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupport
             request["start"] = from_row
         if max_rows >= 0:
             request["rows"] = max_rows
+        elif self.max_rows >= 0:
+            request["rows"] = self.max_rows
+
         if add_sort and self._sortcriteria != {}:
             request["sort"] = [self._sortcriteria]
         return request
@@ -789,7 +811,7 @@ class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupport
         resp = self._cb.post_object(url, body=request)
         result = resp.json()
 
-        self._total_results = result["num_found"]
+        self._total_results = result["num_available"]
         self._count_valid = True
 
         return self._total_results
@@ -814,7 +836,7 @@ class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupport
             resp = self._cb.post_object(url, body=request)
             result = resp.json()
 
-            self._total_results = result["num_found"]
+            self._total_results = result["num_available"]
             self._count_valid = True
 
             results = result.get("results", [])
@@ -844,7 +866,7 @@ class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupport
         request = self._build_request(0, -1)
         resp = self._cb.post_object(url, body=request)
         result = resp.json()
-        self._total_results = result["num_found"]
+        self._total_results = result["num_available"]
         self._count_valid = True
         results = result.get("results", [])
         return [self._doc_class(self._cb, item["id"], item) for item in results]
