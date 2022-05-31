@@ -924,7 +924,7 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
 
         Args:
             alerttypes (list): List of string alert type values.  Valid values are "CB_ANALYTICS",
-                               and "WATCHLIST".
+                               "WATCHLIST", "DEVICE_CONTROL", and "CONTAINER_RUNTIME".
 
         Returns:
             BaseAlertSearchQuery: This instance.
@@ -1037,12 +1037,14 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
 
         return self._total_results
 
-    def _perform_query(self, from_row=0, max_rows=-1):
+    def _perform_query(self, from_row=1, max_rows=-1):
         """
         Performs the query and returns the results of the query in an iterable fashion.
 
+        Alerts v6 API uses base 1 instead of 0.
+
         Args:
-            from_row (int): The row to start the query at (default 0).
+            from_row (int): The row to start the query at (default 1).
             max_rows (int): The maximum number of rows to be returned (default -1, meaning "all").
 
         Returns:
@@ -1096,6 +1098,7 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
         if not all((field in BaseAlertSearchQuery.VALID_FACET_FIELDS) for field in fieldlist):
             raise ApiError("One or more invalid term field names")
         request = self._build_request(0, -1, False)
+        del request['rows']
         request["terms"] = {"fields": fieldlist, "rows": max_rows}
         url = self._build_url("/_facet")
         resp = self._cb.post_object(url, body=request)
