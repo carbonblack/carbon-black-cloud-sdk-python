@@ -329,8 +329,7 @@ def test_query_cbanalyticsalert_facets(cbcsdk_mock):
 
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort", "criteria": {"workflow": ["OPEN"]},
-                        "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]},
-                        "rows": 100}
+                        "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]}}
         return {"results": [{"field": {},
                              "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
                             {"field": {},
@@ -411,8 +410,7 @@ def test_query_devicecontrolalert_facets(cbcsdk_mock):
 
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort", "criteria": {"workflow": ["OPEN"]},
-                        "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]},
-                        "rows": 100}
+                        "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]}}
         return {"results": [{"field": {},
                              "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
                             {"field": {},
@@ -486,8 +484,7 @@ def test_query_watchlistalert_facets(cbcsdk_mock):
 
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort", "criteria": {"workflow": ["OPEN"]},
-                        "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]},
-                        "rows": 100}
+                        "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]}}
         return {"results": [{"field": {},
                              "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
                             {"field": {},
