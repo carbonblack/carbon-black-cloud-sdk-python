@@ -113,14 +113,14 @@ class BaseAlert(PlatformModel):
             raise NonQueryableModel("Notes cannot be queried directly")
 
         def delete(self):
-            """ Deletes a note from an alert """
+            """Deletes a note from an alert."""
             url = self.urlobject_single.format(self._cb.credentials.org_key, self._alert.id,
                                                self.id)
             self._cb.delete_object(url)
             self._is_deleted = True
 
     def notes_(self):
-        """ Retrieves all notes for an alert """
+        """Retrieves all notes for an alert."""
         url = BaseAlert.Note.urlobject.format(self._cb.credentials.org_key, self._info[self.primary_key])
         resp = self._cb.get_object(url)
         item_list = resp.get("results", [])
@@ -128,7 +128,7 @@ class BaseAlert(PlatformModel):
                 for item in item_list]
 
     def create_note(self, note):
-        """ Creates a new note """
+        """Creates a new note."""
         request = {"note": note}
         url = BaseAlert.Note.urlobject.format(self._cb.credentials.org_key, self._info[self.primary_key])
         resp = self._cb.post_object(url, request)
