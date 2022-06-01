@@ -13,7 +13,7 @@
 from datetime import datetime
 import pytest
 
-from cbc_sdk.errors import ApiError, TimeoutError, NonQueryableModel, ObjectNotFoundError
+from cbc_sdk.errors import ApiError, TimeoutError, NonQueryableModel
 from cbc_sdk.platform import (
     BaseAlert,
     CBAnalyticsAlert,
@@ -989,6 +989,7 @@ def test_query_basealert_facets_error(cbcsdk_mock):
 
 
 def test_get_notes_for_alert(cbcsdk_mock):
+    """Test retrieving notes for an alert"""
     cbcsdk_mock.mock_request('GET',
                              "/appservices/v6/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35",
                              GET_ALERT_RESP_WITH_NOTES)
@@ -1008,6 +1009,7 @@ def test_get_notes_for_alert(cbcsdk_mock):
 
 
 def test_base_alert_create_note(cbcsdk_mock):
+    """Test creating a new note on an alert"""
     def on_post(url, body, **kwargs):
         body == {"note": "I am Grogu"}
         return CREATE_ALERT_NOTE
@@ -1027,6 +1029,7 @@ def test_base_alert_create_note(cbcsdk_mock):
 
 
 def test_base_alert_delete_note(cbcsdk_mock):
+    """Test deleting a note from an alert"""
     cbcsdk_mock.mock_request('GET',
                              "/appservices/v6/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35",
                              GET_ALERT_RESP_WITH_NOTES)
@@ -1047,12 +1050,14 @@ def test_base_alert_delete_note(cbcsdk_mock):
 
 
 def test_base_alert_unsupported_query_notes(cbcsdk_mock):
+    """Testing that error is thrown when querying notes directly"""
     with pytest.raises(NonQueryableModel):
         api = cbcsdk_mock.api
         api.select(BaseAlert.Note)
 
 
 def test_base_alert_refresh_note(cbcsdk_mock):
+    """Testing single note refresh"""
     cbcsdk_mock.mock_request('GET',
                              "/appservices/v6/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35",
                              GET_ALERT_RESP_WITH_NOTES)
@@ -1065,4 +1070,3 @@ def test_base_alert_refresh_note(cbcsdk_mock):
     alert = api.select(BaseAlert, "1ba0c35f-9c01-4413-afd8-fe4f01365e35")
     notes = alert.notes_()
     assert notes[0]._refresh() is True
-
