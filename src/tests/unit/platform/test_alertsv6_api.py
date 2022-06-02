@@ -818,11 +818,13 @@ def test_get_events(cbcsdk_mock):
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
                              POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b",
+                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
+                             "-8741e929e48b",
                              # noqa: E501
                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",
+                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
+                             "-8741e929e48b/results",
                              # noqa: E501
                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ALERTS)
 
@@ -842,11 +844,13 @@ def test_get_events_zero_found(cbcsdk_mock):
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
                              POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b",
+                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
+                             "-8741e929e48b",
                              # noqa: E501
                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",
+                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
+                             "-8741e929e48b/results",
                              # noqa: E501
                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_ZERO)
 
@@ -864,7 +868,8 @@ def test_get_events_timeout(cbcsdk_mock):
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
                              POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b",
+                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
+                             "-8741e929e48b",
                              # noqa: E501
                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING)
 
@@ -893,11 +898,13 @@ def test_get_events_detail_jobs_resp_handling(cbcsdk_mock):
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
                              POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b",
+                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
+                             "-8741e929e48b",
                              # noqa: E501
                              get_validate)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",
+                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
+                             "-8741e929e48b/results",
                              # noqa: E501
                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ALERTS)
 
@@ -929,11 +936,13 @@ def test_get_events_async(cbcsdk_mock):
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
                              POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b",
+                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
+                             "-8741e929e48b",
                              # noqa: E501
                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",
+                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
+                             "-8741e929e48b/results",
                              # noqa: E501
                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ALERTS)
 
@@ -946,7 +955,7 @@ def test_get_events_async(cbcsdk_mock):
 
 
 def test_query_basealert_with_time_range_errors(cbcsdk_mock):
-    """Test exeptions in alert query"""
+    """Test exceptions in alert query"""
     api = cbcsdk_mock.api
     with pytest.raises(ApiError) as ex:
         api.select(BaseAlert).where("Blort").set_time_range("invalid", range="whatever")
