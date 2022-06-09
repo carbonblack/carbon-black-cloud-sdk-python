@@ -191,6 +191,94 @@ Both IOCs and reports may include a ``link`` property, which is used by the Carb
 to indicate that this IOC or report is being managed outside of the console.  If this property is not ``None``,
 the console UI will disable the ability to edit the IOC or report, but they can still be edited via the API.
 
+Creating an IOC
++++++++++++++++
+
+You can create an IOC via the `IOC_V2` class, there are 3 avaliable methods that you can use to initiate your IOC:
+`IOC_V2.create_query, IOC_V2.create_equality, IOC_V2.create_regex`.
+
+Creating an equality IOC
+++++++++++++++++++++++++
+
+.. code-block:: python
+
+    >> from cbc_sdk import CBCloudAPI
+    >> from cbc_sdk.enterprise_edr import IOC_V2
+    >> cbcsdk = CBCloudAPI(profile="default")
+    >> IOC_V2.create_equality(cbcsdk, None, "netconn_domain", ["localhost.local"])
+    <cbc_sdk.enterprise_edr.threat_intelligence.IOC_V2: id ad361179-d586-4c99-af3e-821224cc0fd9> @ https://<CBCInstanceURL>
+
+
+Creating a query IOC
+++++++++++++++++++++
+
+.. code-block:: python
+
+    >> IOC_V2.create_query(cbcsdk, None, "{process_hash:098f6bcd4621d373cade4e832627b4f6}")
+    <cbc_sdk.enterprise_edr.threat_intelligence.IOC_V2: id 36d68cab-4739-4aa6-afcc-2921d2e5573e> @ https://<CBCInstanceURL>
+
+
+Creating a regex IOC
+++++++++++++++++++++
+
+.. code-block:: python
+
+    >> IOC_V2.create_regex(cbcsdk, None, "process_name", r"(^/usr/.*$)|(^/bin/.*$)")
+    <cbc_sdk.enterprise_edr.threat_intelligence.IOC_V2: id 5170a04c-bbfc-4449-b939-d5fc9f55d555> @ https://<CBCInstanceURL>
+
+
+Removing and adding an IOC from a Report
+++++++++++++++++++++++++++++++++++++++++
+
+If you want to remove an IOC from a report, you will need the IOC id and the report id.
+
+.. code-block:: python
+
+    >> from cbc_sdk.enterprise_edr import Report
+    >> ioc_id = "<ioc_id>"
+    >> report = cbcsdk.select(Report).where(id="<report_id>", feed_id="<feed_id>")[0]
+    <cbc_sdk.enterprise_edr.threat_intelligence.Report: id 1e69c54e-7cc9-41b8-9d1d-3fd59a003d8a> @ https://<CBCInstanceURL>
+    >> report.remove_iocs_by_id([ioc_id])
+    >> report.update()
+    <cbc_sdk.enterprise_edr.threat_intelligence.Report: id 1e69c54e-7cc9-41b8-9d1d-3fd59a003d8b> @ https://<CBCInstanceURL> (*)
+
+
+Adding the IOC into the report works the same way:
+
+.. code-block:: python
+
+    >> from cbc_sdk.enterprise_edr import Report, IOC_V2
+    >> ioc_id = "<ioc_id>"
+    >> report = cbcsdk.select(Report).where(id="<report_id>", feed_id="<feed_id>")[0]
+    <cbc_sdk.enterprise_edr.threat_intelligence.Report: id 1e69c54e-7cc9-41b8-9d1d-3fd59a003d8a> @ https://<CBCInstanceURL>
+    >> ioc = IOC_V2.create_regex(cbcsdk, None, "process_name", r"(^/usr/.*$)|(^/bin/.*$)")
+    >> report.append_iocs([ioc])
+    >> report.update()
+    <cbc_sdk.enterprise_edr.threat_intelligence.Report: id 1e69c54e-7cc9-41b8-9d1d-3fd59a003d8b> @ https://<CBCInstanceURL> (*)
+
+
+.. note::
+    Calling the `Report.save()` method after the insertion or removal of IOC does not update the report
+    and it's likely to result in a bad call to the API.
+
+
+If the report is in a watchlist instead of a feed then you have to get the appropriate watchlist and iterate over the reports.
+
+.. code-block:: python
+
+    >> from cbc_sdk.enterprise_edr import Watchlist, Report, IOC_V2
+    >> ioc_id = "<ioc_id>"
+    >> report_id = "<report_id>"
+    >> watchlist = cbcsdk.select(Watchlist, "<watchlist_id>")
+    <cbc_sdk.enterprise_edr.threat_intelligence.Watchlist: id <watchlist_id>> @ https://<CBCInstanceURL>
+    >> ioc = IOC_V2.create_regex(cbcsdk, None, "process_name", r"(^/usr/.*$)|(^/bin/.*$)")
+    >> reports = watchlist.reports
+    >> report = [report_ for report_ in reports if report_.id == report_id][0]
+    >> report.append_iocs([ioc])
+    >> report.update()
+    <cbc_sdk.enterprise_edr.threat_intelligence.Report: id 1e69c54e-7cc9-41b8-9d1d-3fd59a003d8b> @ https://<CBCInstanceURL> (*)
+
+
 Tips for Using IOCs
 +++++++++++++++++++
 * You can safely ignore certain fields in an IOC.  For example, fields like ``alert_id`` and ``process_guid`` will
