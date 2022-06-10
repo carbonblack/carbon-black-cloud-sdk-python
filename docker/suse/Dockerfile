@@ -1,4 +1,4 @@
-from opensuse/leap
+from opensuse/tumbleweed
 MAINTAINER cb-developer-network@vmware.com
 
 COPY . /app

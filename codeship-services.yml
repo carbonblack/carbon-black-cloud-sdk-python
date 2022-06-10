@@ -1,7 +1,3 @@
-testingpython36:
-  build:
-    dockerfile: ./docker/python3.6/Dockerfile
-
 testingpython37:
   build:
     dockerfile: ./docker/python3.7/Dockerfile
@@ -11,6 +7,14 @@ testingpython38:
     dockerfile: ./docker/python3.8/Dockerfile
   encrypted_env_file:
     - env.encrypted
+
+testingpython39:
+  build:
+    dockerfile: ./docker/python3.9/Dockerfile
+
+testingpython310:
+  build:
+    dockerfile: ./docker/python3.10/Dockerfile
 
 testingrhel:
   build:
