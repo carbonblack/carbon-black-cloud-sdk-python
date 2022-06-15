@@ -1,0 +1,15 @@
+type: object
+properties:
+  author:
+    type: string
+    description: User who created the note
+  create_time:
+    type: string
+    format: date-time
+    description: Time the note was created
+  id:
+    type: string
+    description: Unique ID for this note
+  note:
+    type: string
+    description: Note contents
