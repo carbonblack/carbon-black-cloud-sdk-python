@@ -894,6 +894,7 @@ class Feed(FeedModel):
 class Report(FeedModel):
     """Represents reports retrieved from an Enterprise EDR feed."""
     urlobject = "/threathunter/feedmgr/v2/orgs/{}/feeds/{}/reports"
+    urlobject_single = "/threathunter/watchlistmgr/v3/orgs/{}/reports/{}"
     primary_key = "id"
     swagger_meta_file = "enterprise_edr/models/report.yaml"
 
@@ -921,24 +922,40 @@ class Report(FeedModel):
             model_unique_id (Any): Unused.
             initial_data (dict): The initial data for the object.
             feed_id (str): The ID of the feed this report is for.
-            from_watchlist (str): The ID of the watchlist this report is for.
+            from_watchlist (bool): If the report is in a watchlist
         """
-        super(Report, self).__init__(cb, model_unique_id=initial_data.get("id", None),
-                                     initial_data=initial_data,
-                                     force_init=False, full_doc=True)
+        if model_unique_id:
+            url = self.urlobject_single.format(
+                cb.credentials.org_key,
+                model_unique_id
+            )
+            log.debug("Fetching a watchlist report")
+            initial_data = cb.get_object(url)
+            from_watchlist = True
 
-        # NOTE(ww): Warn instead of failing since we allow Watchlist reports
-        # to be created via create(), but we don't actually know that the user
-        # intends to use them with a watchlist until they call save().
-        if not feed_id and not from_watchlist:
-            log.warning("Report created without feed ID or not from watchlist")
+        if not feed_id and not initial_data:
+            raise ApiError("You need to provide the parameter `feed_id`")
+
+        super(Report, self).__init__(
+            cb,
+            model_unique_id=initial_data.get("id", None),
+            initial_data=initial_data,
+            force_init=False, full_doc=True
+        )
 
         self._feed_id = feed_id
         self._from_watchlist = from_watchlist
 
-        self._iocs = IOC(cb, initial_data=self.iocs, report_id=self.id) if self.iocs else None
-        self._iocs_v2 = [IOC_V2(cb, initial_data=ioc, report_id=self.id) for ioc in self.iocs_v2] \
-            if self.iocs_v2 else None
+        self._iocs = []
+        if self._iocs:
+            for ioc in self.ioc:
+                self._iocs.append(IOC(cb, initial_data=self.iocs, report_id=self.id))
+
+        self._iocs_v2 = []
+        if self.iocs_v2:
+            for ioc in self.iocs_v2:
+                self._iocs_v2.append(IOC_V2(cb, initial_data=ioc, report_id=self.id))
+
         # this flag is set when we need to rebuild the 'ioc_v2' element of _info from the _iocs_v2 array
         self._iocs_v2_need_rebuild = False
 
@@ -1805,12 +1822,10 @@ class FeedQuery(SimpleQuery):
 class ReportQuery(SimpleQuery):
     """Represents the logic for a Report query.
 
-    Note:
-        Only feed reports can be queried. Watchlist reports should be interacted
-        with via Watchlist.reports().
-
     Example:
         >>> cb.select(Report).where(feed_id=id)
+        >>> cb.select(Report, id)
+        >>> cb.select(Report, id, from_watchlist=True)
     """
     def __init__(self, doc_class, cb):
         """
@@ -1830,17 +1845,14 @@ class ReportQuery(SimpleQuery):
 
     @property
     def results(self):
-        """Return a list of Report objects matching self._args['feed_id']."""
-        if "feed_id" not in self._args:
-            raise ApiError("required parameter feed_id missing")
-
+        """Return a list of Report objects"""
         feed_id = self._args["feed_id"]
 
-        log.debug("Fetching all reports")
         url = self._doc_class.urlobject.format(
             self._cb.credentials.org_key,
             feed_id,
         )
+        log.debug("Fetching all reports")
         resp = self._cb.get_object(url)
         results = resp.get("results", [])
         return [self._doc_class(self._cb, initial_data=item, feed_id=feed_id) for item in results]
