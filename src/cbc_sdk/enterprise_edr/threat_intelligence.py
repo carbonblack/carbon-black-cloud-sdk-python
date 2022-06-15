@@ -919,7 +919,8 @@ class Report(FeedModel):
 
         Args:
             cb (CBCloudAPI): A reference to the CBCloudAPI object.
-            model_unique_id (Any): Unused.
+            model_unique_id (str): The ID of the Report (only works for Reports in
+                Watchlists).
             initial_data (dict): The initial data for the object.
             feed_id (str): The ID of the feed this report is for.
             from_watchlist (bool): If the report is in a watchlist
