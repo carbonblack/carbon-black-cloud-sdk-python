@@ -13,7 +13,7 @@
 from datetime import datetime
 import pytest
 
-from cbc_sdk.errors import ApiError, TimeoutError
+from cbc_sdk.errors import ApiError, TimeoutError, NonQueryableModel
 from cbc_sdk.platform import (
     BaseAlert,
     CBAnalyticsAlert,
@@ -49,6 +49,9 @@ from tests.unit.fixtures.platform.mock_alerts import (
     GET_ALERT_RESP_INVALID_ALERT_ID,
     GET_ALERT_TYPE_WATCHLIST,
     GET_ALERT_TYPE_WATCHLIST_INVALID,
+    GET_ALERT_RESP_WITH_NOTES,
+    GET_ALERT_NOTES,
+    CREATE_ALERT_NOTE,
 )
 
 
@@ -815,10 +818,14 @@ def test_get_events(cbcsdk_mock):
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
                              POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b",  # noqa: E501
+                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
+                             "-8741e929e48b",
+                             # noqa: E501
                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
+                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
+                             "-8741e929e48b/results",
+                             # noqa: E501
                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ALERTS)
 
     api = cbcsdk_mock.api
@@ -837,10 +844,14 @@ def test_get_events_zero_found(cbcsdk_mock):
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
                              POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b",  # noqa: E501
+                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
+                             "-8741e929e48b",
+                             # noqa: E501
                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
+                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
+                             "-8741e929e48b/results",
+                             # noqa: E501
                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_ZERO)
 
     api = cbcsdk_mock.api
@@ -857,7 +868,9 @@ def test_get_events_timeout(cbcsdk_mock):
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
                              POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b",  # noqa: E501
+                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
+                             "-8741e929e48b",
+                             # noqa: E501
                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING)
 
     api = cbcsdk_mock.api
@@ -878,16 +891,21 @@ def test_get_events_detail_jobs_resp_handling(cbcsdk_mock):
         if called == 2:
             return GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ZERO_COMP
         return GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP
+
     cbcsdk_mock.mock_request("GET",
                              "/appservices/v6/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
                              GET_ALERT_RESP)
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
                              POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b",  # noqa: E501
+                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
+                             "-8741e929e48b",
+                             # noqa: E501
                              get_validate)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
+                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
+                             "-8741e929e48b/results",
+                             # noqa: E501
                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ALERTS)
 
     api = cbcsdk_mock.api
@@ -918,10 +936,14 @@ def test_get_events_async(cbcsdk_mock):
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
                              POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b",  # noqa: E501
+                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
+                             "-8741e929e48b",
+                             # noqa: E501
                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
+                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
+                             "-8741e929e48b/results",
+                             # noqa: E501
                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ALERTS)
 
     api = cbcsdk_mock.api
@@ -933,7 +955,7 @@ def test_get_events_async(cbcsdk_mock):
 
 
 def test_query_basealert_with_time_range_errors(cbcsdk_mock):
-    """Test exeptions in alert query"""
+    """Test exceptions in alert query"""
     api = cbcsdk_mock.api
     with pytest.raises(ApiError) as ex:
         api.select(BaseAlert).where("Blort").set_time_range("invalid", range="whatever")
@@ -973,3 +995,87 @@ def test_query_basealert_facets_error(cbcsdk_mock):
     with pytest.raises(ApiError) as ex:
         query.facets(["ALABALA", "STATUS"])
     assert "One or more invalid term field names" in str(ex.value)
+
+
+def test_get_notes_for_alert(cbcsdk_mock):
+    """Test retrieving notes for an alert"""
+    cbcsdk_mock.mock_request('GET',
+                             "/appservices/v6/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35",
+                             GET_ALERT_RESP_WITH_NOTES)
+
+    cbcsdk_mock.mock_request('GET',
+                             "/appservices/v6/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35/notes",
+                             GET_ALERT_NOTES)
+
+    api = cbcsdk_mock.api
+    alert = api.select(BaseAlert, "1ba0c35f-9c01-4413-afd8-fe4f01365e35")
+    notes = alert.notes_()
+    assert len(notes) == 2
+    assert notes[0].author == "Grogu"
+    assert notes[0].id == "1"
+    assert notes[0].create_time == "2021-05-13T00:20:46.474Z"
+    assert notes[0].note == "I am a note"
+
+
+def test_base_alert_create_note(cbcsdk_mock):
+    """Test creating a new note on an alert"""
+    def on_post(url, body, **kwargs):
+        body == {"note": "I am Grogu"}
+        return CREATE_ALERT_NOTE
+
+    cbcsdk_mock.mock_request('GET',
+                             "/appservices/v6/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35",
+                             GET_ALERT_RESP_WITH_NOTES)
+
+    cbcsdk_mock.mock_request('POST',
+                             "/appservices/v6/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35/notes",
+                             on_post)
+
+    api = cbcsdk_mock.api
+    alert = api.select(BaseAlert, "1ba0c35f-9c01-4413-afd8-fe4f01365e35")
+    note = alert.create_note("I am Grogu")
+    assert note[0].note == "I am Grogu"
+
+
+def test_base_alert_delete_note(cbcsdk_mock):
+    """Test deleting a note from an alert"""
+    cbcsdk_mock.mock_request('GET',
+                             "/appservices/v6/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35",
+                             GET_ALERT_RESP_WITH_NOTES)
+
+    cbcsdk_mock.mock_request('GET',
+                             "/appservices/v6/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35/notes",
+                             GET_ALERT_NOTES)
+
+    cbcsdk_mock.mock_request('DELETE',
+                             "/appservices/v6/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35/notes/1",
+                             None)
+
+    api = cbcsdk_mock.api
+    alert = api.select(BaseAlert, "1ba0c35f-9c01-4413-afd8-fe4f01365e35")
+    notes = alert.notes_()
+    notes[0].delete()
+    assert notes[0]._is_deleted
+
+
+def test_base_alert_unsupported_query_notes(cbcsdk_mock):
+    """Testing that error is thrown when querying notes directly"""
+    with pytest.raises(NonQueryableModel):
+        api = cbcsdk_mock.api
+        api.select(BaseAlert.Note)
+
+
+def test_base_alert_refresh_note(cbcsdk_mock):
+    """Testing single note refresh"""
+    cbcsdk_mock.mock_request('GET',
+                             "/appservices/v6/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35",
+                             GET_ALERT_RESP_WITH_NOTES)
+
+    cbcsdk_mock.mock_request('GET',
+                             "/appservices/v6/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35/notes",
+                             GET_ALERT_NOTES)
+
+    api = cbcsdk_mock.api
+    alert = api.select(BaseAlert, "1ba0c35f-9c01-4413-afd8-fe4f01365e35")
+    notes = alert.notes_()
+    assert notes[0]._refresh() is True
