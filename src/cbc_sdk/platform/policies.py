@@ -25,6 +25,18 @@ class Policy(MutableBaseModel):
     primary_key = "id"
     swagger_meta_file = "platform/models/policy.yaml"
     VALID_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "MISSION_CRITICAL"]
+    VALID_SENSOR_SETTINGS = ["SHOW_UI", "ALLOW_UNINSTALL", "ALLOW_UPLOAD", "QUARANTINE_DEVICE", "ENABLE_FORENSICS",
+                             "LOGGING_LEVEL", "QUARANTINE_DEVICE_MESSAGE", "ENABLE_THREAT_SHARING", "SET_SENSOR_MODE",
+                             "SENSOR_RESET", "BLOCK_REMOVABLE_MEDIA", "POLICY_ACTION_OVERRIDE", "BACKGROUND_SCAN",
+                             "RATE_LIMIT", "QUEUE_SIZE", "DROP_CONNECTION_TIME", "CONNECTION_LIMIT", "LEARNING_MODE",
+                             "SET_AV_MODE", "SCAN_NETWORK_DRIVE", "BYPASS_AFTER_RESTART_MINS",
+                             "BYPASS_AFTER_LOGIN_MINS", "HELP_MESSAGE", "SHOW_FULL_UI", "SCAN_EXECUTE_ON_NETWORK_DRIVE",
+                             "DELAY_EXECUTE", "ALLOW_INLINE_BLOCKING", "PRESERVE_SYSTEM_MEMORY_SCAN", "HASH_MD5",
+                             "SCAN_LARGE_FILE_READ", "SECURITY_CENTER_OPT", "CB_LIVE_RESPONSE", "UNINSTALL_CODE",
+                             "ALLOW_EXPEDITED_SCAN", "UBS_OPT_IN", "DISABLE_MALWARE_SERVICES"]
+    VALID_SCAN_MODES = ["NORMAL", "AGGRESSIVE"]
+    VALID_SCAN_OPTIONS = ["AUTOSCAN", "DISABLED"]
+    VALID_DAYS = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
         """
@@ -46,18 +58,46 @@ class Policy(MutableBaseModel):
         self._object_rules_need_load = True
 
     class PolicyBuilder:
+        """Builder object to simplify the creation of new Policy objects."""
         def __init__(self, cb):
+            """
+            Initialize the PolicyBuilder object.
+
+            Args:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+            """
             self._cb = cb
-            self._new_policy_data = {"org_key": cb.credentials.org_key, "priority": "MEDIUM",
+            self._new_policy_data = {"org_key": cb.credentials.org_key, "priority_level": "MEDIUM",
                                      "is_system": False, "rapid_configs": []}
             self._sensor_settings = {}
             self._new_rules = []
 
         def set_name(self, name):
+            """
+            Set the new policy name.
+
+            Args:
+                name (str): The new policy name.
+
+            Returns:
+                PolicyBuilder: This object.
+            """
             self._new_policy_data["name"] = name
             return self
 
         def set_priority(self, priority):
+            """
+            Set the new policy's priority. Default is MEDIUM.
+
+            Args:
+                priority (str): The priority, either "LOW", "MEDIUM", "HIGH", or "MISSION_CRITICAL".
+
+            Returns:
+                PolicyBuilder: This object.
+
+            Raises:
+                ApiError: If an invalid priority value is passed in.
+            """
             if priority in Policy.VALID_PRIORITIES:
                 self._new_policy_data["priority_level"] = priority
             else:
@@ -65,14 +105,361 @@ class Policy(MutableBaseModel):
             return self
 
         def set_description(self, descr):
+            """
+            Set the new policy description.
+
+            Args:
+                descr (str): The new policy description.
+
+            Returns:
+                PolicyBuilder: This object.
+            """
             self._new_policy_data["description"] = descr
             return self
 
+        def set_auto_deregister_interval(self, interval):
+            """
+            Set the time in milliseconds after a VDI goes inactive to deregister it.
+
+            Args:
+                interval (int): The desired interval in milliseconds.
+
+            Returns:
+                PolicyBuilder: This object.
+            """
+            self._new_policy_data["auto_deregister_inactive_vdi_interval_ms"] = interval
+            return self
+
+        def set_auto_delete_bad_hash_delay(self, delay):
+            """
+            Set the delay in milliseconds after which known malware will be deleted.
+
+            Args:
+                delay (int): The desired delay interval in milliseconds.
+
+            Returns:
+                PolicyBuilder: This object.
+            """
+            self._new_policy_data["auto_delete_known_bad_hashes_delay"] = delay
+            return self
+
+        def set_avira_protection_cloud(self, enabled, max_exe_delay=None, max_file_size=None, risk_level=None):
+            """
+            Set the settings for third-party unknown binary reputation analysis.
+
+            Args:
+                enabled (bool): True to enable unknown binary reputation analysis.
+                max_exe_delay (int): Time before sending unknown binary for analysis, in seconds.
+                max_file_size (int): Maximum size of file to send for analysis, in megabytes.
+                risk_level (int): Risk level to send for analysis (0-7).
+
+            Returns:
+                PolicyBuilder: This object.
+            """
+            apc = {"enabled": enabled}
+            if max_exe_delay is not None:
+                apc["max_exe_delay"] = max_exe_delay
+            if max_file_size is not None:
+                apc["max_file_size"] = max_file_size
+            if risk_level is not None:
+                apc["risk_level"] = risk_level
+            av_settings = self._new_policy_data.get("av_settings", {})
+            av_settings["avira_protection_cloud"] = apc
+            self._new_policy_data["av_settings"] = av_settings
+            return self
+
+        def set_on_access_scan(self, enabled, mode="NORMAL"):
+            """
+            Sets the local scan settings.
+
+            Args:
+                enabled (bool): True to enable local scan.
+                mode (str): The mode to operate in, either "NORMAL" or "AGGRESSIVE".
+
+            Returns:
+                PolicyBuilder: This object.
+
+            Raises:
+                ApiError: If an invalid value is passed for the "mode" parameter.
+            """
+            if mode not in Policy.VALID_SCAN_MODES:
+                raise ApiError(f"invalid scan mode: {mode}")
+            av_settings = self._new_policy_data.get("av_settings", {})
+            av_settings["on_access_scan"] = {"enabled": enabled, "mode": mode}
+            self._new_policy_data["av_settings"] = av_settings
+            return self
+
+        def set_on_demand_scan(self, enabled, profile="NORMAL", scan_usb="AUTOSCAN", scan_cd_dvd="AUTOSCAN"):
+            """
+            Sets the background scan settings.
+
+            Args:
+                enabled (bool): True to enable background scan.
+                profile (str): The background scan mode, either "NORMAL" or "AGGRESSIVE".
+                scan_usb (str): Either "AUTOSCAN" to scan USB devices, or "DISABLED" to not do so.
+                scan_cd_dvd (str): Either "AUTOSCAN" to scan CDs and DVDs, or "DISABLED" to not do so.
+
+            Returns:
+                PolicyBuilder: This object.
+
+            Raises:
+                ApiError: If an invalid value is passed for any parameter.
+            """
+            if profile not in Policy.VALID_SCAN_MODES:
+                raise ApiError(f"invalid scan mode: {profile}")
+            if scan_usb not in Policy.VALID_SCAN_OPTIONS:
+                raise ApiError(f"invalid USB scan option: {scan_usb}")
+            if scan_cd_dvd not in Policy.VALID_SCAN_OPTIONS:
+                raise ApiError(f"invalid CD/DVD scan option: {scan_cd_dvd}")
+            av_settings = self._new_policy_data.get("av_settings", {})
+            ods = av_settings.get("on_demand_scan", {})
+            ods["enabled"] = enabled
+            ods["profile"] = profile
+            ods["scan_usb"] = scan_usb
+            ods["scan_cd_dvd"] = scan_cd_dvd
+            av_settings["on_demand_scan"] = ods
+            self._new_policy_data["av_settings"] = av_settings
+            return self
+
+        def set_on_demand_scan_schedule(self, days, start_hour, range_hours, recover_if_missed=True):
+            """
+            Sets the schedule for when background scans will be performed.
+
+            Args:
+                days (list[str]): The days on which to perform background scans.
+                start_hour (int): The hour of the day at which to perform the scans.
+                range_hours (int): The range of hours over which to perform the scans.
+                recover_if_missed (bool): True if the background scan should be performed ASAP if it's been missed.
+
+            Returns:
+                PolicyBuilder: This object.
+
+            Raises:
+                ApiError: If an invalid value is passed for a day of the week.
+            """
+            if not all([v in Policy.VALID_DAYS for v in days]):
+                raise ApiError("invalid day(s) of the week")
+            av_settings = self._new_policy_data.get("av_settings", {})
+            ods = av_settings.get("on_demand_scan", {})
+            ods["schedule"] = {"days": days, "start_hour": start_hour, "range_hours": range_hours,
+                               "recovery_scan_if_missed": recover_if_missed}
+            av_settings["on_demand_scan"] = ods
+            self._new_policy_data["av_settings"] = av_settings
+            return self
+
+        def set_signature_update(self, enabled):
+            """
+            Set the enable status for signature updates.
+
+            Args:
+                enabled (bool): True to enable signature updates.
+
+            Returns:
+                PolicyBuilder: This object.
+            """
+            av_settings = self._new_policy_data.get("av_settings", {})
+            sigupdate = av_settings.get("signature_update", {})
+            sigupdate["enabled"] = enabled
+            av_settings["signature_update"] = sigupdate
+            self._new_policy_data["av_settings"] = av_settings
+            return self
+
+        def set_signature_update_schedule(self, full_interval_hours, initial_random_delay_hours, interval_hours):
+            """
+            Set the signature update schedule.
+
+            Args:
+                full_interval_hours (int): The interval in hours between signature updates.
+                initial_random_delay_hours (int): The initial delay in hours before the first signature update.
+                interval_hours (int): The interval in hours between signature updates.
+
+            Returns:
+                PolicyBuilder: This object.
+            """
+            av_settings = self._new_policy_data.get("av_settings", {})
+            sigupdate = av_settings.get("signature_update", {})
+            sigupdate["schedule"] = {"full_interval_hours": full_interval_hours,
+                                     "initial_random_delay_hours": initial_random_delay_hours,
+                                     "interval_hours": interval_hours}
+            av_settings["signature_update"] = sigupdate
+            self._new_policy_data["av_settings"] = av_settings
+            return self
+
+        def set_update_servers_override(self, names):
+            """
+            Sets the list of update servers to override offsite/onsite settings.
+
+            Args:
+                names (list[str]): The server names to use, as a list of URIs.
+
+            Returns:
+                PolicyBuilder: This object.
+            """
+            av_settings = self._new_policy_data.get("av_settings", {})
+            servers = av_settings.get("update_servers", {})
+            servers["servers_override"] = names
+            av_settings["update_servers"] = servers
+            self._new_policy_data["av_settings"] = av_settings
+            return self
+
+        def set_update_servers_onsite(self, names, preferred_servers=None):
+            """
+            Sets the list of update servers for internal devices.
+
+            Args:
+                names (list[str]): The list of available update servers, as URIs.
+                preferred_servers (list[str]): The list of update servers to be considered "preferred," as URIs.
+
+            Returns:
+                PolicyBuilder: This object.
+            """
+            if preferred_servers is None:
+                preferred_servers = []
+            av_settings = self._new_policy_data.get("av_settings", {})
+            servers = av_settings.get("update_servers", {})
+            servers["servers_for_onsite_devices"] = [{"server": uri,
+                                                      "preferred": True if uri in preferred_servers else False}
+                                                     for uri in names]
+            servers["servers_for_onsite_devices"].extend([{"server": uri, "preferred": True}
+                                                          for uri in preferred_servers if uri not in names])
+            av_settings["update_servers"] = servers
+            self._new_policy_data["av_settings"] = av_settings
+            return self
+
+        def set_update_servers_offsite(self, names):
+            """
+            Sets the list of update servers for offsite devices.
+
+            Args:
+                names (list[str]): The list of update servers, as URIs.
+
+            Returns:
+                PolicyBuilder: This object.
+            """
+            av_settings = self._new_policy_data.get("av_settings", {})
+            servers = av_settings.get("update_servers", {})
+            servers["servers_for_offsite_devices"] = names
+            av_settings["update_servers"] = servers
+            self._new_policy_data["av_settings"] = av_settings
+            return self
+
+        def add_directory_action_rule(self, path, file_upload, protection):
+            """
+            Add a directory action rule to the new policy.
+
+            Args:
+                path (str): Path to the file or directory.
+                file_upload (bool): True to allow the deployed sensor to upload from that path.
+                protection (bool): True to deny the deployed sensor to upload from that path.
+
+            Returns:
+                PolicyBuilder: This object.
+            """
+            da_rules = self._new_policy_data.get("directory_action_rules", [])
+            da_rules.append({"path": path, "file_upload": file_upload, "protection": protection})
+            self._new_policy_data["directory_action_rules"] = da_rules
+            return self
+
+        def _add_rule(self, rule_data):
+            """
+            Add rule data to the new policy.
+
+            Args:
+                rule_data (dict): Rule data specified as a dictionary.
+
+            Raises:
+                InvalidObjectError: If the rule data passed in is not valid.
+            """
+            new_rule = PolicyRule(self._cb, parent=None, model_unique_id=None, initial_data=rule_data, force_init=False,
+                                  full_doc=True)
+            new_rule.validate()
+            self._new_rules.append(new_rule)
+
+        def add_rule_copy(self, rule):
+            """
+            Adds a copy of an existing rule to this new policy.
+
+            Args:
+                rule (PolicyRule): The rule to copy and add to this object.
+
+            Returns:
+                PolicyBuilder: This object.
+
+            Raises:
+                InvalidObjectError: If the rule data passed in is not valid.
+            """
+            ruledata = copy.deepcopy(rule._info)
+            if "id" in ruledata:
+                del ruledata["id"]
+            self._add_rule(ruledata)
+            return self
+
+        def add_rule(self, app_type, app_value, operation, action, required=True):
+            """
+            Add a new rule as discrete data elements to the new policy.
+
+            Args:
+                app_type (str): Specifies "NAME_PATH", "SIGNED_BY", or "REPUTATION:.
+                app_value (str): Value of the attribute specified by `app_type` to be matched.
+                operation (str): The type of behavior the application is performing.
+                action (str): The action the sensor will take when the application performs the specified action.
+                required (bool): True if this rule is required, False if not.
+
+            Returns:
+                PolicyBuilder: This object.
+
+            Raises:
+                InvalidObjectError: If the rule data passed in is not valid.
+            """
+            ruledata = {"required": required, "action": action, "application": {"type": app_type, "value": app_value},
+                        "operation": operation}
+            self._add_rule(ruledata)
+            return self
+
         def add_sensor_setting(self, name, value):
-            self._sensor_settings[name] = value
+            """
+            Add a sensor setting to the policy.
+
+            Args:
+                name (str): Sensor setting name.
+                value (str): Sensor setting value.
+
+            Returns:
+                PolicyBuilder: This object.
+
+            Raises:
+                ApiError: If the sensor setting name is not a valid one.
+            """
+            if name in Policy.VALID_SENSOR_SETTINGS:
+                self._sensor_settings[name] = value
+            else:
+                raise ApiError(f"invalid sensor setting: {name}")
+            return self
+
+        def set_managed_detection_response_permissions(self, policy_mod, quarantine):
+            """
+            Set the permissions for managed detection and response.
+
+            Args:
+                policy_mod (bool): True to allow MDR team to modify the policy.
+                quarantine (bool): True to allow MDR team to quarantine endpoints/workloads associated with the policy.
+
+            Returns:
+                PolicyBuilder: This object.
+            """
+            self._new_policy_data["managed_detection_response_permissions"] = {"policy_modification": policy_mod,
+                                                                               "quarantine": quarantine}
             return self
 
         def build(self):
+            """
+            Build a new Policy object using the contents of this builder.
+
+            The new policy must have `save()` called on it to be saved to the server.
+
+            Returns:
+                Policy: The new Policy object.
+            """
             new_policy = copy.deepcopy(self._new_policy_data)
             new_policy["sensor_settings"] = [{"name": name, "value": value}
                                              for name, value in self._sensor_settings.items()]
@@ -93,6 +480,15 @@ class Policy(MutableBaseModel):
         return PolicyQuery(cls, cb)
 
     def _build_api_request_uri(self, http_method="GET"):
+        """
+        Create the URL to be used to access instances of Policy.
+
+        Args:
+            http_method (str): Unused.
+
+        Returns:
+            str: The actual URL
+        """
         return Policy.urlobject.format(self._cb.credentials.org_key)
 
     def _refresh(self):
