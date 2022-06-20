@@ -38,6 +38,7 @@ from tests.unit.fixtures.enterprise_edr.mock_threatintel import (WATCHLIST_GET_R
                                                                  ADD_REPORT_IDS_LIST,
                                                                  ADD_REPORTS_LIST)
 
+
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 GUID_PATTERN = '[0-9A-Fa-f]{8}(-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}'
 
@@ -339,6 +340,14 @@ def test_report_query(cbcsdk_mock):
     }])
 
     assert reports[0].iocs_v2[0]["values"][0] == "test"
+
+
+def test_report_query_from_watchlist(cbcsdk_mock, get_watchlist_report):
+    """Testing Report Querying from a Watchlist"""
+    cbcsdk_mock.mock_request("GET", "/threathunter/watchlistmgr/v3/orgs/test/reports/1", get_watchlist_report)
+    api = cbcsdk_mock.api
+    report = api.select(Report, "1")
+    assert report.title == "Report Test Title"
 
 
 def test_feed_query_all(cbcsdk_mock):
