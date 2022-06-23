@@ -17,17 +17,13 @@ packages = [
 
 install_requires = [
     'requests',
-    'cachetools',
     'pyyaml',
-    'pika',
-    'prompt_toolkit',
-    'pygments',
     'python-dateutil',
-    'protobuf',
     'schema',
     'solrq',
     'validators',
-    "keyring;platform_system=='Darwin'"
+    "keyring;platform_system=='Darwin'",
+    'boto3'
 ]
 
 tests_requires = [
@@ -66,9 +62,10 @@ setup(
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'Topic :: Security',
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],

@@ -854,3 +854,429 @@ GET_RUN_RESULTS_RESP_OVER_10k = {
         }
     ]
 }
+
+ASYNC_START_QUERY = {
+    "org_key": "test",
+    "name": "DemoQuery",
+    "id": "abcdefghijklmnopqrstuvwxyz123456",
+    "sql": "SELECT * FROM kernel_info;",
+    "created_by": "ABCDEFGHIJ",
+    "destinations": [
+        "LQ"
+    ],
+    "create_time": "2021-11-10T17:39:36.061Z",
+    "status_update_time": "2021-11-10T17:39:36.061Z",
+    "timeout_time": "2021-11-17T17:39:36.061Z",
+    "cancellation_time": None,
+    "cancelled_by": None,
+    "archive_time": None,
+    "archived_by": None,
+    "notify_on_finish": False,
+    "active_org_devices": 4,
+    "status": "ACTIVE",
+    "device_filter": {
+        "policy_id": None,
+        "os": [
+            "MAC",
+            "LINUX",
+            "WINDOWS"
+        ],
+        "device_id": None,
+        "deployment_type": None,
+        "policy_ids": None,
+        "device_types": [
+            "MAC",
+            "LINUX",
+            "WINDOWS"
+        ],
+        "device_ids": None
+    },
+    "recommended_query_id": None,
+    "template_id": None,
+    "schedule": None,
+    "schema": None,
+    "last_result_time": None,
+    "total_results": 0,
+    "not_started_count": 4,
+    "match_count": 0,
+    "no_match_count": 0,
+    "success_count": 0,
+    "in_progress_count": 0,
+    "error_count": 0,
+    "not_supported_count": 0,
+    "cancelled_count": 0
+}
+
+ASYNC_GET_QUERY_1 = {
+    "org_key": "test",
+    "name": "DemoQuery",
+    "id": "abcdefghijklmnopqrstuvwxyz123456",
+    "sql": "SELECT * FROM kernel_info;",
+    "created_by": "ABCDEFGHIJ",
+    "destinations": [
+        "LQ"
+    ],
+    "create_time": "2021-11-10T17:39:36.061Z",
+    "status_update_time": "2021-11-10T17:39:36.061Z",
+    "timeout_time": "2021-11-17T17:39:36.061Z",
+    "cancellation_time": None,
+    "cancelled_by": None,
+    "archive_time": None,
+    "archived_by": None,
+    "notify_on_finish": False,
+    "active_org_devices": 4,
+    "status": "ACTIVE",
+    "device_filter": {
+        "policy_id": None,
+        "os": [
+            "MAC",
+            "LINUX",
+            "WINDOWS"
+        ],
+        "device_id": None,
+        "deployment_type": None,
+        "policy_ids": None,
+        "device_types": [
+            "MAC",
+            "LINUX",
+            "WINDOWS"
+        ],
+        "device_ids": None
+    },
+    "recommended_query_id": None,
+    "template_id": None,
+    "schedule": None,
+    "schema": None,
+    "last_result_time": "2021-11-11T04:26:18.980Z",
+    "total_results": 1,
+    "not_started_count": 1,
+    "match_count": 4,
+    "no_match_count": 0,
+    "success_count": 1,
+    "in_progress_count": 2,
+    "error_count": 0,
+    "not_supported_count": 0,
+    "cancelled_count": 0
+}
+
+ASYNC_GET_QUERY_2 = {
+    "org_key": "test",
+    "name": "DemoQuery",
+    "id": "abcdefghijklmnopqrstuvwxyz123456",
+    "sql": "SELECT * FROM kernel_info;",
+    "created_by": "ABCDEFGHIJ",
+    "destinations": [
+        "LQ"
+    ],
+    "create_time": "2021-11-10T17:39:36.061Z",
+    "status_update_time": "2021-11-11T15:26:32.179Z",
+    "timeout_time": "2021-11-17T17:39:36.061Z",
+    "cancellation_time": None,
+    "cancelled_by": None,
+    "archive_time": None,
+    "archived_by": None,
+    "notify_on_finish": False,
+    "active_org_devices": 4,
+    "status": "COMPLETE",
+    "device_filter": {
+        "policy_id": None,
+        "os": [
+            "WINDOWS",
+            "LINUX",
+            "MAC"
+        ],
+        "device_id": None,
+        "deployment_type": None,
+        "policy_ids": None,
+        "device_types": [
+            "WINDOWS",
+            "LINUX",
+            "MAC"
+        ],
+        "device_ids": None
+    },
+    "recommended_query_id": None,
+    "template_id": None,
+    "schedule": None,
+    "schema": None,
+    "last_result_time": "2021-11-11T15:26:18.980Z",
+    "total_results": 4,
+    "not_started_count": 0,
+    "match_count": 4,
+    "no_match_count": 0,
+    "success_count": 4,
+    "in_progress_count": 0,
+    "error_count": 0,
+    "not_supported_count": 0,
+    "cancelled_count": 0
+}
+
+ASYNC_GET_RESULTS = {
+    "org_key": "test",
+    "num_found": 4,
+    "results": [
+        {
+            "id": "abcdefghijklmnopqrstuvwxyz123456",
+            "device": {
+                "id": 4360506,
+                "name": "DESKTOP-14",
+                "policy_id": 6525,
+                "policy_name": "default",
+                "os": "LINUX"
+            },
+            "status": "matched",
+            "time_received": "2021-11-11T15:25:51.140Z",
+            "device_message": "",
+            "fields": {
+                "arguments": "ro quiet splash vt.handoff=7",
+                "device": "UUID=ab7f55c1-39fe-4800-9e24-c8f7f217de86",
+                "path": "/boot/vmlinuz-5.11.0-38-generic",
+                "version": "5.11.0-38-generic"
+            }
+        },
+        {
+            "id": "abcdefghijklmnopqrstuvwxyz123456",
+            "device": {
+                "id": 4732950,
+                "name": "Brain-Thrashx11",
+                "policy_id": 78483,
+                "policy_name": "Remediant AC Policy",
+                "os": "WINDOWS"
+            },
+            "status": "matched",
+            "time_received": "2021-11-10T20:42:27.973Z",
+            "device_message": "",
+            "fields": {
+                "arguments": " NOEXECUTE=OPTIN",
+                "device": "\\\\?\\Volume{2e5639b7-0000-0000-0000-602200000000}\\",
+                "path": "C:\\WINDOWS\\System32\\ntoskrnl.exe",
+                "version": "10.0.19041.1288"
+            }
+        },
+        {
+            "id": "abcdefghijklmnopqrstuvwxyz123456",
+            "device": {
+                "id": 4101718,
+                "name": "Annuncio-Mac-Mini.local",
+                "policy_id": 6525,
+                "policy_name": "default",
+                "os": "MAC"
+            },
+            "status": "matched",
+            "time_received": "2021-11-10T17:43:03.086Z",
+            "device_message": "",
+            "fields": {
+                "arguments": "%00",
+                "device": "F55422BA-AF5E-4F24-B438-0EF885F434B2",
+                "path": "/System/Library/PrelinkedKernels/prelinkedkernel",
+                "version": "17.7.0"
+            }
+        },
+        {
+            "id": "abcdefghijklmnopqrstuvwxyz123456",
+            "device": {
+                "id": 3666890,
+                "name": "ip-192-168-2-1.us-west-2.compute.internal",
+                "policy_id": 6525,
+                "policy_name": "default",
+                "os": "LINUX"
+            },
+            "status": "matched",
+            "time_received": "2021-11-10T17:40:18.742Z",
+            "device_message": "",
+            "fields": {
+                "arguments": "ro console=tty0 console=ttyS0,115200n8 net.ifnames=0 biosdevname=0 nvme_core.io_timeout=4294967295 rd.emergency=poweroff rd.shell=0",  # noqa: E501
+                "device": "UUID=9365dfe6-d038-4ca5-b9c2-a63f764c5b73",
+                "path": "/boot/vmlinuz-4.14.186-146.268.amzn2.x86_64",
+                "version": "4.14.186-146.268.amzn2.x86_64"
+            }
+        }
+    ]
+}
+
+ASYNC_BROKEN_1 = {
+    "org_key": "test",
+    "name": "DemoQuery",
+    "id": "abcdefghijklmnopqrstuvwxyz123456",
+    "sql": "SELECT * FROM kernel_info;",
+    "created_by": "ABCDEFGHIJ",
+    "destinations": [
+        "LQ"
+    ],
+    "create_time": "2021-11-10T17:39:36.061Z",
+    "status_update_time": "2021-11-10T17:39:36.061Z",
+    "timeout_time": "2021-11-17T17:39:36.061Z",
+    "cancellation_time": None,
+    "cancelled_by": None,
+    "archive_time": None,
+    "archived_by": None,
+    "notify_on_finish": False,
+    "active_org_devices": 4,
+    "status": "TIMED_OUT",
+    "device_filter": {
+        "policy_id": None,
+        "os": [
+            "MAC",
+            "LINUX",
+            "WINDOWS"
+        ],
+        "device_id": None,
+        "deployment_type": None,
+        "policy_ids": None,
+        "device_types": [
+            "MAC",
+            "LINUX",
+            "WINDOWS"
+        ],
+        "device_ids": None
+    },
+    "recommended_query_id": None,
+    "template_id": None,
+    "schedule": None,
+    "schema": None,
+    "last_result_time": "2021-11-11T04:26:18.980Z",
+    "total_results": 1,
+    "not_started_count": 1,
+    "match_count": 4,
+    "no_match_count": 0,
+    "success_count": 1,
+    "in_progress_count": 2,
+    "error_count": 0,
+    "not_supported_count": 0,
+    "cancelled_count": 0
+}
+
+ASYNC_BROKEN_2 = {
+    "org_key": "test",
+    "name": "DemoQuery",
+    "id": "abcdefghijklmnopqrstuvwxyz123456",
+    "sql": "SELECT * FROM kernel_info;",
+    "created_by": "ABCDEFGHIJ",
+    "destinations": [
+        "LQ"
+    ],
+    "create_time": "2021-11-10T17:39:36.061Z",
+    "status_update_time": "2021-11-10T17:39:36.061Z",
+    "timeout_time": "2021-11-17T17:39:36.061Z",
+    "cancellation_time": None,
+    "cancelled_by": None,
+    "archive_time": None,
+    "archived_by": None,
+    "notify_on_finish": False,
+    "active_org_devices": 4,
+    "status": "CANCELLED",
+    "device_filter": {
+        "policy_id": None,
+        "os": [
+            "MAC",
+            "LINUX",
+            "WINDOWS"
+        ],
+        "device_id": None,
+        "deployment_type": None,
+        "policy_ids": None,
+        "device_types": [
+            "MAC",
+            "LINUX",
+            "WINDOWS"
+        ],
+        "device_ids": None
+    },
+    "recommended_query_id": None,
+    "template_id": None,
+    "schedule": None,
+    "schema": None,
+    "last_result_time": "2021-11-11T04:26:18.980Z",
+    "total_results": 1,
+    "not_started_count": 1,
+    "match_count": 4,
+    "no_match_count": 0,
+    "success_count": 1,
+    "in_progress_count": 2,
+    "error_count": 0,
+    "not_supported_count": 0,
+    "cancelled_count": 0
+}
+
+ASYNC_BROKEN_3 = {
+    "org_key": "test",
+    "name": "DemoQuery",
+    "id": "abcdefghijklmnopqrstuvwxyz123456",
+    "sql": "SELECT * FROM kernel_info;",
+    "created_by": "ABCDEFGHIJ",
+    "destinations": [
+        "LQ"
+    ],
+    "create_time": "2021-11-10T17:39:36.061Z",
+    "status_update_time": "2021-11-10T17:39:36.061Z",
+    "timeout_time": "2021-11-17T17:39:36.061Z",
+    "cancellation_time": None,
+    "cancelled_by": None,
+    "archive_time": None,
+    "archived_by": None,
+    "notify_on_finish": False,
+    "active_org_devices": 4,
+    "status": "SOMETHING_AWFUL",
+    "device_filter": {
+        "policy_id": None,
+        "os": [
+            "MAC",
+            "LINUX",
+            "WINDOWS"
+        ],
+        "device_id": None,
+        "deployment_type": None,
+        "policy_ids": None,
+        "device_types": [
+            "MAC",
+            "LINUX",
+            "WINDOWS"
+        ],
+        "device_ids": None
+    },
+    "recommended_query_id": None,
+    "template_id": None,
+    "schedule": None,
+    "schema": None,
+    "last_result_time": "2021-11-11T04:26:18.980Z",
+    "total_results": 1,
+    "not_started_count": 1,
+    "match_count": 4,
+    "no_match_count": 0,
+    "success_count": 1,
+    "in_progress_count": 2,
+    "error_count": 0,
+    "not_supported_count": 0,
+    "cancelled_count": 0
+}
+
+
+ASYNC_FACETING = {
+    "terms": [
+        {
+            "field": "fields.version",
+            "values": [
+                {
+                    "total": 1,
+                    "id": "5.11.0-38-generic",
+                    "name": "5.11.0-38-generic"
+                },
+                {
+                    "total": 1,
+                    "id": "10.0.19041.1288",
+                    "name": "10.0.19041.1288"
+                },
+                {
+                    "total": 1,
+                    "id": "17.7.0",
+                    "name": "17.7.0"
+                },
+                {
+                    "total": 1,
+                    "id": "4.14.186-146.268.amzn2.x86_64",
+                    "name": "4.14.186-146.268.amzn2.x86_64"
+                },
+            ]
+        }
+    ]
+}

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2021. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -24,7 +24,8 @@ from tests.unit.fixtures.endpoint_standard.mock_usb_devices import (USBDEVICE_GE
                                                                     USBDEVICE_APPROVE_RESP,
                                                                     USBDEVICE_GET_RESP_AFTER_APPROVE,
                                                                     USBDEVICE_QUERY_RESP, USBDEVICE_FACET_RESP,
-                                                                    USBDEVICE_GET_PRODUCTS_RESP)
+                                                                    USBDEVICE_GET_PRODUCTS_RESP,
+                                                                    USBDEVICE_MULTIPLE_QUERY_RESP)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -123,13 +124,14 @@ def test_usb_query_with_all_bells_and_whistles(cbcsdk_mock):
         sorting = body['sort'][0]
         assert sorting['field'] == 'vendor_name'
         assert sorting['order'] == 'ASC'
+        assert body['rows'] == 10
         return USBDEVICE_QUERY_RESP
 
     cbcsdk_mock.mock_request("POST", "/device_control/v3/orgs/test/devices/_search", post_validate)
     api = cbcsdk_mock.api
     query = api.select(USBDevice).where('*').set_endpoint_names(["DESKTOP-IL2ON7C"]).set_product_names(["Ultra"]) \
                .set_serial_numbers(['4C531001331122115172']).set_statuses(['APPROVED']).set_vendor_names(["SanDisk"]) \
-               .set_endpoint_names(["ALPHA"]).sort_by("vendor_name")
+               .set_endpoint_names(["ALPHA"]).sort_by("vendor_name").set_max_rows(10)
     assert query._count() == 1
     results = [result for result in query._perform_query()]
     assert len(results) == 1
@@ -138,6 +140,16 @@ def test_usb_query_with_all_bells_and_whistles(cbcsdk_mock):
     assert usb.vendor_name == "SanDisk"
     assert usb.product_name == "Ultra"
     assert usb.status == "APPROVED"
+
+
+def test_usb_query_length_num_available(cbcsdk_mock):
+    """Tests the USB query with all options set."""
+    cbcsdk_mock.mock_request("POST", "/device_control/v3/orgs/test/devices/_search", USBDEVICE_MULTIPLE_QUERY_RESP)
+    api = cbcsdk_mock.api
+    query = api.select(USBDevice).where('*').set_max_rows(10)
+    assert len(query) == 10
+    results = [result for result in query._perform_query()]
+    assert len(results) == 10
 
 
 def test_usb_query_async(cbcsdk_mock):

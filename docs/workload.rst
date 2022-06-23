@@ -1,5 +1,5 @@
 VM Workloads Search Guide and Examples
-==============
+======================================
 
 Visualize the inventory of vSphere workloads that do not have Carbon Black Cloud sensors installed.
 

@@ -208,6 +208,14 @@ Device Control Alerts
 
 The Device Control Alerts are explained in the :doc:`device-control` guide.
 
+Container Runtime Alerts
+------------------------
+
+These represent alerts for behavior noticed inside a Kubernetes container, which are based on network traffic and are
+triggered by anomalies from the learned behavior of workloads or applications.  For these events, the ``type`` will be
+``CONTAINER_RUNTIME``, the ``device_id`` will always be 0, and the ``device_name``, ``device_os``,
+``device_os_version``, and ``device_username`` will always be ``None``. Instead, the workload generating the alert will
+be identified by the ``workload_id`` and ``workload_name`` attributes.
 
 Migrating from Notifications to Alerts
 --------------------------------------
@@ -237,4 +245,4 @@ Those settings shown in the screenshot can be replicated with the following code
 Advanced usage of alerts
 ------------------------
 
-If you want near-real-time streaming of an alerts we advice you to referer our `Data Forwarded <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/data-forwarder-config-api/>`_.
+If you want near-real-time streaming of alerts we advise you to refer to our `Data Forwarder <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/data-forwarder-api/>`_.

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2021. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -13,11 +13,11 @@
 
 """Model and Query Classes for Endpoint Standard"""
 
-from cbc_sdk.base import (MutableBaseModel, UnrefreshableModel, CreatableModelMixin, NewBaseModel, FacetQuery,
+from cbc_sdk.base import (MutableBaseModel, UnrefreshableModel, CreatableModelMixin, FacetQuery,
                           PaginatedQuery, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin)
 from cbc_sdk.base import Query as BaseEventQuery
 from cbc_sdk.utils import convert_query_params
-from cbc_sdk.errors import ApiError, TimeoutError
+from cbc_sdk.errors import ApiError, TimeoutError, FunctionalityDecommissioned
 from cbc_sdk.platform.reputation import ReputationOverride
 from copy import deepcopy
 from pathlib import Path
@@ -40,7 +40,16 @@ class EndpointStandardMutableModel(MutableBaseModel):
     _change_object_key_name = None
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
-        """Initialize an EndpointStandardMutableModel with model_unique_id and initial_data."""
+        """
+        Initialize an EndpointStandardMutableModel with model_unique_id and initial_data.
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            model_unique_id (Any): The unique ID for this particular instance of the model object.
+            initial_data (dict): The data to use when initializing the model object.
+            force_init (bool): True to force object initialization.
+            full_doc (bool): True to mark the object as fully initialized.
+        """
         super(EndpointStandardMutableModel, self).__init__(cb, model_unique_id=model_unique_id,
                                                            initial_data=initial_data, force_init=force_init,
                                                            full_doc=full_doc)
@@ -48,6 +57,16 @@ class EndpointStandardMutableModel(MutableBaseModel):
             self._change_object_key_name = self.primary_key
 
     def _query_implementation(cls, cb, **kwargs):
+        """
+        Returns the appropriate query object for this object type.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            Query: The query object for this alert type.
+        """
         return Query(cls, cb, kwargs.get("query_string", None))
 
     def _parse(self, obj):
@@ -55,12 +74,24 @@ class EndpointStandardMutableModel(MutableBaseModel):
             return obj[self.info_key]
 
     def _update_object(self):
+        """
+        Updates the object data on the server.
+
+        Returns:
+            str: The unique ID of this object.
+        """
         if self._change_object_http_method != "PATCH":
             return self._update_entire_object()
         else:
             return self._patch_object()
 
     def _update_entire_object(self):
+        """
+        Updates the object data on the server in its entirety.
+
+        Returns:
+            str: The unique ID of this object.
+        """
         if self.__class__.primary_key in self._dirty_attributes.keys() or self._model_unique_id is None:
             new_object_info = deepcopy(self._info)
             try:
@@ -79,6 +110,12 @@ class EndpointStandardMutableModel(MutableBaseModel):
         return self._refresh_if_needed(ret)
 
     def _patch_object(self):
+        """
+        Updates the object data on the server by using a PATCH call to update only the changed items.
+
+        Returns:
+            str: The unique ID of this object.
+        """
         if self.__class__.primary_key in self._dirty_attributes.keys() or self._model_unique_id is None:
             log.debug("Creating a new {0:s} object".format(self.__class__.__name__))
             ret = self._cb.api_json_request(self.__class__._new_object_http_method, self.urlobject,
@@ -94,6 +131,15 @@ class EndpointStandardMutableModel(MutableBaseModel):
         return self._refresh_if_needed(ret)
 
     def _refresh_if_needed(self, request_ret):
+        """
+        Refreshes the object data from the server if it's required.
+
+        Args:
+            request_ret (Response): The response from the API call that updated this object.
+
+        Returns:
+            str: The unique ID of this object.
+        """
         refresh_required = True
 
         if request_ret.status_code not in range(200, 300):
@@ -133,8 +179,14 @@ class EndpointStandardMutableModel(MutableBaseModel):
         return self._model_unique_id
 
 
-class Event(NewBaseModel):
-    """Represents an Endpoint Standard Event."""
+class Event:
+    """
+    Represents an Endpoint Standard Event.
+
+    This functionality has been decommissioned.  Please use EnrichedEvent instead.  More information may be found
+    here:
+    https://community.carbonblack.com/t5/Developer-Relations/Migration-Guide-Carbon-Black-Cloud-Events-API/m-p/95915/thread-id/2519
+    """
     urlobject = "/integrationServices/v3/event"
     primary_key = "eventId"
     info_key = "eventInfo"
@@ -144,12 +196,32 @@ class Event(NewBaseModel):
             return obj[self.info_key]
 
     def __init__(self, cb, model_unique_id, initial_data=None):
-        """Initialize an Event with model_unique_id and initial_data."""
-        super(Event, self).__init__(cb, model_unique_id, initial_data)
+        """
+        This functionality has been decommissioned.  Do not use.
+
+        Args:
+            cb (BaseAPI): Unused.
+            model_unique_id (int): Unused.
+            initial_data (dict): Unused.
+
+        Raises:
+            FunctionalityDecommissioned: Always.
+        """
+        raise FunctionalityDecommissioned("Endpoint Standard events", "Platform enriched events")
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
-        return Query(cls, cb, kwargs.get("query_string", None))
+        """
+        This functionality has been decommissioned.  Do not use.
+
+        Args:
+            cb (BaseAPI): Unused.
+            **kwargs (dict): Unused.
+
+        Raises:
+            FunctionalityDecommissioned: Always.
+        """
+        raise FunctionalityDecommissioned("Endpoint Standard events", "Platform enriched events")
 
 
 class Policy(EndpointStandardMutableModel, CreatableModelMixin):
@@ -162,6 +234,16 @@ class Policy(EndpointStandardMutableModel, CreatableModelMixin):
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
+        """
+        Returns the appropriate query object for this object type.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            Query: The query object for this alert type.
+        """
         return Query(cls, cb, kwargs.get("query_string", None))
 
     @property
@@ -186,13 +268,17 @@ class Policy(EndpointStandardMutableModel, CreatableModelMixin):
             - The dictionary keys have these possible values:
 
                 "action": ["IGNORE", "ALLOW", "DENY", "TERMINATE_PROCESS",
-                           "TERMINATE_THREAD", "TERMINATE"]
+                "TERMINATE_THREAD", "TERMINATE"]
+
                 "type": ["NAME_PATH", "SIGNED_BY", "REPUTATION"]
+
                 "value": Any string value to match on
+
                 "operation": ["BYPASS_ALL", "INVOKE_SCRIPT", "INVOKE_SYSAPP",
-                              "POL_INVOKE_NOT_TRUSTED", "INVOKE_CMD_INTERPRETER",
-                              "RANSOM", "NETWORK", "PROCESS_ISOLATION", "CODE_INJECTION",
-                              "MEMORY_SCRAPE", "RUN_INMEMORY_CODE", "ESCALATE", "RUN"]
+                "POL_INVOKE_NOT_TRUSTED", "INVOKE_CMD_INTERPRETER",
+                "RANSOM", "NETWORK", "PROCESS_ISOLATION", "CODE_INJECTION",
+                "MEMORY_SCRAPE", "RUN_INMEMORY_CODE", "ESCALATE", "RUN"]
+
                 "required": [True, False]
         """
         self._cb.post_object("{0}/rule".format(self._build_api_request_uri()), {"ruleInfo": new_rule})
@@ -217,6 +303,16 @@ class EnrichedEvent(UnrefreshableModel):
 
     @classmethod
     def _query_implementation(self, cb, **kwargs):
+        """
+        Returns the appropriate query object for this object type.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            Query: The query object for this alert type.
+        """
         # This will emulate a synchronous enriched event query, for now.
         return EnrichedEventQuery(self, cb)
 
@@ -456,19 +552,19 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin):
 
     The query is not executed on the server until it's accessed, either as an iterator (where it will generate values
     on demand as they're requested) or as a list (where it will retrieve the entire result set and save to a list).
-    You can also call the Python built-in `len() on this object to retrieve the total number of items matching
+    You can also call the Python built-in `len()` on this object to retrieve the total number of items matching
     the query.
 
     Example:
-    >>> from cbc_sdk import CBCloudAPI
-    >>> cb = CBCloudAPI()
+        >>> from cbc_sdk import CBCloudAPI
+        >>> cb = CBCloudAPI()
 
     Notes:
-        - The slicing operator only supports start and end parameters, but not step. ``[1:-1]`` is legal, but
-          ``[1:2:-1]`` is not.
+        - The slicing operator only supports start and end parameters, but not step. ``[1:-1]`` is legal,
+          but ``[1:2:-1]`` is not.
         - You can chain where clauses together to create AND queries; only objects that match all ``where`` clauses
           will be returned.
-          - Device Queries with multiple search parameters only support AND operations, not OR. Use of
+        - Device Queries with multiple search parameters only support AND operations, not OR. Use of
           Query.or_(myParameter='myValue') will add 'AND myParameter:myValue' to the search query.
     """
 
@@ -606,7 +702,7 @@ class EnrichedEventQuery(BaseEventQuery):
 
     def or_(self, **kwargs):
         """
-        or_ criteria are explicitly provided to EnrichedEvent queries although they are endpoint_standard.
+        :meth:`or_` criteria are explicitly provided to EnrichedEvent queries.
 
         This method overrides the base class in order to provide or_() functionality rather than raising an exception.
         """
@@ -652,7 +748,7 @@ class EnrichedEventQuery(BaseEventQuery):
                 parameter.
 
         Example:
-        >>> cb.select(EnrichedEvent).where(process_name="foo.exe").timeout(5000)
+            >>> cb.select(EnrichedEvent).where(process_name="foo.exe").timeout(5000)
         """
         self._timeout = msecs
         return self

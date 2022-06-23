@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2021. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -22,6 +22,9 @@ import cbc_sdk
 
 class CBCSDKMock:
     """Mock framework for unit tests that need to fetch Carbon Black Cloud data"""
+    DEPRECATED_URL_PREFIXES = [
+        "/integrationServices/v3/event"
+    ]
 
     def __init__(self, monkeypatch, api):
         """Initializes monkey patch for HTTP VERB requests"""
@@ -32,24 +35,34 @@ class CBCSDKMock:
         self._all_request_data = list()
         monkeypatch.setattr(api, "get_object", self._self_get_object())
         monkeypatch.setattr(api, "get_raw_data", self._self_get_raw_data())
-        monkeypatch.setattr(api, "post_object", self._self_post_object())
+        monkeypatch.setattr(api, "api_request_stream", self._self_api_request_stream())
+        monkeypatch.setattr(api, "api_request_iterate", self._self_api_request_iterate())
+        post_func = self._self_post_object()
+        monkeypatch.setattr(api, "post_object", post_func)
         monkeypatch.setattr(api, "post_multipart", self._self_post_multipart())
-        monkeypatch.setattr(api, "put_object", self._self_put_object())
+        put_func = self._self_put_object()
+        monkeypatch.setattr(api, "put_object", put_func)
         monkeypatch.setattr(api, "delete_object", self._self_delete_object())
-        monkeypatch.setattr(api, "api_json_request", self._self_patch_object())
+        monkeypatch.setattr(api, "api_json_request", self._self_patch_object(post_func, put_func))
 
     class StubResponse(object):
         """Stubbed response to object to support json function similar to requests package"""
 
         def __init__(self, contents, scode=200, text="", json_parsable=True):
             """Init default properties"""
-            self.content = contents
-            self.status_code = scode
-            if json_parsable and not text:
-                self.text = json.dumps(contents)
+            if isinstance(contents, CBCSDKMock.StubResponse):
+                self.content = contents.content
+                self.status_code = contents.status_code
+                self.text = contents.text
+                self._json_parsable = contents._json_parsable
             else:
-                self.text = text
-            self._json_parsable = json_parsable
+                self.content = contents
+                self.status_code = scode
+                if json_parsable and not text:
+                    self.text = json.dumps(contents)
+                else:
+                    self.text = text
+                self._json_parsable = json_parsable
 
         def json(self):
             """Mimics request package"""
@@ -77,6 +90,12 @@ class CBCSDKMock:
         """Erase the self.mocks dictionary."""
         self.mocks = {}
 
+    @classmethod
+    def _check_for_decommission(self, url):
+        for prefix in CBCSDKMock.DEPRECATED_URL_PREFIXES:
+            if url.startswith(prefix):
+                pytest.fail(f"decommissioned URL {url} called when it shouldn't be")
+
     def _capture_data(self, data):
         self._all_request_data.append(data)
         self._last_request_data = data
@@ -86,7 +105,8 @@ class CBCSDKMock:
         Mocks the VERB + URL by defining the response for that particular request
 
         Args:
-            verb (str): HTTP verb supported [ GET, RAW_GET, POST, POST_MULTIPART, PUT, DELETE ]
+            verb (str): HTTP verb supported [ GET, RAW_GET, POST, POST_MULTIPART, PUT, DELETE, STREAM:methodname,
+                                              ITERATE:methodname ]
             url (str): The full path of to be mocked with support for regex
             body (?): Any value or object to be returned as mocked response
 
@@ -109,6 +129,7 @@ class CBCSDKMock:
 
     def _self_get_object(self):
         def _get_object(url, query_parameters=None, default=None):
+            self._check_for_decommission(url)
             self._capture_data(query_parameters)
             matched = self.match_key(self.get_mock_key("GET", url))
             if matched:
@@ -123,8 +144,64 @@ class CBCSDKMock:
 
         return _get_object
 
+    def _self_get_raw_data(self):
+        def _get_raw_data(url, query_params=None, default=None, **kwargs):
+            self._check_for_decommission(url)
+            self._capture_data(query_params)
+            matched = self.match_key(self.get_mock_key("RAW_GET", url))
+            if matched:
+                if callable(self.mocks[matched]):
+                    return self.mocks[matched](url, query_params, **kwargs)
+                elif self.mocks[matched] is Exception or self.mocks[matched] in Exception.__subclasses__():
+                    raise self.mocks[matched]
+                else:
+                    return self.mocks[matched]
+            pytest.fail("Raw GET called for %s when it shouldn't be" % url)
+
+        return _get_raw_data
+
+    def _self_api_request_stream(self):
+        def _api_request_stream(method, uri, stream_output, **kwargs):
+            self._check_for_decommission(uri)
+            self._capture_data(kwargs)
+            matched = self.match_key(self.get_mock_key(f"STREAM:{method}", uri))
+            if matched:
+                if callable(self.mocks[matched]):
+                    result = self.mocks[matched](uri, kwargs.pop("data", {}), **kwargs)
+                    return_data = self.StubResponse(result, 200, result, False)
+                elif self.mocks[matched] is Exception or self.mocks[matched] in Exception.__subclasses__():
+                    raise self.mocks[matched]
+                else:
+                    return_data = self.mocks[matched]
+                if return_data.status_code < 400:
+                    stream_output.write(bytes(return_data.text, 'utf-8'))
+                return return_data
+            pytest.fail(f"{method} called for {uri} when it shouldn't be")
+
+        return _api_request_stream
+
+    def _self_api_request_iterate(self):
+        def _api_request_iterate(method, uri, **kwargs):
+            self._check_for_decommission(uri)
+            self._capture_data(kwargs)
+            matched = self.match_key(self.get_mock_key(f"ITERATE:{method}", uri))
+            if matched:
+                if callable(self.mocks[matched]):
+                    result = self.mocks[matched](uri, kwargs.pop("data", {}), **kwargs)
+                    return_data = self.StubResponse(result, 200, result, False)
+                elif self.mocks[matched] is Exception or self.mocks[matched] in Exception.__subclasses__():
+                    raise self.mocks[matched]
+                else:
+                    return_data = self.mocks[matched]
+                if return_data.status_code < 400:
+                    return return_data.text.splitlines()
+            pytest.fail(f"{method} called for {uri} when it shouldn't be")
+
+        return _api_request_iterate
+
     def _self_post_object(self):
         def _post_object(url, body, **kwargs):
+            self._check_for_decommission(url)
             self._capture_data(body)
             matched = self.match_key(self.get_mock_key("POST", url))
             if matched:
@@ -140,6 +217,7 @@ class CBCSDKMock:
 
     def _self_post_multipart(self):
         def _post_multipart(url, param_table, **kwargs):
+            self._check_for_decommission(url)
             self._capture_data(kwargs)
             matched = self.match_key(self.get_mock_key("POST_MULTIPART", url))
             if matched:
@@ -153,23 +231,9 @@ class CBCSDKMock:
 
         return _post_multipart
 
-    def _self_get_raw_data(self):
-        def _get_raw_data(url, query_params=None, default=None, **kwargs):
-            self._capture_data(query_params)
-            matched = self.match_key(self.get_mock_key("RAW_GET", url))
-            if matched:
-                if callable(self.mocks[matched]):
-                    return self.mocks[matched](url, query_params, **kwargs)
-                elif self.mocks[matched] is Exception or self.mocks[matched] in Exception.__subclasses__():
-                    raise self.mocks[matched]
-                else:
-                    return self.mocks[matched]
-            pytest.fail("Raw GET called for %s when it shouldn't be" % url)
-
-        return _get_raw_data
-
     def _self_put_object(self):
         def _put_object(url, body, **kwargs):
+            self._check_for_decommission(url)
             self._capture_data(body)
             matched = self.match_key(self.get_mock_key("PUT", url))
             if matched:
@@ -188,6 +252,7 @@ class CBCSDKMock:
 
     def _self_delete_object(self):
         def _delete_object(url, body=None):
+            self._check_for_decommission(url)
             self._capture_data(body)
             matched = self.match_key(self.get_mock_key("DELETE", url))
             if matched:
@@ -201,8 +266,17 @@ class CBCSDKMock:
 
         return _delete_object
 
-    def _self_patch_object(self):
+    def _self_patch_object(self, post_func, put_func):
         def _patch_object(method, url, **kwargs):
+            self._check_for_decommission(url)
+            if method == 'POST':
+                body = kwargs.pop('body', None)
+                return post_func(url, body, **kwargs)
+            if method == 'PUT':
+                body = kwargs.pop('body', None)
+                return put_func(url, body, **kwargs)
+            if method != 'PATCH':
+                pytest.fail(f"api_json_request called for method {method} on url {url} when it shouldn't be")
             matched = self.match_key(self.get_mock_key("PATCH", url))
             if matched:
                 if callable(self.mocks[matched]):

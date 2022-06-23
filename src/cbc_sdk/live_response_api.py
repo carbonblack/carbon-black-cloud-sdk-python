@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2021. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -276,8 +276,8 @@ class CbLRSessionBase(object):
         Create a new file on the remote machine with the specified data.
 
         Example:
-        >>> with c.select(Device, 1).lr_session() as lr_session:
-        ...     lr_session.put_file(open("test.txt", "rb"), r"c:\test.txt")
+            >>> with c.select(Device, 1).lr_session() as lr_session:
+            ...     lr_session.put_file(open("test.txt", "rb"), r"c:\test.txt")
 
         Args:
             infp (object): Python file-like containing data to upload to the remote endpoint.
@@ -302,26 +302,28 @@ class CbLRSessionBase(object):
         List the contents of a directory on the remote machine.
 
         Example:
-        >>> with c.select(Device, 1).lr_session() as lr_session:
-        ...     pprint.pprint(lr_session.list_directory('C:\\\\temp\\\\'))
-        [{u'attributes': [u'DIRECTORY'],
-          u'create_time': 1471897244,
-          u'filename': u'.',
-          u'last_access_time': 1476390670,
-          u'last_write_time': 1476390670,
-          u'size': 0},
-         {u'attributes': [u'DIRECTORY'],
-          u'create_time': 1471897244,
-          u'filename': u'..',
-          u'last_access_time': 1476390670,
-          u'last_write_time': 1476390670,
-          u'size': 0},
-         {u'attributes': [u'ARCHIVE'],
-          u'create_time': 1476390668,
-          u'filename': u'test.txt',
-          u'last_access_time': 1476390668,
-          u'last_write_time': 1476390668,
-          u'size': 0}]
+            >>> with c.select(Device, 1).lr_session() as lr_session:
+            ...     pprint.pprint(lr_session.list_directory('C:\\\\temp\\\\'))
+            [{u'attributes': [u'DIRECTORY'],
+              u'create_time': 1471897244,
+              u'filename': u'.',
+              u'last_access_time': 1476390670,
+              u'last_write_time': 1476390670,
+              u'size': 0},
+
+             {u'attributes': [u'DIRECTORY'],
+              u'create_time': 1471897244,
+              u'filename': u'..',
+              u'last_access_time': 1476390670,
+              u'last_write_time': 1476390670,
+              u'size': 0},
+
+             {u'attributes': [u'ARCHIVE'],
+              u'create_time': 1476390668,
+              u'filename': u'test.txt',
+              u'last_access_time': 1476390668,
+              u'last_write_time': 1476390668,
+              u'size': 0}]
 
         Args:
             dir_name (str): Directory to list.  This parameter should end with the path separator.
@@ -410,10 +412,10 @@ class CbLRSessionBase(object):
 
         Note: walk does not support async_mode due to its behaviour, it can only be invoked synchronously
         Example:
-        >>> with c.select(Device, 1).lr_session() as lr_session:
-        ...     for entry in lr_session.walk(directory_name):
-        ...         print(entry)
-        ('C:\\temp\\', [u'dir1', u'dir2'], [u'file1.txt'])
+            >>> with c.select(Device, 1).lr_session() as lr_session:
+            ...     for entry in lr_session.walk(directory_name):
+            ...         print(entry)
+            ('C:\\temp\\', [u'dir1', u'dir2'], [u'file1.txt'])
 
         Args:
             top (str): Directory to recurse on.
@@ -489,10 +491,10 @@ class CbLRSessionBase(object):
         Create a new process on the remote machine with the specified command string.
 
         Example:
-        >>> with c.select(Device, 1).lr_session() as lr_session:
-        ...     print(lr_session.create_process(r'cmd.exe /c "ping.exe 192.168.1.1"'))
-        Pinging 192.168.1.1 with 32 bytes of data:
-        Reply from 192.168.1.1: bytes=32 time<1ms TTL=64
+            >>> with c.select(Device, 1).lr_session() as lr_session:
+            ...     print(lr_session.create_process(r'cmd.exe /c "ping.exe 192.168.1.1"'))
+            Pinging 192.168.1.1 with 32 bytes of data:
+            Reply from 192.168.1.1: bytes=32 time<1ms TTL=64
 
         Args:
             command_string (str): Command string used for the create process operation.
@@ -555,17 +557,17 @@ class CbLRSessionBase(object):
         List currently running processes on the remote machine.
 
         Example:
-        >>> with c.select(Device, 1).lr_session() as lr_session:
-        ...     print(lr_session.list_processes()[0])
-        {u'command_line': u'',
-         u'create_time': 1476260500,
-         u'parent': 0,
-         u'parent_guid': u'00000001-0000-0000-0000-000000000000',
-         u'path': u'',
-         u'pid': 4,
-         u'proc_guid': u'00000001-0000-0004-01d2-2461a85e4546',
-         u'sid': u's-1-5-18',
-         u'username': u'NT AUTHORITY\\SYSTEM'}
+            >>> with c.select(Device, 1).lr_session() as lr_session:
+            ...     print(lr_session.list_processes()[0])
+            {u'command_line': u'',
+             u'create_time': 1476260500,
+             u'parent': 0,
+             u'parent_guid': u'00000001-0000-0000-0000-000000000000',
+             u'path': u'',
+             u'pid': 4,
+             u'proc_guid': u'00000001-0000-0004-01d2-2461a85e4546',
+             u'sid': u's-1-5-18',
+             u'username': u'NT AUTHORITY\\SYSTEM'}
 
         Args:
             async_mode (bool): Flag showing whether the command should be executed asynchronously
@@ -594,33 +596,34 @@ class CbLRSessionBase(object):
         Enumerate subkeys and values of the specified registry key on the remote machine.
 
         Example:
-        >>> with c.select(Device, 1).lr_session() as lr_session:
-        >>>   pprint.pprint(lr_session.list_registry_keys_and_values('HKLM\\SYSTEM\\CurrentControlSet\\services\\ACPI'))
-        {'sub_keys': [u'Parameters', u'Enum'],
-         'values': [{u'value_data': 0,
-                     u'value_name': u'Start',
-                     u'value_type': u'REG_DWORD'},
-                    {u'value_data': 1,
-                     u'value_name': u'Type',
-                     u'value_type': u'REG_DWORD'},
-                    {u'value_data': 3,
-                     u'value_name': u'ErrorControl',
-                     u'value_type': u'REG_DWORD'},
-                    {u'value_data': u'system32\\drivers\\ACPI.sys',
-                     u'value_name': u'ImagePath',
-                     u'value_type': u'REG_EXPAND_SZ'},
-                    {u'value_data': u'Microsoft ACPI Driver',
-                     u'value_name': u'DisplayName',
-                     u'value_type': u'REG_SZ'},
-                    {u'value_data': u'Boot Bus Extender',
-                     u'value_name': u'Group',
-                     u'value_type': u'REG_SZ'},
-                    {u'value_data': u'acpi.inf_x86_neutral_ddd3c514822f1b21',
-                     u'value_name': u'DriverPackageId',
-                     u'value_type': u'REG_SZ'},
-                    {u'value_data': 1,
-                     u'value_name': u'Tag',
-                     u'value_type': u'REG_DWORD'}]}
+            >>> with c.select(Device, 1).lr_session() as lr_session:
+            >>> pprint.pprint(lr_session.
+            ...     list_registry_keys_and_values('HKLM\\SYSTEM\\CurrentControlSet\\services\\ACPI'))
+            {'sub_keys': [u'Parameters', u'Enum'],
+            'values': [{u'value_data': 0,
+                 u'value_name': u'Start',
+                 u'value_type': u'REG_DWORD'},
+                {u'value_data': 1,
+                 u'value_name': u'Type',
+                 u'value_type': u'REG_DWORD'},
+                {u'value_data': 3,
+                 u'value_name': u'ErrorControl',
+                 u'value_type': u'REG_DWORD'},
+                {u'value_data': u'system32\\drivers\\ACPI.sys',
+                 u'value_name': u'ImagePath',
+                 u'value_type': u'REG_EXPAND_SZ'},
+                {u'value_data': u'Microsoft ACPI Driver',
+                 u'value_name': u'DisplayName',
+                 u'value_type': u'REG_SZ'},
+                {u'value_data': u'Boot Bus Extender',
+                 u'value_name': u'Group',
+                 u'value_type': u'REG_SZ'},
+                {u'value_data': u'acpi.inf_x86_neutral_ddd3c514822f1b21',
+                 u'value_name': u'DriverPackageId',
+                 u'value_type': u'REG_SZ'},
+                {u'value_data': 1,
+                 u'value_name': u'Tag',
+                 u'value_type': u'REG_DWORD'}]}
 
         Args:
             regkey (str): The registry key to enumerate.
@@ -628,10 +631,13 @@ class CbLRSessionBase(object):
 
         Returns:
             command_id, future if ran async
+
             or
+
             dict: A dictionary with two keys, 'sub_keys' (a list of subkey names) and 'values' (a list of dicts
-                containing value data, name, and type).
+            containing value data, name, and type).
         """
+
         def _list_registry_keys_and_values():
             """Helper function for list registry keys and values"""
             raw_output = self._poll_command(command_id)
@@ -671,9 +677,10 @@ class CbLRSessionBase(object):
         Return the associated value of the specified registry key on the remote machine.
 
         Example:
-        >>> with c.select(Device, 1).lr_session() as lr_session:
-        >>>     pprint.pprint(lr_session.get_registry_value('HKLM\\SYSTEM\\CurrentControlSet\\services\\ACPI\\Start'))
-        {u'value_data': 0, u'value_name': u'Start', u'value_type': u'REG_DWORD'}
+            >>> with c.select(Device, 1).lr_session() as lr_session:
+            >>>     pprint.pprint(lr_session.
+            ...     get_registry_value('HKLM\\SYSTEM\\CurrentControlSet\\services\\ACPI\\Start'))
+            {u'value_data': 0, u'value_name': u'Start', u'value_type': u'REG_DWORD'}
 
         Args:
             regkey (str): The registry key to retrieve.
@@ -697,8 +704,9 @@ class CbLRSessionBase(object):
         Set a registry value on the specified registry key on the remote machine.
 
         Example:
-        >>> with c.select(Device, 1).lr_session() as lr_session:
-        ...     lr_session.set_registry_value('HKLM\\\\SYSTEM\\\\CurrentControlSet\\\\services\\\\ACPI\\\\testvalue', 1)
+            >>> with c.select(Device, 1).lr_session() as lr_session:
+            ...     lr_session.
+            ...     set_registry_value('HKLM\\\\SYSTEM\\\\CurrentControlSet\\\\services\\\\ACPI\\\\testvalue', 1)
 
         Args:
             regkey (str): The registry key to set.

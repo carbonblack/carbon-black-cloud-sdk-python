@@ -3,25 +3,23 @@
 import pytest
 import logging
 from cbc_sdk.base import MutableBaseModel, NewBaseModel
-from cbc_sdk.endpoint_standard import Policy, Event, Recommendation
+from cbc_sdk.endpoint_standard import Policy
 from cbc_sdk.platform import Process
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ServerError, InvalidObjectError, ApiError
 from cbc_sdk.enterprise_edr.threat_intelligence import FeedModel
 from cbc_sdk.enterprise_edr import Feed
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.endpoint_standard.mock_events import EVENT_GET_SPECIFIC_RESP
 from tests.unit.fixtures.endpoint_standard.mock_policy import (POLICY_GET_SPECIFIC_RESP, POLICY_GET_RESP,
                                                                POLICY_UPDATE_RESP, POLICY_GET_RESP_1,
                                                                POLICY_GET_RESP_2, POLICY_POST_RESP)
-from tests.unit.fixtures.endpoint_standard.mock_recommendation import ACTION_INIT
 from tests.unit.fixtures.enterprise_edr.mock_threatintel import FEED_GET_SPECIFIC_RESP
 from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_VALIDATION_RESP,
                                                        POST_PROCESS_SEARCH_JOB_RESP,
                                                        GET_PROCESS_SEARCH_JOB_RESP,
                                                        GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
 
-log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
+logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
 
 @pytest.fixture(scope="function")
@@ -39,7 +37,7 @@ def cbcsdk_mock(monkeypatch, cb):
     return CBCSDKMock(monkeypatch, cb)
 
 
-class TestBaseModel(NewBaseModel):
+class _TestBaseModel(NewBaseModel):
     """Test class allowing testing of multiple scenarios of string representation."""
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
         """
@@ -52,7 +50,7 @@ class TestBaseModel(NewBaseModel):
             force_init (bool): True to force object initialization.
             full_doc (bool): True to mark the object as fully initialized.
         """
-        super(TestBaseModel, self).__init__(cb, model_unique_id, initial_data, force_init, full_doc)
+        super(_TestBaseModel, self).__init__(cb, model_unique_id, initial_data, force_init, full_doc)
         self._my_subobjects = {}
 
     def _subobject(self, name):
@@ -67,7 +65,7 @@ class TestBaseModel(NewBaseModel):
         """
         if name in self._my_subobjects:
             return self._my_subobjects[name]
-        return super(TestBaseModel, self)._subobject(name)
+        return super(_TestBaseModel, self)._subobject(name)
 
 
 # ==================================== UNIT TESTS BELOW ====================================
@@ -107,16 +105,16 @@ def test_model_attributes_nbm(cbcsdk_mock):
 
 
 def test_new_object_nbm(cbcsdk_mock):
-    """Test new_object class method of NewBaseModel via an Event object"""
+    """Test new_object class method of NewBaseModel via a Policy object"""
     api = cbcsdk_mock.api
-    nbm_object = Event.new_object(api, {"eventId": "testEventId", "otherData": "test"})
-    assert nbm_object._model_unique_id == "testEventId"
+    nbm_object = Policy.new_object(api, {'id': 6681, 'otherData': 'test'})
+    assert nbm_object._model_unique_id == 6681
 
 
 def test_setattr_nbm(cbcsdk_mock):
     """Test __setattr__ method of NewBaseModel"""
     api = cbcsdk_mock.api
-    nbm = Event(api, 101)
+    nbm = NewBaseModel(api, 101)
     nbm.__setattr__("_my_attr", "attr_val")
     assert nbm._my_attr == "attr_val"
 
@@ -148,14 +146,13 @@ def test_refresh_nbm(cbcsdk_mock):
     object_with_dirty_model_unique_id._dirty_attributes["id"] = 2
     assert object_with_dirty_model_unique_id.primary_key == "id"
     assert "id" in object_with_dirty_model_unique_id._dirty_attributes
-    object_with_dirty_model_unique_id.refresh() is False
+    assert object_with_dirty_model_unique_id.refresh() is False
 
     # refresh() should return True if there's a _model_unique_id and primary_key hasn't been changed
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/event/a1e12604d67b11ea920d3d9192a785d1",
-                             EVENT_GET_SPECIFIC_RESP)
-    refreshable_object = Event(api, "a1e12604d67b11ea920d3d9192a785d1")
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
+    refreshable_object = Policy(api, 30241)
     assert refreshable_object._full_init is False
-    assert refreshable_object.refresh() is True
+    refreshable_object.refresh()
     assert refreshable_object._full_init is True
 
 
@@ -164,25 +161,23 @@ def test_build_api_request_uri_nbm(cbcsdk_mock):
     api = cbcsdk_mock.api
 
     # if there's no _model_unique_id, _build_api_request_uri should return just cls.urlobject
-    event = Event(api, model_unique_id=None)
-    assert event._build_api_request_uri() == "/integrationServices/v3/event"
+    policy = Policy(api, model_unique_id=None)
+    assert policy._build_api_request_uri() == "/integrationServices/v3/policy"
 
     # if there's a _model_unique_id, _build_api_request_uri should return cls.urlobect + _model_unique_id
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/event/a1e12604d67b11ea920d3d9192a785d1",
-                             EVENT_GET_SPECIFIC_RESP)
-    event = Event(api, "a1e12604d67b11ea920d3d9192a785d1")
-    assert event._build_api_request_uri() == "/integrationServices/v3/event/a1e12604d67b11ea920d3d9192a785d1"
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
+    policy = Policy(api, 30241)
+    assert policy._build_api_request_uri() == "/integrationServices/v3/policy/30241"
 
 
 def test_retrieve_cb_info_nbm(cbcsdk_mock):
     """Test _retrieve_cb_info method of NewBaseModel"""
     api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/event/a1e12604d67b11ea920d3d9192a785d1",
-                             EVENT_GET_SPECIFIC_RESP)
-    event = Event(api, "a1e12604d67b11ea920d3d9192a785d1")
-    assert event._build_api_request_uri() == "/integrationServices/v3/event/a1e12604d67b11ea920d3d9192a785d1"
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
+    policy = Policy(api, 30241)
+    assert policy._build_api_request_uri() == "/integrationServices/v3/policy/30241"
     # _retrieve_cb_info() calls cb.get_object, which makes the API call to retrieve the object
-    assert event._retrieve_cb_info() == EVENT_GET_SPECIFIC_RESP
+    assert policy._retrieve_cb_info() == POLICY_GET_RESP
 
 
 def test_parse_nbm(cbcsdk_mock):
@@ -196,14 +191,13 @@ def test_parse_nbm(cbcsdk_mock):
 def test_original_document_nbm(cbcsdk_mock):
     """Test original_document method/property of NewBaseModel"""
     api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/event/a1e12604d67b11ea920d3d9192a785d1",
-                             EVENT_GET_SPECIFIC_RESP)
-    event = api.select(Event, "a1e12604d67b11ea920d3d9192a785d1")
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
+    policy = api.select(Policy, 30241)
     # original_document refreshes (if _full_init == False), then returns self._info
-    assert event._full_init is False
-    assert event.original_document == event._info
-    assert event._full_init is True
-    assert event.original_document['eventId'] == "a1e12604d67b11ea920d3d9192a785d1"
+    assert policy._full_init is False
+    assert policy.original_document == policy._info
+    assert policy._full_init is True
+    assert policy.original_document['id'] == 30241
 
 
 def test_set_attr_mbm(cbcsdk_mock):
@@ -283,7 +277,7 @@ def test_update_object_mbm(cbcsdk_mock):
     # if primary_key hasn't been modified, we use the _change_object_http_method
     api = cbcsdk_mock.api
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30242", POLICY_GET_RESP_1)
-    cbcsdk_mock.mock_request("PATCH", "/integrationServices/v3/policy/30242", POLICY_UPDATE_RESP)
+    cbcsdk_mock.mock_request("PUT", "/integrationServices/v3/policy/30242", POLICY_UPDATE_RESP)
     policy = api.select(Policy, 30242)
     policy._set("name", "newFakeName")
     policy._set("testId", 1)
@@ -315,7 +309,7 @@ def test_update_entire_mbm(cbcsdk_mock):
         mutableBaseModelPolicy._model_unique_id = 30241
 
     mutableBaseModelPolicy.id = 30241
-    cbcsdk_mock.mock_request("PATCH", "/integrationServices/v3/policy", POLICY_POST_RESP)
+    cbcsdk_mock.mock_request("POST", "/integrationServices/v3/policy", POLICY_POST_RESP)
     assert mutableBaseModelPolicy._update_entire_object()
     assert mutableBaseModelPolicy.id == 30241
 
@@ -327,7 +321,7 @@ def test_patch_entire_mbm(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
     mutableBaseModelPolicy = Policy(api, 30242)
     mutableBaseModelPolicy.id = 30241
-    cbcsdk_mock.mock_request("PATCH", "/integrationServices/v3/policy", POLICY_POST_RESP)
+    cbcsdk_mock.mock_request("PUT", "/integrationServices/v3/policy", POLICY_POST_RESP)
     assert mutableBaseModelPolicy._patch_object()
     assert mutableBaseModelPolicy.id == 30241
 
@@ -335,19 +329,15 @@ def test_patch_entire_mbm(cbcsdk_mock):
 def test_getattr_nbm(cbcsdk_mock):
     """Test __getattr__ method of NewBaseModel"""
     api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
     policy = Policy(api, 30241)
+    assert 'name' not in policy._info
     assert policy._model_unique_id == 30241
+    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
     assert policy.__getattr__("name") == 'Lyon_test'
-
-    event = Event(api, 1234)
-    assert 'eventTime' not in event._info
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/event/1234", {"eventInfo": {"eventTime": 1}})
-    assert event.__getattr__("eventTime") == 1
-    assert 'eventTime' in event._info
+    assert 'name' in policy._info
 
     with pytest.raises(AttributeError):
-        assert event.__getattr__("missingInfoTag") is None
+        assert policy.__getattr__("NotExist") is None
 
 
 def test_reset_mbm(cbcsdk_mock):
@@ -461,15 +451,6 @@ def test_str_stringize():
         == 'If this had been an actual emergency, we would ...'
 
 
-def test_str_max_name_len(cb):
-    """Test the _str_max_name_len() method"""
-    recommendation = Recommendation(cb, ACTION_INIT['recommendation_id'], ACTION_INIT)
-    assert recommendation._str_max_name_len() == 17
-    assert recommendation.workflow_._str_max_name_len() == 11
-    assert recommendation.impact_._str_max_name_len() == 16
-    assert recommendation.new_rule_._str_max_name_len() == 13
-
-
 def test_str_attr_line(cb):
     """Test the _str_attr_line method"""
     subobject_data = {
@@ -491,77 +472,99 @@ def test_str_attr_line(cb):
         "objlong": "If this had been an actual emergency, we would all be dead by now",
         "objlist": [1, 2, 3, 5, 8, 13],
         "empty": [],
+        "objdict": {"a": 1, "b": 2, "c": 3},
+        "emptydict": {},
         "mini_me": subobject_data,
         "List1": [listobj_data],
         "List2": [listobj_data, listobj2_data]
     }
-    my_subobject = TestBaseModel(cb, subobject_data["id"], subobject_data)
-    my_listobj = TestBaseModel(cb, listobj_data["id"], listobj_data)
-    my_listobj2 = TestBaseModel(cb, listobj2_data["id"], listobj2_data)
-    my_object = TestBaseModel(cb, object_data["id"], object_data)
+    my_subobject = _TestBaseModel(cb, subobject_data["id"], subobject_data)
+    my_listobj = _TestBaseModel(cb, listobj_data["id"], listobj_data)
+    my_listobj2 = _TestBaseModel(cb, listobj2_data["id"], listobj2_data)
+    my_object = _TestBaseModel(cb, object_data["id"], object_data)
     my_object._my_subobjects["mini_me"] = my_subobject
     my_object._my_subobjects["List1"] = [my_listobj]
     my_object._my_subobjects["List2"] = [my_listobj, my_listobj2]
     # Test rendering of basic data (subobject mode)
-    rendering = my_object._str_attr_line('objint', object_data['objint'], False)
+    name_field_len = my_object._str_name_field_len(object_data)
+    rendering = my_object._str_attr_line('objint', object_data['objint'], name_field_len, False)
     assert len(rendering) == 1
     assert rendering[0] == '   objint: 105'
-    rendering = my_object._str_attr_line('objstring', object_data['objstring'], False)
+    rendering = my_object._str_attr_line('objstring', object_data['objstring'], name_field_len, False)
     assert len(rendering) == 1
     assert rendering[0] == 'objstring: KMFMS'
-    rendering = my_object._str_attr_line('objlong', object_data['objlong'], False)
+    rendering = my_object._str_attr_line('objlong', object_data['objlong'], name_field_len, False)
     assert len(rendering) == 1
     assert rendering[0] == '  objlong: If this had been an actual emergency, we would ...'
     # Test rendering of list data (subobject mode)
-    rendering = my_object._str_attr_line('objlist', object_data['objlist'], False)
+    rendering = my_object._str_attr_line('objlist', object_data['objlist'], name_field_len, False)
     assert len(rendering) == 5
     assert rendering[0] == '  objlist: [list:6 items]:'
     assert rendering[1] == '           [0]: 1'
     assert rendering[2] == '           [1]: 2'
     assert rendering[3] == '           [2]: 3'
     assert rendering[4] == '           [...]'
-    rendering = my_object._str_attr_line('empty', object_data['empty'], False)
+    rendering = my_object._str_attr_line('empty', object_data['empty'], name_field_len, False)
     assert len(rendering) == 1
     assert rendering[0] == '    empty: [list:0 items]'
+    # Test rendering of dict data (subobject mode)
+    rendering = my_object._str_attr_line('objdict', object_data['objdict'], name_field_len, False)
+    assert len(rendering) == 1
+    assert rendering[0].startswith('  objdict: {')
+    rendering = my_object._str_attr_line('emptydict', object_data['emptydict'], name_field_len, False)
+    assert len(rendering) == 1
+    assert rendering[0].startswith('emptydict: {')
     # Test rendering of subobject data (subobject mode)
-    rendering = my_object._str_attr_line('mini_me', object_data['mini_me'], False)
+    rendering = my_object._str_attr_line('mini_me', object_data['mini_me'], name_field_len, False)
     assert len(rendering) == 1
     assert rendering[0].startswith('  mini_me: {')
     # Test rendering of list-of-subobjects data (subobject mode)
-    rendering = my_object._str_attr_line('List1', object_data['List1'], False)
+    rendering = my_object._str_attr_line('List1', object_data['List1'], name_field_len, False)
     assert len(rendering) == 2
     assert rendering[0] == '    List1: [list:1 item]:'
     assert rendering[1].startswith('           [0]: {')
-    rendering = my_object._str_attr_line('List2', object_data['List2'], False)
+    rendering = my_object._str_attr_line('List2', object_data['List2'], name_field_len, False)
     assert len(rendering) == 3
     assert rendering[0] == '    List2: [list:2 items]:'
     assert rendering[1].startswith('           [0]: {')
     assert rendering[2].startswith('           [1]: {')
     # Test rendering of basic data (top-level mode)
-    rendering = my_object._str_attr_line('objint', object_data['objint'])
+    rendering = my_object._str_attr_line('objint', object_data['objint'], name_field_len)
     assert len(rendering) == 1
     assert rendering[0] == '       objint: 105'
-    rendering = my_object._str_attr_line('objstring', object_data['objstring'])
+    rendering = my_object._str_attr_line('objstring', object_data['objstring'], name_field_len)
     assert len(rendering) == 1
     assert rendering[0] == '    objstring: KMFMS'
-    rendering = my_object._str_attr_line('objlong', object_data['objlong'])
+    rendering = my_object._str_attr_line('objlong', object_data['objlong'], name_field_len)
     assert len(rendering) == 1
     assert rendering[0] == '      objlong: If this had been an actual emergency, we would ...'
     # Test rendering of list data (top-level mode)
-    rendering = my_object._str_attr_line('objlist', object_data['objlist'])
+    rendering = my_object._str_attr_line('objlist', object_data['objlist'], name_field_len)
     assert len(rendering) == 5
     assert rendering[0] == '      objlist: [list:6 items]:'
     assert rendering[1] == '               [0]: 1'
     assert rendering[2] == '               [1]: 2'
     assert rendering[3] == '               [2]: 3'
     assert rendering[4] == '               [...]'
-    rendering = my_object._str_attr_line('empty', object_data['empty'])
+    rendering = my_object._str_attr_line('empty', object_data['empty'], name_field_len)
     assert len(rendering) == 1
     assert rendering[0] == '        empty: [list:0 items]'
+    # Test rendering of dict data (top-level mode)
+    rendering = my_object._str_attr_line('objdict', object_data['objdict'], name_field_len)
+    assert len(rendering) == 5
+    assert rendering[0] == '      objdict: [dict] {'
+    assert rendering[1] == '                   a: 1'
+    assert rendering[2] == '                   b: 2'
+    assert rendering[3] == '                   c: 3'
+    assert rendering[4] == '               }'
+    rendering = my_object._str_attr_line('emptydict', object_data['emptydict'], name_field_len)
+    assert len(rendering) == 2
+    assert rendering[0] == '    emptydict: [dict] {'
+    assert rendering[1] == '               }'
     # Test rendering of subobject data (top-level mode) including lists in subobject
-    rendering = my_object._str_attr_line('mini_me', object_data['mini_me'])
+    rendering = my_object._str_attr_line('mini_me', object_data['mini_me'], name_field_len)
     assert len(rendering) == 10
-    assert rendering[0] == '      mini_me: [TestBaseModel object]:'
+    assert rendering[0] == '      mini_me: [_TestBaseModel object]:'
     assert rendering[1] == '                     id: 4096'
     assert rendering[2] == '                  soint: 42'
     assert rendering[3] == '                 solist: [list:5 items]:'
@@ -572,18 +575,18 @@ def test_str_attr_line(cb):
     assert rendering[8] == '               sostring: Boom!'
     assert rendering[9] == ''
     # Test rendering of list-of-subobjects data (top-level mode)
-    rendering = my_object._str_attr_line('List1', object_data['List1'])
+    rendering = my_object._str_attr_line('List1', object_data['List1'], name_field_len)
     assert len(rendering) == 4
     assert rendering[0] == '        List1: [list:1 item]:'
-    assert rendering[1] == '               [0]: [TestBaseModel object]:'
+    assert rendering[1] == '               [0]: [_TestBaseModel object]:'
     assert rendering[2] == '                    id: 64'
     assert rendering[3] == ''
-    rendering = my_object._str_attr_line('List2', object_data['List2'])
+    rendering = my_object._str_attr_line('List2', object_data['List2'], name_field_len)
     assert len(rendering) == 7
     assert rendering[0] == '        List2: [list:2 items]:'
-    assert rendering[1] == '               [0]: [TestBaseModel object]:'
+    assert rendering[1] == '               [0]: [_TestBaseModel object]:'
     assert rendering[2] == '                    id: 64'
     assert rendering[3] == ''
-    assert rendering[4] == '               [1]: [TestBaseModel object]:'
+    assert rendering[4] == '               [1]: [_TestBaseModel object]:'
     assert rendering[5] == '                    id: 128'
     assert rendering[6] == ''

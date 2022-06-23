@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2021. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -58,11 +58,24 @@ class CbMetaModel(type):
             model_data = yaml.safe_load(
                 open(os.path.join(mcs.model_base_directory, swagger_meta_file), 'rb').read())
 
-        clsdict["__doc__"] = "Represents a %s object in the Carbon Black server.\n\n" % (name,)
+        # clsdict["__doc__"] = "Represents a %s object in the Carbon Black server.\n\n" % (name,)
+        # for field_name, field_info in iter(model_data.get("properties", {}).items()):
+        #    docstring = field_info.get("description", None)
+        #    if docstring:
+        #        clsdict["__doc__"] += ":ivar %s: %s\n" % (field_name, docstring)
+
+        class_docstr = clsdict.get('__doc__', None)
+        if not class_docstr:
+            class_docstr = f"Represents a {name} object in the Carbon Black Cloud."
+        need_header = True
         for field_name, field_info in iter(model_data.get("properties", {}).items()):
             docstring = field_info.get("description", None)
             if docstring:
-                clsdict["__doc__"] += ":ivar %s: %s\n" % (field_name, docstring)
+                if need_header:
+                    class_docstr += "\n\nParameters:"
+                    need_header = False
+                class_docstr += f"\n    {field_name}: {docstring}"
+        clsdict['__doc__'] = class_docstr
 
         foreign_keys = clsdict.pop("foreign_keys", {})
 
@@ -367,7 +380,6 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         """
         self._cb = cb
         self._last_refresh_time = 0
-        self._max_name_len = 0
 
         urlobject = self.urlobject
         try:
@@ -556,7 +568,9 @@ class NewBaseModel(object, metaclass=CbMetaModel):
 
         Notes:
             Should be overridden for any class wanting to use subobject reporting capabilities.
+
             If the attribute is a list of subobjects, this method should return that list.
+
             If the attribute is a single subobject, this method should return that subobject.
         """
         return None
@@ -580,30 +594,33 @@ class NewBaseModel(object, metaclass=CbMetaModel):
             string_value = string_value[:NewBaseModel.MAX_VALUE_WIDTH - 3] + "..."
         return string_value
 
-    def _str_max_name_len(self):
+    @classmethod
+    def _str_name_field_len(cls, attributes):
         """
-        Returns the maximum length of the attribute names for this object.
+        Given an attribute dictionary, returns the maximum length of its "name" field.
+
+        Args:
+            attributes (dict): A dictionary to check.
 
         Returns:
-            int: The maximum length of the attribute names for this object.
+            int: The maximum length of any key in the dictionary.
         """
-        if self._max_name_len == 0:
-            attr_names = []
-            for attr in self._info:
-                if isinstance(attr, str):
-                    attr_names.append(attr)
-                elif isinstance(attr, dict):
-                    attr_names.extend(attr.keys())
-            self._max_name_len = max([len(s) for s in attr_names])
-        return self._max_name_len
+        attr_names = []
+        for attr in attributes:
+            if isinstance(attr, str):
+                attr_names.append(attr)
+            elif isinstance(attr, dict):
+                attr_names.extend(attr.keys())
+        return max([len(s) for s in attr_names]) if attr_names else 0
 
-    def _str_attr_line(self, name, value, top_level=True):
+    def _str_attr_line(self, name, value, name_field_len, top_level=True):
         """
         Returns the representation of a single attribute within an object (which may be multiple lines).
 
         Args:
             name (str): The name of this attribute.
             value (Any): The value of this attribute.
+            name_field_len (int): Size of the name field for this line.
             top_level (bool): True if this is a "top level" object being rendered as lines of text.
 
         Returns:
@@ -619,13 +636,13 @@ class NewBaseModel(object, metaclass=CbMetaModel):
             else:
                 status = "(*)"
         subobject_value = self._subobject(name) if top_level else None
-        spacing = self._str_max_name_len() + (6 if top_level else 2)  # (status + space) + name + colon + space
+        spacing = name_field_len + (6 if top_level else 2)  # (status + space) + name + colon + space
         if isinstance(value, list):
             # this is a list - render the first three items, then [...] if we have more
             target = value if subobject_value is None else subobject_value
             list_header = f"[list:{len(target)} {'item' if len(target) == 1 else 'items'}]" \
                           f"{':' if len(target) > 0 else ''}"
-            lines.append(format_str.format(status, name.rjust(self._str_max_name_len()), list_header))
+            lines.append(format_str.format(status, name.rjust(name_field_len), list_header))
             for index, item in enumerate(target):
                 if index >= NewBaseModel.MAX_LIST_ITEM_RENDER:
                     # punt the rest of the list
@@ -635,27 +652,36 @@ class NewBaseModel(object, metaclass=CbMetaModel):
                     # render the item as a subobject
                     lines.append((' ' * spacing) + sub_format_str.format('', f"[{index}]",
                                                                          f"[{item.__class__.__name__} object]:"))
-                    lines.extend([f"{' ' * (spacing + 5)}{sub_line}" for sub_line in item._str_attr_lines(False)])
+                    lines.extend([f"{' ' * (spacing + 5)}{sub_line}"
+                                  for sub_line in self._str_dict_lines(item._info, False)])
                     lines.append('')
                 else:
                     # render item normally
                     lines.append((' ' * spacing) + sub_format_str.format('', f"[{index}]", self._str_stringize(item)))
         elif subobject_value is not None:
             # this is a subobject
-            lines.append(format_str.format(status, name.rjust(self._str_max_name_len()),
+            lines.append(format_str.format(status, name.rjust(name_field_len),
                                            f"[{subobject_value.__class__.__name__} object]:"))
-            lines.extend([f"{' ' * spacing}{sub_line}" for sub_line in subobject_value._str_attr_lines(False)])
+            lines.extend([f"{' ' * spacing}{sub_line}"
+                          for sub_line in self._str_dict_lines(subobject_value._info, False)])
             lines.append('')
+        elif isinstance(value, dict) and top_level:
+            # append the dict elements
+            lines.append(format_str.format(status, name.rjust(name_field_len), '[dict] {'))
+            if len(value) > 0:
+                lines.extend([f"{' ' * (spacing + 4)}{sub_line}" for sub_line in self._str_dict_lines(value, False)])
+            lines.append(f"{' ' * spacing}{'}'}")
         else:
             # ordinary case
-            lines.append(format_str.format(status, name.rjust(self._str_max_name_len()), self._str_stringize(value)))
+            lines.append(format_str.format(status, name.rjust(name_field_len), self._str_stringize(value)))
         return lines
 
-    def _str_attr_lines(self, top_level=True):
+    def _str_dict_lines(self, d, top_level=True):
         """
-        Returns the representation of all attributes within this object.
+        Returns the representation of all attributes within a dictionary.
 
         Args:
+            d (dict): The dictionary from which the attributes are to be rendered.
             top_level (bool): True if this is a "top level" object being rendered as lines of text.
 
         Returns:
@@ -664,20 +690,23 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         # for dictionaries that can be sorted, sort them
         lines = []
         try:
-            attributes = sorted(self._info)
+            attributes = sorted(d)
         # dictionaries containing dictionaries cannot be sorted, so leave as is
         except:
-            attributes = self._info
+            attributes = d
+
+        # Compute the name field length.
+        name_field_len = self._str_name_field_len(attributes)
 
         for attr in attributes:
             # typical case, where the info dictionary value for this `attr` is a string
             if isinstance(attr, str):
-                lines.extend(self._str_attr_line(attr, self._info[attr], top_level))
+                lines.extend(self._str_attr_line(attr, d[attr], name_field_len, top_level))
             # edge case (seen in Facet searches) where the info dictionary value for this `attr` is a dictionary
             elif isinstance(attr, dict):
                 # go through each attribute in the `attr` dictionary
                 for att in attr:
-                    lines.extend(self._str_attr_line(att, attr[att], top_level))
+                    lines.extend(self._str_attr_line(att, attr[att], name_field_len, top_level))
 
         return lines
 
@@ -699,7 +728,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         lines.append('')
 
         # add the attribute lines
-        lines.extend(self._str_attr_lines())
+        lines.extend(self._str_dict_lines(self._info))
 
         return "\n".join(lines)
 
@@ -800,7 +829,7 @@ class MutableBaseModel(NewBaseModel):
                 pass
             log.debug("Creating a new {0:s} object".format(self.__class__.__name__))
             http_method = self.__class__._new_object_http_method
-            ret = self._cb.api_json_request(http_method, self._urlobject,
+            ret = self._cb.api_json_request(http_method, self._build_api_request_uri(http_method=http_method),
                                             data=new_object_info)
         else:
             log.debug("Updating {0:s} with unique ID {1:s}".format(self.__class__.__name__, str(self._model_unique_id)))
@@ -1016,10 +1045,23 @@ class IterableQueryMixin:
         Returns:
             object: Either an item or a list of items.
         """
-        results = list(self)
         if isinstance(item, slice):
+            try:
+                if item.start is not None and item.start >= 0 or item.stop is not None and item.stop >= 0:
+                    from_row = 0
+                    max_rows = -1
+                    if item.start:
+                        from_row = item.start
+                    if item.stop:
+                        max_rows = item.stop - from_row
+                    results = list(self._perform_query(from_row=from_row, max_rows=max_rows))
+                    return results
+            except TypeError:
+                log.debug(f"Unable to perform optimized query for {self.__class__.__name__}")
+            results = list(self)
             return [results[ii] for ii in range(*item.indices(len(results)))]
         elif isinstance(item, int):
+            results = list(self._perform_query(from_row=item, max_rows=1))
             return results[item]
         else:
             raise TypeError("Invalid argument type")
@@ -1320,12 +1362,11 @@ class QueryBuilder(object):
     through the CBCloudAPI.select API.
 
     Examples:
-    >>> from cbc_sdk.base import QueryBuilder
-    >>> # build a query with chaining
-    >>> query = QueryBuilder().where(process_name="malicious.exe").and_(device_name="suspect")
-    >>> # start with an initial query, and chain another condition to it
-    >>> query = QueryBuilder(device_os="WINDOWS").or_(process_username="root")
-
+        >>> from cbc_sdk.base import QueryBuilder
+        >>> # build a query with chaining
+        >>> query = QueryBuilder().where(process_name="malicious.exe").and_(device_name="suspect")
+        >>> # start with an initial query, and chain another condition to it
+        >>> query = QueryBuilder(device_os="WINDOWS").or_(process_username="root")
     """
 
     def __init__(self, **kwargs):
@@ -1585,8 +1626,8 @@ class CriteriaBuilderSupportMixin:
             The query object with specified custom criteria.
 
         Example:
-            query = api.select(Event).add_criteria("event_type", ["filemod", "scriptload"])
-            query = api.select(Event).add_criteria("event_type", "filemod")
+            >>> query = api.select(Event).add_criteria("event_type", ["filemod", "scriptload"])
+            >>> query = api.select(Event).add_criteria("event_type", "filemod")
         """
         if not isinstance(newlist, list):
             if not isinstance(newlist, str):
@@ -1608,9 +1649,10 @@ class CriteriaBuilderSupportMixin:
             The query object with specified custom criteria.
 
         Example:
-            query = api.select(Alert).update_criteria("my.criteria.key", ["criteria_value"])
+            >>> query = api.select(Alert).update_criteria("my.criteria.key", ["criteria_value"])
 
-        Note: Use this method if there is no implemented method for your desired criteria.
+        Note:
+            Use this method if there is no implemented method for your desired criteria.
         """
         if not isinstance(newlist, list):
             if not isinstance(newlist, str):
@@ -1672,17 +1714,17 @@ class AsyncQueryMixin:
 
 
 class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin, CriteriaBuilderSupportMixin):
-    """Represents a prepared query to the Cb Enterprise EDR backend.
+    """Represents a prepared query to the Carbon Black Cloud.
 
-    This object is returned as part of a `CbEnterpriseEDRAPI.select`
-    operation on models requested from the Cb Enterprise EDR backend. You should not have to create this class yourself.
+    This object is returned as part of a `CBCCloudAPI.select`
+    operation on models requested from the Carbon Black Cloud backend.
+    You should not have to create this class yourself.
 
     The query is not executed on the server until it's accessed, either as an iterator (where it will generate values
     on demand as they're requested) or as a list (where it will retrieve the entire result set and save to a list).
     You can also call the Python built-in ``len()`` on this object to retrieve the total number of items matching
     the query.
 
-    Examples::
 
     >>> from cbc_sdk import CBCloudAPI
     >>> from cbc_sdk.enterprise_edr import Report
@@ -1731,8 +1773,8 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
             The ResultQuery with specified custom exclusion.
 
         Example:
-            query = api.select(Event).add_exclusions("netconn_domain", ["www.google.com"])
-            query = api.select(Event).add_exclusions("netconn_domain", "www.google.com")
+            >>> query = api.select(Event).add_exclusions("netconn_domain", ["www.google.com"])
+            >>> query = api.select(Event).add_exclusions("netconn_domain", "www.google.com")
         """
         if not isinstance(newlist, list):
             if not isinstance(newlist, str):
@@ -1810,9 +1852,10 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
             - `window` will take precendent over `start` and `end` if provided.
 
         Examples:
-            query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z")
-            second_query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
-            third_query = api.select(Event).set_time_range(window='-3d')
+            >>> query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z")
+            >>> second_query = api.select(Event).
+            ...     set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
+            >>> third_query = api.select(Event).set_time_range(window='-3d')
         """
         if start:
             if not isinstance(start, str):
@@ -1860,8 +1903,7 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
             Query: The query with sorting parameters.
 
         Example:
-
-        >>> cb.select(Process).where(process_name="cmd.exe").sort_by("device_timestamp")
+            >>> cb.select(Process).where(process_name="cmd.exe").sort_by("device_timestamp")
         """
         found = False
 
@@ -1982,8 +2024,8 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
             The ResultQuery with specified custom exclusion.
 
         Example:
-            query = api.select(Event).add_exclusions("netconn_domain", ["www.google.com"])
-            query = api.select(Event).add_exclusions("netconn_domain", "www.google.com")
+            >>> query = api.select(Event).add_exclusions("netconn_domain", ["www.google.com"])
+            >>> query = api.select(Event).add_exclusions("netconn_domain", "www.google.com")
         """
         if not isinstance(newlist, list):
             if not isinstance(newlist, str):
@@ -2013,11 +2055,10 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
 
         Returns:
             Query (AsyncQuery): The Query object with new milliseconds
-                parameter.
+            parameter.
 
         Example:
-
-        >>> cb.select(ProcessFacet).where(process_name="foo.exe").timeout(5000)
+            >>> cb.select(ProcessFacet).where(process_name="foo.exe").timeout(5000)
         """
         self._timeout = msecs
         return self
@@ -2034,7 +2075,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
             Query (AsyncQuery): The Query object with new limit parameter.
 
         Example:
-        >>> cb.select(ProcessFacet).where(process_name="foo.exe").limit(50)
+            >>> cb.select(ProcessFacet).where(process_name="foo.exe").limit(50)
         """
         self._limit = limit
         return self
@@ -2049,7 +2090,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
             Query (AsyncQuery): The Query object with the new rows parameter.
 
         Example:
-        >>> cb.select(ProcessFacet).set_rows(50)
+            >>> cb.select(ProcessFacet).set_rows(50)
         """
         self._facet_rows = rows
         return self
@@ -2064,7 +2105,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
             Query (AsyncQuery): The Query object that will receive the specified field(s).
 
         Example:
-        >>> cb.select(ProcessFacet).add_facet_field(["process_name", "process_username"])
+            >>> cb.select(ProcessFacet).add_facet_field(["process_name", "process_username"])
         """
         if isinstance(field, str):
             self._facet_fields.append(field)
@@ -2099,7 +2140,8 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
             raise ApiError("`bucket_size` should be either int or ISO8601 timestamp string")
 
     def add_range(self, range):
-        """Sets the facet ranges to be received by this query.
+        """
+        Sets the facet ranges to be received by this query.
 
         Arguments:
             range (dict or [dict]): Range(s) to be received.
@@ -2107,20 +2149,27 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
         Returns:
             Query (AsyncQuery): The Query object that will receive the specified range(s).
 
-        Note: The range parameter must be in this dictionary format:
+        Note:
+            The range parameter must be in this dictionary format:
+
             {
+
                 "bucket_size": "<object>",
+
                 "start": "<object>",
+
                 "end": "<object>",
+
                 "field": "<string>"
+
             },
+
             where "bucket_size", "start", and "end" can be numbers or ISO 8601 timestamps.
 
         Examples:
-        >>> cb.select(ProcessFacet).add_range({"bucket_size": 5, "start": 0, "end": 10, "field": "netconn_count"})
-        >>> cb.select(ProcessFacet).add_range({"bucket_size": "+1DAY", "start": "2020-11-01T00:00:00Z",
-                                               "end": "2020-11-12T00:00:00Z", "field": "backend_timestamp"})
-
+            >>> cb.select(ProcessFacet).add_range({"bucket_size": 5, "start": 0, "end": 10, "field": "netconn_count"})
+            >>> cb.select(ProcessFacet).add_range({"bucket_size": "+1DAY", "start": "2020-11-01T00:00:00Z",
+            ... "end": "2020-11-12T00:00:00Z", "field": "backend_timestamp"})
         """
         if isinstance(range, dict):
             self._check_range(range)
@@ -2139,15 +2188,16 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
             start (str in ISO 8601 timestamp): When to start the result search.
             end (str in ISO 8601 timestamp): When to end the result search.
             window (str): Time window to execute the result search, ending on the current time.
-                Should be in the form "-2w", where y=year, w=week, d=day, h=hour, m=minute, s=second.
+            Should be in the form "-2w", where y=year, w=week, d=day, h=hour, m=minute, s=second.
 
         Note:
             - `window` will take precendent over `start` and `end` if provided.
 
         Examples:
-            query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z")
-            second_query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
-            third_query = api.select(Event).set_time_range(window='-3d')
+            >>> query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z")
+            >>> second_query = api.select(Event).
+            ...     set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
+            >>> third_query = api.select(Event).set_time_range(window='-3d')
         """
         if start:
             if not isinstance(start, str):

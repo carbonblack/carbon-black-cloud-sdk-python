@@ -22,6 +22,7 @@ from tests.unit.fixtures.enterprise_edr.mock_threatintel import (WATCHLIST_GET_R
                                                                  IOC_GET_IGNORED,
                                                                  REPORT_BUILT_VIA_BUILDER,
                                                                  REPORT_INIT,
+                                                                 REPORT_INIT2,
                                                                  REPORT_GET_IGNORED,
                                                                  REPORT_GET_SEVERITY,
                                                                  REPORT_UPDATE_AFTER_ADD_IOC,
@@ -36,6 +37,7 @@ from tests.unit.fixtures.enterprise_edr.mock_threatintel import (WATCHLIST_GET_R
                                                                  WATCHLIST_FROM_FEED_OUT,
                                                                  ADD_REPORT_IDS_LIST,
                                                                  ADD_REPORTS_LIST)
+
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 GUID_PATTERN = '[0-9A-Fa-f]{8}(-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}'
@@ -60,7 +62,7 @@ def cbcsdk_mock(monkeypatch, cb):
 
 def test_watchlist_query(cbcsdk_mock):
     """Testing Watchlist Querying"""
-    cbcsdk_mock.mock_request("GET", "/threathunter/watchlistmgr/v2/watchlist", WATCHLIST_GET_RESP)
+    cbcsdk_mock.mock_request("GET", "/threathunter/watchlistmgr/v3/orgs/test/watchlists", WATCHLIST_GET_RESP)
     api = cbcsdk_mock.api
     watchlist = api.select(Watchlist)
     results = [res for res in watchlist._perform_query()]
@@ -71,7 +73,8 @@ def test_watchlist_query(cbcsdk_mock):
 def test_watchlist_init(cbcsdk_mock):
     """Testing Watchlist.__init__()."""
     id = "watchlistId"
-    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_RESP)
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}",
+                             WATCHLIST_GET_SPECIFIC_RESP)
     watchlist = Watchlist(cbcsdk_mock.api, model_unique_id="watchlistId", initial_data=None)
     assert watchlist._model_unique_id == "watchlistId"
 
@@ -86,7 +89,7 @@ def test_watchlist_save(cbcsdk_mock):
     watchlist.save()
 
     # if Watchlist response is missing a required field per enterprise_edr.models.Watchlist, raise InvalidObjectError
-    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}",
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}",
                              WATCHLIST_GET_SPECIFIC_MISSING_FIELDS_RESP)
     watchlist = api.select(Watchlist, "watchlistId")
     with pytest.raises(InvalidObjectError):
@@ -98,14 +101,13 @@ def test_watchlist_save(cbcsdk_mock):
 def test_watchlist_update(cbcsdk_mock):
     """Testing Watchlist.update()."""
     id = "watchlistId"
-    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_RESP)
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}",
+                             WATCHLIST_GET_SPECIFIC_RESP)
     watchlist = Watchlist(cbcsdk_mock.api, model_unique_id="watchlistId", initial_data=None)
     assert "description" in watchlist._info
     assert "nonexistant_key" not in watchlist._info
     assert watchlist._info["description"] == "Existing description for the watchlist."
     cbcsdk_mock.mock_request("PUT", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}",
-                             WATCHLIST_GET_SPECIFIC_RESP)
-    cbcsdk_mock.mock_request("PATCH", f"/threathunter/watchlistmgr/v2/watchlist/{id}",
                              WATCHLIST_GET_SPECIFIC_RESP)
     watchlist.update(description="My New Description", nonexistant_key="This Is Ignored")
     assert watchlist._info["description"] == "My New Description"
@@ -116,11 +118,12 @@ def test_watchlist_update_id(cbcsdk_mock):
     """Testing Watchlist.update()."""
     id = "watchlistId2"
     id2 = "watchlistId"
-    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_RESP_2)
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}",
+                             WATCHLIST_GET_SPECIFIC_RESP_2)
     watchlist = Watchlist(cbcsdk_mock.api, model_unique_id="watchlistId2", initial_data=None)
     assert "description" in watchlist._info
     assert "nonexistant_key" not in watchlist._info
-    cbcsdk_mock.mock_request("PATCH", "/threathunter/watchlistmgr/v2/watchlist",
+    cbcsdk_mock.mock_request("POST", "/threathunter/watchlistmgr/v3/orgs/test/watchlists",
                              WATCHLIST_GET_SPECIFIC_RESP)
     watchlist.id = id2
     result_repr = watchlist.__repr__()
@@ -139,7 +142,8 @@ def test_watchlist_update_invalid_object(cbcsdk_mock):
 def test_watchlist_update_api_error(cbcsdk_mock):
     """Testing Watchlist.update() raising ApiError when passing in "report_ids" with empty list."""
     id = "watchlistId"
-    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_RESP)
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}",
+                             WATCHLIST_GET_SPECIFIC_RESP)
     watchlist = Watchlist(cbcsdk_mock.api, model_unique_id="watchlistId", initial_data=None)
     cbcsdk_mock.mock_request("PUT", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}",
                              WATCHLIST_GET_SPECIFIC_RESP)
@@ -163,7 +167,8 @@ def test_watchlist_classifier_empty(cbcsdk_mock):
 def test_watchlist_delete(cbcsdk_mock):
     """Testing Watchlist.delete()."""
     id = "watchlistId"
-    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_RESP)
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}",
+                             WATCHLIST_GET_SPECIFIC_RESP)
     cbcsdk_mock.mock_request("DELETE", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}", None)
     watchlist = Watchlist(cbcsdk_mock.api, model_unique_id="watchlistId")
     watchlist.delete()
@@ -180,7 +185,8 @@ def test_enable_alerts(cbcsdk_mock):
     """Testing Watchlist.enable_alerts()."""
     api = cbcsdk_mock.api
     id = "watchlistId"
-    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_RESP)
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}",
+                             WATCHLIST_GET_SPECIFIC_RESP)
     watchlist = Watchlist(api, model_unique_id="watchlistId")
     cbcsdk_mock.mock_request("PUT", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}/alert", {"alert": True})
     watchlist.enable_alerts()
@@ -198,7 +204,8 @@ def test_disable_alerts(cbcsdk_mock):
     """Testing Watchlist.disable_alerts()."""
     api = cbcsdk_mock.api
     id = "watchlistId"
-    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_RESP)
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}",
+                             WATCHLIST_GET_SPECIFIC_RESP)
     watchlist = Watchlist(api, model_unique_id="watchlistId")
     cbcsdk_mock.mock_request("DELETE", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}/alert", None)
     watchlist.disable_alerts()
@@ -216,7 +223,8 @@ def test_watchlist_enable_tags(cbcsdk_mock):
     """Testing Watchlist.enable_tags()."""
     api = cbcsdk_mock.api
     id = "watchlistId"
-    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_RESP)
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}",
+                             WATCHLIST_GET_SPECIFIC_RESP)
     watchlist = Watchlist(api, model_unique_id="watchlistId")
     cbcsdk_mock.mock_request("PUT", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}/tag", {"tag": True})
     watchlist.enable_tags()
@@ -234,7 +242,8 @@ def test_watchlist_disable_tags(cbcsdk_mock):
     """Testing Watchlist.disable_tags()."""
     api = cbcsdk_mock.api
     id = "watchlistId"
-    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}", WATCHLIST_GET_SPECIFIC_RESP)
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}",
+                             WATCHLIST_GET_SPECIFIC_RESP)
     watchlist = Watchlist(api, model_unique_id="watchlistId")
     cbcsdk_mock.mock_request("DELETE", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}/tag", None)
     watchlist.disable_tags()
@@ -252,7 +261,7 @@ def test_watchlist_feed(cbcsdk_mock):
     """Testing Watchlist.feed property."""
     api = cbcsdk_mock.api
     id = "watchlistId"
-    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}",
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}",
                              WATCHLIST_GET_SPECIFIC_RESP)
     watchlist = api.select(Watchlist, "watchlistId")
     cbcsdk_mock.mock_request("GET", "/threathunter/feedmgr/v2/orgs/test/feeds/feed_id_associated",
@@ -266,7 +275,7 @@ def test_watchlist_feed_missing_classifier(cbcsdk_mock):
     """Testing Watchlist.feed property."""
     api = cbcsdk_mock.api
     id = "watchlistMissingFieldsWithID"
-    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}",
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}",
                              WATCHLIST_GET_SPECIFIC_MISSING_FIELDS_RESP)
     watchlist = api.select(Watchlist, "watchlistMissingFieldsWithID")
     assert not watchlist.classifier
@@ -277,7 +286,7 @@ def test_watchlist_feed_invalid_classifier(cbcsdk_mock):
     """Testing Watchlist.feed property when "classifier" is missing."""
     api = cbcsdk_mock.api
     id = "watchlistInvalidClassifier"
-    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}",
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}",
                              WATCHLIST_GET_SPECIFIC_INVALID_CLASSIFIER_RESP)
     watchlist = api.select(Watchlist, "watchlistInvalidClassifier")
     assert watchlist.classifier
@@ -288,7 +297,7 @@ def test_watchlist_reports(cbcsdk_mock):
     """Testing Watchlist.reports property."""
     api = cbcsdk_mock.api
     id = "watchlistInvalidClassifier"
-    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v2/watchlist/{id}",
+    cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v3/orgs/test/watchlists/{id}",
                              WATCHLIST_GET_SPECIFIC_RESP)
     watchlist = api.select(Watchlist, "watchlistInvalidClassifier")
     cbcsdk_mock.mock_request("GET", "/threathunter/watchlistmgr/v3/orgs/test/reports/reportId0",
@@ -331,6 +340,14 @@ def test_report_query(cbcsdk_mock):
     }])
 
     assert reports[0].iocs_v2[0]["values"][0] == "test"
+
+
+def test_report_query_from_watchlist(cbcsdk_mock, get_watchlist_report):
+    """Testing Report Querying from a Watchlist"""
+    cbcsdk_mock.mock_request("GET", "/threathunter/watchlistmgr/v3/orgs/test/reports/1", get_watchlist_report)
+    api = cbcsdk_mock.api
+    report = api.select(Report, "1")
+    assert report.title == "Report Test Title"
 
 
 def test_feed_query_all(cbcsdk_mock):
@@ -491,48 +508,53 @@ def test_report_builder_save_watchlist(cbcsdk_mock):
     assert report._info['id'] == "AaBbCcDdEeFfGg"
 
 
-@pytest.mark.parametrize("init_data, feed, watchlist, do_request, expectation, result", [
-    (REPORT_INIT, None, True, True, does_not_raise(), True),
-    (REPORT_INIT, None, False, False, pytest.raises(InvalidObjectError), True),
-    (REPORT_BUILT_VIA_BUILDER, None, True, False, pytest.raises(InvalidObjectError), True)
+@pytest.mark.parametrize("init_data, feed, watchlist, do_request, url_id, expectation, result", [
+    (REPORT_INIT, None, True, True, "69e2a8d0-bc36-4970-9834-8687efe1aff7", does_not_raise(), True),
+    (REPORT_INIT, None, False, False, "", pytest.raises(InvalidObjectError), True),
+    (REPORT_BUILT_VIA_BUILDER, None, True, False, "", pytest.raises(InvalidObjectError), True),
+    (REPORT_INIT2, "abcdefgh", True, True, "abcdefgh-Compound", does_not_raise(), True),
+    (REPORT_INIT2, "abcdefgh", False, True, "abcdefgh-Compound", does_not_raise(), True)
 ])
-def test_report_get_ignored(cbcsdk_mock, init_data, feed, watchlist, do_request, expectation, result):
+def test_report_get_ignored(cbcsdk_mock, init_data, feed, watchlist, do_request, url_id, expectation, result):
     """Tests the operation of the report.ignored() method."""
     if do_request:
-        cbcsdk_mock.mock_request("GET", "/threathunter/watchlistmgr/v3/orgs/test/reports/"
-                                        "69e2a8d0-bc36-4970-9834-8687efe1aff7/ignore", REPORT_GET_IGNORED)
+        cbcsdk_mock.mock_request("GET", f"/threathunter/watchlistmgr/v3/orgs/test/reports/{url_id}/ignore",
+                                 REPORT_GET_IGNORED)
     api = cbcsdk_mock.api
     report = Report(api, None, init_data, feed, watchlist)
     with expectation:
         assert report.ignored == result
 
 
-@pytest.mark.parametrize("init_data, feed, watchlist, do_request, expectation", [
-    (REPORT_INIT, None, True, True, does_not_raise()),
-    (REPORT_INIT, None, False, False, pytest.raises(InvalidObjectError)),
-    (REPORT_BUILT_VIA_BUILDER, None, True, False, pytest.raises(InvalidObjectError))
+@pytest.mark.parametrize("init_data, feed, watchlist, do_request, url_id, expectation", [
+    (REPORT_INIT, None, True, True, "69e2a8d0-bc36-4970-9834-8687efe1aff7", does_not_raise()),
+    (REPORT_INIT, None, False, False, "", pytest.raises(InvalidObjectError)),
+    (REPORT_BUILT_VIA_BUILDER, None, True, False, "", pytest.raises(InvalidObjectError)),
+    (REPORT_INIT2, "abcdefgh", True, True, "abcdefgh-Compound", does_not_raise()),
+    (REPORT_INIT2, "abcdefgh", False, True, "abcdefgh-Compound", does_not_raise())
 ])
-def test_report_set_ignored(cbcsdk_mock, init_data, feed, watchlist, do_request, expectation):
+def test_report_set_ignored(cbcsdk_mock, init_data, feed, watchlist, do_request, url_id, expectation):
     """Tests the operation of the report.ignore() method."""
     if do_request:
-        cbcsdk_mock.mock_request("PUT", "/threathunter/watchlistmgr/v3/orgs/test/reports/"
-                                        "69e2a8d0-bc36-4970-9834-8687efe1aff7/ignore", REPORT_GET_IGNORED)
+        cbcsdk_mock.mock_request("PUT", f"/threathunter/watchlistmgr/v3/orgs/test/reports/{url_id}/ignore",
+                                 REPORT_GET_IGNORED)
     api = cbcsdk_mock.api
     report = Report(api, None, init_data, feed, watchlist)
     with expectation:
         report.ignore()
 
 
-@pytest.mark.parametrize("init_data, feed, watchlist, do_request, expectation", [
-    (REPORT_INIT, None, True, True, does_not_raise()),
-    (REPORT_INIT, None, False, False, pytest.raises(InvalidObjectError)),
-    (REPORT_BUILT_VIA_BUILDER, None, True, False, pytest.raises(InvalidObjectError))
+@pytest.mark.parametrize("init_data, feed, watchlist, do_request, url_id, expectation", [
+    (REPORT_INIT, None, True, True, "69e2a8d0-bc36-4970-9834-8687efe1aff7", does_not_raise()),
+    (REPORT_INIT, None, False, False, "", pytest.raises(InvalidObjectError)),
+    (REPORT_BUILT_VIA_BUILDER, None, True, False, "", pytest.raises(InvalidObjectError)),
+    (REPORT_INIT2, "abcdefgh", True, True, "abcdefgh-Compound", does_not_raise()),
+    (REPORT_INIT2, "abcdefgh", False, True, "abcdefgh-Compound", does_not_raise())
 ])
-def test_report_clear_ignored(cbcsdk_mock, init_data, feed, watchlist, do_request, expectation):
+def test_report_clear_ignored(cbcsdk_mock, init_data, feed, watchlist, do_request, url_id, expectation):
     """Tests the operation of the report.unignore() method."""
     if do_request:
-        cbcsdk_mock.mock_request("DELETE", "/threathunter/watchlistmgr/v3/orgs/test/reports/"
-                                           "69e2a8d0-bc36-4970-9834-8687efe1aff7/ignore",
+        cbcsdk_mock.mock_request("DELETE", f"/threathunter/watchlistmgr/v3/orgs/test/reports/{url_id}/ignore",
                                  CBCSDKMock.StubResponse(None, 204))
     api = cbcsdk_mock.api
     report = Report(api, None, init_data, feed, watchlist)

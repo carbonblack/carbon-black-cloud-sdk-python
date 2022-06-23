@@ -53,11 +53,10 @@ to USB devices is through the Endpoint Standard package ``from cbc_sdk.endpoint_
   >>> api = CBCloudAPI(profile='endpoint_standard')
   >>> usb_devices = api.select(USBDevice).set_statuses(['APPROVED'])
   >>> for usb in usb_devices:
-  ...   print(f'''
-              USB Device ID: {usb.id}
-              USB Device: {usb.vendor_name} {usb.product_name}
-
-              ''')
+  ...     print(f'''
+  ...         USB Device ID: {usb.id}
+  ...         USB Device: {usb.vendor_name} {usb.product_name}
+  ...         ''')
   USB Device ID: 774
   USB Device: SanDisk Ultra
 
@@ -425,7 +424,6 @@ Create the query:
     >>> print(synchronous_results)
     EventFacet object, bound to https://defense-eap01.conferdeploy.net.
     -------------------------------------------------------------------------------
-
                num_found: 16
       processed_segments: 1
                   ranges: [{'start': '2020-10-16T00:00:00Z', 'end': '2020...
@@ -439,7 +437,6 @@ Create the query:
     >>> print(asynchronous_result)
     EventFacet object, bound to https://defense-eap01.conferdeploy.net.
     -------------------------------------------------------------------------------
-
                num_found: 16
       processed_segments: 1
                   ranges: [{'start': '2020-10-16T00:00:00Z', 'end': '2020...
@@ -481,11 +478,11 @@ Get details per event
   >>> item = query[0]
   >>> details = item.get_details()
   >>> print(
-      f'''
-      Category: {details.alert_category}
-      Type: {details.enriched_event_type}
-      Alert Id: {details.alert_id}
-      ''')
+  ...     f'''
+  ...     Category: {details.alert_category}
+  ...     Type: {details.enriched_event_type}
+  ...     Alert Id: {details.alert_id}
+  ...     ''')
   Category: ['THREAT'])
   Type: CREATE_PROCESS
   Alert Id: ['3F0D00A6']
@@ -503,12 +500,12 @@ Get details for all events per alert
   >>> # get the first alert returned by the query
   >>> alert = query[0]
   >>> for event in alert.get_events():
-  ...   print(
-        f'''
-        Category: {event.alert_category}
-        Type: {event.enriched_event_type}
-        Alert Id: {event.alert_id}
-        ''')
+  ...     print(
+  ...         f'''
+  ...         Category: {event.alert_category}
+  ...         Type: {event.enriched_event_type}
+  ...         Alert Id: {event.alert_id}
+  ...         ''')
   Category: ['OBSERVED']
   Type: SYSTEM_API_CALL
   Alert Id: ['BE084638']

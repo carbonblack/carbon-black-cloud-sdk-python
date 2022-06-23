@@ -1,5 +1,60 @@
 Changelog
 ================================
+CBC SDK 1.3.6 - Released April 19, 2022
+---------------------------------------
+
+New Features:
+
+* Support for Device Facet API.
+* Dynamic reference of query classes--now you can do ``api.select("Device")`` in addition to ``api.select(Device)``.
+* Support for Container Runtime Alerts.
+* NSX Remediation functionality - set the NSX remediation state for workloads which support it.
+
+Updates:
+
+* Endpoint Standard specific ``Event``s have been decommissioned and removed.
+* SDK now uses Watchlist Manager apis ``v3`` instead of ``v2``.  ``v2`` APIs are being decommissioned.
+
+Documentation:
+
+* Added a ``CONTRIBUTING`` link to the ``README.md`` file.
+* Change to Watchlist/Report documentation to properly reflect how to update a ``Report`` in a ``Watchlist``.
+* Cleaned up formatting.
+
+CBC SDK 1.3.5 - Released January 26, 2022
+-----------------------------------------
+
+New Features:
+
+* Added asynchronous query support to Live Query.
+* Added the ability to export query results from Live Query, either synchronously or asynchronously (via the ``Job``
+  object and the Jobs API).  Synchronous exports include full-file export, line-by-line export, and ZIP file export.
+  Asynchronous exports include full-file export and line-by-line export.
+* Added a ``CredentialProvider`` that uses AWS Secrets Manager to store credential information.
+
+Updates:
+
+* Added ``WatchlistAlert.get_process()`` method to return the ``Process`` of a ``WatchlistAlert``.
+* Added several helpers to Live Query support to make it easier to get runs from a template, or results, device
+  summaries, or facets from a run.
+* Optimized API requests when performing query slicing.
+* Updated pretty-printing of objects containing ``dict`` members.
+* ``lxml`` dependency updated to version 4.6.5.
+
+Bug Fixes:
+
+* ``User.delete()`` now checks for an outstanding access grant on the user, and deletes it first if it exists.
+* Fixed handling of URL when attaching a new IOC to a ``Feed``.
+* Getting and setting of ``Report`` ignore status is now supported even if that ``Report`` is part of a ``Feed``.
+
+Documentation:
+
+* Information added about the target audience for the SDK.
+* Improper reference to a credential property replaced in the Authentication guide.
+* Broken example updated in Authentication guide.
+* Added SDK guides for Vulnerabilities and Live Query APIs.
+* Updated documentation for ``ProcessFacet`` model to better indicate support for full query string.
+
 CBC SDK 1.3.4 - Released October 12, 2021
 -----------------------------------------
 

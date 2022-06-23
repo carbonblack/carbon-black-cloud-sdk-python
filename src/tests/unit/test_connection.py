@@ -1,5 +1,5 @@
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2021. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -14,6 +14,7 @@
 import pytest
 import requests
 import ssl
+import io
 from cbc_sdk.connection import try_json, Connection
 from cbc_sdk.credentials import Credentials
 from cbc_sdk.errors import (ApiError, ClientError, ConnectionError, ObjectNotFoundError, QuerySyntaxError, ServerError,
@@ -114,7 +115,7 @@ def test_http_request_exception_cases(mox, exception_raised, exception_caught, p
     conn = Connection(creds)
     mox.StubOutWithMock(conn.session, 'request')
     conn.session.request('GET', 'https://example.com/path', headers=IgnoreArg(), verify=True, proxies=conn.proxies,
-                         timeout=conn._timeout).AndRaise(exception_raised)
+                         timeout=conn._timeout, stream=False).AndRaise(exception_raised)
     mox.ReplayAll()
     with pytest.raises(exception_caught) as excinfo:
         conn.http_request('get', '/path')
@@ -136,7 +137,7 @@ def test_http_request_error_code_cases(mox, response, exception_caught, prefix):
     conn = Connection(creds)
     mox.StubOutWithMock(conn.session, 'request')
     conn.session.request('GET', 'https://example.com/path', headers=IgnoreArg(), verify=True, proxies=conn.proxies,
-                         timeout=conn._timeout).AndReturn(response)
+                         timeout=conn._timeout, stream=False).AndReturn(response)
     mox.ReplayAll()
     with pytest.raises(exception_caught) as excinfo:
         conn.http_request('get', '/path')
@@ -156,10 +157,33 @@ def test_http_request_happy_path(mox):
     conn = Connection(creds)
     mox.StubOutWithMock(conn.session, 'request')
     conn.session.request('GET', 'https://example.com/path', headers=Func(validate_headers), verify=True,
-                         proxies=conn.proxies, timeout=conn._timeout).AndReturn(StubResponse({'ok': True}))
+                         proxies=conn.proxies, timeout=conn._timeout, stream=False) \
+        .AndReturn(StubResponse({'ok': True}))
     mox.ReplayAll()
     resp = conn.http_request('get', '/path', headers={'X-Test': 'yes'})
     assert resp.json()['ok']
+    mox.VerifyAll()
+
+
+def test_http_request_with_stream(mox):
+    """Test the HTTP request going to a stream."""
+    def validate_headers(hdrs):
+        assert hdrs['X-Auth-Token'] == 'ABCDEFGH'
+        assert hdrs['User-Agent'].startswith("CBC_SDK/")
+        return True
+
+    creds = Credentials({'url': 'https://example.com', 'token': 'ABCDEFGH'})
+    conn = Connection(creds)
+    mox.StubOutWithMock(conn.session, 'request')
+    conn.session.request('POST', 'https://example.com/path', headers=Func(validate_headers), verify=True,
+                         proxies=conn.proxies, timeout=conn._timeout, stream=True) \
+        .AndReturn(StubResponse(None, 200, "ThisIsFine"))
+    mox.ReplayAll()
+    with io.BytesIO() as stream:
+        with conn.http_request('POST', '/path', stream=True) as resp:
+            for block in resp.iter_content():
+                stream.write(block)
+        assert str(stream.getvalue(), encoding='utf-8') == "ThisIsFine"
     mox.VerifyAll()
 
 
@@ -169,13 +193,17 @@ def test_request_helper_methods(mox):
     conn = Connection(creds)
     mox.StubOutWithMock(conn.session, 'request')
     conn.session.request('GET', 'https://example.com/getpath', headers=IgnoreArg(), verify=True,
-                         proxies=conn.proxies, timeout=conn._timeout).AndReturn(StubResponse({'get': True}))
+                         proxies=conn.proxies, timeout=conn._timeout, stream=False) \
+        .AndReturn(StubResponse({'get': True}))
     conn.session.request('POST', 'https://example.com/postpath', headers=IgnoreArg(), verify=True,
-                         proxies=conn.proxies, timeout=conn._timeout).AndReturn(StubResponse({'post': True}))
+                         proxies=conn.proxies, timeout=conn._timeout, stream=False) \
+        .AndReturn(StubResponse({'post': True}))
     conn.session.request('PUT', 'https://example.com/putpath', headers=IgnoreArg(), verify=True,
-                         proxies=conn.proxies, timeout=conn._timeout).AndReturn(StubResponse({'put': True}))
+                         proxies=conn.proxies, timeout=conn._timeout, stream=False) \
+        .AndReturn(StubResponse({'put': True}))
     conn.session.request('DELETE', 'https://example.com/delpath', headers=IgnoreArg(), verify=True,
-                         proxies=conn.proxies, timeout=conn._timeout).AndReturn(StubResponse({'delete': True}))
+                         proxies=conn.proxies, timeout=conn._timeout, stream=False) \
+        .AndReturn(StubResponse({'delete': True}))
     mox.ReplayAll()
     resp = conn.get('/getpath')
     assert resp.json()['get']

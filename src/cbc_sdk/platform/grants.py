@@ -392,8 +392,9 @@ class Grant(MutableBaseModel):
 
             Returns:
                 Profile: If a template was specified, return the new Profile object.
+
                 ProfileBuilder: If template was None, returns a ProfileBuilder object. Call methods on it to set
-                                up the new profile, and then call build() to create the new profile.
+                up the new profile, and then call build() to create the new profile.
             """
             if template:
                 t = copy.deepcopy(template)
@@ -541,12 +542,13 @@ class Grant(MutableBaseModel):
             cb (CBCloudAPI): A reference to the CBCloudAPI object.
             template (dict): Optional template to use for creating the grant object.
             kwargs (dict): Additional arguments to be used to specify the principal, if template is None.
-                           The arguments to be used are 'org_key' and 'userid' for the two parts of the ID.
+            The arguments to be used are 'org_key' and 'userid' for the two parts of the ID.
 
         Returns:
             Grant: The new grant object, if the template is specified.
+
             GrantBuilder: If template was None, returns a GrantBuilder object.  Call methods on it to set
-                            up the new grant, and then call build() to create the new grant.
+            up the new grant, and then call build() to create the new grant.
 
         Raises:
             ApiError: If the principal is inadequately specified (whether for the Grant or GrantBuilder).
@@ -581,8 +583,9 @@ class Grant(MutableBaseModel):
 
         Returns:
             Profile: If a template was specified, return the new Profile object.
+
             ProfileBuilder: If template was None, returns a ProfileBuilder object.  Call methods on it to set
-                            up the new profile, and then call build() to create the new profile.
+            up the new profile, and then call build() to create the new profile.
         """
         if template:
             t = copy.deepcopy(template)

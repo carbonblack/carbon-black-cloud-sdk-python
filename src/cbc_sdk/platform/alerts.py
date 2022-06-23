@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2021. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -14,7 +14,7 @@
 """Model and Query Classes for Platform Alerts and Workflows"""
 import time
 
-from cbc_sdk.errors import ApiError, TimeoutError, ObjectNotFoundError
+from cbc_sdk.errors import ApiError, TimeoutError, ObjectNotFoundError, NonQueryableModel
 from cbc_sdk.platform import PlatformModel
 from cbc_sdk.base import (BaseQuery,
                           UnrefreshableModel,
@@ -51,6 +51,89 @@ class BaseAlert(PlatformModel):
         self._workflow = Workflow(cb, initial_data.get("workflow", None) if initial_data else None)
         if model_unique_id is not None and initial_data is None:
             self._refresh()
+
+    class Note(PlatformModel):
+        """Represents a note within an alert."""
+        urlobject = "/appservices/v6/orgs/{0}/alerts/{1}/notes"
+        urlobject_single = "/appservices/v6/orgs/{0}/alerts/{1}/notes/{2}"
+        primary_key = "id"
+        swagger_meta_file = "platform/models/base_alert_note.yaml"
+        _is_deleted = False
+
+        def __init__(self, cb, alert, model_unique_id, initial_data=None):
+            """
+            Initialize the Note object.
+
+            Args:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+                alert (BaseAlert): The alert where the note is saved.
+                model_unique_id (str): ID of the note represented.
+                initial_data (dict): Initial data used to populate the note.
+            """
+            super(BaseAlert.Note, self).__init__(cb, model_unique_id, initial_data)
+            self._alert = alert
+            if model_unique_id is not None and initial_data is None:
+                self._refresh()
+
+        def _refresh(self):
+            """
+            Rereads the alert data from the server.
+
+            Returns:
+                bool: True if refresh was successful, False if not.
+            """
+            _exists_in_list = False
+            if self._is_deleted:
+                raise ApiError("Cannot refresh a deleted Note")
+
+            url = BaseAlert.Note.urlobject.format(self._cb.credentials.org_key, self._alert.id)
+            resp = self._cb.get_object(url)
+            item_list = resp.get("results", [])
+
+            for item in item_list:
+                if item["id"] == self.id:
+                    _exists_in_list = True
+                    return True
+
+            if not _exists_in_list:
+                raise ObjectNotFoundError(url, "Cannot refresh: Note not found")
+
+        @classmethod
+        def _query_implementation(cls, cb, **kwargs):
+            """
+            Raises an error, as Notes cannot be queried directly.
+
+            Args:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+                **kwargs (dict): Not used, retained for compatibility.
+
+            Raises:
+                ApiError: Always.
+            """
+            raise NonQueryableModel("Notes cannot be queried directly")
+
+        def delete(self):
+            """Deletes a note from an alert."""
+            url = self.urlobject_single.format(self._cb.credentials.org_key, self._alert.id,
+                                               self.id)
+            self._cb.delete_object(url)
+            self._is_deleted = True
+
+    def notes_(self):
+        """Retrieves all notes for an alert."""
+        url = BaseAlert.Note.urlobject.format(self._cb.credentials.org_key, self._info[self.primary_key])
+        resp = self._cb.get_object(url)
+        item_list = resp.get("results", [])
+        return [BaseAlert.Note(self._cb, self, item[BaseAlert.Note.primary_key], item)
+                for item in item_list]
+
+    def create_note(self, note):
+        """Creates a new note."""
+        request = {"note": note}
+        url = BaseAlert.Note.urlobject.format(self._cb.credentials.org_key, self._info[self.primary_key])
+        resp = self._cb.post_object(url, request)
+        result = resp.json()
+        return [BaseAlert.Note(self._cb, self, result["id"], result)]
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -340,6 +423,25 @@ class DeviceControlAlert(BaseAlert):
         return DeviceControlAlertSearchQuery(cls, cb)
 
 
+class ContainerRuntimeAlert(BaseAlert):
+    """Represents Container Runtime alerts."""
+    urlobject = "/appservices/v6/orgs/{0}/alerts/containerruntime"
+
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
+        """
+        Returns the appropriate query object for this alert type.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            ContainerRuntimeAlertSearchQuery: The query object for this alert type.
+        """
+        return ContainerRuntimeAlertSearchQuery(cls, cb)
+
+
 class Workflow(UnrefreshableModel):
     """Represents the workflow associated with alerts."""
     swagger_meta_file = "platform/models/workflow.yaml"
@@ -452,7 +554,7 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
     VALID_CATEGORIES = ["THREAT", "MONITORED"]
     VALID_REPUTATIONS = ["KNOWN_MALWARE", "SUSPECT_MALWARE", "PUP", "NOT_LISTED", "ADAPTIVE_WHITE_LIST",
                          "COMMON_WHITE_LIST", "TRUSTED_WHITE_LIST", "COMPANY_BLACK_LIST"]
-    VALID_ALERT_TYPES = ["CB_ANALYTICS", "DEVICE_CONTROL", "WATCHLIST"]
+    VALID_ALERT_TYPES = ["CB_ANALYTICS", "DEVICE_CONTROL", "WATCHLIST", "CONTAINER_RUNTIME"]
     VALID_WORKFLOW_VALS = ["OPEN", "DISMISSED"]
     VALID_FACET_FIELDS = ["ALERT_TYPE", "CATEGORY", "REPUTATION", "WORKFLOW", "TAG", "POLICY_ID",
                           "POLICY_NAME", "DEVICE_ID", "DEVICE_NAME", "APPLICATION_HASH",
@@ -822,7 +924,7 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
 
         Args:
             alerttypes (list): List of string alert type values.  Valid values are "CB_ANALYTICS",
-                               and "WATCHLIST".
+                               "WATCHLIST", "DEVICE_CONTROL", and "CONTAINER_RUNTIME".
 
         Returns:
             BaseAlertSearchQuery: This instance.
@@ -935,12 +1037,14 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
 
         return self._total_results
 
-    def _perform_query(self, from_row=0, max_rows=-1):
+    def _perform_query(self, from_row=1, max_rows=-1):
         """
         Performs the query and returns the results of the query in an iterable fashion.
 
+        Alerts v6 API uses base 1 instead of 0.
+
         Args:
-            from_row (int): The row to start the query at (default 0).
+            from_row (int): The row to start the query at (default 1).
             max_rows (int): The maximum number of rows to be returned (default -1, meaning "all").
 
         Returns:
@@ -994,6 +1098,7 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
         if not all((field in BaseAlertSearchQuery.VALID_FACET_FIELDS) for field in fieldlist):
             raise ApiError("One or more invalid term field names")
         request = self._build_request(0, -1, False)
+        del request['rows']
         request["terms"] = {"fields": fieldlist, "rows": max_rows}
         url = self._build_url("/_facet")
         resp = self._cb.post_object(url, body=request)
@@ -1050,6 +1155,7 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
 
 class WatchlistAlertSearchQuery(BaseAlertSearchQuery):
     """Represents a query that is used to locate WatchlistAlert objects."""
+
     def __init__(self, doc_class, cb):
         """
         Initialize the WatchlistAlertSearchQuery.
@@ -1272,7 +1378,7 @@ class DeviceControlAlertSearchQuery(BaseAlertSearchQuery):
 
     def __init__(self, doc_class, cb):
         """
-        Initialize the CBAnalyticsAlertSearchQuery.
+        Initialize the DeviceControlAlertSearchQuery.
 
         Args:
             doc_class (class): The model class that will be returned by this query.
@@ -1384,4 +1490,244 @@ class DeviceControlAlertSearchQuery(BaseAlertSearchQuery):
         if not all(isinstance(n, str) for n in names):
             raise ApiError("One or more invalid vendor name values")
         self._update_criteria("vendor_name", names)
+        return self
+
+
+class ContainerRuntimeAlertSearchQuery(BaseAlertSearchQuery):
+    """Represents a query that is used to locate ContainerRuntimeAlert objects."""
+
+    def __init__(self, doc_class, cb):
+        """
+        Initialize the ContainerRuntimeAlertSearchQuery.
+
+        Args:
+            doc_class (class): The model class that will be returned by this query.
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+        """
+        super().__init__(doc_class, cb)
+        self._bulkupdate_url = "/appservices/v6/orgs/{0}/alerts/containerruntime/_criteria"
+
+    def set_cluster_names(self, names):
+        """
+        Restricts the alerts that this query is performed on to the specified Kubernetes cluster names.
+
+        Args:
+            names (list): List of Kubernetes cluster names to look for.
+
+        Returns:
+            ContainerRuntimeAlertSearchQuery: This instance.
+        """
+        if not all(isinstance(n, str) for n in names):
+            raise ApiError("One or more invalid cluster name values")
+        self._update_criteria("cluster_name", names)
+        return self
+
+    def set_namespaces(self, namespaces):
+        """
+        Restricts the alerts that this query is performed on to the specified Kubernetes namespaces.
+
+        Args:
+            namespaces (list): List of Kubernetes namespaces to look for.
+
+        Returns:
+            ContainerRuntimeAlertSearchQuery: This instance.
+        """
+        if not all(isinstance(n, str) for n in namespaces):
+            raise ApiError("One or more invalid namespace values")
+        self._update_criteria("namespace", namespaces)
+        return self
+
+    def set_workload_kinds(self, kinds):
+        """
+        Restricts the alerts that this query is performed on to the specified workload types.
+
+        Args:
+            kinds (list): List of workload types to look for.
+
+        Returns:
+            ContainerRuntimeAlertSearchQuery: This instance.
+        """
+        if not all(isinstance(n, str) for n in kinds):
+            raise ApiError("One or more invalid workload kind values")
+        self._update_criteria("workload_kind", kinds)
+        return self
+
+    def set_workload_ids(self, ids):
+        """
+        Restricts the alerts that this query is performed on to the specified workload IDs.
+
+        Args:
+            ids (list): List of workload IDs to look for.
+
+        Returns:
+            ContainerRuntimeAlertSearchQuery: This instance.
+        """
+        if not all(isinstance(n, str) for n in ids):
+            raise ApiError("One or more invalid workload ID values")
+        self._update_criteria("workload_id", ids)
+        return self
+
+    def set_workload_names(self, names):
+        """
+        Restricts the alerts that this query is performed on to the specified workload names.
+
+        Args:
+            names (list): List of workload names to look for.
+
+        Returns:
+            ContainerRuntimeAlertSearchQuery: This instance.
+        """
+        if not all(isinstance(n, str) for n in names):
+            raise ApiError("One or more invalid workload name values")
+        self._update_criteria("workload_name", names)
+        return self
+
+    def set_replica_ids(self, ids):
+        """
+        Restricts the alerts that this query is performed on to the specified pod names.
+
+        Args:
+            ids (list): List of pod names to look for.
+
+        Returns:
+            ContainerRuntimeAlertSearchQuery: This instance.
+        """
+        if not all(isinstance(n, str) for n in ids):
+            raise ApiError("One or more invalid replica ID values")
+        self._update_criteria("replica_id", ids)
+        return self
+
+    def set_remote_ips(self, addrs):
+        """
+        Restricts the alerts that this query is performed on to the specified remote IP addresses.
+
+        Args:
+            addrs (list): List of remote IP addresses to look for.
+
+        Returns:
+            ContainerRuntimeAlertSearchQuery: This instance.
+        """
+        if not all(isinstance(n, str) for n in addrs):
+            raise ApiError("One or more invalid remote IP values")
+        self._update_criteria("remote_ip", addrs)
+        return self
+
+    def set_remote_domains(self, domains):
+        """
+        Restricts the alerts that this query is performed on to the specified remote domains.
+
+        Args:
+            domains (list): List of remote domains to look for.
+
+        Returns:
+            ContainerRuntimeAlertSearchQuery: This instance.
+        """
+        if not all(isinstance(n, str) for n in domains):
+            raise ApiError("One or more invalid remote domain values")
+        self._update_criteria("remote_domain", domains)
+        return self
+
+    def set_protocols(self, protocols):
+        """
+        Restricts the alerts that this query is performed on to the specified protocols.
+
+        Args:
+            protocols (list): List of protocols to look for.
+
+        Returns:
+            ContainerRuntimeAlertSearchQuery: This instance.
+        """
+        if not all(isinstance(n, str) for n in protocols):
+            raise ApiError("One or more invalid protocol values")
+        self._update_criteria("protocol", protocols)
+        return self
+
+    def set_ports(self, ports):
+        """
+        Restricts the alerts that this query is performed on to the specified listening ports.
+
+        Args:
+            ports (list): List of listening ports to look for.
+
+        Returns:
+            ContainerRuntimeAlertSearchQuery: This instance.
+        """
+        if not all(isinstance(n, int) for n in ports):
+            raise ApiError("One or more invalid port values")
+        self._update_criteria("port", ports)
+        return self
+
+    def set_egress_group_ids(self, ids):
+        """
+        Restricts the alerts that this query is performed on to the specified egress group IDs.
+
+        Args:
+            ids (list): List of egress group IDs to look for.
+
+        Returns:
+            ContainerRuntimeAlertSearchQuery: This instance.
+        """
+        if not all(isinstance(n, str) for n in ids):
+            raise ApiError("One or more invalid egress group ID values")
+        self._update_criteria("egress_group_id", ids)
+        return self
+
+    def set_egress_group_names(self, names):
+        """
+        Restricts the alerts that this query is performed on to the specified egress group names.
+
+        Args:
+            names (list): List of egress group names to look for.
+
+        Returns:
+            ContainerRuntimeAlertSearchQuery: This instance.
+        """
+        if not all(isinstance(n, str) for n in names):
+            raise ApiError("One or more invalid egress group name values")
+        self._update_criteria("egress_group_name", names)
+        return self
+
+    def set_ip_reputations(self, reputations):
+        """
+        Restricts the alerts that this query is performed on to the specified IP reputation values.
+
+        Args:
+            reputations (list): List of IP reputation values to look for.
+
+        Returns:
+            ContainerRuntimeAlertSearchQuery: This instance.
+        """
+        if not all(isinstance(n, int) for n in reputations):
+            raise ApiError("One or more invalid IP reputation values")
+        self._update_criteria("ip_reputation", reputations)
+        return self
+
+    def set_rule_ids(self, ids):
+        """
+        Restricts the alerts that this query is performed on to the specified Kubernetes policy rule IDs.
+
+        Args:
+            ids (list): List of Kubernetes policy rule IDs to look for.
+
+        Returns:
+            ContainerRuntimeAlertSearchQuery: This instance.
+        """
+        if not all(isinstance(n, str) for n in ids):
+            raise ApiError("One or more invalid rule ID values")
+        self._update_criteria("rule_id", ids)
+        return self
+
+    def set_rule_names(self, names):
+        """
+        Restricts the alerts that this query is performed on to the specified Kubernetes policy rule names.
+
+        Args:
+            names (list): List of Kubernetes policy rule names to look for.
+
+        Returns:
+            ContainerRuntimeAlertSearchQuery: This instance.
+        """
+        if not all(isinstance(n, str) for n in names):
+            raise ApiError("One or more invalid rule name values")
+        self._update_criteria("rule_name", names)
         return self

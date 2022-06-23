@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2021. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -11,6 +11,10 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 """Exceptions that are thrown by CBC SDK operations."""
+
+
+class ModelNotFound(Exception):
+    """Exception for not finding a model while selecting dynamically."""
 
 
 class ApiError(Exception):
@@ -235,25 +239,21 @@ class UnauthorizedError(ApiError):
 
 class ConnectionError(ApiError):
     """There was an error in the connection to the server."""
-
     pass
 
 
 class CredentialError(ApiError):
     """The credentials had an unspecified error."""
-
     pass
 
 
 class InvalidObjectError(ApiError):
     """An invalid object was received by the server."""
-
     pass
 
 
 class InvalidHashError(Exception):
     """An invalid hash value was used."""
-
     pass
 
 
@@ -274,5 +274,30 @@ class MoreThanOneResultError(ApiError):
 
 class NonQueryableModel(ApiError):
     """A model that attempted to be queried which is not queryable"""
-
     pass
+
+
+class OperationCancelled(ApiError):
+    """An operation in the background was canceled."""
+    pass
+
+
+class NSXJobError(ApiError):
+    """NSX remediation jobs were not started"""
+    pass
+
+
+class FunctionalityDecommissioned(ApiError):
+    """Raised when a piece of decommissioned functionality is used."""
+    def __init__(self, functionality_tag, alternate=None):
+        """
+        Initialize the FunctionalityDecommissioned exception.
+
+        Args:
+            functionality_tag (str): Should indicate which functionality has been decommissioned.
+            alternate (str): Optional indication of what the replacement for this functionality is.
+        """
+        msg = f"The {functionality_tag} functionality has been decommissioned."
+        if alternate:
+            msg += f"\nReplacement: {alternate}"
+        super().__init__(message=msg)

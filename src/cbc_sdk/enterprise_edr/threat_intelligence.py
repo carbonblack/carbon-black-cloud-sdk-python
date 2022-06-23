@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2021. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -67,8 +67,8 @@ class FeedModel(UnrefreshableModel, CreatableModelMixin, MutableBaseModel):
 class Watchlist(FeedModel):
     """Represents an Enterprise EDR watchlist."""
     # NOTE(ww): Not documented.
-    urlobject = "/threathunter/watchlistmgr/v2/watchlist"
-    urlobject_single = "/threathunter/watchlistmgr/v2/watchlist/{}"
+    urlobject = "/threathunter/watchlistmgr/v3/orgs/{}/watchlists"
+    urlobject_single = "/threathunter/watchlistmgr/v3/orgs/{}/watchlists/{}"
     swagger_meta_file = "enterprise_edr/models/watchlist.yaml"
 
     def __init__(self, cb, model_unique_id=None, initial_data=None):
@@ -85,7 +85,7 @@ class Watchlist(FeedModel):
         if initial_data:
             item = initial_data
         elif model_unique_id:
-            item = cb.get_object(self.urlobject_single.format(model_unique_id))
+            item = cb.get_object(self.urlobject_single.format(cb.credentials.org_key, model_unique_id))
 
         feed_id = item.get("id")
 
@@ -250,6 +250,21 @@ class Watchlist(FeedModel):
         """
         return WatchlistQuery(self, cb)
 
+    def _build_api_request_uri(self, http_method="GET"):
+        """
+        Returns the API request URI for this object.
+
+        Args:
+            http_method (str): Unused.
+
+        Returns:
+            str: The API request URI for this object.
+        """
+        if self._model_unique_id is not None:
+            return self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id)
+        else:
+            return self.urlobject.format(self._cb.credentials.org_key)
+
     def save(self):
         """Saves this watchlist on the Enterprise EDR server.
 
@@ -288,10 +303,7 @@ class Watchlist(FeedModel):
             ApiError: If `report_ids` is given and is empty.
 
         Example:
-
-        >>> watchlist.update(name="New Name")
-
-
+            >>> watchlist.update(name="New Name")
         """
         if not self.id:
             raise InvalidObjectError("missing Watchlist ID")
@@ -742,8 +754,7 @@ class Feed(FeedModel):
             ApiError: If an invalid field is specified.
 
         Example:
-
-        >>> feed.update(access="private")
+            >>> feed.update(access="private")
         """
         if not self.id:
             raise InvalidObjectError("missing feed ID")
@@ -883,6 +894,7 @@ class Feed(FeedModel):
 class Report(FeedModel):
     """Represents reports retrieved from an Enterprise EDR feed."""
     urlobject = "/threathunter/feedmgr/v2/orgs/{}/feeds/{}/reports"
+    urlobject_single = "/threathunter/watchlistmgr/v3/orgs/{}/reports/{}"
     primary_key = "id"
     swagger_meta_file = "enterprise_edr/models/report.yaml"
 
@@ -907,27 +919,44 @@ class Report(FeedModel):
 
         Args:
             cb (CBCloudAPI): A reference to the CBCloudAPI object.
-            model_unique_id (Any): Unused.
+            model_unique_id (str): The ID of the Report (only works for Reports in
+                Watchlists).
             initial_data (dict): The initial data for the object.
             feed_id (str): The ID of the feed this report is for.
-            from_watchlist (str): The ID of the watchlist this report is for.
+            from_watchlist (bool): If the report is in a watchlist
         """
-        super(Report, self).__init__(cb, model_unique_id=initial_data.get("id", None),
-                                     initial_data=initial_data,
-                                     force_init=False, full_doc=True)
+        if model_unique_id:
+            url = self.urlobject_single.format(
+                cb.credentials.org_key,
+                model_unique_id
+            )
+            log.debug("Fetching a watchlist report")
+            initial_data = cb.get_object(url)
+            from_watchlist = True
 
-        # NOTE(ww): Warn instead of failing since we allow Watchlist reports
-        # to be created via create(), but we don't actually know that the user
-        # intends to use them with a watchlist until they call save().
-        if not feed_id and not from_watchlist:
-            log.warning("Report created without feed ID or not from watchlist")
+        if not feed_id and not initial_data:
+            raise ApiError("You need to provide the parameter `feed_id`")
+
+        super(Report, self).__init__(
+            cb,
+            model_unique_id=initial_data.get("id", None),
+            initial_data=initial_data,
+            force_init=False, full_doc=True
+        )
 
         self._feed_id = feed_id
         self._from_watchlist = from_watchlist
 
-        self._iocs = IOC(cb, initial_data=self.iocs, report_id=self.id) if self.iocs else None
-        self._iocs_v2 = [IOC_V2(cb, initial_data=ioc, report_id=self.id) for ioc in self.iocs_v2] \
-            if self.iocs_v2 else None
+        self._iocs = []
+        if self._iocs:
+            for ioc in self.ioc:
+                self._iocs.append(IOC(cb, initial_data=self.iocs, report_id=self.id))
+
+        self._iocs_v2 = []
+        if self.iocs_v2:
+            for ioc in self.iocs_v2:
+                self._iocs_v2.append(IOC_V2(cb, initial_data=ioc, report_id=self.id))
+
         # this flag is set when we need to rebuild the 'ioc_v2' element of _info from the _iocs_v2 array
         self._iocs_v2_need_rebuild = False
 
@@ -1106,6 +1135,9 @@ class Report(FeedModel):
             This method **cannot** be used to save a feed report. To save feed reports, create them with `cb.create`
             and use `Feed.replace`.
 
+            This method **cannot** be used to save a report that is *already* part of a watchlist.  Use the `update()`
+            method instead.
+
         Raises:
             InvalidObjectError: If Report.validate() fails.
         """
@@ -1203,8 +1235,7 @@ class Report(FeedModel):
                 and this report is a Feed Report.
 
         Example:
-
-        >>> report.delete()
+            >>> report.delete()
         """
         if not self.id:
             raise InvalidObjectError("missing Report ID")
@@ -1229,27 +1260,28 @@ class Report(FeedModel):
     def ignored(self):
         """Returns the ignore status for this report.
 
-        Only watchlist reports have an ignore status.
-
         Returns:
             (bool): True if this Report is ignored, False otherwise.
 
         Raises:
-            InvalidObjectError: If `id` is missing or this Report is not from a Watchlist.
+            InvalidObjectError: If `id` is missing or feed ID is missing.
 
         Example:
-
-        >>> if report.ignored:
-        ...     report.unignore()
+            >>> if report.ignored:
+            ...     report.unignore()
         """
         if not self.id:
             raise InvalidObjectError("missing Report ID")
-        if not self._from_watchlist:
-            raise InvalidObjectError("ignore status only applies to watchlist reports")
+        if self._feed_id:
+            send_id = f"{self._feed_id}-{self.id}"
+        elif self._from_watchlist:
+            send_id = self.id
+        else:
+            raise InvalidObjectError("missing Feed ID")
 
         url = "/threathunter/watchlistmgr/v3/orgs/{}/reports/{}/ignore".format(
             self._cb.credentials.org_key,
-            self.id
+            send_id
         )
         resp = self._cb.get_object(url)
         return resp["ignored"]
@@ -1257,40 +1289,42 @@ class Report(FeedModel):
     def ignore(self):
         """Sets the ignore status on this report.
 
-        Only watchlist reports have an ignore status.
-
         Raises:
-            InvalidObjectError: If `id` is missing or this Report is not from a Watchlist.
+            InvalidObjectError: If `id` is missing or feed ID is missing.
         """
         if not self.id:
             raise InvalidObjectError("missing Report ID")
-
-        if not self._from_watchlist:
-            raise InvalidObjectError("ignoring only applies to watchlist reports")
+        if self._feed_id:
+            send_id = f"{self._feed_id}-{self.id}"
+        elif self._from_watchlist:
+            send_id = self.id
+        else:
+            raise InvalidObjectError("missing Feed ID")
 
         url = "/threathunter/watchlistmgr/v3/orgs/{}/reports/{}/ignore".format(
             self._cb.credentials.org_key,
-            self.id
+            send_id
         )
         self._cb.put_object(url, None)
 
     def unignore(self):
         """Removes the ignore status on this report.
 
-        Only watchlist reports have an ignore status.
-
         Raises:
-            InvalidObjectError: If `id` is missing or this Report is not from a Watchlist.
+            InvalidObjectError: If `id` is missing or feed ID is missing.
         """
         if not self.id:
             raise InvalidObjectError("missing Report ID")
-
-        if not self._from_watchlist:
-            raise InvalidObjectError("ignoring only applies to watchlist reports")
+        if self._feed_id:
+            send_id = f"{self._feed_id}-{self.id}"
+        elif self._from_watchlist:
+            send_id = self.id
+        else:
+            raise InvalidObjectError("missing Feed ID")
 
         url = "/threathunter/watchlistmgr/v3/orgs/{}/reports/{}/ignore".format(
             self._cb.credentials.org_key,
-            self.id
+            send_id
         )
         self._cb.delete_object(url)
 
@@ -1361,9 +1395,8 @@ class Report(FeedModel):
             IOC_V2 ([IOC_V2]): List of IOC_V2's for associated with the Report.
 
         Example:
-
-        >>> for ioc in report.iocs_:
-        ...     print(ioc.values)
+            >>> for ioc in report.iocs_:
+            ...     print(ioc.values)
         """
         if not self.iocs_v2:
             return []
@@ -1668,15 +1701,15 @@ class IOC_V2(FeedModel):
 
     def validate(self):
         """
-        Checks to ensure this IOC contains valid data.
+        Checks to ensure this IOC contains valid FQDN.
 
         Raises:
             InvalidObjectError: If the IOC contains invalid data.
         """
         super(IOC_V2, self).validate()
 
-        if self.link and not validators.url(self.link):
-            raise InvalidObjectError("link should be a valid URL")
+        if self.link and not validators.domain(self.link):
+            raise InvalidObjectError("link should be a valid domain URL (FQDN)")
 
     @property
     def ignored(self):
@@ -1692,9 +1725,8 @@ class IOC_V2(FeedModel):
             InvalidObjectError: If this IOC is missing an `id` or is not a Watchlist IOC.
 
         Example:
-
-        >>> if ioc.ignored:
-        ...     ioc.unignore()
+            >>> if ioc.ignored:
+            ...     ioc.unignore()
         """
         if not self.id:
             raise InvalidObjectError("missing IOC ID")
@@ -1791,12 +1823,10 @@ class FeedQuery(SimpleQuery):
 class ReportQuery(SimpleQuery):
     """Represents the logic for a Report query.
 
-    Note:
-        Only feed reports can be queried. Watchlist reports should be interacted
-            with via Watchlist.reports().
-
     Example:
-    >>> cb.select(Report).where(feed_id=id)
+        >>> cb.select(Report).where(feed_id=id)
+        >>> cb.select(Report, id)
+        >>> cb.select(Report, id, from_watchlist=True)
     """
     def __init__(self, doc_class, cb):
         """
@@ -1816,17 +1846,14 @@ class ReportQuery(SimpleQuery):
 
     @property
     def results(self):
-        """Return a list of Report objects matching self._args['feed_id']."""
-        if "feed_id" not in self._args:
-            raise ApiError("required parameter feed_id missing")
-
+        """Return a list of Report objects"""
         feed_id = self._args["feed_id"]
 
-        log.debug("Fetching all reports")
         url = self._doc_class.urlobject.format(
             self._cb.credentials.org_key,
             feed_id,
         )
+        log.debug("Fetching all reports")
         resp = self._cb.get_object(url)
         results = resp.get("results", [])
         return [self._doc_class(self._cb, initial_data=item, feed_id=feed_id) for item in results]
@@ -1852,6 +1879,6 @@ class WatchlistQuery(SimpleQuery):
         """Return a list of all Watchlist objects."""
         log.debug("Fetching all watchlists")
 
-        resp = self._cb.get_object(self._doc_class.urlobject)
+        resp = self._cb.get_object(self._doc_class.urlobject.format(self._cb.credentials.org_key))
         results = resp.get("results", [])
         return [self._doc_class(self._cb, initial_data=item) for item in results]

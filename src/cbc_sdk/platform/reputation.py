@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2021. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -99,6 +99,7 @@ class ReputationOverride(PlatformModel):
             initial_data (Object): The initial data for a ReputationOverride
 
         Example:
+            >>>
             {
                 "description": "Banned as known malware",
                 "override_list": "BLACK_LIST",
@@ -125,8 +126,9 @@ class ReputationOverride(PlatformModel):
             overrides (List): List if reputation override ids
 
         Example:
+            >>>
             [
-                "e9410b754ea011ebbfd0db2585a41b07"
+               "e9410b754ea011ebbfd0db2585a41b07"
             ]
 
         """

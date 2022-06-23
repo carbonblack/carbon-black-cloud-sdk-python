@@ -1,5 +1,5 @@
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2021. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -14,6 +14,7 @@
 import pytest
 import json
 import sys
+import io
 from cbc_sdk import __version__
 from cbc_sdk.connection import BaseAPI
 from cbc_sdk.credentials import Credentials
@@ -268,6 +269,65 @@ def test_BaseAPI_post_object(mox):
     mox.ReplayAll()
     rc = sut.post_object('/path', {'a': 1, 'b': 2})
     assert rc.json() == {'zyx': 100}
+    mox.VerifyAll()
+
+
+@pytest.mark.parametrize("verb, inputdata", [
+    ('GET', None),
+    ('POST', {'a': 1, 'b': 2})
+])
+def test_BaseAPI_request_stream(mox, verb, inputdata):
+    """Test the operation of api_request_stream."""
+    def validate_header(hdrs):
+        if verb == 'POST':
+            assert hdrs['Content-Type'] == 'application/json'
+        return True
+
+    def validate_data(data):
+        if inputdata:
+            real_data = json.loads(data)
+            assert real_data == inputdata
+        else:
+            assert data is None
+        return True
+
+    sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
+    mox.StubOutWithMock(sut.session, 'http_request')
+    sut.session.http_request(verb, '/path', headers=Func(validate_header), data=Func(validate_data), stream=True) \
+        .AndReturn(StubResponse(None, 200, "ThisIsFine"))
+    mox.ReplayAll()
+    with io.BytesIO() as output:
+        sut.api_request_stream(verb, '/path', output, data=inputdata)
+        assert str(output.getvalue(), encoding='utf-8') == "ThisIsFine"
+    mox.VerifyAll()
+
+
+@pytest.mark.parametrize("verb, inputdata", [
+    ('GET', None),
+    ('POST', {'a': 1, 'b': 2})
+])
+def test_BaseAPI_request_iterate(mox, verb, inputdata):
+    """Test the operation of api_request_iterate."""
+    def validate_header(hdrs):
+        if verb == 'POST':
+            assert hdrs['Content-Type'] == 'application/json'
+        return True
+
+    def validate_data(data):
+        if inputdata:
+            real_data = json.loads(data)
+            assert real_data == inputdata
+        else:
+            assert data is None
+        return True
+
+    sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
+    mox.StubOutWithMock(sut.session, 'http_request')
+    sut.session.http_request(verb, '/path', headers=Func(validate_header), data=Func(validate_data), stream=True) \
+        .AndReturn(StubResponse(None, 200, "AAA\r\nBBB\r\nCCC"))
+    mox.ReplayAll()
+    output = list(sut.api_request_iterate(verb, '/path', data=inputdata))
+    assert output == ["AAA", "BBB", "CCC"]
     mox.VerifyAll()
 
 

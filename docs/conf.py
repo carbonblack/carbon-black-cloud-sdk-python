@@ -19,11 +19,11 @@ sys.path.insert(0, os.path.abspath('.'))
 # -- Project information -----------------------------------------------------
 
 project = 'Carbon Black Cloud Python SDK'
-copyright = '2020-2021, Developer Relations'
+copyright = '2020-2022, Developer Relations'
 author = 'Developer Relations'
 
 # The full version, including alpha/beta/rc tags
-release = '1.3.4'
+release = '1.3.6'
 
 
 # -- General configuration ---------------------------------------------------
@@ -31,7 +31,7 @@ release = '1.3.4'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.napoleon', 'sphinx.ext.autodoc', 'sphinx.ext.autosectionlabel']
+extensions = ['sphinx.ext.napoleon', 'sphinx.ext.autodoc', 'sphinx.ext.autosectionlabel', 'sphinx_copybutton']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -51,6 +51,8 @@ pygments_style = 'tango'
 # unit titles (such as .. function::).
 add_module_names = False
 
+# Generate unique labels
+autosectionlabel_prefix_document = True
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -129,6 +131,12 @@ latex_elements = {
 }
 
 autoclass_content = 'both'
+
+# options for sphinx generation.
+# use a regular expression to strip standard prompt and continuation when copying an example
+copybutton_prompt_is_regexp = True
+copybutton_remove_prompts = True
+copybutton_prompt_text = r">>> |\.\.\. "
 
 
 def setup(app):

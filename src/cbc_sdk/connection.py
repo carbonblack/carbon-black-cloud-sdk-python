@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2021. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -15,9 +15,12 @@
 
 from __future__ import absolute_import
 
+import pkgutil
+import cbc_sdk
 import requests
 import sys
 from requests.adapters import HTTPAdapter, DEFAULT_POOLBLOCK, DEFAULT_RETRIES, DEFAULT_POOLSIZE, DEFAULT_POOL_TIMEOUT
+
 
 try:
     from requests.packages.urllib3.util.ssl_ import create_urllib3_context
@@ -44,14 +47,15 @@ import urllib
 from .credentials import Credentials
 from .credential_providers.default import default_credential_provider
 from .errors import ClientError, QuerySyntaxError, ServerError, TimeoutError, ApiError, ObjectNotFoundError, \
-    UnauthorizedError, ConnectionError
+    UnauthorizedError, ConnectionError, ModelNotFound
 from . import __version__
 
 from .cache.lru import lru_cache_function
-from .base import CreatableModelMixin
+from .base import CreatableModelMixin, NewBaseModel
 from .utils import convert_query_params
 
 log = logging.getLogger(__name__)
+DEFAULT_STREAM_BUFFER_SIZE = 1024
 
 
 def try_json(resp):
@@ -210,6 +214,7 @@ class Connection(object):
             credentials.use_custom_proxy_session = False
 
         self._timeout = timeout
+        self.stream_buffer_size = DEFAULT_STREAM_BUFFER_SIZE
 
         if max_retries is None:
             max_retries = MAX_RETRIES
@@ -269,6 +274,7 @@ class Connection(object):
 
         verify_ssl = kwargs.pop('verify', None) or self.ssl_verify
         proxies = kwargs.pop('proxies', None) or self.proxies
+        stream = kwargs.pop('stream', False)
 
         new_headers = kwargs.pop('headers', None)
         if new_headers:
@@ -284,7 +290,7 @@ class Connection(object):
             if raw_data:
                 log.debug("Sending HTTP {0} {1} with {2}".format(method, url, raw_data))
             r = self.session.request(method, uri, headers=headers, verify=verify_ssl, proxies=proxies,
-                                     timeout=self._timeout, **kwargs)
+                                     timeout=self._timeout, stream=stream, **kwargs)
             log.debug('HTTP {0:s} {1:s} took {2:.3f}s (response {3:d})'.format(method, url,
                                                                                r.elapsed.total_seconds(),
                                                                                r.status_code))
@@ -523,6 +529,65 @@ class BaseAPI(object):
 
         return result
 
+    def api_request_stream(self, method, uri, stream_output, **kwargs):
+        """
+        Submit a request to the specified URI and stream the results back into the given stream object.
+
+        Args:
+            method (str): HTTP method to use.
+            uri (str): The URI to send the request to.
+            stream_output (RawIOBase): The output stream to write the data to.
+            **kwargs (dict): Additional arguments for the request.
+
+        Returns:
+            object: The return data from the request.
+        """
+        headers = kwargs.pop("headers", {})
+        raw_data = None
+
+        if method in ('POST', 'PUT', 'PATCH'):
+            if "Content-Type" not in headers:
+                headers["Content-Type"] = "application/json"
+                raw_data = json.dumps(kwargs.pop("data", {}), sort_keys=True)
+        else:
+            if 'data' in kwargs:
+                del kwargs['data']
+
+        with self.session.http_request(method, uri, headers=headers, data=raw_data, stream=True, **kwargs) as resp:
+            for block in resp.iter_content(self.session.stream_buffer_size):
+                stream_output.write(block)
+        return resp
+
+    def api_request_iterate(self, method, uri, **kwargs):
+        """
+        Submit a request to the specified URI and iterate over the response as lines of text.
+
+        Should only be used for requests that can be expressed as large amounts of text that can be broken into lines.
+        Since this is an iterator, call it with the 'yield from' syntax.
+
+        Args:
+            method (str): HTTP method to use.
+            uri (str): The URI to send the request to.
+            **kwargs (dict): Additional arguments for the request.
+
+        Returns:
+            iterable: An iterable that can be used to get each line of text in turn as a string.
+        """
+        headers = kwargs.pop("headers", {})
+        raw_data = None
+
+        if method in ('POST', 'PUT', 'PATCH'):
+            if "Content-Type" not in headers:
+                headers["Content-Type"] = "application/json"
+                raw_data = json.dumps(kwargs.pop("data", {}), sort_keys=True)
+        else:
+            if 'data' in kwargs:
+                del kwargs['data']
+
+        with self.session.http_request(method, uri, headers=headers, data=raw_data, stream=True, **kwargs) as resp:
+            for line in resp.iter_lines(decode_unicode=True):
+                yield line
+
     def post_object(self, uri, body, **kwargs):
         """
         Send a POST request to the specified URI.
@@ -530,7 +595,7 @@ class BaseAPI(object):
         Args:
             uri (str): The URI to send the POST request to.
             body (object): The data to be sent in the body of the POST request.
-            **kwargs:
+            **kwargs (dict): Additional arguments for the HTTP POST.
 
         Returns:
             object: The return data from the POST request.
@@ -603,7 +668,7 @@ class BaseAPI(object):
         Prepare a query against the Carbon Black data store.
 
         Args:
-            cls (class): The Model class (for example, Computer, Process, Binary, FileInstance) to query
+            cls (class | str): The Model class (for example, Computer, Process, Binary, FileInstance) to query
             unique_id (optional): The unique id of the object to retrieve, to retrieve a single object by ID
             *args:
             **kwargs:
@@ -611,6 +676,8 @@ class BaseAPI(object):
         Returns:
             object: An instance of the Model class if a unique_id is provided, otherwise a Query object
         """
+        if isinstance(cls, str):
+            cls = select_class_instance(cls)
         if unique_id is not None:
             return select_instance(self, cls, unique_id, *args, **kwargs)
         else:
@@ -671,3 +738,34 @@ def select_instance(api, cls, unique_id, *args, **kwargs):
         object: New object instance.
     """
     return cls(api, unique_id, *args, **kwargs)
+
+
+def select_class_instance(cls: str):
+    """
+    Selecting the appropriate class based on the passed string.
+
+    Args:
+        cls: The class name represented in a string.
+
+    Returns:
+        Object[]:
+    """
+    # Walk through all the packages contained in the `cbc_sdk`, ensures the loading
+    # of all the needed packages.
+    _ = [i for i in pkgutil.walk_packages(cbc_sdk.__path__, f"{cbc_sdk.__name__}.")]
+
+    subclasses = set()
+    base_subclasses = NewBaseModel.__subclasses__().copy()
+    while base_subclasses:
+        parent = base_subclasses.pop()
+        subclasses.add(parent)
+        for child in parent.__subclasses__():
+            if child not in subclasses:
+                subclasses.add(child)
+                base_subclasses.append(child)
+
+    # https://www.python.org/dev/peps/pep-3155/#rationale
+    lookup_dict = {klass.__qualname__: klass for klass in subclasses}
+    if cls in lookup_dict.keys():
+        return lookup_dict[cls]
+    raise ModelNotFound()
