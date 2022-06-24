@@ -56,6 +56,7 @@ class Policy(MutableBaseModel):
                                      force_init=force_init if initial_data else True, full_doc=full_doc)
         self._object_rules = None
         self._object_rules_need_load = True
+        self._info["version"] = 2
 
     class PolicyBuilder:
         """Builder object to simplify the creation of new Policy objects."""
@@ -466,6 +467,7 @@ class Policy(MutableBaseModel):
             new_policy["rules"] = [copy.deepcopy(r._info) for r in self._new_rules]
             return Policy(self._cb, None, new_policy, False, True)
 
+    @classmethod
     def _query_implementation(cls, cb, **kwargs):
         """
         Returns the appropriate query object for this object type.
@@ -489,7 +491,10 @@ class Policy(MutableBaseModel):
         Returns:
             str: The actual URL
         """
-        return Policy.urlobject.format(self._cb.credentials.org_key)
+        uri = Policy.urlobject.format(self._cb.credentials.org_key)
+        if self._model_unique_id is not None:
+            return f"{uri}/{self._model_unique_id}"
+        return uri
 
     def _refresh(self):
         """
@@ -503,6 +508,7 @@ class Policy(MutableBaseModel):
         """
         rc = super(Policy, self)._refresh()
         self._object_rules_need_load = True
+        self._info["version"] = 2
         return rc
 
     @property
@@ -627,11 +633,6 @@ class Policy(MutableBaseModel):
         return self.is_system
 
     @property
-    def version(self):
-        """Returns the version of this policy (compatibility method)."""
-        return 2
-
-    @property
     def latestRevision(self):
         """Returns the latest revision of this policy (compatibility method)."""
         return 2
@@ -649,31 +650,38 @@ class Policy(MutableBaseModel):
             if subobj:
                 new_av["apc"] = {"enabled": subobj["enabled"], "maxExeDelay": subobj["max_exe_delay"],
                                  "maxFileSize": subobj["max_file_size"], "riskLevel": subobj["risk_level"]}
+            features = []
             subobj = av_settings.get("on_access_scan", None)
             if subobj:
-                new_av["onAccessScan"] = copy.deepcopy(subobj)
+                new_av["onAccessScan"] = {"profile": subobj["mode"]}
+                features.append({"enabled": subobj["enabled"], "name": "ONACCESS_SCAN"})
             subobj = av_settings.get("on_demand_scan", None)
             if subobj:
-                new_av["onDemandScan"] = {"enabled": subobj["enabled"], "profile": subobj["profile"],
-                                          "scanUsb": subobj["scan_usb"], "scanCdDvd": subobj["scan_cd_dvd"]}
+                new_av["onDemandScan"] = {"profile": subobj["profile"], "scanUsb": subobj["scan_usb"],
+                                          "scanCdDvd": subobj["scan_cd_dvd"]}
                 sched = subobj["schedule"]
                 if sched:
-                    new_av["onDemandScan"]["schedule"] = {"days": sched["days"], "startHour": sched["start_hour"],
-                                                          "rangeHours": sched["range_hours"],
-                                                          "recoveryScanIfMissed": sched["recovery_scan_if_missed"]}
+                    new_av["onDemandScan"]["schedule"] = {"days": sched.get("days", None),
+                                                          "startHour": sched.get("start_hour", None),
+                                                          "rangeHours": sched.get("range_hours", None),
+                                                          "recoveryScanIfMissed":
+                                                              sched.get("recovery_scan_if_missed", None)}
+                features.append({"enabled": subobj["enabled"], "name": "ONDEMAND_SCAN"})
             subobj = av_settings.get("signature_update", None)
             if subobj:
                 new_av["signatureUpdate"] = \
-                    {"enabled": subobj["enabled"],
-                     "schedule": {"intervalHours": subobj["schedule"]["interval_hours"],
+                    {"schedule": {"intervalHours": subobj["schedule"]["interval_hours"],
                                   "fullIntervalHours": subobj["schedule"]["full_interval_hours"],
                                   "initialRandomDelayHours": subobj["schedule"]["initial_random_delay_hours"]}}
+                features.append({"enabled": subobj["enabled"], "name": "SIGNATURE_UPDATE"})
+            new_av["features"] = features
             subobj = av_settings.get("update_servers", None)
             if subobj:
-                new_av["updateServers"] = {"serversOverride": subobj["servers_override"],
-                                           "serversForOffsiteDevices": subobj["servers_for_offsite_devices"],
+                new_av["updateServers"] = {"serversForOffSiteDevices": subobj["servers_for_offsite_devices"],
                                            "servers": [{"server": [entry["server"]], "flags": 0, "regId": None}
                                                        for entry in subobj["servers_for_onsite_devices"]]}
+                if subobj["servers_override"]:
+                    new_av["updateServers"]["serversOverride"] = subobj["servers_override"]
             rc["avSettings"] = new_av
         if "directory_action_rules" in self._info:
             rc["directoryActionRules"] = [{"actions": {"FILE_UPLOAD": dar["file_upload"],
@@ -685,6 +693,15 @@ class Policy(MutableBaseModel):
 
     @classmethod
     def create(cls, cb):
+        """
+        Begins creating a policy by returning a PolicyBuilder.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+
+        Returns:
+            PolicyBuilder: The new policy builder object.
+        """
         return Policy.PolicyBuilder(cb)
 
 
@@ -871,7 +888,7 @@ class PolicyQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
         if isinstance(system, bool):
             self._system = system
             self._system_set = True
-        else
+        else:
             raise ApiError("system flag is of invalid type")
         return self
 

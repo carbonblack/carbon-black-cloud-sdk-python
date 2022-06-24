@@ -104,7 +104,7 @@ def test_raise_ModelNotFound():
         ("Recommendation", "RecommendationQuery"),
         ("EnrichedEvent", "EnrichedEventQuery"),
         ("EnrichedEventFacet", "FacetQuery"),
-        ("Policy", "Query"),
+        #("Policy", "Query"),  # TODO: will change
         ("USBDevice", "USBDeviceQuery"),
         ("USBDeviceApproval", "USBDeviceApprovalQuery"),
         ("USBDeviceBlock", "USBDeviceBlockQuery"),
