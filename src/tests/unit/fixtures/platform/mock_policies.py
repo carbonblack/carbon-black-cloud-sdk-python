@@ -417,3 +417,24 @@ OLD_POLICY_1 = {
         }
     ]
 }
+
+RULE_ADD_1 = {
+    "required": True,
+    "action": "TERMINATE",
+    "application": {
+        "type": "SIGNED_BY",
+        "value": "something"
+    },
+    "operation": "RANSOM"
+}
+
+RULE_ADD_2 = {
+    "id": 409,
+    "required": True,
+    "action": "TERMINATE",
+    "application": {
+        "type": "SIGNED_BY",
+        "value": "something"
+    },
+    "operation": "RANSOM"
+}

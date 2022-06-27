@@ -38,6 +38,37 @@ class CreatableModelMixin(object):
     pass
 
 
+class SwaggerLoader(yaml.SafeLoader):
+    """YAML loader class for loading Swagger metafiles."""
+    _model_base_directory = os.path.dirname(__file__)
+
+
+def construct_include(loader, node):
+    """
+    Include the file referenced by the node.
+
+    Args:
+        loader (yaml.Loader): YAML loader object.
+        node (yaml.Node): Current node being loaded.
+
+    Returns:
+        Any: The data to be included in the YAML loader output.
+    """
+    filename = os.path.abspath(os.path.join(loader._model_base_directory, loader.construct_scalar(node)))
+    extension = os.path.splitext(filename)[1].lstrip('.')
+
+    with open(filename, 'rb') as f:
+        if extension in ('yaml', 'yml'):
+            return yaml.load(f, SwaggerLoader)
+        elif extension in ('json', ):
+            return json.load(f)
+        else:
+            return ''.join(f.readlines())
+
+
+yaml.add_constructor('!include', construct_include, SwaggerLoader)
+
+
 class CbMetaModel(type):
     """Meta-model for NewBaseModel and its subclasses."""
     model_base_directory = os.path.dirname(__file__)
@@ -55,8 +86,8 @@ class CbMetaModel(type):
         swagger_meta_file = clsdict.pop("swagger_meta_file", None)
         model_data = {}
         if swagger_meta_file:
-            model_data = yaml.safe_load(
-                open(os.path.join(mcs.model_base_directory, swagger_meta_file), 'rb').read())
+            model_data = yaml.load(
+                open(os.path.join(mcs.model_base_directory, swagger_meta_file), 'rb').read(), SwaggerLoader)
 
         # clsdict["__doc__"] = "Represents a %s object in the Carbon Black server.\n\n" % (name,)
         # for field_name, field_info in iter(model_data.get("properties", {}).items()):

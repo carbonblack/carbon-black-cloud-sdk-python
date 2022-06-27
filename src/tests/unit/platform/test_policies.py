@@ -10,16 +10,18 @@
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
 """Tests of the policies support in the Platform API."""
+import copy
 
 import pytest
 import logging
+import random
 from contextlib import ExitStack as does_not_raise
 from cbc_sdk.rest_api import CBCloudAPI
-from cbc_sdk.platform import Policy
-from cbc_sdk.errors import ApiError
+from cbc_sdk.platform import Policy, PolicyRule
+from cbc_sdk.errors import ApiError, InvalidObjectError, ServerError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_policies import (FULL_POLICY_1, SUMMARY_POLICY_1, SUMMARY_POLICY_2,
-                                                        SUMMARY_POLICY_3, OLD_POLICY_1)
+                                                        SUMMARY_POLICY_3, OLD_POLICY_1, RULE_ADD_1, RULE_ADD_2)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -241,3 +243,134 @@ def test_bogus_policy_query_arguments(cb):
         query.add_priorities("APOCALYPTIC")
     with pytest.raises(ApiError):
         query.add_priorities(8675309)
+
+
+@pytest.mark.parametrize("initial_data, handler, message", [
+    ({"required": True, "action": "DENY", "application": {"type": "REPUTATION", "value": "PUP"},
+      "operation": "MEMORY_SCRAPE"}, does_not_raise(), None),
+    ({"action": "DENY", "application": {"type": "REPUTATION", "value": "PUP"},
+      "operation": "MEMORY_SCRAPE"}, pytest.raises(InvalidObjectError), "Missing fields: [required]"),
+    ({"required": True, "application": {"type": "REPUTATION", "value": "PUP"},
+      "operation": "MEMORY_SCRAPE"}, pytest.raises(InvalidObjectError), "Missing fields: [action]"),
+    ({"required": True, "action": "DENY", "operation": "MEMORY_SCRAPE"},
+     pytest.raises(InvalidObjectError), "Missing fields: [application]"),
+    ({"required": True, "action": "DENY", "application": {"type": "REPUTATION", "value": "PUP"}},
+     pytest.raises(InvalidObjectError), "Missing fields: [operation]"),
+    ({"required": ApiError, "action": "DENY", "application": {"type": "REPUTATION", "value": "PUP"},
+      "operation": "MEMORY_SCRAPE"}, pytest.raises(InvalidObjectError), "'required' field not valid type"),
+    ({"required": True, "action": "PUNT", "application": {"type": "REPUTATION", "value": "PUP"},
+      "operation": "MEMORY_SCRAPE"}, pytest.raises(InvalidObjectError), "'action' field value not valid"),
+    ({"required": True, "action": "DENY", "application": "NOT VALID",
+      "operation": "MEMORY_SCRAPE"}, pytest.raises(InvalidObjectError), "'application' field not valid type/structure"),
+    ({"required": True, "action": "DENY", "application": {"value": "PUP"},
+      "operation": "MEMORY_SCRAPE"}, pytest.raises(InvalidObjectError), "'application' field not valid type/structure"),
+    ({"required": True, "action": "DENY", "application": {"type": "REPUTATION"},
+      "operation": "MEMORY_SCRAPE"}, pytest.raises(InvalidObjectError), "'application' field not valid type/structure"),
+    ({"required": True, "action": "DENY", "application": {"type": "REPUTATION", "value": "PUP", "extra": "ignore"},
+      "operation": "MEMORY_SCRAPE"}, pytest.raises(InvalidObjectError), "'application' field not valid type/structure"),
+    ({"required": True, "action": "DENY", "application": {"type": "WHATEVER", "value": "WHATEVER"},
+      "operation": "MEMORY_SCRAPE"}, pytest.raises(InvalidObjectError), "'application' 'type' value not valid"),
+    ({"required": True, "action": "DENY", "application": {"type": "REPUTATION", "value": 3.1416},
+      "operation": "MEMORY_SCRAPE"}, pytest.raises(InvalidObjectError), "'application' 'value' not valid type"),
+    ({"required": True, "action": "DENY", "application": {"type": "REPUTATION", "value": "NIHILIST"},
+      "operation": "MEMORY_SCRAPE"}, pytest.raises(InvalidObjectError),
+     "'application' 'value' not valid value for type REPUTATION"),
+    ({"required": True, "action": "DENY", "application": {"type": "REPUTATION", "value": "PUP"},
+      "operation": "RANDOM_VALUE"}, pytest.raises(InvalidObjectError), "'operation' field value not valid")
+])
+def test_rule_validate(cb, initial_data, handler, message):
+    """Tests rule validation."""
+    rule = PolicyRule(cb, None, None, initial_data, False, True)
+    with handler as h:
+        rule.validate()
+    if message is not None:
+        assert h.value.args[0] == message
+
+
+def test_rule_refresh(cbcsdk_mock):
+    """Tests the rule refresh() mechanism."""
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536', FULL_POLICY_1)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 65536, FULL_POLICY_1, False, True)
+    rule = random.choice(list(policy.object_rules.values()))
+    old_id = rule.id
+    old_action = rule.action
+    old_operation = rule.operation
+    rule.refresh()
+    assert rule.id == old_id
+    assert rule.action == old_action
+    assert rule.operation == old_operation
+
+
+@pytest.mark.parametrize("rule_data, give_error, handler", [
+    (RULE_ADD_1, False, does_not_raise()),
+    (RULE_ADD_2, False, does_not_raise()),
+    (RULE_ADD_1, True, pytest.raises(ServerError))
+])
+def test_rule_add_by_object(cbcsdk_mock, rule_data, give_error, handler):
+    """Tests using a PolicyRule object to add a rule."""
+    def on_post(uri, body, **kwargs):
+        assert body == RULE_ADD_1
+        if give_error:
+            return CBCSDKMock.StubResponse("Failure", scode=404)
+        rc = copy.deepcopy(body)
+        rc['id'] = 16
+        return rc
+
+    cbcsdk_mock.mock_request('POST', '/policyservice/v1/orgs/test/policies/65536/rules', on_post)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+    rule_count = len(policy.object_rules)
+    new_rule = PolicyRule(api, policy, None, rule_data, False, True)
+    with handler:
+        new_rule.save()
+        assert new_rule.id == 16
+        assert len(policy.object_rules) == rule_count + 1
+        assert policy.object_rules[new_rule.id] is new_rule
+        assert len(policy.rules) == rule_count + 1
+        assert 16 in [rd['id'] for rd in policy.rules]
+
+
+def test_rule_modify_by_object(cbcsdk_mock):
+    """Tests modifying a PolicyRule object within a policy."""
+    def on_put(url, body, **kwargs):
+        assert body == {"id": 2, "required": True, "action": "TERMINATE",
+                        "application": {"type": "NAME_PATH", "value": "data"}, "operation": "MEMORY_SCRAPE"}
+        return copy.deepcopy(body)
+
+    cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/65536/rules/2', on_put)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+    rule_count = len(policy.object_rules)
+    rule = policy.object_rules[2]
+    rule.action = "TERMINATE"
+    rule.save()
+    assert len(policy.object_rules) == rule_count
+    assert len(policy.rules) == rule_count
+    raw_pointer = [rd for rd in policy.rules if rd['id'] == 2][0]
+    assert raw_pointer['action'] == "TERMINATE"
+
+
+def test_rule_delete_by_object(cbcsdk_mock):
+    """Tests deleting a PolicyRule object from a policy."""
+    cbcsdk_mock.mock_request('DELETE', '/policyservice/v1/orgs/test/policies/65536/rules/1',
+                             CBCSDKMock.StubResponse(None, scode=204))
+    api = cbcsdk_mock.api
+    policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+    rule_count = len(policy.object_rules)
+    rule = policy.object_rules[1]
+    assert not rule.is_deleted
+    rule.delete()
+    assert len(policy.object_rules) == rule_count - 1
+    assert rule not in list(policy.object_rules.values())
+    assert len(policy.rules) == rule_count - 1
+    assert 1 not in [rd['id'] for rd in policy.rules]
+    assert rule.is_deleted
+
+
+def test_rule_delete_is_new(cb):
+    """Tests deleting a new PolicyRule raises an error."""
+    policy = Policy(cb, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+    new_rule = PolicyRule(cb, policy, None, RULE_ADD_1, False, True)
+    with pytest.raises(ApiError):
+        new_rule.delete()

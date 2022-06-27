@@ -57,6 +57,8 @@ class Policy(MutableBaseModel):
         self._object_rules = None
         self._object_rules_need_load = True
         self._info["version"] = 2
+        if model_unique_id is None:
+            self.touch()
 
     class PolicyBuilder:
         """Builder object to simplify the creation of new Policy objects."""
@@ -708,8 +710,7 @@ class Policy(MutableBaseModel):
 class PolicyRule(MutableBaseModel):
     """Represents a rule in the policy."""
     primary_key = "id"
-    _required_fields = ["required", "action", "application", "operation"]
-    _valid_fields = ["id"] + _required_fields
+    swagger_meta_file = "platform/models/policy_rule.yaml"
     VALID_ACTIONS = ["IGNORE", "ALLOW", "TERMINATE_PROCESS", "TERMINATE_THREAD", "TERMINATE", "DENY"]
     VALID_APP_KEYS = {"type", "value"}
     VALID_APP_TYPES = ["NAME_PATH", "SIGNED_BY", "REPUTATION"]
@@ -735,6 +736,8 @@ class PolicyRule(MutableBaseModel):
         super(PolicyRule, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
                                          force_init=force_init, full_doc=full_doc)
         self._parent = parent
+        if model_unique_id is None:
+            self.touch()
 
     def _refresh(self):
         """
