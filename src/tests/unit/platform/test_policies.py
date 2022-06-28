@@ -21,7 +21,8 @@ from cbc_sdk.platform import Policy, PolicyRule
 from cbc_sdk.errors import ApiError, InvalidObjectError, ServerError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_policies import (FULL_POLICY_1, SUMMARY_POLICY_1, SUMMARY_POLICY_2,
-                                                        SUMMARY_POLICY_3, OLD_POLICY_1, RULE_ADD_1, RULE_ADD_2)
+                                                        SUMMARY_POLICY_3, OLD_POLICY_1, RULE_ADD_1, RULE_ADD_2,
+                                                        NEW_POLICY_CONSTRUCT_1)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -374,3 +375,26 @@ def test_rule_delete_is_new(cb):
     new_rule = PolicyRule(cb, policy, None, RULE_ADD_1, False, True)
     with pytest.raises(ApiError):
         new_rule.delete()
+
+
+def test_policy_builder_make_policy(cbcsdk_mock):
+    """Tests using a policy builder to create a new policy."""
+    api = cbcsdk_mock.api
+    builder = Policy.create(api)
+    builder.set_name("New Policy Name").set_priority("HIGH").set_description("Foobar")
+    builder.set_auto_deregister_interval(1000).set_auto_delete_bad_hash_delay(500)
+    builder.set_avira_protection_cloud(True, 3600, 1024, 5).set_on_access_scan(True, "AGGRESSIVE")
+    builder.set_on_demand_scan(True, "AGGRESSIVE", "DISABLED", "DISABLED")
+    builder.set_on_demand_scan_schedule(["MONDAY", "WEDNESDAY", "FRIDAY"], 6, 4, False)
+    builder.set_signature_update(True).set_signature_update_schedule(12, 3, 6)
+    builder.set_update_servers_override(["http://contoso.com/foo"])
+    builder.set_update_servers_onsite(["http://example.com/foo", "http://example.org/foo"], ["http://example.org/foo"])
+    builder.set_update_servers_offsite(["http://amytapie.com/foo"])
+    builder.add_directory_action_rule("/usr", True, True).add_directory_action_rule("/tmp", False, False)
+    rule = PolicyRule(api, None, 409, RULE_ADD_2, False, True)
+    builder.add_rule_copy(rule).add_rule("REPUTATION", "COMPANY_BLACK_LIST", "RUN", "DENY", False)
+    builder.add_sensor_setting("SCAN_EXECUTE_ON_NETWORK_DRIVE", "false").add_sensor_setting("UBS_OPT_IN", "true")
+    builder.add_sensor_setting("SCAN_EXECUTE_ON_NETWORK_DRIVE", "true").add_sensor_setting("ALLOW_UNINSTALL", "true")
+    builder.set_managed_detection_response_permissions(False, True)
+    policy = builder.build()
+    assert policy._info == NEW_POLICY_CONSTRUCT_1

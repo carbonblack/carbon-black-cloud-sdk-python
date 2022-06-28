@@ -402,7 +402,7 @@ class Policy(MutableBaseModel):
             Add a new rule as discrete data elements to the new policy.
 
             Args:
-                app_type (str): Specifies "NAME_PATH", "SIGNED_BY", or "REPUTATION:.
+                app_type (str): Specifies "NAME_PATH", "SIGNED_BY", or "REPUTATION".
                 app_value (str): Value of the attribute specified by `app_type` to be matched.
                 operation (str): The type of behavior the application is performing.
                 action (str): The action the sensor will take when the application performs the specified action.
@@ -464,8 +464,9 @@ class Policy(MutableBaseModel):
                 Policy: The new Policy object.
             """
             new_policy = copy.deepcopy(self._new_policy_data)
-            new_policy["sensor_settings"] = [{"name": name, "value": value}
-                                             for name, value in self._sensor_settings.items()]
+            settings = [{"name": name, "value": value} for name, value in self._sensor_settings.items()]
+            settings.sort(key=lambda item: item["name"])
+            new_policy["sensor_settings"] = settings
             new_policy["rules"] = [copy.deepcopy(r._info) for r in self._new_rules]
             return Policy(self._cb, None, new_policy, False, True)
 
