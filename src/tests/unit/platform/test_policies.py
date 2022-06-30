@@ -22,7 +22,7 @@ from cbc_sdk.errors import ApiError, InvalidObjectError, ServerError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_policies import (FULL_POLICY_1, SUMMARY_POLICY_1, SUMMARY_POLICY_2,
                                                         SUMMARY_POLICY_3, OLD_POLICY_1, RULE_ADD_1, RULE_ADD_2,
-                                                        NEW_POLICY_CONSTRUCT_1)
+                                                        RULE_MODIFY_1, NEW_POLICY_CONSTRUCT_1, NEW_POLICY_RETURN_1)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -332,11 +332,28 @@ def test_rule_add_by_object(cbcsdk_mock, rule_data, give_error, handler):
         assert 16 in [rd['id'] for rd in policy.rules]
 
 
+def test_rule_add_by_compatibility_method(cbcsdk_mock):
+    """Tests using the compatibility method to add a rule."""
+    def on_post(uri, body, **kwargs):
+        assert body == RULE_ADD_1
+        rc = copy.deepcopy(body)
+        rc['id'] = 16
+        return rc
+
+    cbcsdk_mock.mock_request('POST', '/policyservice/v1/orgs/test/policies/65536/rules', on_post)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+    rule_count = len(policy.object_rules)
+    policy.add_rule(copy.deepcopy(RULE_ADD_1))
+    assert len(policy.object_rules) == rule_count + 1
+    assert len(policy.rules) == rule_count + 1
+    assert 16 in [rd['id'] for rd in policy.rules]
+
+
 def test_rule_modify_by_object(cbcsdk_mock):
     """Tests modifying a PolicyRule object within a policy."""
     def on_put(url, body, **kwargs):
-        assert body == {"id": 2, "required": True, "action": "TERMINATE",
-                        "application": {"type": "NAME_PATH", "value": "data"}, "operation": "MEMORY_SCRAPE"}
+        assert body == RULE_MODIFY_1
         return copy.deepcopy(body)
 
     cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/65536/rules/2', on_put)
@@ -350,6 +367,49 @@ def test_rule_modify_by_object(cbcsdk_mock):
     assert len(policy.rules) == rule_count
     raw_pointer = [rd for rd in policy.rules if rd['id'] == 2][0]
     assert raw_pointer['action'] == "TERMINATE"
+
+
+def test_rule_modify_by_compatibility_method(cbcsdk_mock):
+    """Tests modifying a PolicyRule object using the replace_rule method."""
+    def on_put(url, body, **kwargs):
+        assert body == RULE_MODIFY_1
+        return copy.deepcopy(body)
+
+    cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/65536/rules/2', on_put)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+    rule_count = len(policy.object_rules)
+    policy.replace_rule(2, RULE_MODIFY_1)
+    assert len(policy.object_rules) == rule_count
+    assert len(policy.rules) == rule_count
+    rule = policy.object_rules[2]
+    assert rule.action == "TERMINATE"
+    raw_pointer = [rd for rd in policy.rules if rd['id'] == 2][0]
+    assert raw_pointer['action'] == "TERMINATE"
+
+
+def test_rule_modify_by_compatibility_method_with_server_error(cbcsdk_mock):
+    """Tests modifying a PolicyRule object using the replace_rule method, but it returns a server error."""
+    cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/65536/rules/2',
+                             CBCSDKMock.StubResponse(None, scode=500))
+    api = cbcsdk_mock.api
+    policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+    rule_count = len(policy.object_rules)
+    with pytest.raises(ServerError):
+        policy.replace_rule(2, RULE_MODIFY_1)
+    assert len(policy.object_rules) == rule_count
+    assert len(policy.rules) == rule_count
+    rule = policy.object_rules[2]
+    assert rule.action == "DENY"
+    raw_pointer = [rd for rd in policy.rules if rd['id'] == 2][0]
+    assert raw_pointer['action'] == "DENY"
+
+
+def test_rule_modify_by_compatibility_method_invalid_index(cb):
+    """Tests modifying a PolicyRule object using the replace_rule method, but it uses an invalid index."""
+    policy = Policy(cb, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+    with pytest.raises(ApiError):
+        policy.replace_rule(6, RULE_MODIFY_1)
 
 
 def test_rule_delete_by_object(cbcsdk_mock):
@@ -369,6 +429,29 @@ def test_rule_delete_by_object(cbcsdk_mock):
     assert rule.is_deleted
 
 
+def test_rule_delete_by_compatibility_method(cbcsdk_mock):
+    """Tests deleting a rule from a policy via the compatibility method."""
+    cbcsdk_mock.mock_request('DELETE', '/policyservice/v1/orgs/test/policies/65536/rules/1',
+                             CBCSDKMock.StubResponse(None, scode=204))
+    api = cbcsdk_mock.api
+    policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+    rule_count = len(policy.object_rules)
+    policy.delete_rule(1)
+    assert len(policy.object_rules) == rule_count - 1
+    assert len(policy.rules) == rule_count - 1
+    assert 1 not in [rd['id'] for rd in policy.rules]
+
+
+def test_rule_delete_by_compatibility_method_nonexistent(cb):
+    """Tests what happens when you try to delete a nonexistent rule by compatibility method."""
+    policy = Policy(cb, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+    rule_count = len(policy.object_rules)
+    with pytest.raises(ApiError):
+        policy.delete_rule(6)
+    assert len(policy.object_rules) == rule_count
+    assert len(policy.rules) == rule_count
+
+
 def test_rule_delete_is_new(cb):
     """Tests deleting a new PolicyRule raises an error."""
     policy = Policy(cb, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
@@ -379,6 +462,11 @@ def test_rule_delete_is_new(cb):
 
 def test_policy_builder_make_policy(cbcsdk_mock):
     """Tests using a policy builder to create a new policy."""
+    def on_post(uri, body, **kwargs):
+        assert body == NEW_POLICY_CONSTRUCT_1
+        return NEW_POLICY_RETURN_1
+
+    cbcsdk_mock.mock_request('POST', '/policyservice/v1/orgs/test/policies', on_post)
     api = cbcsdk_mock.api
     builder = Policy.create(api)
     builder.set_name("New Policy Name").set_priority("HIGH").set_description("Foobar")
@@ -398,3 +486,24 @@ def test_policy_builder_make_policy(cbcsdk_mock):
     builder.set_managed_detection_response_permissions(False, True)
     policy = builder.build()
     assert policy._info == NEW_POLICY_CONSTRUCT_1
+    policy.save()
+    assert policy.id == 30250
+
+
+def test_policy_builder_error_handling(cb):
+    """Tests the error handling in the various PolicyBuilder setter functions."""
+    builder = Policy.create(cb)
+    with pytest.raises(ApiError):
+        builder.set_priority("DOGWASH")
+    with pytest.raises(ApiError):
+        builder.set_on_access_scan(True, "SLOW")
+    with pytest.raises(ApiError):
+        builder.set_on_demand_scan(True, "ABNORMAL")
+    with pytest.raises(ApiError):
+        builder.set_on_demand_scan(True, "NORMAL", "JUNKVALUE")
+    with pytest.raises(ApiError):
+        builder.set_on_demand_scan(True, "NORMAL", "AUTOSCAN", "JUNKVALUE")
+    with pytest.raises(ApiError):
+        builder.set_on_demand_scan_schedule(["WEDNESDAY", "FRIDAY", "HELLDAY"], 0, 6)
+    with pytest.raises(ApiError):
+        builder.add_sensor_setting("LONG_RANGE", "true")

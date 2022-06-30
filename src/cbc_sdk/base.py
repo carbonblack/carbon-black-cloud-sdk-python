@@ -850,9 +850,10 @@ class MutableBaseModel(NewBaseModel):
         if self._refresh():
             self._dirty_attributes = {}
 
-    def touch(self):
+    def touch(self, fulltouch=False):
         """Force this object to be considered as changed."""
-        self._dirty_attributes = {key: self._info.get(key, None) for key in self.__class__._valid_fields}
+        self._dirty_attributes = {key: self._info.get(key, None) for key in self.__class__._valid_fields
+                                  if key != self.__class__.primary_key or fulltouch}
 
     def is_dirty(self):
         """

@@ -439,6 +439,17 @@ RULE_ADD_2 = {
     "operation": "RANSOM"
 }
 
+RULE_MODIFY_1 = {
+    "id": 2,
+    "required": True,
+    "action": "TERMINATE",
+    "application": {
+        "type": "NAME_PATH",
+        "value": "data"
+    },
+    "operation": "MEMORY_SCRAPE"
+}
+
 NEW_POLICY_CONSTRUCT_1 = {
     "name": "New Policy Name",
     "org_key": "test",
@@ -519,6 +530,119 @@ NEW_POLICY_CONSTRUCT_1 = {
             "operation": "RANSOM"
         },
         {
+            "required": False,
+            "action": "DENY",
+            "application": {
+                "type": "REPUTATION",
+                "value": "COMPANY_BLACK_LIST"
+            },
+            "operation": "RUN"
+        }
+    ],
+    "sensor_settings": [
+        {
+            "name": "ALLOW_UNINSTALL",
+            "value": "true"
+        },
+        {
+            "name": "SCAN_EXECUTE_ON_NETWORK_DRIVE",
+            "value": "true"
+        },
+        {
+            "name": "UBS_OPT_IN",
+            "value": "true"
+        }
+    ],
+    "managed_detection_response_permissions": {
+        "policy_modification": False,
+        "quarantine": True
+    },
+    "rapid_configs": []
+}
+
+NEW_POLICY_RETURN_1 = {
+    "id": 30250,
+    "name": "New Policy Name",
+    "org_key": "test",
+    "priority_level": "HIGH",
+    "version": 2,
+    "is_system": False,
+    "description": "Foobar",
+    "auto_deregister_inactive_vdi_interval_ms": 1000,
+    "auto_delete_known_bad_hashes_delay": 500,
+    "av_settings": {
+        "avira_protection_cloud": {
+            "enabled": True,
+            "max_exe_delay": 3600,
+            "max_file_size": 1024,
+            "risk_level": 5
+        },
+        "on_access_scan": {
+            "enabled": True,
+            "mode": "AGGRESSIVE"
+        },
+        "on_demand_scan": {
+            "enabled": True,
+            "profile": "AGGRESSIVE",
+            "schedule": {
+                "days": ["MONDAY", "WEDNESDAY", "FRIDAY"],
+                "start_hour": 6,
+                "range_hours": 4,
+                "recovery_scan_if_missed": False
+            },
+            "scan_usb": "DISABLED",
+            "scan_cd_dvd": "DISABLED"
+        },
+        "signature_update": {
+            "enabled": True,
+            "schedule": {
+                "full_interval_hours": 12,
+                "initial_random_delay_hours": 3,
+                "interval_hours": 6
+            }
+        },
+        "update_servers": {
+            "servers_override": ["http://contoso.com/foo"],
+            "servers_for_onsite_devices": [
+                {
+                    "server": "http://example.com/foo",
+                    "preferred": False
+                },
+                {
+                    "server": "http://example.org/foo",
+                    "preferred": True
+                }
+            ],
+            "servers_for_offsite_devices": [
+                "http://amytapie.com/foo"
+            ]
+        }
+    },
+    "directory_action_rules": [
+        {
+            "file_upload": True,
+            "protection": True,
+            "path": "/usr"
+        },
+        {
+            "file_upload": False,
+            "protection": False,
+            "path": "/tmp"
+        }
+    ],
+    "rules": [
+        {
+            "id": 1,
+            "required": True,
+            "action": "TERMINATE",
+            "application": {
+                "type": "SIGNED_BY",
+                "value": "something"
+            },
+            "operation": "RANSOM"
+        },
+        {
+            "id": 2,
             "required": False,
             "action": "DENY",
             "application": {

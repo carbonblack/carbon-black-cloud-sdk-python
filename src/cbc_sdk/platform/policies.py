@@ -58,7 +58,7 @@ class Policy(MutableBaseModel):
         self._object_rules_need_load = True
         self._info["version"] = 2
         if model_unique_id is None:
-            self.touch()
+            self.touch(True)
 
     class PolicyBuilder:
         """Builder object to simplify the creation of new Policy objects."""
@@ -615,6 +615,7 @@ class Policy(MutableBaseModel):
             new_rule_info["id"] = rule_id
             saved_rule_info = old_rule._info
             old_rule._info = new_rule_info
+            old_rule.touch()
             restore_rule = True
             try:
                 old_rule.save()
@@ -622,6 +623,7 @@ class Policy(MutableBaseModel):
             finally:
                 if restore_rule:
                     old_rule._info = saved_rule_info
+                    old_rule._dirty_attributes = {}
         else:
             raise ApiError(f"rule #{rule_id} not found in policy")
 
@@ -738,7 +740,7 @@ class PolicyRule(MutableBaseModel):
                                          force_init=force_init, full_doc=full_doc)
         self._parent = parent
         if model_unique_id is None:
-            self.touch()
+            self.touch(True)
 
     def _refresh(self):
         """
