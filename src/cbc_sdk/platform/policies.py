@@ -517,7 +517,7 @@ class Policy(MutableBaseModel):
     @property
     def rules(self):
         """Returns a dictionary of rules and rule IDs for this Policy."""
-        return dict([(r.get("id"), r) for r in self._info.get("rules", [])])
+        return dict([(r.get("id"), copy.deepcopy(r)) for r in self._info.get("rules", [])])
 
     @property
     def object_rules(self):
