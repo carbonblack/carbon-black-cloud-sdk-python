@@ -224,7 +224,7 @@ class Event:
         raise FunctionalityDecommissioned("Endpoint Standard events", "Platform enriched events")
 
 
-class Policy(EndpointStandardMutableModel, CreatableModelMixin):
+class DeprecatedPolicy(EndpointStandardMutableModel, CreatableModelMixin):
     """Represents an Endpoint Standard Policy."""
     urlobject = "/integrationServices/v3/policy"
     info_key = "policyInfo"
