@@ -242,8 +242,10 @@ properties:
         - WATCHDOG
         - SENSOR_RESET_IN_PROGRESS
         - DRIVER_INIT_REBOOT_REQUIRED
+        - DRIVER_LOAD_NOT_GRANTED
         - SENSOR_SHUTDOWN
         - SENSOR_MAINTENANCE
+        - FULL_DISK_ACCESS_NOT_GRANTED
         - DEBUG_MODE_ENABLED
         - AUTO_UPDATE_DISABLED
         - SELF_PROTECT_DISABLED
@@ -256,6 +258,10 @@ properties:
         - LIVE_RESPONSE_NOT_KILLED
         - LIVE_RESPONSE_ENABLED
         - LIVE_RESPONSE_DISABLED
+        - DRIVER_KERNEL
+        - DRIVER_USERSPACE
+        - DRIVER_LOAD_PENDING
+        - OS_VERSION_MISMATCH
   sensor_version:
     type: string
     example: 3.4.0.0
