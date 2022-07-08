@@ -470,6 +470,20 @@ class Policy(MutableBaseModel):
             new_policy["rules"] = [copy.deepcopy(r._info) for r in self._new_rules]
             return Policy(self._cb, None, new_policy, False, True)
 
+    def _subobject(self, name):
+        """
+        Returns the "subobject value" of the given attribute.
+
+        Args:
+            name (str): Name of the subobject value to be returned.
+
+        Returns:
+            Any: Subobject value for the attribute, or None if there is none.
+        """
+        if name == 'rules':
+            return list(self.object_rules.values())
+        return super(Policy, self)._subobject(name)
+
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
         """
