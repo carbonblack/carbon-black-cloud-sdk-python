@@ -206,14 +206,14 @@ properties:
   scan_last_action_time:
     type: string
     format: date-time
-    description: When the background scan was last active
+    description: Not used. Intended for when the background scan was last active
   scan_last_complete_time:
     type: string
     format: date-time
-    description: When the background scan was last completed
+    description: Not Used. Intended for when the background scan was last completed
   scan_status:
     type: string
-    description: Background scan status
+    description: Not Used. Intended for Background scan status
     enum:
       - NEVER_RUN
       - STOPPED
