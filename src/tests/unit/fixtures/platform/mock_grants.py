@@ -3,7 +3,6 @@
 GET_GRANT_RESP = {
     "principal": "psc:user:12345678:ABCDEFGH",
     "expires": 0,
-    "revoked": False,
     "roles": [
         "psc:role::SECOPS_ROLE_MANAGER",
         "psc:role:test:APP_SERVICE_ROLE"
@@ -37,7 +36,6 @@ GET_GRANT_RESP = {
 PUT_GRANT_RESP = {
     "principal": "psc:user:12345678:ABCDEFGH",
     "expires": 0,
-    "revoked": False,
     "roles": [
         "psc:role::SECOPS_ROLE_MANAGER",
         "psc:role:test:APP_SERVICE_ROLE",
@@ -73,7 +71,6 @@ PUT_GRANT_RESP = {
 POST_GRANT_RESP = {
     "principal": "psc:user:ABC12345:DEF67890",
     "expires": 0,
-    "revoked": False,
     "roles": [
         "psc:role::SECOPS_ROLE_MANAGER"
     ],
@@ -159,7 +156,6 @@ DELETE_PROFILE_RESP = {
 DELETE_GRANT_RESP = {
     "principal": "psc:user:12345678:ABCDEFGH",
     "expires": 0,
-    "revoked": True,
     "roles": [
         "psc:role::SECOPS_ROLE_MANAGER",
         "psc:role:test:APP_SERVICE_ROLE"
@@ -195,7 +191,6 @@ QUERY_GRANT_RESP = {
         {
             "principal": "psc:user:12345678:ABCDEFGH",
             "expires": 0,
-            "revoked": False,
             "roles": [
                 "psc:role::SECOPS_ROLE_MANAGER",
                 "psc:role:test:APP_SERVICE_ROLE"
@@ -228,7 +223,6 @@ QUERY_GRANT_RESP = {
         {
             "principal": "psc:user:87654321:HGFEDCBA",
             "expires": 0,
-            "revoked": False,
             "roles": [
                 "psc:role::SECOPS_ROLE_MANAGER",
                 "psc:role:test:APP_SERVICE_ROLE"
@@ -264,7 +258,6 @@ QUERY_GRANT_RESP = {
 DETAILS_GRANT1 = {
     "principal": "psc:user:test:3911",
     "expires": 0,
-    "revoked": True,
     "roles": [
         "psc:role::SECOPS_ROLE_MANAGER",
         "psc:role:test:APP_SERVICE_ROLE"
@@ -281,7 +274,6 @@ DETAILS_GRANT1 = {
 EXPECT_CHANGE_ROLE_GRANT1 = {
     "principal": "psc:user:test:3911",
     "expires": 0,
-    "revoked": True,
     "roles": [
         "psc:role::SECOPS_ROLE_MANAGER",
         "psc:role:test:APP_SERVICE_ROLE",
@@ -299,7 +291,6 @@ EXPECT_CHANGE_ROLE_GRANT1 = {
 EXPECT_DELETE_GRANT1 = {
     "principal": "psc:user:test:3911",
     "expires": 0,
-    "revoked": True,
     "roles": [
         "psc:role::SECOPS_ROLE_MANAGER",
         "psc:role:test:APP_SERVICE_ROLE"
@@ -316,7 +307,6 @@ EXPECT_DELETE_GRANT1 = {
 DETAILS_GRANT2 = {
     "principal": "psc:user:test:3934",
     "expires": 0,
-    "revoked": False,
     "roles": [],
     "profiles": [
         {
@@ -381,7 +371,6 @@ DETAILS_GRANT2 = {
 EXPECT_CHANGE_ROLE_GRANT2A = {
     "principal": "psc:user:test:3934",
     "expires": 0,
-    "revoked": False,
     "roles": [],
     "profiles": [
         {
@@ -448,7 +437,6 @@ EXPECT_CHANGE_ROLE_GRANT2A = {
 EXPECT_CHANGE_ROLE_GRANT2B = {
     "principal": "psc:user:test:3934",
     "expires": 0,
-    "revoked": False,
     "roles": [],
     "profiles": [
         {
@@ -514,7 +502,6 @@ EXPECT_CHANGE_ROLE_GRANT2B = {
 EXPECT_DISABLE_ALL_GRANT2 = {
     "principal": "psc:user:test:3934",
     "expires": 0,
-    "revoked": False,
     "roles": [],
     "profiles": [
         {
@@ -579,7 +566,6 @@ EXPECT_DISABLE_ALL_GRANT2 = {
 DETAILS_GRANT3 = {
     "principal": "psc:user:test:4338",
     "expires": 0,
-    "revoked": False,
     "roles": [],
     "profiles": [
         {
@@ -651,7 +637,6 @@ PROFILE_TEMPLATES_A = [
 EXPECT_ADD_PROFILES_3A = {
     "principal": "psc:user:test:4338",
     "expires": 0,
-    "revoked": False,
     "roles": [],
     "profiles": [
         {
@@ -713,7 +698,6 @@ PROFILE_TEMPLATES_B = [
 EXPECT_ADD_PROFILES_3B = {
     "principal": "psc:user:test:4338",
     "expires": 0,
-    "revoked": False,
     "roles": [],
     "profiles": [
         {
@@ -774,7 +758,6 @@ PROFILE_TEMPLATES_C = [
 EXPECT_DISABLE_2B = {
     "principal": "psc:user:test:3934",
     "expires": 0,
-    "revoked": False,
     "roles": [],
     "profiles": [
         {
@@ -839,7 +822,6 @@ EXPECT_DISABLE_2B = {
 EXPECT_SET_EXPIRATION_2B = {
     "principal": "psc:user:test:3934",
     "expires": 0,
-    "revoked": False,
     "roles": [],
     "profiles": [
         {
@@ -973,7 +955,6 @@ EXPECT_NEW_GRANT_5A = {
 POST_GRANT_RESP_5A = {
     "principal": "psc:user:test:3978",
     "expires": 0,
-    "revoked": False,
     "roles": [
     ],
     "profiles": [

@@ -7,9 +7,6 @@ properties:
     type: string
     format: date-time
     description: Date and time the grant expires
-  revoked:
-    type: boolean
-    description: True if this grant has been/is being revoked
   roles:
     type: array
     description: URNs of roles assigned to grant (obsolete)
