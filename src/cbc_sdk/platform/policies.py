@@ -646,10 +646,20 @@ class Policy(MutableBaseModel):
         """Returns the priority level of this policy (compatibility method)."""
         return self.priority_level
 
+    @priorityLevel.setter
+    def priorityLevel(self, level):
+        """Sets the priority level of this policy (compatibility method)."""
+        self.priority_level = level
+
     @property
     def systemPolicy(self):
         """Returns whether or not this is a systsem policy (compatibility method)."""
         return self.is_system
+
+    @systemPolicy.setter
+    def systemPolicy(self, flag):
+        """Sets whether or not this is a systsem policy (compatibility method)."""
+        self.is_system = flag
 
     @property
     def latestRevision(self):
@@ -709,6 +719,70 @@ class Policy(MutableBaseModel):
         if "rules" in self._info:
             rc["rules"] = copy.deepcopy(self._info["rules"])
         return rc
+
+    @policy.setter
+    def policy(self, oldpolicy):
+        """Sets the contents of this policy from a dict (compatibility method)."""
+        newpolicy = copy.deepcopy(self._info)
+        if "sensorSettings" in oldpolicy:
+            newpolicy["sensor_settings"] = copy.deepcopy(oldpolicy["sensorSettings"])
+        oldav = oldpolicy.get("avSettings", None)
+        if oldav:
+            newav = {}
+            feature_flags = {}
+            if "features" in oldav:
+                for d in oldav["features"]:
+                    feature_flags[d["name"]] = d["enabled"]
+            subobj = oldav.get("apc", None)
+            if subobj:
+                newav["avira_protection_cloud"] = {"enabled": subobj.get("enabled", False),
+                                                   "max_exe_delay": subobj.get("maxExeDelay", 0),
+                                                   "max_file_size": subobj.get("maxFileSize", 0),
+                                                   "risk_level": subobj.get("riskLevel", 0)}
+            subobj = oldav.get("onAccessScan", {})
+            if subobj or "ONACCESS_SCAN" in feature_flags:
+                newav["on_access_scan"] = {"enabled": feature_flags.get("ONACCESS_SCAN", False),
+                                           "mode": subobj.get("profile", "NORMAL")}
+            subobj = oldav.get("onDemandScan", {})
+            if subobj or "ONDEMAND_SCAN" in feature_flags:
+                newav["on_demand_scan"] = {"enabled": feature_flags.get("ONDEMAND_SCAN", False),
+                                           "profile": subobj.get("profile", "NORMAL"),
+                                           "scan_usb": subobj.get("scanUsb", "AUTOSCAN"),
+                                           "scan_cd_dvd": subobj.get("scanCdDvd", "AUTOSCAN")}
+                sched = subobj.get("schedule", {})
+                if sched:
+                    newav["on_demand_scan"]["schedule"] = {"days": sched.get("days", None),
+                                                           "start_hour": sched.get("startHour", None),
+                                                           "range_hours": sched.get("rangeHours", None),
+                                                           "recovery_scan_if_missed":
+                                                               sched.get("recoveryScanIfMissed", None)}
+            subobj = oldav.get("signatureUpdate", {})
+            if subobj or "SIGNATURE_UPDATE" in feature_flags:
+                newav["signature_update"] = {"enabled": feature_flags.get("SIGNATURE_UPDATE", False)}
+                sched = subobj.get("schedule", {})
+                if sched:
+                    newav["signature_update"]["schedule"] = {"interval_hours": sched.get("intervalHours", None),
+                                                             "full_interval_hours":
+                                                                 sched.get("fullIntervalHours", None),
+                                                             "initial_random_delay_hours":
+                                                                 sched.get("initialRandomDelayHours", None)}
+            subobj = oldav.get("updateServers", None)
+            if subobj:
+                newav["update_servers"] = {"servers_for_offsite_devices": subobj.get("serversForOffSiteDevices", []),
+                                           "servers_override": subobj.get("serversOverride", [])}
+                if "servers" in subobj:
+                    servers = [name for name in d.get("server", []) for d in subobj["servers"]]
+                    newav["update_servers"]["servers_for_onsite_devices"] = \
+                        [{"server": name, "preferred": False} for name in servers]
+            newpolicy["av_settings"] = newav
+        if "directoryActionRules" in oldpolicy:
+            newpolicy["directory_action_rules"] = [{"path": dar.get("path", None),
+                                                    "file_upload": dar.get("actions", {}).get("FILE_UPLOAD", False),
+                                                    "protection": dar.get("actions", {}).get("PROTECTION", False)}
+                                                   for dar in oldpolicy["directoryActionRules"]]
+        if "rules" in oldpolicy:
+            newpolicy["rules"] = copy.deepcopy(oldpolicy["rules"])
+        self._info = newpolicy
 
     @classmethod
     def create(cls, cb):
