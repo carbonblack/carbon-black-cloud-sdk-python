@@ -21,8 +21,9 @@ from cbc_sdk.platform import Policy, PolicyRule
 from cbc_sdk.errors import ApiError, InvalidObjectError, ServerError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_policies import (FULL_POLICY_1, SUMMARY_POLICY_1, SUMMARY_POLICY_2,
-                                                        SUMMARY_POLICY_3, OLD_POLICY_1, RULE_ADD_1, RULE_ADD_2,
-                                                        RULE_MODIFY_1, NEW_POLICY_CONSTRUCT_1, NEW_POLICY_RETURN_1)
+                                                        SUMMARY_POLICY_3, OLD_POLICY_1, FULL_POLICY_2, OLD_POLICY_2,
+                                                        RULE_ADD_1, RULE_ADD_2, RULE_MODIFY_1, NEW_POLICY_CONSTRUCT_1,
+                                                        NEW_POLICY_RETURN_1)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -45,7 +46,7 @@ def cbcsdk_mock(monkeypatch, cb):
 
 # ==================================== UNIT TESTS BELOW ====================================
 
-def test_policy_compatibility_aliases(cb):
+def test_policy_compatibility_aliases_read(cb):
     """Test the compatibility aliases that mimic the behavior of the old policy object."""
     policy = Policy(cb, 65536, FULL_POLICY_1, False, True)
     assert policy.priorityLevel == "HIGH"
@@ -57,6 +58,18 @@ def test_policy_compatibility_aliases(cb):
     objs = policy.object_rules
     for raw_rule in FULL_POLICY_1["rules"]:
         assert objs[raw_rule["id"]]._info == raw_rule
+
+
+def test_policy_compatibility_aliases_write(cb):
+    """Test the compatibility aliases that mimic the behavior of the old policy object."""
+    policy = cb.create(Policy)
+    policy.policy = copy.deepcopy(OLD_POLICY_2)
+    policy.description = "Hoopy Frood"
+    policy.name = "default - S1"
+    policy.priorityLevel = "MEDIUM"
+    policy.version = 2
+    new_policy_data = copy.deepcopy(policy._info)
+    assert new_policy_data == FULL_POLICY_2
 
 
 def test_policy_autoload(cbcsdk_mock):

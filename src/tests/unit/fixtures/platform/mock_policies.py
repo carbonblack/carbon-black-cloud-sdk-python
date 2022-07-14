@@ -418,6 +418,843 @@ OLD_POLICY_1 = {
     ]
 }
 
+FULL_POLICY_2 = {
+    "name": "default - S1",
+    "priority_level": "MEDIUM",
+    "description": "Hoopy Frood",
+    "av_settings": {
+        "avira_protection_cloud": {
+            "enabled": False,
+            "max_exe_delay": 45,
+            "max_file_size": 4,
+            "risk_level": 4
+        },
+        "on_access_scan": {
+            "enabled": True,
+            "mode": "NORMAL"
+        },
+        "on_demand_scan": {
+            "enabled": True,
+            "profile": "NORMAL",
+            "schedule": {
+                "days": None,
+                "start_hour": 0,
+                "range_hours": 0,
+                "recovery_scan_if_missed": True
+            },
+            "scan_usb": "AUTOSCAN",
+            "scan_cd_dvd": "AUTOSCAN"
+        },
+        "signature_update": {
+            "enabled": True,
+            "schedule": {
+                "full_interval_hours": 0,
+                "initial_random_delay_hours": 4,
+                "interval_hours": 2
+            }
+        },
+        "update_servers": {
+            "servers_override": [],
+            "servers_for_onsite_devices": [
+                {
+                    "server": "http://updates2.cdc.carbonblack.io/update2",
+                    "preferred": False
+                }
+            ],
+            "servers_for_offsite_devices": [
+                "http://updates2.cdc.carbonblack.io/update2"
+            ]
+        }
+    },
+    "rules": [
+        {
+            "id": 1328,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "KNOWN_MALWARE"
+            },
+            "operation": "RUN"
+        },
+        {
+            "id": 1329,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "COMPANY_BLACK_LIST"
+            },
+            "operation": "RUN"
+        },
+        {
+            "id": 1330,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "RESOLVING"
+            },
+            "operation": "MEMORY_SCRAPE"
+        },
+        {
+            "id": 1331,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "RESOLVING"
+            },
+            "operation": "RANSOM"
+        },
+        {
+            "id": 1332,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "PUP"
+            },
+            "operation": "RANSOM"
+        },
+        {
+            "id": 1333,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "ADAPTIVE_WHITE_LIST"
+            },
+            "operation": "MEMORY_SCRAPE"
+        },
+        {
+            "id": 1334,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "ADAPTIVE_WHITE_LIST"
+            },
+            "operation": "RANSOM"
+        },
+        {
+            "id": 1335,
+            "required": False,
+            "action": "DENY",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**\\powershell*.exe"
+            },
+            "operation": "MEMORY_SCRAPE"
+        },
+        {
+            "id": 1336,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**\\powershell*.exe"
+            },
+            "operation": "RANSOM"
+        },
+        {
+            "id": 1337,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**\\powershell*.exe"
+            },
+            "operation": "INVOKE_SCRIPT"
+        },
+        {
+            "id": 1338,
+            "required": False,
+            "action": "DENY",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**\\powershell*.exe"
+            },
+            "operation": "CODE_INJECTION"
+        },
+        {
+            "id": 1339,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**/python"
+            },
+            "operation": "MEMORY_SCRAPE"
+        },
+        {
+            "id": 1340,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**\\wscript.exe"
+            },
+            "operation": "MEMORY_SCRAPE"
+        },
+        {
+            "id": 1341,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**\\cscript.exe"
+            },
+            "operation": "MEMORY_SCRAPE"
+        },
+        {
+            "id": 1342,
+            "required": False,
+            "action": "DENY",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**\\wscript.exe"
+            },
+            "operation": "CODE_INJECTION"
+        },
+        {
+            "id": 1343,
+            "required": False,
+            "action": "DENY",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**\\cscript.exe"
+            },
+            "operation": "CODE_INJECTION"
+        },
+        {
+            "id": 1344,
+            "required": False,
+            "action": "DENY",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**\\excel.exe"
+            },
+            "operation": "INVOKE_CMD_INTERPRETER"
+        },
+        {
+            "id": 1345,
+            "required": False,
+            "action": "DENY",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "/Users/*/Downloads/**"
+            },
+            "operation": "RUN"
+        },
+        {
+            "id": 1346,
+            "required": False,
+            "action": "DENY",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "/Users/*/Downloads/**"
+            },
+            "operation": "RUN_INMEMORY_CODE"
+        },
+        {
+            "id": 1348,
+            "required": False,
+            "action": "DENY",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "/Users/*/Downloads/**"
+            },
+            "operation": "POL_INVOKE_NOT_TRUSTED"
+        },
+        {
+            "id": 1349,
+            "required": False,
+            "action": "DENY",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "/Users/*/Downloads/**"
+            },
+            "operation": "INVOKE_CMD_INTERPRETER"
+        },
+        {
+            "id": 1350,
+            "required": False,
+            "action": "DENY",
+            "application": {
+                "type": "REPUTATION",
+                "value": "SIGNED_BY"
+            },
+            "operation": "NETWORK"
+        },
+        {
+            "id": 1351,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "SUSPECT_MALWARE"
+            },
+            "operation": "RUN"
+        }
+    ],
+    "directory_action_rules": [
+        {
+            "file_upload": False,
+            "protection": False,
+            "path": ""
+        }
+    ],
+    "sensor_settings": [
+        {
+            "name": "ALLOW_UNINSTALL",
+            "value": "true"
+        },
+        {
+            "name": "ALLOW_UPLOADS",
+            "value": "false"
+        },
+        {
+            "name": "SHOW_UI",
+            "value": "true"
+        },
+        {
+            "name": "ENABLE_THREAT_SHARING",
+            "value": "true"
+        },
+        {
+            "name": "QUARANTINE_DEVICE",
+            "value": "false"
+        },
+        {
+            "name": "LOGGING_LEVEL",
+            "value": "false"
+        },
+        {
+            "name": "QUARANTINE_DEVICE_MESSAGE",
+            "value": "Your device has been quarantined. Please contact your administrator."
+        },
+        {
+            "name": "SET_SENSOR_MODE",
+            "value": "0"
+        },
+        {
+            "name": "SENSOR_RESET",
+            "value": "0"
+        },
+        {
+            "name": "BACKGROUND_SCAN",
+            "value": "false"
+        },
+        {
+            "name": "POLICY_ACTION_OVERRIDE",
+            "value": "true"
+        },
+        {
+            "name": "HELP_MESSAGE",
+            "value": ""
+        },
+        {
+            "name": "PRESERVE_SYSTEM_MEMORY_SCAN",
+            "value": "false"
+        },
+        {
+            "name": "HASH_MD5",
+            "value": "false"
+        },
+        {
+            "name": "SCAN_LARGE_FILE_READ",
+            "value": "false"
+        },
+        {
+            "name": "SCAN_EXECUTE_ON_NETWORK_DRIVE",
+            "value": "false"
+        },
+        {
+            "name": "DELAY_EXECUTE",
+            "value": "false"
+        },
+        {
+            "name": "SCAN_NETWORK_DRIVE",
+            "value": "false"
+        },
+        {
+            "name": "BYPASS_AFTER_LOGIN_MINS",
+            "value": "0"
+        },
+        {
+            "name": "BYPASS_AFTER_RESTART_MINS",
+            "value": "0"
+        },
+        {
+            "name": "SHOW_FULL_UI",
+            "value": "false"
+        },
+        {
+            "name": "SECURITY_CENTER_OPT",
+            "value": "true"
+        },
+        {
+            "name": "CB_LIVE_RESPONSE",
+            "value": "true"
+        },
+        {
+            "name": "UNINSTALL_CODE",
+            "value": "false"
+        },
+        {
+            "name": "UBS_OPT_IN",
+            "value": "true"
+        },
+        {
+            "name": "ALLOW_EXPEDITED_SCAN",
+            "value": "false"
+        },
+        {
+            "name": "RATE_LIMIT",
+            "value": "0"
+        },
+        {
+            "name": "CONNECTION_LIMIT",
+            "value": "0"
+        },
+        {
+            "name": "QUEUE_SIZE",
+            "value": "100"
+        },
+        {
+            "name": "LEARNING_MODE",
+            "value": "0"
+        }
+    ],
+    "version": 2
+}
+
+OLD_POLICY_2 = {
+    "avSettings": {
+        "apc": {
+            "enabled": False,
+            "maxExeDelay": 45,
+            "maxFileSize": 4,
+            "riskLevel": 4
+        },
+        "features": [
+            {
+                "enabled": True,
+                "name": "SIGNATURE_UPDATE"
+            },
+            {
+                "enabled": True,
+                "name": "ONACCESS_SCAN"
+            },
+            {
+                "enabled": True,
+                "name": "ONDEMAND_SCAN"
+            }
+        ],
+        "onAccessScan": {
+            "profile": "NORMAL"
+        },
+        "onDemandScan": {
+            "profile": "NORMAL",
+            "schedule": {
+                "days": None,
+                "startHour": 0,
+                "rangeHours": 0,
+                "recoveryScanIfMissed": True
+            },
+            "scanUsb": "AUTOSCAN",
+            "scanCdDvd": "AUTOSCAN"
+        },
+        "signatureUpdate": {
+            "schedule": {
+                "fullIntervalHours": 0,
+                "initialRandomDelayHours": 4,
+                "intervalHours": 2
+            }
+        },
+        "updateServers": {
+            "serversOverride": [],
+            "servers": [
+                {
+                    "flags": 0,
+                    "regId": None,
+                    "server": [
+                        "http://updates2.cdc.carbonblack.io/update2"
+                    ],
+                }
+            ],
+            "serversForOffSiteDevices": [
+                "http://updates2.cdc.carbonblack.io/update2"
+            ]
+        }
+    },
+    "directoryActionRules": [
+        {
+            "actions": {
+                "FILE_UPLOAD": False,
+                "PROTECTION": False
+            },
+            "path": ""
+        }
+    ],
+    "id": 91849,
+    "rules": [
+        {
+            "id": 1328,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "KNOWN_MALWARE"
+            },
+            "operation": "RUN"
+        },
+        {
+            "id": 1329,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "COMPANY_BLACK_LIST"
+            },
+            "operation": "RUN"
+        },
+        {
+            "id": 1330,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "RESOLVING"
+            },
+            "operation": "MEMORY_SCRAPE"
+        },
+        {
+            "id": 1331,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "RESOLVING"
+            },
+            "operation": "RANSOM"
+        },
+        {
+            "id": 1332,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "PUP"
+            },
+            "operation": "RANSOM"
+        },
+        {
+            "id": 1333,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "ADAPTIVE_WHITE_LIST"
+            },
+            "operation": "MEMORY_SCRAPE"
+        },
+        {
+            "id": 1334,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "ADAPTIVE_WHITE_LIST"
+            },
+            "operation": "RANSOM"
+        },
+        {
+            "id": 1335,
+            "required": False,
+            "action": "DENY",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**\\powershell*.exe"
+            },
+            "operation": "MEMORY_SCRAPE"
+        },
+        {
+            "id": 1336,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**\\powershell*.exe"
+            },
+            "operation": "RANSOM"
+        },
+        {
+            "id": 1337,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**\\powershell*.exe"
+            },
+            "operation": "INVOKE_SCRIPT"
+        },
+        {
+            "id": 1338,
+            "required": False,
+            "action": "DENY",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**\\powershell*.exe"
+            },
+            "operation": "CODE_INJECTION"
+        },
+        {
+            "id": 1339,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**/python"
+            },
+            "operation": "MEMORY_SCRAPE"
+        },
+        {
+            "id": 1340,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**\\wscript.exe"
+            },
+            "operation": "MEMORY_SCRAPE"
+        },
+        {
+            "id": 1341,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**\\cscript.exe"
+            },
+            "operation": "MEMORY_SCRAPE"
+        },
+        {
+            "id": 1342,
+            "required": False,
+            "action": "DENY",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**\\wscript.exe"
+            },
+            "operation": "CODE_INJECTION"
+        },
+        {
+            "id": 1343,
+            "required": False,
+            "action": "DENY",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**\\cscript.exe"
+            },
+            "operation": "CODE_INJECTION"
+        },
+        {
+            "id": 1344,
+            "required": False,
+            "action": "DENY",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**\\excel.exe"
+            },
+            "operation": "INVOKE_CMD_INTERPRETER"
+        },
+        {
+            "id": 1345,
+            "required": False,
+            "action": "DENY",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "/Users/*/Downloads/**"
+            },
+            "operation": "RUN"
+        },
+        {
+            "id": 1346,
+            "required": False,
+            "action": "DENY",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "/Users/*/Downloads/**"
+            },
+            "operation": "RUN_INMEMORY_CODE"
+        },
+        {
+            "id": 1348,
+            "required": False,
+            "action": "DENY",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "/Users/*/Downloads/**"
+            },
+            "operation": "POL_INVOKE_NOT_TRUSTED"
+        },
+        {
+            "id": 1349,
+            "required": False,
+            "action": "DENY",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "/Users/*/Downloads/**"
+            },
+            "operation": "INVOKE_CMD_INTERPRETER"
+        },
+        {
+            "id": 1350,
+            "required": False,
+            "action": "DENY",
+            "application": {
+                "type": "REPUTATION",
+                "value": "SIGNED_BY"
+            },
+            "operation": "NETWORK"
+        },
+        {
+            "id": 1351,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "SUSPECT_MALWARE"
+            },
+            "operation": "RUN"
+        }
+    ],
+    "sensorSettings": [
+        {
+            "name": "ALLOW_UNINSTALL",
+            "value": "true"
+        },
+        {
+            "name": "ALLOW_UPLOADS",
+            "value": "false"
+        },
+        {
+            "name": "SHOW_UI",
+            "value": "true"
+        },
+        {
+            "name": "ENABLE_THREAT_SHARING",
+            "value": "true"
+        },
+        {
+            "name": "QUARANTINE_DEVICE",
+            "value": "false"
+        },
+        {
+            "name": "LOGGING_LEVEL",
+            "value": "false"
+        },
+        {
+            "name": "QUARANTINE_DEVICE_MESSAGE",
+            "value": "Your device has been quarantined. Please contact your administrator."
+        },
+        {
+            "name": "SET_SENSOR_MODE",
+            "value": "0"
+        },
+        {
+            "name": "SENSOR_RESET",
+            "value": "0"
+        },
+        {
+            "name": "BACKGROUND_SCAN",
+            "value": "false"
+        },
+        {
+            "name": "POLICY_ACTION_OVERRIDE",
+            "value": "true"
+        },
+        {
+            "name": "HELP_MESSAGE",
+            "value": ""
+        },
+        {
+            "name": "PRESERVE_SYSTEM_MEMORY_SCAN",
+            "value": "false"
+        },
+        {
+            "name": "HASH_MD5",
+            "value": "false"
+        },
+        {
+            "name": "SCAN_LARGE_FILE_READ",
+            "value": "false"
+        },
+        {
+            "name": "SCAN_EXECUTE_ON_NETWORK_DRIVE",
+            "value": "false"
+        },
+        {
+            "name": "DELAY_EXECUTE",
+            "value": "false"
+        },
+        {
+            "name": "SCAN_NETWORK_DRIVE",
+            "value": "false"
+        },
+        {
+            "name": "BYPASS_AFTER_LOGIN_MINS",
+            "value": "0"
+        },
+        {
+            "name": "BYPASS_AFTER_RESTART_MINS",
+            "value": "0"
+        },
+        {
+            "name": "SHOW_FULL_UI",
+            "value": "false"
+        },
+        {
+            "name": "SECURITY_CENTER_OPT",
+            "value": "true"
+        },
+        {
+            "name": "CB_LIVE_RESPONSE",
+            "value": "true"
+        },
+        {
+            "name": "UNINSTALL_CODE",
+            "value": "false"
+        },
+        {
+            "name": "UBS_OPT_IN",
+            "value": "true"
+        },
+        {
+            "name": "ALLOW_EXPEDITED_SCAN",
+            "value": "false"
+        },
+        {
+            "name": "RATE_LIMIT",
+            "value": "0"
+        },
+        {
+            "name": "CONNECTION_LIMIT",
+            "value": "0"
+        },
+        {
+            "name": "QUEUE_SIZE",
+            "value": "100"
+        },
+        {
+            "name": "LEARNING_MODE",
+            "value": "0"
+        }
+    ]
+}
+
 RULE_ADD_1 = {
     "required": True,
     "action": "TERMINATE",

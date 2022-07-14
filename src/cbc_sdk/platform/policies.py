@@ -771,7 +771,8 @@ class Policy(MutableBaseModel):
                 newav["update_servers"] = {"servers_for_offsite_devices": subobj.get("serversForOffSiteDevices", []),
                                            "servers_override": subobj.get("serversOverride", [])}
                 if "servers" in subobj:
-                    servers = [name for name in d.get("server", []) for d in subobj["servers"]]
+                    server_lists = [d.get("server", []) for d in subobj["servers"]]
+                    servers = [name for l in server_lists for name in l]
                     newav["update_servers"]["servers_for_onsite_devices"] = \
                         [{"server": name, "preferred": False} for name in servers]
             newpolicy["av_settings"] = newav
