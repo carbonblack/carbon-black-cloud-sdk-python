@@ -420,6 +420,7 @@ OLD_POLICY_1 = {
 
 FULL_POLICY_2 = {
     "name": "default - S1",
+    "org_key": "test",
     "priority_level": "MEDIUM",
     "description": "Hoopy Frood",
     "av_settings": {

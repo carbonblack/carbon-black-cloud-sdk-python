@@ -724,6 +724,7 @@ class Policy(MutableBaseModel):
     def policy(self, oldpolicy):
         """Sets the contents of this policy from a dict (compatibility method)."""
         newpolicy = copy.deepcopy(self._info)
+        newpolicy["org_key"] = self._cb.credentials.org_key  # in case this is a new object
         if "sensorSettings" in oldpolicy:
             newpolicy["sensor_settings"] = copy.deepcopy(oldpolicy["sensorSettings"])
         oldav = oldpolicy.get("avSettings", None)
