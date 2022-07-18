@@ -19,7 +19,20 @@ from cbc_sdk.errors import ApiError, ServerError, InvalidObjectError
 
 
 class Policy(MutableBaseModel):
-    """Represents a policy within the organization."""
+    """
+    Represents a policy within the organization.
+
+    Create one of these objects (either directly or with the CBCloudAPI.create() method) and set its properties,
+    then call its save() method to create the policy on the server. This requires the org.policies(CREATE) permission.
+
+    Alternatively, you may call Policy.create() to get a PolicyBuilder, use its methods to set the properties of the
+    new policy, call its build() method to build the populated Policy, then call the policy save() method.
+
+    To update a Policy, change the values of its property fields, then call the policy's save() method.  This requires
+    the org.policies(UPDATE) permission.
+
+    To delete an existing Policy, call its delete() method. This requires the org.policies(DELETE) permission.
+    """
     urlobject = "/policyservice/v1/orgs/{0}/policies"
     urlobject_single = "/policyservice/v1/orgs/{0}/policies/{1}"
     primary_key = "id"
@@ -61,7 +74,20 @@ class Policy(MutableBaseModel):
             self.touch(True)
 
     class PolicyBuilder:
-        """Builder object to simplify the creation of new Policy objects."""
+        """
+        Builder object to simplify the creation of new Policy objects.
+
+        To use, call Policy.create() to get a PolicyBuilder, use its methods to set the properties of the
+        new policy, call its build() method to build the populated Policy, then call the policy save() method.
+        The org.policy(CREATE) permission is required.
+
+        Examples:
+            >>> builder = Policy.create(api)
+            >>> builder.set_name("New Policy").set_priority("MEDIUM").set_description("New policy description")
+            >>> # more calls here to set up rules, sensor settings, etc.
+            >>> policy = builder.build()
+            >>> policy.save()
+        """
         def __init__(self, cb):
             """
             Initialize the PolicyBuilder object.
@@ -530,12 +556,22 @@ class Policy(MutableBaseModel):
 
     @property
     def rules(self):
-        """Returns a dictionary of rules and rule IDs for this Policy."""
+        """
+        Returns a dictionary of rules and rule IDs for this Policy.
+
+        Returns:
+            dict: A dictionary with rule IDs as keys and rule data as values.
+        """
         return dict([(r.get("id"), copy.deepcopy(r)) for r in self._info.get("rules", [])])
 
     @property
     def object_rules(self):
-        """Returns a dictionary of rule objects and rule IDs for this Policy."""
+        """
+        Returns a dictionary of rule objects and rule IDs for this Policy.
+
+        Returns:
+            dict: A dictionary with rule IDs as keys and PolicyRule objects as values.
+        """
         if self._object_rules_need_load:
             ruleobjects = [PolicyRule(self._cb, self, r.get("id"), r, False, True)
                            for r in self._info.get("rules", [])]
@@ -614,7 +650,15 @@ class Policy(MutableBaseModel):
         new_obj.save()
 
     def delete_rule(self, rule_id):
-        """Deletes a rule from this Policy."""
+        """
+        Deletes a rule from this Policy.
+
+        Args:
+            rule_id (int): The ID of the rule to be deleted.
+
+        Raises:
+            ApiError: If the rule ID does not exist in this policy.
+        """
         old_rule = self.object_rules.get(rule_id, None)
         if old_rule:
             old_rule.delete()
@@ -622,7 +666,16 @@ class Policy(MutableBaseModel):
             raise ApiError(f"rule #{rule_id} not found in policy")
 
     def replace_rule(self, rule_id, new_rule):
-        """Replaces a rule in this policy."""
+        """
+        Replaces a rule in this policy.
+
+        Args:
+            rule_id (int): The ID of the rule to be replaced.
+            new_rule (dict): The data for the new rule.
+
+        Raises:
+            ApiError: If the rule ID does not exist in this policy.
+        """
         old_rule = self.object_rules.get(rule_id, None)
         if old_rule:
             new_rule_info = copy.deepcopy(new_rule)
@@ -668,7 +721,7 @@ class Policy(MutableBaseModel):
 
     @property
     def policy(self):
-        """Returns a dict with the contents of this policy (compatibility method)."""
+        """Returns the contents of this policy [compatibility method]."""
         rc = {"version": 2, "name": self._info.get("name", None), "description": self._info.get("description", None)}
         if "sensor_settings" in self._info:
             rc["sensorSettings"] = copy.deepcopy(self._info["sensor_settings"])
@@ -773,7 +826,7 @@ class Policy(MutableBaseModel):
                                            "servers_override": subobj.get("serversOverride", [])}
                 if "servers" in subobj:
                     server_lists = [d.get("server", []) for d in subobj["servers"]]
-                    servers = [name for l in server_lists for name in l]
+                    servers = [name for server_list in server_lists for name in server_list]
                     newav["update_servers"]["servers_for_onsite_devices"] = \
                         [{"server": name, "preferred": False} for name in servers]
             newpolicy["av_settings"] = newav
@@ -801,7 +854,18 @@ class Policy(MutableBaseModel):
 
 
 class PolicyRule(MutableBaseModel):
-    """Represents a rule in the policy."""
+    """
+    Represents a rule in the policy.
+
+    Create one of these objects, associating it with a Policy, and set its properties, then call its save() method to
+    add the rule to the policy. This requires the org.policies(UPDATE) permission.
+
+    To update a PolicyRule, change the values of its property fields, then call the rule's save() method.  This
+    requires the org.policies(UPDATE) permission.
+
+    To delete an existing PolicyRule, call its delete() method. This requires the org.policies(UPDATE) permission.
+
+    """
     primary_key = "id"
     swagger_meta_file = "platform/models/policy_rule.yaml"
     VALID_ACTIONS = ["IGNORE", "ALLOW", "TERMINATE_PROCESS", "TERMINATE_THREAD", "TERMINATE", "DENY"]
@@ -855,7 +919,7 @@ class PolicyRule(MutableBaseModel):
         Updates the rule object on the policy on the server.
 
         Required Permissions:
-            org.policies (UPDATE)
+            org.policies(UPDATE)
         """
         if "id" in self._dirty_attributes.keys() or self._model_unique_id is None:
             new_object_info = copy.deepcopy(self._info)
@@ -879,7 +943,7 @@ class PolicyRule(MutableBaseModel):
         Deletes this rule object from the policy on the server.
 
         Required Permissions:
-            org.policies (UPDATE)
+            org.policies(UPDATE)
         """
         if self._model_unique_id is None:
             raise ApiError("new rule cannot be deleted")
@@ -1090,7 +1154,7 @@ class PolicyQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
         Executes the query and returns the list of raw results.
 
         Required Permissions:
-            org.policies (READ)
+            org.policies(READ)
 
         Returns:
             list[dict]: The raw results of the query, as a list of dicts.
@@ -1104,7 +1168,7 @@ class PolicyQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
         Returns the number of results from the run of this query.
 
         Required Permissions:
-            org.policies (READ)
+            org.policies(READ)
 
         Returns:
             int: The number of results from the run of this query.
@@ -1121,7 +1185,7 @@ class PolicyQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
         Performs the query and returns the results of the query in an iterable fashion.
 
         Required Permissions:
-            org.policies (READ)
+            org.policies(READ)
 
         Args:
             from_row (int): Unused in this implementation, always 0.
@@ -1142,7 +1206,7 @@ class PolicyQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
         Executed in the background to run an asynchronous query.
 
         Required Permissions:
-            org.policies (READ)
+            org.policies(READ)
 
         Args:
             context (object): Not used; always None.

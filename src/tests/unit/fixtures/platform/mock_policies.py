@@ -344,10 +344,10 @@ OLD_POLICY_1 = {
             "serversForOffSiteDevices": ["http://updates2.cdc.carbonblack.io/update2"]
         },
         "apc": {
-           "maxFileSize": 4,
-           "maxExeDelay": 45,
-           "riskLevel": 4,
-           "enabled": True
+            "maxFileSize": 4,
+            "maxExeDelay": 45,
+            "riskLevel": 4,
+            "enabled": True
         },
         "onAccessScan": {
             "profile": "AGGRESSIVE"
