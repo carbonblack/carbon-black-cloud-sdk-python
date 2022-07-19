@@ -32,6 +32,9 @@ class Policy(MutableBaseModel):
     the org.policies(UPDATE) permission.
 
     To delete an existing Policy, call its delete() method. This requires the org.policies(DELETE) permission.
+
+    For information on values for policy settings including enumeration values, see the Policy Service API page:
+    https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/policy-service/#fields
     """
     urlobject = "/policyservice/v1/orgs/{0}/policies"
     urlobject_single = "/policyservice/v1/orgs/{0}/policies/{1}"
@@ -1005,7 +1008,7 @@ class PolicyQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
         self._system = False
         self._system_set = False
         self._names = []
-        self._descrs = []
+        self._descriptions = []
         self._priorities = []
 
     def add_policy_ids(self, ids):
@@ -1090,10 +1093,10 @@ class PolicyQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
             ApiError: If not supplied with a string or a list of strings.
         """
         if isinstance(descrs, str):
-            self._descrs.append(descrs)
+            self._descriptions.append(descrs)
         elif hasattr(descrs, '__iter__'):
             if all([isinstance(v, str) for v in descrs]):
-                self._descrs.extend(descrs)
+                self._descriptions.extend(descrs)
             else:
                 raise ApiError("non-string items in iterable")
         else:
@@ -1143,7 +1146,7 @@ class PolicyQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
             return False
         if self._names and all([n not in policydata['name'] for n in self._names]):
             return False
-        if self._descrs and all([n not in policydata['description'] for n in self._descrs]):
+        if self._descriptions and all([n not in policydata['description'] for n in self._descriptions]):
             return False
         if self._priorities and policydata['priority_level'] not in self._priorities:
             return False
