@@ -58,7 +58,8 @@ def build_cli_parser(description="Cb Example Script"):
     parser.add_argument("--csp-api-token", help="CSP API Token for VMware Carbon Black Cloud")
     parser.add_argument("--csp-oauth-app-id", help="CSP OAuth App ID for VMware Carbon Black Cloud")
     parser.add_argument("--csp-oauth-app-secret", help="CSP OAuth App Secret for VMware Carbon Black Cloud")
-    parser.add_argument("--csp-url-override", help="CSP URL override default value https://console.cloud.vmware.com")
+    parser.add_argument("--csp-url-override", help="CSP URL to override default value %(default)s",
+                        default="https://console.cloud.vmware.com")
     parser.add_argument("--orgkey", help="Organization key value for Carbon Black server")
     parser.add_argument("--no-ssl-verify", help="Do not verify server SSL certificate.", action="store_true",
                         default=False)

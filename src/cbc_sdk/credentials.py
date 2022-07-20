@@ -206,8 +206,8 @@ class Credentials(object):
         csp_url = self.get_value(CredentialValue.CSP_URL_OVERRIDE).rstrip("/")
 
         if self._token_type == "API_TOKEN":
-            API_TOKEN_URL = f"{csp_url}/csp/gateway/am/api/auth/api-tokens/authorize"
-            resp = requests.post(API_TOKEN_URL, {"api_token": self.get_value(CredentialValue.CSP_API_TOKEN)})
+            api_token_url = f"{csp_url}/csp/gateway/am/api/auth/api-tokens/authorize"
+            resp = requests.post(api_token_url, {"api_token": self.get_value(CredentialValue.CSP_API_TOKEN)})
             json_body = resp.json()
             if resp.status_code != 200:
                 raise CredentialError(json_body.get("message"))
