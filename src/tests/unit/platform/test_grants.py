@@ -334,7 +334,6 @@ def test_delete_grant(cbcsdk_mock):
     api = cbcsdk_mock.api
     grant = api.select(Grant, 'psc:user:12345678:ABCDEFGH')
     grant.delete()
-    assert grant.revoked is True
 
 
 def test_query_grants(cbcsdk_mock):
