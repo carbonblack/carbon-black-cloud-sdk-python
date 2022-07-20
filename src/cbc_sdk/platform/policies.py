@@ -72,7 +72,8 @@ class Policy(MutableBaseModel):
                                      force_init=force_init if initial_data else True, full_doc=full_doc)
         self._object_rules = None
         self._object_rules_need_load = True
-        self._info["version"] = 2
+        if "version" not in self._info:
+            self._info["version"] = 2
         if model_unique_id is None:
             self.touch(True)
 
@@ -554,7 +555,6 @@ class Policy(MutableBaseModel):
         """
         rc = super(Policy, self)._refresh()
         self._object_rules_need_load = True
-        self._info["version"] = 2
         return rc
 
     @property

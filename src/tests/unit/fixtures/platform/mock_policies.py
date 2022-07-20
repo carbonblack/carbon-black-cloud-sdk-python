@@ -5,6 +5,7 @@ FULL_POLICY_1 = {
     "id": 65536,
     "name": "A Dummy Policy",
     "org_key": "test",
+    "version": 2,
     "priority_level": "HIGH",
     "position": -1,
     "is_system": False,
