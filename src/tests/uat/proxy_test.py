@@ -13,7 +13,7 @@
 """
 The following script verifies that an API call to a Carbon Black Cloud instance is able to route through a proxy.
 
-To execute, ensure have the following:
+To execute, ensure you have the following:
 * Carbon Black Cloud URL
 * API Token ({api_secret_key}/{api_id})
 * Organization Key
@@ -42,21 +42,19 @@ The following tinyproxy.conf file will allow all traffic to be accepted at port 
 
 import sys
 
-from cbc_sdk import CBCloudAPI
 from cbc_sdk.platform import Device
-
-url = ''
-token = ''
-org_key = ''
-proxy = ''
+from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
 
 
 def main():
     """Script entry point"""
-    cb = CBCloudAPI(url=url, token=token, org_key=org_key, proxy=proxy, ssl_verify=False)
+    parser = build_cli_parser()
+    args = parser.parse_args()
+
+    cb = get_cb_cloud_object(args)
 
     assert type(cb.select(Device).first()) is Device
-    print(f"Successfully fetched Device using proxy: {proxy}")
+    print(f"Successfully fetched Device using proxy: {args.proxy}")
 
 
 if __name__ == "__main__":

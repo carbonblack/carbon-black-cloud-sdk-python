@@ -53,7 +53,13 @@ def build_cli_parser(description="Cb Example Script"):
     parser = argparse.ArgumentParser(description=description)
 
     parser.add_argument("--cburl", help="CB server's URL.  e.g., http://127.0.0.1 ")
-    parser.add_argument("--apitoken", help="API Token for Carbon Black server")
+    parser.add_argument("--proxy", help="Proxy URL.  e.g., http://127.0.0.1 ")
+    parser.add_argument("--apitoken", help="API Token for VMware Carbon Black Cloud")
+    parser.add_argument("--csp-api-token", help="CSP API Token for VMware Carbon Black Cloud")
+    parser.add_argument("--csp-oauth-app-id", help="CSP OAuth App ID for VMware Carbon Black Cloud")
+    parser.add_argument("--csp-oauth-app-secret", help="CSP OAuth App Secret for VMware Carbon Black Cloud")
+    parser.add_argument("--csp-url-override", help="CSP URL to override default value %(default)s",
+                        default="https://console.cloud.vmware.com")
     parser.add_argument("--orgkey", help="Organization key value for Carbon Black server")
     parser.add_argument("--no-ssl-verify", help="Do not verify server SSL certificate.", action="store_true",
                         default=False)
@@ -85,7 +91,30 @@ def get_cb_cloud_object(args):
         logging.getLogger("__main__").setLevel(logging.DEBUG)
 
     if args.cburl and args.apitoken and args.orgkey:
-        cb = CBCloudAPI(url=args.cburl, token=args.apitoken, org_key=args.orgkey, ssl_verify=(not args.no_ssl_verify))
+        cb = CBCloudAPI(url=args.cburl,
+                        proxy=args.proxy,
+                        token=args.apitoken,
+                        org_key=args.orgkey,
+                        ssl_verify=(not args.no_ssl_verify))
+
+    elif args.cburl and args.csp_api_token and args.orgkey:
+        csp_url_override = args.csp_url_override if args.csp_url_override else "https://console.cloud.vmware.com"
+        cb = CBCloudAPI(url=args.cburl,
+                        proxy=args.proxy,
+                        csp_api_token=args.csp_api_token,
+                        csp_url_override=csp_url_override,
+                        org_key=args.orgkey,
+                        ssl_verify=(not args.no_ssl_verify))
+
+    elif args.cburl and args.csp_oauth_app_id and args.csp_oauth_app_secret and args.orgkey:
+        csp_url_override = args.csp_url_override if args.csp_url_override else "https://console.cloud.vmware.com"
+        cb = CBCloudAPI(url=args.cburl,
+                        proxy=args.proxy,
+                        csp_oauth_app_id=args.csp_oauth_app_id,
+                        csp_oauth_app_secret=args.csp_oauth_app_secret,
+                        csp_url_override=csp_url_override,
+                        org_key=args.orgkey,
+                        ssl_verify=(not args.no_ssl_verify))
     else:
         cb = CBCloudAPI(profile=args.profile)
 
