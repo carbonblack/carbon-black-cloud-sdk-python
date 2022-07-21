@@ -10,9 +10,8 @@ from cbc_sdk.errors import ServerError, InvalidObjectError, ApiError
 from cbc_sdk.enterprise_edr.threat_intelligence import FeedModel
 from cbc_sdk.enterprise_edr import Feed
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.endpoint_standard.mock_policy import (POLICY_GET_SPECIFIC_RESP, POLICY_GET_RESP,
-                                                               POLICY_UPDATE_RESP, POLICY_GET_RESP_1,
-                                                               POLICY_GET_RESP_2, POLICY_POST_RESP)
+from tests.unit.fixtures.stubobject import (StubObject, STUBOBJECT_GET_RESP, STUBOBJECT_GET_PARTIAL,
+                                            STUBOBJECT_GET_RESP_1, STUBOBJECT_GET_RESP_2, STUBOBJECT_UPDATE_RESP)
 from tests.unit.fixtures.enterprise_edr.mock_threatintel import FEED_GET_SPECIFIC_RESP
 from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_VALIDATION_RESP,
                                                        POST_PROCESS_SEARCH_JOB_RESP,
@@ -148,8 +147,8 @@ def test_refresh_nbm(cbcsdk_mock):
     assert object_with_dirty_model_unique_id.refresh() is False
 
     # refresh() should return True if there's a _model_unique_id and primary_key hasn't been changed
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
-    refreshable_object = Policy(api, 30241)
+    cbcsdk_mock.mock_request("GET", "/testing_only/v1/stubobjects/30241", STUBOBJECT_GET_RESP)
+    refreshable_object = StubObject(api, 30241)
     assert refreshable_object._full_init is False
     refreshable_object.refresh()
     assert refreshable_object._full_init is True
@@ -160,23 +159,23 @@ def test_build_api_request_uri_nbm(cbcsdk_mock):
     api = cbcsdk_mock.api
 
     # if there's no _model_unique_id, _build_api_request_uri should return just cls.urlobject
-    policy = Policy(api, model_unique_id=None)
-    assert policy._build_api_request_uri() == "/integrationServices/v3/policy"
+    stub = StubObject(api, model_unique_id=None)
+    assert stub._build_api_request_uri() == "/testing_only/v1/stubobjects"
 
     # if there's a _model_unique_id, _build_api_request_uri should return cls.urlobect + _model_unique_id
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
-    policy = Policy(api, 30241)
-    assert policy._build_api_request_uri() == "/integrationServices/v3/policy/30241"
+    cbcsdk_mock.mock_request("GET", "/testing_only/v1/stubobjects/30241", STUBOBJECT_GET_RESP)
+    stub = StubObject(api, 30241)
+    assert stub._build_api_request_uri() == "/testing_only/v1/stubobjects/30241"
 
 
 def test_retrieve_cb_info_nbm(cbcsdk_mock):
     """Test _retrieve_cb_info method of NewBaseModel"""
     api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
-    policy = Policy(api, 30241)
-    assert policy._build_api_request_uri() == "/integrationServices/v3/policy/30241"
+    cbcsdk_mock.mock_request("GET", "/testing_only/v1/stubobjects/30241", STUBOBJECT_GET_RESP)
+    stub = StubObject(api, 30241)
+    assert stub._build_api_request_uri() == "/testing_only/v1/stubobjects/30241"
     # _retrieve_cb_info() calls cb.get_object, which makes the API call to retrieve the object
-    assert policy._retrieve_cb_info() == POLICY_GET_RESP
+    assert stub._retrieve_cb_info() == STUBOBJECT_GET_RESP
 
 
 def test_parse_nbm(cbcsdk_mock):
@@ -190,13 +189,13 @@ def test_parse_nbm(cbcsdk_mock):
 def test_original_document_nbm(cbcsdk_mock):
     """Test original_document method/property of NewBaseModel"""
     api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
-    policy = api.select(Policy, 30241)
+    cbcsdk_mock.mock_request("GET", "/testing_only/v1/stubobjects/30241", STUBOBJECT_GET_RESP)
+    stub = api.select(StubObject, 30241)
     # original_document refreshes (if _full_init == False), then returns self._info
-    assert policy._full_init is False
-    assert policy.original_document == policy._info
-    assert policy._full_init is True
-    assert policy.original_document['id'] == 30241
+    assert stub._full_init is False
+    assert stub.original_document == stub._info
+    assert stub._full_init is True
+    assert stub.original_document['id'] == 30241
 
 
 def test_set_attr_mbm(cbcsdk_mock):
@@ -229,66 +228,66 @@ def test_set_attr_mbm(cbcsdk_mock):
 def test_validate_mbm(cbcsdk_mock):
     """Test validate method of MutableBaseModel"""
     api = cbcsdk_mock.api
-    policyMissingFields = Policy(api, model_unique_id="myUniqueId",
-                                 initial_data={"description": "Policy objects need more fields here"})
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/myUniqueId", POLICY_GET_SPECIFIC_RESP)
+    objectMissingFields = StubObject(api, model_unique_id=30241,
+                                     initial_data={"description": "Need more fields here"})
+    cbcsdk_mock.mock_request("GET", "/testing_only/v1/stubobjects/30241", STUBOBJECT_GET_PARTIAL)
 
     with pytest.raises(InvalidObjectError):
-        assert policyMissingFields.validate() is None
+        assert objectMissingFields.validate() is None
 
 
 def test_setattr_mbm(cbcsdk_mock):
     """Test validate method of MutableBaseModel"""
     api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
-    policy = api.select(Policy, 30241)
-    assert policy._model_unique_id == 30241
-    assert "id" not in policy._dirty_attributes.keys()
-    assert policy._refresh() is True
+    cbcsdk_mock.mock_request("GET", "/testing_only/v1/stubobjects/30241", STUBOBJECT_GET_RESP)
+    stubobj = api.select(StubObject, 30241)
+    assert stubobj._model_unique_id == 30241
+    assert "id" not in stubobj._dirty_attributes.keys()
+    assert stubobj._refresh() is True
 
-    policy._set("id", 54321)
-    assert policy._model_unique_id == 54321
-    assert policy.primary_key == "id"
-    assert "id" in policy._dirty_attributes.keys()
-    assert policy.__class__.primary_key in policy._dirty_attributes.keys()
-    assert isinstance(policy, Policy)
-    assert policy._refresh() is False
+    stubobj._set("id", 54321)
+    assert stubobj._model_unique_id == 54321
+    assert stubobj.primary_key == "id"
+    assert "id" in stubobj._dirty_attributes.keys()
+    assert stubobj.__class__.primary_key in stubobj._dirty_attributes.keys()
+    assert isinstance(stubobj, StubObject)
+    assert stubobj._refresh() is False
     # refresh at end of tests to clear dirty_attributes
-    policy.reset()
+    stubobj.reset()
 
 
 def test_is_dirty_mbm(cbcsdk_mock):
     """Test is_dirty method of MutableBaseModel"""
     api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
-    policy = api.select(Policy, 30241)
-    assert policy.is_dirty() is False
+    cbcsdk_mock.mock_request("GET", "/testing_only/v1/stubobjects/30241", STUBOBJECT_GET_RESP)
+    stubobj = api.select(StubObject, 30241)
+    assert stubobj.is_dirty() is False
 
-    policy._set("id", 99999)
-    assert policy.is_dirty()
+    stubobj._set("id", 99999)
+    assert stubobj.is_dirty()
 
     # refresh at end of tests to clear dirty_attributes
-    policy.reset()
+    stubobj.reset()
 
 
 def test_update_object_mbm(cbcsdk_mock):
     """Test _update_object method of MutableBaseModel"""
     # if primary_key hasn't been modified, we use the _change_object_http_method
     api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30242", POLICY_GET_RESP_1)
-    cbcsdk_mock.mock_request("PUT", "/integrationServices/v3/policy/30242", POLICY_UPDATE_RESP)
-    policy = api.select(Policy, 30242)
-    policy._set("name", "newFakeName")
-    policy._set("testId", 1)
+    cbcsdk_mock.mock_request("GET", "/testing_only/v1/stubobjects/30242", STUBOBJECT_GET_RESP_1)
+    cbcsdk_mock.mock_request("PUT", "/testing_only/v1/stubobjects/30242", STUBOBJECT_UPDATE_RESP)
+    stubobj = api.select(StubObject, 30242)
+    stubobj._set("name", "newFakeName")
+    stubobj._set("device", 69)
 
-    assert policy._update_object() == 30242
+    assert stubobj._update_object() == 30242
 
-    assert policy.id == 30242
-    assert policy._info['name'] == 'newFakeName'
-    assert policy._info['testId'] == 1
+    assert stubobj.id == 30242
+    assert stubobj._info['name'] == 'newFakeName'
+    assert stubobj._info['device'] == 69
 
     # refresh at end of tests to clear dirty_attributes
-    policy.reset()
+    stubobj.reset()
 
 
 def test_query_implementation_error(cbcsdk_mock):
@@ -298,63 +297,36 @@ def test_query_implementation_error(cbcsdk_mock):
         api.select(FeedModel)
 
 
-def test_update_entire_mbm(cbcsdk_mock):
-    """Test save method of MutableBaseModel"""
-    api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30242", POLICY_GET_RESP_1)
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
-    mutableBaseModelPolicy = Policy(api, 30242)
-    with pytest.raises(AttributeError):
-        mutableBaseModelPolicy._model_unique_id = 30241
-
-    mutableBaseModelPolicy.id = 30241
-    cbcsdk_mock.mock_request("POST", "/integrationServices/v3/policy", POLICY_POST_RESP)
-    assert mutableBaseModelPolicy._update_entire_object()
-    assert mutableBaseModelPolicy.id == 30241
-
-
-def test_patch_entire_mbm(cbcsdk_mock):
-    """Test save method of MutableBaseModel"""
-    api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30242", POLICY_GET_RESP_1)
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
-    mutableBaseModelPolicy = Policy(api, 30242)
-    mutableBaseModelPolicy.id = 30241
-    cbcsdk_mock.mock_request("PUT", "/integrationServices/v3/policy", POLICY_POST_RESP)
-    assert mutableBaseModelPolicy._patch_object()
-    assert mutableBaseModelPolicy.id == 30241
-
-
 def test_getattr_nbm(cbcsdk_mock):
     """Test __getattr__ method of NewBaseModel"""
     api = cbcsdk_mock.api
-    policy = Policy(api, 30241)
-    assert 'name' not in policy._info
-    assert policy._model_unique_id == 30241
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30241", POLICY_GET_RESP)
-    assert policy.__getattr__("name") == 'Lyon_test'
-    assert 'name' in policy._info
+    stubobj = StubObject(api, 30241)
+    assert 'name' not in stubobj._info
+    assert stubobj._model_unique_id == 30241
+    cbcsdk_mock.mock_request("GET", "/testing_only/v1/stubobjects/30241", STUBOBJECT_GET_RESP)
+    assert stubobj.__getattr__("name") == 'Stub One'
+    assert 'name' in stubobj._info
 
     with pytest.raises(AttributeError):
-        assert policy.__getattr__("NotExist") is None
+        assert stubobj.__getattr__("NotExist") is None
 
 
 def test_reset_mbm(cbcsdk_mock):
     """Test reset method of MutableBaseModel"""
     api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30242", POLICY_GET_RESP_1)
-    policy = Policy(api, 30242)
-    assert policy._dirty_attributes == {}
-    policy._set("name", "somename")
-    assert "name" in policy._dirty_attributes
-    assert policy.is_dirty()
+    cbcsdk_mock.mock_request("GET", "/testing_only/v1/stubobjects/30242", STUBOBJECT_GET_RESP_1)
+    stubobj = StubObject(api, 30242)
+    assert stubobj._dirty_attributes == {}
+    stubobj._set("name", "somename")
+    assert "name" in stubobj._dirty_attributes
+    assert stubobj.is_dirty()
 
-    policy.reset()
-    assert policy.is_dirty() is False
-    assert policy._dirty_attributes == {}
+    stubobj.reset()
+    assert stubobj.is_dirty() is False
+    assert stubobj._dirty_attributes == {}
 
     # refresh at end of tests to clear dirty_attributes
-    policy.reset()
+    stubobj.reset()
 
 
 def test_delete_mbm(cbcsdk_mock):
@@ -365,56 +337,45 @@ def test_delete_mbm(cbcsdk_mock):
     assert emptyMutableBase._model_unique_id is None
     assert emptyMutableBase.delete() is None
 
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30242", POLICY_GET_RESP_1)
-    mutableBaseModelPolicy = Policy(api, 30242)
-    assert mutableBaseModelPolicy._model_unique_id == 30242
-    cbcsdk_mock.mock_request("DELETE", "/integrationServices/v3/policy/30242", body=None)
-    assert mutableBaseModelPolicy.delete() is None
+    cbcsdk_mock.mock_request("GET", "/testing_only/v1/stubobjects/30242", STUBOBJECT_GET_RESP_1)
+    mutableBaseModelStub = StubObject(api, 30242)
+    assert mutableBaseModelStub._model_unique_id == 30242
+    cbcsdk_mock.mock_request("DELETE", "/testing_only/v1/stubobjects/30242", body=None)
+    assert mutableBaseModelStub.delete() is None
 
     # receiving a status code outside of (200,204) should raise a ServerError
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30243",
-                             POLICY_GET_RESP_2)
-    newPolicy = Policy(api, 30243)
+    cbcsdk_mock.mock_request("GET", "/testing_only/v1/stubobjects/30243",
+                             STUBOBJECT_GET_RESP_2)
+    newStub = StubObject(api, 30243)
     delete_resp = cbcsdk_mock.StubResponse(contents={"success": False}, scode=403,
                                            text="Failed to delete for some reason")
-    cbcsdk_mock.mock_request("DELETE", "/integrationServices/v3/policy/30243", delete_resp)
+    cbcsdk_mock.mock_request("DELETE", "/testing_only/v1/stubobjects/30243", delete_resp)
     with pytest.raises(ServerError):
-        newPolicy.delete()
+        newStub.delete()
 
-    newPolicy.reset()
-    mutableBaseModelPolicy.reset()
+    newStub.reset()
+    mutableBaseModelStub.reset()
 
 
 def test_refresh_if_needed_mbm(cbcsdk_mock):
     """Test _refresh_if_needed method of MutableBaseModel"""
     api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/integrationServices/v3/policy/30242", POLICY_GET_RESP_1)
-    mutableBaseModelDevice = Policy(api, 30242)
+    cbcsdk_mock.mock_request("GET", "/testing_only/v1/stubobjects/30242", STUBOBJECT_GET_RESP_1)
+    mutableBaseModelStub = StubObject(api, 30242)
 
     # 200 status code
-    refresh_resp_200 = cbcsdk_mock.StubResponse({"success": True, "policyInfo": {"id": 30242}}, 200)
-    model_id = mutableBaseModelDevice._refresh_if_needed(refresh_resp_200)
+    refresh_resp_200 = cbcsdk_mock.StubResponse(STUBOBJECT_GET_RESP_1, 200)
+    model_id = mutableBaseModelStub._refresh_if_needed(refresh_resp_200)
     assert model_id == 30242
 
     # 404 status code
     refresh_resp_404 = cbcsdk_mock.StubResponse({}, 404, "Object not found text")
     with pytest.raises(ServerError):
-        model_id = mutableBaseModelDevice._refresh_if_needed(refresh_resp_404)
+        model_id = mutableBaseModelStub._refresh_if_needed(refresh_resp_404)
         assert model_id == 12345
-
-    # 200 status code with "result": "error"
-    refresh_resp = cbcsdk_mock.StubResponse({"success": False, "message": "Couldn't update the record :("}, 200)
-    with pytest.raises(ServerError):
-        model_id = mutableBaseModelDevice._refresh_if_needed(refresh_resp)
-        assert model_id == 12345
-
-    # 200 status code with a response that isn't a dictionary
-    refresh_unknown_resp = cbcsdk_mock.StubResponse("not_a_dictionary", 200)
-    with pytest.raises(ServerError):
-        model_id = mutableBaseModelDevice._refresh_if_needed(refresh_unknown_resp)
 
     # refresh at end of tests to clear dirty_attributes
-    mutableBaseModelDevice.reset()
+    mutableBaseModelStub.reset()
 
 
 def test_print_unrefreshablemodel(cbcsdk_mock):
