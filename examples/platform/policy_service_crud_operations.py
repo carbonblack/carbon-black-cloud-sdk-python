@@ -10,17 +10,21 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-"""This sample has been deprecated.
+"""Example script showing policy operations.
 
-The endpoint standard policy module (cbc_sdk.endpoint_standard) was deprecated
-in July 2022 in line with the underlying APIs. A replacement example is
-included in ../platform/policy_service_crud_operations.py.
+This script shows the main operations that are expected to be used for
+integrations and automations.
+* List Policies
+* Export Policies - this generates a file
+* Import a Policy from a policy file - Export generates the necessary file
+* Add, Delete and Replace a rule from within a policy
+* Use the Policy Builder function to set policy properties and then
+create the policy.
 
-The cbc_sdk.endpoint_standard module has been replaced by the
-cbc_sdk.platform.policies module and this example will be removed in a future
-version of the SDK.
+A sample command line to List Policies is:
+$ python3 policy_service_crud_operations.py --profile MY_PROFILE export -i 1234
 
-Example script showing policy operations.
+Where MY_PROFILE is defined in the credentials.psc file and 1234 is the policy id.
 """
 
 import sys
@@ -29,7 +33,7 @@ import logging
 
 from cbc_sdk.errors import ServerError
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
-from cbc_sdk.endpoint_standard import Policy  # This is the module that has been deprecated.
+from cbc_sdk.platform import Policy
 
 log = logging.getLogger(__name__)
 
@@ -164,10 +168,36 @@ def replace_rule(cb, parser, args):
                                                                                  args.rulefile))
 
 
+def build_minimal_policy(cb, parser, args):
+    """Use the builder to a policy.
+
+    Only the name, description priority are configured with input parameters
+    Other fields are hardcoded to demonstrate use of the builder.
+    """
+    builder = Policy.create(cb)
+    builder.set_name(args.name).set_priority(args.prioritylevel).set_description(args.description)
+    # more calls here to set up rules, sensor settings, etc.
+    builder.add_rule("REPUTATION", "KNOWN_MALWARE", "RUN", "DENY", True)
+    policy = builder.build()
+
+    try:
+        policy.save()
+    except ServerError as se:
+        print("Could not add policy: {0}".format(str(se)))
+    except Exception as e:
+        print("Could not add policy: {0}".format(str(e)))
+    else:
+        print("Added policy. New policy ID is {0}".format(policy.id))
+
+
 def main():
-    """Main function for the Policy Operations script."""
+    """Main function for the Policy Operations script.
+
+    Use --help for list of operations.
+    Use with a function for help for that function.
+    """
     parser = build_cli_parser("Policy operations")
-    commands = parser.add_subparsers(help="This sample has been deprecated.  Policy commands", dest="command_name")
+    commands = parser.add_subparsers(help="Policy commands", dest="command_name")
 
     commands.add_parser("list", help="List all configured policies")
 
@@ -213,6 +243,13 @@ def main():
     replace_rule_command.add_argument("-r", "--ruleid", type=int, help="ID of rule", required=True)
     replace_rule_command.add_argument("-f", "--rulefile", help="Filename containing the JSON rule", required=True)
 
+    build_minimal_policy_command = commands.add_parser("build-minimal-policy",
+                                                       help="Create a minimal policy using the builder function")
+    build_minimal_policy_command.add_argument("-N", "--name", help="Name of new policy", required=True)
+    build_minimal_policy_command.add_argument("-d", "--description", help="Description of new policy", required=True)
+    build_minimal_policy_command.add_argument("-p", "--prioritylevel", help="Priority level (HIGH, MEDIUM, LOW)",
+                                              default="LOW")
+
     args = parser.parse_args()
     cb = get_cb_cloud_object(args)
 
@@ -230,6 +267,8 @@ def main():
         return del_rule(cb, parser, args)
     elif args.command_name == "replace-rule":
         return replace_rule(cb, parser, args)
+    elif args.command_name == "build-minimal-policy":
+        return build_minimal_policy(cb, parser, args)
 
 
 if __name__ == "__main__":
