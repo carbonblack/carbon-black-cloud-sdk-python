@@ -6,10 +6,15 @@ CBC SDK 1.4.0 - Released TBD
 **Breaking Changes:**
 
 * ``Policy`` object has been moved from ``cbc_sdk.endpoint_standard`` to ``cbc_sdk.platform``, as it now uses the new
-  Policy Services API rather than the old APIs through Integration Services.  **N.B.:** This change means that
-  you *must* use a custom API key with permissions under ``org.policies`` to manage policies, rather than an older
-  "API key."  (The ``Policy`` object may still be imported from the old package, and supports operations that are
-  backwards-compatible with the old one.)
+  Policy Services API rather than the old APIs through Integration Services.
+
+  - **N.B.:** This change means that you *must* use a custom API key with permissions under ``org.policies`` to manage
+    policies, rather than an older "API key."
+  - To enable time to update integration logic, the ``cbc_sdk.endpoint_standard Policy`` object may still be imported
+    from the old package, and supports operations that are backwards-compatible with the old one.
+  - When developing a new integration, or updating an existing one cbc_sdk.platform should be used. There is a utility
+    class ``PolicyBuilder``, and as features are added to the Carbon Black Cloud, they will be added to this module.
+
 * Official support for Python 3.6 has been dropped, since that version is now end-of-life.  Added explicit testing
   support for Python versions 3.9 and 3.10.  **N.B.:** End users should update their Python version to 3.7.x or
   greater.
