@@ -680,7 +680,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
                 status = "(*)"
         subobject_value = self._subobject(name) if top_level else None
         spacing = name_field_len + (6 if top_level else 2)  # (status + space) + name + colon + space
-        if isinstance(value, list):
+        if isinstance(value, list) or isinstance(subobject_value, list):
             # this is a list - render the first three items, then [...] if we have more
             target = value if subobject_value is None else subobject_value
             list_header = f"[list:{len(target)} {'item' if len(target) == 1 else 'items'}]" \
