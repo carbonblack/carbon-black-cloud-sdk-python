@@ -38,8 +38,7 @@ def create_report_in_watchlist(api):
     watchlist_report = builder.build()
     watchlist_report.save_watchlist()
     print("Report:")
-    # TO DO - there is a bug that prevents the report printing
-    # print(watchlist_report)
+    print(watchlist_report)
     builder = Watchlist.create(api, f"SDK Testing {CURRENT_DATE} v36")
     builder.set_description("Description for SDK testing").add_reports([watchlist_report])
     watchlist = builder.build()
