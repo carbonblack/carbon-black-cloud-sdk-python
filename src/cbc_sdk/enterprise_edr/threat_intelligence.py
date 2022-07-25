@@ -274,6 +274,10 @@ class Watchlist(FeedModel):
         Raises:
             InvalidObjectError: If Watchlist.validate() fails.
         """
+        if self._model_unique_id is not None:
+            self.update()
+            return self
+
         self.validate()
 
         url = "/threathunter/watchlistmgr/v3/orgs/{}/watchlists".format(
