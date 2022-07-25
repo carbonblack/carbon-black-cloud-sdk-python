@@ -17,7 +17,7 @@ from cbc_sdk.enterprise_edr import Report, IOC_V2, Watchlist, Feed
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
 
 
-CURRENT_DATE = datetime.now().strftime("%Y-%m-%d")
+CURRENT_DATE = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
 
 
 def create_report_in_watchlist(api):
@@ -127,7 +127,7 @@ def add_feed_to_watchlist_and_ignore_report(api, feed_id):
         print(r.ignored)
 
     print('put the feed in a watchlist')
-    feed_watchlist = Watchlist.create_from_feed(feed, "SDK Testing - Watchlist for Feed - 202201265 v36 ",
+    feed_watchlist = Watchlist.create_from_feed(feed, f"SDK Testing - Watchlist for Feed - {CURRENT_DATE} v36 ",
                                                 "Subscription to the new feed")
     watchlist = feed_watchlist.save()
 
