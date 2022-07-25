@@ -86,6 +86,7 @@ def test_watchlist_save(cbcsdk_mock):
     cbcsdk_mock.mock_request("POST", "/threathunter/watchlistmgr/v3/orgs/test/watchlists", WATCHLIST_GET_SPECIFIC_RESP)
     watchlist = Watchlist(api, model_unique_id=None, initial_data=CREATE_WATCHLIST_DATA)
     watchlist.validate()
+    print(f"{watchlist._model_unique_id =}")
     watchlist.save()
 
     # if Watchlist response is missing a required field per enterprise_edr.models.Watchlist, raise InvalidObjectError
