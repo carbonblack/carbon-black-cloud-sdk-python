@@ -38,7 +38,8 @@ def create_report_in_watchlist(api):
     watchlist_report = builder.build()
     watchlist_report.save_watchlist()
     print("Report:")
-    print(watchlist_report)
+    # TO DO - there is a bug that prevents the report printing
+    # print(watchlist_report)
     builder = Watchlist.create(api, f"SDK Testing {CURRENT_DATE} v36")
     builder.set_description("Description for SDK testing").add_reports([watchlist_report])
     watchlist = builder.build()
@@ -53,6 +54,7 @@ def create_report_in_watchlist(api):
     watchlist_report.unignore()
     print(f'watchlist_report ignored value, should be ignored = False: {watchlist_report.ignored}')
     print('create_report_in_watchlist.............................Check UI to validate')
+    return watchlist.id
 
 
 def create_report_in_feed(api):
@@ -171,13 +173,29 @@ def get_reports_in_a_feed(api, feed_id):
         print(f"{report.id} - {report.title}")
 
 
+def add_new_report_to_existing_watchlist(api, watchlist_id):
+    """Create a new report and add to existing watchlist"""
+    builder = Report.create(api, "SDK UAT: Unsigned Browsers", "SDK UAT: Unsigned processes impersonating browsers", 5)
+    builder.add_tag("compliance").add_tag("unsigned_browsers")
+    builder.add_ioc(IOC_V2.create_query(api, "unsigned-chrome",
+                                        "process_name:chrome.exe NOT "
+                                        "process_publisher_state:FILE_SIGNATURE_STATE_SIGNED"))
+    report = builder.build()
+    report.save_watchlist()
+
+    watchlist = api.select('Watchlist', watchlist_id)
+    watchlist.add_reports([report])
+    watchlist.save()
+
+
 def main():
     """Entry function for testing"""
     parser = build_cli_parser()
     args = parser.parse_args()
     api = get_cb_cloud_object(args)
 
-    create_report_in_watchlist(api)
+    watchlist_id = create_report_in_watchlist(api)
+    add_new_report_to_existing_watchlist(api, watchlist_id)
 
     feed_id = create_report_in_feed(api)
     add_feed_to_watchlist_and_ignore_report(api, feed_id)
