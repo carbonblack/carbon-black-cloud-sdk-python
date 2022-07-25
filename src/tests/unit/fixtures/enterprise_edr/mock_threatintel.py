@@ -521,7 +521,6 @@ WATCHLIST_GET_SPECIFIC_INVALID_CLASSIFIER_RESP = {
 CREATE_WATCHLIST_DATA = {
     "name": "myWatchlist",
     "description": "My Description.",
-    "id": "watchlistId",
     "tags_enabled": True,
     "alerts_enabled": True,
     "create_timestamp": 1600197345,
