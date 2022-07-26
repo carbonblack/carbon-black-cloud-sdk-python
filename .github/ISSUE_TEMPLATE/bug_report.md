@@ -10,7 +10,7 @@ assignees:
 **I am seeing this behaviour on: (please complete the following information):**
  - OS: [e.g. iOS]
  - Carbon Black Cloud Products: [e.g. Endpoint Standard, Enterprise EDR, Audit & Remediation]
- - Python Version: [e.g. 3.6]
+ - Python Version: [e.g. 3.7]
 
 **Describe the bug**
 A clear and concise description of what the bug is.

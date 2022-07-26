@@ -1,0 +1,52 @@
+type: object
+required:
+  - required
+  - action
+  - application
+  - operation
+properties:
+  id:
+    type: integer
+    description: The identifier of the rule
+  required:
+    type: boolean
+  action:
+    type: string
+    description: The action the sensor will take when an application attempts to perform the selected operation
+    enum:
+      - IGNORE
+      - ALLOW
+      - TERMINATE_PROCESS
+      - TERMINATE_THREAD
+      - TERMINATE
+      - DENY
+  application:
+    type: object
+    description: The path, signature or reputation of the application
+    properties:
+      type:
+        type: string
+        enum:
+          - NAME_PATH
+          - SIGNED_BY
+          - REPUTATION
+      value:
+        type: string
+  operation:
+    type: string
+    description: The type of behavior an application is performing
+    enum:
+      - BYPASS_ALL
+      - BYPASS_API
+      - INVOKE_SCRIPT
+      - INVOKE_SYSAPP
+      - POL_INVOKE_NOT_TRUSTED
+      - INVOKE_CMD_INTERPRETER
+      - RANSOM
+      - NETWORK
+      - PROCESS_ISOLATION
+      - CODE_INJECTION
+      - MEMORY_SCRAPE
+      - RUN_INMEMORY_CODE
+      - ESCALATE
+      - RUN

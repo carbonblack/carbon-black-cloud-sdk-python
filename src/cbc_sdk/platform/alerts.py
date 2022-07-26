@@ -14,7 +14,7 @@
 """Model and Query Classes for Platform Alerts and Workflows"""
 import time
 
-from cbc_sdk.errors import ApiError, TimeoutError, ObjectNotFoundError
+from cbc_sdk.errors import ApiError, TimeoutError, ObjectNotFoundError, NonQueryableModel
 from cbc_sdk.platform import PlatformModel
 from cbc_sdk.base import (BaseQuery,
                           UnrefreshableModel,
@@ -51,6 +51,89 @@ class BaseAlert(PlatformModel):
         self._workflow = Workflow(cb, initial_data.get("workflow", None) if initial_data else None)
         if model_unique_id is not None and initial_data is None:
             self._refresh()
+
+    class Note(PlatformModel):
+        """Represents a note within an alert."""
+        urlobject = "/appservices/v6/orgs/{0}/alerts/{1}/notes"
+        urlobject_single = "/appservices/v6/orgs/{0}/alerts/{1}/notes/{2}"
+        primary_key = "id"
+        swagger_meta_file = "platform/models/base_alert_note.yaml"
+        _is_deleted = False
+
+        def __init__(self, cb, alert, model_unique_id, initial_data=None):
+            """
+            Initialize the Note object.
+
+            Args:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+                alert (BaseAlert): The alert where the note is saved.
+                model_unique_id (str): ID of the note represented.
+                initial_data (dict): Initial data used to populate the note.
+            """
+            super(BaseAlert.Note, self).__init__(cb, model_unique_id, initial_data)
+            self._alert = alert
+            if model_unique_id is not None and initial_data is None:
+                self._refresh()
+
+        def _refresh(self):
+            """
+            Rereads the alert data from the server.
+
+            Returns:
+                bool: True if refresh was successful, False if not.
+            """
+            _exists_in_list = False
+            if self._is_deleted:
+                raise ApiError("Cannot refresh a deleted Note")
+
+            url = BaseAlert.Note.urlobject.format(self._cb.credentials.org_key, self._alert.id)
+            resp = self._cb.get_object(url)
+            item_list = resp.get("results", [])
+
+            for item in item_list:
+                if item["id"] == self.id:
+                    _exists_in_list = True
+                    return True
+
+            if not _exists_in_list:
+                raise ObjectNotFoundError(url, "Cannot refresh: Note not found")
+
+        @classmethod
+        def _query_implementation(cls, cb, **kwargs):
+            """
+            Raises an error, as Notes cannot be queried directly.
+
+            Args:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+                **kwargs (dict): Not used, retained for compatibility.
+
+            Raises:
+                ApiError: Always.
+            """
+            raise NonQueryableModel("Notes cannot be queried directly")
+
+        def delete(self):
+            """Deletes a note from an alert."""
+            url = self.urlobject_single.format(self._cb.credentials.org_key, self._alert.id,
+                                               self.id)
+            self._cb.delete_object(url)
+            self._is_deleted = True
+
+    def notes_(self):
+        """Retrieves all notes for an alert."""
+        url = BaseAlert.Note.urlobject.format(self._cb.credentials.org_key, self._info[self.primary_key])
+        resp = self._cb.get_object(url)
+        item_list = resp.get("results", [])
+        return [BaseAlert.Note(self._cb, self, item[BaseAlert.Note.primary_key], item)
+                for item in item_list]
+
+    def create_note(self, note):
+        """Creates a new note."""
+        request = {"note": note}
+        url = BaseAlert.Note.urlobject.format(self._cb.credentials.org_key, self._info[self.primary_key])
+        resp = self._cb.post_object(url, request)
+        result = resp.json()
+        return [BaseAlert.Note(self._cb, self, result["id"], result)]
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -841,7 +924,7 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
 
         Args:
             alerttypes (list): List of string alert type values.  Valid values are "CB_ANALYTICS",
-                               and "WATCHLIST".
+                               "WATCHLIST", "DEVICE_CONTROL", and "CONTAINER_RUNTIME".
 
         Returns:
             BaseAlertSearchQuery: This instance.
@@ -954,12 +1037,14 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
 
         return self._total_results
 
-    def _perform_query(self, from_row=0, max_rows=-1):
+    def _perform_query(self, from_row=1, max_rows=-1):
         """
         Performs the query and returns the results of the query in an iterable fashion.
 
+        Alerts v6 API uses base 1 instead of 0.
+
         Args:
-            from_row (int): The row to start the query at (default 0).
+            from_row (int): The row to start the query at (default 1).
             max_rows (int): The maximum number of rows to be returned (default -1, meaning "all").
 
         Returns:
@@ -1013,6 +1098,7 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
         if not all((field in BaseAlertSearchQuery.VALID_FACET_FIELDS) for field in fieldlist):
             raise ApiError("One or more invalid term field names")
         request = self._build_request(0, -1, False)
+        del request['rows']
         request["terms"] = {"fields": fieldlist, "rows": max_rows}
         url = self._build_url("/_facet")
         resp = self._cb.post_object(url, body=request)
@@ -1069,6 +1155,7 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
 
 class WatchlistAlertSearchQuery(BaseAlertSearchQuery):
     """Represents a query that is used to locate WatchlistAlert objects."""
+
     def __init__(self, doc_class, cb):
         """
         Initialize the WatchlistAlertSearchQuery.

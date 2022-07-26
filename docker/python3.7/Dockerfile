@@ -1,4 +1,4 @@
-from python:3.7.7
+from python:3.7
 MAINTAINER cb-developer-network@vmware.com
 
 COPY . /app

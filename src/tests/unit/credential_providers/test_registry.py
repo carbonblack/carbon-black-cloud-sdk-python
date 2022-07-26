@@ -153,6 +153,10 @@ def test_read_credentials(monkeypatch, mox):
     sut._read_value(stub_key, "proxy").AndReturn(("proxy.example", REG_SZ))
     sut._read_value(stub_key, "ignore_system_proxy").AndReturn((1, REG_DWORD))
     sut._read_value(stub_key, "integration").AndReturn(("Dhampir", REG_SZ))
+    sut._read_value(stub_key, "csp_oauth_app_id").AndReturn(("ID", REG_SZ))
+    sut._read_value(stub_key, "csp_oauth_app_secret").AndReturn(("SECRET", REG_SZ))
+    sut._read_value(stub_key, "csp_api_token").AndReturn(("API TOKEN", REG_SZ))
+    sut._read_value(stub_key, "csp_url_override").AndReturn(("http://csp.com", REG_SZ))
     mox.ReplayAll()
     creds = sut._read_credentials(stub_key)
     mox.VerifyAll()
@@ -166,6 +170,10 @@ def test_read_credentials(monkeypatch, mox):
     assert creds.proxy == "proxy.example"
     assert creds.ignore_system_proxy
     assert creds.integration == "Dhampir"
+    assert creds.csp_oauth_app_id == "ID"
+    assert creds.csp_oauth_app_secret == "SECRET"
+    assert creds.csp_api_token == "API TOKEN"
+    assert creds.csp_url_override == "http://csp.com"
 
 
 def test_read_credentials_defaults(monkeypatch, mox):
@@ -184,6 +192,10 @@ def test_read_credentials_defaults(monkeypatch, mox):
     sut._read_value(stub_key, "proxy").AndReturn(None)
     sut._read_value(stub_key, "ignore_system_proxy").AndReturn(None)
     sut._read_value(stub_key, "integration").AndReturn(None)
+    sut._read_value(stub_key, "csp_oauth_app_id").AndReturn(None)
+    sut._read_value(stub_key, "csp_oauth_app_secret").AndReturn(None)
+    sut._read_value(stub_key, "csp_api_token").AndReturn(None)
+    sut._read_value(stub_key, "csp_url_override").AndReturn(None)
     mox.ReplayAll()
     creds = sut._read_credentials(stub_key)
     mox.VerifyAll()
@@ -197,6 +209,10 @@ def test_read_credentials_defaults(monkeypatch, mox):
     assert creds.proxy is None
     assert not creds.ignore_system_proxy
     assert creds.integration is None
+    assert creds.csp_oauth_app_id is None
+    assert creds.csp_oauth_app_secret is None
+    assert creds.csp_api_token is None
+    assert creds.csp_url_override == "https://console.cloud.vmware.com"
 
 
 def test_get_credentials(monkeypatch, mox):
@@ -219,6 +235,10 @@ def test_get_credentials(monkeypatch, mox):
     sut._read_value(key2, "proxy").AndReturn(("proxy.example", REG_SZ))
     sut._read_value(key2, "ignore_system_proxy").AndReturn((1, REG_DWORD))
     sut._read_value(key2, "integration").AndReturn(("Dhampir", REG_SZ))
+    sut._read_value(key2, "csp_oauth_app_id").AndReturn(("ID", REG_SZ))
+    sut._read_value(key2, "csp_oauth_app_secret").AndReturn(("SECRET", REG_SZ))
+    sut._read_value(key2, "csp_api_token").AndReturn(("API-TOKEN", REG_SZ))
+    sut._read_value(key2, "csp_url_override").AndReturn(("http://csp.com", REG_SZ))
     mox.ReplayAll()
     creds = sut.get_credentials('default')
     assert creds.url == "http://example.com"
@@ -231,6 +251,10 @@ def test_get_credentials(monkeypatch, mox):
     assert creds.proxy == "proxy.example"
     assert creds.ignore_system_proxy
     assert creds.integration == "Dhampir"
+    assert creds.csp_oauth_app_id == "ID"
+    assert creds.csp_oauth_app_secret == "SECRET"
+    assert creds.csp_api_token == "API-TOKEN"
+    assert creds.csp_url_override == "http://csp.com"
     creds2 = sut.get_credentials('default')
     assert creds2 is creds
     mox.VerifyAll()

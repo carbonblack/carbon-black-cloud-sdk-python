@@ -48,7 +48,11 @@ def test_aws_getting_credentials(monkeypatch):
         "ssl_force_tls_1_2": True,
         "proxy": "<NAME_OF_THE_PROXY_HOST>",
         "ignore_system_proxy": True,
-        "integration": "<INTEGRATION_NAME>"
+        "integration": "<INTEGRATION_NAME>",
+        'csp_api_token': None,
+        'csp_oauth_app_id': None,
+        'csp_oauth_app_secret': None,
+        'csp_url_override': 'https://console.cloud.vmware.com'
     }
 
     monkeypatch.setattr(Session, "client", ClientMock)

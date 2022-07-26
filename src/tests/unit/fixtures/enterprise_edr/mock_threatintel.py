@@ -1,4 +1,5 @@
 """Mock responses for threat intelligence queries."""
+import pytest
 
 WATCHLIST_GET_RESP = {
     "results": [
@@ -520,7 +521,6 @@ WATCHLIST_GET_SPECIFIC_INVALID_CLASSIFIER_RESP = {
 CREATE_WATCHLIST_DATA = {
     "name": "myWatchlist",
     "description": "My Description.",
-    "id": "watchlistId",
     "tags_enabled": True,
     "alerts_enabled": True,
     "create_timestamp": 1600197345,
@@ -1264,3 +1264,28 @@ ADD_REPORTS_LIST = [
     "69e2a8d0-bc36-4970-9834-8687efe1aff7",
     "065fb68d-42a8-4b2e-8f91-17f925f54356"
 ]
+
+
+@pytest.fixture(scope="function")
+def get_watchlist_report():
+    return {
+        "id": "1",
+        "timestamp": 0,
+        "title": "Report Test Title",
+        "description": "Report Test Description",
+        "severity": 8,
+        "link": "https://test.feed.com/report3",
+        "tags": None,
+        "iocs": None,
+        "iocs_v2": [
+            {
+                "id": "test_ioc_2",
+                "match_type": "query",
+                "values": ["process_name:b*"],
+                "field": "123",
+                "link": "https://localhost/"
+            }
+        ],
+        "iocs_total_count": 1,
+        "visibility": None
+    }

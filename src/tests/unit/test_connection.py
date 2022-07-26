@@ -13,6 +13,7 @@
 
 import pytest
 import requests
+import requests_mock
 import ssl
 import io
 from cbc_sdk.connection import try_json, Connection
@@ -214,3 +215,54 @@ def test_request_helper_methods(mox):
     resp = conn.delete('/delpath')
     assert resp.json()['delete']
     mox.VerifyAll()
+
+
+def test_csp_token_retry():
+    """Test CSP OAuth App Token for Authorization with Refresh Token and Retry"""
+    with requests_mock.Mocker() as mock_request:
+        mock_request.register_uri("POST",
+                                  "http://example.com/csp/gateway/am/api/auth/token",
+                                  json={"access_token": "valid-token", "scope": "valid-scope"})
+        values = {
+            "url": "https://cb_cloud.com",
+            "csp_oauth_app_id": "client-id",
+            "csp_oauth_app_secret": "client-secret",
+            "csp_url_override": "http://example.com"
+        }
+        creds = Credentials(values)
+        conn = Connection(creds)
+
+        assert conn.token == "valid-token"
+        assert conn.token_header.get("Authorization") == "Bearer valid-token"
+
+        unauthorized = True
+
+        def callback(request, context):
+            nonlocal unauthorized
+
+            if unauthorized:
+                unauthorized = False
+                context.status_code = 401
+                return 'Unauthorized'
+            else:
+                return 'Success'
+
+        mock_request.register_uri("GET",
+                                  "https://cb_cloud.com/fake-endpoint",
+                                  text=callback)
+
+        conn.http_request("GET", "/fake-endpoint")
+
+        assert len(mock_request.request_history) == 4
+
+        # Initial API call on Connection __init__
+        assert mock_request.request_history[0].url == "http://example.com/csp/gateway/am/api/auth/token"
+
+        # First attempt at API call with force 401 Unauthorized failure
+        assert mock_request.request_history[1].url == "https://cb_cloud.com/fake-endpoint"
+
+        # Refresh Token
+        assert mock_request.request_history[2].url == "http://example.com/csp/gateway/am/api/auth/token"
+
+        # Retry API Request
+        assert mock_request.request_history[3].url == "https://cb_cloud.com/fake-endpoint"

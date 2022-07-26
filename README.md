@@ -1,8 +1,8 @@
 # VMware Carbon Black Cloud Python SDK
 
-**Latest Version:** 1.3.6
+**Latest Version:** 1.4.0
 <br>
-**Release Date:** April 19, 2022
+**Release Date:** July 26, 2022
 
 [![Coverage Status](https://coveralls.io/repos/github/carbonblack/carbon-black-cloud-sdk-python/badge.svg?t=Id6Baf)](https://coveralls.io/github/carbonblack/carbon-black-cloud-sdk-python)
 [![Codeship Status for carbonblack/carbon-black-cloud-sdk-python](https://app.codeship.com/projects/9e55a370-a772-0138-aae4-129773225755/status?branch=develop)](https://app.codeship.com/projects/402767)
@@ -30,7 +30,7 @@ Visit [ReadTheDocs](https://carbon-black-cloud-python-sdk.readthedocs.io/en/late
 
 ## Requirements
 
-The Carbon Black Cloud Python SDK is design to work on Python 3.6 and above.
+The Carbon Black Cloud Python SDK is design to work on Python 3.7 and above.
 
 All requirements are installed as part of `pip install carbon-black-cloud-sdk`. If you're planning on pushing changes to the Carbon Black Cloud Python SDK, the following can be used after cloning the repo `pip install -r requirements.txt`
 
@@ -47,13 +47,8 @@ At least one Carbon Black Cloud product is required to use this SDK:
 ### Python Packages
 
 - requests
-- cachetools
 - pyyaml
-- pika
-- prompt_toolkit
-- pygments
 - python-dateutil
-- protobuf
 - schema
 - solrq
 - validators

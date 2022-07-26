@@ -1,12 +1,7 @@
 # Package dependencies
 requests
-cachetools
 pyyaml
-pika
-prompt_toolkit
-pygments
 python-dateutil
-protobuf
 schema
 solrq
 validators
@@ -14,7 +9,7 @@ keyring;platform_system=='Darwin'
 boto3
 
 # Dev dependencies
-pytest==5.4.2
+pytest==7.1.2
 pymox==0.7.8
 coverage==5.1
 coveralls==2.0.0
@@ -22,3 +17,4 @@ flake8==3.8.1
 flake8-colors==0.1.6
 flake8-docstrings==1.5.0
 pre-commit>=2.15.0
+requests-mock==1.9.3

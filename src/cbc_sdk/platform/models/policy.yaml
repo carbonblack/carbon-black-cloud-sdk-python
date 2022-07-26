@@ -1,0 +1,178 @@
+type: object
+properties:
+  id:
+    type: integer
+    description: The policy identifier
+  name:
+    type: string
+    description: Defined name for the policy
+  org_key:
+    type: string
+    description: The organization key associated with the console instance
+  priority_level:
+    type: string
+    description: The priority level designated for policy
+    enum:
+      - LOW
+      - MEDIUM
+      - HIGH
+      - MISSION_CRITICAL
+  position:
+    type: integer
+  is_system:
+    type: boolean
+    description: Indicates that the policy was created by VMware
+  description:
+    type: string
+    description: The description of the policy
+  auto_deregister_inactive_vdi_interval_ms:
+    type: integer
+    description: The time in milliseconds to wait after a VDI is inactive before setting the VDI to a DEREGISTERED state
+  auto_delete_known_bad_hashes_delay:
+    type: integer
+    description: Enables the Carbon Black Cloud to automatically delete known malware after a specified time in milliseconds
+  av_settings:
+    type: object
+    description: Anti-Virus settings for endpoints and workloads assigned to the policy
+    properties:
+      avira_protection_cloud:
+        type: object
+        description: Third-party partner settings for unknown reputation binary analysis
+        properties:
+          enabled:
+            type: boolean
+            description: Whether unknown reputation binary analysis is enabled
+          max_exe_delay:
+            type: integer
+            description: Time before sending unknown binary for analysis in seconds
+            minimum: 2
+            maximum: 500
+          max_file_size:
+            type: integer
+            description: Maximum file size to send for analysis in MB
+            minimum: 15
+            maximum: 100
+          risk_level:
+            type: integer
+            description: Risk level to send for analysis
+            minimum: 0
+            maximum: 7
+      on_access_scan:
+        type: object
+        description: Local scan settings
+        properties:
+          enabled:
+            type: boolean
+            description: Whether local scan is enabled
+          mode:
+            type: string
+            description: The local scan mode for new files or all files
+            enum:
+              - NORMAL
+              - AGGRESSIVE
+      on_demand_scan:
+        type: object
+        description: Background scan settings
+        properties:
+          enabled:
+            type: boolean
+            description: Whether background scan is enabled
+          profile:
+            type: string
+            description: The background scan mode which limits the maximum number of files scanned per minute.
+            enum:
+              - NORMAL
+              - AGGRESSIVE
+          schedule:
+            type: object
+            description: The schedule for when the one time background scan will be performed
+          scan_usb:
+            type: string
+            description: Whether USB devices are scanned
+            enum:
+              - AUTOSCAN
+              - DISABLED
+          scan_cd_dvd:
+            type: string
+            description: Whether a CD or DVD is scanned
+            enum:
+              - AUTOSCAN
+              - DISABLED
+      signature_update:
+        type: object
+        description: Signature pack update settings
+        properties:
+          enabled:
+            type: boolean
+            description: Whether signature updates are enabled
+          schedule:
+            type: object
+            description: The schedule to update signatures
+      update_servers:
+        type: object
+        description: Servers for updating signatures
+        properties:
+          servers_override:
+            type: array
+            description: Update servers to override offsite/onsite settings
+            items:
+              type: string
+          servers_for_onsite_devices:
+            type: array
+            description: Update servers for internal devices
+            items:
+              type: object
+              properties:
+                server:
+                  type: string
+                preferred:
+                  type: boolean
+          servers_for_offsite_devices:
+            type: array
+            description: Update servers for offsite devices
+            items:
+              type: string
+  rules:
+    type: array
+    description: Permission or prevention rules
+    items: !include platform/models/policy_rule.yaml
+  directory_action_rules:
+    type: array
+    description: Rules to deny or allow the deployed sensors to send uploads from specific paths
+    items:
+      type: object
+      properties:
+        file_upload:
+          type: boolean
+          description: Allow the deployed sensor to upload from path
+        protection:
+          type: boolean
+          description: Deny the deployed sensor from uploading at path
+        path:
+          type: string
+          description: The path to a file or directory
+  sensor_settings:
+    type: array
+    description: Settings to configure sensor behavior and capabilities
+    items:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the sensor setting
+        value:
+          type: string
+          description: Value for the sensor setting
+  managed_detection_response_permissions:
+    type: object
+    description: Permissions for Managed Detection and Response analysts to perform remediations on endpoints and workloads assigned to the policy
+    properties:
+      policy_modification:
+        type: boolean
+        description: Allow MDR team to modify the policy
+      quarantine:
+        type: boolean
+        description: Allow MDR team to quarantine endpoints and workloads associated with the policy
+  version:
+    type: integer
+    description: Version of the policy

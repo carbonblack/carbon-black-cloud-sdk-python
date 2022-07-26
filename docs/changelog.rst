@@ -1,5 +1,51 @@
 Changelog
 ================================
+CBC SDK 1.4.0 - Released July 26,2022
+-------------------------------------
+
+**Breaking Changes:**
+
+* ``Policy`` object has been moved from ``cbc_sdk.endpoint_standard`` to ``cbc_sdk.platform``, as it now uses the new
+  Policy Services API rather than the old APIs through Integration Services.
+
+  - **N.B.:** This change means that you *must* use a custom API key with permissions under ``org.policies`` to manage
+    policies, rather than an older "API key."
+  - To enable time to update integration logic, the ``cbc_sdk.endpoint_standard Policy`` object may still be imported
+    from the old package, and supports operations that are backwards-compatible with the old one.
+  - When developing a new integration, or updating an existing one cbc_sdk.platform should be used. There is a utility
+    class ``PolicyBuilder``, and as features are added to the Carbon Black Cloud, they will be added to this module.
+
+* Official support for Python 3.6 has been dropped, since that version is now end-of-life.  Added explicit testing
+  support for Python versions 3.9 and 3.10.  **N.B.:** End users should update their Python version to 3.7.x or
+  greater.
+
+New Features:
+
+* Credentials handler now supports OAuth tokens.
+* Added support for querying a single ``Report`` from a ``Feed``.
+* Added support for alert notes (create, delete, get, refresh).
+
+Updates:
+
+* Removed the (unused) ``revoked`` property from ``Grant`` objects.
+* Increased the asynchronous query thread pool to 3 threads by default.
+* Required version of ``lxml`` is now 4.9.1.
+* Added a user acceptance test script for Alerts.
+
+Bug Fixes:
+
+* Added ``max_rows`` to USB device query, fixing pagination.
+* Fixed an off-by-one error in Alerts Search resulting un duplicate alerts showing up in results.
+* Fixed an error in alert faceting operations due to sending excess input to the server.
+
+Documentation:
+
+* Watchlists, Feeds, and Reports guide has been updated with additional clarification and examples.
+* Updated description for some ``Device`` fields that are never populated.
+* Additional sensor states added to ``Device`` documentation.
+* Fixed the description of ``BaseAlertSearchQuery.set_types`` so that it mentions all valid alert types.
+* Threat intelligence example has been deprecated.
+
 CBC SDK 1.3.6 - Released April 19, 2022
 ---------------------------------------
 

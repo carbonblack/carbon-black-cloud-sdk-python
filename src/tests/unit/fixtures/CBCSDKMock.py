@@ -270,10 +270,10 @@ class CBCSDKMock:
         def _patch_object(method, url, **kwargs):
             self._check_for_decommission(url)
             if method == 'POST':
-                body = kwargs.pop('body', None)
+                body = kwargs.pop('data', None)
                 return post_func(url, body, **kwargs)
             if method == 'PUT':
-                body = kwargs.pop('body', None)
+                body = kwargs.pop('data', None)
                 return put_func(url, body, **kwargs)
             if method != 'PATCH':
                 pytest.fail(f"api_json_request called for method {method} on url {url} when it shouldn't be")
