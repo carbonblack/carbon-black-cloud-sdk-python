@@ -84,7 +84,7 @@ def test_watchlist_save(cbcsdk_mock):
     api = cbcsdk_mock.api
     id = "watchlistId"
     cbcsdk_mock.mock_request("POST", "/threathunter/watchlistmgr/v3/orgs/test/watchlists", WATCHLIST_GET_SPECIFIC_RESP)
-    watchlist = Watchlist(api, model_unique_id="watchlistId", initial_data=CREATE_WATCHLIST_DATA)
+    watchlist = Watchlist(api, model_unique_id=None, initial_data=CREATE_WATCHLIST_DATA)
     watchlist.validate()
     watchlist.save()
 
