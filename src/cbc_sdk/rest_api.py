@@ -45,7 +45,7 @@ class CBCloudAPI(BaseAPI):
         Keyword Args:
             profile (str): Use the credentials in the named profile when connecting to the Carbon Black server.
                 Uses the profile named 'default' when not specified.
-            threat_pool_count (int): The number of threads to create for asynchronous queries. Defaults to 3.
+            thread_pool_count (int): The number of threads to create for asynchronous queries. Defaults to 3.
         """
         super(CBCloudAPI, self).__init__(*args, **kwargs)
         self._thread_pool_count = kwargs.pop('thread_pool_count', 3)
