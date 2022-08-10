@@ -1,0 +1,23 @@
+type: object
+required:
+  - newer_run_id
+  - older_run_id
+properties:
+  count_only:
+    type: boolean
+    description: Specify whether the count of diff results per device or complete diff result must be returned
+  criteria:
+    type: object
+    description: Object that represents values that must be in the results
+    properties:
+      device_id:
+        type: array
+        description: Allows the results to be filtered on device_id(s)
+        items:
+          type: string
+  newer_run_id:
+    type: string
+    description: id against which the older run id results will be compared
+  older_run_id:
+    type: string
+    description: This is optional if comparing two runs from a recurring query. If it is not specified, the run that is one earlier than newer_run_id will be the older_run_id
