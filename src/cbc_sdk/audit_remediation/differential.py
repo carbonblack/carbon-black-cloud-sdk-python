@@ -15,7 +15,7 @@
 
 from __future__ import absolute_import
 import logging
-from cbc_sdk.base import (NewBaseModel,IterableQueryMixin, BaseQuery, CriteriaBuilderSupportMixin)
+from cbc_sdk.base import (NewBaseModel, IterableQueryMixin, BaseQuery, CriteriaBuilderSupportMixin)
 from cbc_sdk.platform import Job
 from cbc_sdk.errors import ApiError
 
@@ -28,6 +28,7 @@ ASYNC_RATE_LIMIT = 100
 
 
 """Differential Analysis Models"""
+
 
 class Differential(NewBaseModel):
     """
@@ -124,7 +125,9 @@ class DifferentialQuery(BaseQuery, IterableQueryMixin, CriteriaBuilderSupportMix
 
     def older_run_id(self, older_run_id):
         """
-        This can be optional. If not specified, the previous run as compared to the primary will be chosen if
+        This can be optional.
+
+        If not specified, the previous run as compared to the primary will be chosen if
         it is a reccuring one. If comparing two individual runs, this is required.
 
         Args:
@@ -161,8 +164,9 @@ class DifferentialQuery(BaseQuery, IterableQueryMixin, CriteriaBuilderSupportMix
 
     def count_only(self, count_only):
         """
-        Specify whether the only the count of diff results per device or complete diff metadata result
-        must be returned. The default value is true, which means only the count will be returned.
+        Return only count of diff results per device or complete diff metadata result.
+
+        The default value is true, which means only the count will be returned.
 
         Args:
             count_only (string): Boolean that indicates whether to return actual metadata
