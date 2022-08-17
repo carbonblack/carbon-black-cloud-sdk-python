@@ -13,14 +13,10 @@
 
 """Model and Query Classes for Differential Analysis"""
 
-from __future__ import absolute_import
-import logging
-from cbc_sdk.base import (NewBaseModel, IterableQueryMixin, BaseQuery, CriteriaBuilderSupportMixin)
+from cbc_sdk.base import NewBaseModel, IterableQueryMixin, BaseQuery, CriteriaBuilderSupportMixin
 from cbc_sdk.platform import Job
 from cbc_sdk.errors import ApiError
 
-
-log = logging.getLogger(__name__)
 
 # Rate limits per 5 mins on an org basis
 SYNC_RATE_LIMIT = 350
@@ -42,7 +38,7 @@ class Differential(NewBaseModel):
     swagger_meta_file = "audit_remediation/models/differential.yaml"
     urlobject = "/livequery/v1/orgs/{}/differential/runs/_search"
 
-    def __init__(self, cbc, model_unique_id=None, initial_data=None):
+    def __init__(self, cbc, initial_data=None):
         """
         Initialize a Differential object with initial_data.
 
@@ -53,14 +49,10 @@ class Differential(NewBaseModel):
 
         Arguments:
             cbc (BaseAPI): Reference to API object used to communicate with the server.
-            model_unique_id (str): ID of the query run represented.
             initial_data (dict): Initial data used to populate the query run.
         """
-        model_unique_id = initial_data.get("newer_run_id")
-
         super(Differential, self).__init__(
             cbc,
-            model_unique_id=model_unique_id,
             initial_data=initial_data,
             force_init=False,
             full_doc=True,
@@ -72,7 +64,7 @@ class Differential(NewBaseModel):
         Returns the appropriate query object for the Differential type.
 
         Args:
-            cb (BaseAPI): Reference to API object used to communicate with the server.
+            cbc (BaseAPI): Reference to API object used to communicate with the server.
             **kwargs (dict): Not used, retained for compatibility.
 
         Returns:
@@ -244,7 +236,7 @@ class DifferentialQuery(BaseQuery, IterableQueryMixin, CriteriaBuilderSupportMix
         self._count_valid = True
         self._total_results = len(results["results"])
 
-        yield self._doc_class(self._cb, result["newer_run_id"], result)
+        yield self._doc_class(self._cb, result)
 
     def async_export(self):
         """
