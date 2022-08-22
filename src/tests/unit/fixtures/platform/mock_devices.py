@@ -377,3 +377,36 @@ FACET_INIT_4 = {
         }
     ]
 }
+
+FACET_INIT_5 = {
+    "field": "cloud_provider_account_id",
+    "values": [
+        {
+            "total": 2,
+            "id": "303",
+            "name": "303"
+        }
+    ]
+}
+
+FACET_INIT_6 = {
+    "field": "auto_scaling_group_name",
+    "values": [
+        {
+            "total": 2,
+            "id": "ARGON",
+            "name": "ARGON"
+        }
+    ]
+}
+
+FACET_INIT_7 = {
+    "field": "virtual_private_cloud_id",
+    "values": [
+        {
+            "total": 2,
+            "id": "65534",
+            "name": "65534"
+        }
+    ]
+}
