@@ -31,14 +31,14 @@ class Differential(NewBaseModel):
     Represents a Differential Analysis run.
 
     Example:
-        >>> run = cbc.select(Differential).newer_run_id(newer_run_id)
+        >>> run = cb.select(Differential).newer_run_id(newer_run_id)
         >>> print(*run)
         >>> print(resp[0]._info)
     """
     swagger_meta_file = "audit_remediation/models/differential.yaml"
     urlobject = "/livequery/v1/orgs/{}/differential/runs/_search"
 
-    def __init__(self, cbc, initial_data=None):
+    def __init__(self, cb, initial_data=None):
         """
         Initialize a Differential object with initial_data.
 
@@ -48,29 +48,29 @@ class Differential(NewBaseModel):
             _API.Live.Query:livequery.Manage.read
 
         Arguments:
-            cbc (BaseAPI): Reference to API object used to communicate with the server.
+            cb (BaseAPI): Reference to API object used to communicate with the server.
             initial_data (dict): Initial data used to populate the query run.
         """
         super(Differential, self).__init__(
-            cbc,
+            cb,
             initial_data=initial_data,
             force_init=False,
             full_doc=True,
         )
 
     @classmethod
-    def _query_implementation(cls, cbc, **kwargs):
+    def _query_implementation(cls, cb, **kwargs):
         """
         Returns the appropriate query object for the Differential type.
 
         Args:
-            cbc (BaseAPI): Reference to API object used to communicate with the server.
+            cb (BaseAPI): Reference to API object used to communicate with the server.
             **kwargs (dict): Not used, retained for compatibility.
 
         Returns:
             DifferentialQuery: The query object for the Differential type.
         """
-        return DifferentialQuery(cls, cbc)
+        return DifferentialQuery(cls, cb)
 
 
 """Differential Analysis Queries"""
@@ -79,16 +79,16 @@ class Differential(NewBaseModel):
 class DifferentialQuery(BaseQuery, IterableQueryMixin, CriteriaBuilderSupportMixin):
     """Query used to compare two Live Query runs."""
 
-    def __init__(self, doc_class, cbc):
+    def __init__(self, doc_class, cb):
         """
         Initialize the DifferentialQuery.
 
         Args:
             doc_class (class): The model class that will be returned by this query.
-            cbc (BaseAPI): Reference to API object used to communicate with the server.
+            cb (BaseAPI): Reference to API object used to communicate with the server.
         """
         super(DifferentialQuery, self).__init__()
-        self._cb = cbc
+        self._cb = cb
         self._criteria = {}
         self._doc_class = doc_class
         self._count_only = True
@@ -100,6 +100,9 @@ class DifferentialQuery(BaseQuery, IterableQueryMixin, CriteriaBuilderSupportMix
     def newer_run_id(self, newer_run_id):
         """
         Set the id against which the older_run_id results will be compared.
+
+        Example:
+            >>> run = cb.select(Differential).newer_run_id(newer_run_id)
 
         Args:
             newer_run_id (string): id against which the older_run_id results will be compared.
@@ -122,6 +125,9 @@ class DifferentialQuery(BaseQuery, IterableQueryMixin, CriteriaBuilderSupportMix
         If not specified, the previous run as compared to the primary will be chosen if
         it is a reccuring one. If comparing two individual runs, this is required.
 
+        Example:
+            >>> run = cb.select(Differential).newer_run_id(newer_run_id).older_run_id(older_run_id)
+
         Args:
             older_run_id (string): id against which the newer_run_id results will be compared.
 
@@ -139,6 +145,9 @@ class DifferentialQuery(BaseQuery, IterableQueryMixin, CriteriaBuilderSupportMix
     def set_device_ids(self, device_ids):
         """
         Restricts the query on to the specified devices only.
+
+        Example:
+            >>> run = cb.select(Differential).newer_run_id(newer_run_id).set_device_ids([12345, 56789])
 
         Args:
             device_ids (list): List of device id(s)
@@ -159,6 +168,9 @@ class DifferentialQuery(BaseQuery, IterableQueryMixin, CriteriaBuilderSupportMix
         Return only count of diff results per device or complete diff metadata result.
 
         The default value is true, which means only the count will be returned.
+
+        Example:
+            >>> run = cb.select(Differential).newer_run_id(newer_run_id).count_only(True)
 
         Args:
             count_only (string): Boolean that indicates whether to return actual metadata
@@ -248,7 +260,7 @@ class DifferentialQuery(BaseQuery, IterableQueryMixin, CriteriaBuilderSupportMix
         await_completion() method.
 
         Example:
-            >>> run = cbc.select(Differential).newer_run_id(newer_run_id)
+            >>> run = cb.select(Differential).newer_run_id(newer_run_id)
             >>> job = run.async_export()
             >>> # show the status in progress
             >>> print(job.status)
@@ -260,7 +272,7 @@ class DifferentialQuery(BaseQuery, IterableQueryMixin, CriteriaBuilderSupportMix
             >>> # show the job has completed
             >>> print(finished_job.status)
             COMPLETED
-            >>> # write the results to a csv file
+            >>> # write the results to a file
             >>> finished_job.get_output_as_file("example_data.json")
 
         Required CBC Permissions:
