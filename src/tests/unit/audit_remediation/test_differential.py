@@ -11,12 +11,10 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-
 """Unit test code for Differential Analysis API"""
 
-import pytest
 import logging
-import copy
+import pytest
 from cbc_sdk.audit_remediation import Differential
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError
@@ -49,7 +47,9 @@ def cbcsdk_mock(monkeypatch, cb):
 
 def test_differential_bogus_parameters(cbcsdk_mock):
     """Test that we get the appropriate exceptions when we pass in bogus or no parameters."""
-    cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/differential/runs/_search", QUERY_COMPARISON_COUNT_ONLY)
+    cbcsdk_mock.mock_request("POST",
+                             "/livequery/v1/orgs/test/differential/runs/_search",
+                             QUERY_COMPARISON_COUNT_ONLY)
     api = cbcsdk_mock.api
     query = api.select(Differential).newer_run_id("qpopjb82whlmthlo0x1wrwcnoyxmrueu")
     with pytest.raises(ApiError):
@@ -72,7 +72,9 @@ def test_differential_bogus_parameters(cbcsdk_mock):
 
 def test_newer_run_id(cbcsdk_mock):
     """Test the required newer_run_id with default values for diff."""
-    cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/differential/runs/_search", QUERY_COMPARISON_COUNT_ONLY)
+    cbcsdk_mock.mock_request("POST",
+                             "/livequery/v1/orgs/test/differential/runs/_search",
+                             QUERY_COMPARISON_COUNT_ONLY)
     api = cbcsdk_mock.api
     resp = api.select(Differential).newer_run_id("qpopjb82whlmthlo0x1wrwcnoyxmrueu")
     assert resp[0].older_run_id == "kibloccplynombvigcgtu2et2zayhzal"
@@ -81,7 +83,9 @@ def test_newer_run_id(cbcsdk_mock):
 
 def test_newer_run_id_actual_changes(cbcsdk_mock):
     """Test the required newer_run_id with actual changes."""
-    cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/differential/runs/_search", QUERY_COMPARISON_ACTUAL_CHANGES)
+    cbcsdk_mock.mock_request("POST",
+                             "/livequery/v1/orgs/test/differential/runs/_search",
+                             QUERY_COMPARISON_ACTUAL_CHANGES)
     api = cbcsdk_mock.api
     resp = api.select(Differential).newer_run_id("qpopjb82whlmthlo0x1wrwcnoyxmrueu").count_only(False)
     assert resp[0].older_run_id == "kibloccplynombvigcgtu2et2zayhzal"
@@ -90,16 +94,21 @@ def test_newer_run_id_actual_changes(cbcsdk_mock):
 
 def test_older_run_id(cbcsdk_mock):
     """Test the older_run_id with default values for diff."""
-    cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/differential/runs/_search", QUERY_COMPARISON_COUNT_ONLY)
+    cbcsdk_mock.mock_request("POST",
+                             "/livequery/v1/orgs/test/differential/runs/_search",
+                             QUERY_COMPARISON_COUNT_ONLY)
     api = cbcsdk_mock.api
-    resp = api.select(Differential).newer_run_id("qpopjb82whlmthlo0x1wrwcnoyxmrueu").older_run_id("kibloccplynombvigcgtu2et2zayhzal")
+    resp = api.select(Differential).newer_run_id("qpopjb82whlmthlo0x1wrwcnoyxmrueu") \
+                                   .older_run_id("kibloccplynombvigcgtu2et2zayhzal")
     assert resp[0].older_run_id == "kibloccplynombvigcgtu2et2zayhzal"
     assert resp[0].diff_results[0]["changes"] == "null"
 
 
 def test_set_device_ids(cbcsdk_mock):
     """Test the device_ids criteria."""
-    cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/differential/runs/_search", QUERY_COMPARISON_SET_DEVICE_ID)
+    cbcsdk_mock.mock_request("POST",
+                             "/livequery/v1/orgs/test/differential/runs/_search",
+                             QUERY_COMPARISON_SET_DEVICE_ID)
     api = cbcsdk_mock.api
     resp = api.select(Differential).newer_run_id("qpopjb82whlmthlo0x1wrwcnoyxmrueu").set_device_ids([11412673])
     assert len(resp[0].diff_results) == 1
