@@ -127,7 +127,7 @@ def test_set_device_ids(cbcsdk_mock):
 
 
 def test_build_url(cbcsdk_mock):
-    """Test the required newer_run_id with default values for diff."""
+    """Test the _build_url that appends a prefix to the end of the url."""
     cbcsdk_mock.mock_request("POST",
                              "/livequery/v1/orgs/test/differential/runs/_search",
                              QUERY_COMPARISON_COUNT_ONLY)
