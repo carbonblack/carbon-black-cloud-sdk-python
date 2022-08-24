@@ -596,17 +596,17 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         self._update_criteria("target_priority", target_priorities)
         return self
 
-    def set_cloud_provider_account_id(self, cloud_ids):
+    def set_cloud_provider_account_id(self, account_ids):
         """
         Restricts the devices that this query is performed on to the specified cloud provider account IDs.
 
         Args:
-            cloud_ids (list): List of account IDs to restrict search to.
+            account_ids (list): List of account IDs to restrict search to.
 
         Returns:
             DeviceSearchQuery: This instance.
         """
-        self._update_criteria("cloud_provider_account_id", cloud_ids)
+        self._update_criteria("cloud_provider_account_id", account_ids)
         return self
 
     def set_auto_scaling_group_name(self, group_names):
