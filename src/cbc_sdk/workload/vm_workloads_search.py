@@ -27,8 +27,8 @@ log = logging.getLogger(__name__)
 
 class ComputeResource(NewBaseModel):
     """ComputeResource Model"""
-    urlobject = "/lcm/view/v1/orgs/{0}/compute_resources"
-    urlobject_single = "/lcm/view/v1/orgs/{0}/compute_resources/{1}"
+    urlobject = "/lcm/view/v2/orgs/{0}/compute_resources"
+    urlobject_single = "/lcm/view/v2/orgs/{0}/compute_resources/{1}?deployment_type={2}"
     primary_key = "id"
 
     def __init__(self, cb, model_unique_id, initial_data=None):
@@ -81,7 +81,8 @@ class ComputeResource(NewBaseModel):
         Returns:
             str: The URL used to make requests for this object.
         """
-        return self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id)
+        return self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id,
+                                            self._info.get('deployment_type', 'WORKLOAD'))
 
     def _get_sensor_type(self):
         """
@@ -208,6 +209,7 @@ class ComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderS
     VALID_ELIGIBILITY = ("ELIGIBLE", "NOT_ELIGIBLE", "UNSUPPORTED")
     VALID_OS_ARCHITECTURE = ("32", "64")
     VALID_INSTALLATION_STATUS = ("SUCCESS", "ERROR", "PENDING", "NOT_INSTALLED")
+    VALID_DEPLOYMENT_TYPE = ("WORKLOAD", "AWS")
 
     def __init__(self, doc_class, cb):
         """
@@ -222,9 +224,25 @@ class ComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderS
         self._count_valid = False
         super(BaseQuery, self).__init__()
         self._query_builder = QueryBuilder()
-        self._criteria = {}
+        self._criteria = {"deployment_type": ["WORKLOAD"]}
         self._sortcriteria = {}
         self._total_results = 0
+
+    def set_deployment_type(self, deployment_type):
+        """
+        Restricts the search that this query is performed on to the specified deployment type.
+
+        Args:
+            deployment_type (str): The desired deployment type.  Valid values are "WORKLOAD" and "AWS".
+                                   The default value is "WORKLOAD", for backward compatibility.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if deployment_type not in ComputeResourceQuery.VALID_DEPLOYMENT_TYPE:
+            raise ApiError(f"invalid deployment type: {deployment_type}")
+        self._criteria["deployment_type"] = [deployment_type]
+        return self
 
     def set_appliance_uuid(self, appliance_uuid):
         """
