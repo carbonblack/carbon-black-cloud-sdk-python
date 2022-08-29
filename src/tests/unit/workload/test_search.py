@@ -44,7 +44,7 @@ def cbcsdk_mock(monkeypatch, cb):
 # ==================================== UNIT TESTS BELOW ====================================
 def test_compute_resource_by_id(cbcsdk_mock):
     """Tests a simple compute resource querry"""
-    cbcsdk_mock.mock_request("GET", "/lcm/view/v1/orgs/test/compute_resources/1539610",
+    cbcsdk_mock.mock_request("GET", "/lcm/view/v2/orgs/test/compute_resources/15396109?deployment_type=WORKLOAD",
                              FETCH_COMPUTE_RESOURCE_BY_ID_RESP)
     api = cbcsdk_mock.api
     resource = ComputeResource(api, "15396109")
@@ -59,7 +59,7 @@ def test_search_facet_async(cbcsdk_mock):
 
         return SEARCH_AND_FACET_COMPUTE_RESEOURCES
 
-    cbcsdk_mock.mock_request("POST", "/lcm/view/v1/orgs/test/compute_resources/_search",
+    cbcsdk_mock.mock_request("POST", "/lcm/view/v2/orgs/test/compute_resources/_search",
                              post_validate)
     api = cbcsdk_mock.api
     query = api.select(ComputeResource).set_uuid(['502277cc-0aa9-80b0-9ac8-6f540c11edaf'])
@@ -76,6 +76,7 @@ def test_search_facet_with_all_bells_and_whistles(cbcsdk_mock):
     def post_validate(url, body, **kwargs):
         crits = body['criteria']
         assert crits['appliance_uuid'] == ['c89f183b-f201-4bca-bacc-80184b5b8823']
+        assert crits['deployment_type'] == ['WORKLOAD']
         assert crits['eligibility'] == ['NOT_ELIGIBLE']
         assert crits['cluster_name'] == ['launcher-cluster']
         assert crits['name'] == ['vsvv-2k8r2']
@@ -87,7 +88,7 @@ def test_search_facet_with_all_bells_and_whistles(cbcsdk_mock):
 
         return SEARCH_AND_FACET_COMPUTE_RESEOURCES
 
-    cbcsdk_mock.mock_request("POST", "/lcm/view/v1/orgs/test/compute_resources/_search",
+    cbcsdk_mock.mock_request("POST", "/lcm/view/v2/orgs/test/compute_resources/_search",
                              post_validate)
     api = cbcsdk_mock.api
     query = api.select(ComputeResource).set_appliance_uuid(['c89f183b-f201-4bca-bacc-80184b5b8823']) \
@@ -118,6 +119,8 @@ def test_search_facet_with_all_bells_and_whistles(cbcsdk_mock):
 def test_search_facet_with_all_bells_and_whistles_failures(cbcsdk_mock):
     """Testng all set methods"""
     query = cbcsdk_mock.api.select(ComputeResource)
+    with pytest.raises(ApiError):
+        query.set_deployment_type('UNIVERSE')
     with pytest.raises(ApiError):
         query.set_uuid([1])
     with pytest.raises(ApiError):

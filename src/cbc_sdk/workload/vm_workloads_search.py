@@ -71,6 +71,16 @@ class ComputeResource(NewBaseModel):
         self._last_refresh_time = time.time()
         return True
 
+    @classmethod
+    def _get_default_deployment_type(cls):
+        """
+        Return the default deployment type.
+
+        Returns:
+            str: The default deployment type for this class.
+        """
+        return "WORKLOAD"
+
     def _build_api_request_uri(self, http_method="GET"):
         """
         Build the unique URL used to make requests for this object.
@@ -82,7 +92,7 @@ class ComputeResource(NewBaseModel):
             str: The URL used to make requests for this object.
         """
         return self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id,
-                                            self._info.get('deployment_type', 'WORKLOAD'))
+                                            self._info.get('deployment_type', self._get_default_deployment_type()))
 
     def _get_sensor_type(self):
         """
