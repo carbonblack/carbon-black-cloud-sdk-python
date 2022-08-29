@@ -12,6 +12,12 @@ cbc\_sdk.audit\_remediation.base module
    :undoc-members:
    :show-inheritance:
 
+
+.. automodule:: cbc_sdk.audit_remediation.differential
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Module contents
 ---------------
 
