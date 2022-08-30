@@ -24,8 +24,6 @@ You can read more about it `here <https://developer.carbonblack.com/reference/ca
 
 Query Comparison
 ----------------
-The ``Differential`` object has a number of different methods etc..
-
 
 Basic Query
 ###########
