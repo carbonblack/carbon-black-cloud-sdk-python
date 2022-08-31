@@ -11,8 +11,8 @@
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
 """
-To execute, a profile must be provided using the standard CBC Credentials
-and newer_run_id.
+To execute, a profile must be provided using the standard CBC Credentials and newer_run_id.
+
 Altho optional, older_run_id must be provided in some cases as well.
 
 Example: python3 differential_analysis_uat.py --profile LiveQuery --newer_run_id abcd
