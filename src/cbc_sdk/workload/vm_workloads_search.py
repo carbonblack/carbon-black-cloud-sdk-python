@@ -211,19 +211,52 @@ class ComputeResource(NewBaseModel):
         return _do_sensor_install_request(cb, compute_resources, sensor_kit_types, config_file)
 
 
-class ComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
-                           IterableQueryMixin, AsyncQueryMixin):
-    """Represents a query that is used to locate ComputeResource objects."""
-    VALID_OS_TYPE = ("WINDOWS", "RHEL", "UBUNTU", "SUSE", "SLES", "CENTOS", "OTHER", "AMAZON_LINUX", "ORACLE")
+class AWSComputeResource(ComputeResource):
+    """Shim class to allow querying for AWS compute resource."""
+    def __init__(self, cb, model_unique_id, initial_data=None):
+        """
+        Initialize the AWSComputeResource object.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            model_unique_id (str): ID of the alert represented.
+            initial_data (dict): Initial data used to populate the alert.
+        """
+        super(AWSComputeResource, self).__init__(cb, model_unique_id, initial_data)
+
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
+        """
+        Returns the appropriate query object for this object type.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            AWSComputeResourceQuery: The query object
+        """
+        return AWSComputeResourceQuery(cls, cb)
+
+    @classmethod
+    def _get_default_deployment_type(cls):
+        """
+        Return the default deployment type.
+
+        Returns:
+            str: The default deployment type for this class.
+        """
+        return "AWS"
+
+
+class BaseComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
+                               IterableQueryMixin, AsyncQueryMixin):
     VALID_DIRECTIONS = ("ASC", "DESC")
-    VALID_ELIGIBILITY = ("ELIGIBLE", "NOT_ELIGIBLE", "UNSUPPORTED")
-    VALID_OS_ARCHITECTURE = ("32", "64")
-    VALID_INSTALLATION_STATUS = ("SUCCESS", "ERROR", "PENDING", "NOT_INSTALLED")
     VALID_DEPLOYMENT_TYPE = ("WORKLOAD", "AWS")
 
     def __init__(self, doc_class, cb):
         """
-        Initialize the ComputeResource.
+        Initialize the BaseComputeResourceQuery.
 
         Args:
             doc_class (class): The model class that will be returned by this query.
@@ -234,160 +267,23 @@ class ComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderS
         self._count_valid = False
         super(BaseQuery, self).__init__()
         self._query_builder = QueryBuilder()
-        self._criteria = {"deployment_type": ["WORKLOAD"]}
+        self._criteria = {"deployment_type": [doc_class._get_default_deployment_type()]}
+        self._exclusions = {}
         self._sortcriteria = {}
         self._total_results = 0
 
-    def set_deployment_type(self, deployment_type):
+    def _update_exclusions(self, key, newlist):
         """
-        Restricts the search that this query is performed on to the specified deployment type.
+        Updates a list of exclusions being collected for a query, by appending items.
 
         Args:
-            deployment_type (str): The desired deployment type.  Valid values are "WORKLOAD" and "AWS".
-                                   The default value is "WORKLOAD", for backward compatibility.
-
-        Returns:
-            ComputeResourceQuery: This instance.
+            key (str): The key for the criteria item to be set.
+            newlist (list): List of values to be set for the criteria item.
         """
-        if deployment_type not in ComputeResourceQuery.VALID_DEPLOYMENT_TYPE:
-            raise ApiError(f"invalid deployment type: {deployment_type}")
-        self._criteria["deployment_type"] = [deployment_type]
-        return self
-
-    def set_appliance_uuid(self, appliance_uuid):
-        """
-        Restricts the search that this query is performed on to the specified appliance uuid.
-
-        Args:
-            appliance_uuid (list): List of string appliance uuids.
-
-        Returns:
-            ComputeResourceQuery: This instance.
-        """
-        if not all(isinstance(_, str) for _ in appliance_uuid):
-            raise ApiError("One or more invalid appliance uuid")
-        self._update_criteria("appliance_uuid", appliance_uuid)
-        return self
-
-    def set_eligibility(self, eligibility):
-        """
-        Restricts the search that this query is performed on to the specified eligibility.
-
-        Args:
-            eligibility (list): List of string eligibilities.
-
-        Returns:
-            ComputeResourceQuery: This instance.
-        """
-        if not all((_ in ComputeResourceQuery.VALID_ELIGIBILITY) for _ in eligibility):
-            raise ApiError("One or more invalid eligibility")
-        self._update_criteria("eligibility", eligibility)
-        return self
-
-    def set_cluster_name(self, cluster_name):
-        """
-        Restricts the search that this query is performed on to the specified cluster name.
-
-        Args:
-            cluster_name (list): List of string cluster names.
-
-        Returns:
-            ComputeResourceQuery: This instance.
-        """
-        if not all(isinstance(_, str) for _ in cluster_name):
-            raise ApiError("One or more invalid cluster name")
-        self._update_criteria("cluster_name", cluster_name)
-        return self
-
-    def set_name(self, name):
-        """
-        Restricts the search that this query is performed on to the specified name.
-
-        Args:
-            name (list): List of string names.
-
-        Returns:
-            ComputeResourceQuery: This instance.
-        """
-        if not all(isinstance(_, str) for _ in name):
-            raise ApiError("One or more invalid names")
-        self._update_criteria("name", name)
-        return self
-
-    def set_ip_address(self, ip_address):
-        """
-        Restricts the search that this query is performed on to the specified ip address.
-
-        Args:
-            ip_address (list): List of string ip addresses.
-
-        Returns:
-            ComputeResourceQuery: This instance.
-        """
-        if not all(isinstance(_, str) for _ in ip_address):
-            raise ApiError("One or more invalid ip address")
-        self._update_criteria("ip_address", ip_address)
-        return self
-
-    def set_installation_status(self, installation_status):
-        """
-        Restricts the search that this query is performed on to the specified installation status.
-
-        Args:
-            installation_status (list): List of string installation status.
-
-        Returns:
-            ComputeResourceQuery: This instance.
-        """
-        if not all((_ in ComputeResourceQuery.VALID_INSTALLATION_STATUS) for _ in installation_status):
-            raise ApiError("One or more invalid installation status")
-        self._update_criteria("installation_status", installation_status)
-        return self
-
-    def set_uuid(self, uuid):
-        """
-        Restricts the search that this query is performed on to the specified uuid.
-
-        Args:
-            uuid (list): List of string uuid.
-
-        Returns:
-            ComputeResourceQuery: This instance.
-        """
-        if not all(isinstance(_, str) for _ in uuid):
-            raise ApiError("One or more invalid uuid")
-        self._update_criteria("uuid", uuid)
-        return self
-
-    def set_os_type(self, os_type):
-        """
-        Restricts the search that this query is performed on to the specified os type.
-
-        Args:
-            os_type (list): List of string os type.
-
-        Returns:
-            ComputeResourceQuery: This instance.
-        """
-        if not all((_ in ComputeResourceQuery.VALID_OS_TYPE) for _ in os_type):
-            raise ApiError("One or more invalid os type")
-        self._update_criteria("os_type", os_type)
-        return self
-
-    def set_os_architecture(self, os_architecture):
-        """
-        Restricts the search that this query is performed on to the specified os architecture.
-
-        Args:
-            os_architecture (list): List of string os architecture.
-
-        Returns:
-            ComputeResourceQuery: This instance.
-        """
-        if not all((_ in ComputeResourceQuery.VALID_OS_ARCHITECTURE) for _ in os_architecture):
-            raise ApiError("One or more invalid os architecture")
-        self._update_criteria("os_architecture", os_architecture)
-        return self
+        if self._exclusions.get(key, None) is None:
+            self._exclusions[key] = newlist
+        else:
+            self._exclusions[key].extend(newlist)
 
     def sort_by(self, key, direction="ASC"):
         """
@@ -401,9 +297,9 @@ class ComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderS
             direction (str): The sort order.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            BaseComputeResourceQuery: This instance.
         """
-        if direction not in ComputeResourceQuery.VALID_DIRECTIONS:
+        if direction not in BaseComputeResourceQuery.VALID_DIRECTIONS:
             raise ApiError("invalid sort direction specified")
         self._sortcriteria = {"field": key, "order": direction}
         return self
@@ -421,6 +317,8 @@ class ComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderS
             dict: The complete request body.
         """
         request = {"criteria": self._criteria, "query": self._query_builder._collapse(), "rows": 100}
+        if self._exclusions != {}:
+            request["exclusions"] = self._exclusions
         # Fetch 100 rows per page (instead of 10 by default) for better performance
         if from_row > 0:
             request["start"] = from_row
@@ -517,3 +415,1086 @@ class ComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderS
         self._count_valid = True
         results = result.get("results", [])
         return [self._doc_class(self._cb, item["id"], item) for item in results]
+
+
+class ComputeResourceQuery(BaseComputeResourceQuery):
+    """Represents a query that is used to locate ComputeResource objects."""
+    VALID_OS_TYPE = ("WINDOWS", "RHEL", "UBUNTU", "SUSE", "SLES", "CENTOS", "OTHER", "AMAZON_LINUX", "ORACLE")
+    VALID_ELIGIBILITY = ("ELIGIBLE", "NOT_ELIGIBLE", "UNSUPPORTED")
+    VALID_OS_ARCHITECTURE = ("32", "64")
+    VALID_INSTALLATION_STATUS = ("SUCCESS", "ERROR", "PENDING", "NOT_INSTALLED")
+
+    def __init__(self, doc_class, cb):
+        """
+        Initialize the ComputeResourceQuery.
+
+        Args:
+            doc_class (class): The model class that will be returned by this query.
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+        """
+        super(ComputeResourceQuery, self).__init__(doc_class, cb)
+
+    def set_appliance_uuid(self, appliance_uuid):
+        """
+        Restricts the search that this query is performed on to the specified appliance uuid.
+
+        Args:
+            appliance_uuid (list): List of string appliance uuids.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in appliance_uuid):
+            raise ApiError("One or more invalid appliance uuid")
+        self._update_criteria("appliance_uuid", appliance_uuid)
+        return self
+
+    def set_cluster_name(self, cluster_name):
+        """
+        Restricts the search that this query is performed on to the specified cluster name.
+
+        Args:
+            cluster_name (list): List of string cluster names.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in cluster_name):
+            raise ApiError("One or more invalid cluster name")
+        self._update_criteria("cluster_name", cluster_name)
+        return self
+
+    def set_datacenter_name(self, datacenter_name):
+        """
+        Restricts the search that this query is performed on to the specified datacenter name.
+
+        Args:
+            datacenter_name (list): List of string datacenter names.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in datacenter_name):
+            raise ApiError("One or more invalid datacenter_name")
+        self._update_criteria("datacenter_name", datacenter_name)
+        return self
+
+    def set_esx_host_name(self, esx_host_name):
+        """
+        Restricts the search that this query is performed on to the specified ESX host name.
+
+        Args:
+            esx_host_name (list): List of string ESX host names.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in esx_host_name):
+            raise ApiError("One or more invalid esx_host_name")
+        self._update_criteria("esx_host_name", esx_host_name)
+        return self
+
+    def set_esx_host_uuid(self, esx_host_uuid):
+        """
+        Restricts the search that this query is performed on to the specified ESX host UUID.
+
+        Args:
+            esx_host_uuid (list): List of string ESX host UUIDs.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in esx_host_uuid):
+            raise ApiError("One or more invalid esx_host_uuid")
+        self._update_criteria("esx_host_uuid", esx_host_uuid)
+        return self
+
+    def set_vcenter_name(self, vcenter_name):
+        """
+        Restricts the search that this query is performed on to the specified vCenter name.
+
+        Args:
+            vcenter_name (list): List of string vCenter names.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in vcenter_name):
+            raise ApiError("One or more invalid vcenter_name")
+        self._update_criteria("vcenter_name", vcenter_name)
+        return self
+
+    def set_vcenter_host_url(self, vcenter_host_url):
+        """
+        Restricts the search that this query is performed on to the specified vCenter host URL.
+
+        Args:
+            vcenter_host_url (list): List of string vCenter host URLs.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in vcenter_host_url):
+            raise ApiError("One or more invalid vcenter_host_url")
+        self._update_criteria("vcenter_host_url", vcenter_host_url)
+        return self
+
+    def set_vcenter_uuid(self, vcenter_uuid):
+        """
+        Restricts the search that this query is performed on to the specified vCenter UUID.
+
+        Args:
+            vcenter_uuid (list): List of string vCenter UUIDs.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in vcenter_uuid):
+            raise ApiError("One or more invalid vcenter_uuid")
+        self._update_criteria("vcenter_uuid", vcenter_uuid)
+        return self
+
+    def set_name(self, name):
+        """
+        Restricts the search that this query is performed on to the specified name.
+
+        Args:
+            name (list): List of string names.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in name):
+            raise ApiError("One or more invalid names")
+        self._update_criteria("name", name)
+        return self
+
+    def set_host_name(self, host_name):
+        """
+        Restricts the search that this query is performed on to the specified host name.
+
+        Args:
+            host_name (list): List of string host names.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in host_name):
+            raise ApiError("One or more invalid host_names")
+        self._update_criteria("host_name", host_name)
+        return self
+
+    def set_ip_address(self, ip_address):
+        """
+        Restricts the search that this query is performed on to the specified ip address.
+
+        Args:
+            ip_address (list): List of string ip addresses.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in ip_address):
+            raise ApiError("One or more invalid ip address")
+        self._update_criteria("ip_address", ip_address)
+        return self
+
+    def set_device_guid(self, device_guid):
+        """
+        Restricts the search that this query is performed on to the specified device GUID.
+
+        Args:
+            device_guid (list): List of string device GUIDs.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in device_guid):
+            raise ApiError("One or more invalid device_guid")
+        self._update_criteria("device_guid", device_guid)
+        return self
+
+    def set_registration_id(self, registration_id):
+        """
+        Restricts the search that this query is performed on to the specified registration ID.
+
+        Args:
+            registration_id (list): List of string registration IDs.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in registration_id):
+            raise ApiError("One or more invalid registration_id")
+        self._update_criteria("registration_id", registration_id)
+        return self
+
+    def set_eligibility(self, eligibility):
+        """
+        Restricts the search that this query is performed on to the specified eligibility.
+
+        Args:
+            eligibility (list): List of string eligibilities.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all((_ in ComputeResourceQuery.VALID_ELIGIBILITY) for _ in eligibility):
+            raise ApiError("One or more invalid eligibility")
+        self._update_criteria("eligibility", eligibility)
+        return self
+
+    def set_eligibility_code(self, eligibility_code):
+        """
+        Restricts the search that this query is performed on to the specified eligibility code.
+
+        Args:
+            eligibility_code (list): List of string eligibility codes.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in eligibility_code):
+            raise ApiError("One or more invalid eligibility_code")
+        self._update_criteria("eligibility_code", eligibility_code)
+        return self
+
+    def set_installation_status(self, installation_status):
+        """
+        Restricts the search that this query is performed on to the specified installation status.
+
+        Args:
+            installation_status (list): List of string installation status.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all((_ in ComputeResourceQuery.VALID_INSTALLATION_STATUS) for _ in installation_status):
+            raise ApiError("One or more invalid installation status")
+        self._update_criteria("installation_status", installation_status)
+        return self
+
+    def set_installation_type(self, installation_type):
+        """
+        Restricts the search that this query is performed on to the specified installation type.
+
+        Args:
+            installation_type (list): List of string installation types.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in installation_type):
+            raise ApiError("One or more invalid installation_type")
+        self._update_criteria("installation_type", installation_type)
+        return self
+
+    def set_uuid(self, uuid):
+        """
+        Restricts the search that this query is performed on to the specified uuid.
+
+        Args:
+            uuid (list): List of string uuid.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in uuid):
+            raise ApiError("One or more invalid uuid")
+        self._update_criteria("uuid", uuid)
+        return self
+
+    def set_os_description(self, os_description):
+        """
+        Restricts the search that this query is performed on to the specified os description.
+
+        Args:
+            os_description (list): List of string os description.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in os_description):
+            raise ApiError("One or more invalid os_description")
+        self._update_criteria("os_description", os_description)
+        return self
+
+    def set_os_type(self, os_type):
+        """
+        Restricts the search that this query is performed on to the specified os type.
+
+        Args:
+            os_type (list): List of string os type.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all((_ in ComputeResourceQuery.VALID_OS_TYPE) for _ in os_type):
+            raise ApiError("One or more invalid os type")
+        self._update_criteria("os_type", os_type)
+        return self
+
+    def set_os_architecture(self, os_architecture):
+        """
+        Restricts the search that this query is performed on to the specified os architecture.
+
+        Args:
+            os_architecture (list): List of string os architecture.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all((_ in ComputeResourceQuery.VALID_OS_ARCHITECTURE) for _ in os_architecture):
+            raise ApiError("One or more invalid os architecture")
+        self._update_criteria("os_architecture", os_architecture)
+        return self
+
+    def set_vmwaretools_version(self, vmwaretools_version):
+        """
+        Restricts the search that this query is performed on to the specified VMware Tools version.
+
+        Args:
+            vmwaretools_version (list): List of string VMware Tools versions.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in vmwaretools_version):
+            raise ApiError("One or more invalid vmwaretools_version")
+        self._update_criteria("vmwaretools_version", vmwaretools_version)
+        return self
+
+    def exclude_appliance_uuid(self, appliance_uuid):
+        """
+        Excludes the specified appliance UUID from appearing in the search results.
+
+        Args:
+            appliance_uuid (list): List of string appliance uuids.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in appliance_uuid):
+            raise ApiError("One or more invalid appliance uuid")
+        self._update_exclusions("appliance_uuid", appliance_uuid)
+        return self
+
+    def exclude_cluster_name(self, cluster_name):
+        """
+        Excludes the specified cluster name from appearing in the search results.
+
+        Args:
+            cluster_name (list): List of string cluster names.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in cluster_name):
+            raise ApiError("One or more invalid cluster_name")
+        self._update_exclusions("cluster_name", cluster_name)
+        return self
+
+    def exclude_datacenter_name(self, datacenter_name):
+        """
+        Excludes the specified datacenter name from appearing in the search results.
+
+        Args:
+            datacenter_name (list): List of string datacenter names.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in datacenter_name):
+            raise ApiError("One or more invalid datacenter_name")
+        self._update_exclusions("datacenter_name", datacenter_name)
+        return self
+
+    def exclude_esx_host_name(self, esx_host_name):
+        """
+        Excludes the specified ESX host name from appearing in the search results.
+
+        Args:
+            esx_host_name (list): List of string ESX host names.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in esx_host_name):
+            raise ApiError("One or more invalid esx_host_name")
+        self._update_exclusions("esx_host_name", esx_host_name)
+        return self
+
+    def exclude_esx_host_uuid(self, esx_host_uuid):
+        """
+        Excludes the specified ESX host UUID from appearing in the search results.
+
+        Args:
+            esx_host_uuid (list): List of string ESX host UUIDs.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in esx_host_uuid):
+            raise ApiError("One or more invalid esx_host_uuid")
+        self._update_exclusions("esx_host_uuid", esx_host_uuid)
+        return self
+
+    def exclude_vcenter_name(self, vcenter_name):
+        """
+        Excludes the specified vCenter name from appearing in the search results.
+
+        Args:
+            vcenter_name (list): List of string vCenter names.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in vcenter_name):
+            raise ApiError("One or more invalid vcenter_name")
+        self._update_exclusions("vcenter_name", vcenter_name)
+        return self
+
+    def exclude_vcenter_host_url(self, vcenter_host_url):
+        """
+        Excludes the specified vCenter host URL from appearing in the search results.
+
+        Args:
+            vcenter_host_url (list): List of string vCenter host URLs.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in vcenter_host_url):
+            raise ApiError("One or more invalid vcenter_host_url")
+        self._update_exclusions("vcenter_host_url", vcenter_host_url)
+        return self
+
+    def exclude_vcenter_uuid(self, vcenter_uuid):
+        """
+        Excludes the specified vCenter UUID from appearing in the search results.
+
+        Args:
+            vcenter_uuid (list): List of string vCenter UUIDs.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in vcenter_uuid):
+            raise ApiError("One or more invalid vcenter_uuid")
+        self._update_exclusions("vcenter_uuid", vcenter_uuid)
+        return self
+
+    def exclude_name(self, name):
+        """
+        Excludes the specified name from appearing in the search results.
+
+        Args:
+            name (list): List of string names.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in name):
+            raise ApiError("One or more invalid names")
+        self._update_exclusions("name", name)
+        return self
+
+    def exclude_host_name(self, host_name):
+        """
+        Excludes the specified host name from appearing in the search results.
+
+        Args:
+            host_name (list): List of string host names.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in host_name):
+            raise ApiError("One or more invalid host names")
+        self._update_exclusions("host_name", host_name)
+        return self
+
+    def exclude_ip_address(self, ip_address):
+        """
+        Excludes the specified IP address from appearing in the search results.
+
+        Args:
+            ip_address (list): List of string IP addresses.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in ip_address):
+            raise ApiError("One or more invalid IP addresses")
+        self._update_exclusions("ip_address", ip_address)
+        return self
+
+    def exclude_device_guid(self, device_guid):
+        """
+        Excludes the specified device GUID from appearing in the search results.
+
+        Args:
+            device_guid (list): List of string device GUIDs.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in device_guid):
+            raise ApiError("One or more invalid device_guid")
+        self._update_exclusions("device_guid", device_guid)
+        return self
+
+    def exclude_registration_id(self, registration_id):
+        """
+        Excludes the specified registration ID from appearing in the search results.
+
+        Args:
+            registration_id (list): List of string registration IDs.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in registration_id):
+            raise ApiError("One or more invalid registration_id")
+        self._update_exclusions("registration_id", registration_id)
+        return self
+
+    def exclude_eligibility(self, eligibility):
+        """
+        Excludes the specified eligibility from appearing in the search results.
+
+        Args:
+            eligibility (list): List of string eligibilities.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all((_ in ComputeResourceQuery.VALID_ELIGIBILITY) for _ in eligibility):
+            raise ApiError("One or more invalid eligibility")
+        self._update_exclusions("eligibility", eligibility)
+        return self
+
+    def exclude_eligibility_code(self, eligibility_code):
+        """
+        Excludes the specified eligibility code from appearing in the search results.
+
+        Args:
+            eligibility_code (list): List of string eligibility codes.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in eligibility_code):
+            raise ApiError("One or more invalid eligibility_code")
+        self._update_exclusions("eligibility_code", eligibility_code)
+        return self
+
+    def exclude_installation_status(self, installation_status):
+        """
+        Excludes the specified installation status from appearing in the search results.
+
+        Args:
+            installation_status (list): List of string installation statuses.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all((_ in ComputeResourceQuery.VALID_INSTALLATION_STATUS) for _ in installation_status):
+            raise ApiError("One or more invalid installation status")
+        self._update_exclusions("installation_status", installation_status)
+        return self
+
+    def exclude_installation_type(self, installation_type):
+        """
+        Excludes the specified installation type from appearing in the search results.
+
+        Args:
+            installation_type (list): List of string installation types.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in installation_type):
+            raise ApiError("One or more invalid installation_type")
+        self._update_exclusions("installation_type", installation_type)
+        return self
+
+    def exclude_uuid(self, uuid):
+        """
+        Excludes the specified UUID from appearing in the search results.
+
+        Args:
+            uuid (list): List of string UUIDs.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in uuid):
+            raise ApiError("One or more invalid uuid")
+        self._update_exclusions("uuid", uuid)
+        return self
+
+    def exclude_os_description(self, os_description):
+        """
+        Excludes the specified OS description from appearing in the search results.
+
+        Args:
+            os_description (list): List of string OS descriptions.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in os_description):
+            raise ApiError("One or more invalid os_description")
+        self._update_exclusions("os_description", os_description)
+        return self
+
+    def exclude_os_type(self, os_type):
+        """
+        Excludes the specified OS type from appearing in the search results.
+
+        Args:
+            os_type (list): List of string OS types.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all((_ in ComputeResourceQuery.VALID_OS_TYPE) for _ in os_type):
+            raise ApiError("One or more invalid os type")
+        self._update_exclusions("os_type", os_type)
+        return self
+
+    def exclude_os_architecture(self, os_architecture):
+        """
+        Excludes the specified OS architecture from appearing in the search results.
+
+        Args:
+            os_architecture (list): List of string OS architectures.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all((_ in ComputeResourceQuery.VALID_OS_ARCHITECTURE) for _ in os_architecture):
+            raise ApiError("One or more invalid os architecture")
+        self._update_exclusions("os_architecture", os_architecture)
+        return self
+
+    def exclude_vmwaretools_version(self, vmwaretools_version):
+        """
+        Excludes the specified VMware Tools version from appearing in the search results.
+
+        Args:
+            vmwaretools_version (list): List of string VMware Tools versions.
+
+        Returns:
+            ComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in vmwaretools_version):
+            raise ApiError("One or more invalid vmwaretools_version")
+        self._update_exclusions("vmwaretools_version", vmwaretools_version)
+        return self
+
+
+class AWSComputeResourceQuery(BaseComputeResourceQuery):
+    """Represents a query that is used to locate AWSComputeResource objects."""
+    VALID_INSTALLATION_STATUS = ("SUCCESS", "ERROR", "PENDING", "NOT_INSTALLED")
+
+    def __init__(self, doc_class, cb):
+        """
+        Initialize the ComputeResourceQuery.
+
+        Args:
+            doc_class (class): The model class that will be returned by this query.
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+        """
+        super(AWSComputeResourceQuery, self).__init__(doc_class, cb)
+
+    def set_auto_scaling_group_name(self, auto_scaling_group_name):
+        """
+        Restricts the search that this query is performed on to the specified auto scaling group name.
+
+        Args:
+            auto_scaling_group_name (list): List of string auto scaling group names.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in auto_scaling_group_name):
+            raise ApiError("One or more invalid auto_scaling_group_name")
+        self._update_criteria("auto_scaling_group_name", auto_scaling_group_name)
+        return self
+
+    def set_availability_zone(self, availability_zone):
+        """
+        Restricts the search that this query is performed on to the specified availability zone.
+
+        Args:
+            availability_zone (list): List of string availability zones.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in availability_zone):
+            raise ApiError("One or more invalid availability_zone")
+        self._update_criteria("availability_zone", availability_zone)
+        return self
+
+    def set_cloud_provider_account_id(self, cloud_provider_account_id):
+        """
+        Restricts the search that this query is performed on to the specified cloud provider account ID.
+
+        Args:
+            cloud_provider_account_id (list): List of string cloud provider account IDs.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in cloud_provider_account_id):
+            raise ApiError("One or more invalid cloud_provider_account_id")
+        self._update_criteria("cloud_provider_account_id", cloud_provider_account_id)
+        return self
+
+    def set_cloud_provider_resource_id(self, cloud_provider_resource_id):
+        """
+        Restricts the search that this query is performed on to the specified cloud provider resource ID.
+
+        Args:
+            cloud_provider_resource_id (list): List of string cloud provider resource IDs.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in cloud_provider_resource_id):
+            raise ApiError("One or more invalid cloud_provider_resource_id")
+        self._update_criteria("cloud_provider_resource_id", cloud_provider_resource_id)
+        return self
+
+    def set_cloud_provider_tags(self, cloud_provider_tags):
+        """
+        Restricts the search that this query is performed on to the specified cloud provider tags.
+
+        Args:
+            cloud_provider_tags (list): List of string cloud provider tags.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in cloud_provider_tags):
+            raise ApiError("One or more invalid cloud_provider_tags")
+        self._update_criteria("cloud_provider_tags", cloud_provider_tags)
+        return self
+
+    def set_id(self, id_value):
+        """
+        Restricts the search that this query is performed on to the specified compute resource ID.
+
+        Args:
+            id_value (list): List of string compute resource IDs.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in id_value):
+            raise ApiError("One or more invalid IDs")
+        self._update_criteria("id", id_value)
+        return self
+
+    def set_installation_status(self, installation_status):
+        """
+        Restricts the search that this query is performed on to the specified installation status.
+
+        Args:
+            installation_status (list): List of string installation statuses.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all((_ in AWSComputeResourceQuery.VALID_INSTALLATION_STATUS) for _ in installation_status):
+            raise ApiError("One or more invalid installation_status")
+        self._update_criteria("installation_status", installation_status)
+        return self
+
+    def set_name(self, name):
+        """
+        Restricts the search that this query is performed on to the specified compute resource name.
+
+        Args:
+            name (list): List of string compute resource names.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in name):
+            raise ApiError("One or more invalid names")
+        self._update_criteria("name", name)
+        return self
+
+    def set_platform(self, platform):
+        """
+        Restricts the search that this query is performed on to the specified platform.
+
+        Args:
+            platform (list): List of string platforms.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in platform):
+            raise ApiError("One or more invalid platforms")
+        self._update_criteria("platform", platform)
+        return self
+
+    def set_platform_details(self, platform_details):
+        """
+        Restricts the search that this query is performed on to the specified platform details.
+
+        Args:
+            platform_details (list): List of string platform details.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in platform_details):
+            raise ApiError("One or more invalid platform_details")
+        self._update_criteria("platform_details", platform_details)
+        return self
+
+    def set_region(self, region):
+        """
+        Restricts the search that this query is performed on to the specified region.
+
+        Args:
+            region (list): List of string regions.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in region):
+            raise ApiError("One or more invalid regions")
+        self._update_criteria("region", region)
+        return self
+
+    def set_subnet_id(self, subnet_id):
+        """
+        Restricts the search that this query is performed on to the specified subnet ID.
+
+        Args:
+            subnet_id (list): List of string subnet IDs.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in subnet_id):
+            raise ApiError("One or more invalid subnet_id")
+        self._update_criteria("subnet_id", subnet_id)
+        return self
+
+    def set_virtual_private_cloud_id(self, virtual_private_cloud_id):
+        """
+        Restricts the search that this query is performed on to the specified virtual private cloud ID.
+
+        Args:
+            virtual_private_cloud_id (list): List of string virtual private cloud IDs.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in virtual_private_cloud_id):
+            raise ApiError("One or more invalid virtual_private_cloud_id")
+        self._update_criteria("virtual_private_cloud_id", virtual_private_cloud_id)
+        return self
+
+    def exclude_auto_scaling_group_name(self, auto_scaling_group_name):
+        """
+        Excludes the specified auto scaling group name from appearing in the search results.
+
+        Args:
+            auto_scaling_group_name (list): List of string auto scaling group names.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in auto_scaling_group_name):
+            raise ApiError("One or more invalid auto_scaling_group_name")
+        self._update_exclusions("auto_scaling_group_name", auto_scaling_group_name)
+        return self
+
+    def exclude_availability_zone(self, availability_zone):
+        """
+        Excludes the specified availability zone from appearing in the search results.
+
+        Args:
+            availability_zone (list): List of string availability zones.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in availability_zone):
+            raise ApiError("One or more invalid availability zones")
+        self._update_exclusions("availability_zone", availability_zone)
+        return self
+
+    def exclude_cloud_provider_account_id(self, cloud_provider_account_id):
+        """
+        Excludes the specified cloud provider account ID from appearing in the search results.
+
+        Args:
+            cloud_provider_account_id (list): List of string cloud provider account IDs.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in cloud_provider_account_id):
+            raise ApiError("One or more invalid cloud_provider_account_id")
+        self._update_exclusions("cloud_provider_account_id", cloud_provider_account_id)
+        return self
+
+    def exclude_cloud_provider_resource_id(self, cloud_provider_resource_id):
+        """
+        Excludes the specified cloud provider resource ID from appearing in the search results.
+
+        Args:
+            cloud_provider_resource_id (list): List of string cloud provider resource IDs.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in cloud_provider_resource_id):
+            raise ApiError("One or more invalid cloud_provider_resource_id")
+        self._update_exclusions("cloud_provider_resource_id", cloud_provider_resource_id)
+        return self
+
+    def exclude_cloud_provider_tags(self, cloud_provider_tags):
+        """
+        Excludes the specified cloud provider tags from appearing in the search results.
+
+        Args:
+            cloud_provider_tags (list): List of string cloud provider tags.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in cloud_provider_tags):
+            raise ApiError("One or more invalid cloud_provider_tags")
+        self._update_exclusions("cloud_provider_tags", cloud_provider_tags)
+        return self
+
+    def exclude_id(self, id_value):
+        """
+        Excludes the specified compute resource ID from appearing in the search results.
+
+        Args:
+            id_value (list): List of string compute resource IDs.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in id_value):
+            raise ApiError("One or more invalid IDs")
+        self._update_exclusions("id", id_value)
+        return self
+
+    def exclude_installation_status(self, installation_status):
+        """
+        Excludes the specified installation status from appearing in the search results.
+
+        Args:
+            installation_status (list): List of string installation statuses.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all((_ in AWSComputeResourceQuery.VALID_INSTALLATION_STATUS) for _ in installation_status):
+            raise ApiError("One or more invalid installation_status")
+        self._update_exclusions("installation_status", installation_status)
+        return self
+
+    def exclude_name(self, name):
+        """
+        Excludes the specified compute resource name from appearing in the search results.
+
+        Args:
+            name (list): List of string compute resource names.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in name):
+            raise ApiError("One or more invalid names")
+        self._update_exclusions("name", name)
+        return self
+
+    def exclude_platform(self, platform):
+        """
+        Excludes the specified platform from appearing in the search results.
+
+        Args:
+            platform (list): List of string platforms.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in platform):
+            raise ApiError("One or more invalid platforms")
+        self._update_exclusions("platform", platform)
+        return self
+
+    def exclude_platform_details(self, platform_details):
+        """
+        Excludes the specified platform details from appearing in the search results.
+
+        Args:
+            platform_details (list): List of string platform details.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in platform_details):
+            raise ApiError("One or more invalid platform_details")
+        self._update_exclusions("platform_details", platform_details)
+        return self
+
+    def exclude_region(self, region):
+        """
+        Excludes the specified region from appearing in the search results.
+
+        Args:
+            region (list): List of string regions.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in region):
+            raise ApiError("One or more invalid regions")
+        self._update_exclusions("region", region)
+        return self
+
+    def exclude_subnet_id(self, subnet_id):
+        """
+        Excludes the specified subnet ID from appearing in the search results.
+
+        Args:
+            subnet_id (list): List of string subnet IDs.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in subnet_id):
+            raise ApiError("One or more invalid subnet IDs")
+        self._update_exclusions("subnet_id", subnet_id)
+        return self
+
+    def exclude_virtual_private_cloud_id(self, virtual_private_cloud_id):
+        """
+        Excludes the specified virtual private cloud ID from appearing in the search results.
+
+        Args:
+            virtual_private_cloud_id (list): List of string virtual private cloud IDs.
+
+        Returns:
+            AWSComputeResourceQuery: This instance.
+        """
+        if not all(isinstance(_, str) for _ in virtual_private_cloud_id):
+            raise ApiError("One or more invalid virtual_private_cloud_id")
+        self._update_exclusions("virtual_private_cloud_id", virtual_private_cloud_id)
+        return self
