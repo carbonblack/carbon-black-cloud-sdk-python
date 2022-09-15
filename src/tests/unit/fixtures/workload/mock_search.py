@@ -128,3 +128,259 @@ SEARCH_AWS_RESOURCES = {
         }
     ]
 }
+
+WORKLOAD_FACET_REQUEST = {
+    "query": "",
+    "criteria": {
+        "deployment_type": ["WORKLOAD"],
+        "cluster_name": ["buster_cluster"]
+    },
+    "terms": {
+        "rows": 20,
+        "fields": ["eligibility", "installation_status", "vmwaretools_version", "os_type"]
+    }
+}
+
+WORKLOAD_FACET_RESPONSE = {
+    "terms": [
+        {
+            "field": "os_type",
+            "values": [
+                {
+                    "id": "UBUNTU",
+                    "name": "UBUNTU",
+                    "total": 30
+                },
+                {
+                    "id": "WINDOWS",
+                    "name": "WINDOWS",
+                    "total": 15
+                }
+            ]
+        },
+        {
+            "field": "vmwaretools_version",
+            "values": [
+                {
+                    "id": "10336",
+                    "name": "10336",
+                    "total": 27
+                },
+                {
+                    "id": "10400",
+                    "name": "10400",
+                    "total": 18
+                }
+            ]
+        },
+        {
+            "field": "eligibility",
+            "values": [
+                {
+                    "id": "NOT_ELIGIBLE",
+                    "name": "NOT_ELIGIBLE",
+                    "total": 41
+                },
+                {
+                    "id": "ELIGIBLE",
+                    "name": "ELIGIBLE",
+                    "total": 4
+                }
+            ]
+        },
+        {
+            "field": "installation_status",
+            "values": [
+                {
+                    "id": "NOT_INSTALLED",
+                    "name": "NOT_INSTALLED",
+                    "total": 45
+                }
+            ]
+        }
+    ]
+}
+
+AWS_FACET_REQUEST = {
+    "query": "",
+    "criteria": {
+        "deployment_type": ["AWS"],
+        "subnet_id": ["alphaworx"]
+    },
+    "terms": {
+        "rows": 20,
+        "fields": ["auto_scaling_group_name", "cloud_provider_tags", "platform", "platform_details",
+                   "virtual_private_cloud_id"]
+    }
+}
+
+AWS_FACET_RESPONSE = {
+    "terms": [
+        {
+            "field": "cloud_provider_tags",
+            "values": [
+                {
+                    "id": "Name##CB-Installed-Oregon",
+                    "name": "Name##CB-Installed-Oregon",
+                    "total": 6
+                },
+                {
+                    "id": "Name##CB-Installed-Wyoming",
+                    "name": "Name##CB-Installed-Wyoming",
+                    "total": 9
+                }
+            ]
+        },
+        {
+            "field": "auto_scaling_group_name",
+            "values": [
+                {
+                    "id": "Virginia-ASG",
+                    "name": "Virginia-ASG",
+                    "total": 5
+                },
+                {
+                    "id": "Georgia-ASG",
+                    "name": "Georgia-ASG",
+                    "total": 10
+                }
+            ]
+        },
+        {
+            "field": "virtual_private_cloud_id",
+            "values": [
+                {
+                    "id": "vpc-abcd123",
+                    "name": "vpc-abcd123",
+                    "total": 15
+                }
+            ]
+        },
+        {
+            "field": "platform_details",
+            "values": [
+                {
+                    "id": "Linux/UNIX",
+                    "name": "Linux/UNIX",
+                    "total": 15
+                }
+            ]
+        },
+        {
+            "field": "platform",
+            "values": [
+                {
+                    "id": "Unix/Linux",
+                    "name": "Unix/Linux",
+                    "total": 15
+                }
+            ]
+        }
+    ]
+}
+
+WORKLOAD_DOWNLOAD_REQUEST = {
+    "query": "",
+    "rows": 100,
+    "criteria": {
+        "deployment_type": ["WORKLOAD"],
+        "installation_status": [
+            "NOT_INSTALLED",
+            "PENDING",
+            "ERROR"
+        ]
+    },
+    "sort": [
+        {
+            "field": "created_at",
+            "order": "DESC"
+        }
+    ],
+    "format": "CSV"
+}
+
+DOWNLOAD_RESPONSE = {
+    "jobId": 120066
+}
+
+DOWNLOAD_JOB_RESPONSE = {
+    "connector_id": "",
+    "create_time": "",
+    "errors": "",
+    "id": 120066,
+    "job_parameters": {},
+    "last_update_time": "",
+    "org_key": "test",
+    "owner_id": 69,
+    "progress": {
+        "num_total": 40,
+        "num_completed": 0,
+        "message": ""
+    },
+    "status": "",
+    "type": ""
+}
+
+AWS_DOWNLOAD_REQUEST = {
+    "query": "",
+    "rows": 100,
+    "criteria": {
+        "deployment_type": ["AWS"],
+        "auto_scaling_group_name": ["AutoScalingGroup"],
+        "availability_zone": ["us-west-1c"],
+        "cloud_provider_account_id": ["1234567890"],
+        "virtual_private_cloud_id": ["vpc-id"]
+    },
+    "sort": [
+        {
+            "field": "name",
+            "order": "ASC"
+        }
+    ],
+    "format": "JSON"
+}
+
+AWS_SUMMARY_REQUEST = {
+    "query": "",
+    "criteria": {
+        "deployment_type": ["AWS"],
+        "auto_scaling_group_name": ["AutoScalingGroup"],
+        "availability_zone": ["us-west-1c"],
+        "cloud_provider_account_id": ["1234567890"],
+        "virtual_private_cloud_id": ["vpc-id"]
+    },
+    "summary_fields": ["availability_zone", "region", "subnet_id", "virtual_private_cloud_id", "security_group_id"]
+}
+
+AWS_SUMMARY_RESPONSE = {
+    "summaries": [
+        {
+            "count": 14,
+            "field": "availability_zone"
+        },
+        {
+            "count": 17,
+            "field": "security_group_id"
+        },
+        {
+            "count": 16,
+            "field": "subnet_id"
+        },
+        {
+            "count": 6,
+            "field": "region"
+        },
+        {
+            "count": 7,
+            "field": "virtual_private_cloud_id"
+        }
+    ]
+}
+
+AWS_SUMMARY_OUTPUT = {
+    "availability_zone": 14,
+    "security_group_id": 17,
+    "subnet_id": 16,
+    "region": 6,
+    "virtual_private_cloud_id": 7
+}

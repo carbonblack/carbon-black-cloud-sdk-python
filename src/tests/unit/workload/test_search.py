@@ -20,7 +20,11 @@ from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from cbc_sdk.workload.vm_workloads_search import ComputeResource, AWSComputeResource
 from tests.unit.fixtures.workload.mock_search import (FETCH_COMPUTE_RESOURCE_BY_ID_RESP, FETCH_AWS_RESOURCE_BY_ID_RESP,
-                                                      SEARCH_COMPUTE_RESOURCES, SEARCH_AWS_RESOURCES)
+                                                      SEARCH_COMPUTE_RESOURCES, SEARCH_AWS_RESOURCES,
+                                                      WORKLOAD_FACET_REQUEST, WORKLOAD_FACET_RESPONSE,
+                                                      AWS_FACET_REQUEST, AWS_FACET_RESPONSE, WORKLOAD_DOWNLOAD_REQUEST,
+                                                      DOWNLOAD_RESPONSE, DOWNLOAD_JOB_RESPONSE, AWS_DOWNLOAD_REQUEST,
+                                                      AWS_SUMMARY_REQUEST, AWS_SUMMARY_RESPONSE, AWS_SUMMARY_OUTPUT)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -418,3 +422,169 @@ def test_search_aws_failures(cbcsdk_mock):
         query.exclude_subnet_id([1])
     with pytest.raises(ApiError):
         query.exclude_virtual_private_cloud_id([1])
+
+
+def test_facet_resource(cbcsdk_mock):
+    """Tests faceting workload compute resources."""
+    def post_validate(url, body, **kwargs):
+        assert body == WORKLOAD_FACET_REQUEST
+        return WORKLOAD_FACET_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/lcm/view/v2/orgs/test/compute_resources/_facet", post_validate)
+    api = cbcsdk_mock.api
+    query = api.select(ComputeResource).set_cluster_name(["buster_cluster"])
+    results = query.facet(["eligibility", "installation_status", "vmwaretools_version", "os_type"])
+    assert len(results) == 4
+    facet = results[0]
+    assert facet.field == "os_type"
+    assert len(facet.values) == 2
+    assert facet.values[0].id == "UBUNTU"
+    assert facet.values[0].name == "UBUNTU"
+    assert facet.values[0].total == 30
+    assert facet.values[1].id == "WINDOWS"
+    assert facet.values[1].name == "WINDOWS"
+    assert facet.values[1].total == 15
+    facet = results[1]
+    assert facet.field == "vmwaretools_version"
+    assert len(facet.values) == 2
+    assert facet.values[0].id == "10336"
+    assert facet.values[0].name == "10336"
+    assert facet.values[0].total == 27
+    assert facet.values[1].id == "10400"
+    assert facet.values[1].name == "10400"
+    assert facet.values[1].total == 18
+    facet = results[2]
+    assert facet.field == "eligibility"
+    assert len(facet.values) == 2
+    assert facet.values[0].id == "NOT_ELIGIBLE"
+    assert facet.values[0].name == "NOT_ELIGIBLE"
+    assert facet.values[0].total == 41
+    assert facet.values[1].id == "ELIGIBLE"
+    assert facet.values[1].name == "ELIGIBLE"
+    assert facet.values[1].total == 4
+    facet = results[3]
+    assert facet.field == "installation_status"
+    assert len(facet.values) == 1
+    assert facet.values[0].id == "NOT_INSTALLED"
+    assert facet.values[0].name == "NOT_INSTALLED"
+    assert facet.values[0].total == 45
+
+
+def test_facet_aws(cbcsdk_mock):
+    """Tests faceting AWS compute resources."""
+    def post_validate(url, body, **kwargs):
+        assert body == AWS_FACET_REQUEST
+        return AWS_FACET_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/lcm/view/v2/orgs/test/compute_resources/_facet", post_validate)
+    api = cbcsdk_mock.api
+    query = api.select(AWSComputeResource).set_subnet_id(["alphaworx"])
+    results = query.facet(["auto_scaling_group_name", "cloud_provider_tags", "platform", "platform_details",
+                           "virtual_private_cloud_id"])
+    assert len(results) == 5
+    facet = results[0]
+    assert facet.field == "cloud_provider_tags"
+    assert len(facet.values) == 2
+    assert facet.values[0].id == "Name##CB-Installed-Oregon"
+    assert facet.values[0].name == "Name##CB-Installed-Oregon"
+    assert facet.values[0].total == 6
+    assert facet.values[1].id == "Name##CB-Installed-Wyoming"
+    assert facet.values[1].name == "Name##CB-Installed-Wyoming"
+    assert facet.values[1].total == 9
+    facet = results[1]
+    assert facet.field == "auto_scaling_group_name"
+    assert len(facet.values) == 2
+    assert facet.values[0].id == "Virginia-ASG"
+    assert facet.values[0].name == "Virginia-ASG"
+    assert facet.values[0].total == 5
+    assert facet.values[1].id == "Georgia-ASG"
+    assert facet.values[1].name == "Georgia-ASG"
+    assert facet.values[1].total == 10
+    facet = results[2]
+    assert facet.field == "virtual_private_cloud_id"
+    assert len(facet.values) == 1
+    assert facet.values[0].id == "vpc-abcd123"
+    assert facet.values[0].name == "vpc-abcd123"
+    assert facet.values[0].total == 15
+    facet = results[3]
+    assert facet.field == "platform_details"
+    assert len(facet.values) == 1
+    assert facet.values[0].id == "Linux/UNIX"
+    assert facet.values[0].name == "Linux/UNIX"
+    assert facet.values[0].total == 15
+    facet = results[4]
+    assert facet.field == "platform"
+    assert len(facet.values) == 1
+    assert facet.values[0].id == "Unix/Linux"
+    assert facet.values[0].name == "Unix/Linux"
+    assert facet.values[0].total == 15
+
+
+def test_download_resource(cbcsdk_mock):
+    """Test creating a download request for compute resources."""
+    def post_validate(url, body, **kwargs):
+        assert body == WORKLOAD_DOWNLOAD_REQUEST
+        return DOWNLOAD_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/lcm/view/v2/orgs/test/compute_resources/_search/download", post_validate)
+    cbcsdk_mock.mock_request("GET", "/jobs/v1/orgs/test/jobs/120066", DOWNLOAD_JOB_RESPONSE)
+    api = cbcsdk_mock.api
+    query = api.select(ComputeResource).set_installation_status(["NOT_INSTALLED", "PENDING", "ERROR"])
+    query.sort_by("created_at", "DESC")
+    job = query.download("CSV")
+    assert job.id == 120066
+
+
+def test_download_aws(cbcsdk_mock):
+    """Test creating a download request for AWS resources."""
+    def post_validate(url, body, **kwargs):
+        assert body == AWS_DOWNLOAD_REQUEST
+        return DOWNLOAD_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/lcm/view/v2/orgs/test/compute_resources/_search/download", post_validate)
+    cbcsdk_mock.mock_request("GET", "/jobs/v1/orgs/test/jobs/120066", DOWNLOAD_JOB_RESPONSE)
+    api = cbcsdk_mock.api
+    query = api.select(AWSComputeResource).set_auto_scaling_group_name(["AutoScalingGroup"])
+    query.set_availability_zone(["us-west-1c"]).set_cloud_provider_account_id(["1234567890"])
+    query.set_virtual_private_cloud_id(["vpc-id"]).sort_by("name", "ASC")
+    job = query.download()
+    assert job.id == 120066
+
+
+def test_download_aws_broken_server_response(cbcsdk_mock):
+    """Test what happens if the server doesn't send back a job ID."""
+    def post_validate(url, body, **kwargs):
+        assert body == AWS_DOWNLOAD_REQUEST
+        return {}
+
+    cbcsdk_mock.mock_request("POST", "/lcm/view/v2/orgs/test/compute_resources/_search/download", post_validate)
+    api = cbcsdk_mock.api
+    query = api.select(AWSComputeResource).set_auto_scaling_group_name(["AutoScalingGroup"])
+    query.set_availability_zone(["us-west-1c"]).set_cloud_provider_account_id(["1234567890"])
+    query.set_virtual_private_cloud_id(["vpc-id"]).sort_by("name", "ASC")
+    with pytest.raises(ApiError):
+        query.download()
+
+
+def test_invalid_download_format(cb):
+    """Test failure on invalid download format."""
+    query = cb.select(ComputeResource).set_installation_status(["NOT_INSTALLED", "PENDING", "ERROR"])
+    query.sort_by("created_at", "DESC")
+    with pytest.raises(ApiError):
+        query.download("XLS")
+
+
+def test_summarize_aws(cbcsdk_mock):
+    """Test summarizing AWS resource data."""
+    def post_validate(url, body, **kwargs):
+        assert body == AWS_SUMMARY_REQUEST
+        return AWS_SUMMARY_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/lcm/view/v2/orgs/test/compute_resources/_summarize", post_validate)
+    api = cbcsdk_mock.api
+    query = api.select(AWSComputeResource).set_auto_scaling_group_name(["AutoScalingGroup"])
+    query.set_availability_zone(["us-west-1c"]).set_cloud_provider_account_id(["1234567890"])
+    query.set_virtual_private_cloud_id(["vpc-id"])
+    data = query.summarize(["availability_zone", "region", "subnet_id", "virtual_private_cloud_id",
+                            "security_group_id"])
+    assert data == AWS_SUMMARY_OUTPUT

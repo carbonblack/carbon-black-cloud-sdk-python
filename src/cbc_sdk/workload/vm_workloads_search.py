@@ -16,13 +16,14 @@
 import time
 import logging
 from cbc_sdk.errors import ApiError
-from cbc_sdk.base import (NewBaseModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
+from cbc_sdk.base import (NewBaseModel, UnrefreshableModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
                           CriteriaBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
 from cbc_sdk.workload.sensor_lifecycle import SensorKit, _do_sensor_install_request
+from cbc_sdk.platform.jobs import Job
 
 log = logging.getLogger(__name__)
 
-""" Workloads Search model: """
+"""Workloads Search model"""
 
 
 class ComputeResource(NewBaseModel):
@@ -37,8 +38,8 @@ class ComputeResource(NewBaseModel):
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
-            model_unique_id (str): ID of the alert represented.
-            initial_data (dict): Initial data used to populate the alert.
+            model_unique_id (str): ID of the compute resource represented.
+            initial_data (dict): Initial data used to populate the resource object.
         """
         super(ComputeResource, self).__init__(cb, model_unique_id, initial_data)
         if model_unique_id is not None and initial_data is None:
@@ -249,10 +250,71 @@ class AWSComputeResource(ComputeResource):
         return "AWS"
 
 
+class ComputeResourceFacet(UnrefreshableModel):
+    """Facet data returned by the facet() method of the query."""
+    def __init__(self, cb, model_unique_id, initial_data=None):
+        """
+        Initialize the ComputeResourceFacet object.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            model_unique_id (str): ID of the facet represented.
+            initial_data (dict): Initial data used to populate the facet.
+        """
+        super(ComputeResourceFacet, self).__init__(cb, model_unique_id, initial_data, force_init=False, full_doc=True)
+        if initial_data:
+            self._values = [ComputeResourceFacet.ComputeResourceFacetValue(cb, d["id"], d)
+                            for d in initial_data.get("values", [])]
+        else:
+            self._values = []
+
+    class ComputeResourceFacetValue(UnrefreshableModel):
+        def __init__(self, cb, model_unique_id, initial_data=None):
+            """
+            Initialize the ComputeResourceFacetValue object.
+
+            Args:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+                model_unique_id (str): ID of the facet value represented.
+                initial_data (dict): Initial data used to populate the facet value.
+            """
+            super(ComputeResourceFacet.ComputeResourceFacetValue, self).__init__(cb, model_unique_id, initial_data,
+                                                                                 force_init=False, full_doc=True)
+
+    def _subobject(self, name):
+        """
+        Returns the "subobject value" of the given attribute.
+
+        Args:
+            name (str): Name of the subobject value to be returned.
+
+        Returns:
+            Any: Subobject value for the attribute, or None if there is none.
+        """
+        if name == "values":
+            return self._values
+        return super(ComputeResourceFacet, self)._subobject(name)
+
+    @property
+    def values(self):
+        """
+        Returns the values for this particular facet.
+
+        Returns:
+            list[ComputeResourceFacet.ComputeResourceFacetValue]: The values of this facet.
+        """
+        return self._values
+
+
+"""Query Classes"""
+
+
 class BaseComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
                                IterableQueryMixin, AsyncQueryMixin):
     VALID_DIRECTIONS = ("ASC", "DESC")
     VALID_DEPLOYMENT_TYPE = ("WORKLOAD", "AWS")
+    VALID_DOWNLOAD_FORMATS = ("JSON", "CSV")
+    DEFAULT_FACET_ROWS = 20
 
     def __init__(self, doc_class, cb):
         """
@@ -345,6 +407,9 @@ class BaseComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuil
         """
         Returns the number of results from the run of this query.
 
+        Required Permissions:
+            public.cloud.inventory(READ) or _API.Public.Cloud:Public.cloud.inventory:READ
+
         Returns:
             int: The number of results from the run of this query.
         """
@@ -364,6 +429,9 @@ class BaseComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuil
     def _perform_query(self, from_row=0, max_rows=-1):
         """
         Performs the query and returns the results of the query in an iterable fashion.
+
+        Required Permissions:
+            public.cloud.inventory(READ) or _API.Public.Cloud:Public.cloud.inventory:READ
 
         Args:
             from_row (int): The row to start the query at (default 0).
@@ -401,6 +469,9 @@ class BaseComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuil
         """
         Executed in the background to run an asynchronous query.
 
+        Required Permissions:
+            public.cloud.inventory(READ) or _API.Public.Cloud:Public.cloud.inventory:READ
+
         Args:
             context (object): Not used, always None.
 
@@ -415,6 +486,58 @@ class BaseComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuil
         self._count_valid = True
         results = result.get("results", [])
         return [self._doc_class(self._cb, item["id"], item) for item in results]
+
+    def facet(self, fields, rows=None):
+        """
+        Facets all compute resources matching the specified criteria and returns the facet results.
+
+        Required Permissions:
+            public.cloud.inventory(READ) or _API.Public.Cloud:Public.cloud.inventory:READ
+
+        Args:
+            fields (list[str]): List of the fields to be faceted on.
+            rows (int): Number of the top entries to return. Default is 20.
+
+        Returns:
+            list[ComputeResourceFacet]: The facet data.
+        """
+        url = self._build_url("/_facet")
+        request = self._build_request(0, -1, False)
+        if "rows" in request:
+            del request["rows"]
+        if "start" in request:
+            del request["start"]
+        request["terms"] = {"rows": rows if rows else BaseComputeResourceQuery.DEFAULT_FACET_ROWS, "fields": fields}
+        resp = self._cb.post_object(url, body=request)
+        result = resp.json()
+        return [ComputeResourceFacet(self._cb, d["field"], d) for d in result.get("terms", [])]
+
+    def download(self, download_format=None):
+        """
+        Downloads all compute resources matching the specific criteria.
+
+        Required Permissions:
+            public.cloud.inventory(READ) or _API.Public.Cloud:Public.cloud.inventory:READ
+
+        Args:
+            download_format (str): The download format to be used. Valid values are "JSON" (the default) and "CSV".
+
+        Returns:
+            Job: Asynchronous job which will supply the results of the download when they're complete.
+
+        Raises:
+             ApiError: If the format specified was not valid, or if the server did not properly return the job.
+        """
+        if download_format and download_format not in BaseComputeResourceQuery.VALID_DOWNLOAD_FORMATS:
+            raise ApiError(f"download format {download_format} not supported")
+        url = self._build_url("/_search/download")
+        request = self._build_request(0, -1)
+        request["format"] = download_format if download_format else BaseComputeResourceQuery.VALID_DOWNLOAD_FORMATS[0]
+        resp = self._cb.post_object(url, body=request)
+        result = resp.json()
+        if "jobId" in result:
+            return Job(self._cb, result["jobId"])
+        raise ApiError("server did not send back a job ID")
 
 
 class ComputeResourceQuery(BaseComputeResourceQuery):
@@ -1498,3 +1621,27 @@ class AWSComputeResourceQuery(BaseComputeResourceQuery):
             raise ApiError("One or more invalid virtual_private_cloud_id")
         self._update_exclusions("virtual_private_cloud_id", virtual_private_cloud_id)
         return self
+
+    def summarize(self, summary_fields):
+        """
+        Get compute resource summaries on required fields of the resources with the specified criteria.
+
+        Required Permissions:
+            public.cloud.inventory(READ) or _API.Public.Cloud:Public.cloud.inventory:READ
+
+        Args:
+            summary_fields (list[str]): The fields to be summarized.
+
+        Returns:
+            map[str, int]: A mapping of field names to the number of resources with that field.
+        """
+        url = self._build_url("/_summarize")
+        request = self._build_request(0, -1, False)
+        if "rows" in request:
+            del request["rows"]
+        if "start" in request:
+            del request["start"]
+        request["summary_fields"] = summary_fields
+        resp = self._cb.post_object(url, body=request)
+        result = resp.json()
+        return {d["field"]: d["count"] for d in result.get("summaries", [])}
