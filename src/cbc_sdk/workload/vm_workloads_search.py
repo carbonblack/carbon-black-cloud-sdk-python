@@ -269,6 +269,7 @@ class ComputeResourceFacet(UnrefreshableModel):
             self._values = []
 
     class ComputeResourceFacetValue(UnrefreshableModel):
+        """Represents a single facet value inside a ComputeResourceFacet."""
         def __init__(self, cb, model_unique_id, initial_data=None):
             """
             Initialize the ComputeResourceFacetValue object.
@@ -311,6 +312,7 @@ class ComputeResourceFacet(UnrefreshableModel):
 
 class BaseComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
                                IterableQueryMixin, AsyncQueryMixin):
+    """Base class for compute resource queries, not intended for direct use."""
     VALID_DIRECTIONS = ("ASC", "DESC")
     VALID_DEPLOYMENT_TYPE = ("WORKLOAD", "AWS")
     VALID_DOWNLOAD_FORMATS = ("JSON", "CSV")
