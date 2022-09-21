@@ -184,7 +184,10 @@ def facet_aws_resource_sdk(cb):
     print("Facet AWS Compute Resource")
 
     facets = cb.select(AWSComputeResource).facet(['installation_status', 'platform', 'region'], 200)
-    return [facet._info for facet in facets]
+    return_array = [copy.deepcopy(facet._info) for facet in facets]
+    for item in return_array:
+        item.pop("id", None)
+    return return_array
 
 
 def summarize_aws_api(cb):
