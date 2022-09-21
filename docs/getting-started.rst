@@ -19,8 +19,10 @@ See also the :doc:`installation` section of this documentation for more informat
 
 Authentication
 --------------
-In order to make use of the API, you will need an *API token,* which you will get from the Carbon Black Cloud UI.
-For the purposes of our example, we will need a custom key with the ability to list devices.
+To make use of APIs, you will need an *API token,* in case you are using Carbon Black Cloud to manage your
+identity and authentication, or if you are using VMware Cloud Services Platform, an *OAuth App with Bearer* or a *Personal API Token*.
+For our example, we will use a custom CBC-managed key with the ability to list devices.
+To learn more about the different authentication methods, click `here <https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/>`_.
 
 Log into the Carbon Black Cloud UI and go to ``Settings > API Access``.  Start by selecting ``Access Levels`` at the
 top of the screen and press ``Add Access Level``.  Fill in a name and description for your sample access level, keep
