@@ -110,7 +110,7 @@ class BaseComputeResource(NewBaseModel):
         Raises:
             NotImplementedError: Always, for BaseComputeResource.
         """
-        raise NotImplementedError("this resource does not allow sensor installation")
+        raise NotImplementedError("Resource does not allow sensor installation")
 
     @classmethod
     def bulk_install(cls, cb, compute_resources, sensor_kit_types, config_file=None):
@@ -132,7 +132,7 @@ class BaseComputeResource(NewBaseModel):
         Raises:
             NotImplementedError: Always, for BaseComputeResource.
         """
-        raise NotImplementedError("this resource does not allow sensor installation")
+        raise NotImplementedError("Resource does not allow sensor installation")
 
     @classmethod
     def bulk_install_by_id(cls, cb, compute_resources, sensor_kit_types, config_file=None):
@@ -154,7 +154,7 @@ class BaseComputeResource(NewBaseModel):
         Raises:
             NotImplementedError: Always, for BaseComputeResource.
         """
-        raise NotImplementedError("this resource does not allow sensor installation")
+        raise NotImplementedError("Resource does not allow sensor installation")
 
 
 class VCenterComputeResource(BaseComputeResource):
@@ -363,7 +363,7 @@ class AWSComputeResource(BaseComputeResource):
         Raises:
             NotImplementedError: Always, for BaseComputeResource.
         """
-        raise NotImplementedError("this resource does not allow sensor installation")
+        raise NotImplementedError("Resource does not allow sensor installation")
 
     @classmethod
     def bulk_install(cls, cb, compute_resources, sensor_kit_types, config_file=None):
@@ -385,7 +385,7 @@ class AWSComputeResource(BaseComputeResource):
         Raises:
             NotImplementedError: Always, for BaseComputeResource.
         """
-        raise NotImplementedError("this resource does not allow sensor installation")
+        raise NotImplementedError("Resource does not allow sensor installation")
 
     @classmethod
     def bulk_install_by_id(cls, cb, compute_resources, sensor_kit_types, config_file=None):
@@ -407,7 +407,7 @@ class AWSComputeResource(BaseComputeResource):
         Raises:
             NotImplementedError: Always, for BaseComputeResource.
         """
-        raise NotImplementedError("this resource does not allow sensor installation")
+        raise NotImplementedError("Resource does not allow sensor installation")
 
 
 class ComputeResourceFacet(UnrefreshableModel):
