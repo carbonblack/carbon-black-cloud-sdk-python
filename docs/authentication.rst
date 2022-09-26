@@ -6,20 +6,32 @@ Authentication
 
 Carbon Black Cloud APIs require authentication to secure your data.
 
-There are a few methods for authentication listed below. Every method requires
-an API Key. See the `Developer Network Authentication Guide`_ to learn how to
-generate an API Key.
+There are several methods for authentication listed below. Every method requires
+one of the following type of credentials ``X-Auth-Token``, ``OAuth App with Bearer`` or ``Personal API Token``.
+See the `Developer Network Authentication Guide`_ to learn how to
+generate the type of credentials your implementation uses.
 
-The SDK only uses one API Key at a time. It is recommended to create API Keys for
+The SDK only uses one Authentication method at a time. It is recommended to create Authentication Methods for
 specific actions, and use them as needed.
 
 For example, if using the
-`Platform Devices API <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/devices-api/#search-devices>`_
+`Devices API <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/devices-api/#search-devices>`_
 to search for mission critical devices, and the
-`Platform Live Response API <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/live-response-api/>`_
-to execute commands on those devices, generate one API Key with Custom Access Level with appropriate permissions.
-Store the Key with profile name, and reference the profile name when creating CBCloudAPI objects.
+`Live Response API <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/live-response-api/>`_
+to execute commands on those devices, generate one API credential with appropriate permissions and access level.
+Store the credential with a profile name, and reference the profile when creating CBCloudAPI objects.
 
+**Example contents of credentials.cbc file used for authentication with X-Auth-Token. Read more about the credentials.cbc below.**
+::
+
+  [platform]
+  url=https://defense-prod05.conferdeploy.net
+  token=ABCDEFGHIJKLMNO123456789/ABCD123456
+  org_key=ABCD123456
+  ssl_verify=false
+  ssl_verify_hostname=no
+
+**Example code authentication with a profile named "platform"**
 ::
 
   # import relevant modules
@@ -106,7 +118,9 @@ With a File
 ^^^^^^^^^^^
 Credentials may be supplied in a file that resembles a Windows ``.INI`` file in structure, which allows for
 multiple "profiles" or sets of credentials to be supplied in a single file.  The file format is backwards compatible with
-CBAPI, so older files can continue to be used.  This is an example of a credentials file:
+CBAPI, so older files can continue to be used.
+
+**Example of a credentials file containing two profiles**
 
 ::
 
@@ -115,12 +129,6 @@ CBAPI, so older files can continue to be used.  This is an example of a credenti
     token=ABCDEFGHIJKLMNOPQRSTUVWX/12345678
     org_key=A1B2C3D4
     ssl_verify=false
-    ssl_verify_hostname=no
-    ssl_cert_file=foo.certs
-    ssl_force_tls_1_2=1
-    proxy=proxy.example
-    ignore_system_proxy=on
-    integration=MyScript/0.9.0
 
     [production]
     url=http://example.com
@@ -133,6 +141,59 @@ CBAPI, so older files can continue to be used.  This is an example of a credenti
     proxy=proxy.example
     ignore_system_proxy=on
     integration=MyApplication/1.3.1
+
+
+**Common fields** between all types of credentials
+
++-------------------------+---------+----------+
+|  Keyword                | Default | Required |
++=========================+=========+==========+
+| ``url``                 |         | Yes      |
++-------------------------+---------+----------+
+|``org_key``              |         | Yes      |
++-------------------------+---------+----------+
+| ``ssl_verify``          | 1       | No       |
++-------------------------+---------+----------+
+| ``ssl_verify_hostname`` | 1       | No       |
++-------------------------+---------+----------+
+|``ignore_system_proxy``  | 0       | No       |
++-------------------------+---------+----------+
+|``ssl_force_tls_1_2``    | 0       | No       |
++-------------------------+---------+----------+
+|``ssl_cert_file``        |         | No       |
++-------------------------+---------+----------+
+|``proxy``                |         | No       |
++-------------------------+---------+----------+
+|``integration``          |         | No       |
++-------------------------+---------+----------+
+
+**X-AUTH-TOKEN** specific fields
+
++-------------------------+---------+----------+
+|  Keyword                | Default | Required |
++=========================+=========+==========+
+| ``token``               |         | Yes      |
++-------------------------+---------+----------+
+
+**OAuth App with Bearer** specific fields
+
++-------------------------+---------+----------+
+|  Keyword                | Default | Required |
++=========================+=========+==========+
+| ``csp_oauth_app_id``    |         | Yes      |
++-------------------------+---------+----------+
+| ``csp_oauth_app_secret``|         | Yes      |
++-------------------------+---------+----------+
+
+**Personal API Token** specific fields
+
++-------------------------+---------+----------+
+|  Keyword                | Default | Required |
++=========================+=========+==========+
+| ``csp_api_token``       |         | Yes      |
++-------------------------+---------+----------+
+
+
 
 Individual profiles or sections are delimited in the file by placing their name within square brackets: ``[profile_name]``.  Within
 each section, individual credential values are supplied in a ``keyword=value`` format.
@@ -183,31 +244,55 @@ By default, registry entries are stored under the key
 each of which specifies a "profile" (as with credential files).  Within these subkeys, the following named values may
 be specified:
 
-***** **Required**
+**Common fields** between all types of credentials
 
-+-------------------------+----------------+---------+
-|  Keyword                | Value Type     | Default |
-+=========================+================+=========+
-| ``url`` *****           | ``REG_SZ``     |         |
-+-------------------------+----------------+---------+
-| ``token`` *****         | ``REG_SZ``     |         |
-+-------------------------+----------------+---------+
-|``org_key`` *****        | ``REG_SZ``     |         |
-+-------------------------+----------------+---------+
-| ``ssl_verify``          | ``REG_DWORD``  | 1       |
-+-------------------------+----------------+---------+
-| ``ssl_verify_hostname`` | ``REG_DWORD``  | 1       |
-+-------------------------+----------------+---------+
-|``ignore_system_proxy``  |``REG_DWORD``   | 0       |
-+-------------------------+----------------+---------+
-|``ssl_force_tls_1_2``    |``REG_DWORD``   | 0       |
-+-------------------------+----------------+---------+
-|``ssl_cert_file``        | ``REG_SZ``     |         |
-+-------------------------+----------------+---------+
-|``proxy``                | ``REG_SZ``     |         |
-+-------------------------+----------------+---------+
-|``integration``          | ``REG_SZ``     |         |
-+-------------------------+----------------+---------+
++-------------------------+----------------+---------+----------+
+|  Keyword                | Value Type     | Default | Required |
++=========================+================+=========+==========+
+| ``url``                 | ``REG_SZ``     |         | Yes      |
++-------------------------+----------------+---------+----------+
+|``org_key``              | ``REG_SZ``     |         | Yes      |
++-------------------------+----------------+---------+----------+
+| ``ssl_verify``          | ``REG_DWORD``  | 1       | No       |
++-------------------------+----------------+---------+----------+
+| ``ssl_verify_hostname`` | ``REG_DWORD``  | 1       | No       |
++-------------------------+----------------+---------+----------+
+|``ignore_system_proxy``  |``REG_DWORD``   | 0       | No       |
++-------------------------+----------------+---------+----------+
+|``ssl_force_tls_1_2``    |``REG_DWORD``   | 0       | No       |
++-------------------------+----------------+---------+----------+
+|``ssl_cert_file``        | ``REG_SZ``     |         | No       |
++-------------------------+----------------+---------+----------+
+|``proxy``                | ``REG_SZ``     |         | No       |
++-------------------------+----------------+---------+----------+
+|``integration``          | ``REG_SZ``     |         | No       |
++-------------------------+----------------+---------+----------+
+
+**X-AUTH-TOKEN** specific fields
+
++-------------------------+----------------+---------+----------+
+|  Keyword                | Value Type     | Default | Required |
++=========================+================+=========+==========+
+| ``token``               | ``REG_SZ``     |         | Yes      |
++-------------------------+----------------+---------+----------+
+
+**OAuth App with Bearer** specific fields
+
++-------------------------+----------------+---------+----------+
+|  Keyword                | Value Type     | Default | Required |
++=========================+================+=========+==========+
+| ``csp_oauth_app_id``    | ``REG_SZ``     |         | Yes      |
++-------------------------+----------------+---------+----------+
+| ``csp_oauth_app_secret``| ``REG_SZ``     |         | Yes      |
++-------------------------+----------------+---------+----------+
+
+**Personal API Token** specific fields
+
++-------------------------+----------------+---------+----------+
+|  Keyword                | Value Type     | Default | Required |
++=========================+================+=========+==========+
+| ``csp_api_token``       | ``REG_SZ``     |         | Yes      |
++-------------------------+----------------+---------+----------+
 
 Unrecognized named values are ignored.
 
@@ -381,50 +466,79 @@ Explanation of API Credential Components
 When supplying API credentials to the SDK :ref:`at runtime <At Runtime>`, :ref:`with a file <With a File>`,
 or :ref:`with Windows Registry <With Windows Registry>`, the credentials include these components:
 
-***** **Required**
+**Common fields** between ``X-Auth-Token``, ``OAuth App with Bearer`` and ``Personal API Token`` authentication methods
 
-+-------------------------+------------------------------------------------------+---------+
-|  Keyword                | Definition                                           | Default |
-+=========================+======================================================+=========+
-| ``url`` *****           | The URL used to access the Carbon Black Cloud.       |         |
-+-------------------------+------------------------------------------------------+---------+
-| ``token`` *****         | The access token to authenticate with.  Same         |         |
-|                         | structure as ``X-Auth-Token`` defined in             |         |
-|                         | the `Developer Network Authentication Guide`_.       |         |
-|                         | Derived from an API Key's Secret Key and API ID.     |         |
-+-------------------------+------------------------------------------------------+---------+
-|``org_key`` *****        | The organization key specifying which organization to|         |
-|                         | work with.                                           |         |
-+-------------------------+------------------------------------------------------+---------+
-| ``ssl_verify``          | A Boolean value (see below) indicating whether or not| ``True``|
-|                         | to validate the SSL connection.                      |         |
-+-------------------------+------------------------------------------------------+---------+
-| ``ssl_verify_hostname`` | A Boolean value (see below) indicating whether or not| ``True``|
-|                         | to verify the host name of the server being connected|         |
-|                         | to.                                                  |         |
-+-------------------------+------------------------------------------------------+---------+
-|``ignore_system_proxy``  | A Boolean value (see below). If this is ``True``, any|``False``|
-|                         | system proxy settings will be ignored in making the  |         |
-|                         | connection to the server.                            |         |
-+-------------------------+------------------------------------------------------+---------+
-|``ssl_force_tls_1_2``    | A Boolean value (see below). If this is ``True``,    |``False``|
-|                         | the connection will be forced to use TLS 1.2         |         |
-|                         | rather than any later version.                       |         |
-+-------------------------+------------------------------------------------------+---------+
-|``ssl_cert_file``        | The name of an optional certificate file used to     |         |
-|                         | validate the certificates of the SSL connection.     |         |
-|                         | If not specified, the standard system certificate    |         |
-|                         | verification will be used.                           |         |
-+-------------------------+------------------------------------------------------+---------+
-|``proxy``                | If specified, this is the name of a proxy host to be |         |
-|                         | used in making the connection.                       |         |
-+-------------------------+------------------------------------------------------+---------+
-|``integration``          | The name of the integration to use these credentials.|         |
-|                         | The string may optionally end with a slash character,|         |
-|                         | followed by the integration's version number.  Passed|         |
-|                         | as part of the ``User-Agent:`` HTTP header on all    |         |
-|                         | requests made by the SDK.                            |         |
-+-------------------------+------------------------------------------------------+---------+
++-------------------------+------------------------------------------------------+---------+----------+
+|  Keyword                | Definition                                           | Default | Required |
++=========================+======================================================+=========+==========+
+| ``url``                 | The URL used to access the Carbon Black Cloud.       |         | Yes      |
++-------------------------+------------------------------------------------------+---------+----------+
+|``org_key``              | The organization key specifying which organization to|         | Yes      |
+|                         | work with.                                           |         |          |
++-------------------------+------------------------------------------------------+---------+----------+
+| ``ssl_verify``          | A Boolean value (see below) indicating whether or not| ``True``| No       |
+|                         | to validate the SSL connection.                      |         |          |
++-------------------------+------------------------------------------------------+---------+----------+
+| ``ssl_verify_hostname`` | A Boolean value (see below) indicating whether or not| ``True``| No       |
+|                         | to verify the host name of the server being connected|         |          |
+|                         | to.                                                  |         |          |
++-------------------------+------------------------------------------------------+---------+----------+
+|``ignore_system_proxy``  | A Boolean value (see below). If this is ``True``, any|``False``| No       |
+|                         | system proxy settings will be ignored in making the  |         |          |
+|                         | connection to the server.                            |         |          |
++-------------------------+------------------------------------------------------+---------+----------+
+|``ssl_force_tls_1_2``    | A Boolean value (see below). If this is ``True``,    |``False``| No       |
+|                         | the connection will be forced to use TLS 1.2         |         |          |
+|                         | rather than any later version.                       |         |          |
++-------------------------+------------------------------------------------------+---------+----------+
+|``ssl_cert_file``        | The name of an optional certificate file used to     |         | No       |
+|                         | validate the certificates of the SSL connection.     |         |          |
+|                         | If not specified, the standard system certificate    |         |          |
+|                         | verification will be used.                           |         |          |
++-------------------------+------------------------------------------------------+---------+----------+
+|``proxy``                | If specified, this is the name of a proxy host to be |         | No       |
+|                         | used in making the connection.                       |         |          |
++-------------------------+------------------------------------------------------+---------+----------+
+|``integration``          | The name of the integration to use these credentials.|         | No       |
+|                         | The string may optionally end with a slash character,|         |          |
+|                         | followed by the integration's version number.  Passed|         |          |
+|                         | as part of the ``User-Agent:`` HTTP header on all    |         |          |
+|                         | requests made by the SDK.                            |         |          |
++-------------------------+------------------------------------------------------+---------+----------+
+
+**X-AUTH-TOKEN** specific fields
+
++-------------------------+------------------------------------------------------+----------+
+|  Keyword                | Definition                                           | Required |
++=========================+======================================================+==========+
+| ``token``               | The access token to authenticate with.  Same         | Yes      |
+|                         | structure as ``X-Auth-Token`` defined in             |          |
+|                         | the `Developer Network Authentication Guide`_.       |          |
+|                         | Derived from an API Key's Secret Key and API ID.     |          |
++-------------------------+------------------------------------------------------+----------+
+
+**OAuth App with Bearer** specific fields
+
++-------------------------+------------------------------------------------------+----------+
+|  Keyword                | Definition                                           | Required |
++=========================+======================================================+==========+
+| ``csp_oauth_app_id``    | Client ID, enter the Client ID that you set in       |          |
+|                         | Create OAuth 2.0 Client.                             | Yes      |
++-------------------------+------------------------------------------------------+----------+
+| ``csp_oauth_app_secret``| Client Secret, enter the secret that was             | Yes      |
+|                         | generated in Create OAuth 2.0 Client.                |          |
++-------------------------+------------------------------------------------------+----------+
+
+**Personal API Token** specific fields
+
++-------------------------+------------------------------------------------------+----------+
+|  Keyword                | Definition                                           | Required |
++=========================+======================================================+==========+
+| ``csp_api_token``       | API tokens are issued by users in an organization    | Yes      |
+|                         | and are associated with the user’s account           |          |
+|                         | and the organization from which they                 |          |
+|                         | generated the API token.                             |          |
++-------------------------+------------------------------------------------------+----------+
 
 .. _`Developer Network Authentication Guide`: https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/#creating-an-api-key
 
