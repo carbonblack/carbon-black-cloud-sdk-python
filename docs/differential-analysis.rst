@@ -154,14 +154,6 @@ To use this method, append it to the rest of the Differential object query or co
     >>>
     >>> query = cbc.select(Differential).newer_run_id('jcdqsju4utpaayj5dh5r2llzffeolg0u').older_run_id('yhbg3wcea9y1l4asiltky5tupkgauzas')
     >>> export = query.count_only(False).set_device_ids([12345]).async_export()
-    >>> print(export.status)
-    IN_PROGRESS
-    >>> # wait for it to finish and refresh the information in the SDK
-    >>> job_future = export.await_completion()
-    >>> finished_job = job_future.result()
-    >>> finished_job.refresh()
-    >>> # show the job has completed
-    >>> print(finished_job.status)
-    COMPLETED
+    >>> export.await_completion()
     >>> # write the results to a file
-    >>> finished_job.get_output_as_file("example_data.json")
+    >>> export.get_output_as_file("example_data.json")
