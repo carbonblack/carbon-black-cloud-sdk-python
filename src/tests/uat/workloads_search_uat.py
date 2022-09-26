@@ -36,7 +36,7 @@ import requests
 import copy
 
 # Internal library imports
-from cbc_sdk.workload.vm_workloads_search import ComputeResource, AWSComputeResource
+from cbc_sdk.workload.vm_workloads_search import VCenterComputeResource, AWSComputeResource
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
 
 
@@ -64,7 +64,7 @@ def search_compute_resources_sdk(cb):
     print("Search Compute Resources")
 
     resource_id = None
-    query = list(cb.select(ComputeResource))
+    query = list(cb.select(VCenterComputeResource))
     for resource in query:
         if not resource_id and resource.id and resource.uuid:
             resource_id = resource.id
@@ -119,7 +119,7 @@ def fetch_compute_resource_by_id_sdk(cb, resource_id):
     print("API Calls:")
     print("Fetch Compute Resource by ID")
 
-    return ComputeResource(cb, resource_id)._info
+    return VCenterComputeResource(cb, resource_id)._info
 
 
 def fetch_aws_resource_by_id_api(cb, resource_id):
@@ -158,7 +158,7 @@ def facet_compute_resource_sdk(cb):
     print("API Calls:")
     print("Facet Compute Resource")
 
-    facets = cb.select(ComputeResource).facet(['eligibility', 'os_type', 'installation_status'], 200)
+    facets = cb.select(VCenterComputeResource).facet(['eligibility', 'os_type', 'installation_status'], 200)
     return_array = [copy.deepcopy(facet._info) for facet in facets]
     for item in return_array:
         item.pop("id", None)
