@@ -15,7 +15,7 @@
 
 import time
 import logging
-from cbc_sdk.errors import ApiError
+from cbc_sdk.errors import ApiError, NonQueryableModel
 from cbc_sdk.base import (NewBaseModel, UnrefreshableModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
                           CriteriaBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
 from cbc_sdk.workload.sensor_lifecycle import SensorKit, _do_sensor_install_request
@@ -26,22 +26,22 @@ log = logging.getLogger(__name__)
 """Workloads Search model"""
 
 
-class ComputeResource(NewBaseModel):
-    """ComputeResource Model"""
+class BaseComputeResource(NewBaseModel):
+    """Internal BaseComputeResource model"""
     urlobject = "/lcm/view/v2/orgs/{0}/compute_resources"
     urlobject_single = "/lcm/view/v2/orgs/{0}/compute_resources/{1}?deployment_type={2}"
     primary_key = "id"
 
     def __init__(self, cb, model_unique_id, initial_data=None):
         """
-        Initialize the ComputeResource object.
+        Initialize the BaseComputeResource object.
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
             model_unique_id (str): ID of the compute resource represented.
             initial_data (dict): Initial data used to populate the resource object.
         """
-        super(ComputeResource, self).__init__(cb, model_unique_id, initial_data)
+        super(BaseComputeResource, self).__init__(cb, model_unique_id, initial_data)
         if model_unique_id is not None and initial_data is None:
             self._refresh()
         self._full_init = True
@@ -56,21 +56,9 @@ class ComputeResource(NewBaseModel):
             **kwargs (dict): Not used, retained for compatibility.
 
         Returns:
-            ComputeResourceQuery: The query object
+            VCenterComputeResourceQuery: The query object
         """
-        return ComputeResourceQuery(cls, cb)
-
-    def _refresh(self):
-        """
-        Rereads the object data from the server.
-
-        Returns:
-           bool: True if refresh was successful, False if not.
-        """
-        resp = self._cb.get_object(self._build_api_request_uri())
-        self._info = resp
-        self._last_refresh_time = time.time()
-        return True
+        raise NonQueryableModel("BaseComputeResource is not directly queryable")
 
     @classmethod
     def _get_default_deployment_type(cls):
@@ -80,7 +68,7 @@ class ComputeResource(NewBaseModel):
         Returns:
             str: The default deployment type for this class.
         """
-        return "WORKLOAD"
+        raise NotImplementedError("this method is not implemented")
 
     def _build_api_request_uri(self, http_method="GET"):
         """
@@ -94,6 +82,117 @@ class ComputeResource(NewBaseModel):
         """
         return self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id,
                                             self._info.get('deployment_type', self._get_default_deployment_type()))
+
+    def _refresh(self):
+        """
+        Rereads the object data from the server.
+
+        Returns:
+           bool: True if refresh was successful, False if not.
+        """
+        resp = self._cb.get_object(self._build_api_request_uri())
+        self._info = resp
+        self._last_refresh_time = time.time()
+        return True
+
+    def install_sensor(self, sensor_version, config_file=None):
+        """
+        Install a sensor on this compute resource.
+
+        Args:
+            sensor_version (str): The version number of the sensor to be used.
+            config_file (str): The text of a config.ini file with a list of sensor properties to configure
+                               on installation.
+
+        Returns:
+            dict: A dict with two members, 'type' and 'code', indicating the status of the installation.
+
+        Raises:
+            NotImplementedError: Always, for BaseComputeResource.
+        """
+        raise NotImplementedError("this resource does not allow sensor installation")
+
+    @classmethod
+    def bulk_install(cls, cb, compute_resources, sensor_kit_types, config_file=None):
+        """
+        Install a sensor on a list of compute resources.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            compute_resources (list): A list of ComputeResource objects used to specify compute resources to install
+                                      sensors on.
+            sensor_kit_types (list): A list of SensorKit objects used to specify sensor types to choose from
+                                     in installation.
+            config_file (str): The text of a config.ini file with a list of sensor properties to configure
+                               on installation.
+
+        Returns:
+            dict: A dict with two members, 'type' and 'code', indicating the status of the installation.
+
+        Raises:
+            NotImplementedError: Always, for BaseComputeResource.
+        """
+        raise NotImplementedError("this resource does not allow sensor installation")
+
+    @classmethod
+    def bulk_install_by_id(cls, cb, compute_resources, sensor_kit_types, config_file=None):
+        """
+        Install a sensor on a list of compute resources, specified by ID.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            compute_resources (list): A list of dicts, each of which contains the keys 'vcenter_uuid' and
+                                      'compute_resource_id', specifying the compute resources to install sensors on.
+            sensor_kit_types (list): A list of SensorKit objects used to specify sensor types to choose from
+                                     in installation.
+            config_file (str): The text of a config.ini file with a list of sensor properties to configure
+                               on installation.
+
+        Returns:
+            dict: A dict with two members, 'type' and 'code', indicating the status of the installation.
+
+        Raises:
+            NotImplementedError: Always, for BaseComputeResource.
+        """
+        raise NotImplementedError("this resource does not allow sensor installation")
+
+
+class VCenterComputeResource(BaseComputeResource):
+    """Models a vCenter compute resource."""
+    def __init__(self, cb, model_unique_id, initial_data=None):
+        """
+        Initialize the AWSComputeResource object.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            model_unique_id (str): ID of the alert represented.
+            initial_data (dict): Initial data used to populate the alert.
+        """
+        super(VCenterComputeResource, self).__init__(cb, model_unique_id, initial_data)
+
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
+        """
+        Returns the appropriate query object for this object type.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            VCenterComputeResourceQuery: The query object
+        """
+        return VCenterComputeResourceQuery(cls, cb)
+
+    @classmethod
+    def _get_default_deployment_type(cls):
+        """
+        Return the default deployment type.
+
+        Returns:
+            str: The default deployment type for this class.
+        """
+        return "WORKLOAD"
 
     def _get_sensor_type(self):
         """
@@ -169,7 +268,7 @@ class ComputeResource(NewBaseModel):
             ApiError: If the compute node is not eligible or is of an invalid type.
         """
         sensorkit = self._build_desired_sensorkit(sensor_version)
-        return _do_sensor_install_request(self._cb, ComputeResource._build_compute_resource_list([self]),
+        return _do_sensor_install_request(self._cb, VCenterComputeResource._build_compute_resource_list([self]),
                                           [sensorkit], config_file)
 
     @classmethod
@@ -189,7 +288,7 @@ class ComputeResource(NewBaseModel):
         Returns:
             dict: A dict with two members, 'type' and 'code', indicating the status of the installation.
         """
-        return _do_sensor_install_request(cb, ComputeResource._build_compute_resource_list(compute_resources),
+        return _do_sensor_install_request(cb, VCenterComputeResource._build_compute_resource_list(compute_resources),
                                           sensor_kit_types, config_file)
 
     @classmethod
@@ -212,8 +311,8 @@ class ComputeResource(NewBaseModel):
         return _do_sensor_install_request(cb, compute_resources, sensor_kit_types, config_file)
 
 
-class AWSComputeResource(ComputeResource):
-    """Shim class to allow querying for AWS compute resource."""
+class AWSComputeResource(BaseComputeResource):
+    """Models an AWS compute resource."""
     def __init__(self, cb, model_unique_id, initial_data=None):
         """
         Initialize the AWSComputeResource object.
@@ -248,6 +347,67 @@ class AWSComputeResource(ComputeResource):
             str: The default deployment type for this class.
         """
         return "AWS"
+
+    def install_sensor(self, sensor_version, config_file=None):
+        """
+        Install a sensor on this compute resource.
+
+        Args:
+            sensor_version (str): The version number of the sensor to be used.
+            config_file (str): The text of a config.ini file with a list of sensor properties to configure
+                               on installation.
+
+        Returns:
+            dict: A dict with two members, 'type' and 'code', indicating the status of the installation.
+
+        Raises:
+            NotImplementedError: Always, for BaseComputeResource.
+        """
+        raise NotImplementedError("this resource does not allow sensor installation")
+
+    @classmethod
+    def bulk_install(cls, cb, compute_resources, sensor_kit_types, config_file=None):
+        """
+        Install a sensor on a list of compute resources.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            compute_resources (list): A list of ComputeResource objects used to specify compute resources to install
+                                      sensors on.
+            sensor_kit_types (list): A list of SensorKit objects used to specify sensor types to choose from
+                                     in installation.
+            config_file (str): The text of a config.ini file with a list of sensor properties to configure
+                               on installation.
+
+        Returns:
+            dict: A dict with two members, 'type' and 'code', indicating the status of the installation.
+
+        Raises:
+            NotImplementedError: Always, for BaseComputeResource.
+        """
+        raise NotImplementedError("this resource does not allow sensor installation")
+
+    @classmethod
+    def bulk_install_by_id(cls, cb, compute_resources, sensor_kit_types, config_file=None):
+        """
+        Install a sensor on a list of compute resources, specified by ID.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            compute_resources (list): A list of dicts, each of which contains the keys 'vcenter_uuid' and
+                                      'compute_resource_id', specifying the compute resources to install sensors on.
+            sensor_kit_types (list): A list of SensorKit objects used to specify sensor types to choose from
+                                     in installation.
+            config_file (str): The text of a config.ini file with a list of sensor properties to configure
+                               on installation.
+
+        Returns:
+            dict: A dict with two members, 'type' and 'code', indicating the status of the installation.
+
+        Raises:
+            NotImplementedError: Always, for BaseComputeResource.
+        """
+        raise NotImplementedError("this resource does not allow sensor installation")
 
 
 class ComputeResourceFacet(UnrefreshableModel):
@@ -542,7 +702,7 @@ class BaseComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuil
         raise ApiError("server did not send back a job ID")
 
 
-class ComputeResourceQuery(BaseComputeResourceQuery):
+class VCenterComputeResourceQuery(BaseComputeResourceQuery):
     """Represents a query that is used to locate ComputeResource objects."""
     VALID_OS_TYPE = ("WINDOWS", "RHEL", "UBUNTU", "SUSE", "SLES", "CENTOS", "OTHER", "AMAZON_LINUX", "ORACLE")
     VALID_ELIGIBILITY = ("ELIGIBLE", "NOT_ELIGIBLE", "UNSUPPORTED")
@@ -557,7 +717,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             doc_class (class): The model class that will be returned by this query.
             cb (BaseAPI): Reference to API object used to communicate with the server.
         """
-        super(ComputeResourceQuery, self).__init__(doc_class, cb)
+        super(VCenterComputeResourceQuery, self).__init__(doc_class, cb)
 
     def set_appliance_uuid(self, appliance_uuid):
         """
@@ -567,7 +727,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             appliance_uuid (list): List of string appliance uuids.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in appliance_uuid):
             raise ApiError("One or more invalid appliance uuid")
@@ -582,7 +742,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             cluster_name (list): List of string cluster names.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in cluster_name):
             raise ApiError("One or more invalid cluster name")
@@ -597,7 +757,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             datacenter_name (list): List of string datacenter names.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in datacenter_name):
             raise ApiError("One or more invalid datacenter_name")
@@ -612,7 +772,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             esx_host_name (list): List of string ESX host names.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in esx_host_name):
             raise ApiError("One or more invalid esx_host_name")
@@ -627,7 +787,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             esx_host_uuid (list): List of string ESX host UUIDs.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in esx_host_uuid):
             raise ApiError("One or more invalid esx_host_uuid")
@@ -642,7 +802,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             vcenter_name (list): List of string vCenter names.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in vcenter_name):
             raise ApiError("One or more invalid vcenter_name")
@@ -657,7 +817,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             vcenter_host_url (list): List of string vCenter host URLs.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in vcenter_host_url):
             raise ApiError("One or more invalid vcenter_host_url")
@@ -672,7 +832,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             vcenter_uuid (list): List of string vCenter UUIDs.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in vcenter_uuid):
             raise ApiError("One or more invalid vcenter_uuid")
@@ -687,7 +847,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             name (list): List of string names.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in name):
             raise ApiError("One or more invalid names")
@@ -702,7 +862,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             host_name (list): List of string host names.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in host_name):
             raise ApiError("One or more invalid host_names")
@@ -717,7 +877,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             ip_address (list): List of string ip addresses.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in ip_address):
             raise ApiError("One or more invalid ip address")
@@ -732,7 +892,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             device_guid (list): List of string device GUIDs.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in device_guid):
             raise ApiError("One or more invalid device_guid")
@@ -747,7 +907,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             registration_id (list): List of string registration IDs.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in registration_id):
             raise ApiError("One or more invalid registration_id")
@@ -762,9 +922,9 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             eligibility (list): List of string eligibilities.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
-        if not all((_ in ComputeResourceQuery.VALID_ELIGIBILITY) for _ in eligibility):
+        if not all((_ in VCenterComputeResourceQuery.VALID_ELIGIBILITY) for _ in eligibility):
             raise ApiError("One or more invalid eligibility")
         self._update_criteria("eligibility", eligibility)
         return self
@@ -777,7 +937,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             eligibility_code (list): List of string eligibility codes.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in eligibility_code):
             raise ApiError("One or more invalid eligibility_code")
@@ -792,9 +952,9 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             installation_status (list): List of string installation status.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
-        if not all((_ in ComputeResourceQuery.VALID_INSTALLATION_STATUS) for _ in installation_status):
+        if not all((_ in VCenterComputeResourceQuery.VALID_INSTALLATION_STATUS) for _ in installation_status):
             raise ApiError("One or more invalid installation status")
         self._update_criteria("installation_status", installation_status)
         return self
@@ -807,7 +967,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             installation_type (list): List of string installation types.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in installation_type):
             raise ApiError("One or more invalid installation_type")
@@ -822,7 +982,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             uuid (list): List of string uuid.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in uuid):
             raise ApiError("One or more invalid uuid")
@@ -837,7 +997,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             os_description (list): List of string os description.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in os_description):
             raise ApiError("One or more invalid os_description")
@@ -852,9 +1012,9 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             os_type (list): List of string os type.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
-        if not all((_ in ComputeResourceQuery.VALID_OS_TYPE) for _ in os_type):
+        if not all((_ in VCenterComputeResourceQuery.VALID_OS_TYPE) for _ in os_type):
             raise ApiError("One or more invalid os type")
         self._update_criteria("os_type", os_type)
         return self
@@ -867,9 +1027,9 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             os_architecture (list): List of string os architecture.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
-        if not all((_ in ComputeResourceQuery.VALID_OS_ARCHITECTURE) for _ in os_architecture):
+        if not all((_ in VCenterComputeResourceQuery.VALID_OS_ARCHITECTURE) for _ in os_architecture):
             raise ApiError("One or more invalid os architecture")
         self._update_criteria("os_architecture", os_architecture)
         return self
@@ -882,7 +1042,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             vmwaretools_version (list): List of string VMware Tools versions.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in vmwaretools_version):
             raise ApiError("One or more invalid vmwaretools_version")
@@ -897,7 +1057,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             appliance_uuid (list): List of string appliance uuids.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in appliance_uuid):
             raise ApiError("One or more invalid appliance uuid")
@@ -912,7 +1072,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             cluster_name (list): List of string cluster names.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in cluster_name):
             raise ApiError("One or more invalid cluster_name")
@@ -927,7 +1087,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             datacenter_name (list): List of string datacenter names.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in datacenter_name):
             raise ApiError("One or more invalid datacenter_name")
@@ -942,7 +1102,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             esx_host_name (list): List of string ESX host names.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in esx_host_name):
             raise ApiError("One or more invalid esx_host_name")
@@ -957,7 +1117,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             esx_host_uuid (list): List of string ESX host UUIDs.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in esx_host_uuid):
             raise ApiError("One or more invalid esx_host_uuid")
@@ -972,7 +1132,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             vcenter_name (list): List of string vCenter names.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in vcenter_name):
             raise ApiError("One or more invalid vcenter_name")
@@ -987,7 +1147,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             vcenter_host_url (list): List of string vCenter host URLs.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in vcenter_host_url):
             raise ApiError("One or more invalid vcenter_host_url")
@@ -1002,7 +1162,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             vcenter_uuid (list): List of string vCenter UUIDs.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in vcenter_uuid):
             raise ApiError("One or more invalid vcenter_uuid")
@@ -1017,7 +1177,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             name (list): List of string names.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in name):
             raise ApiError("One or more invalid names")
@@ -1032,7 +1192,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             host_name (list): List of string host names.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in host_name):
             raise ApiError("One or more invalid host names")
@@ -1047,7 +1207,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             ip_address (list): List of string IP addresses.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in ip_address):
             raise ApiError("One or more invalid IP addresses")
@@ -1062,7 +1222,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             device_guid (list): List of string device GUIDs.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in device_guid):
             raise ApiError("One or more invalid device_guid")
@@ -1077,7 +1237,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             registration_id (list): List of string registration IDs.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in registration_id):
             raise ApiError("One or more invalid registration_id")
@@ -1092,9 +1252,9 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             eligibility (list): List of string eligibilities.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
-        if not all((_ in ComputeResourceQuery.VALID_ELIGIBILITY) for _ in eligibility):
+        if not all((_ in VCenterComputeResourceQuery.VALID_ELIGIBILITY) for _ in eligibility):
             raise ApiError("One or more invalid eligibility")
         self._update_exclusions("eligibility", eligibility)
         return self
@@ -1107,7 +1267,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             eligibility_code (list): List of string eligibility codes.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in eligibility_code):
             raise ApiError("One or more invalid eligibility_code")
@@ -1122,9 +1282,9 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             installation_status (list): List of string installation statuses.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
-        if not all((_ in ComputeResourceQuery.VALID_INSTALLATION_STATUS) for _ in installation_status):
+        if not all((_ in VCenterComputeResourceQuery.VALID_INSTALLATION_STATUS) for _ in installation_status):
             raise ApiError("One or more invalid installation status")
         self._update_exclusions("installation_status", installation_status)
         return self
@@ -1137,7 +1297,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             installation_type (list): List of string installation types.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in installation_type):
             raise ApiError("One or more invalid installation_type")
@@ -1152,7 +1312,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             uuid (list): List of string UUIDs.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in uuid):
             raise ApiError("One or more invalid uuid")
@@ -1167,7 +1327,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             os_description (list): List of string OS descriptions.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in os_description):
             raise ApiError("One or more invalid os_description")
@@ -1182,9 +1342,9 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             os_type (list): List of string OS types.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
-        if not all((_ in ComputeResourceQuery.VALID_OS_TYPE) for _ in os_type):
+        if not all((_ in VCenterComputeResourceQuery.VALID_OS_TYPE) for _ in os_type):
             raise ApiError("One or more invalid os type")
         self._update_exclusions("os_type", os_type)
         return self
@@ -1197,9 +1357,9 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             os_architecture (list): List of string OS architectures.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
-        if not all((_ in ComputeResourceQuery.VALID_OS_ARCHITECTURE) for _ in os_architecture):
+        if not all((_ in VCenterComputeResourceQuery.VALID_OS_ARCHITECTURE) for _ in os_architecture):
             raise ApiError("One or more invalid os architecture")
         self._update_exclusions("os_architecture", os_architecture)
         return self
@@ -1212,7 +1372,7 @@ class ComputeResourceQuery(BaseComputeResourceQuery):
             vmwaretools_version (list): List of string VMware Tools versions.
 
         Returns:
-            ComputeResourceQuery: This instance.
+            VCenterComputeResourceQuery: This instance.
         """
         if not all(isinstance(_, str) for _ in vmwaretools_version):
             raise ApiError("One or more invalid vmwaretools_version")

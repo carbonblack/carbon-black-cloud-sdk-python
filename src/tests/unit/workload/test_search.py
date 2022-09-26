@@ -18,7 +18,8 @@ import logging
 from cbc_sdk.errors import ApiError
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from cbc_sdk.workload.vm_workloads_search import ComputeResource, AWSComputeResource
+from cbc_sdk.workload.vm_workloads_search import VCenterComputeResource, AWSComputeResource
+from cbc_sdk.platform.jobs import Job
 from tests.unit.fixtures.workload.mock_search import (FETCH_COMPUTE_RESOURCE_BY_ID_RESP, FETCH_AWS_RESOURCE_BY_ID_RESP,
                                                       SEARCH_COMPUTE_RESOURCES, SEARCH_AWS_RESOURCES,
                                                       WORKLOAD_FACET_REQUEST, WORKLOAD_FACET_RESPONSE,
@@ -52,7 +53,7 @@ def test_compute_resource_by_id(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", "/lcm/view/v2/orgs/test/compute_resources/15396109?deployment_type=WORKLOAD",
                              FETCH_COMPUTE_RESOURCE_BY_ID_RESP)
     api = cbcsdk_mock.api
-    resource = ComputeResource(api, "15396109")
+    resource = VCenterComputeResource(api, "15396109")
     assert resource._model_unique_id == "15396109"
 
 
@@ -78,7 +79,7 @@ def test_search_resource_async(cbcsdk_mock):
     cbcsdk_mock.mock_request("POST", "/lcm/view/v2/orgs/test/compute_resources/_search",
                              post_validate)
     api = cbcsdk_mock.api
-    query = api.select(ComputeResource).set_uuid(['502277cc-0aa9-80b0-9ac8-6f540c11edaf']).sort_by("name", "ASC")
+    query = api.select(VCenterComputeResource).set_uuid(['502277cc-0aa9-80b0-9ac8-6f540c11edaf']).sort_by("name", "ASC")
 
     assert query._count() == 1
     results = [result for result in query._run_async_query(None)]
@@ -144,7 +145,7 @@ def test_search_resource_with_all_bells_and_whistles(cbcsdk_mock):
     cbcsdk_mock.mock_request("POST", "/lcm/view/v2/orgs/test/compute_resources/_search",
                              post_validate)
     api = cbcsdk_mock.api
-    query = api.select(ComputeResource).set_appliance_uuid(['c89f183b-f201-4bca-bacc-80184b5b8823']) \
+    query = api.select(VCenterComputeResource).set_appliance_uuid(['c89f183b-f201-4bca-bacc-80184b5b8823']) \
         .set_cluster_name(['launcher-cluster']).set_datacenter_name(['launcher-dc']) \
         .set_esx_host_name(['10.105.5.70']).set_esx_host_uuid(['d5304d56-5004-a871-1ad1-bd4b4af9977d']) \
         .set_vcenter_name(['VMware vCenter Server 7.0.0 build-15952599']).set_vcenter_host_url(['10.105.5.63']) \
@@ -183,7 +184,7 @@ def test_search_resource_with_all_bells_and_whistles(cbcsdk_mock):
 
 def test_search_resource_failures(cbcsdk_mock):
     """Testng all set methods for failure."""
-    query = cbcsdk_mock.api.select(ComputeResource)
+    query = cbcsdk_mock.api.select(VCenterComputeResource)
     with pytest.raises(ApiError):
         query.set_appliance_uuid([1])
     with pytest.raises(ApiError):
@@ -432,7 +433,7 @@ def test_facet_resource(cbcsdk_mock):
 
     cbcsdk_mock.mock_request("POST", "/lcm/view/v2/orgs/test/compute_resources/_facet", post_validate)
     api = cbcsdk_mock.api
-    query = api.select(ComputeResource).set_cluster_name(["buster_cluster"])
+    query = api.select(VCenterComputeResource).set_cluster_name(["buster_cluster"])
     results = query.facet(["eligibility", "installation_status", "vmwaretools_version", "os_type"])
     assert len(results) == 4
     facet = results[0]
@@ -529,7 +530,7 @@ def test_download_resource(cbcsdk_mock):
     cbcsdk_mock.mock_request("POST", "/lcm/view/v2/orgs/test/compute_resources/_search/download", post_validate)
     cbcsdk_mock.mock_request("GET", "/jobs/v1/orgs/test/jobs/120066", DOWNLOAD_JOB_RESPONSE)
     api = cbcsdk_mock.api
-    query = api.select(ComputeResource).set_installation_status(["NOT_INSTALLED", "PENDING", "ERROR"])
+    query = api.select(VCenterComputeResource).set_installation_status(["NOT_INSTALLED", "PENDING", "ERROR"])
     query.sort_by("created_at", "DESC")
     job = query.download("CSV")
     assert job.id == 120066
@@ -548,6 +549,7 @@ def test_download_aws(cbcsdk_mock):
     query.set_availability_zone(["us-west-1c"]).set_cloud_provider_account_id(["1234567890"])
     query.set_virtual_private_cloud_id(["vpc-id"]).sort_by("name", "ASC")
     job = query.download()
+    assert isinstance(job, Job)
     assert job.id == 120066
 
 
@@ -568,7 +570,7 @@ def test_download_aws_broken_server_response(cbcsdk_mock):
 
 def test_invalid_download_format(cb):
     """Test failure on invalid download format."""
-    query = cb.select(ComputeResource).set_installation_status(["NOT_INSTALLED", "PENDING", "ERROR"])
+    query = cb.select(VCenterComputeResource).set_installation_status(["NOT_INSTALLED", "PENDING", "ERROR"])
     query.sort_by("created_at", "DESC")
     with pytest.raises(ApiError):
         query.download("XLS")
