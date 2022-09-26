@@ -2,7 +2,7 @@ Differential Analysis
 =====================
 
 Differential Analysis provides the ability to compare and understand the changes between two
-`Live Query <https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/latest/livequery-api/>`_ runs.
+`Live Query <https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/cbc_sdk.audit_remediation/#cbc_sdk.audit_remediation.base.Run>`_ runs.
 The differential is calculated based on point-in-time snapshots. These features answer the question, “What changed on endpoints, and when?”.
 
 Overview
@@ -19,7 +19,9 @@ The example Live Query runs look for added or removed Firefox add-ons.
 
 **2. Query Comparison**
 
-Start a Query Comparison with the id's you received from step 1. In some cases, the ``older_run_id`` is not required.
+Start a Query Comparison with the ID's you received from step 1. If the supplied ``newer_run_id`` is from a recurring Live Query run,
+the ``older_run_id`` is not required - the backend will automatically compare it to previous to the supplied one.
+The backend will throw a specific error if you provide a query id from a single Live Query run.
 You can read more about it `here <https://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/latest/differential-analysis-api/#query-comparison>`_.
 
 Query Comparison
@@ -37,9 +39,9 @@ To receive the actual differential data, use the ``.count_only()`` method, as fe
     >>>
     >>> cbc = CBCloudAPI(profile='sample')
     >>>
-    >>> resp = cbc.select(Differential).newer_run_id('jcdqsju4utpaayj5dh5r2llzffeolg0u').older_run_id('yhbg3wcea9y1l4asiltky5tupkgauzas')
-    >>> # The content of resp object always has a length of 1, and contains the Differential response.
-    >>> print(*resp)
+    >>> query = cbc.select(Differential).newer_run_id('jcdqsju4utpaayj5dh5r2llzffeolg0u').older_run_id('yhbg3wcea9y1l4asiltky5tupkgauzas')
+    >>> # The content of query object always has a length of 1, and contains the Differential response.
+    >>> print(*query)
     Differential object, bound to https://defense-dev01.cbdtest.io.
     diff_processed_time: 0.633
     diff_results: [list:1 item]:
@@ -82,8 +84,8 @@ To use this method, append it to the rest of the Differential object query. The 
     >>>
     >>> cbc = CBCloudAPI(profile='sample')
     >>>
-    >>> resp = cbc.select(Differential).newer_run_id('jcdqsju4utpaayj5dh5r2llzffeolg0u').older_run_id('yhbg3wcea9y1l4asiltky5tupkgauzas')
-    >>> actual_changes = resp.count_only(False)
+    >>> query = cbc.select(Differential).newer_run_id('jcdqsju4utpaayj5dh5r2llzffeolg0u').older_run_id('yhbg3wcea9y1l4asiltky5tupkgauzas')
+    >>> actual_changes = query.count_only(False)
     >>> print(actual_changes[0]._info)
         {'diff_processed_time': 0.039,
          'diff_results': [{'added_count': 1,
@@ -117,8 +119,8 @@ To use this method, append it to the rest of the Differential object query or co
     >>>
     >>> cbc = CBCloudAPI(profile='sample')
     >>>
-    >>> resp = cbc.select(Differential).newer_run_id('jcdqsju4utpaayj5dh5r2llzffeolg0u').older_run_id('yhbg3wcea9y1l4asiltky5tupkgauzas')
-    >>> actual_changes = resp.count_only(False).set_device_ids([12345])
+    >>> query = cbc.select(Differential).newer_run_id('jcdqsju4utpaayj5dh5r2llzffeolg0u').older_run_id('yhbg3wcea9y1l4asiltky5tupkgauzas')
+    >>> actual_changes = query.count_only(False).set_device_ids([12345])
     >>> print(actual_changes[0]._info)
         {'diff_processed_time': 0.039,
          'diff_results': [{'added_count': 1,
@@ -150,8 +152,8 @@ To use this method, append it to the rest of the Differential object query or co
     >>>
     >>> cbc = CBCloudAPI(profile='sample')
     >>>
-    >>> resp = cbc.select(Differential).newer_run_id('jcdqsju4utpaayj5dh5r2llzffeolg0u').older_run_id('yhbg3wcea9y1l4asiltky5tupkgauzas')
-    >>> export = resp.count_only(False).set_device_ids([12345]).async_export()
+    >>> query = cbc.select(Differential).newer_run_id('jcdqsju4utpaayj5dh5r2llzffeolg0u').older_run_id('yhbg3wcea9y1l4asiltky5tupkgauzas')
+    >>> export = query.count_only(False).set_device_ids([12345]).async_export()
     >>> print(export.status)
     IN_PROGRESS
     >>> # wait for it to finish and refresh the information in the SDK

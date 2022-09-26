@@ -33,7 +33,7 @@ class Differential(NewBaseModel):
     Example:
         >>> run = cb.select(Differential).newer_run_id(newer_run_id)
         >>> print(*run)
-        >>> print(resp[0]._info)
+        >>> print(run[0].diff_results)
     """
     swagger_meta_file = "audit_remediation/models/differential.yaml"
     urlobject = "/livequery/v1/orgs/{}/differential/runs/_search"
@@ -123,7 +123,7 @@ class DifferentialQuery(BaseQuery, IterableQueryMixin, CriteriaBuilderSupportMix
         This can be optional.
 
         If not specified, the previous run as compared to the primary will be chosen if
-        it is a reccuring one. If comparing two individual runs, this is required.
+        it is a recurring one. If comparing two individual runs, this is required.
 
         Example:
             >>> run = cb.select(Differential).newer_run_id(newer_run_id).older_run_id(older_run_id)
@@ -256,7 +256,7 @@ class DifferentialQuery(BaseQuery, IterableQueryMixin, CriteriaBuilderSupportMix
 
         This is recommended if you are expecting a very large result set. Once the Job is created, wait for it to be
         completed, then get the results from the Job using one of the get_output methods on the
-        `cbc_sdk.platform.jobs` object. To wait asynchronously for the results, use the Job object's
+        `cbc_sdk.platform.jobs` object. To wait for the results, use the Job object's
         await_completion() method.
 
         Example:

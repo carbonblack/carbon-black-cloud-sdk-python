@@ -50,7 +50,7 @@ def compare_data(sdk_resp, api_resp):
 
     test_pass = True
 
-    # Check if all devices have completedtheir queries
+    # Check if all devices have completed their queries
     for item in api:
         if item in ['newer_run_not_responded_devices', 'older_run_not_responded_devices']:
             api_resp = set(api[item])
