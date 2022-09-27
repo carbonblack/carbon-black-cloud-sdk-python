@@ -55,8 +55,8 @@ class BaseComputeResource(NewBaseModel):
             cb (BaseAPI): Reference to API object used to communicate with the server.
             **kwargs (dict): Not used, retained for compatibility.
 
-        Returns:
-            VCenterComputeResourceQuery: The query object
+        Raises:
+            NonQueryableModel: Always, since BaseComputeResource cannot be queried directly.
         """
         raise NonQueryableModel("BaseComputeResource is not directly queryable")
 
@@ -161,7 +161,7 @@ class VCenterComputeResource(BaseComputeResource):
     """Models a vCenter compute resource."""
     def __init__(self, cb, model_unique_id, initial_data=None):
         """
-        Initialize the AWSComputeResource object.
+        Initialize the VCenterComputeResource object.
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
