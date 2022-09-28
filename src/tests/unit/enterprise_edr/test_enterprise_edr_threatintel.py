@@ -699,6 +699,7 @@ def test_feed_builder_save(cbcsdk_mock):
     builder = Feed.create(api, "NotReal", "http://127.0.0.1", "Not a real summary", "Fake")
     builder.set_name("FeedName").set_provider_url("http://example.com").set_summary("Summary information")
     builder.set_category("Intrusion").set_source_label("SourceLabel").add_reports([report])
+    builder.set_alertable(True)
     feed = builder.build()
     feed.save()
     assert feed.id == "qwertyuiop"
