@@ -134,7 +134,8 @@ def test_raise_ModelNotFound():
 
         # Workload
         ("SensorKit", "SensorKitQuery"),
-        ("ComputeResource", "ComputeResourceQuery"),
+        ("VCenterComputeResource", "VCenterComputeResourceQuery"),
+        ("AWSComputeResource", "AWSComputeResourceQuery"),
     ],
 )
 def test_select_class_instance(klass_name, query_expected):
