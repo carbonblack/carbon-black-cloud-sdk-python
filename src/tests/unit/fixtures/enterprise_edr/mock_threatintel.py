@@ -1145,7 +1145,8 @@ FEED_BUILT_VIA_BUILDER = {
         "provider_url": "http://example.com",
         "summary": "Summary information",
         "category": "Intrusion",
-        "source_label": "SourceLabel"
+        "source_label": "SourceLabel",
+        "alertable": True
     },
     "reports": [REPORT_BUILT_VIA_BUILDER]
 }
