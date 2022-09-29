@@ -243,6 +243,8 @@ class DifferentialQuery(BaseQuery, IterableQueryMixin, CriteriaBuilderSupportMix
         url = self._build_url()
         request = self._build_request()
         results = self._cb.post_object(url, body=request).json()
+
+        # The result always contains a single item
         result = results.get("results")[0]
 
         self._count_valid = True
@@ -260,20 +262,13 @@ class DifferentialQuery(BaseQuery, IterableQueryMixin, CriteriaBuilderSupportMix
         await_completion() method.
 
         Example:
-            >>> run = cb.select(Differential).newer_run_id(newer_run_id)
-            >>> job = run.async_export()
-            >>> # show the status in progress
-            >>> print(job.status)
-            IN_PROGRESS
-            >>> # wait for it to finish and refresh the information in the SDK
-            >>> job_future = job.await_completion()
-            >>> finished_job = job_future.result()
-            >>> finished_job.refresh()
-            >>> # show the job has completed
-            >>> print(finished_job.status)
-            COMPLETED
+            >>> # Get the differential
+            >>> query = cb.select(Differential).newer_run_id(newer_run_id)
+            >>> export = query.async_export()
+            >>> # wait for the export to finish
+            >>> export.await_completion()
             >>> # write the results to a file
-            >>> finished_job.get_output_as_file("example_data.json")
+            >>> export.get_output_as_file("example_data.json")
 
         Required CBC Permissions:
             livequery.manage(READ), jobs.status(READ)
