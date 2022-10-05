@@ -1,90 +1,83 @@
 VM Workloads Search Guide and Examples
 ======================================
 
-Visualize the inventory of vSphere workloads that do not have Carbon Black Cloud sensors installed.
+These APIs allow you to visualize the inventory of compute resources available under either vSphere
+or AWS.
 
 .. note::
-  A Compute Resource is a vm without a sensor installed.
+  A *compute resource* is a virtual machine without a sensor installed.
 
-Search and Facet Compute Resources
-----------------------------------
-Using a query of the ``ComputeResource`` object, you can search and facet compute resources in your organization.
-The Carbon Black Cloud Python SDK supports a set of criteria filters that can help you find the exact resource or resources you are looking for.
+The API operations center around the ``VSphereComputeResource`` object for vSphere compute resources,
+or around the ``AWSComputeResource`` for AWS compute resources.
 
-Available criteria filters are:
-::
+.. note::
+  The object name ``ComputeResource`` is an alias for ``VSphereComputeResource``, provided for
+  backwards compatibility with earlier versions of the SDK.
 
-  appliance_uuid
-  cluster_name
-  eligibility
-  installation_status
-  ip_address
-  name
-  os_architecture
-  os_type
-  uuid
+Search Compute Resources
+------------------------
+By querying on one of the compute resource object types, you can obtain a list of matching
+compute resources.  The SDK supports filtering by a number of different criteria, which are different
+for each compute resource type.
 
+**For VSphereComputeResource:**
 
-Start by making a query with our ComputeResource object.
+- ``appliance_uuid``
+- ``cluster_name``
+- ``datacenter_name``
+- ``deployment_type``
+- ``esx_host_name``
+- ``esx_host_uuid``
+- ``vcenter_name``
+- ``vcenter_host_url``
+- ``vcenter_uuid``
+- ``name``
+- ``host_name``
+- ``ip_address``
+- ``device_guid``
+- ``registration_id``
+- ``eligibility``
+- ``eligibility_code``
+- ``installation_status``
+- ``installation_type``
+- ``uuid``
+- ``os_description``
+- ``os_type``
+- ``os_architecture``
+- ``vmwaretools_version``
 
-::
+**For AWSComputeResource:**
+
+- ``auto_scaling_group_name``
+- ``availability_zone``
+- ``cloud_provider_account_id``
+- ``cloud_provider_resource_id``
+- ``cloud_provider_tags``
+- ``deployment_type``
+- ``id``
+- ``installation_status``
+- ``name``
+- ``platform``
+- ``platform_details``
+- ``region``
+- ``subnet_id``
+- ``virtual_private_cloud_id``
+
+Any of these criteria may be specified to be included in search results by calling the method ``set_XXX``,
+or excluded by calling the method ``exclude_XXX``, where ``XXX`` is the specific criteria name.
+
+Example (vSphere workloads)::
 
   >>> from cbc_sdk import CBCloudAPI
-  >>> from cbc_sdk.workload import ComputeResource
+  >>> from cbc_sdk.workload import VSphereComputeResource
 
   >>> cbc = CBCloudAPI()
-  >>> query = cbc.select(ComputeResource)
+  >>> query = cbc.select(VSphereComputeResource).set_os_type(['WINDOWS']).set_cluster_name(['example-cluster-name'])
+  >>> results = list(query)
+  >>> print(results)
 
-  >>> # Before we print to the console, lets see how many results found we have
-  >>> print(len(query))
-  >>> 218
+Example Output::
 
-Since this is too many entries to print to the console output, try to narrow down the search by adding criteria to the query.
-To do this, add the desired method to the ComputeResource object.
-
-The criteria fields tied to the class methods are as follows::
-::
-
-  appliance_uuid -> set_appliance_uuid()
-  cluster_name -> set_cluster_name()
-  eligibility -> set_eligibility()
-  installation_status -> set_installation_status()
-  ip_address -> set_ip_address()
-  name -> set_name()
-  os_architecture -> set_os_architecture()
-  os_type -> set_os_type()
-  uuid -> set_uuid()
-
-Each of these methods accepts an array of strings. You can find more detailed information about the class methods in the Workloads Search section.
-
-Example:
-::
-
-  set_appliance_uuid(['ABCD', 'DEFG'])
-
-Next, make a query with a filter for OS type.
-
-::
-
-  >>> from cbc_sdk import CBCloudAPI
-  >>> from cbc_sdk.workload import ComputeResource
-
-  >>> cbc = CBCloudAPI()
-  >>> filtered_query = cbc.select(ComputeResource).set_os_type(['WINDOWS'])
-
-  >>> # Lets first find out how many results we found with the filtered query.
-  >>> print(len(filtered_query))
-  >>> 45
-
-  >>> # Great, but not excellent, we can make our query even more specific.
-  >>> # We can add any or all of the supported criteria.
-  >>> filtered_query = cbc.select(ComputeResource).set_os_type(['WINDOWS']).set_cluster_name(['example-cluster-name'])
-
-  >>> print(len(filtered_query))
-  >>> 2
-
-  >>> # And now we can comfortably print our results list object to the console output
-  >>> print(*filtered_query)
   ComputeResource object, bound to https://defense-dev01.cbdtest.io.
   -------------------------------------------------------------------------------
 
@@ -135,13 +128,16 @@ Next, make a query with a filter for OS type.
             vcenter_uuid: 9a8a0be5-ae1e-49ce-b2aa-34bc7dc445e3
      vmwaretools_version: 11328 ComputeResource object, bound to https://defense-dev01.cbdtest.io.
 
+Example (AWS workloads)::
+
+  TODO
 
 Fetch Compute Resource by ID
 ----------------------------
+Using a query of the ``VCenterComputeResource`` or ``AWSComputeResource`` objects, you can get the
+compute resource by ID from your organization.
 
-Using a query of the ``ComputeResource`` object, you can get the compute resource by ID from your organization.
-
-::
+Example (vSphere workloads)::
 
     >>> from cbc_sdk import CBCloudAPI
     >>> from cbc_sdk.workload import ComputeResource
@@ -182,13 +178,89 @@ Using a query of the ``ComputeResource`` object, you can get the compute resourc
                 vcenter_uuid: 4a6b1382-f917-4e1a-8564-374cb7274bd7
          vmwaretools_version: 10336
 
+Example (AWS workloads)::
+
+    TODO
+
+Facet Compute Resources
+-----------------------
+
+Any compute resource search may be turned into a *faceting* by calling the ``facet()`` method on the
+query object returned by ``select()``, after setting search criteria.  A faceting breaks down each
+specified field for all compute resources matching the criteria, showing which values that field can take
+and how many times that field value shows up in the matching compute resources.  Only a subset of fields
+can be faceted on, as listed here:
+
+**For VSphereComputeResource:**
+
+- ``eligibility``
+- ``installation_status``
+- ``vmwaretools_version``
+- ``os_type``
+
+**For AWSComputeResource:**
+
+- ``auto_scaling_group_name``
+- ``cloud_provider_tags``
+- ``platform``
+- ``platform_details``
+- ``virtual_private_cloud_id``
+
+Example (vSphere workloads)::
+
+    TODO
+
+Example (AWS workloads)::
+
+    TODO
+
+Download Compute Resource Listings
+----------------------------------
+
+The details of compute resources matching a search may be directly downloaded from the Carbon Black Cloud
+by callin the ``download()`` method on the query object returned by ``select()``, after setting
+search criteria.  The format for downloading may be specified as either JSON or CSV.
+
+The ``download()`` method returns a ``Job`` object, which is processed asynchronously and from which
+the results are available once the job has been completed.
+
+Example (vSphere workloads)::
+
+    TODO
+
+Example (AWS workloads)::
+
+    TODO
+
+Summarize Compute Resources
+---------------------------
+
+.. note::
+  This functionality is not available for vSphere compute resources.
+
+By calling the ``summarize()`` method on the query object returned by ``select()``, after setting
+search criteria, a summary of compute resources may be generated.  The fields which may be summarized
+are as follows:
+
+**For AWSComputeResource:**
+
+- ``availability_zone``
+- ``region``
+- ``subnet_id``
+- ``virtual_private_cloud_id``
+- ``security_group_id``
+
+Example (AWS workloads)::
+
+    TODO
 
 Interactive example script featuring Workloads Search
--------------------------------------------------------------------------------
+-----------------------------------------------------
 We have a number of example scripts you can use with the CBC SDK.
 
 .. image:: _static/workloads_example_script.gif
 
-This interactive script highlights the capabilities of the CBC SDK. It uses user input to guide you trough the functionalities of the Workloads Search.
+This interactive script highlights the capabilities of the CBC SDK. It uses user input to guide you
+through the functionalities of the Workloads Search.
 
 You can download it from: `here <https://github.com/carbonblack/carbon-black-cloud-sdk-python/blob/develop/examples/workload/workloads_search_example.py>`_
