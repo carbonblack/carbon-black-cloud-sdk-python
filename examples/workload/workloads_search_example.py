@@ -15,138 +15,385 @@
 
 Docs: https://developer.carbonblack.com/reference/carbon-black-cloud/workload-protection/latest/vm-workload-search/
 """
-
 # Standard library imports
 import sys
+import argparse
+from types import MappingProxyType
 
 # Internal library imports
-from cbc_sdk.helpers import build_cli_parser
-from cbc_sdk.helpers import get_cb_cloud_object
-from cbc_sdk.workload.vm_workloads_search import ComputeResource
+from cbc_sdk.errors import ApiError
+from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
+from cbc_sdk.workload import VCenterComputeResource, AWSComputeResource
 
 
-def generate_menu():
-    """Define console menu"""
-    menu_content = {'0': {'name': 'M A I N - M E N U\n',
-                          'function_call': main},
-                    '1': {'name': 'Fetch Compute Resource by ID',
-                          'function_call': fetch_compute_resource_by_id},
-                    '2': {'name': 'Search and Facet Compute Resources',
-                          'function_call': search_and_facet_compute_resources},
-                    '9': {'name': 'Quit',
-                          'function_call': quit_script}
-                    }
+DOWNLOAD_MENU = MappingProxyType({
+    '1': {'name': 'Comma-separated values (CSV) format', 'value': 'CSV'},
+    '2': {'name': 'JSON format', 'value': 'JSON'}
+})
 
-    return menu_content
+CRITERIA_VCENTER = {
+    'appliance-uuid': 'UUID of the appliance the VM is associated with',
+    'cluster-name': 'Name of the cluster (group of hosts)',
+    'datacenter-name': 'Name of the underlying datacenter (common container)',
+    'esx-host-name': 'Name of the ESX host on which the VM is deployed',
+    'esx-host-uuid': 'UUID of the ESX host on which VM is deployed',
+    'vcenter-name': 'Name of the vcenter the VM is associated with',
+    'vcenter-host-url': 'Hostname or IP address of the vcenter the VM is associated with',
+    'vcenter-uuid': '128-bit SMBIOS UUID of a vcenter represented as a hexadecimal string',
+    'name': 'Name of the compute resource',
+    'host-name': 'DNS name associated with the compute resource',
+    'ip-address': 'Current ip address assigned to the compute resource',
+    'device-guid': 'Device GUID',
+    'registration-id': 'Registration ID',
+    'eligibility': 'Status indicator indicating whether a compute resource is capable of installing a CBC sensor',
+    'eligibility-code': 'Reason messages for why a compute resource is not eligible',
+    'installation-status': 'Current state of installing the Carbon Black Cloud sensor on the compute resource',
+    'installation-type': 'Installation type',
+    'uuid': 'Universally unique identifier for a compute resource',
+    'os-description': 'Operating system, version, and architecture',
+    'os-type': 'Type of operating system',
+    'os-architecture': "Compute resource’s operating system architecture",
+    'vmwaretools-version': 'Current version of VMware Tools installed in the compute resource'
+}
+
+CRITERIA_AWS = {
+    'auto-scaling-group-name': 'Auto scaling group name',
+    'availability-zone': 'AWS availability zone',
+    'cloud-provider-account-id': 'Account id of the cloud provider',
+    'cloud-provider-resource-id': 'Resource id assigned by cloud provider',
+    'cloud-provider-tags': 'Cloud provider tags',
+    'id': 'Identifier for the compute resource',
+    'installation-status': 'Current state of installing the Carbon Black Cloud sensor on the compute resource',
+    'name': 'Name of the compute resource',
+    'platform': 'Platform',
+    'platform-details': 'Platform details',
+    'region': 'AWS region',
+    'subnet-id': 'Subnet ID',
+    'virtual-private-cloud-id': 'Virtual private cloud ID'
+}
+
+FACET_FIELDS_VCENTER = ('eligibility', 'installation_status', 'vmwaretools_version', 'os_type')
+FACET_FIELDS_AWS = ('auto_scaling_group_name', 'cloud_provider_tags', 'platform', 'platform_details',
+                    'virtual_private_cloud_id')
+
+SUMMARY_FIELDS_AWS = ('availability_zone', 'region', 'subnet_id', 'virtual_private_cloud_id', 'security_group_id')
 
 
-def user_input(menu):
-    """Prompt user for menu choice"""
-    print('-' * 21)
-    for item in menu:
-        print(f'{item}. {menu[item]["name"]}')
-
-    choice = input('\nEnter your choice: ')
-    while choice not in str(menu.keys()):
-        choice = input('Enter a valid choice: ')
-
-    return choice
-
-
-def quit_script(cbc, menu, parser):
-    """Quits script"""
-    sys.exit()
-
-
-def fetch_compute_resource_by_id(cbc, menu, parser):
-    """Creates Fetch Compute Resource by ID SDK call"""
-    event_id = None
-    while not event_id:
-        event_id = input('\nPlease provide ID for the compute resource: ').strip()
-        try:
-            event_id = int(event_id)
-        except ValueError:
-            event_id = None
-            print('\nERR: ID must be integer!')
-
-    print(cbc.select(ComputeResource, event_id))
-    print('-' * 79)
-    new_query = input('\nMake anothery query? Y/n\n')
-    if new_query.lower() in ['y', 'yes']:
-        fetch_compute_resource_by_id(cbc, menu, parser)
+def resource_class_for_mode(mode):
+    """Returns the correct resource class for the mode."""
+    if mode == 'VCENTER':
+        return VCenterComputeResource
+    elif mode == 'AWS':
+        return AWSComputeResource
     else:
-        menu['0']['function_call']()
+        raise NotImplementedError(f"mode {mode} not implemented!")
 
 
-def search_and_facet_compute_resources(cbc, menu, parser):
-    """Creates Search and Facet Compute Resources SDK call"""
+def criteria_dict_for_mode(mode):
+    """Returns the correct criteria dictionary for the mode."""
+    if mode == 'VCENTER':
+        return MappingProxyType(CRITERIA_VCENTER)
+    elif mode == 'AWS':
+        return MappingProxyType(CRITERIA_AWS)
+    else:
+        raise NotImplementedError(f"mode {mode} not implemented!")
+
+
+def facet_fields_for_mode(mode):
+    """Returns the correct list of facet fields for the mode."""
+    if mode == 'VCENTER':
+        return FACET_FIELDS_VCENTER
+    elif mode == 'AWS':
+        return FACET_FIELDS_AWS
+    else:
+        raise NotImplementedError(f"mode {mode} not implemented!")
+
+
+def summary_fields_for_mode(mode):
+    if mode == 'VCENTER':
+        raise NotImplementedError("vCenter mode does not implement the summarize() function")
+    elif mode == 'AWS':
+        return SUMMARY_FIELDS_AWS
+    else:
+        raise NotImplementedError(f"mode {mode} not implemented!")
+
+
+def print_available_criteria(mode):
+    """Prints the available search criteria for each mode."""
     print('\n' + '-' * 21)
     print('Available criteria filters:\n')
-    print(*('appliance_uuid', 'eligibility', 'cluster_name', 'name',
-            'ip_address', 'installation_status', 'uuid', 'os_type',
-            'os_architecture'), sep='\n')
+    for flag, descr in criteria_dict_for_mode(mode).items():
+        print(f"  {flag} - {descr}")
+    print('\nFor each flag X, use the option --X to include values of that field,')
+    print('  or use the option --exclude-X to exclude values of that field.')
+    print('Each criteria flag accepts one or more space separated values.',
+          'Example: --name ABCD --appliance-uuid 1234 5678')
     print('-' * 21)
 
-    query = cbc.select(ComputeResource)
+
+def criteria_parser_for_mode(mode):
+    """Return a criteria parser object for the current mode."""
+    parser = argparse.ArgumentParser(description=f"Criteria parser for {mode}")
+    for flag, descr in criteria_dict_for_mode(mode).items():
+        parser.add_argument(f"--{flag}", nargs='+', help=descr)
+        parser.add_argument(f"--exclude-{flag}", nargs='+', help=f"Exclude: {descr}")
+    return parser
+
+
+def map_criteria_to_query(mode, query, args):
+    """Map the parsed criteria arguments into the query depending on the mode."""
+    parsed_values = vars(args)
+    for value_name in [flag.replace('-', '_') for flag in criteria_dict_for_mode(mode).keys()]:
+        if parsed_values[value_name]:
+            f = getattr(query.__class__, f"set_{value_name}")
+            f(query, parsed_values[value_name])
+        if parsed_values[f"exclude_{value_name}"]:
+            f = getattr(query.__class__, f"exclude_{value_name}")
+            f(query, parsed_values[f"exclude_{value_name}"])
+
+
+def build_main_menu(mode):
+    """Create the main menu given the script operating mode."""
+    menu = {
+        '1': {'name': 'Fetch Compute Resource By ID',
+              'function': lambda cbc, m: loop_calling_multiply(cbc, m, fetch_by_id, "Make another query?")},
+        '2': {'name': 'Search for Compute Resources',
+              'function': lambda cbc, m: loop_calling_multiply(cbc, m, search_resources, "Run another search?")},
+        '3': {'name': 'Facet Compute Resources',
+              'function': lambda cbc, m: loop_calling_multiply(cbc, m, facet_resources, "Run another faceting?")},
+        '4': {'name': 'Download Compute Resources List',
+              'function': lambda cbc, m: loop_calling_multiply(cbc, m, download_resources, "Download another list?")},
+        '9': {'name': 'Quit', 'function': quit_script}
+    }
+    if mode == 'AWS':
+        menu['5'] = {'name': 'Summarize Compute Resources',
+                     'function': lambda cbc, m: loop_calling_multiply(cbc, m, summarize_resources,
+                                                                      "Run another summary?")}
+    return MappingProxyType(menu)
+
+
+def fetch_by_id(cbc, mode):
+    """Execute the "fetch resource by ID" function."""
+    resource_id = None
+    while not resource_id:
+        resource_id = input(f"\nPlease provide ID for the {mode} compute resource: ").strip()
+        try:
+            resource_id = int(resource_id)
+        except ValueError:
+            resource_id = None
+            print('\nERROR: ID must be integer!')
+
+    try:
+        print(cbc.select(resource_class_for_mode(mode), resource_id))
+    except ApiError as e:
+        print("\nERROR: Query of resource failed!")
+        print(e)
+    print('-' * 79)
+    return True
+
+
+def search_resources(cbc, mode):
+    """Execute the "search resources" function."""
+    print_available_criteria(mode)
+
+    query = cbc.select(resource_class_for_mode(mode))
 
     use_filter = input('\nWould you like to use criteria filters?: Y/n\n')
-    if use_filter.lower() in ['y', 'yes']:
-        print('Each criteria accepts one or more space separated values.',
-              'Exmaple: --name ABCD --appliance_uuid 1234 5678')
-        args = parser.parse_args(input('Enter criteria filters: ').split())
-        if args.name:
-            query.set_name(args.name)
-        if args.os_type:
-            query.set_os_type(args.os_type)
-        if args.appliance_uuid:
-            query.set_appliance_uuid(args.appliance_uuid)
-        if args.cluster_name:
-            query.set_cluster_name(args.cluster_name)
-        if args.ip_address:
-            query.set_ip_address(args.ip_address)
-        if args.installation_status:
-            query.set_installation_status(args.installation_status)
-        if args.uuid:
-            query.set_uuid(args.uuid)
-        if args.os_architecture:
-            query.set_os_architecture(args.os_architecture)
-        if args.eligibility:
-            query.set_eligibility(args.eligibility)
+    if use_filter.lower() in ('y', 'yes'):
+        parser = criteria_parser_for_mode(mode)
+        args = parser.parse_args(input("Enter criteria filters: ").split())
+        try:
+            map_criteria_to_query(mode, query, args)
+        except ApiError as e:
+            print("\nERROR: Mapping resources to criteria failed")
+            print(e)
+            return True
 
-    print(*query)
-    new_query = input('\nMake anothery query? Y/n\n')
-    if new_query.lower() in ['y', 'yes']:
-        search_and_facet_compute_resources(cbc, menu, parser)
-    else:
-        menu['0']['function_call']()
+    try:
+        for item in query:
+            print(item)
+            print('-' * 79)
+    except ApiError as e:
+        print("\nERROR: Resource search failed")
+        print(e)
+
+    return True
 
 
-def main(cbc=None, menu=None, parser=None):
-    """Script entry point"""
+def facet_resources(cbc, mode):
+    """Execute the "facet resources" function."""
+    print_available_criteria(mode)
+
+    query = cbc.select(resource_class_for_mode(mode))
+
+    use_filter = input('\nWould you like to use criteria filters?: Y/n\n')
+    if use_filter.lower() in ('y', 'yes'):
+        parser = criteria_parser_for_mode(mode)
+        args = parser.parse_args(input("Enter criteria filters: ").split())
+        try:
+            map_criteria_to_query(mode, query, args)
+        except ApiError as e:
+            print("\nERROR: Mapping resources to criteria failed")
+            print(e)
+            return True
+
+    print(f"\nAvailable facet fields: {facet_fields_for_mode(mode)}")
+    print("Specify field names to use, separated by spaces. At least one must be specified.")
+
+    facet_fields = None
+    while not facet_fields:
+        facet_fields = list(input("Enter facet field names: ").split())
+        if len(facet_fields) == 0:
+            facet_fields = None
+            print("\nERROR: At least one facet field must be specified")
+
+    try:
+        for facet_object in query.facet(facet_fields, 100):
+            print(facet_object)
+            print('-' * 79)
+    except ApiError as e:
+        print("\nERROR: Resource faceting failed")
+        print(e)
+
+    return True
+
+
+def download_resources(cbc, mode):
+    """Execute the "download resources" function."""
+    print_available_criteria(mode)
+
+    query = cbc.select(resource_class_for_mode(mode))
+
+    use_filter = input('\nWould you like to use criteria filters?: Y/n\n')
+    if use_filter.lower() in ('y', 'yes'):
+        parser = criteria_parser_for_mode(mode)
+        args = parser.parse_args(input("Enter criteria filters: ").split())
+        try:
+            map_criteria_to_query(mode, query, args)
+        except ApiError as e:
+            print("\nERROR: Mapping resources to criteria failed")
+            print(e)
+            return True
+
+    print("\n\n--------------------Download Format:\n")
+    for key in sorted(DOWNLOAD_MENU.keys()):
+        print(f"{DOWNLOAD_MENU}. {DOWNLOAD_MENU[key]['name']}")
+    print('\n')
+
+    # Get choice
+    choice = input('\nEnter your choice: ')
+    while choice not in str(DOWNLOAD_MENU.keys()):
+        choice = input('Enter a valid choice: ')
+
+    try:
+        job = query.download(DOWNLOAD_MENU[choice]['value'])
+        print("Waiting for job to complete...")
+        job.await_completion()
+        print(job.get_output_as_string())
+        print('-' * 79)
+    except ApiError as e:
+        print("\nERROR: Download operation failed")
+        print(e)
+    return True
+
+
+def summarize_resources(cbc, mode):
+    """Execute the "summarize resources" function."""
+    print_available_criteria(mode)
+
+    query = cbc.select(resource_class_for_mode(mode))
+
+    use_filter = input('\nWould you like to use criteria filters?: Y/n\n')
+    if use_filter.lower() in ('y', 'yes'):
+        parser = criteria_parser_for_mode(mode)
+        args = parser.parse_args(input("Enter criteria filters: ").split())
+        try:
+            map_criteria_to_query(mode, query, args)
+        except ApiError as e:
+            print("\nERROR: Mapping resources to criteria failed")
+            print(e)
+            return True
+
+    print(f"\nAvailable summary fields: {summary_fields_for_mode(mode)}")
+    print("Specify field names to use, separated by spaces. At least one must be specified.")
+
+    summary_fields = None
+    while not summary_fields:
+        summary_fields = list(input("Enter summary field names: ").split())
+        if len(summary_fields) == 0:
+            summary_fields = None
+            print("\nERROR: At least one summary field must be specified")
+
+    try:
+        for field, count in query.summarize(summary_fields):
+            print(f"{field}: {count} total")
+    except ApiError as e:
+        print("\nERROR: Resource summary failed")
+        print(e)
+
+    return True
+
+
+def loop_calling_multiply(cbc, mode, subfunction, prompt):
+    """Run a particular menu function multiple times, prompting to run again after each one."""
+    rc = True
+    is_running = True
+    while is_running:
+        rc = subfunction(cbc, mode)
+        if rc:
+            new_query = input(f"\n{prompt} Y/n\n")
+            if new_query.lower() not in ('y', 'yes'):
+                is_running = False
+        else:
+            is_running = False
+    return rc
+
+
+def quit_script(cbc, mode):
+    """Function which quits the script."""
+    print("Bye")
+    return False
+
+
+def main():
+    """Ye Olde Main Function"""
+
     # Initiate argparser
     parser = build_cli_parser()
-    parser.add_argument('--appliance_uuid', nargs='+')
-    parser.add_argument('--eligibility', nargs='+')
-    parser.add_argument('--cluster_name', nargs='+')
-    parser.add_argument('--name', nargs='+')
-    parser.add_argument('--ip_address', nargs='+')
-    parser.add_argument('--installation_status', nargs='+')
-    parser.add_argument('--uuid', nargs='+')
-    parser.add_argument('--os_type', nargs='+')
-    parser.add_argument('--os_architecture', nargs='+')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--vcenter', action='store_true', help='Work with vCenter compute resources (default)')
+    group.add_argument('--aws', action='store_true', help='Work with AWS compute resources')
     args = parser.parse_args()
+
+    if args.vcenter:
+        mode = 'VCENTER'
+    elif args.aws:
+        mode = 'AWS'
+    else:
+        mode = 'VCENTER'
 
     # Create cbc Instance
     cbc = get_cb_cloud_object(args)
 
-    # Generate menu
-    menu = generate_menu()
+    menu = build_main_menu(mode)
 
-    # Get user menu choice
-    user_choice = user_input(menu)
+    is_running = True
+    while is_running:
+        # Print the menu
+        print("\n\n--------------------Main Menu:\n")
+        for key in sorted(menu.keys()):
+            print(f"{key}. {menu[key]['name']}")
+        print('\n')
 
-    # Call user specified sdk call
-    menu[user_choice]['function_call'](cbc, menu, parser)
+        # Get choice
+        choice = input('\nEnter your choice: ')
+        while choice not in str(menu.keys()):
+            choice = input('Enter a valid choice: ')
+
+        # Execute choice
+        is_running = menu[choice]['function'](cbc, mode)
+
+    return 0
 
 
 if __name__ == "__main__":

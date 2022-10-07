@@ -7,11 +7,11 @@ or AWS.
 .. note::
   A *compute resource* is a virtual machine without a sensor installed.
 
-The API operations center around the ``VSphereComputeResource`` object for vSphere compute resources,
+The API operations center around the ``VCenterComputeResource`` object for vSphere compute resources,
 or around the ``AWSComputeResource`` for AWS compute resources.
 
 .. note::
-  The object name ``ComputeResource`` is an alias for ``VSphereComputeResource``, provided for
+  The object name ``ComputeResource`` is an alias for ``VCenterComputeResource``, provided for
   backwards compatibility with earlier versions of the SDK.
 
 Search Compute Resources
@@ -20,12 +20,11 @@ By querying on one of the compute resource object types, you can obtain a list o
 compute resources.  The SDK supports filtering by a number of different criteria, which are different
 for each compute resource type.
 
-**For VSphereComputeResource:**
+**For VCenterComputeResource:**
 
 - ``appliance_uuid``
 - ``cluster_name``
 - ``datacenter_name``
-- ``deployment_type``
 - ``esx_host_name``
 - ``esx_host_uuid``
 - ``vcenter_name``
@@ -53,7 +52,6 @@ for each compute resource type.
 - ``cloud_provider_account_id``
 - ``cloud_provider_resource_id``
 - ``cloud_provider_tags``
-- ``deployment_type``
 - ``id``
 - ``installation_status``
 - ``name``
@@ -69,12 +67,13 @@ or excluded by calling the method ``exclude_XXX``, where ``XXX`` is the specific
 Example (vSphere workloads)::
 
   >>> from cbc_sdk import CBCloudAPI
-  >>> from cbc_sdk.workload import VSphereComputeResource
+  >>> from cbc_sdk.workload import VCenterComputeResource
 
   >>> cbc = CBCloudAPI()
-  >>> query = cbc.select(VSphereComputeResource).set_os_type(['WINDOWS']).set_cluster_name(['example-cluster-name'])
+  >>> query = cbc.select(VCenterComputeResource).set_os_type(['WINDOWS']).set_cluster_name(['example-cluster-name'])
   >>> results = list(query)
-  >>> print(results)
+  >>> for result in results:
+  ...     print(results)
 
 Example Output::
 
@@ -102,7 +101,8 @@ Example Output::
         vcenter_host_url: 10.105.17.114
             vcenter_name: VMware vCenter Server 6.7.0 build-14368073
             vcenter_uuid: 9a8a0be5-ae1e-49ce-b2aa-34bc7dc445e3
-     vmwaretools_version: 11328 ComputeResource object, bound to https://defense-dev01.cbdtest.io.
+     vmwaretools_version: 11328
+  ComputeResource object, bound to https://defense-dev01.cbdtest.io.
   -------------------------------------------------------------------------------
 
           appliance_uuid: c74bca54-e903-49e8-9962-2bb895f428c1
@@ -191,7 +191,7 @@ specified field for all compute resources matching the criteria, showing which v
 and how many times that field value shows up in the matching compute resources.  Only a subset of fields
 can be faceted on, as listed here:
 
-**For VSphereComputeResource:**
+**For VCenterComputeResource:**
 
 - ``eligibility``
 - ``installation_status``
