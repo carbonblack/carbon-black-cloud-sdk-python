@@ -77,7 +77,7 @@ Example (vSphere workloads)::
 
 Example Output::
 
-  ComputeResource object, bound to https://defense-dev01.cbdtest.io.
+  VCenterComputeResource object, bound to https://defense-dev01.cbdtest.io.
   -------------------------------------------------------------------------------
 
           appliance_uuid: c74bca54-e903-49e8-9962-2bb895f428c1
@@ -102,7 +102,7 @@ Example Output::
             vcenter_name: VMware vCenter Server 6.7.0 build-14368073
             vcenter_uuid: 9a8a0be5-ae1e-49ce-b2aa-34bc7dc445e3
      vmwaretools_version: 11328
-  ComputeResource object, bound to https://defense-dev01.cbdtest.io.
+  VCenterComputeResource object, bound to https://defense-dev01.cbdtest.io.
   -------------------------------------------------------------------------------
 
           appliance_uuid: c74bca54-e903-49e8-9962-2bb895f428c1
@@ -137,21 +137,21 @@ Fetch Compute Resource by ID
 Using a query of the ``VCenterComputeResource`` or ``AWSComputeResource`` objects, you can get the
 compute resource by ID from your organization.
 
-Example (vSphere workloads)::
+Example (vCenter workloads)::
 
     >>> from cbc_sdk import CBCloudAPI
-    >>> from cbc_sdk.workload import ComputeResource
+    >>> from cbc_sdk.workload import VCenterComputeResource
 
     >>> # This is an example id that we want to query
     >>> id = 15054425
 
     >>> cbc = CBCloudAPI()
-    >>> query = cbc.select(ComputeResource, id)
+    >>> query = cbc.select(VCenterComputeResource, id)
 
     >>> # A string object is returned here, so we can print the result directly.
     >>> print(query)
 
-    ComputeResource object, bound to https://defense-dev01.cbdtest.io.
+    VCenterComputeResource object, bound to https://defense-dev01.cbdtest.io.
      Last refreshed at Mon Mar  1 12:02:14 2021
     -------------------------------------------------------------------------------
 
@@ -206,9 +206,58 @@ can be faceted on, as listed here:
 - ``platform_details``
 - ``virtual_private_cloud_id``
 
-Example (vSphere workloads)::
+Example (vCenter workloads)::
 
-    TODO
+    >>> from cbc_sdk import CBCloudAPI
+    >>> from cbc_sdk.workload import VCenterComputeResource
+    >>> cbc = CBCloudAPI()
+    >>> query = cbc.select(VCenterComputeResource)
+    >>> facets = query.facet(['os_type', 'eligibility'])
+    >>> for facet in facets:
+    ...    print facet
+    ...
+    ComputeResourceFacet object, bound to https://defense-dev01.cbdtest.io.
+    -------------------------------------------------------------------------------
+
+         field: os_type
+            id: os_type
+        values: [list:6 items]:
+                [0]: [ComputeResourceFacetValue object]:
+                        id: OTHER
+                      name: OTHER
+                     total: 230
+
+                [1]: [ComputeResourceFacetValue object]:
+                        id: UBUNTU
+                      name: UBUNTU
+                     total: 68
+
+                [2]: [ComputeResourceFacetValue object]:
+                        id: WINDOWS
+                      name: WINDOWS
+                     total: 46
+
+                [...]
+    ComputeResourceFacet object, bound to https://defense-dev01.cbdtest.io.
+    -------------------------------------------------------------------------------
+
+         field: eligibility
+            id: eligibility
+        values: [list:3 items]:
+                [0]: [ComputeResourceFacetValue object]:
+                        id: NOT_ELIGIBLE
+                      name: NOT_ELIGIBLE
+                     total: 237
+
+                [1]: [ComputeResourceFacetValue object]:
+                        id: UNSUPPORTED
+                      name: UNSUPPORTED
+                     total: 185
+
+                [2]: [ComputeResourceFacetValue object]:
+                        id: ELIGIBLE
+                      name: ELIGIBLE
+                     total: 25
 
 Example (AWS workloads)::
 
@@ -224,9 +273,22 @@ search criteria.  The format for downloading may be specified as either JSON or 
 The ``download()`` method returns a ``Job`` object, which is processed asynchronously and from which
 the results are available once the job has been completed.
 
-Example (vSphere workloads)::
+Example (vCenter workloads)::
 
-    TODO
+    >>> from cbc_sdk import CBCloudAPI
+    >>> from cbc_sdk.workload import VCenterComputeResource
+    >>> cbc = CBCloudAPI()
+    >>> query = cbc.select(VCenterComputeResource).set_os_type(["UBUNTU"]).set_eligibility(["ELIGIBLE"])
+    >>> query.set_installation_status(["ERROR"])
+    >>> job = query.download("CSV")
+    >>> job.await_completion()
+    >>> print(job.get_output_as_string())
+    Eligibility,Install Status,Name,OS,VMware Tools,Added Time,VM ID,VM name,IP address,Datacenter,Cluster,vCenter [...]
+    "ELIGIBLE",""ERROR"","wdc-10-180-200-134","UBUNTU","10336",""2021-07-27T11:01:01.636","776bf589-923e-4ccd-869d-[...]
+    "ELIGIBLE",""ERROR"","","UBUNTU","0",""2021-11-19T08:49:20.882","50294288-5baa-6e71-18f0-71c8a17f0caf","POC-DB-[...]
+    "ELIGIBLE",""ERROR"","ubunti1804desktop","UBUNTU","10338",""2022-04-04T04:54:50.861","503410f6-80aa-1f69-0285-[...]
+    "ELIGIBLE",""ERROR"","ubunti1804desktop","UBUNTU","10338",""2022-02-28T09:22:32.235","503410f6-80aa-1f69-0285-[...]
+    >>> # note: lines truncated in above output for formatting purposes
 
 Example (AWS workloads)::
 
@@ -236,7 +298,7 @@ Summarize Compute Resources
 ---------------------------
 
 .. note::
-  This functionality is not available for vSphere compute resources.
+  This functionality is not available for vCenter compute resources.
 
 By calling the ``summarize()`` method on the query object returned by ``select()``, after setting
 search criteria, a summary of compute resources may be generated.  The fields which may be summarized

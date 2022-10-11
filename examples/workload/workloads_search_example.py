@@ -213,6 +213,8 @@ def search_resources(cbc, mode):
         for item in query:
             print(item)
             print('-' * 79)
+        print(f"Total items returned: {query._count()}")
+        print('-' * 79)
     except ApiError as e:
         print("\nERROR: Resource search failed")
         print(e)
@@ -277,7 +279,7 @@ def download_resources(cbc, mode):
 
     print("\n\n--------------------Download Format:\n")
     for key in sorted(DOWNLOAD_MENU.keys()):
-        print(f"{DOWNLOAD_MENU}. {DOWNLOAD_MENU[key]['name']}")
+        print(f"{key}. {DOWNLOAD_MENU[key]['name']}")
     print('\n')
 
     # Get choice
