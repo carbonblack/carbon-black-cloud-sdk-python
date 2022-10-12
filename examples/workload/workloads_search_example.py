@@ -327,7 +327,7 @@ def summarize_resources(cbc, mode):
             print("\nERROR: At least one summary field must be specified")
 
     try:
-        for field, count in query.summarize(summary_fields):
+        for field, count in query.summarize(summary_fields).items():
             print(f"{field}: {count} total")
     except ApiError as e:
         print("\nERROR: Resource summary failed")

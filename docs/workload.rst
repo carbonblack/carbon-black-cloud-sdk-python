@@ -130,7 +130,131 @@ Example Output::
 
 Example (AWS workloads)::
 
-  TODO
+    >>> from cbc_sdk import CBCloudAPI
+    >>> from cbc_sdk.workload import AWSComputeResource
+
+    >>> cbc = CBCloudAPI()
+    >>> query = cbc.select(AWSComputeResource).set_region(['us-west-1'])
+    >>> results = list(query)
+    >>> for result in results:
+    ...     print(results)
+
+Example Output::
+
+    AWSComputeResource object, bound to https://defense-dev01.cbdtest.io.
+    -------------------------------------------------------------------------------
+
+             auto_scaling_group_name: Demo-AutoScalingGroup
+                   availability_zone: us-west-1c
+           cloud_provider_account_id: 267678331262
+          cloud_provider_resource_id: i-043de738ce129b77a
+                 cloud_provider_tags: [list:4 items]:
+                                      [0]: Name##Demo-ASG
+                                      [1]: aws:ec2launchtemplate:id##lt-0e3d35dba4f5ba16f
+                                      [2]: aws:autoscaling:groupName##Demo-AutoScalingGroup
+                                      [...]
+                         create_time: 2022-06-02T05:23:27Z
+                     deployment_type: AWS
+                         eligibility: NOT_ELIGIBLE
+                    eligibility_code: [list:1 item]:
+                                      [0]: SSM_DOC_NOT_INSTALLED
+                         external_ip: 18.144.80.202
+                                  id: 8x5tjvywq-aws-i-043de738ce129b77a
+                   image_description: Amazon Linux 2 Kernel 5.10 AMI 2.0.20220426.0 x...
+                            image_id: ami-02541b8af977f6cdd
+                          image_name: amzn2-ami-kernel-5.10-hvm-2.0.20220426.0-x86_64...
+                 installation_status: NOT_INSTALLED
+            installation_status_code: None
+        installation_status_code_key: None
+                      instance_state: running
+                       instance_type: t2.micro
+                         internal_ip: 172.31.11.73
+                                name: Demo-ASG
+                             org_key: 8X5TJVYWQ
+                            platform: Unix/Linux
+                    platform_details: Linux/UNIX
+                       platform_name: None
+                    platform_version: None
+                              region: us-west-1
+                   security_group_id: [list:1 item]:
+                                      [0]: sg-085972ee2f0be60aa
+                           subnet_id: subnet-03cb2d09e07350698
+            virtual_private_cloud_id: vpc-0faa4803c3de51c87
+    AWSComputeResource object, bound to https://defense-dev01.cbdtest.io.
+    -------------------------------------------------------------------------------
+
+             auto_scaling_group_name: None
+                   availability_zone: us-west-1c
+           cloud_provider_account_id: 267678331262
+          cloud_provider_resource_id: i-0febda35fcaf2dbd1
+                 cloud_provider_tags: [list:1 item]:
+                                      [0]: Name##Rushit-Test-2
+                         create_time: 2022-07-11T08:26:58Z
+                     deployment_type: AWS
+                         eligibility: NOT_ELIGIBLE
+                    eligibility_code: [list:1 item]:
+                                      [0]: SSM_DOC_NOT_INSTALLED
+                         external_ip: 54.193.100.2
+                                  id: 8x5tjvywq-aws-i-0febda35fcaf2dbd1
+                   image_description: Amazon Linux 2 Kernel 5.10 AMI 2.0.20220606.1 x...
+                            image_id: ami-0d9858aa3c6322f73
+                          image_name: amzn2-ami-kernel-5.10-hvm-2.0.20220606.1-x86_64...
+                 installation_status: NOT_INSTALLED
+            installation_status_code: None
+        installation_status_code_key: None
+                      instance_state: running
+                       instance_type: t2.micro
+                         internal_ip: 172.31.7.55
+                                name: Rushit-Test-2
+                             org_key: 8X5TJVYWQ
+                            platform: Unix/Linux
+                    platform_details: Linux/UNIX
+                       platform_name: None
+                    platform_version: None
+                              region: us-west-1
+                   security_group_id: [list:1 item]:
+                                      [0]: sg-08473e77b9e4921e3
+                           subnet_id: subnet-03cb2d09e07350698
+            virtual_private_cloud_id: vpc-0faa4803c3de51c87
+    AWSComputeResource object, bound to https://defense-dev01.cbdtest.io.
+    -------------------------------------------------------------------------------
+
+             auto_scaling_group_name: Demo-AutoScalingGroup
+                   availability_zone: us-west-1a
+           cloud_provider_account_id: 267678331262
+          cloud_provider_resource_id: i-0b8b62d7c3aea1f9f
+                 cloud_provider_tags: [list:5 items]:
+                                      [0]: Name##Demo-ASG
+                                      [1]: Test##Rushit-ASG
+                                      [2]: aws:ec2launchtemplate:id##lt-0e3d35dba4f5ba16f
+                                      [...]
+                         create_time: 2022-06-02T05:21:26Z
+                     deployment_type: AWS
+                         eligibility: NOT_ELIGIBLE
+                    eligibility_code: [list:1 item]:
+                                      [0]: SSM_DOC_NOT_INSTALLED
+                         external_ip: 54.176.174.194
+                                  id: 8x5tjvywq-aws-i-0b8b62d7c3aea1f9f
+                   image_description: Amazon Linux 2 Kernel 5.10 AMI 2.0.20220426.0 x...
+                            image_id: ami-02541b8af977f6cdd
+                          image_name: amzn2-ami-kernel-5.10-hvm-2.0.20220426.0-x86_64...
+                 installation_status: NOT_INSTALLED
+            installation_status_code: None
+        installation_status_code_key: None
+                      instance_state: running
+                       instance_type: t2.micro
+                         internal_ip: 172.31.17.166
+                                name: Demo-ASG
+                             org_key: 8X5TJVYWQ
+                            platform: Unix/Linux
+                    platform_details: Linux/UNIX
+                       platform_name: None
+                    platform_version: None
+                              region: us-west-1
+                   security_group_id: [list:1 item]:
+                                      [0]: sg-085972ee2f0be60aa
+                           subnet_id: subnet-02ccab8946d24f386
+            virtual_private_cloud_id: vpc-0faa4803c3de51c87
 
 Fetch Compute Resource by ID
 ----------------------------
@@ -180,7 +304,57 @@ Example (vCenter workloads)::
 
 Example (AWS workloads)::
 
-    TODO
+    >>> from cbc_sdk import CBCloudAPI
+    >>> from cbc_sdk.workload import AWSComputeResource
+
+    >>> # This is an example id that we want to query
+    >>> id = '8x5tjvywq-aws-i-043de738ce129b77a'
+
+    >>> cbc = CBCloudAPI()
+    >>> query = cbc.select(AWSComputeResource, id)
+
+    >>> # A string object is returned here, so we can print the result directly.
+    >>> print(query)
+    AWSComputeResource object, bound to https://defense-dev01.cbdtest.io.
+     Last refreshed at Wed Oct 12 11:11:41 2022
+    -------------------------------------------------------------------------------
+
+             auto_scaling_group_name: Demo-AutoScalingGroup
+                   availability_zone: us-west-1c
+           cloud_provider_account_id: 267678331262
+          cloud_provider_resource_id: i-043de738ce129b77a
+                 cloud_provider_tags: [list:4 items]:
+                                      [0]: Name##Demo-ASG
+                                      [1]: aws:ec2launchtemplate:id##lt-0e3d35dba4f5ba16f
+                                      [2]: aws:autoscaling:groupName##Demo-AutoScalingGroup
+                                      [...]
+                         create_time: 2022-06-02T05:23:27Z
+                     deployment_type: AWS
+                         eligibility: NOT_ELIGIBLE
+                    eligibility_code: [list:1 item]:
+                                      [0]: SSM_DOC_NOT_INSTALLED
+                         external_ip: 18.144.80.202
+                                  id: 8x5tjvywq-aws-i-043de738ce129b77a
+                   image_description: Amazon Linux 2 Kernel 5.10 AMI 2.0.20220426.0 x...
+                            image_id: ami-02541b8af977f6cdd
+                          image_name: amzn2-ami-kernel-5.10-hvm-2.0.20220426.0-x86_64...
+                 installation_status: NOT_INSTALLED
+            installation_status_code: None
+        installation_status_code_key: None
+                      instance_state: running
+                       instance_type: t2.micro
+                         internal_ip: 172.31.11.73
+                                name: Demo-ASG
+                             org_key: 8X5TJVYWQ
+                            platform: Unix/Linux
+                    platform_details: Linux/UNIX
+                       platform_name: None
+                    platform_version: None
+                              region: us-west-1
+                   security_group_id: [list:1 item]:
+                                      [0]: sg-085972ee2f0be60aa
+                           subnet_id: subnet-03cb2d09e07350698
+            virtual_private_cloud_id: vpc-0faa4803c3de51c87
 
 Facet Compute Resources
 -----------------------
@@ -261,7 +435,51 @@ Example (vCenter workloads)::
 
 Example (AWS workloads)::
 
-    TODO
+    >>> from cbc_sdk import CBCloudAPI
+    >>> from cbc_sdk.workload import AWSComputeResource
+    >>> cbc = CBCloudAPI()
+    >>> query = cbc.select(AWSComputeResource)
+    >>> facets = query.facet(['platform', 'virtual_private_cloud_id'])
+    >>> for facet in facets:
+    ...    print facet
+    ...
+    ComputeResourceFacet object, bound to https://defense-dev01.cbdtest.io.
+    -------------------------------------------------------------------------------
+
+         field: virtual_private_cloud_id
+            id: virtual_private_cloud_id
+        values: [list:8 items]:
+                [0]: [ComputeResourceFacetValue object]:
+                        id: vpc-02371233d7ac6d33c
+                      name: vpc-02371233d7ac6d33c
+                     total: 28
+
+                [1]: [ComputeResourceFacetValue object]:
+                        id: vpc-5102d53a
+                      name: vpc-5102d53a
+                     total: 12
+
+                [2]: [ComputeResourceFacetValue object]:
+                        id: vpc-0968a1d4ea101fc26
+                      name: vpc-0968a1d4ea101fc26
+                     total: 7
+
+                [...]
+    ComputeResourceFacet object, bound to https://defense-dev01.cbdtest.io.
+    -------------------------------------------------------------------------------
+
+         field: platform
+            id: platform
+        values: [list:2 items]:
+                [0]: [ComputeResourceFacetValue object]:
+                        id: Unix/Linux
+                      name: Unix/Linux
+                     total: 56
+
+                [1]: [ComputeResourceFacetValue object]:
+                        id: Windows
+                      name: Windows
+                     total: 5
 
 Download Compute Resource Listings
 ----------------------------------
@@ -292,7 +510,19 @@ Example (vCenter workloads)::
 
 Example (AWS workloads)::
 
-    TODO
+    >>> from cbc_sdk import CBCloudAPI
+    >>> from cbc_sdk.workload import AWSComputeResource
+
+    >>> cbc = CBCloudAPI()
+    >>> query = cbc.select(AWSComputeResource).set_region(['us-west-1'])
+    >>> job = query.download("CSV")
+    >>> job.await_completion()
+    >>> print(job.get_output_as_string())
+    Instance ID,Platform,Account ID,VPC ID,Added Time,AWS Tags,ASG,Instance Type,Image ID,Image name,Image [...]
+    "i-043de738ce129b77a","Unix/Linux","267678331262","vpc-0faa4803c3de51c87","2022-06-02T05:23:27",[...]
+    "i-0febda35fcaf2dbd1","Unix/Linux","267678331262","vpc-0faa4803c3de51c87","2022-07-11T08:26:58",[...]
+    "i-0b8b62d7c3aea1f9f","Unix/Linux","267678331262","vpc-0faa4803c3de51c87","2022-06-02T05:21:26",[...]
+    >>> # note: lines truncated in above output for formatting purposes
 
 Summarize Compute Resources
 ---------------------------
@@ -314,7 +544,13 @@ are as follows:
 
 Example (AWS workloads)::
 
-    TODO
+    >>> from cbc_sdk import CBCloudAPI
+    >>> from cbc_sdk.workload import AWSComputeResource
+    >>> cbc = CBCloudAPI()
+    >>> query = cbc.select(AWSComputeResource)
+    >>> summary = query.summarize(['availability_zone', 'region', 'virtual_private_cloud_id'])
+    >>> print(summary)
+    {'region': 5, 'availability_zone': 12, 'virtual_private_cloud_id': 8}
 
 Interactive example script featuring Workloads Search
 -----------------------------------------------------
