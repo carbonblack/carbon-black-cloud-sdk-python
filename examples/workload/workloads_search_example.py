@@ -110,6 +110,7 @@ def facet_fields_for_mode(mode):
 
 
 def summary_fields_for_mode(mode):
+    """Returns the correct list of summary fields for the mode."""
     if mode == 'VCENTER':
         raise NotImplementedError("vCenter mode does not implement the summarize() function")
     elif mode == 'AWS':
@@ -359,7 +360,6 @@ def quit_script(cbc, mode):
 
 def main():
     """Ye Olde Main Function"""
-
     # Initiate argparser
     parser = build_cli_parser()
     group = parser.add_mutually_exclusive_group()
