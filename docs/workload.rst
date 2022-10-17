@@ -71,8 +71,7 @@ Example (vSphere workloads)::
 
   >>> cbc = CBCloudAPI()
   >>> query = cbc.select(VCenterComputeResource).set_os_type(['WINDOWS']).set_cluster_name(['example-cluster-name'])
-  >>> results = list(query)
-  >>> for result in results:
+  >>> for result in list(query):
   ...     print(results)
 
 Example Output::
