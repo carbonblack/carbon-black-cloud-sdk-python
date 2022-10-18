@@ -144,6 +144,12 @@ def criteria_parser_for_mode(mode):
 def map_criteria_to_query(mode, query, args):
     """Map the parsed criteria arguments into the query depending on the mode."""
     parsed_values = vars(args)
+    # This relies on the fact that each criteria name X has a set_X() and exclude_X() method on the query object,
+    # with dashes in the criteria name replaced by underscores.  This allows us to reflect on the query class to find
+    # the appropriate method to use.
+    # The other way of doing this would be with a big sequence of if...elif...elif statements to check the value names,
+    # but that would quickly become cumbersome with the number of attributes we have, and as new workload types are
+    # added in the future.
     for value_name in [flag.replace('-', '_') for flag in criteria_dict_for_mode(mode).keys()]:
         if parsed_values[value_name]:
             f = getattr(query.__class__, f"set_{value_name}")
@@ -176,6 +182,7 @@ def build_main_menu(mode):
 def fetch_by_id(cbc, mode):
     """Execute the "fetch resource by ID" function."""
     resource_id = None
+    # prompt for the resource ID
     while not resource_id:
         resource_id = input(f"\nPlease provide ID for the {mode} compute resource: ").strip()
         try:
@@ -185,6 +192,7 @@ def fetch_by_id(cbc, mode):
             print('\nERROR: ID must be integer!')
 
     try:
+        # select the appropriate class (VCenterComputeResource or AWSComputeResource) with the resource ID
         print(cbc.select(resource_class_for_mode(mode), resource_id))
     except ApiError as e:
         print("\nERROR: Query of resource failed!")
@@ -197,8 +205,10 @@ def search_resources(cbc, mode):
     """Execute the "search resources" function."""
     print_available_criteria(mode)
 
+    # set up a query on the appropriate class (VCenterComputeResource or AWSComputeResource)
     query = cbc.select(resource_class_for_mode(mode))
 
+    # prompt for and apply criteria filters where desired
     use_filter = input('\nWould you like to use criteria filters?: Y/n\n')
     if use_filter.lower() in ('y', 'yes'):
         parser = criteria_parser_for_mode(mode)
@@ -211,6 +221,7 @@ def search_resources(cbc, mode):
             return True
 
     try:
+        # read in the query results and dump them to output
         for item in query:
             print(item)
             print('-' * 79)
@@ -227,8 +238,10 @@ def facet_resources(cbc, mode):
     """Execute the "facet resources" function."""
     print_available_criteria(mode)
 
+    # set up a query on the appropriate class (VCenterComputeResource or AWSComputeResource)
     query = cbc.select(resource_class_for_mode(mode))
 
+    # prompt for and apply criteria filters where desired
     use_filter = input('\nWould you like to use criteria filters?: Y/n\n')
     if use_filter.lower() in ('y', 'yes'):
         parser = criteria_parser_for_mode(mode)
@@ -243,6 +256,7 @@ def facet_resources(cbc, mode):
     print(f"\nAvailable facet fields: {facet_fields_for_mode(mode)}")
     print("Specify field names to use, separated by spaces. At least one must be specified.")
 
+    # get the list of fields to facet on
     facet_fields = None
     while not facet_fields:
         facet_fields = list(input("Enter facet field names: ").split())
@@ -251,6 +265,7 @@ def facet_resources(cbc, mode):
             print("\nERROR: At least one facet field must be specified")
 
     try:
+        # facet and print results
         for facet_object in query.facet(facet_fields, 100):
             print(facet_object)
             print('-' * 79)
@@ -265,8 +280,10 @@ def download_resources(cbc, mode):
     """Execute the "download resources" function."""
     print_available_criteria(mode)
 
+    # set up a query on the appropriate class (VCenterComputeResource or AWSComputeResource)
     query = cbc.select(resource_class_for_mode(mode))
 
+    # prompt for and apply criteria filters where desired
     use_filter = input('\nWould you like to use criteria filters?: Y/n\n')
     if use_filter.lower() in ('y', 'yes'):
         parser = criteria_parser_for_mode(mode)
@@ -278,18 +295,20 @@ def download_resources(cbc, mode):
             print(e)
             return True
 
+    # get the download format to use
     print("\n\n--------------------Download Format:\n")
     for key in sorted(DOWNLOAD_MENU.keys()):
         print(f"{key}. {DOWNLOAD_MENU[key]['name']}")
     print('\n')
 
-    # Get choice
     choice = input('\nEnter your choice: ')
     while choice not in str(DOWNLOAD_MENU.keys()):
         choice = input('Enter a valid choice: ')
 
     try:
+        # set up the download job
         job = query.download(DOWNLOAD_MENU[choice]['value'])
+        # wait for the download job to finish and then print its results
         print("Waiting for job to complete...")
         job.await_completion()
         print(job.get_output_as_string())
@@ -304,8 +323,11 @@ def summarize_resources(cbc, mode):
     """Execute the "summarize resources" function."""
     print_available_criteria(mode)
 
+    # set up a query on the appropriate class (VCenterComputeResource or AWSComputeResource)
+    # N.B.: only AWSComputeResource implements summarize at this time
     query = cbc.select(resource_class_for_mode(mode))
 
+    # prompt for and apply criteria filters where desired
     use_filter = input('\nWould you like to use criteria filters?: Y/n\n')
     if use_filter.lower() in ('y', 'yes'):
         parser = criteria_parser_for_mode(mode)
@@ -320,6 +342,7 @@ def summarize_resources(cbc, mode):
     print(f"\nAvailable summary fields: {summary_fields_for_mode(mode)}")
     print("Specify field names to use, separated by spaces. At least one must be specified.")
 
+    # get the list of fields to summarize on
     summary_fields = None
     while not summary_fields:
         summary_fields = list(input("Enter summary field names: ").split())
@@ -328,6 +351,7 @@ def summarize_resources(cbc, mode):
             print("\nERROR: At least one summary field must be specified")
 
     try:
+        # run the summary and print the results
         for field, count in query.summarize(summary_fields).items():
             print(f"{field}: {count} total")
     except ApiError as e:
