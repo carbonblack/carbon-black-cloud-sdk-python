@@ -653,6 +653,13 @@ class BaseComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuil
         """
         Facets all compute resources matching the specified criteria and returns the facet results.
 
+        Example:
+            >>> from cbc_sdk import CBCloudAPI
+            >>> from cbc_sdk.workload import AWSComputeResource
+            >>> cbc = CBCloudAPI()
+            >>> query = cbc.select(AWSComputeResource)
+            >>> facets = query.facet(['platform', 'virtual_private_cloud_id'])
+
         Required Permissions:
             public.cloud.inventory(READ) or _API.Public.Cloud:Public.cloud.inventory:READ
 
@@ -678,8 +685,18 @@ class BaseComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuil
         """
         Downloads all compute resources matching the specific criteria.
 
+        Example:
+            >>> from cbc_sdk import CBCloudAPI
+            >>> from cbc_sdk.workload import VCenterComputeResource
+            >>> cbc = CBCloudAPI()
+            >>> query = cbc.select(VCenterComputeResource).set_os_type(["UBUNTU"]).set_eligibility(["ELIGIBLE"])
+            >>> query.set_installation_status(["ERROR"])
+            >>> job = query.download("CSV")
+            >>> job.await_completion()
+            >>> print(job.get_output_as_string())
+
         Required Permissions:
-            public.cloud.inventory(READ) or _API.Public.Cloud:Public.cloud.inventory:READ
+            public.cloud.inventory(READ) or _API.Public.Cloud:Public.cloud.inventory:READ, jobs.status(READ)
 
         Args:
             download_format (str): The download format to be used. Valid values are "JSON" (the default) and "CSV".
@@ -1787,6 +1804,13 @@ class AWSComputeResourceQuery(BaseComputeResourceQuery):
     def summarize(self, summary_fields):
         """
         Get compute resource summaries on required fields of the resources with the specified criteria.
+
+        Example:
+            >>> from cbc_sdk import CBCloudAPI
+            >>> from cbc_sdk.workload import AWSComputeResource
+            >>> cbc = CBCloudAPI()
+            >>> query = cbc.select(AWSComputeResource)
+            >>> summary = query.summarize(['availability_zone', 'region', 'virtual_private_cloud_id'])
 
         Required Permissions:
             public.cloud.inventory(READ) or _API.Public.Cloud:Public.cloud.inventory:READ

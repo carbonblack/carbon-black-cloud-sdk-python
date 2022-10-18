@@ -241,18 +241,15 @@ def compare_data_summary(sdk_resp, api_resp, api_call):
 def main():
     """Script entry point"""
     parser = build_cli_parser()
-    parser.add_argument('--vcenter-only', action='store_true', help='Run tests only on vCenter compute resources')
-    parser.add_argument('--aws-only', action='store_true', help='Run tests only on AWS compute resources')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('--vcenter-only', action='store_true', help='Run tests only on vCenter compute resources')
+    group.add_argument('--aws-only', action='store_true', help='Run tests only on AWS compute resources')
     args = parser.parse_args()
 
     run_vcenter = True
     run_aws = True
     if args.vcenter_only:
-        if args.aws_only:
-            print("Cannot specify both --vcenter-only and --aws-only options")
-            return 1
-        else:
-            run_aws = False
+        run_aws = False
     elif args.aws_only:
         run_vcenter = False
 
