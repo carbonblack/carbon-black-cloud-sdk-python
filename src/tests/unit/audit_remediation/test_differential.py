@@ -78,9 +78,10 @@ def test_newer_run_id(cbcsdk_mock):
                              "/livequery/v1/orgs/test/differential/runs/_search",
                              QUERY_COMPARISON_COUNT_ONLY)
     api = cbcsdk_mock.api
-    resp = api.select(Differential).newer_run_id("qpopjb82whlmthlo0x1wrwcnoyxmrueu")
-    assert resp[0].older_run_id == "kibloccplynombvigcgtu2et2zayhzal"
-    assert resp[0].diff_results[0]["changes"] == "null"
+    query = api.select(Differential).newer_run_id("qpopjb82whlmthlo0x1wrwcnoyxmrueu")
+    resp = query.submit()
+    assert resp.older_run_id == "kibloccplynombvigcgtu2et2zayhzal"
+    assert resp.diff_results[0]["changes"] == "null"
 
 
 def test_older_run_id(cbcsdk_mock):
@@ -89,10 +90,11 @@ def test_older_run_id(cbcsdk_mock):
                              "/livequery/v1/orgs/test/differential/runs/_search",
                              QUERY_COMPARISON_COUNT_ONLY)
     api = cbcsdk_mock.api
-    resp = api.select(Differential).newer_run_id("qpopjb82whlmthlo0x1wrwcnoyxmrueu") \
+    query = api.select(Differential).newer_run_id("qpopjb82whlmthlo0x1wrwcnoyxmrueu") \
                                    .older_run_id("kibloccplynombvigcgtu2et2zayhzal")
-    assert resp[0].older_run_id == "kibloccplynombvigcgtu2et2zayhzal"
-    assert resp[0].diff_results[0]["changes"] == "null"
+    resp = query.submit()
+    assert resp.older_run_id == "kibloccplynombvigcgtu2et2zayhzal"
+    assert resp.diff_results[0]["changes"] == "null"
 
 
 def test_count_only_false(cbcsdk_mock):
@@ -101,8 +103,9 @@ def test_count_only_false(cbcsdk_mock):
                              "/livequery/v1/orgs/test/differential/runs/_search",
                              QUERY_COMPARISON_ACTUAL_CHANGES)
     api = cbcsdk_mock.api
-    resp = api.select(Differential).newer_run_id("qpopjb82whlmthlo0x1wrwcnoyxmrueu").count_only(False)
-    assert resp[0].diff_results[0]["changes"] != "null"
+    query = api.select(Differential).newer_run_id("qpopjb82whlmthlo0x1wrwcnoyxmrueu").count_only(False)
+    resp = query.submit()
+    assert resp.diff_results[0]["changes"] != "null"
 
 
 def test_count_only_true(cbcsdk_mock):
@@ -111,8 +114,9 @@ def test_count_only_true(cbcsdk_mock):
                              "/livequery/v1/orgs/test/differential/runs/_search",
                              QUERY_COMPARISON_COUNT_ONLY)
     api = cbcsdk_mock.api
-    resp = api.select(Differential).newer_run_id("qpopjb82whlmthlo0x1wrwcnoyxmrueu").count_only(True)
-    assert resp[0].diff_results[0]["changes"] == "null"
+    query = api.select(Differential).newer_run_id("qpopjb82whlmthlo0x1wrwcnoyxmrueu").count_only(True)
+    resp = query.submit()
+    assert resp.diff_results[0]["changes"] == "null"
 
 
 def test_set_device_ids(cbcsdk_mock):
@@ -121,9 +125,10 @@ def test_set_device_ids(cbcsdk_mock):
                              "/livequery/v1/orgs/test/differential/runs/_search",
                              QUERY_COMPARISON_SET_DEVICE_ID)
     api = cbcsdk_mock.api
-    resp = api.select(Differential).newer_run_id("qpopjb82whlmthlo0x1wrwcnoyxmrueu").set_device_ids([11412673])
-    assert len(resp[0].diff_results) == 1
-    assert resp[0].diff_results[0]["device_id"] == 11412673
+    query = api.select(Differential).newer_run_id("qpopjb82whlmthlo0x1wrwcnoyxmrueu").set_device_ids([11412673])
+    resp = query.submit()
+    assert len(resp.diff_results) == 1
+    assert resp.diff_results[0]["device_id"] == 11412673
 
 
 def test_build_url(cbcsdk_mock):
