@@ -44,7 +44,7 @@ def extract_data(data):
 
 def compare_data(sdk_resp, api_resp):
     """Compare the data between the sdk and api response"""
-    sdk = sdk_resp[0]._info
+    sdk = sdk_resp._info
     api = api_resp.json()
     api = api['results'][0]
 
@@ -99,11 +99,12 @@ def compare_data(sdk_resp, api_resp):
 
 def differential_analysis_sdk(cb, args):
     """Get Config Template call via SDK"""
-    resp = cb.select(Differential).newer_run_id(args.newer_run_id)
+    query = cb.select(Differential).newer_run_id(args.newer_run_id)
     if args.older_run_id:
-        resp.older_run_id(args.older_run_id)
+        query.older_run_id(args.older_run_id)
 
-    if resp[0]._info:
+    resp = query.submit()
+    if resp._info:
         print('SDK Response: OK')
     return resp
 
