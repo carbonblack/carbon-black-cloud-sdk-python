@@ -37,26 +37,29 @@ To receive the actual differential data, use the ``.count_only()`` method, as fe
     >>> from cbc_sdk import CBCloudAPI
     >>> from cbc_sdk.audit_remediation import Differential
     >>>
-    >>> cbc = CBCloudAPI(profile='sample')
+    >>> cb = CBCloudAPI(profile='sample')
     >>>
-    >>> query = cbc.select(Differential).newer_run_id('jcdqsju4utpaayj5dh5r2llzffeolg0u').older_run_id('yhbg3wcea9y1l4asiltky5tupkgauzas')
-    >>> # The content of query object always has a length of 1, and contains the Differential response.
-    >>> print(*query)
+    >>> query = cb.select(Differential).newer_run_id('jcdqsju4utpaayj5dh5r2llzffeolg0u').older_run_id('yhbg3wcea9y1l4asiltky5tupkgauzas')
+    >>> run = query.submit()
+    >>> print(run)
     Differential object, bound to https://defense-dev01.cbdtest.io.
-    diff_processed_time: 0.633
-    diff_results: [list:1 item]:
-    [0]: {'device_id': 12345, 'change_count': 1, 'add...
-    newer_run_create_time: 2022-08-10T13:07:44.194Z
-    newer_run_id: jcdqsju4utpaayj5dh5r2llzffeolg0u
-    newer_run_not_responded_devices: [list:0 items]
-    older_run_create_time: 2022-08-10T12:57:03.872Z
-    older_run_id: yhbg3wcea9y1l4asiltky5tupkgauzas
-    older_run_not_responded_devices: [list:0 items]
+    -------------------------------------------------------------------------------
 
+                    diff_processed_time: 0.037
+                           diff_results: [list:1 item]:
+                                         [0]: {'device_id': 11412673, 'change_count': 19, 'ad...
+                  newer_run_create_time: 2022-10-19T13:29:34.429Z
+                           newer_run_id: n6cv24lh3pnh4zbciotahl82tm4tsuo7
+        newer_run_not_responded_devices: [list:1 item]:
+                                         [0]: 17331059
+                  older_run_create_time: 2022-10-19T13:19:49.812Z
+                           older_run_id: olquodvqz8kekxug2o2jsxcdnltak9hu
+        older_run_not_responded_devices: [list:1 item]:
+                                         [0]: 17331059
 
 You can also access a dictionary representation of the response with the ``._info`` property.
 
-    >>> print(resp[0]._info)
+    >>> print(run._info)
     {'diff_processed_time': 0.037,
      'diff_results': [{'added_count': 1,
                        'change_count': 1,
@@ -82,30 +85,14 @@ To use this method, append it to the rest of the Differential object query. The 
     >>> from cbc_sdk import CBCloudAPI
     >>> from cbc_sdk.audit_remediation import Differential
     >>>
-    >>> cbc = CBCloudAPI(profile='sample')
+    >>> cb = CBCloudAPI(profile='sample')
     >>>
-    >>> query = cbc.select(Differential).newer_run_id('jcdqsju4utpaayj5dh5r2llzffeolg0u').older_run_id('yhbg3wcea9y1l4asiltky5tupkgauzas')
-    >>> actual_changes = query.count_only(False)
-    >>> print(actual_changes[0]._info)
-        {'diff_processed_time': 0.039,
-         'diff_results': [{'added_count': 1,
-                           'change_count': 1,
-                           'changes': [{'action': 'ADDED',
-                                        'fields': [{'key': 'name',
-                                                    'value': 'AdBlocker Ultimate'}]}],
-                           'device_id': 12345,
-                           'newer_run_row_count': 21,
-                           'older_run_row_count': 20,
-                           'removed_count': 0}],
-         'newer_run_create_time': '2022-08-10T13:07:44.194Z',
-         'newer_run_id': 'jcdqsju4utpaayj5dh5r2llzffeolg0u',
-         'newer_run_not_responded_devices': [],
-         'older_run_create_time': '2022-08-10T12:57:03.872Z',
-         'older_run_id': 'yhbg3wcea9y1l4asiltky5tupkgauzas',
-         'older_run_not_responded_devices': []}
+    >>> query = cb.select(Differential).newer_run_id('jcdqsju4utpaayj5dh5r2llzffeolg0u').older_run_id('yhbg3wcea9y1l4asiltky5tupkgauzas').count_only(False)
+    >>> actual_changes = query.submit()
+    >>> print(actual_changes.diff_results)
+    [{'device_id': 11412673, 'change_count': 19, 'added_count': 19, 'removed_count': 0, 'changes': [{'action': 'ADDED', 'fields': [{'key': 'name', 'value': 'Visionary – Soft'}]}, {'action': 'ADDED', 'fields': [{'key': 'name', 'value': 'Activist – Balanced'}]}, {'action': 'ADDED', 'fields': [{'key': 'name', 'value': 'Visionary – Balanced'}]}, {'action': 'ADDED', 'fields': [{'key': 'name', 'value': 'Innovator – Soft'}]}, {'action': 'ADDED', 'fields': [{'key': 'name', 'value': 'Activist – Bold'}]}, {'action': 'ADDED', 'fields': [{'key': 'name', 'value': 'Dreamer – Soft'}]}, {'action': 'ADDED', 'fields': [{'key': 'name', 'value': 'Dreamer – Balanced'}]}, {'action': 'ADDED', 'fields': [{'key': 'name', 'value': 'Expressionist – Bold'}]}, {'action': 'ADDED', 'fields': [{'key': 'name', 'value': 'Innovator – Bold'}]}, {'action': 'ADDED', 'fields': [{'key': 'name', 'value': 'AdGuard AdBlocker'}]}, {'action': 'ADDED', 'fields': [{'key': 'name', 'value': 'Expressionist – Balanced'}]}, {'action': 'ADDED', 'fields': [{'key': 'name', 'value': 'Visionary – Bold'}]}, {'action': 'ADDED', 'fields': [{'key': 'name', 'value': 'Playmaker – Soft'}]}, {'action': 'ADDED', 'fields': [{'key': 'name', 'value': 'Innovator – Balanced'}]}, {'action': 'ADDED', 'fields': [{'key': 'name', 'value': 'Expressionist – Soft'}]}, {'action': 'ADDED', 'fields': [{'key': 'name', 'value': 'Playmaker – Balanced'}]}, {'action': 'ADDED', 'fields': [{'key': 'name', 'value': 'Playmaker – Bold'}]}, {'action': 'ADDED', 'fields': [{'key': 'name', 'value': 'Activist – Soft'}]}, {'action': 'ADDED', 'fields': [{'key': 'name', 'value': 'Dreamer – Bold'}]}], 'older_run_row_count': 26, 'newer_run_row_count': 45}]
 
-
-In the example response you can see that ``AdBlocker Ultimate`` add-on was added between the two snapshot intervals.
+In the example response you can see that 19 items were added between the two snapshot intervals.
 
 
 Filter Devices
@@ -117,11 +104,12 @@ To use this method, append it to the rest of the Differential object query or co
     >>> from cbc_sdk import CBCloudAPI
     >>> from cbc_sdk.audit_remediation import Differential
     >>>
-    >>> cbc = CBCloudAPI(profile='sample')
+    >>> cb = CBCloudAPI(profile='sample')
     >>>
-    >>> query = cbc.select(Differential).newer_run_id('jcdqsju4utpaayj5dh5r2llzffeolg0u').older_run_id('yhbg3wcea9y1l4asiltky5tupkgauzas')
+    >>> query = cb.select(Differential).newer_run_id('jcdqsju4utpaayj5dh5r2llzffeolg0u').older_run_id('yhbg3wcea9y1l4asiltky5tupkgauzas')
     >>> actual_changes = query.count_only(False).set_device_ids([12345])
-    >>> print(actual_changes[0]._info)
+    >>> run = actual_changes.submit()
+    >>> print(run._info)
         {'diff_processed_time': 0.039,
          'diff_results': [{'added_count': 1,
                            'change_count': 1,
@@ -150,9 +138,9 @@ To use this method, append it to the rest of the Differential object query or co
     >>> from cbc_sdk import CBCloudAPI
     >>> from cbc_sdk.audit_remediation import Differential
     >>>
-    >>> cbc = CBCloudAPI(profile='sample')
+    >>> cb = CBCloudAPI(profile='sample')
     >>>
-    >>> query = cbc.select(Differential).newer_run_id('jcdqsju4utpaayj5dh5r2llzffeolg0u').older_run_id('yhbg3wcea9y1l4asiltky5tupkgauzas')
+    >>> query = cb.select(Differential).newer_run_id('jcdqsju4utpaayj5dh5r2llzffeolg0u').older_run_id('yhbg3wcea9y1l4asiltky5tupkgauzas')
     >>> export = query.count_only(False).set_device_ids([12345]).async_export()
     >>> export.await_completion()
     >>> # write the results to a file
