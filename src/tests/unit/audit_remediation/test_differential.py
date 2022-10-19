@@ -91,7 +91,7 @@ def test_older_run_id(cbcsdk_mock):
                              QUERY_COMPARISON_COUNT_ONLY)
     api = cbcsdk_mock.api
     query = api.select(Differential).newer_run_id("qpopjb82whlmthlo0x1wrwcnoyxmrueu") \
-                                   .older_run_id("kibloccplynombvigcgtu2et2zayhzal")
+                                    .older_run_id("kibloccplynombvigcgtu2et2zayhzal")
     resp = query.submit()
     assert resp.older_run_id == "kibloccplynombvigcgtu2et2zayhzal"
     assert resp.diff_results[0]["changes"] == "null"
