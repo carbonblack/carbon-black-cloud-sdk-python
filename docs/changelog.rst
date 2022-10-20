@@ -6,7 +6,7 @@ CBC SDK 1.4.1 - Released (TBD)
 New Features:
 
 * AWS workloads now supported in VM Workloads Search.
-* Differential Analysis functionality.
+* Live Query Differential Analysis functionality.
 
 Updates:
 
