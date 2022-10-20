@@ -28,6 +28,7 @@ Guides
 
 * :doc:`alerts` - Work and manage different types of alerts such as CB Analytics Alert, Watchlist Alerts and Device Control Alerts.
 * :doc:`device-control` - Control the blocking of USB devices on endpoints.
+* :doc:`differential-analysis` - Provides the ability to compare and understand the changes between two Live Query runs
 * :doc:`live-query` - Live Query allows operators to ask questions of endpoints
 * :doc:`live-response` - Live Response allows security operators to collect information and take action on remote endpoints in real time.
 * :doc:`recommendations` - Work with Endpoint Standard recommendations for reputation override.
