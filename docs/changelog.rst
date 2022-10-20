@@ -1,5 +1,24 @@
 Changelog
 ================================
+CBC SDK 1.4.1 - Released (TBD)
+-------------------------------------
+
+New Features:
+
+* AWS workloads now supported in VM Workloads Search.
+* Live Query Differential Analysis functionality.
+
+Updates:
+
+* VM Workloads Search updated to use new v2 APIs
+* Added the ``alertable`` field to feeds.
+* Devices API now supports faceting on three additional (public cloud related) fields.
+* Added a user acceptance test script for the policy function updates.
+
+Documentation:
+
+* Added information on OAuth authentication to docs.
+
 CBC SDK 1.4.0 - Released July 26,2022
 -------------------------------------
 
