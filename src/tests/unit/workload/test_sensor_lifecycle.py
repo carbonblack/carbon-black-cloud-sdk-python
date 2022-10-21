@@ -19,7 +19,7 @@ import json
 from cbc_sdk.errors import ApiError
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.workload.sensor_lifecycle import SensorKit
-from cbc_sdk.workload.vm_workloads_search import ComputeResource
+from cbc_sdk.workload.vm_workloads_search import VCenterComputeResource
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.workload.mock_sensor_lifecycle import (GET_CONFIG_TEMPLATE_RESP, GET_SENSOR_INFO_RESP,
                                                                 REQUEST_SENSOR_INSTALL_RESP)
@@ -45,8 +45,8 @@ def cbcsdk_mock(monkeypatch, cb):
 
 def create_stub_compute_resource(cb, id, uuid, vcenter_uuid, os_type, os_arch, eligibility='ELIGIBLE'):
     """Create a stub ComputeResource object with the data we need."""
-    return ComputeResource(cb, id, {'id': id, 'name': id, 'uuid': uuid, 'vcenter_uuid': vcenter_uuid,
-                                    'eligibility': eligibility, 'os_type': os_type, 'os_architecture': os_arch})
+    return VCenterComputeResource(cb, id, {'id': id, 'name': id, 'uuid': uuid, 'vcenter_uuid': vcenter_uuid,
+                                  'eligibility': eligibility, 'os_type': os_type, 'os_architecture': os_arch})
 
 
 # ==================================== UNIT TESTS BELOW ====================================
@@ -206,7 +206,7 @@ def test_build_compute_resource_list(cb):
     res1 = create_stub_compute_resource(cb, '1', 'Zulu', 'Alpha', 'WINDOWS', '64')
     res2 = create_stub_compute_resource(cb, '2', 'Yankee', 'Bravo', 'WINDOWS', '64')
     res3 = create_stub_compute_resource(cb, '3', 'X-Ray', 'Charlie', 'WINDOWS', '64')
-    output = ComputeResource._build_compute_resource_list([res1, res2, res3])
+    output = VCenterComputeResource._build_compute_resource_list([res1, res2, res3])
     assert output == [{'resource_manager_id': 'Alpha', 'compute_resource_id': '1'},
                       {'resource_manager_id': 'Bravo', 'compute_resource_id': '2'},
                       {'resource_manager_id': 'Charlie', 'compute_resource_id': '3'}]
@@ -230,9 +230,11 @@ def test_sensor_install_bulk_by_id(cbcsdk_mock):
     api = cbcsdk_mock.api
     skit1 = SensorKit.from_type(api, 'LINUX', '64', 'SUSE', '1.2.3.4')
     skit2 = SensorKit.from_type(api, 'MAC', '64', 'MAC', '5.6.7.8')
-    result = ComputeResource.bulk_install_by_id(api, [{'resource_manager_id': 'Alpha', 'compute_resource_id': '1'},
-                                                      {'resource_manager_id': 'Bravo', 'compute_resource_id': '2'}],
-                                                [skit1, skit2], 'MyConfigFile')
+    result = VCenterComputeResource.bulk_install_by_id(api, [{'resource_manager_id': 'Alpha',
+                                                              'compute_resource_id': '1'},
+                                                             {'resource_manager_id': 'Bravo',
+                                                              'compute_resource_id': '2'}],
+                                                       [skit1, skit2], 'MyConfigFile')
     assert result == {'type': "INFO", 'code': "INSTALL_SENSOR_REQUEST_PROCESSED"}
 
 
@@ -256,7 +258,7 @@ def test_sensor_install_bulk(cbcsdk_mock):
     resource2 = create_stub_compute_resource(api, '234', 'Yankee', 'Bravo', 'SUSE', '64')
     skit1 = SensorKit.from_type(api, 'LINUX', '64', 'SUSE', '1.2.3.4')
     skit2 = SensorKit.from_type(api, 'MAC', '64', 'MAC', '5.6.7.8')
-    result = ComputeResource.bulk_install(api, [resource1, resource2], [skit1, skit2], 'MyConfigFile')
+    result = VCenterComputeResource.bulk_install(api, [resource1, resource2], [skit1, skit2], 'MyConfigFile')
     assert result == {'type': "INFO", 'code': "INSTALL_SENSOR_REQUEST_PROCESSED"}
 
 

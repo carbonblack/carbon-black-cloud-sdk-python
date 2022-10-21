@@ -602,6 +602,19 @@ class Feed(FeedModel):
             self._new_feedinfo['source_label'] = source_label
             return self
 
+        def set_alertable(self, alertable):
+            """
+            Sets the alertable for the new feed. Defaults to true if not specified.
+
+            Args:
+                alertable (bool): Indicator whether the feed supports alerting.
+
+            Returns:
+                FeedBuilder: This object.
+            """
+            self._new_feedinfo['alertable'] = alertable
+            return self
+
         def add_reports(self, reports):
             """
             Adds new reports to the new feed.
@@ -630,7 +643,7 @@ class Feed(FeedModel):
             return Feed(self._cb, None, init_data)
 
     @classmethod
-    def create(cls, cb, name, provider_url, summary, category):
+    def create(cls, cb, name, provider_url, summary, category, alertable=True):
         """
         Begins creating a new feed by making a FeedBuilder to hold the new feed data.
 
@@ -645,7 +658,7 @@ class Feed(FeedModel):
             FeedBuilder: The new FeedBuilder object to be used to create the feed.
         """
         return Feed.FeedBuilder(cb, {'name': name, 'provider_url': provider_url, 'summary': summary,
-                                     'category': category})
+                                     'category': category, 'alertable': alertable})
 
     @classmethod
     def _query_implementation(self, cb, **kwargs):

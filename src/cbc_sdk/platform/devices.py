@@ -353,6 +353,12 @@ class DeviceFacet(UnrefreshableModel):
                 query.set_os([self.id.upper()])
             elif self._outer.field == 'ad_group_id':
                 query.set_ad_group_ids([int(self.id)])
+            elif self._outer.field == "cloud_provider_account_id":
+                query.set_cloud_provider_account_id([self.id])
+            elif self._outer.field == "auto_scaling_group_name":
+                query.set_auto_scaling_group_name([self.id])
+            elif self._outer.field == "virtual_private_cloud_id":
+                query.set_virtual_private_cloud_id([self.id])
             return query
 
     @classmethod
@@ -408,7 +414,8 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
     VALID_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "MISSION_CRITICAL"]
     VALID_DIRECTIONS = ["ASC", "DESC"]
     VALID_DEPLOYMENT_TYPES = ["ENDPOINT", "WORKLOAD"]
-    VALID_FACET_FIELDS = ["policy_id", "status", "os", "ad_group_id"]
+    VALID_FACET_FIELDS = ["policy_id", "status", "os", "ad_group_id", "cloud_provider_account_id",
+                          "auto_scaling_group_name", "virtual_private_cloud_id"]
 
     def __init__(self, doc_class, cb):
         """
@@ -587,6 +594,45 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         if not all((prio in DeviceSearchQuery.VALID_PRIORITIES) for prio in target_priorities):
             raise ApiError("One or more invalid target priority values")
         self._update_criteria("target_priority", target_priorities)
+        return self
+
+    def set_cloud_provider_account_id(self, account_ids):
+        """
+        Restricts the devices that this query is performed on to the specified cloud provider account IDs.
+
+        Args:
+            account_ids (list): List of account IDs to restrict search to.
+
+        Returns:
+            DeviceSearchQuery: This instance.
+        """
+        self._update_criteria("cloud_provider_account_id", account_ids)
+        return self
+
+    def set_auto_scaling_group_name(self, group_names):
+        """
+        Restricts the devices that this query is performed on to the specified auto scaling group names.
+
+        Args:
+            group_names (list): List of group names to restrict search to.
+
+        Returns:
+            DeviceSearchQuery: This instance.
+        """
+        self._update_criteria("auto_scaling_group_name", group_names)
+        return self
+
+    def set_virtual_private_cloud_id(self, cloud_ids):
+        """
+        Restricts the devices that this query is performed on to the specified virtual private cloud IDs.
+
+        Args:
+            cloud_ids (list): List of cloud IDs to restrict search to.
+
+        Returns:
+            DeviceSearchQuery: This instance.
+        """
+        self._update_criteria("virtual_private_cloud_id", cloud_ids)
         return self
 
     def set_exclude_sensor_versions(self, sensor_versions):
@@ -815,7 +861,8 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
 
         Args:
             fieldlist (list[str]): List of facet field names. Valid names are "policy_id", "status", "os",
-                                   and "ad_group_id".
+                                   "ad_group_id", "cloud_provider_account_id", "auto_scaling_group_name",
+                                   and "virtual_private_cloud_id".
             max_rows (int): The maximum number of rows to return. 0 means return all rows.
 
         Returns:

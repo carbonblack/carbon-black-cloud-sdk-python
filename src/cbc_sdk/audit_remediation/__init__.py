@@ -6,3 +6,4 @@ from cbc_sdk.audit_remediation.base import (Run, RunHistory, Result, DeviceSumma
                                     ResultFacet, DeviceSummaryFacet,
                                     ResultQuery, FacetQuery, RunQuery,
                                     RunHistoryQuery, Template, TemplateHistory)
+from cbc_sdk.audit_remediation.differential import Differential
