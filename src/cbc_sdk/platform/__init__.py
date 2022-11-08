@@ -5,6 +5,8 @@ from cbc_sdk.platform.base import PlatformModel
 from cbc_sdk.platform.alerts import (BaseAlert, WatchlistAlert, CBAnalyticsAlert, DeviceControlAlert,
                                      ContainerRuntimeAlert, Workflow, WorkflowStatus)
 
+from cbc_sdk.platform.asset_groups import AssetGroup
+
 from cbc_sdk.platform.devices import Device, DeviceFacet, DeviceSearchQuery
 
 from cbc_sdk.platform.events import Event, EventFacet
