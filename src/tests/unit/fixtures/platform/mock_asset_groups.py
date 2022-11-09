@@ -52,4 +52,3 @@ UPDATE_AG_REQUEST = {
     "policy_id": 9001,
     "policy_name": "Jenny"
 }
-
