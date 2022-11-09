@@ -17,13 +17,11 @@ from cbc_sdk.base import MutableBaseModel
 
 
 class AssetGroup(MutableBaseModel):
-    """
-    Represents an asset group within the organization.
-    """
+    """Represents an asset group within the organization."""
     urlobject = "/asset_groups/v1beta/orgs/{0}/groups"
     urlobject_single = "/asset_groups/v1beta/orgs/{0}/groups/{1}"
     primary_key = "id"
-    swagger_meta_file = "platform/models/asset_groups.yaml"
+    swagger_meta_file = "platform/models/asset_group.yaml"
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
         """
@@ -41,6 +39,8 @@ class AssetGroup(MutableBaseModel):
         """
         super(AssetGroup, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
                                          force_init=force_init if initial_data else True, full_doc=full_doc)
+        if model_unique_id is None:
+            self.touch(True)
 
     def _build_api_request_uri(self, http_method="GET"):
         """
@@ -61,6 +61,9 @@ class AssetGroup(MutableBaseModel):
     def create_group(cls, cb, name, description, policy_id):
         """
         Create a new asset group.
+
+        Required Permissions:
+            gm.group-set (CREATE)
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
