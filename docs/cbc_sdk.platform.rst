@@ -9,12 +9,23 @@ Base Module
    :inherited-members:
    :show-inheritance:
 
+Submodules
+----------
+
 Alerts Module
 -------------------------------
 
 .. automodule:: cbc_sdk.platform.alerts
    :members:
    :inherited-members:
+   :show-inheritance:
+
+Asset Groups Module
+-------------------------------------
+
+.. automodule:: cbc_sdk.platform.asset_groups
+   :members:
+   :undoc-members:
    :show-inheritance:
 
 Audit Module
