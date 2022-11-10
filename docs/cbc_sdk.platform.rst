@@ -12,6 +12,14 @@ cbc\_sdk.platform.alerts module
    :undoc-members:
    :show-inheritance:
 
+cbc\_sdk.platform.asset_groups module
+-------------------------------------
+
+.. automodule:: cbc_sdk.platform.asset_groups
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 cbc\_sdk.platform.base module
 -----------------------------
 
