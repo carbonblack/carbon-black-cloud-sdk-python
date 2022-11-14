@@ -94,10 +94,17 @@ def test_find_and_update_asset_group(cbcsdk_mock):
 
 def test_find_and_delete_asset_group(cbcsdk_mock):
     """Tests finding and deleting the asset group."""
+    did_delete = False
+
+    def on_delete(url, body):
+        nonlocal did_delete
+        did_delete = True
+        return CBCSDKMock.StubResponse(None, scode=200)
+
     cbcsdk_mock.mock_request('GET', '/asset_groups/v1beta/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
                              copy.deepcopy(EXISTING_AG_DATA))
     cbcsdk_mock.mock_request('DELETE', '/asset_groups/v1beta/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
-                             CBCSDKMock.StubResponse(None, scode=200))
+                             on_delete)
     api = cbcsdk_mock.api
     group = api.select(AssetGroup, 'db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16')
     assert group is not None
@@ -107,3 +114,5 @@ def test_find_and_delete_asset_group(cbcsdk_mock):
     assert group.policy_id == 8675309
 
     group.delete()
+    assert did_delete
+
