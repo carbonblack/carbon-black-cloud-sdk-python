@@ -115,4 +115,3 @@ def test_find_and_delete_asset_group(cbcsdk_mock):
 
     group.delete()
     assert did_delete
-
