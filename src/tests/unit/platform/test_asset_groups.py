@@ -15,10 +15,11 @@ import pytest
 import logging
 import copy
 from cbc_sdk.rest_api import CBCloudAPI
+from cbc_sdk.errors import ApiError
 from cbc_sdk.platform import AssetGroup
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_asset_groups import (CREATE_AG_REQUEST, CREATE_AG_RESPONSE, EXISTING_AG_DATA,
-                                                            UPDATE_AG_REQUEST)
+                                                            UPDATE_AG_REQUEST, QUERY_REQUEST, QUERY_RESPONSE)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -115,3 +116,64 @@ def test_find_and_delete_asset_group(cbcsdk_mock):
 
     group.delete()
     assert did_delete
+
+
+@pytest.mark.parametrize("name, polid", [
+    ("Group Test", 7113785),
+    (["Group Test"], [7113785]),
+])
+def test_query_with_all_options(cbcsdk_mock, name, polid):
+    """Tests querying for asset groups with all options set."""
+
+    def on_post(uri, body, **kwargs):
+        tbody = copy.deepcopy(body)
+        if 'start' not in tbody:
+            tbody['start'] = 1
+        assert tbody == QUERY_REQUEST
+        return QUERY_RESPONSE
+
+    cbcsdk_mock.mock_request('POST', '/asset_groups/v1beta/orgs/test/groups/_search', on_post)
+    api = cbcsdk_mock.api
+    query = api.select(AssetGroup).where("test").set_discovered(False).set_name(name).set_policy_id(polid)
+    query.sort_by("name", "ASC")
+    assert query._count() == 1
+    output = list(query)
+    assert len(output) == 1
+    assert output[0].id == "9b8b8d84-4a44-4a94-81ec-1f8ef52d4430"
+    assert output[0].name == "Group Test"
+    assert output[0].description == "Group Test"
+    assert output[0].policy_id == 7113785
+
+
+def test_query_async(cbcsdk_mock):
+    """Tests async querying for asset groups."""
+
+    def on_post(uri, body, **kwargs):
+        tbody = copy.deepcopy(body)
+        if 'start' not in tbody:
+            tbody['start'] = 1
+        assert tbody == QUERY_REQUEST
+        return QUERY_RESPONSE
+
+    cbcsdk_mock.mock_request('POST', '/asset_groups/v1beta/orgs/test/groups/_search', on_post)
+    api = cbcsdk_mock.api
+    query = api.select(AssetGroup).where("test").set_discovered(False).set_name("Group Test").set_policy_id(7113785)
+    query.sort_by("name", "ASC")
+    future = query.execute_async()
+    output = future.result()
+    assert len(output) == 1
+    assert output[0].id == "9b8b8d84-4a44-4a94-81ec-1f8ef52d4430"
+    assert output[0].name == "Group Test"
+    assert output[0].description == "Group Test"
+    assert output[0].policy_id == 7113785
+
+
+def test_query_fail_criteria_set(cb):
+    """Tests the failure of validation when setting criteria on a query."""
+    query = cb.select(AssetGroup)
+    with pytest.raises(ApiError):
+        query.set_discovered("not a bool")
+    with pytest.raises(ApiError):
+        query.set_policy_id("not an int")
+    with pytest.raises(ApiError):
+        query.sort_by("name", "NOTADIRECTION")

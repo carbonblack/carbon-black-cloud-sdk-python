@@ -52,3 +52,46 @@ UPDATE_AG_REQUEST = {
     "policy_id": 9001,
     "policy_name": "Jenny"
 }
+
+QUERY_REQUEST = {
+    "query": "test",
+    "criteria": {
+        "policy_id": [
+            7113785
+        ],
+        "name": [
+            "Group Test"
+        ],
+        "discovered": [
+            False
+        ]
+    },
+    "rows": 100,
+    "sort": [
+        {
+            "field": "name",
+            "order": "ASC"
+        }
+    ],
+    "start": 1
+}
+
+QUERY_RESPONSE = {
+    "num_found": 1,
+    "results": [
+        {
+            "id": "9b8b8d84-4a44-4a94-81ec-1f8ef52d4430",
+            "name": "Group Test",
+            "description": "Group Test",
+            "org_key": "test",
+            "status": "OK",
+            "member_type": "DEVICE",
+            "discovered": False,
+            "create_time": "2022-09-05T13:12:31.848Z",
+            "update_time": "2022-09-05T13:12:31.848Z",
+            "member_count": 0,
+            "policy_id": 7113785,
+            "policy_name": "Monitored"
+        }
+    ]
+}
