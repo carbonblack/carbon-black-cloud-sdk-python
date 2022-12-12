@@ -177,7 +177,7 @@ class AssetGroupQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
             direction (str): The sort order, either "ASC" or "DESC".
 
         Returns:
-            BaseAlertSearchQuery: This instance.
+            AssetGroupQuery: This instance.
         """
         if direction not in DeviceSearchQuery.VALID_DIRECTIONS:
             raise ApiError("invalid sort direction specified")
