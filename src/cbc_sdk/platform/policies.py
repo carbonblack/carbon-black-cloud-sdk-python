@@ -14,6 +14,7 @@
 """Policy implementation as part of Platform API"""
 import copy
 import json
+import weakref
 from cbc_sdk.base import MutableBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
 from cbc_sdk.errors import ApiError, ServerError, InvalidObjectError
 
@@ -72,6 +73,9 @@ class Policy(MutableBaseModel):
                                      force_init=force_init if initial_data else True, full_doc=full_doc)
         self._object_rules = None
         self._object_rules_need_load = True
+        self._object_rule_configs = None
+        self._object_rule_configs_need_load = True
+        self._ruleconfig_presentation = None
         if "version" not in self._info:
             self._info["version"] = 2
         if model_unique_id is None:
@@ -512,6 +516,8 @@ class Policy(MutableBaseModel):
         """
         if name == 'rules':
             return list(self.object_rules.values())
+        if name == 'rule_configs' or name == 'rapid_configs':
+            return list(self.object_rule_configs.values())
         return super(Policy, self)._subobject(name)
 
     @classmethod
@@ -557,6 +563,22 @@ class Policy(MutableBaseModel):
         self._object_rules_need_load = True
         return rc
 
+    def _get_ruleconfig_presentation(self):
+        """
+        Returns information about the rule config presentation for this policy.
+
+        Returns:
+            dict: A mapping of key values (UUIDs) to rule config information (dicts).
+        """
+        rc = self._ruleconfig_presentation() if self._ruleconfig_presentation else None
+        if rc is None and self._model_unique_id is not None:
+            uri = Policy.urlobject.format(self._cb.credentials.org_key) + \
+                  f"/{self._model_unique_id}/configs/presentation"
+            result = self._cb.get_object(uri)
+            rc = {cfg['id']: cfg for cfg in result.get('configs', [])}
+            self._ruleconfig_presentation = weakref.ref(rc)
+        return rc
+
     @property
     def rules(self):
         """
@@ -581,6 +603,62 @@ class Policy(MutableBaseModel):
             self._object_rules = dict([(robj.id, robj) for robj in ruleobjects])
             self._object_rules_need_load = False
         return self._object_rules
+
+    @property
+    def object_rule_configs(self):
+        if self._object_rule_configs_need_load:
+            cfgs = self._info.get("rule_configs", self._info.get("rapid_configs", []))
+            ruleconfigobjects = [PolicyRuleConfig._create_rule_config(self._cb, self, cfg) for cfg in cfgs]
+            self._object_rule_configs = dict([(rconf.id, rconf) for rconf in ruleconfigobjects])
+            self._object_rule_configs_need_load = False
+        return self._object_rule_configs
+
+    def valid_rule_configs(self):
+        """
+        Returns a dictionary identifying all valid rule configurations for this policy.
+
+        Returns:
+            dict: A dictionary mapping string ID values (UUIDs) to dicts containing entries for name, description,
+                  and category.
+        """
+        presentation = self._get_ruleconfig_presentation()
+        return {k: {'name': v['name'], 'description': v['description'], 'category': v['presentation']['category']}
+                for k, v in presentation.items()}
+
+    @classmethod
+    def get_ruleconfig_parameter_schema_directly(cls, cb, ruleconfig_id):
+        url = f"/policyservice/v1/orgs/{cb.credentials.org_key}/rule_configs/{ruleconfig_id}/parameters/schema"
+        try:
+            result = cb.get_object(url)
+            return result.get('properties', {})
+        except ServerError:
+            raise InvalidObjectError(f"invalid rule config ID {ruleconfig_id}")
+
+    def get_ruleconfig_parameter_schema(self, ruleconfig_id):
+        presentation = self._ruleconfig_presentation() if self._ruleconfig_presentation else None
+        if presentation is not None:
+            block = presentation.get(ruleconfig_id, None)
+            if block is None:
+                raise InvalidObjectError(f"invalid rule config ID {ruleconfig_id}")
+            param_items = block.get("parameters", [])
+            # morph the parameter presentation into a parameter schema
+            schema = {}
+            for item in param_items:
+                schema_item = {'default': item['default'], 'description': item['description']}
+                for validation in item.get('validations', []):
+                    val_type = validation.get('type', None)
+                    if val_type == 'enum':
+                        schema_item['type'] = 'string'
+                        schema_item['enum'] = validation.get('values', [])
+                    else:
+                        # other item types may be defined later
+                        schema_item['type'] = val_type
+                if 'type' not in schema_item:  # fallback to string if nothing specified
+                    schema_item['type'] = 'string'
+                schema[item['name']] = schema_item
+            return schema
+        else:
+            return self.get_ruleconfig_parameter_schema_directly(self._cb, ruleconfig_id)
 
     def _on_updated_rule(self, rule):
         """
@@ -618,6 +696,56 @@ class Policy(MutableBaseModel):
             raise ApiError("internal error: updated rule does not belong to this policy")
         new_raw_rules = [raw_rule for raw_rule in self._info.get("rules", []) if raw_rule['id'] != rule.id]
         self._info["rules"] = new_raw_rules
+
+    def _on_updated_rule_config(self, rule_config):
+        if rule_config._parent is not self:
+            raise ApiError("internal error: updated rule configuration does not belong to this policy")
+        existed = rule_config.id in self.object_rule_configs
+        old_rule_configs = dict(self.object_rule_configs)
+        self._object_rule_configs[rule_config.id] = rule_config
+        raw_rule_configs = self._info.get("rule_configs", self._info.get("rapid_configs", []))
+        old_raw_rules = copy.deepcopy(raw_rule_configs)
+        if existed:
+            for index, raw_rule_config in enumerate(raw_rule_configs):
+                if raw_rule_config['id'] == rule_config.id:
+                    raw_rule_configs[index] = copy.deepcopy(rule_config._info)
+                    break
+        else:
+            raw_rule_configs.append(copy.deepcopy(rule_config._info))
+        self._info['rule_configs'] = raw_rule_configs
+        if 'rapid_configs' in self._info:
+            del self._info['rapid_configs']
+        rollback = True
+        try:
+            self.save()
+            rollback = False
+        finally:
+            if rollback:
+                self._object_rule_configs = old_rule_configs
+                self._info['rule_configs'] = old_raw_rules
+
+    def _on_deleted_rule_config(self, rule_config):
+        if rule_config._parent is not self:
+            raise ApiError("internal error: updated rule configuration does not belong to this policy")
+        old_rule_configs = None
+        if rule_config.id in self.object_rule_configs:
+            old_rule_configs = dict(self.object_rule_configs)
+            del self._object_rule_configs[rule_config.id]
+        else:
+            raise ApiError("internal error: updated rule configuration does not belong to this policy")
+        old_raw_rule_configs = self._info.get("rule_configs", self._info.get("rapid_configs", []))
+        new_raw_rule_configs = [raw for raw in old_raw_rule_configs if raw['id'] != rule_config.id]
+        self._info['rule_configs'] = new_raw_rule_configs
+        if 'rapid_configs' in self._info:
+            del self._info['rapid_configs']
+        rollback = True
+        try:
+            self.save()
+            rollback = False
+        finally:
+            if rollback:
+                self._object_rule_configs = old_rule_configs
+                self._info['rule_configs'] = old_raw_rule_configs
 
     def add_rule(self, new_rule):
         """Adds a rule to this Policy.
@@ -696,6 +824,8 @@ class Policy(MutableBaseModel):
                     old_rule._dirty_attributes = {}
         else:
             raise ApiError(f"rule #{rule_id} not found in policy")
+
+    # --- BEGIN policy v1 compatibility methods ---
 
     @property
     def priorityLevel(self):
@@ -842,6 +972,8 @@ class Policy(MutableBaseModel):
             newpolicy["rules"] = copy.deepcopy(oldpolicy["rules"])
         self._info = newpolicy
 
+    # --- END policy v1 compatibility methods ---
+
     @classmethod
     def create(cls, cb):
         """
@@ -984,6 +1116,120 @@ class PolicyRule(MutableBaseModel):
         if self._info["operation"] not in PolicyRule.VALID_OPERATIONS:
             raise InvalidObjectError("'operation' field value not valid")
         return True
+
+
+# YOUAREHERE
+
+
+class PolicyRuleConfig(MutableBaseModel):
+    primary_key = "id"
+    swagger_meta_file = "platform/models/policy_rule.yaml"
+
+    def __init__(self, cb, parent, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
+        """
+        Initialize the PolicyRuleConfig object.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            parent (Policy): The "parent" policy of this rule configuration.
+            model_unique_id (int): ID of the rule configuration.
+            initial_data (dict): Initial data used to populate the rule configuration.
+            force_init (bool): If True, forces the object to be refreshed after constructing.  Default False.
+            full_doc (bool): If True, object is considered "fully" initialized. Default False.
+        """
+        super(PolicyRule, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
+                                         force_init=force_init, full_doc=full_doc)
+        self._parent = parent
+        if model_unique_id is None:
+            self.touch(True)
+
+    @classmethod
+    def _create_rule_config(cls, cb, parent, data):
+        """
+        Creates a PolicyRuleConfig object, or specialized subclass thereof, from a block of data in the policy.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            parent (Policy): The "parent" policy of this rule configuration.
+            data (dict): Initial data used to populate the rule configuration.
+
+        Returns:
+            PolicyRuleConfig: The new object.
+        """
+        return PolicyRuleConfig(cb, parent, data.get("id", None), data, False, True)
+
+    def _refresh(self):
+        """
+        Refreshes the rule configuration object from the server.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Returns:
+            bool: True if the refresh was successful.
+        """
+        if self._model_unique_id is not None:
+            rc = self._parent._refresh()
+            if rc:
+                newobj = self._parent.object_rule_configs.get(self.id, None)
+                if newobj:
+                    self._info = newobj._info
+            return rc
+
+    def _update_object(self):
+        self._parent._on_updated_rule_config(self)
+
+    def _delete_object(self):
+        was_deleted = False
+        try:
+            self._parent._on_deleted_rule_config(self)
+            was_deleted = True
+        finally:
+            if was_deleted:
+                self._parent = None
+
+    def validate(self):
+        """
+        Validates this rule configuration against its constraints.
+
+        Raises:
+            InvalidObjectError: If the rule object is not valid.
+        """
+        super(PolicyRuleConfig, self).validate()
+        if self._parent is not None:
+            # validate configuration ID and set high-level fields
+            valid_configs = self._parent.valid_rule_configs()
+            data = valid_configs.get(self._model_unique_id, None)
+            if not data:
+                raise InvalidObjectError(f"rule configuration ID {self._model_unique_id} is not valid")
+            self._info.update(data)
+            if 'inherited_from' not in self._info:
+                self._info['inherited_from'] = 'psc:region'
+
+        # validate parameters
+        if self._parent is None:
+            parameter_validations = Policy.get_ruleconfig_parameter_schema_directly(self._cb, self._model_unique_id)
+        else:
+            parameter_validations = self._parent.get_ruleconfig_parameter_schema(self._model_unique_id)
+        my_parameters = self._info.get('parameters', {})
+        for k, v in parameter_validations.items():
+            if k in my_parameters:
+                if v['type'] == 'string':
+                    if not isinstance(my_parameters[k], str):
+                        raise InvalidObjectError(f"rule configuration parameter '{k}' is not a string")
+                    if ('enum' in v) and (my_parameters[k] not in v['enum']):
+                        raise InvalidObjectError(f"invalid value '{my_parameters[k]}' "
+                                                 f"for rule configuration parameter '{k}'")
+                else:
+                    raise ApiError(f"internal error: unknown parameter type {v['type']}")
+            else:
+                my_parameters[k] = v['default']
+        self._info['parameters'] = my_parameters
+
+    @property
+    def is_deleted(self):
+        """Returns True if this rule configuration object has been deleted."""
+        return self._parent is None
 
 
 """Query Class"""
