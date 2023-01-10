@@ -418,7 +418,7 @@ class EnrichedEventQuery(BaseEventQuery):
         if self._aggregation:
             return False
 
-        status_url = "/api/investigate/v1/orgs/{}/enriched_events/search_jobs/{}".format(
+        status_url = "/api/investigate/v2/orgs/{}/enriched_events/search_jobs/{}/results?start=0&rows=1".format(
             self._cb.credentials.org_key,
             self._query_token,
         )

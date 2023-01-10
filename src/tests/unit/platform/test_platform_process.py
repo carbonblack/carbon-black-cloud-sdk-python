@@ -1058,8 +1058,8 @@ def test_process_still_querying(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
                              GET_PROCESS_VALIDATION_RESP)
     # mock the GET to check search status
-    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
-                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=1"),
                              GET_PROCESS_SEARCH_JOB_RESULTS_RESP_ZERO)
     api = cbcsdk_mock.api
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
@@ -1077,8 +1077,8 @@ def test_process_still_querying_zero(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
                              GET_PROCESS_VALIDATION_RESP)
     # mock the GET to check search status
-    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
-                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=1"),
                              GET_PROCESS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING)
     api = cbcsdk_mock.api
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'

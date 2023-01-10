@@ -297,7 +297,7 @@ def test_enriched_event_timeout_error(cbcsdk_mock):
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/search_job",
                              POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b",  # noqa: E501
+                             "/api/investigate/v2/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results?start=0&rows=1",  # noqa: E501
                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING)
 
     api = cbcsdk_mock.api
