@@ -606,6 +606,12 @@ class Policy(MutableBaseModel):
 
     @property
     def object_rule_configs(self):
+        """
+        Returns a dictionary of rule configuration IDs and objects for this Policy.
+
+        Returns:
+            dict: A dictionary with rule configuration IDs as keys and PolicyRuleConfig objects as values.
+        """
         if self._object_rule_configs_need_load:
             cfgs = self._info.get("rule_configs", self._info.get("rapid_configs", []))
             ruleconfigobjects = [PolicyRuleConfig._create_rule_config(self._cb, self, cfg) for cfg in cfgs]
@@ -627,6 +633,19 @@ class Policy(MutableBaseModel):
 
     @classmethod
     def get_ruleconfig_parameter_schema_directly(cls, cb, ruleconfig_id):
+        """
+        Returns the parameter schema for a specified rule configuration.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            ruleconfig_id (str): The rule configuration ID (UUID).
+
+        Returns:
+            dict: The parameter schema for this particular rule configuration.
+
+        Raises:
+            InvalidObjectError: If the rule configuration ID is not valid.
+        """
         url = f"/policyservice/v1/orgs/{cb.credentials.org_key}/rule_configs/{ruleconfig_id}/parameters/schema"
         try:
             result = cb.get_object(url)
@@ -635,6 +654,20 @@ class Policy(MutableBaseModel):
             raise InvalidObjectError(f"invalid rule config ID {ruleconfig_id}")
 
     def get_ruleconfig_parameter_schema(self, ruleconfig_id):
+        """
+        Returns the parameter schema for a specified rule configuration.
+
+        Uses cached rule configuration presentation data if present.
+
+        Args:
+            ruleconfig_id (str): The rule configuration ID (UUID).
+
+        Returns:
+            dict: The parameter schema for this particular rule configuration.
+
+        Raises:
+            InvalidObjectError: If the rule configuration ID is not valid.
+        """
         presentation = self._ruleconfig_presentation() if self._ruleconfig_presentation else None
         if presentation is not None:
             block = presentation.get(ruleconfig_id, None)
@@ -698,6 +731,12 @@ class Policy(MutableBaseModel):
         self._info["rules"] = new_raw_rules
 
     def _on_updated_rule_config(self, rule_config):
+        """
+        Called when a rule configuration object is added or updated.
+
+        Args:
+            rule_config (PolicyRuleConfig): The rule configuration being added or updated.
+        """
         if rule_config._parent is not self:
             raise ApiError("internal error: updated rule configuration does not belong to this policy")
         existed = rule_config.id in self.object_rule_configs
@@ -725,6 +764,12 @@ class Policy(MutableBaseModel):
                 self._info['rule_configs'] = old_raw_rules
 
     def _on_deleted_rule_config(self, rule_config):
+        """
+        Called when a rule configuration object is deleted.
+
+        Args:
+            rule_config (PolicyRuleConfig): The rule configuration being deleted.
+        """
         if rule_config._parent is not self:
             raise ApiError("internal error: updated rule configuration does not belong to this policy")
         old_rule_configs = None
@@ -824,6 +869,36 @@ class Policy(MutableBaseModel):
                     old_rule._dirty_attributes = {}
         else:
             raise ApiError(f"rule #{rule_id} not found in policy")
+
+    def add_rule_config(self, new_rule_config):
+        new_obj = PolicyRuleConfig._create_rule_config(self._cb, self, new_rule_config)
+        new_obj.save()
+
+    def delete_rule_config(self, rule_config_id):
+        old_rule_config = self.object_rule_configs.get(rule_config_id, None)
+        if old_rule_config:
+            old_rule_config.delete()
+        else:
+            raise ApiError(f"rule configuration '{rule_config_id}' not found in policy")
+
+    def replace_rule_config(self, rule_config_id, new_rule_config):
+        old_rule_config = self.object_rule_configs.get(rule_config_id, None)
+        if old_rule_config:
+            new_rule_config_info = copy.deepcopy(new_rule_config)
+            new_rule_config_info['id'] = rule_config_id
+            saved_rule_config_info = old_rule_config._info
+            old_rule_config._info = new_rule_config_info
+            old_rule_config.touch()
+            restore_rule_config = True
+            try:
+                old_rule_config.save()
+                restore_rule_config = False
+            finally:
+                if restore_rule_config:
+                    old_rule_config._info = saved_rule_config_info
+                    old_rule_config._dirty_attributes = {}
+        else:
+            raise ApiError(f"rule configuration '{rule_config_id}' not found in policy")
 
     # --- BEGIN policy v1 compatibility methods ---
 
@@ -1177,9 +1252,21 @@ class PolicyRuleConfig(MutableBaseModel):
             return rc
 
     def _update_object(self):
+        """
+        Updates the rule configuration object on the policy on the server.
+
+        Required Permissions:
+            org.policies(UPDATE)
+        """
         self._parent._on_updated_rule_config(self)
 
     def _delete_object(self):
+        """
+        Deletes this rule configuration object from the policy on the server.
+
+        Required Permissions:
+            org.policies(UPDATE)
+        """
         was_deleted = False
         try:
             self._parent._on_deleted_rule_config(self)
