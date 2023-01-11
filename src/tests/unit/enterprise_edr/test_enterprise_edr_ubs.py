@@ -48,7 +48,7 @@ def test_binary_query(cbcsdk_mock):
         return BINARY_GET_FILE_RESP
 
     sha256 = "00a16c806ff694b64e566886bba5122655eff89b45226cddc8651df7860e4524"
-    cbcsdk_mock.mock_request("GET", f"/ubs/v1/orgs/test/sha256/{sha256}", BINARY_GET_METADATA_RESP)
+    cbcsdk_mock.mock_request("GET", f"/ubs/v1/orgs/test/sha256/{sha256}/metadata", BINARY_GET_METADATA_RESP)
     api = cbcsdk_mock.api
     binary = api.select(Binary, sha256)
     assert isinstance(binary, Binary)
@@ -76,7 +76,7 @@ def test_binary_query_case_insensitive(cbcsdk_mock):
         return BINARY_GET_FILE_RESP
 
     sha256 = "00A16C806FF694B64E566886BBA5122655EFF89B45226CDDC8651DF7860E4524"
-    cbcsdk_mock.mock_request("GET", f"/ubs/v1/orgs/test/sha256/{sha256}", BINARY_GET_METADATA_RESP)
+    cbcsdk_mock.mock_request("GET", f"/ubs/v1/orgs/test/sha256/{sha256}/metadata", BINARY_GET_METADATA_RESP)
     api = cbcsdk_mock.api
     binary = api.select(Binary, sha256)
     assert isinstance(binary, Binary)
@@ -109,7 +109,7 @@ def test_binary_query_error(cbcsdk_mock):
 def test_binary_query_not_found(cbcsdk_mock):
     """Testing Binary Querying"""
     sha256 = "00a16c806ff694b64e566886bba5122655eff89b45226cddc8651df7860e4524"
-    cbcsdk_mock.mock_request("GET", f"/ubs/v1/orgs/test/sha256/{sha256}", BINARY_GET_METADATA_RESP)
+    cbcsdk_mock.mock_request("GET", f"/ubs/v1/orgs/test/sha256/{sha256}/metadata", BINARY_GET_METADATA_RESP)
     api = cbcsdk_mock.api
     binary = api.select(Binary, sha256)
     assert isinstance(binary, Binary)
@@ -121,7 +121,7 @@ def test_binary_query_not_found(cbcsdk_mock):
 def test_binary_downloads_error(cbcsdk_mock):
     """Testing Binary Querying"""
     sha256 = "00a16c806ff694b64e566886bba5122655eff89b45226cddc8651df7860e4524"
-    cbcsdk_mock.mock_request("GET", f"/ubs/v1/orgs/test/sha256/{sha256}", BINARY_GET_METADATA_RESP)
+    cbcsdk_mock.mock_request("GET", f"/ubs/v1/orgs/test/sha256/{sha256}/metadata", BINARY_GET_METADATA_RESP)
     api = cbcsdk_mock.api
     binary = api.select(Binary, sha256)
     assert isinstance(binary, Binary)

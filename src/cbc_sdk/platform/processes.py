@@ -384,7 +384,7 @@ class Process(UnrefreshableModel):
         submit_time = time.time() * 1000
 
         while True:
-            status_url = "/api/investigate/v2/orgs/{}/processes/detail_jobs/{}".format(
+            status_url = "/api/investigate/v2/orgs/{}/processes/detail_jobs/{}/results".format(
                 self._cb.credentials.org_key,
                 job_id,
             )
@@ -850,7 +850,7 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
             self._time_range["window"] = window
         return self
 
-    def _get_query_parameters(self):
+    def _get_body_parameters(self):
         args = {}
         if self._time_range:
             args["time_range"] = self._time_range
@@ -874,7 +874,7 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         if self._query_token:
             raise ApiError("Query already submitted: token {0}".format(self._query_token))
 
-        args = self._get_query_parameters()
+        args = self._get_body_parameters()
 
         url = "/api/investigate/v2/orgs/{}/processes/summary_jobs".format(self._cb.credentials.org_key)
         query_start = self._cb.post_object(url, body=args)
@@ -888,7 +888,7 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         if not self._query_token:
             self._submit()
 
-        status_url = "/api/investigate/v2/orgs/{}/processes/summary_jobs/{}".format(
+        status_url = "/api/investigate/v2/orgs/{}/processes/summary_jobs/{}/results?format=summary".format(
             self._cb.credentials.org_key,
             self._query_token,
         )

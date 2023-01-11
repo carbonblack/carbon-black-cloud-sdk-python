@@ -155,7 +155,7 @@ class EnrichedEvent(UnrefreshableModel):
         submit_time = time.time() * 1000
 
         while True:
-            status_url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs/{}".format(
+            status_url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs/{}/results".format(
                 self._cb.credentials.org_key,
                 job_id,
             )
