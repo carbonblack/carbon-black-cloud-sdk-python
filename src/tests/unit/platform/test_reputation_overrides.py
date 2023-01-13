@@ -191,7 +191,7 @@ def test_reputation_override_process_ban_process_sha256(cbcsdk_mock):
                              POST_PROCESS_SEARCH_JOB_RESP)
     # mock the GET to check search status
     cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
-                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=1"),
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=0"),
                              GET_PROCESS_SEARCH_JOB_RESP)
     # mock the GET to get search results
     cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
@@ -236,7 +236,7 @@ def test_reputation_override_process_approve_process_sha256(cbcsdk_mock):
                              POST_PROCESS_SEARCH_JOB_RESP)
     # mock the GET to check search status
     cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
-                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=1"),
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=0"),
                              GET_PROCESS_SEARCH_JOB_RESP)
     # mock the GET to get search results
     cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
@@ -272,7 +272,7 @@ def test_reputation_override_enriched_event_ban_process_sha256(cbcsdk_mock):
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/search_jobs",
                              POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results?start=0&rows=1",  # noqa: E501
+                             "/api/investigate/v2/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results?start=0&rows=0",  # noqa: E501
                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
     cbcsdk_mock.mock_request("GET",
                              "/api/investigate/v2/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results?start=0&rows=500",  # noqa: E501
@@ -307,7 +307,7 @@ def test_reputation_override_enriched_event_approve_process_sha256(cbcsdk_mock):
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/search_jobs",
                              POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results?start=0&rows=1",  # noqa: E501
+                             "/api/investigate/v2/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results?start=0&rows=0",  # noqa: E501
                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
     cbcsdk_mock.mock_request("GET",
                              "/api/investigate/v2/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results?start=0&rows=500",  # noqa: E501

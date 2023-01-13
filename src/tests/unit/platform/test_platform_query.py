@@ -57,7 +57,7 @@ def test_query_count(cbcsdk_mock, get_summary_response, get_process_search_respo
                              POST_PROCESS_SEARCH_JOB_RESP)
     # mock the GET to check search status
     cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
-                                     "2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=1"),
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=0"),
                              GET_PROCESS_SEARCH_JOB_RESP)
     # mock the GET to get search results
     cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
@@ -87,7 +87,7 @@ def test_query_get_query_parameters(cbcsdk_mock, get_process_search_response, gu
     # mock the GET to check search status
     cbcsdk_mock.mock_request("GET",
                              "/api/investigate/v2/orgs/test/processes/search_jobs/"
-                             "2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=1",
+                             "2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=0",
                              GET_PROCESS_SEARCH_JOB_RESP)
     # mock the GET to get search results
     cbcsdk_mock.mock_request("GET",
@@ -233,7 +233,7 @@ def test_query_execute_async(cbcsdk_mock, get_summary_response, get_process_sear
     # mock the GET to check search status
     cbcsdk_mock.mock_request("GET",
                              "/api/investigate/v2/orgs/test/processes/search_jobs/"
-                             "2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=1",
+                             "2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=0",
                              GET_PROCESS_SEARCH_JOB_RESP)
     # mock the GET to get search results
     cbcsdk_mock.mock_request("GET",

@@ -658,7 +658,7 @@ class AsyncProcessQuery(Query):
         if not self._query_token:
             self._submit()
 
-        status_url = "/api/investigate/v2/orgs/{}/processes/search_jobs/{}/results?start=0&rows=1".format(
+        status_url = "/api/investigate/v2/orgs/{}/processes/search_jobs/{}/results?start=0&rows=0".format(
             self._cb.credentials.org_key,
             self._query_token,
         )

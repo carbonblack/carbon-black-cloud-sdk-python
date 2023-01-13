@@ -153,7 +153,7 @@ class TestReferenceProcess:
             "GET",
             (
                 "/api/investigate/v2/orgs/Z100/processes/"
-                "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=1"
+                "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=0"
             ),
             GET_PROCESS_SEARCH_JOB_RESP,
         )
@@ -226,7 +226,7 @@ class TestReferenceProcess:
             "GET",
             (
                 "/api/investigate/v1/orgs/Z100/processes/"
-                "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=1"
+                "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=0"
             ),
             GET_PROCESS_SEARCH_JOB_RESP,
         )
