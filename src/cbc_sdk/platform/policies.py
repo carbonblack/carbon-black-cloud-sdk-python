@@ -104,8 +104,7 @@ class Policy(MutableBaseModel):
                 cb (BaseAPI): Reference to API object used to communicate with the server.
             """
             self._cb = cb
-            self._new_policy_data = {"org_key": cb.credentials.org_key, "priority_level": "MEDIUM",
-                                     "is_system": False, "rapid_configs": []}
+            self._new_policy_data = {"org_key": cb.credentials.org_key, "priority_level": "MEDIUM", "is_system": False}
             self._sensor_settings = {}
             self._new_rules = []
             self._new_rule_configs = []

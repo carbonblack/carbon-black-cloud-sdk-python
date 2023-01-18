@@ -190,7 +190,7 @@ FULL_POLICY_1 = {
             "value": "true"
         }
     ],
-    "rapid_configs": []
+    "rule_configs": []
 }
 
 SUMMARY_POLICY_1 = {
@@ -1396,7 +1396,7 @@ NEW_POLICY_CONSTRUCT_1 = {
         "policy_modification": False,
         "quarantine": True
     },
-    "rapid_configs": []
+    "rule_configs": []
 }
 
 NEW_POLICY_RETURN_1 = {
@@ -1509,5 +1509,5 @@ NEW_POLICY_RETURN_1 = {
         "policy_modification": False,
         "quarantine": True
     },
-    "rapid_configs": []
+    "rule_configs": []
 }
