@@ -108,6 +108,7 @@ class Policy(MutableBaseModel):
                                      "is_system": False, "rapid_configs": []}
             self._sensor_settings = {}
             self._new_rules = []
+            self._new_rule_configs = []
 
         def set_name(self, name):
             """
@@ -412,6 +413,20 @@ class Policy(MutableBaseModel):
             new_rule.validate()
             self._new_rules.append(new_rule)
 
+        def _add_rule_config(self, rule_config_data):
+            """
+            Add rule configuration data to the new policy.
+
+            Args:
+                rule_config_data (dict): Rule configuration data specified as a dictionary.
+
+            Raises:
+                InvalidObjectError: If the rule configuration data passed in is not valid.
+            """
+            new_rule_config = PolicyRuleConfig._create_rule_config(self._cb, None, rule_config_data)
+            new_rule_config.validate()
+            self._new_rule_configs.append(new_rule_config)
+
         def add_rule_copy(self, rule):
             """
             Adds a copy of an existing rule to this new policy.
@@ -451,6 +466,45 @@ class Policy(MutableBaseModel):
             ruledata = {"required": required, "action": action, "application": {"type": app_type, "value": app_value},
                         "operation": operation}
             self._add_rule(ruledata)
+            return self
+
+        def add_rule_config_copy(self, rule_config):
+            """
+            Adds a copy of an existing rule configuration to this new policy.
+
+            Args:
+                rule_config (PolicyRuleConfig): The rule configuration to copy and add to this object.
+
+            Returns:
+                PolicyBuilder: This object.
+
+            Raises:
+                InvalidObjectError: If the rule configuration data passed in is not valid.
+            """
+            ruleconfigdata = copy.deepcopy(rule_config._info)
+            if "id" in ruleconfigdata:
+                del ruleconfigdata["id"]
+            self._add_rule_config(ruleconfigdata)
+            return self
+
+        def add_rule_config(self, name, category, **kwargs):
+            """
+            Add a new rule configuration as discrete data elements to the new policy.
+
+            Args:
+                name (str): Name of the rule configuration object.
+                category (str): Category of the rule configuration object.
+                **kwargs (dict): Parameter values for the rule configuration object.
+
+            Returns:
+                PolicyBuilder: This object.
+
+            Raises:
+                InvalidObjectError: If the rule configuration data passed in is not valid.
+            """
+            ruleconfigdata = {"name": name, "category": category, "inherited_from": "",
+                              "parameters": copy.deepcopy(**kwargs)}
+            self._add_rule_config(ruleconfigdata)
             return self
 
         def add_sensor_setting(self, name, value):
@@ -502,6 +556,7 @@ class Policy(MutableBaseModel):
             settings.sort(key=lambda item: item["name"])
             new_policy["sensor_settings"] = settings
             new_policy["rules"] = [copy.deepcopy(r._info) for r in self._new_rules]
+            new_policy["rule_configs"] = [copy.deepcopy(rcfg._info) for rcfg in self._new_rule_configs]
             return Policy(self._cb, None, new_policy, False, True)
 
     def _subobject(self, name):
@@ -871,10 +926,25 @@ class Policy(MutableBaseModel):
             raise ApiError(f"rule #{rule_id} not found in policy")
 
     def add_rule_config(self, new_rule_config):
+        """
+        Adds a rule configuration to this policy.
+
+        Args:
+            new_rule_config (dict): The new rule configuration to add to this Policy.
+        """
         new_obj = PolicyRuleConfig._create_rule_config(self._cb, self, new_rule_config)
         new_obj.save()
 
     def delete_rule_config(self, rule_config_id):
+        """
+        Deletes a rule configuration from this Policy.
+
+        Args:
+            rule_config_id (str): The ID of the rule configuration to be deleted.
+
+        Raises:
+            ApiError: If the rule configuration ID does not exist in this policy.
+        """
         old_rule_config = self.object_rule_configs.get(rule_config_id, None)
         if old_rule_config:
             old_rule_config.delete()
@@ -882,6 +952,16 @@ class Policy(MutableBaseModel):
             raise ApiError(f"rule configuration '{rule_config_id}' not found in policy")
 
     def replace_rule_config(self, rule_config_id, new_rule_config):
+        """
+        Replaces a rule configuration in this policy.
+
+        Args:
+            rule_config_id (str): The ID of the rule configuration to be replaced.
+            new_rule_config (dict): The data for the new rule configuration.
+
+        Raises:
+            ApiError: If the rule configuration ID does not exist in this policy.
+        """
         old_rule_config = self.object_rule_configs.get(rule_config_id, None)
         if old_rule_config:
             new_rule_config_info = copy.deepcopy(new_rule_config)
@@ -1231,7 +1311,7 @@ class PolicyRuleConfig(MutableBaseModel):
         Returns:
             PolicyRuleConfig: The new object.
         """
-        return PolicyRuleConfig(cb, parent, data.get("id", None), data, False, True)
+        return PolicyRuleConfig(cb, parent, data.get("id", None) if parent else None, data, False, True)
 
     def _refresh(self):
         """
