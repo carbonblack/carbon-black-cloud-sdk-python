@@ -190,7 +190,48 @@ FULL_POLICY_1 = {
             "value": "true"
         }
     ],
-    "rule_configs": []
+    "rule_configs": [
+        {
+            "id": "1f8a5e4b-34f2-4d31-9f8f-87c56facaec8",
+            "name": "Advanced Scripting Prevention",
+            "description": "Addresses malicious fileless and file-backed scripts that leverage native programs [...]",
+            "inherited_from": "psc:region",
+            "category": "core_prevention",
+            "parameters": {
+                "WindowsAssignmentMode": "BLOCK"
+            }
+        },
+        {
+            "id": "ac67fa14-f6be-4df9-93f2-6de0dbd96061",
+            "name": "Credential Theft",
+            "description": "Addresses threat actors obtaining credentials and relies on detecting the malicious [...]",
+            "inherited_from": "psc:region",
+            "category": "core_prevention",
+            "parameters": {
+                "WindowsAssignmentMode": "REPORT"
+            }
+        },
+        {
+            "id": "c4ed61b3-d5aa-41a9-814f-0f277451532b",
+            "name": "Carbon Black Threat Intel",
+            "description": "Addresses common and pervasive TTPs used for malicious activity as well as [...]",
+            "inherited_from": "psc:region",
+            "category": "core_prevention",
+            "parameters": {
+                "WindowsAssignmentMode": "REPORT"
+            }
+        },
+        {
+            "id": "88b19232-7ebb-48ef-a198-2a75a282de5d",
+            "name": "Privilege Escalation",
+            "description": "Addresses behaviors that indicate a threat actor has gained elevated access via [...]",
+            "inherited_from": "psc:region",
+            "category": "core_prevention",
+            "parameters": {
+                "WindowsAssignmentMode": "BLOCK"
+            }
+        }
+    ]
 }
 
 SUMMARY_POLICY_1 = {
@@ -1509,5 +1550,72 @@ NEW_POLICY_RETURN_1 = {
         "policy_modification": False,
         "quarantine": True
     },
-    "rule_configs": []
+    "rule_configs": [
+        {
+            "id": "1f8a5e4b-34f2-4d31-9f8f-87c56facaec8",
+            "name": "Advanced Scripting Prevention",
+            "description": "Addresses malicious fileless and file-backed scripts that leverage native programs [...]",
+            "inherited_from": "psc:region",
+            "category": "core_prevention",
+            "parameters": {
+                "WindowsAssignmentMode": "BLOCK"
+            }
+        },
+        {
+            "id": "ac67fa14-f6be-4df9-93f2-6de0dbd96061",
+            "name": "Credential Theft",
+            "description": "Addresses threat actors obtaining credentials and relies on detecting the malicious [...]",
+            "inherited_from": "psc:region",
+            "category": "core_prevention",
+            "parameters": {
+                "WindowsAssignmentMode": "REPORT"
+            }
+        },
+        {
+            "id": "c4ed61b3-d5aa-41a9-814f-0f277451532b",
+            "name": "Carbon Black Threat Intel",
+            "description": "Addresses common and pervasive TTPs used for malicious activity as well as [...]",
+            "inherited_from": "psc:region",
+            "category": "core_prevention",
+            "parameters": {
+                "WindowsAssignmentMode": "REPORT"
+            }
+        },
+        {
+            "id": "88b19232-7ebb-48ef-a198-2a75a282de5d",
+            "name": "Privilege Escalation",
+            "description": "Addresses behaviors that indicate a threat actor has gained elevated access via [...]",
+            "inherited_from": "psc:region",
+            "category": "core_prevention",
+            "parameters": {
+                "WindowsAssignmentMode": "BLOCK"
+            }
+        }
+    ]
+}
+
+BASIC_CONFIG_TEMPLATE_RETURN = {
+    "type": "object",
+    "properties": {
+        "WindowsAssignmentMode": {
+            "default": "BLOCK",
+            "description": "Used to change assignment mode to PREVENT or BLOCK",
+            "type": "string",
+            "enum": [
+                "REPORT",
+                "BLOCK"
+            ]
+        }
+    }
+}
+
+TEMPLATE_RETURN_BOGUS_TYPE = {
+    "type": "object",
+    "properties": {
+        "WindowsAssignmentMode": {
+            "default": "BLOCK",
+            "description": "Used to change assignment mode to PREVENT or BLOCK",
+            "type": "bogus"
+        }
+    }
 }

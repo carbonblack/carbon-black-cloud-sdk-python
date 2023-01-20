@@ -1277,7 +1277,7 @@ class PolicyRule(MutableBaseModel):
 
 class PolicyRuleConfig(MutableBaseModel):
     primary_key = "id"
-    swagger_meta_file = "platform/models/policy_rule.yaml"
+    swagger_meta_file = "platform/models/policy_ruleconfig.yaml"
 
     def __init__(self, cb, parent, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
         """
@@ -1291,8 +1291,8 @@ class PolicyRuleConfig(MutableBaseModel):
             force_init (bool): If True, forces the object to be refreshed after constructing.  Default False.
             full_doc (bool): If True, object is considered "fully" initialized. Default False.
         """
-        super(PolicyRule, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
-                                         force_init=force_init, full_doc=full_doc)
+        super(PolicyRuleConfig, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
+                                               force_init=force_init, full_doc=full_doc)
         self._parent = parent
         if model_unique_id is None:
             self.touch(True)

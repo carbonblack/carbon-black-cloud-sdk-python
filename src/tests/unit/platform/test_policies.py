@@ -17,13 +17,14 @@ import logging
 import random
 from contextlib import ExitStack as does_not_raise
 from cbc_sdk.rest_api import CBCloudAPI
-from cbc_sdk.platform import Policy, PolicyRule
+from cbc_sdk.platform import Policy, PolicyRule, PolicyRuleConfig
 from cbc_sdk.errors import ApiError, InvalidObjectError, ServerError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_policies import (FULL_POLICY_1, SUMMARY_POLICY_1, SUMMARY_POLICY_2,
                                                         SUMMARY_POLICY_3, OLD_POLICY_1, FULL_POLICY_2, OLD_POLICY_2,
                                                         RULE_ADD_1, RULE_ADD_2, RULE_MODIFY_1, NEW_POLICY_CONSTRUCT_1,
-                                                        NEW_POLICY_RETURN_1)
+                                                        NEW_POLICY_RETURN_1, BASIC_CONFIG_TEMPLATE_RETURN,
+                                                        TEMPLATE_RETURN_BOGUS_TYPE)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -58,6 +59,11 @@ def test_policy_compatibility_aliases_read(cb):
     objs = policy.object_rules
     for raw_rule in FULL_POLICY_1["rules"]:
         assert objs[raw_rule["id"]]._info == raw_rule
+    rule_configs = policy.object_rule_configs
+    assert rule_configs["1f8a5e4b-34f2-4d31-9f8f-87c56facaec8"].name == "Advanced Scripting Prevention"
+    assert rule_configs["ac67fa14-f6be-4df9-93f2-6de0dbd96061"].name == "Credential Theft"
+    assert rule_configs["c4ed61b3-d5aa-41a9-814f-0f277451532b"].name == "Carbon Black Threat Intel"
+    assert rule_configs["88b19232-7ebb-48ef-a198-2a75a282de5d"].name == "Privilege Escalation"
 
 
 def test_policy_compatibility_aliases_write(cb):
@@ -91,6 +97,8 @@ def test_policy_autoload(cbcsdk_mock):
     assert policy.auto_delete_known_bad_hashes_delay == 86400000
     assert called_full_get is True
     assert policy.rules == FULL_POLICY_1["rules"]
+    rule_configs = policy.object_rule_configs
+    assert rule_configs["1f8a5e4b-34f2-4d31-9f8f-87c56facaec8"].name == "Advanced Scripting Prevention"
 
 
 def test_policy_lookup_by_id(cbcsdk_mock):
@@ -102,6 +110,8 @@ def test_policy_lookup_by_id(cbcsdk_mock):
     assert policy.priority_level == "HIGH"
     assert policy.auto_delete_known_bad_hashes_delay == 86400000
     assert policy.rules == FULL_POLICY_1["rules"]
+    rule_configs = policy.object_rule_configs
+    assert rule_configs["1f8a5e4b-34f2-4d31-9f8f-87c56facaec8"].name == "Advanced Scripting Prevention"
 
 
 def test_policy_get_summaries(cbcsdk_mock):
@@ -471,6 +481,46 @@ def test_rule_delete_is_new(cb):
     new_rule = PolicyRule(cb, policy, None, RULE_ADD_1, False, True)
     with pytest.raises(ApiError):
         new_rule.delete()
+
+
+@pytest.mark.parametrize("initial_data, param_schema_return, handler, message", [
+    ({"id": "88b19232-7ebb-48ef-a198-2a75a282de5d", "name": "Privilege Escalation", "inherited_from": "",
+      "category": "core_prevention", "parameters": {"WindowsAssignmentMode": "BLOCK"}},
+     BASIC_CONFIG_TEMPLATE_RETURN, does_not_raise(), None),
+    ({"id": "88b19232-7ebb-48ef-a198-2a75a282de5d", "name": "Privilege Escalation", "inherited_from": "",
+      "category": "core_prevention", "parameters": {"WindowsAssignmentMode": "BLOCK"}},
+     ServerError(error_code=400, message="blah"), pytest.raises(InvalidObjectError),
+     "invalid rule config ID 88b19232-7ebb-48ef-a198-2a75a282de5d"),
+    ({"id": "88b19232-7ebb-48ef-a198-2a75a282de5d", "name": "Privilege Escalation", "inherited_from": "",
+      "category": "core_prevention", "parameters": {}},
+     BASIC_CONFIG_TEMPLATE_RETURN, does_not_raise(), None),
+    ({"id": "88b19232-7ebb-48ef-a198-2a75a282de5d", "name": "Privilege Escalation", "inherited_from": "",
+      "category": "core_prevention", "parameters": {"WindowsAssignmentMode": "BLOCK"}},
+     TEMPLATE_RETURN_BOGUS_TYPE, pytest.raises(ApiError), "internal error: unknown parameter type bogus"),
+    ({"id": "88b19232-7ebb-48ef-a198-2a75a282de5d", "name": "Privilege Escalation", "inherited_from": "",
+      "category": "core_prevention", "parameters": {"WindowsAssignmentMode": 666}},
+     BASIC_CONFIG_TEMPLATE_RETURN, pytest.raises(InvalidObjectError),
+     "rule configuration parameter 'WindowsAssignmentMode' is not a string"),
+    ({"id": "88b19232-7ebb-48ef-a198-2a75a282de5d", "name": "Privilege Escalation", "inherited_from": "",
+      "category": "core_prevention", "parameters": {"WindowsAssignmentMode": "BOGUSVALUE"}},
+     BASIC_CONFIG_TEMPLATE_RETURN, pytest.raises(InvalidObjectError),
+     "invalid value 'BOGUSVALUE' for rule configuration parameter 'WindowsAssignmentMode'"),
+])
+def test_rule_config_validate(cbcsdk_mock, initial_data, param_schema_return, handler, message):
+    """Tests rule configuration validation."""
+    def param_schema(uri, query_params, default):
+        if isinstance(param_schema_return, Exception):
+            raise param_schema_return
+        return param_schema_return
+
+    cbcsdk_mock.mock_request('GET', f"/policyservice/v1/orgs/test/rule_configs/{initial_data['id']}/parameters/schema",
+                             param_schema)
+    api = cbcsdk_mock.api
+    rule_config = PolicyRuleConfig._create_rule_config(api, None, initial_data)
+    with handler as h:
+        rule_config.validate()
+    if message is not None:
+        assert h.value.args[0] == message
 
 
 def test_policy_builder_make_policy(cbcsdk_mock):
