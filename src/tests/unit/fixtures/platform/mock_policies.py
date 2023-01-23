@@ -1619,3 +1619,184 @@ TEMPLATE_RETURN_BOGUS_TYPE = {
         }
     }
 }
+
+POLICY_CONFIG_PRESENTATION = {
+    "configs": [
+        {
+            "id": "1f8a5e4b-34f2-4d31-9f8f-87c56facaec8",
+            "name": "Advanced Scripting Prevention",
+            "description": "Addresses malicious fileless and file-backed scripts that leverage native programs and common scripting languages.",
+            "presentation": {
+                "name": "amsi.name",
+                "category": "core-prevention",
+                "description": [
+                    "amsi.description"
+                ],
+                "platforms": [
+                    {
+                        "platform": "WINDOWS",
+                        "header": "amsi.windows.heading",
+                        "subHeader": [
+                            "amsi.windows.sub_heading"
+                        ],
+                        "actions": [
+                            {
+                                "component": "assignment-mode-selector",
+                                "parameter": "WindowsAssignmentMode"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "parameters": [
+                {
+                    "default": "BLOCK",
+                    "name": "WindowsAssignmentMode",
+                    "description": "Used to change assignment mode to PREVENT or BLOCK",
+                    "recommended": "BLOCK",
+                    "validations": [
+                        {
+                            "type": "enum",
+                            "values": [
+                                "REPORT",
+                                "BLOCK"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "ac67fa14-f6be-4df9-93f2-6de0dbd96061",
+            "name": "Credential Theft",
+            "description": "Addresses threat actors obtaining credentials and relies on detecting the malicious use of TTPs/behaviors that indicate such activity.",
+            "presentation": {
+                "name": "cred_theft.name",
+                "category": "core-prevention",
+                "description": [
+                    "cred_theft.description"
+                ],
+                "platforms": [
+                    {
+                        "platform": "WINDOWS",
+                        "header": "cred_theft.windows.heading",
+                        "subHeader": [
+                            "cred_theft.windows.sub_heading"
+                        ],
+                        "actions": [
+                            {
+                                "component": "assignment-mode-selector",
+                                "parameter": "WindowsAssignmentMode"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "parameters": [
+                {
+                    "default": "BLOCK",
+                    "name": "WindowsAssignmentMode",
+                    "description": "Used to change assignment mode to PREVENT or BLOCK",
+                    "recommended": "BLOCK",
+                    "validations": [
+                        {
+                            "type": "enum",
+                            "values": [
+                                "REPORT",
+                                "BLOCK"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "c4ed61b3-d5aa-41a9-814f-0f277451532b",
+            "name": "Carbon Black Threat Intel",
+            "description": "Addresses common and pervasive TTPs used for malicious activity as well as living off the land TTPs/behaviors detected by Carbon Black’s Threat Analysis Unit.",
+            "presentation": {
+                "name": "cbti.name",
+                "category": "core-prevention",
+                "description": [
+                    "cbti.description"
+                ],
+                "platforms": [
+                    {
+                        "platform": "WINDOWS",
+                        "header": "cbti.windows.heading",
+                        "subHeader": [
+                            "cbti.windows.sub_heading"
+                        ],
+                        "actions": [
+                            {
+                                "component": "assignment-mode-selector",
+                                "parameter": "WindowsAssignmentMode"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "parameters": [
+                {
+                    "default": "BLOCK",
+                    "name": "WindowsAssignmentMode",
+                    "description": "Used to change assignment mode to PREVENT or BLOCK",
+                    "recommended": "BLOCK",
+                    "validations": [
+                        {
+                            "type": "enum",
+                            "values": [
+                                "REPORT",
+                                "BLOCK"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "88b19232-7ebb-48ef-a198-2a75a282de5d",
+            "name": "Privilege Escalation",
+            "description": "Addresses behaviors that indicate a threat actor has gained elevated access via a bug or misconfiguration within an operating system, and leverages the detection of TTPs/behaviors to prevent such activity.",
+            "presentation": {
+                "name": "privesc.name",
+                "category": "core-prevention",
+                "description": [
+                    "privesc.description"
+                ],
+                "platforms": [
+                    {
+                        "platform": "WINDOWS",
+                        "header": "privesc.windows.heading",
+                        "subHeader": [
+                            "privesc.windows.sub_heading"
+                        ],
+                        "actions": [
+                            {
+                                "component": "assignment-mode-selector",
+                                "parameter": "WindowsAssignmentMode"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "parameters": [
+                {
+                    "default": "BLOCK",
+                    "name": "WindowsAssignmentMode",
+                    "description": "Used to change assignment mode to PREVENT or BLOCK",
+                    "recommended": "BLOCK",
+                    "validations": [
+                        {
+                            "type": "enum",
+                            "values": [
+                                "REPORT",
+                                "BLOCK"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

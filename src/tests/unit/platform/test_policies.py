@@ -24,7 +24,7 @@ from tests.unit.fixtures.platform.mock_policies import (FULL_POLICY_1, SUMMARY_P
                                                         SUMMARY_POLICY_3, OLD_POLICY_1, FULL_POLICY_2, OLD_POLICY_2,
                                                         RULE_ADD_1, RULE_ADD_2, RULE_MODIFY_1, NEW_POLICY_CONSTRUCT_1,
                                                         NEW_POLICY_RETURN_1, BASIC_CONFIG_TEMPLATE_RETURN,
-                                                        TEMPLATE_RETURN_BOGUS_TYPE)
+                                                        TEMPLATE_RETURN_BOGUS_TYPE, POLICY_CONFIG_PRESENTATION)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -517,6 +517,40 @@ def test_rule_config_validate(cbcsdk_mock, initial_data, param_schema_return, ha
                              param_schema)
     api = cbcsdk_mock.api
     rule_config = PolicyRuleConfig._create_rule_config(api, None, initial_data)
+    with handler as h:
+        rule_config.validate()
+    if message is not None:
+        assert h.value.args[0] == message
+
+
+@pytest.mark.parametrize("new_data, get_id, handler, message", [
+    ({"id": "88b19232-7ebb-48ef-a198-2a75a282de5d", "name": "Privilege Escalation", "inherited_from": "",
+      "category": "core_prevention", "parameters": {"WindowsAssignmentMode": "BLOCK"}},
+     None, does_not_raise(), None),
+    ({"id": "88b19236-7ebb-48ef-a198-2a75a282de5d", "name": "Privilege Escalation", "inherited_from": "",
+      "category": "core_prevention", "parameters": {"WindowsAssignmentMode": "BLOCK"}},
+     "88b19232-7ebb-48ef-a198-2a75a282de5d", pytest.raises(InvalidObjectError),
+     "invalid rule config ID 88b19236-7ebb-48ef-a198-2a75a282de5d"),
+    ({"id": "88b19232-7ebb-48ef-a198-2a75a282de5d", "name": "Privilege Escalation", "inherited_from": "",
+      "category": "core_prevention", "parameters": {}},
+     None, does_not_raise(), None),
+    ({"id": "88b19232-7ebb-48ef-a198-2a75a282de5d", "name": "Privilege Escalation", "inherited_from": "",
+      "category": "core_prevention", "parameters": {"WindowsAssignmentMode": 666}},
+     None, pytest.raises(InvalidObjectError),
+     "rule configuration parameter 'WindowsAssignmentMode' is not a string"),
+    ({"id": "88b19232-7ebb-48ef-a198-2a75a282de5d", "name": "Privilege Escalation", "inherited_from": "",
+      "category": "core_prevention", "parameters": {"WindowsAssignmentMode": "BOGUSVALUE"}},
+     None, pytest.raises(InvalidObjectError),
+     "invalid value 'BOGUSVALUE' for rule configuration parameter 'WindowsAssignmentMode'"),
+])
+def test_rule_config_validate_inside_policy(cbcsdk_mock, new_data, get_id, handler, message):
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65535/configs/presentation',
+                             POLICY_CONFIG_PRESENTATION)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 65535, copy.deepcopy(FULL_POLICY_1), False, True)
+    rule_config_id = get_id if get_id is not None else new_data['id']
+    rule_config = policy.object_rule_configs[rule_config_id]
+    rule_config._info = copy.deepcopy(new_data)
     with handler as h:
         rule_config.validate()
     if message is not None:

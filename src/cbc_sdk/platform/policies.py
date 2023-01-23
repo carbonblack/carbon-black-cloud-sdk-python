@@ -14,7 +14,6 @@
 """Policy implementation as part of Platform API"""
 import copy
 import json
-import weakref
 from cbc_sdk.base import MutableBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
 from cbc_sdk.errors import ApiError, ServerError, InvalidObjectError
 
@@ -615,6 +614,7 @@ class Policy(MutableBaseModel):
         """
         rc = super(Policy, self)._refresh()
         self._object_rules_need_load = True
+        self._object_rule_configs_need_load = True
         return rc
 
     def _get_ruleconfig_presentation(self):
@@ -624,14 +624,12 @@ class Policy(MutableBaseModel):
         Returns:
             dict: A mapping of key values (UUIDs) to rule config information (dicts).
         """
-        rc = self._ruleconfig_presentation() if self._ruleconfig_presentation else None
-        if rc is None and self._model_unique_id is not None:
+        if self._ruleconfig_presentation is None and self._model_unique_id is not None:
             uri = Policy.urlobject.format(self._cb.credentials.org_key) + \
                   f"/{self._model_unique_id}/configs/presentation"
             result = self._cb.get_object(uri)
-            rc = {cfg['id']: cfg for cfg in result.get('configs', [])}
-            self._ruleconfig_presentation = weakref.ref(rc)
-        return rc
+            self._ruleconfig_presentation = {cfg['id']: cfg for cfg in result.get('configs', [])}
+        return self._ruleconfig_presentation
 
     @property
     def rules(self):
@@ -722,9 +720,8 @@ class Policy(MutableBaseModel):
         Raises:
             InvalidObjectError: If the rule configuration ID is not valid.
         """
-        presentation = self._ruleconfig_presentation() if self._ruleconfig_presentation else None
-        if presentation is not None:
-            block = presentation.get(ruleconfig_id, None)
+        if self._ruleconfig_presentation is not None:
+            block = self._ruleconfig_presentation.get(ruleconfig_id, None)
             if block is None:
                 raise InvalidObjectError(f"invalid rule config ID {ruleconfig_id}")
             param_items = block.get("parameters", [])
@@ -1362,12 +1359,11 @@ class PolicyRuleConfig(MutableBaseModel):
             InvalidObjectError: If the rule object is not valid.
         """
         super(PolicyRuleConfig, self).validate()
+
         if self._parent is not None:
-            # validate configuration ID and set high-level fields
+            # set high-level fields
             valid_configs = self._parent.valid_rule_configs()
-            data = valid_configs.get(self._model_unique_id, None)
-            if not data:
-                raise InvalidObjectError(f"rule configuration ID {self._model_unique_id} is not valid")
+            data = valid_configs.get(self._model_unique_id, {})
             self._info.update(data)
             if 'inherited_from' not in self._info:
                 self._info['inherited_from'] = 'psc:region'
