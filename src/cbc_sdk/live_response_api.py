@@ -1022,7 +1022,7 @@ class JobWorker(threading.Thread):
             self.result_queue.put(WorkerStatus(self.device_id, status="READY"))
             while True:
                 work_item = self.job_queue.get(block=True)
-                if not work_item:
+                if work_item is None:  # Check for None which is condition to terminate thread
                     self.job_queue.task_done()
                     return
 
@@ -1031,10 +1031,14 @@ class JobWorker(threading.Thread):
                 self.job_queue.task_done()
         except Exception as e:
             self.result_queue.put(WorkerStatus(self.device_id, status="ERROR", exception=e))
+            while not self.job_queue.empty():
+                work_item = self.job_queue.get()
+                work_item.future.set_exception(e)
+                self.job_queue.task_done()
         finally:
             if self.lr_session:
                 self.lr_session.close()
-            self.result_queue.put(WorkerStatus(self.device_id, status="EXISTING"))
+            self.result_queue.put(WorkerStatus(self.device_id, status="EXITING"))
 
     def run_job(self, work_item):
         """
@@ -1090,7 +1094,7 @@ class LiveResponseJobScheduler(threading.Thread):
                                                                                 item.exception))
                     # Don't reattempt error'd jobs
                     del self._unscheduled_jobs[item.device_id]
-                elif item.status == "EXISTING":
+                elif item.status == "EXITING":
                     log.debug("JobWorker[{0}] has exited, waiting...".format(item.device_id))
                     self._job_workers[item.device_id].join()
                     log.debug("JobWorker[{0}] deleted".format(item.device_id))
@@ -1236,7 +1240,7 @@ class CbLRManagerBase(object):
         Submit a new job to be executed as a Live Response.
 
         Args:
-            job (object): The job to be scheduled.
+            job (func): The job function to be scheduled.
             device (int): ID of the device to use for job execution.
 
         Returns:
