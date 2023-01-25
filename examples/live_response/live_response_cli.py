@@ -68,7 +68,7 @@ def split_cli(line):
         if (tok[:1] == '"'):
             tok = tok[1:]
             next = parts.pop(0)
-            while(next[-1:] != '"' and len(parts) > 0):
+            while (next[-1:] != '"' and len(parts) > 0):
                 tok += ' ' + next
                 next = parts.pop(0)
 
