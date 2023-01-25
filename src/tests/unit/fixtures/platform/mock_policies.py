@@ -1437,7 +1437,26 @@ NEW_POLICY_CONSTRUCT_1 = {
         "policy_modification": False,
         "quarantine": True
     },
-    "rule_configs": []
+    "rule_configs": [
+        {
+            "id": "88b19232-7ebb-48ef-a198-2a75a282de5d",
+            "name": "Privilege Escalation",
+            "inherited_from": "",
+            "category": "core-prevention",
+            "parameters": {
+                "WindowsAssignmentMode": "BLOCK"
+            }
+        },
+        {
+            "id": "ac67fa14-f6be-4df9-93f2-6de0dbd96061",
+            "name": "Credential Theft",
+            "inherited_from": "",
+            "category": "core-prevention",
+            "parameters": {
+                "WindowsAssignmentMode": "REPORT"
+            }
+        }
+    ]
 }
 
 NEW_POLICY_RETURN_1 = {
@@ -1809,5 +1828,15 @@ REPLACE_RULECONFIG = {
     "category": "core-prevention",
     "parameters": {
         "WindowsAssignmentMode": "REPORT"
+    }
+}
+
+BUILD_RULECONFIG_1 = {
+    "id": "88b19232-7ebb-48ef-a198-2a75a282de5d",
+    "name": "Privilege Escalation",
+    "inherited_from": "",
+    "category": "core-prevention",
+    "parameters": {
+        "WindowsAssignmentMode": "BLOCK"
     }
 }

@@ -15,7 +15,6 @@ import copy
 import pytest
 import logging
 import random
-import json
 from contextlib import ExitStack as does_not_raise
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.platform import Policy, PolicyRule, PolicyRuleConfig
@@ -26,7 +25,7 @@ from tests.unit.fixtures.platform.mock_policies import (FULL_POLICY_1, SUMMARY_P
                                                         RULE_ADD_1, RULE_ADD_2, RULE_MODIFY_1, NEW_POLICY_CONSTRUCT_1,
                                                         NEW_POLICY_RETURN_1, BASIC_CONFIG_TEMPLATE_RETURN,
                                                         TEMPLATE_RETURN_BOGUS_TYPE, POLICY_CONFIG_PRESENTATION,
-                                                        REPLACE_RULECONFIG)
+                                                        REPLACE_RULECONFIG, BUILD_RULECONFIG_1)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -748,6 +747,12 @@ def test_policy_builder_make_policy(cbcsdk_mock):
         assert body == NEW_POLICY_CONSTRUCT_1
         return NEW_POLICY_RETURN_1
 
+    cbcsdk_mock.mock_request('GET', "/policyservice/v1/orgs/test/rule_configs/"
+                                    "88b19232-7ebb-48ef-a198-2a75a282de5d/parameters/schema",
+                             BASIC_CONFIG_TEMPLATE_RETURN)
+    cbcsdk_mock.mock_request('GET', "/policyservice/v1/orgs/test/rule_configs/"
+                                    "ac67fa14-f6be-4df9-93f2-6de0dbd96061/parameters/schema",
+                             BASIC_CONFIG_TEMPLATE_RETURN)
     cbcsdk_mock.mock_request('POST', '/policyservice/v1/orgs/test/policies', on_post)
     api = cbcsdk_mock.api
     builder = Policy.create(api)
@@ -766,6 +771,10 @@ def test_policy_builder_make_policy(cbcsdk_mock):
     builder.add_sensor_setting("SCAN_EXECUTE_ON_NETWORK_DRIVE", "false").add_sensor_setting("UBS_OPT_IN", "true")
     builder.add_sensor_setting("SCAN_EXECUTE_ON_NETWORK_DRIVE", "true").add_sensor_setting("ALLOW_UNINSTALL", "true")
     builder.set_managed_detection_response_permissions(False, True)
+    rule_config = PolicyRuleConfig(api, None, BUILD_RULECONFIG_1['id'], BUILD_RULECONFIG_1, False, True)
+    builder.add_rule_config_copy(rule_config)
+    builder.add_rule_config("ac67fa14-f6be-4df9-93f2-6de0dbd96061", "Credential Theft", "core-prevention",
+                            WindowsAssignmentMode='REPORT')
     policy = builder.build()
     assert policy._info == NEW_POLICY_CONSTRUCT_1
     policy.save()

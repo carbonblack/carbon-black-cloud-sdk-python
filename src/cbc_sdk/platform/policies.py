@@ -480,16 +480,15 @@ class Policy(MutableBaseModel):
                 InvalidObjectError: If the rule configuration data passed in is not valid.
             """
             ruleconfigdata = copy.deepcopy(rule_config._info)
-            if "id" in ruleconfigdata:
-                del ruleconfigdata["id"]
             self._add_rule_config(ruleconfigdata)
             return self
 
-        def add_rule_config(self, name, category, **kwargs):
+        def add_rule_config(self, config_id, name, category, **kwargs):
             """
             Add a new rule configuration as discrete data elements to the new policy.
 
             Args:
+                config_id (str): ID of the rule configuration object (a GUID).
                 name (str): Name of the rule configuration object.
                 category (str): Category of the rule configuration object.
                 **kwargs (dict): Parameter values for the rule configuration object.
@@ -500,8 +499,8 @@ class Policy(MutableBaseModel):
             Raises:
                 InvalidObjectError: If the rule configuration data passed in is not valid.
             """
-            ruleconfigdata = {"name": name, "category": category, "inherited_from": "",
-                              "parameters": copy.deepcopy(**kwargs)}
+            ruleconfigdata = {"id": config_id, "name": name, "category": category, "inherited_from": "",
+                              "parameters": copy.deepcopy(kwargs)}
             self._add_rule_config(ruleconfigdata)
             return self
 
@@ -626,7 +625,7 @@ class Policy(MutableBaseModel):
         """
         if self._ruleconfig_presentation is None and self._model_unique_id is not None:
             uri = Policy.urlobject.format(self._cb.credentials.org_key) + \
-                  f"/{self._model_unique_id}/configs/presentation"
+                f"/{self._model_unique_id}/configs/presentation"
             result = self._cb.get_object(uri)
             self._ruleconfig_presentation = {cfg['id']: cfg for cfg in result.get('configs', [])}
         return self._ruleconfig_presentation
@@ -1279,6 +1278,18 @@ class PolicyRule(MutableBaseModel):
 
 
 class PolicyRuleConfig(MutableBaseModel):
+    """
+    Represents a rule configuration in the policy.
+
+    Create one of these objects, associating it with a Policy, and set its properties, then call its save() method to
+    add the rule configuration to the policy. This requires the org.policies(UPDATE) permission.
+
+    To update a PolicyRuleConfig, change the values of its property fields, then call its save() method.  This
+    requires the org.policies(UPDATE) permission.
+
+    To delete an existing PolicyRuleConfig, call its delete() method. This requires the org.policies(UPDATE) permission.
+
+    """
     primary_key = "id"
     swagger_meta_file = "platform/models/policy_ruleconfig.yaml"
 
@@ -1313,7 +1324,7 @@ class PolicyRuleConfig(MutableBaseModel):
         Returns:
             PolicyRuleConfig: The new object.
         """
-        return PolicyRuleConfig(cb, parent, data.get("id", None) if parent else None, data, False, True)
+        return PolicyRuleConfig(cb, parent, data.get("id", None), data, False, True)
 
     def _refresh(self):
         """
