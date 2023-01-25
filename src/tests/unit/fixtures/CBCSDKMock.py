@@ -14,10 +14,10 @@
 """CBCSDK Mock Framework"""
 
 import pytest
-import re
 import copy
 import json
 import cbc_sdk
+import urllib
 
 
 class CBCSDKMock:
@@ -79,10 +79,9 @@ class CBCSDKMock:
         """Matches mocked requests against incoming request"""
         if request in self.mocks:
             return request
+        # Removed regex as partial match hid invalid mocks
         for key in self.mocks.keys():
-            exp = key.replace("/", ".")
-            matched = re.match(exp, request)
-            if matched:
+            if key == request:
                 return key
         return None
 
@@ -131,9 +130,14 @@ class CBCSDKMock:
         def _get_object(url, query_parameters=None, default=None):
             self._check_for_decommission(url)
             self._capture_data(query_parameters)
+            if query_parameters:
+                if isinstance(query_parameters, dict):
+                    query_parameters = convert_query_params(query_parameters)
+                    url += '?%s' % (urllib.parse.urlencode(sorted(query_parameters)))
+
             matched = self.match_key(self.get_mock_key("GET", url))
             if matched:
-                if (self.mocks[matched] is Exception or self.mocks[matched] in Exception.__subclasses__()
+                if (isinstance(self.mocks[matched], Exception)
                         or getattr(self.mocks[matched], '__module__', None) == cbc_sdk.errors.__name__):  # noqa: W503
                     raise self.mocks[matched]
                 elif callable(self.mocks[matched]):
@@ -152,7 +156,7 @@ class CBCSDKMock:
             if matched:
                 if callable(self.mocks[matched]):
                     return self.mocks[matched](url, query_params, **kwargs)
-                elif self.mocks[matched] is Exception or self.mocks[matched] in Exception.__subclasses__():
+                elif isinstance(self.mocks[matched], Exception):
                     raise self.mocks[matched]
                 else:
                     return self.mocks[matched]
@@ -169,7 +173,7 @@ class CBCSDKMock:
                 if callable(self.mocks[matched]):
                     result = self.mocks[matched](uri, kwargs.pop("data", {}), **kwargs)
                     return_data = self.StubResponse(result, 200, result, False)
-                elif self.mocks[matched] is Exception or self.mocks[matched] in Exception.__subclasses__():
+                elif isinstance(self.mocks[matched], Exception):
                     raise self.mocks[matched]
                 else:
                     return_data = self.mocks[matched]
@@ -189,7 +193,7 @@ class CBCSDKMock:
                 if callable(self.mocks[matched]):
                     result = self.mocks[matched](uri, kwargs.pop("data", {}), **kwargs)
                     return_data = self.StubResponse(result, 200, result, False)
-                elif self.mocks[matched] is Exception or self.mocks[matched] in Exception.__subclasses__():
+                elif isinstance(self.mocks[matched], Exception):
                     raise self.mocks[matched]
                 else:
                     return_data = self.mocks[matched]
@@ -207,7 +211,7 @@ class CBCSDKMock:
             if matched:
                 if callable(self.mocks[matched]):
                     return self.StubResponse(self.mocks[matched](url, body, **kwargs))
-                elif self.mocks[matched] is Exception or self.mocks[matched] in Exception.__subclasses__():
+                elif isinstance(self.mocks[matched], Exception):
                     raise self.mocks[matched]
                 else:
                     return self.mocks[matched]
@@ -223,7 +227,7 @@ class CBCSDKMock:
             if matched:
                 if callable(self.mocks[matched]):
                     return self.StubResponse(self.mocks[matched](url, param_table, **kwargs))
-                elif self.mocks[matched] is Exception or self.mocks[matched] in Exception.__subclasses__():
+                elif isinstance(self.mocks[matched], Exception):
                     raise self.mocks[matched]
                 else:
                     return self.mocks[matched]
@@ -243,7 +247,7 @@ class CBCSDKMock:
                 elif response.content is None:
                     response = copy.deepcopy(self.mocks[matched])
                     response.content = body
-                elif self.mocks[matched] is Exception or self.mocks[matched] in Exception.__subclasses__():
+                elif isinstance(self.mocks[matched], Exception):
                     raise self.mocks[matched]
                 return response
             pytest.fail("PUT called for %s when it shouldn't be" % url)
@@ -258,7 +262,7 @@ class CBCSDKMock:
             if matched:
                 if callable(self.mocks[matched]):
                     return self.StubResponse(self.mocks[matched](url, body))
-                elif self.mocks[matched] is Exception or self.mocks[matched] in Exception.__subclasses__():
+                elif isinstance(self.mocks[matched], Exception):
                     raise self.mocks[matched]
                 else:
                     return self.mocks[matched]
@@ -281,10 +285,31 @@ class CBCSDKMock:
             if matched:
                 if callable(self.mocks[matched]):
                     return self.StubResponse(self.mocks[matched](url, None, **kwargs))
-                elif self.mocks[matched] is Exception or self.mocks[matched] in Exception.__subclasses__():
+                elif isinstance(self.mocks[matched], Exception):
                     raise self.mocks[matched]
                 else:
                     return self.mocks[matched]
             pytest.fail("PATCH called for %s when it shouldn't be" % url)
 
         return _patch_object
+
+
+def convert_query_params(qd):
+    """
+    Expand a dictionary of query parameters by turning "list" values into multiple pairings of key with value.
+
+    Args:
+        qd (dict): A mapping of parameter names to values.
+
+    Returns:
+        list: A list of query parameters, each one a tuple containing name and value, after the expansion is applied.
+    """
+    o = []
+    for k, v in iter(qd.items()):
+        if type(v) == list:
+            for item in v:
+                o.append((k, item))
+        else:
+            o.append((k, v))
+
+    return o

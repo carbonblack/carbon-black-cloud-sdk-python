@@ -1237,7 +1237,7 @@ def test_registry_unsupported_command(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', USESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:7777', USESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/7777', UDEVICE_RESPONSE)
-    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions', None)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:7777', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
     with manager.request_session(7777) as session:
         with pytest.raises(ApiError) as excinfo:

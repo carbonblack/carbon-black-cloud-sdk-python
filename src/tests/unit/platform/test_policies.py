@@ -106,7 +106,7 @@ def test_policy_lookup_by_id(cbcsdk_mock):
 
 def test_policy_get_summaries(cbcsdk_mock):
     """Tests getting the list of policy summaries."""
-    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies',
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/summary',
                              {"policies": [SUMMARY_POLICY_1, SUMMARY_POLICY_2, SUMMARY_POLICY_3]})
     api = cbcsdk_mock.api
     my_list = list(api.select(Policy))
@@ -137,7 +137,7 @@ def test_policy_get_summaries_async(cbcsdk_mock):
 
 def test_policy_filter_by_id(cbcsdk_mock):
     """Tests filtering the policy summaries by ID."""
-    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies',
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/summary',
                              {"policies": [SUMMARY_POLICY_1, SUMMARY_POLICY_2, SUMMARY_POLICY_3]})
     api = cbcsdk_mock.api
     query = api.select(Policy).add_policy_ids([10191, 74656])

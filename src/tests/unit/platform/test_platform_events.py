@@ -42,18 +42,22 @@ def cbcsdk_mock(monkeypatch, cb):
 def test_event_query_process_select_with_guid(cbcsdk_mock):
     """Test Event Querying with GUID inside process.select()"""
     # mock the search validation
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v1/orgs/test/processes/search_validation"
+                             "?process_guid=J7G6DTLN%5C-006633e3%5C-00000334%5C-00000000%5C-1d677bedfbb1c2e"
+                             "&q=process_guid%3AJ7G6DTLN%5C-006633e3%5C-00000334%5C-00000000%5C-1d677bedfbb1c2e"
+                             "&query=process_guid%3AJ7G6DTLN%5C-006633e3%5C-00000334%5C-00000000%5C-1d677bedfbb1c2e",
                              GET_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_job",
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
     # mock the GET to check search status
-    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
-                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=0"),
                              GET_PROCESS_SEARCH_JOB_RESP)
     # mock the GET to get search results
     cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
-                                     "2c292717-80ed-4f0d-845f-779e09470920/results"),
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=500"),
                              GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
     api = cbcsdk_mock.api
     guid = "J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e"
@@ -61,9 +65,13 @@ def test_event_query_process_select_with_guid(cbcsdk_mock):
     assert isinstance(process, Process)
     assert process.process_guid == guid
 
-    search_validate_url = "/api/investigate/v1/orgs/test/events/search_validation"
-    cbcsdk_mock.mock_request("GET", search_validate_url, EVENT_SEARCH_VALIDATION_RESP)
-    url = r"/api/investigate/v2/orgs/test/events/J7G6DTLN\\-006633e3\\-00000334\\-00000000\\-1d677bedfbb1c2e/_search"
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v1/orgs/test/events/search_validation?"
+                             "process_guid=J7G6DTLN%5C-006633e3%5C-00000334%5C-00000000%5C-1d677bedfbb1c2e"
+                             "&q=process_guid%3AJ7G6DTLN%5C-006633e3%5C-00000334%5C-00000000%5C-1d677bedfbb1c2e"
+                             "&query=process_guid%3AJ7G6DTLN%5C-006633e3%5C-00000334%5C-00000000%5C-1d677bedfbb1c2e",
+                             EVENT_SEARCH_VALIDATION_RESP)
+    url = r"/api/investigate/v2/orgs/test/events/J7G6DTLN\-006633e3\-00000334\-00000000\-1d677bedfbb1c2e/_search"
     cbcsdk_mock.mock_request("POST", url, EVENT_SEARCH_RESP_INTERIM)
     cbcsdk_mock.mock_request("POST", url, EVENT_SEARCH_RESP)
 
@@ -81,10 +89,14 @@ def test_event_query_select_with_guid(cbcsdk_mock):
 
 def test_event_query_select_with_where(cbcsdk_mock):
     """Test Event Querying with where() clause"""
-    search_validate_url = "/api/investigate/v1/orgs/test/events/search_validation"
-    cbcsdk_mock.mock_request("GET", search_validate_url, EVENT_SEARCH_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v1/orgs/test/events/search_validation?"
+                             "process_guid=J7G6DTLN%5C-006633e3%5C-00000334%5C-00000000%5C-1d677bedfbb1c2e"
+                             "&q=process_guid%3AJ7G6DTLN%5C-006633e3%5C-00000334%5C-00000000%5C-1d677bedfbb1c2e"
+                             "&query=process_guid%3AJ7G6DTLN%5C-006633e3%5C-00000334%5C-00000000%5C-1d677bedfbb1c2e",
+                             EVENT_SEARCH_VALIDATION_RESP)
 
-    url = r"/api/investigate/v2/orgs/test/events/J7G6DTLN\\-006633e3\\-00000334\\-00000000\\-1d677bedfbb1c2e/_search"
+    url = "/api/investigate/v2/orgs/test/events/J7G6DTLN\\-006633e3\\-00000334\\-00000000\\-1d677bedfbb1c2e/_search"
     cbcsdk_mock.mock_request("POST", url, EVENT_SEARCH_RESP)
 
     api = cbcsdk_mock.api
@@ -100,6 +112,14 @@ def test_event_query_select_with_where(cbcsdk_mock):
     # test .where('process_guid:...')
     url = "/api/investigate/v2/orgs/test/events/J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e/_search"
     cbcsdk_mock.mock_request("POST", url, EVENT_SEARCH_RESP)
+
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v1/orgs/test/events/search_validation?"
+                             "process_guid=J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e"
+                             "&q=process_guid%3AJ7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e"
+                             "&query=process_guid%3AJ7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e",
+                             EVENT_SEARCH_VALIDATION_RESP)
+
     events = api.select(Event).where('process_guid:J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e')
     results = [res for res in events._perform_query(numrows=10)]
     first_event = results[0]
@@ -117,10 +137,14 @@ def test_event_query_select_with_where(cbcsdk_mock):
 
 def test_event_query_select_timeout(cbcsdk_mock):
     """Test Event Querying with where() clause that times out"""
-    search_validate_url = "/api/investigate/v1/orgs/test/events/search_validation"
-    cbcsdk_mock.mock_request("GET", search_validate_url, EVENT_SEARCH_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v1/orgs/test/events/search_validation?"
+                             "process_guid=J7G6DTLN%5C-006633e3%5C-00000334%5C-00000000%5C-1d677bedfbb1c2e"
+                             "&q=process_guid%3AJ7G6DTLN%5C-006633e3%5C-00000334%5C-00000000%5C-1d677bedfbb1c2e"
+                             "&query=process_guid%3AJ7G6DTLN%5C-006633e3%5C-00000334%5C-00000000%5C-1d677bedfbb1c2e",
+                             EVENT_SEARCH_VALIDATION_RESP)
 
-    url = r"/api/investigate/v2/orgs/test/events/J7G6DTLN\\-006633e3\\-00000334\\-00000000\\-1d677bedfbb1c2e/_search"
+    url = "/api/investigate/v2/orgs/test/events/J7G6DTLN\\-006633e3\\-00000334\\-00000000\\-1d677bedfbb1c2e/_search"
     cbcsdk_mock.mock_request("POST", url, EVENT_SEARCH_RESP_INCOMPLETE)
 
     api = cbcsdk_mock.api
@@ -132,10 +156,14 @@ def test_event_query_select_timeout(cbcsdk_mock):
 
 def test_event_query_select_asynchronous(cbcsdk_mock):
     """Test Event Querying with where() clause as asynchronous"""
-    search_validate_url = "/api/investigate/v1/orgs/test/events/search_validation"
-    cbcsdk_mock.mock_request("GET", search_validate_url, EVENT_SEARCH_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v1/orgs/test/events/search_validation?"
+                             "process_guid=J7G6DTLN%5C-006633e3%5C-00000334%5C-00000000%5C-1d677bedfbb1c2e"
+                             "&q=process_guid%3AJ7G6DTLN%5C-006633e3%5C-00000334%5C-00000000%5C-1d677bedfbb1c2e"
+                             "&query=process_guid%3AJ7G6DTLN%5C-006633e3%5C-00000334%5C-00000000%5C-1d677bedfbb1c2e",
+                             EVENT_SEARCH_VALIDATION_RESP)
 
-    url = r"/api/investigate/v2/orgs/test/events/J7G6DTLN\\-006633e3\\-00000334\\-00000000\\-1d677bedfbb1c2e/_search"
+    url = "/api/investigate/v2/orgs/test/events/J7G6DTLN\\-006633e3\\-00000334\\-00000000\\-1d677bedfbb1c2e/_search"
     cbcsdk_mock.mock_request("POST", url, EVENT_SEARCH_RESP)
 
     api = cbcsdk_mock.api
@@ -163,10 +191,14 @@ def test_event_query_with_multiple_fetches(cbcsdk_mock):
             assert body['start'] == 1
             return EVENT_SEARCH_RESP_PART_TWO
 
-    search_validate_url = "/api/investigate/v1/orgs/test/events/search_validation"
-    cbcsdk_mock.mock_request("GET", search_validate_url, EVENT_SEARCH_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v1/orgs/test/events/search_validation?"
+                             "process_guid=J7G6DTLN%5C-006633e3%5C-00000334%5C-00000000%5C-1d677bedfbb1c2e"
+                             "&q=process_guid%3AJ7G6DTLN%5C-006633e3%5C-00000334%5C-00000000%5C-1d677bedfbb1c2e"
+                             "&query=process_guid%3AJ7G6DTLN%5C-006633e3%5C-00000334%5C-00000000%5C-1d677bedfbb1c2e",
+                             EVENT_SEARCH_VALIDATION_RESP)
 
-    url = r"/api/investigate/v2/orgs/test/events/J7G6DTLN\\-006633e3\\-00000334\\-00000000\\-1d677bedfbb1c2e/_search"
+    url = "/api/investigate/v2/orgs/test/events/J7G6DTLN\\-006633e3\\-00000334\\-00000000\\-1d677bedfbb1c2e/_search"
     cbcsdk_mock.mock_request("POST", url, _fake_multiple_fetches)
 
     api = cbcsdk_mock.api

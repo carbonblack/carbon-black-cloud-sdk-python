@@ -176,7 +176,7 @@ GET_PROCESS_SEARCH_JOB_RESULTS_RESP_ZERO = {
     "results": [],
     "num_found": 616,
     "num_available": 1,
-    "contacted": 0,
+    "contacted": 5,
     "completed": 0
 }
 
@@ -681,21 +681,64 @@ GET_PROCESS_SEARCH_PARENT_JOB_RESULTS_RESP_1 = {
 GET_PROCESS_SEARCH_JOB_RESP = {
     "contacted": 45,
     "completed": 45,
-    "query": {
-        "cb.max_backend_timestamp": 1599853172000,
-        "cb.min_backend_timestamp": 0,
-        "cb.min_device_timestamp": 0,
-        "cb.preview_results": 500,
-        "cb.use_agg": True,
-        "facet": False,
-        "fl": "*,parent_hash,parent_name,process_cmdline,backend_timestamp,device_external_ip,device_group,device_internal_ip,device_os,process_effective_reputation,process_reputation,ttp",  # noqa: E501
-        "fq": "{!collapse field=process_collapse_id sort='max(0,legacy) asc,device_timestamp desc'}",
-        "q": "(process_guid:test-0034d5f2-00000ba0-00000000-1d68709850fe521)",
-        "rows": 500,
-        "start": 0
-    },
-    "search_initiated_time": 1599853172533,
-    "connector_id": "ABCDEFGH"
+    "results": [
+        {
+            "backend_timestamp": "2020-09-11T19:35:02.972Z",
+            "childproc_count": 0,
+            "crossproc_count": 787,
+            "device_external_ip": "192.168.0.1",
+            "device_group_id": 0,
+            "device_id": 1234567,
+            "device_internal_ip": "192.168.0.2",
+            "device_name": "Windows10Device",
+            "device_os": "WINDOWS",
+            "device_policy_id": 12345,
+            "device_timestamp": "2020-09-11T19:32:12.821Z",
+            "enriched": True,
+            "enriched_event_type": [
+                "INJECT_CODE",
+                "SYSTEM_API_CALL"
+            ],
+            "event_type": [
+                "crossproc"
+            ],
+            "filemod_count": 0,
+            "ingress_time": 1599852859660,
+            "legacy": True,
+            "modload_count": 1,
+            "netconn_count": 0,
+            "org_id": "test",
+            "process_cmdline": [
+                "\"C:\\Program Files\\VMware\\VMware Tools\\vmtoolsd.exe\""
+            ],
+            "process_effective_reputation": "TRUSTED_WHITE_LIST",
+            "process_guid": "test-0002b226-00000001-00000000-1d6225bbba74c01",
+            "process_hash": [
+                "5920199e4fbfa47c1717b863814722148a353e54f8c10912cf1f991a1c86309d",
+                "c7084336325dc8eadfb1e8ff876921c4"
+            ],
+            "process_name": "c:\\program files\\vmware\\vmware tools\\vmtoolsd.exe",
+            "process_pid": [
+                2976
+            ],
+            "process_reputation": "TRUSTED_WHITE_LIST",
+            "process_username": [
+                "Username"
+            ],
+            "regmod_count": 1,
+            "scriptload_count": 0,
+            "ttp": [
+                "ENUMERATE_PROCESSES",
+                "INJECT_CODE",
+                "MITRE_T1003_CREDENTIAL_DUMP",
+                "MITRE_T1005_DATA_FROM_LOCAL_SYS",
+                "MITRE_T1055_PROCESS_INJECT",
+                "MITRE_T1057_PROCESS_DISCOVERY",
+                "RAM_SCRAPING",
+                "READ_SECURITY_DATA"
+            ]
+        }
+    ]
 }
 
 GET_PROCESS_SUMMARY_RESP = {
@@ -1801,6 +1844,8 @@ GET_PROCESS_SUMMARY_RESP_2 = {
 }
 
 GET_PROCESS_TREE_STR = {
+    "contacted": 34,
+    "completed": 34,
     "exception": "",
     "tree": {
         "children": [
@@ -1883,6 +1928,8 @@ GET_PROCESS_TREE_STR = {
 }
 
 GET_PROCESS_SUMMARY_STR = {
+    "contacted": 34,
+    "completed": 34,
     "exception": "",
     "summary": {
         "process": {
@@ -2432,6 +2479,13 @@ GET_PROCESS_SUMMARY_NOT_FOUND = {
     "completed": 33
 }
 
+GET_PROCESS_TREE_NOT_FOUND = {
+    "exception": "NOT_FOUND",
+    "tree": {},
+    "contacted": 33,
+    "completed": 33
+}
+
 POST_PROCESS_DETAILS_JOB_RESP = {
     'job_id': 'ccc47a52-9a61-4c77-8652-8a03dc187b98'
 }
@@ -2519,8 +2573,8 @@ GET_PROCESS_DETAILS_JOB_RESULTS_RESP = {
 }
 
 GET_PROCESS_DETAILS_JOB_RESULTS_RESP_ZERO = {
-    'contacted': 0,
-    'completed': 0,
+    'contacted': 5,
+    'completed': 5,
     'num_available': 0,
     'num_found': 0,
     'results': []
