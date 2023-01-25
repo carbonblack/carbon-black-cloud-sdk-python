@@ -805,6 +805,7 @@ class Policy(MutableBaseModel):
         self._info['rule_configs'] = raw_rule_configs
         if 'rapid_configs' in self._info:
             del self._info['rapid_configs']
+        self.touch()
         rollback = True
         try:
             self.save()
@@ -813,6 +814,9 @@ class Policy(MutableBaseModel):
             if rollback:
                 self._object_rule_configs = old_rule_configs
                 self._info['rule_configs'] = old_raw_rules
+            else:
+                self._object_rules_need_load = True
+                self._object_rule_configs_need_load = True
 
     def _on_deleted_rule_config(self, rule_config):
         """
@@ -823,7 +827,6 @@ class Policy(MutableBaseModel):
         """
         if rule_config._parent is not self:
             raise ApiError("internal error: updated rule configuration does not belong to this policy")
-        old_rule_configs = None
         if rule_config.id in self.object_rule_configs:
             old_rule_configs = dict(self.object_rule_configs)
             del self._object_rule_configs[rule_config.id]
@@ -834,6 +837,7 @@ class Policy(MutableBaseModel):
         self._info['rule_configs'] = new_raw_rule_configs
         if 'rapid_configs' in self._info:
             del self._info['rapid_configs']
+        self.touch()
         rollback = True
         try:
             self.save()
@@ -842,6 +846,9 @@ class Policy(MutableBaseModel):
             if rollback:
                 self._object_rule_configs = old_rule_configs
                 self._info['rule_configs'] = old_raw_rule_configs
+            else:
+                self._object_rules_need_load = True
+                self._object_rule_configs_need_load = True
 
     def add_rule(self, new_rule):
         """Adds a rule to this Policy.
@@ -874,6 +881,7 @@ class Policy(MutableBaseModel):
                 "required": [True, False]
         """
         new_obj = PolicyRule(self._cb, self, None, new_rule, False, True)
+        new_obj.touch()
         new_obj.save()
 
     def delete_rule(self, rule_id):
@@ -929,6 +937,7 @@ class Policy(MutableBaseModel):
             new_rule_config (dict): The new rule configuration to add to this Policy.
         """
         new_obj = PolicyRuleConfig._create_rule_config(self._cb, self, new_rule_config)
+        new_obj.touch()
         new_obj.save()
 
     def delete_rule_config(self, rule_config_id):
@@ -1269,9 +1278,6 @@ class PolicyRule(MutableBaseModel):
         return True
 
 
-# YOUAREHERE
-
-
 class PolicyRuleConfig(MutableBaseModel):
     primary_key = "id"
     swagger_meta_file = "platform/models/policy_ruleconfig.yaml"
@@ -1283,7 +1289,7 @@ class PolicyRuleConfig(MutableBaseModel):
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
             parent (Policy): The "parent" policy of this rule configuration.
-            model_unique_id (int): ID of the rule configuration.
+            model_unique_id (str): ID of the rule configuration.
             initial_data (dict): Initial data used to populate the rule configuration.
             force_init (bool): If True, forces the object to be refreshed after constructing.  Default False.
             full_doc (bool): If True, object is considered "fully" initialized. Default False.
@@ -1350,6 +1356,38 @@ class PolicyRuleConfig(MutableBaseModel):
         finally:
             if was_deleted:
                 self._parent = None
+
+    def get_parameter(self, name):
+        """
+        Returns a parameter value from the rule configuration.
+
+        Args:
+            name (str): The parameter name.
+
+        Returns:
+            Any: The parameter value, or None if there is no value.
+        """
+        params = self._info['parameters']
+        return params.get(name, None)
+
+    def set_parameter(self, name, value):
+        """
+        Sets a parameter value into the rule configuration.
+
+        Args:
+            name (str): The parameter name.
+            value (Any): The new value to be set.
+        """
+        params = self._info['parameters']
+        old_value = params.get(name, None)
+        if old_value != value:
+            if 'parameters' not in self._dirty_attributes:
+                self._dirty_attributes['parameters'] = params
+                new_params = copy.deepcopy(params)
+            else:
+                new_params = params
+            new_params[name] = value
+            self._info['parameters'] = new_params
 
     def validate(self):
         """

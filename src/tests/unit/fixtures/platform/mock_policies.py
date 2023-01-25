@@ -196,7 +196,7 @@ FULL_POLICY_1 = {
             "name": "Advanced Scripting Prevention",
             "description": "Addresses malicious fileless and file-backed scripts that leverage native programs [...]",
             "inherited_from": "psc:region",
-            "category": "core_prevention",
+            "category": "core-prevention",
             "parameters": {
                 "WindowsAssignmentMode": "BLOCK"
             }
@@ -206,7 +206,7 @@ FULL_POLICY_1 = {
             "name": "Credential Theft",
             "description": "Addresses threat actors obtaining credentials and relies on detecting the malicious [...]",
             "inherited_from": "psc:region",
-            "category": "core_prevention",
+            "category": "core-prevention",
             "parameters": {
                 "WindowsAssignmentMode": "REPORT"
             }
@@ -216,7 +216,7 @@ FULL_POLICY_1 = {
             "name": "Carbon Black Threat Intel",
             "description": "Addresses common and pervasive TTPs used for malicious activity as well as [...]",
             "inherited_from": "psc:region",
-            "category": "core_prevention",
+            "category": "core-prevention",
             "parameters": {
                 "WindowsAssignmentMode": "REPORT"
             }
@@ -226,7 +226,7 @@ FULL_POLICY_1 = {
             "name": "Privilege Escalation",
             "description": "Addresses behaviors that indicate a threat actor has gained elevated access via [...]",
             "inherited_from": "psc:region",
-            "category": "core_prevention",
+            "category": "core-prevention",
             "parameters": {
                 "WindowsAssignmentMode": "BLOCK"
             }
@@ -1556,7 +1556,7 @@ NEW_POLICY_RETURN_1 = {
             "name": "Advanced Scripting Prevention",
             "description": "Addresses malicious fileless and file-backed scripts that leverage native programs [...]",
             "inherited_from": "psc:region",
-            "category": "core_prevention",
+            "category": "core-prevention",
             "parameters": {
                 "WindowsAssignmentMode": "BLOCK"
             }
@@ -1566,7 +1566,7 @@ NEW_POLICY_RETURN_1 = {
             "name": "Credential Theft",
             "description": "Addresses threat actors obtaining credentials and relies on detecting the malicious [...]",
             "inherited_from": "psc:region",
-            "category": "core_prevention",
+            "category": "core-prevention",
             "parameters": {
                 "WindowsAssignmentMode": "REPORT"
             }
@@ -1576,7 +1576,7 @@ NEW_POLICY_RETURN_1 = {
             "name": "Carbon Black Threat Intel",
             "description": "Addresses common and pervasive TTPs used for malicious activity as well as [...]",
             "inherited_from": "psc:region",
-            "category": "core_prevention",
+            "category": "core-prevention",
             "parameters": {
                 "WindowsAssignmentMode": "REPORT"
             }
@@ -1586,7 +1586,7 @@ NEW_POLICY_RETURN_1 = {
             "name": "Privilege Escalation",
             "description": "Addresses behaviors that indicate a threat actor has gained elevated access via [...]",
             "inherited_from": "psc:region",
-            "category": "core_prevention",
+            "category": "core-prevention",
             "parameters": {
                 "WindowsAssignmentMode": "BLOCK"
             }
@@ -1625,7 +1625,7 @@ POLICY_CONFIG_PRESENTATION = {
         {
             "id": "1f8a5e4b-34f2-4d31-9f8f-87c56facaec8",
             "name": "Advanced Scripting Prevention",
-            "description": "Addresses malicious fileless and file-backed scripts that leverage native programs and common scripting languages.",
+            "description": "Addresses malicious fileless and file-backed scripts that leverage native programs [...]",
             "presentation": {
                 "name": "amsi.name",
                 "category": "core-prevention",
@@ -1669,7 +1669,7 @@ POLICY_CONFIG_PRESENTATION = {
         {
             "id": "ac67fa14-f6be-4df9-93f2-6de0dbd96061",
             "name": "Credential Theft",
-            "description": "Addresses threat actors obtaining credentials and relies on detecting the malicious use of TTPs/behaviors that indicate such activity.",
+            "description": "Addresses threat actors obtaining credentials and relies on detecting the malicious [...]",
             "presentation": {
                 "name": "cred_theft.name",
                 "category": "core-prevention",
@@ -1713,7 +1713,7 @@ POLICY_CONFIG_PRESENTATION = {
         {
             "id": "c4ed61b3-d5aa-41a9-814f-0f277451532b",
             "name": "Carbon Black Threat Intel",
-            "description": "Addresses common and pervasive TTPs used for malicious activity as well as living off the land TTPs/behaviors detected by Carbon Black’s Threat Analysis Unit.",
+            "description": "Addresses common and pervasive TTPs used for malicious activity as well as [...]",
             "presentation": {
                 "name": "cbti.name",
                 "category": "core-prevention",
@@ -1757,7 +1757,7 @@ POLICY_CONFIG_PRESENTATION = {
         {
             "id": "88b19232-7ebb-48ef-a198-2a75a282de5d",
             "name": "Privilege Escalation",
-            "description": "Addresses behaviors that indicate a threat actor has gained elevated access via a bug or misconfiguration within an operating system, and leverages the detection of TTPs/behaviors to prevent such activity.",
+            "description": "Addresses behaviors that indicate a threat actor has gained elevated access via [...]",
             "presentation": {
                 "name": "privesc.name",
                 "category": "core-prevention",
@@ -1799,4 +1799,15 @@ POLICY_CONFIG_PRESENTATION = {
             ]
         }
     ]
+}
+
+REPLACE_RULECONFIG = {
+    "id": "88b19232-7ebb-48ef-a198-2a75a282de5d",
+    "name": "Privilege Escalation",
+    "description": "Addresses behaviors that indicate a threat actor has gained elevated access via [...]",
+    "inherited_from": "psc:region",
+    "category": "core-prevention",
+    "parameters": {
+        "WindowsAssignmentMode": "REPORT"
+    }
 }
