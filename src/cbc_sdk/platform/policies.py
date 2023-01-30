@@ -568,7 +568,7 @@ class Policy(MutableBaseModel):
         """
         if name == 'rules':
             return list(self.object_rules.values())
-        if name == 'rule_configs' or name == 'rapid_configs':
+        if name == 'rule_configs':
             return list(self.object_rule_configs.values())
         return super(Policy, self)._subobject(name)
 
@@ -616,20 +616,6 @@ class Policy(MutableBaseModel):
         self._object_rule_configs_need_load = True
         return rc
 
-    def _get_ruleconfig_presentation(self):
-        """
-        Returns information about the rule config presentation for this policy.
-
-        Returns:
-            dict: A mapping of key values (UUIDs) to rule config information (dicts).
-        """
-        if self._ruleconfig_presentation is None and self._model_unique_id is not None:
-            uri = Policy.urlobject.format(self._cb.credentials.org_key) + \
-                f"/{self._model_unique_id}/configs/presentation"
-            result = self._cb.get_object(uri)
-            self._ruleconfig_presentation = {cfg['id']: cfg for cfg in result.get('configs', [])}
-        return self._ruleconfig_presentation
-
     @property
     def rules(self):
         """
@@ -664,7 +650,7 @@ class Policy(MutableBaseModel):
             dict: A dictionary with rule configuration IDs as keys and PolicyRuleConfig objects as values.
         """
         if self._object_rule_configs_need_load:
-            cfgs = self._info.get("rule_configs", self._info.get("rapid_configs", []))
+            cfgs = self._info.get("rule_configs", [])
             ruleconfigobjects = [PolicyRuleConfig._create_rule_config(self._cb, self, cfg) for cfg in cfgs]
             self._object_rule_configs = dict([(rconf.id, rconf) for rconf in ruleconfigobjects])
             self._object_rule_configs_need_load = False
@@ -678,9 +664,13 @@ class Policy(MutableBaseModel):
             dict: A dictionary mapping string ID values (UUIDs) to dicts containing entries for name, description,
                   and category.
         """
-        presentation = self._get_ruleconfig_presentation()
+        if self._ruleconfig_presentation is None and self._model_unique_id is not None:
+            uri = Policy.urlobject.format(self._cb.credentials.org_key) + \
+                f"/{self._model_unique_id}/configs/presentation"
+            result = self._cb.get_object(uri)
+            self._ruleconfig_presentation = {cfg['id']: cfg for cfg in result.get('configs', [])}
         return {k: {'name': v['name'], 'description': v['description'], 'category': v['presentation']['category']}
-                for k, v in presentation.items()}
+                for k, v in self._ruleconfig_presentation.items()}
 
     @classmethod
     def get_ruleconfig_parameter_schema_directly(cls, cb, ruleconfig_id):
@@ -792,7 +782,7 @@ class Policy(MutableBaseModel):
         existed = rule_config.id in self.object_rule_configs
         old_rule_configs = dict(self.object_rule_configs)
         self._object_rule_configs[rule_config.id] = rule_config
-        raw_rule_configs = self._info.get("rule_configs", self._info.get("rapid_configs", []))
+        raw_rule_configs = self._info.get("rule_configs", [])
         old_raw_rules = copy.deepcopy(raw_rule_configs)
         if existed:
             for index, raw_rule_config in enumerate(raw_rule_configs):
@@ -802,8 +792,6 @@ class Policy(MutableBaseModel):
         else:
             raw_rule_configs.append(copy.deepcopy(rule_config._info))
         self._info['rule_configs'] = raw_rule_configs
-        if 'rapid_configs' in self._info:
-            del self._info['rapid_configs']
         self.touch()
         rollback = True
         try:
@@ -831,11 +819,9 @@ class Policy(MutableBaseModel):
             del self._object_rule_configs[rule_config.id]
         else:
             raise ApiError("internal error: updated rule configuration does not belong to this policy")
-        old_raw_rule_configs = self._info.get("rule_configs", self._info.get("rapid_configs", []))
+        old_raw_rule_configs = self._info.get("rule_configs", [])
         new_raw_rule_configs = [raw for raw in old_raw_rule_configs if raw['id'] != rule_config.id]
         self._info['rule_configs'] = new_raw_rule_configs
-        if 'rapid_configs' in self._info:
-            del self._info['rapid_configs']
         self.touch()
         rollback = True
         try:
