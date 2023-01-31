@@ -497,15 +497,16 @@ def test_rule_delete_is_new(cb):
      BASIC_CONFIG_TEMPLATE_RETURN, does_not_raise(), None),
     ({"id": "88b19232-7ebb-48ef-a198-2a75a282de5d", "name": "Privilege Escalation", "inherited_from": "",
       "category": "core_prevention", "parameters": {"WindowsAssignmentMode": "BLOCK"}},
-     TEMPLATE_RETURN_BOGUS_TYPE, pytest.raises(ApiError), "internal error: unknown parameter type bogus"),
+     TEMPLATE_RETURN_BOGUS_TYPE, pytest.raises(ApiError),
+     "internal error: 'bogus' is not valid under any of the given schemas"),
     ({"id": "88b19232-7ebb-48ef-a198-2a75a282de5d", "name": "Privilege Escalation", "inherited_from": "",
       "category": "core_prevention", "parameters": {"WindowsAssignmentMode": 666}},
      BASIC_CONFIG_TEMPLATE_RETURN, pytest.raises(InvalidObjectError),
-     "rule configuration parameter 'WindowsAssignmentMode' is not a string"),
+     "parameter error: 666 is not of type 'string'"),
     ({"id": "88b19232-7ebb-48ef-a198-2a75a282de5d", "name": "Privilege Escalation", "inherited_from": "",
       "category": "core_prevention", "parameters": {"WindowsAssignmentMode": "BOGUSVALUE"}},
      BASIC_CONFIG_TEMPLATE_RETURN, pytest.raises(InvalidObjectError),
-     "invalid value 'BOGUSVALUE' for rule configuration parameter 'WindowsAssignmentMode'"),
+     "parameter error: 'BOGUSVALUE' is not one of ['REPORT', 'BLOCK']"),
 ])
 def test_rule_config_validate(cbcsdk_mock, initial_data, param_schema_return, handler, message):
     """Tests rule configuration validation."""
@@ -537,12 +538,10 @@ def test_rule_config_validate(cbcsdk_mock, initial_data, param_schema_return, ha
      None, does_not_raise(), None),
     ({"id": "88b19232-7ebb-48ef-a198-2a75a282de5d", "name": "Privilege Escalation", "inherited_from": "",
       "category": "core_prevention", "parameters": {"WindowsAssignmentMode": 666}},
-     None, pytest.raises(InvalidObjectError),
-     "rule configuration parameter 'WindowsAssignmentMode' is not a string"),
+     None, pytest.raises(InvalidObjectError), "parameter error: 666 is not of type 'string'"),
     ({"id": "88b19232-7ebb-48ef-a198-2a75a282de5d", "name": "Privilege Escalation", "inherited_from": "",
       "category": "core_prevention", "parameters": {"WindowsAssignmentMode": "BOGUSVALUE"}},
-     None, pytest.raises(InvalidObjectError),
-     "invalid value 'BOGUSVALUE' for rule configuration parameter 'WindowsAssignmentMode'"),
+     None, pytest.raises(InvalidObjectError), "parameter error: 'BOGUSVALUE' is not one of ['REPORT', 'BLOCK']"),
 ])
 def test_rule_config_validate_inside_policy(cbcsdk_mock, new_data, get_id, handler, message):
     """Tests rule configuration validation when it's part of a policy."""

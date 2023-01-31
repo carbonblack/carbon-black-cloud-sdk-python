@@ -14,6 +14,7 @@
 """Policy implementation as part of Platform API"""
 import copy
 import json
+import jsonschema
 from cbc_sdk.base import MutableBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
 from cbc_sdk.errors import ApiError, ServerError, InvalidObjectError
 
@@ -697,7 +698,7 @@ class Policy(MutableBaseModel):
             ruleconfig_id (str): The rule configuration ID (UUID).
 
         Returns:
-            dict: The parameter schema for this particular rule configuration.
+            dict: The parameter schema for this particular rule configuration (a JSON schema).
 
         Raises:
             InvalidObjectError: If the rule configuration ID is not valid.
@@ -722,7 +723,7 @@ class Policy(MutableBaseModel):
                 if 'type' not in schema_item:  # fallback to string if nothing specified
                     schema_item['type'] = 'string'
                 schema[item['name']] = schema_item
-            return schema
+            return {'type': 'object', 'properties': schema}
         else:
             return self._cb.get_policy_ruleconfig_parameter_schema(ruleconfig_id)
 
@@ -1387,18 +1388,12 @@ class PolicyRuleConfig(MutableBaseModel):
         else:
             parameter_validations = self._parent.get_ruleconfig_parameter_schema(self._model_unique_id)
         my_parameters = self._info.get('parameters', {})
-        for k, v in parameter_validations.items():
-            if k in my_parameters:
-                if v['type'] == 'string':
-                    if not isinstance(my_parameters[k], str):
-                        raise InvalidObjectError(f"rule configuration parameter '{k}' is not a string")
-                    if ('enum' in v) and (my_parameters[k] not in v['enum']):
-                        raise InvalidObjectError(f"invalid value '{my_parameters[k]}' "
-                                                 f"for rule configuration parameter '{k}'")
-                else:
-                    raise ApiError(f"internal error: unknown parameter type {v['type']}")
-            else:
-                my_parameters[k] = v['default']
+        try:
+            jsonschema.validate(instance=my_parameters, schema=parameter_validations)
+        except jsonschema.ValidationError as e:
+            raise InvalidObjectError(f"parameter error: {e.message}", e)
+        except jsonschema.exceptions.SchemaError as e:
+            raise ApiError(f"internal error: {e.message}", e)
         self._info['parameters'] = my_parameters
 
     @property

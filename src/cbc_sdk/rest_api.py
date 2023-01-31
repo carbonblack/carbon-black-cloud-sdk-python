@@ -501,14 +501,13 @@ class CBCloudAPI(BaseAPI):
             ruleconfig_id (str): The rule configuration ID (UUID).
 
         Returns:
-            dict: The parameter schema for this particular rule configuration.
+            dict: The parameter schema for this particular rule configuration (as a JSON schema).
 
         Raises:
             InvalidObjectError: If the rule configuration ID is not valid.
         """
         url = f"/policyservice/v1/orgs/{self.credentials.org_key}/rule_configs/{ruleconfig_id}/parameters/schema"
         try:
-            result = self.get_object(url)
-            return result.get('properties', {})
+            return self.get_object(url)
         except ServerError:
             raise InvalidObjectError(f"invalid rule config ID {ruleconfig_id}")
