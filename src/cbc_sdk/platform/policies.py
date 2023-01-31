@@ -421,7 +421,7 @@ class Policy(MutableBaseModel):
             Raises:
                 InvalidObjectError: If the rule configuration data passed in is not valid.
             """
-            new_rule_config = PolicyRuleConfig._create_rule_config(self._cb, None, rule_config_data)
+            new_rule_config = Policy._create_rule_config(self._cb, None, rule_config_data)
             new_rule_config.validate()
             self._new_rule_configs.append(new_rule_config)
 
@@ -651,7 +651,7 @@ class Policy(MutableBaseModel):
         """
         if self._object_rule_configs_need_load:
             cfgs = self._info.get("rule_configs", [])
-            ruleconfigobjects = [PolicyRuleConfig._create_rule_config(self._cb, self, cfg) for cfg in cfgs]
+            ruleconfigobjects = [self._create_rule_config(self._cb, self, cfg) for cfg in cfgs]
             self._object_rule_configs = dict([(rconf.id, rconf) for rconf in ruleconfigobjects])
             self._object_rule_configs_need_load = False
         return self._object_rule_configs
@@ -673,26 +673,19 @@ class Policy(MutableBaseModel):
                 for k, v in self._ruleconfig_presentation.items()}
 
     @classmethod
-    def get_ruleconfig_parameter_schema_directly(cls, cb, ruleconfig_id):
+    def _create_rule_config(cls, cb, parent, data):
         """
-        Returns the parameter schema for a specified rule configuration.
+        Creates a PolicyRuleConfig object, or specialized subclass thereof, from a block of data in the policy.
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
-            ruleconfig_id (str): The rule configuration ID (UUID).
+            parent (Policy): The "parent" policy of this rule configuration.
+            data (dict): Initial data used to populate the rule configuration.
 
         Returns:
-            dict: The parameter schema for this particular rule configuration.
-
-        Raises:
-            InvalidObjectError: If the rule configuration ID is not valid.
+            PolicyRuleConfig: The new object.
         """
-        url = f"/policyservice/v1/orgs/{cb.credentials.org_key}/rule_configs/{ruleconfig_id}/parameters/schema"
-        try:
-            result = cb.get_object(url)
-            return result.get('properties', {})
-        except ServerError:
-            raise InvalidObjectError(f"invalid rule config ID {ruleconfig_id}")
+        return PolicyRuleConfig(cb, parent, data.get("id", None), data, False, True)
 
     def get_ruleconfig_parameter_schema(self, ruleconfig_id):
         """
@@ -731,7 +724,7 @@ class Policy(MutableBaseModel):
                 schema[item['name']] = schema_item
             return schema
         else:
-            return self.get_ruleconfig_parameter_schema_directly(self._cb, ruleconfig_id)
+            return self._cb.get_policy_ruleconfig_parameter_schema(ruleconfig_id)
 
     def _on_updated_rule(self, rule):
         """
@@ -921,7 +914,7 @@ class Policy(MutableBaseModel):
         Args:
             new_rule_config (dict): The new rule configuration to add to this Policy.
         """
-        new_obj = PolicyRuleConfig._create_rule_config(self._cb, self, new_rule_config)
+        new_obj = self._create_rule_config(self._cb, self, new_rule_config)
         new_obj.touch()
         new_obj.save()
 
@@ -1297,21 +1290,6 @@ class PolicyRuleConfig(MutableBaseModel):
         if model_unique_id is None:
             self.touch(True)
 
-    @classmethod
-    def _create_rule_config(cls, cb, parent, data):
-        """
-        Creates a PolicyRuleConfig object, or specialized subclass thereof, from a block of data in the policy.
-
-        Args:
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-            parent (Policy): The "parent" policy of this rule configuration.
-            data (dict): Initial data used to populate the rule configuration.
-
-        Returns:
-            PolicyRuleConfig: The new object.
-        """
-        return PolicyRuleConfig(cb, parent, data.get("id", None), data, False, True)
-
     def _refresh(self):
         """
         Refreshes the rule configuration object from the server.
@@ -1405,7 +1383,7 @@ class PolicyRuleConfig(MutableBaseModel):
 
         # validate parameters
         if self._parent is None:
-            parameter_validations = Policy.get_ruleconfig_parameter_schema_directly(self._cb, self._model_unique_id)
+            parameter_validations = self._cb.get_policy_ruleconfig_parameter_schema(self._model_unique_id)
         else:
             parameter_validations = self._parent.get_ruleconfig_parameter_schema(self._model_unique_id)
         my_parameters = self._info.get('parameters', {})

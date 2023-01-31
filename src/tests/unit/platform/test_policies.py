@@ -517,7 +517,7 @@ def test_rule_config_validate(cbcsdk_mock, initial_data, param_schema_return, ha
     cbcsdk_mock.mock_request('GET', f"/policyservice/v1/orgs/test/rule_configs/{initial_data['id']}/parameters/schema",
                              param_schema)
     api = cbcsdk_mock.api
-    rule_config = PolicyRuleConfig._create_rule_config(api, None, initial_data)
+    rule_config = Policy._create_rule_config(api, None, initial_data)
     with handler as h:
         rule_config.validate()
     if message is not None:
@@ -598,7 +598,7 @@ def test_rule_config_add_by_object(cbcsdk_mock, give_error, handler):
     del policy_data['rule_configs'][rule_config_data1[0][0]]
     policy = Policy(api, 65536, policy_data, False, True)
     rule_config_count = len(policy.object_rule_configs)
-    new_rule_config = PolicyRuleConfig._create_rule_config(api, policy, rule_config_data)
+    new_rule_config = Policy._create_rule_config(api, policy, rule_config_data)
     new_rule_config.touch()
     with handler:
         new_rule_config.save()
