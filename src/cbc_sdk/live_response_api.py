@@ -411,7 +411,9 @@ class CbLRSessionBase(object):
         Perform a full directory walk with recursion into subdirectories on the remote machine.
 
         Note: walk does not support async_mode due to its behaviour, it can only be invoked synchronously
+
         Example:
+
             >>> with c.select(Device, 1).lr_session() as lr_session:
             ...     for entry in lr_session.walk(directory_name):
             ...         print(entry)

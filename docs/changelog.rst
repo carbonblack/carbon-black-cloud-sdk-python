@@ -77,7 +77,7 @@ New Features:
 
 Updates:
 
-* Endpoint Standard specific ``Event``s have been decommissioned and removed.
+* Endpoint Standard specific ``Event`` s have been decommissioned and removed.
 * SDK now uses Watchlist Manager apis ``v3`` instead of ``v2``.  ``v2`` APIs are being decommissioned.
 
 Documentation:

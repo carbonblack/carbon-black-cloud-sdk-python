@@ -33,8 +33,11 @@ class Process(UnrefreshableModel):
 
     Examples:
         # use the Process GUID directly
+
         >>> process = api.select(Process, "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb")
+
         # use the Process GUID in a where() clause
+
         >>> process_query = (api.select(Process).where(process_guid=
         "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb"))
         >>> process_query_results = [proc for proc in process_query]
@@ -485,17 +488,23 @@ class ProcessFacet(UnrefreshableModel):
 
     If you want full control over the query string specify Process Guid in the query string
     `.where("process_guid: example_guid OR parent_effective_reputation: KNOWN_MALWARE")`
-
     Examples:
+
         >>> process_facet_query = (api.select(ProcessFacet).where(process_guid=
                                    "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb"))
         >>> process_facet_query.add_facet_field("device_name")
+
         # retrieve results synchronously
+
         >>> facet = process_facet_query.results
+
         # retrieve results asynchronously
+
         >>> future = process_facet_query.execute_async()
         >>> result = future.result()
+
         # result is a list with one item, so access the first item
+
         >>> facet = result[0]
     """
     primary_key = "job_id"
