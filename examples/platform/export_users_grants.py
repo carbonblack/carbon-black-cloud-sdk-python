@@ -139,7 +139,7 @@ def main():
         return 0
 
     # handle CSV output from here
-    rows_list = list(map(lambda r: flatten_row(r), data_list))
+    rows_list = list(map(flatten_row, data_list))
     if args.output:
         with open(args.output, "w", newline='') as stream:
             writer = csv.DictWriter(stream, fieldnames=CSV_FIELDNAMES, extrasaction='ignore')
