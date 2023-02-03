@@ -123,7 +123,7 @@ def main():
     # If specified, filter the list by roles.
     if args.roles:
         roleset = set(args.roles)
-        output_list = list(filter(lambda p: matches_roles(p[1], roleset), paired_user_grants))
+        output_list = filter(lambda p: matches_roles(p[1], roleset), paired_user_grants)
     else:
         output_list = paired_user_grants
 
@@ -139,7 +139,7 @@ def main():
         return 0
 
     # handle CSV output from here
-    rows_list = list(map(flatten_row, data_list))
+    rows_list = map(flatten_row, data_list)
     if args.output:
         with open(args.output, "w", newline='') as stream:
             writer = csv.DictWriter(stream, fieldnames=CSV_FIELDNAMES, extrasaction='ignore')
