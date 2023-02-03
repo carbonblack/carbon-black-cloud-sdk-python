@@ -128,14 +128,14 @@ def main():
         output_list = paired_user_grants
 
     # extract data to JSON format
-    data_list = list(map(lambda p: extract_row(p[0], p[1]), output_list))
+    data_list = map(lambda p: extract_row(p[0], p[1]), output_list)
 
     if output_type == 'JSON':
         if args.output:
             with open(args.output, "w") as f:
-                f.write(json.dumps(data_list, indent=4))
+                f.write(json.dumps(list(data_list), indent=4))
         else:
-            print(json.dumps(data_list, indent=4))
+            print(json.dumps(list(data_list), indent=4))
         return 0
 
     # handle CSV output from here
