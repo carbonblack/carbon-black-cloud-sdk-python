@@ -638,3 +638,15 @@ MOCK_WORKLOAD_RESP = {
     "results": [MOCK_WORKLOAD],
     "num_found": 1
 }
+
+MOCK_VULNERABILITY_EXPORT_JOB = {
+    "id": 4677844,
+    "type": "EXTERNAL",
+    "job_parameters": {
+        "job_parameters": None
+    },
+    "org_key": "7DESJ9GN",
+    "status": "COMPLETED",
+    "create_time": "2023-02-02T23:16:25.625583Z",
+    "last_update_time": "2023-02-02T23:16:29.079184Z"
+}
