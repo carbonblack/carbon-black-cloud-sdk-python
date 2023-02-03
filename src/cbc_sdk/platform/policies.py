@@ -1267,7 +1267,7 @@ class PolicyRuleConfig(MutableBaseModel):
     To update a PolicyRuleConfig, change the values of its property fields, then call its save() method.  This
     requires the org.policies(UPDATE) permission.
 
-    To delete an existing PolicyRuleConfig, call its delete() method. This requires the org.policies(UPDATE) permission.
+    To delete an existing PolicyRuleConfig, call its delete() method. This requires the org.policies(DELETE) permission.
 
     """
     primary_key = "id"
@@ -1323,7 +1323,7 @@ class PolicyRuleConfig(MutableBaseModel):
         Deletes this rule configuration object from the policy on the server.
 
         Required Permissions:
-            org.policies(UPDATE)
+            org.policies(DELETE)
         """
         was_deleted = False
         try:
