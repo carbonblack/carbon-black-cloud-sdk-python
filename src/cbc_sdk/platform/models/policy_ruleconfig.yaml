@@ -1,0 +1,20 @@
+type: object
+properties:
+  id:
+    type: string
+    description: The ID of this rule config
+  name:
+    type: string
+    description: The name of this rule config
+  description:
+    type: string
+    description: The description of this rule config
+  inherited_from:
+    type: string
+    description: Indicates where the rule config was inherited from
+  category:
+    type: string
+    description: The category for this rule config
+  parameters:
+    type: object
+    description: The parameters associated with this rule config
