@@ -128,7 +128,7 @@ def main():
         output_list = paired_user_grants
 
     # extract data to JSON format
-    data_list = list(filter(lambda p: extract_row(p[0], p[1]), output_list))
+    data_list = list(map(lambda p: extract_row(p[0], p[1]), output_list))
 
     if output_type == 'JSON':
         if args.output:
@@ -139,7 +139,7 @@ def main():
         return 0
 
     # handle CSV output from here
-    rows_list = list(filter(lambda r: flatten_row(r), data_list))
+    rows_list = list(map(lambda r: flatten_row(r), data_list))
     if args.output:
         with open(args.output, "w", newline='') as stream:
             writer = csv.DictWriter(stream, fieldnames=CSV_FIELDNAMES, extrasaction='ignore')
