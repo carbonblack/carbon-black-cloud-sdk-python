@@ -71,7 +71,7 @@ def list_policies(cb, parser, args):
     for p in cb.select(Policy):
         print(u"Policy id {0}: {1} {2}".format(p.id, p.name, "({0})".format(p.description) if p.description else ""))
         print("Rules:")
-        for r in p.rules.values():
+        for r in p.rules:
             print("  {0}: {1} when {2} {3} is {4}".format(r.get('id'), r.get("action"),
                                                           r.get("application", {}).get("type"),
                                                           r.get("application", {}).get("value"), r.get("operation")))
