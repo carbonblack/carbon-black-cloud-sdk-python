@@ -9,7 +9,9 @@ from cbc_sdk.platform.devices import Device, DeviceFacet, DeviceSearchQuery
 
 from cbc_sdk.platform.events import Event, EventFacet
 
-from cbc_sdk.platform.policies import Policy, PolicyRule, PolicyRuleConfig
+from cbc_sdk.platform.policies import Policy, PolicyRule
+
+from cbc_sdk.platform.policy_ruleconfigs import PolicyRuleConfig
 
 from cbc_sdk.platform.processes import (Process, ProcessFacet,
                                         AsyncProcessQuery, SummaryQuery)
