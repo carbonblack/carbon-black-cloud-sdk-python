@@ -41,8 +41,9 @@ def matches_roles(grant, roles):
             return True
     if grant.profiles:
         for profile in grant.profiles:
-            if profile.roles:
-                if not set(profile.roles).isdisjoint(roles):
+            profile_roles = profile.get("roles", [])
+            if profile_roles:
+                if not set(profile_roles).isdisjoint(roles):
                     return True
     return False
 
@@ -68,9 +69,10 @@ def extract_row(user, grant):
         roles.extend(grant.roles)
     if grant.profiles:
         for profile in grant.profiles:
-            profiles.append(profile.profile_uuid)
-            if profile.roles:
-                roles.extend(profile.roles)
+            profiles.append(profile["profile_uuid"])
+            profile_roles = profile.get("roles", [])
+            if profile_roles:
+                roles.extend(profile_roles)
     rc["roles"] = roles
     rc["profiles"] = profiles
     return rc
@@ -120,9 +122,9 @@ def main():
         grant_query.add_principal(user.urn, user.org_urn)
     paired_user_grants = [(all_users[g.principal], g) for g in grant_query if g.principal in all_users]
 
-    # If specified, filter the list by roles.
-    if args.roles:
-        roleset = set(args.roles)
+    # If specified, filter the list by roles.  Note that "args.roles" is actually a list of lists.
+    if args.role:
+        roleset = set([item for role_list in args.role for item in role_list])
         output_list = filter(lambda p: matches_roles(p[1], roleset), paired_user_grants)
     else:
         output_list = paired_user_grants
