@@ -68,11 +68,7 @@ def extract_row(user, grant):
     if grant.roles:
         roles.extend(grant.roles)
     if grant.profiles:
-        for profile in grant.profiles:
-            profiles.append(profile["profile_uuid"])
-            profile_roles = profile.get("roles", [])
-            if profile_roles:
-                roles.extend(profile_roles)
+        profiles = [copy.deepcopy(profile) for profile in grant.profiles]
     rc["roles"] = roles
     rc["profiles"] = profiles
     return rc
@@ -89,8 +85,15 @@ def flatten_row(row):
         dict: The flattened row.
     """
     rc = copy.deepcopy(row)
-    rc["roles"] = "|".join(row["roles"])
-    rc["profiles"] = "|".join(row["profiles"])
+    flat_roles = rc["roles"]
+    flat_profiles = []
+    for profile in rc["profiles"]:
+        flat_profiles.append(profile["profile_uuid"])
+        profile_roles = profile.get("roles", [])
+        if profile_roles:
+            flat_roles.extend(profile_roles)
+    rc["roles"] = "|".join(flat_roles)
+    rc["profiles"] = "|".join(flat_profiles)
     return rc
 
 
