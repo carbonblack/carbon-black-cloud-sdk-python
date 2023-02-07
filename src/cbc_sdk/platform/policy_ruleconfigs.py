@@ -16,7 +16,7 @@
 import copy
 import jsonschema
 from cbc_sdk.base import MutableBaseModel
-from cbc_sdk.errors import ApiError, ServerError, InvalidObjectError
+from cbc_sdk.errors import ApiError, InvalidObjectError
 
 
 class PolicyRuleConfig(MutableBaseModel):
