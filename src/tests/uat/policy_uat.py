@@ -28,6 +28,9 @@ def main():
 
     Sequence on command line is:
 
+    # 0. List the policies
+    $ python3 examples/platform/policy_service_crud_operations.py --profile PROFILE_NAME --verbose list
+
     # 1. export the default policy
     $ python3 examples/platform/policy_service_crud_operations.py --profile PROFILE_NAME --verbose export \
         --id DEFAULT_POLICY_ID
