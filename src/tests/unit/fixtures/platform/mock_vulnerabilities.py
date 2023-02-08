@@ -240,7 +240,77 @@ GET_VULNERABILITY_RESP = {
             "device_count": 1,
             "affected_assets": [
                 "jdoe-windows_2012"
-            ]
+            ],
+            "rule_id": None,
+            "dismissed": False,
+            "dismiss_until": None,
+            "dismiss_reason": None,
+            "notes": None,
+            "dismissed_on": None,
+            "dismissed_by": None
+        }
+    ]
+}
+
+GET_DISMISSED_VULNERABILITY_RESP = {
+    "num_found": 1,
+    "results": [
+        {
+            "os_product_id": "90_5372",
+            "category": "APP",
+            "os_info": {
+                "os_type": "CENTOS",
+                "os_name": "CentOS Linux",
+                "os_version": "7.1.1503",
+                "os_arch": "x86_64"
+            },
+            "product_info": {
+                "vendor": "CentOS",
+                "product": "python-libs",
+                "version": "2.7.5",
+                "release": "16.el7",
+                "arch": "x86_64"
+            },
+            "vuln_info": {
+                "cve_id": "CVE-2014-4650",
+                "cve_description": "The CGIHTTPServer module in Python 2.7.5 and 3.3.4 does not properly handle...",
+                "risk_meter_score": 4.9,
+                "severity": "MODERATE",
+                "fixed_by": "0:2.7.5-34.el7",
+                "solution": None,
+                "created_at": "2020-02-20T17:15:00Z",
+                "nvd_link": "https://nvd.nist.gov/vuln/detail/CVE-2014-4650",
+                "cvss_access_complexity": "Low",
+                "cvss_access_vector": "Local access",
+                "cvss_authentication": "None required",
+                "cvss_availability_impact": "Partial",
+                "cvss_confidentiality_impact": "None",
+                "cvss_integrity_impact": "None",
+                "easily_exploitable": False,
+                "malware_exploitable": False,
+                "active_internet_breach": False,
+                "cvss_exploit_subscore": 3.9,
+                "cvss_impact_subscore": 2.9,
+                "cvss_vector": "AV:L/AC:L/Au:N/C:N/I:N/A:P/E:U/RL:OF/RC:C",
+                "cvss_v3_exploit_subscore": 3.9,
+                "cvss_v3_impact_subscore": 2.9,
+                "cvss_v3_vector": "CVSS:3.0/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H/E:U/RL:O/RC:C",
+                "cvss_score": 3.9,
+                "cvss_v3_score": 3.9
+            },
+            "device_count": 1,
+            "affected_assets": [
+                "jdoe-windows_2012"
+            ],
+            "rule_id": 9061,
+            "dismissed": True,
+            "dismiss_until": None,
+            "dismiss_reason": "FALSE_POSITIVE",
+            "notes": None,
+            "created_by": "anonymous",
+            "updated_by": "anonymous",
+            "created_at": "2023-02-02T22:05:04.430281Z",
+            "updated_at": "2023-02-02T22:05:04.430281Z"
         }
     ]
 }
@@ -567,4 +637,16 @@ MOCK_WORKLOAD = {
 MOCK_WORKLOAD_RESP = {
     "results": [MOCK_WORKLOAD],
     "num_found": 1
+}
+
+MOCK_VULNERABILITY_EXPORT_JOB = {
+    "id": 4677844,
+    "type": "EXTERNAL",
+    "job_parameters": {
+        "job_parameters": None
+    },
+    "org_key": "7DESJ9GN",
+    "status": "COMPLETED",
+    "create_time": "2023-02-02T23:16:25.625583Z",
+    "last_update_time": "2023-02-02T23:16:29.079184Z"
 }
