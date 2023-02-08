@@ -98,6 +98,7 @@ def flatten_row(row):
 
 
 def main():
+    """The main function of the script; executes the search, filters and presents the results."""
     parser = build_cli_parser('Export User and Grant Information')
     parser.add_argument('-r', '--role', action='append', nargs='+',
                         help="If specified, users returned will match at least one of these roles.")
@@ -118,7 +119,7 @@ def main():
         output_type = 'JSON'
 
     # Obtain a list of users paired with their grants.
-    user_query = cb.select(User);
+    user_query = cb.select(User)
     all_users = {user.urn: user for user in user_query}
     grant_query = cb.select(Grant)
     for user in all_users.values():
@@ -162,4 +163,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-
