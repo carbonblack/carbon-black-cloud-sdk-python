@@ -43,7 +43,7 @@ GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP = {
             "process_hash": [
                 "9df1ec5e25919660a1b0b85d3965d55797b9aac81e028008428106c4dcda7b29"
             ],
-            "process_name": "c:\\programdata\\mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\\updates\\308046b0af4a39cb\\backgroundupdate.moz_log",
+            "process_name": "c:\\programdata\\mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\\updates",
             "process_pid": [2000],
             "process_username": ["DEV01-39X-1\\bit9qa"],
         }
@@ -112,7 +112,7 @@ GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_2 = {
             "process_hash": [
                 "9df1ec5e25919660a1b0b85d3965d55797b9aac81e028008428106c4dcda7b29"
             ],
-            "process_name": "c:\\programdata\\mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\\updates\\308046b0af4a39cb\\backgroundupdate.moz_log",
+            "process_name": "c:\\programdata\\mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\\updates",
             "process_pid": [2000],
             "process_username": ["DEV01-39X-1\\bit9qa"],
         },
@@ -148,7 +148,7 @@ GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_2 = {
             "process_hash": [
                 "9df1ec5e25919660a1b0b85d3965d55797b9aac81e028008428106c4dcda7b29"
             ],
-            "process_name": "c:\\programdata\\mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\\updates\\308046b0af4a39cb\\backgroundupdate.moz_log",
+            "process_name": "c:\\programdata\\mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\\updates",
             "process_pid": [2000],
             "process_username": ["DEV01-39X-1\\bit9qa"],
         },
@@ -236,7 +236,7 @@ GET_OBSERVATIONS_DETAIL_JOB_RESULTS_RESP = {
             "process_hash": [
                 "9df1ec5e25919660a1b0b85d3965d55797b9aac81e028008428106c4dc"
             ],
-            "process_name": "c:\\programdata\\mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\\updates\\308046b0af4a39cb\\backgroundupdate.moz_log",
+            "process_name": "c:\\programdata\\mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\\updates",
             "process_pid": [2000],
             "process_reputation": "NOT_LISTED",
             "process_sha256": "9df1ec5e25919660a1b0b85d3965d55797b9aac81e028008428106c4dc",
@@ -323,7 +323,7 @@ GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_ALERTS = {
             "process_hash": [
                 "9df1ec5e25919660a1b0b85d3965d55797b9aac81e028008428106c4dc"
             ],
-            "process_name": "c:\\programdata\\mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\\updates\\308046b0af4a39cb\\backgroundupdate.moz_log",
+            "process_name": "c:\\programdata\\mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\\updates",
             "process_pid": [2000],
             "process_reputation": "NOT_LISTED",
             "process_sha256": "9df1ec5e25919660a1b0b85d3965d55797b9aac81e028008428106c4dc",

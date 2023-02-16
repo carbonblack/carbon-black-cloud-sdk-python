@@ -324,15 +324,10 @@ def test_observations_query_implementation(cbcsdk_mock):
         GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP,
     )
     api = cbcsdk_mock.api
-    observation_id = (
-        "8fbccc2da75f11ed937ae3cb089984c6:be6ff259-88e3-6286-789f-74defa192d2e"
-    )
+    observation_id = "8fbccc2da75f11ed937ae3cb089984c6:be6ff259-88e3-6286-789f-74defa192d2e"
     obs_list = api.select(Observation).where(f"observation_id:{observation_id}")
     assert isinstance(obs_list, ObservationQuery)
-    assert (
-        obs_list[0].observation_id
-        == "8fbccc2da75f11ed937ae3cb089984c6:be6ff259-88e3-6286-789f-74defa192d2e"
-    )
+    assert obs_list[0].observation_id == observation_id
 
 
 def test_observations_timeout(cbcsdk_mock):
