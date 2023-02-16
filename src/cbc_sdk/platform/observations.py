@@ -14,12 +14,9 @@
 from cbc_sdk.base import UnrefreshableModel
 from cbc_sdk.base import Query as BaseEventQuery
 from cbc_sdk.errors import ApiError, TimeoutError
-from cbc_sdk.platform.reputation import ReputationOverride
-from pathlib import Path
 
 import logging
 import time
-import os
 
 log = logging.getLogger(__name__)
 
@@ -246,9 +243,9 @@ class ObservationQuery(BaseEventQuery):
             raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
 
         result_url = "/api/investigate/v2/orgs/{}/observations/search_jobs/{}/results".format(
-                self._cb.credentials.org_key,
-                self._query_token,
-            )
+            self._cb.credentials.org_key,
+            self._query_token,
+        )
         result = self._cb.get_object(result_url)
 
         self._total_results = result.get('num_available', 0)
@@ -284,7 +281,7 @@ class ObservationQuery(BaseEventQuery):
             )
 
             result = self._cb.get_object(result_url, query_parameters=query_parameters)
-            
+
             self._total_results = result.get('num_available', 0)
             self._count_valid = True
 
@@ -303,4 +300,3 @@ class ObservationQuery(BaseEventQuery):
                 still_fetching = False
 
             log.debug("current: {}, total_results: {}".format(current, self._total_results))
-
