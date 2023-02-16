@@ -26,8 +26,8 @@ log = logging.getLogger(__name__)
 
 class Observation(UnrefreshableModel):
     """Represents an observations"""
-    default_sort = "device_timestamp"
     primary_key = "observation_id"
+    swagger_meta_file = "platform/models/observation.yaml"
 
     @classmethod
     def _query_implementation(self, cb, **kwargs):
@@ -83,7 +83,7 @@ class Observation(UnrefreshableModel):
         """
         self._details_timeout = timeout
         if not self.observation_id:
-            raise ApiError("Trying to get event details on an invalid observation_id")
+            raise ApiError("Trying to get observation details on an invalid observation_id")
         if async_mode:
             return self._cb._async_submit(lambda arg, kwarg: self._get_detailed_results())
         else:
@@ -162,6 +162,15 @@ class ObservationQuery(BaseEventQuery):
         self._query_token = None
         self._timeout = 0
         self._timed_out = False
+
+    def or_(self, **kwargs):
+        """
+        :meth:`or_` criteria are explicitly provided to Observation queries.
+
+        This method overrides the base class in order to provide or_() functionality rather than raising an exception.
+        """
+        self._query_builder.or_(None, **kwargs)
+        return self
 
     def set_rows(self, rows):
         """
@@ -294,3 +303,4 @@ class ObservationQuery(BaseEventQuery):
                 still_fetching = False
 
             log.debug("current: {}, total_results: {}".format(current, self._total_results))
+
