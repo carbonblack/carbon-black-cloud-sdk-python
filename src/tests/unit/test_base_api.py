@@ -15,6 +15,7 @@ import pytest
 import json
 import sys
 import io
+import requests_mock
 from cbc_sdk import __version__
 from cbc_sdk.connection import BaseAPI
 from cbc_sdk.credentials import Credentials
@@ -388,3 +389,35 @@ def test_BaseAPI_delete_object(mox):
     rc = sut.delete_object('/path')
     assert rc.json() == {'zyx': 100}
     mox.VerifyAll()
+
+
+def test_BaseAPI_csp_api_token_kwargs():
+    """Test init credentials from BaseAPI for CSP API Token options"""
+    with requests_mock.Mocker() as mock_request:
+        mock_request.register_uri("POST",
+                                  "https://console.cloud.vmware.com/csp/gateway/am/api/auth/api-tokens/authorize",
+                                  json={"access_token": "valid-token", "scope": "valid-scope"})
+        api = BaseAPI(url='https://example.com', csp_api_token='test-token', org_key='A1B2C3D4')
+
+        assert api.session.token == "valid-token"
+
+        # Verify Request
+        assert mock_request.last_request.text == "api_token=test-token"
+
+
+def test_BaseAPI_csp_oauth_app_kwargs():
+    """Test init credentials from BaseAPI for CSP OAuth App options"""
+    with requests_mock.Mocker() as mock_request:
+        mock_request.register_uri("POST",
+                                  "https://console.cloud.vmware.com/csp/gateway/am/api/auth/token",
+                                  json={"access_token": "valid-token", "scope": "valid-scope"})
+        api = BaseAPI(url='https://example.com',
+                      csp_oauth_app_id='client-id',
+                      csp_oauth_app_secret='client-secret',
+                      org_key='A1B2C3D4')
+
+        assert api.session.token == "valid-token"
+
+        # Verify Request
+        assert mock_request.last_request.text == "grant_type=client_credentials"
+        assert mock_request.last_request.headers.get("Authorization") == "Basic Y2xpZW50LWlkOmNsaWVudC1zZWNyZXQ="

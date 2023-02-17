@@ -17,7 +17,7 @@ from cbc_sdk.platform import Device, DeviceFacet
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_devices import (FACET_RESPONSE, FACET_INIT_1, FACET_INIT_2, FACET_INIT_3,
-                                                       FACET_INIT_4)
+                                                       FACET_INIT_4, FACET_INIT_5, FACET_INIT_6, FACET_INIT_7)
 
 
 @pytest.fixture(scope="function")
@@ -250,7 +250,10 @@ def test_query_device_facet(cbcsdk_mock):
     (FACET_INIT_1, {'policy_id': [68727]}),
     (FACET_INIT_2, {'status': ['ACTIVE']}),
     (FACET_INIT_3, {'os': ['LINUX']}),
-    (FACET_INIT_4, {'ad_group_id': [955]})
+    (FACET_INIT_4, {'ad_group_id': [955]}),
+    (FACET_INIT_5, {'cloud_provider_account_id': ['303']}),
+    (FACET_INIT_6, {'auto_scaling_group_name': ['ARGON']}),
+    (FACET_INIT_7, {'virtual_private_cloud_id': ['65534']})
 ])
 def test_facet_generated_queries(cb, init_facet, desired_criteria):
     """Test to make sure the query_devices() API generates queries with the correct criteria."""

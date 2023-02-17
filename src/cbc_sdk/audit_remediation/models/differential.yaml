@@ -1,0 +1,66 @@
+type: object
+properties:
+  newer_run_id:
+    type: string
+    description: id against which the older run id results will be compared
+  newer_run_create_time:
+    type: string
+    format: yyyy-MM-dd'T'HH:mm:ss.SSS'Z'
+    description: Timestamp of the primary run in ISO 8601 UTC format
+  older_run_id:
+    type: string
+    description: This can be optional. If not specified, the previous run as compared to the primary will be chosen. This can be optional if you are comparing reccuring runs only.
+  older_run_create_time:
+    type: string
+    format: yyyy-MM-dd'T'HH:mm:ss.SSS'Z'
+    description: Timestamp of the older run in ISO 8601 UTC format
+  diff_processed_time:
+    type: string
+    format: ss.SSS
+    description: The time it took to process the results in seconds and milliseconds
+  newer_run_not_responded_devices:
+    type: array
+    description: Array of device IDs that have not responded
+  older_run_not_responded_devices:
+    type: array
+    description: Array of device IDs that have not responded
+  diff_results:
+    type: object
+    description: An object containing either count of changes only or count and actual diff results
+    properties:
+      added_count:
+        type: integer
+        description: Number of additive differences
+      change_count:
+        type: integer
+        description: Number of total change count - additive and subtractive
+      changes:
+        type: array
+        description: Array containing objects with additive and subtractive changes metadata
+        properties:
+          action:
+            type: string
+            description: Indicates whether actions are additive or subtractive
+            values: ADDED, REMOVED
+          fields:
+            type: array
+            description: Array of objects with metadata of the differential
+            properties:
+              key:
+                type: string
+                description: Name of differential metadata
+              value:
+                type: string
+                description: Content of differential metadata
+      device_id:
+        type: integer
+        description: Device identifier
+      newer_run_row_count:
+        type: integer
+        description: Number of total Live Query result objects in primary run
+      removed_count:
+        type: integer
+        description: Number of subtractive differences
+      older_run_row_count:
+        type: integer
+        description: Number of total Live Query result objects in older run

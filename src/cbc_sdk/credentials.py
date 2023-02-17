@@ -12,6 +12,7 @@
 """Credentials management for the CBC SDK."""
 
 import logging
+import requests
 
 from enum import Enum, auto
 from .errors import CredentialError
@@ -34,6 +35,10 @@ class CredentialValue(Enum):
     PROXY = auto()
     IGNORE_SYSTEM_PROXY = auto()
     INTEGRATION = auto()
+    CSP_OAUTH_APP_ID = auto()
+    CSP_OAUTH_APP_SECRET = auto()
+    CSP_API_TOKEN = auto()
+    CSP_URL_OVERRIDE = auto()
 
     def requires_boolean_value(self):
         """
@@ -80,7 +85,11 @@ class Credentials(object):
             CredentialValue.SSL_FORCE_TLS_1_2: False,
             CredentialValue.PROXY: None,
             CredentialValue.IGNORE_SYSTEM_PROXY: False,
-            CredentialValue.INTEGRATION: None
+            CredentialValue.INTEGRATION: None,
+            CredentialValue.CSP_OAUTH_APP_ID: None,
+            CredentialValue.CSP_OAUTH_APP_SECRET: None,
+            CredentialValue.CSP_API_TOKEN: None,
+            CredentialValue.CSP_URL_OVERRIDE: "https://console.cloud.vmware.com"
         }
         if values is not None:
             for k in list(CredentialValue):
@@ -88,6 +97,17 @@ class Credentials(object):
                     self._set_value(k, values[k])
                 elif k.name.lower() in values:
                     self._set_value(k, values[k.name.lower()])
+
+        self._token_type = "UNKNOWN"
+        if self.get_value(CredentialValue.TOKEN) is not None:
+            self._token_type = "API_KEY"
+
+        elif self.get_value(CredentialValue.CSP_API_TOKEN) is not None:
+            self._token_type = "API_TOKEN"
+
+        elif self.get_value(CredentialValue.CSP_OAUTH_APP_ID) is not None and \
+                self.get_value(CredentialValue.CSP_OAUTH_APP_SECRET) is not None:
+            self._token_type = "OAUTH_APP"
 
     def _set_value(self, key, value):
         """
@@ -122,7 +142,7 @@ class Credentials(object):
         Returns:
             object: The credential's value, or a default value if the value was not explicitly set.
         """
-        return self._values[key]
+        return self._values.get(key)
 
     def __getattr__(self, name):
         """
@@ -157,6 +177,65 @@ class Credentials(object):
         for i in list(CredentialValue):
             _dict[i.name.lower()] = self.get_value(i)
         return _dict
+
+    def get_token_type(self):
+        """
+        Get token type API_KEY or BEARER
+
+        Returns:
+            str: The token type
+        """
+        if self._token_type == "API_KEY":
+            return "API_KEY"
+        elif self._token_type == "API_TOKEN" or self._token_type == "OAUTH_APP":
+            return "BEARER"
+        return "UNKNOWN"
+
+    def get_token(self):
+        """
+        Get token required to authenticate with VMware Carbon Black Cloud
+
+        Returns:
+            str: Token string for VMware Carbon Black Cloud
+        """
+        if self._token_type == "UNKNOWN":
+            return None
+        elif self._token_type == "API_KEY":
+            return self.get_value(CredentialValue.TOKEN)
+
+        csp_url = self.get_value(CredentialValue.CSP_URL_OVERRIDE).rstrip("/")
+
+        if self._token_type == "API_TOKEN":
+            api_token_url = f"{csp_url}/csp/gateway/am/api/auth/api-tokens/authorize"
+            resp = requests.post(api_token_url, {"api_token": self.get_value(CredentialValue.CSP_API_TOKEN)})
+            json_body = resp.json()
+            if resp.status_code != 200:
+                raise CredentialError(json_body.get("message"))
+
+            # Check that token has scope
+            if json_body.get("scope") is None:
+                raise CredentialError("Access token created with empty scope")
+            return json_body.get("access_token")
+
+        if self._token_type == "OAUTH_APP":
+            oauth_app_token_url = f"{csp_url}/csp/gateway/am/api/auth/token"
+
+            # Construct Authorization header Basic Base64(client_id:client_secret)
+            client_id = self.get_value(CredentialValue.CSP_OAUTH_APP_ID)
+            client_secret = self.get_value(CredentialValue.CSP_OAUTH_APP_SECRET)
+            client_credentials = (client_id, client_secret)
+
+            resp = requests.post(oauth_app_token_url, {"grant_type": "client_credentials"}, auth=client_credentials)
+            json_body = resp.json()
+            if resp.status_code != 200:
+                raise CredentialError(json_body.get("message"))
+
+            # Check that token has scope
+            if json_body.get("scope") is None:
+                raise CredentialError("Access token created with empty scope")
+            return json_body.get("access_token")
+
+        return None
 
 # === THE INTERFACES IMPLEMENTED BY CREDENTIAL PROVIDERS === #
 

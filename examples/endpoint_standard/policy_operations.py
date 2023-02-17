@@ -10,7 +10,18 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-"""Example script showing policy operations."""
+"""This sample has been deprecated.
+
+The endpoint standard policy module (cbc_sdk.endpoint_standard) was deprecated
+in July 2022 in line with the underlying APIs. A replacement example is
+included in ../platform/policy_service_crud_operations.py.
+
+The cbc_sdk.endpoint_standard module has been replaced by the
+cbc_sdk.platform.policies module and this example will be removed in a future
+version of the SDK.
+
+Example script showing policy operations.
+"""
 
 import sys
 import json
@@ -18,7 +29,7 @@ import logging
 
 from cbc_sdk.errors import ServerError
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
-from cbc_sdk.endpoint_standard import Policy
+from cbc_sdk.endpoint_standard import Policy  # This is the module that has been deprecated.
 
 log = logging.getLogger(__name__)
 
@@ -156,7 +167,7 @@ def replace_rule(cb, parser, args):
 def main():
     """Main function for the Policy Operations script."""
     parser = build_cli_parser("Policy operations")
-    commands = parser.add_subparsers(help="Policy commands", dest="command_name")
+    commands = parser.add_subparsers(help="This sample has been deprecated.  Policy commands", dest="command_name")
 
     commands.add_parser("list", help="List all configured policies")
 

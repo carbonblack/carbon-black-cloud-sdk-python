@@ -105,7 +105,6 @@ def test_raise_ModelNotFound():
         ("Recommendation", "RecommendationQuery"),
         ("EnrichedEvent", "EnrichedEventQuery"),
         ("EnrichedEventFacet", "FacetQuery"),
-        ("Policy", "Query"),
         ("USBDevice", "USBDeviceQuery"),
         ("USBDeviceApproval", "USBDeviceApprovalQuery"),
         ("USBDeviceBlock", "USBDeviceBlockQuery"),
@@ -124,6 +123,7 @@ def test_raise_ModelNotFound():
         ("Event", "EventQuery"),
         ("EventFacet", "EventFacetQuery"),
         ("Grant", "GrantQuery"),
+        ("Policy", "PolicyQuery"),
         ("Process", "AsyncProcessQuery"),
         ("Process.Summary", "SummaryQuery"),
         ("Process.Tree", "SummaryQuery"),
@@ -135,7 +135,8 @@ def test_raise_ModelNotFound():
 
         # Workload
         ("SensorKit", "SensorKitQuery"),
-        ("ComputeResource", "ComputeResourceQuery"),
+        ("VCenterComputeResource", "VCenterComputeResourceQuery"),
+        ("AWSComputeResource", "AWSComputeResourceQuery"),
     ],
 )
 def test_select_class_instance(klass_name, query_expected):
@@ -147,6 +148,9 @@ def test_select_class_instance(klass_name, query_expected):
 
 class _TestQuery(BaseQuery, IterableQueryMixin):
     """Test Query for Slicing"""
+
+    # Prevent pytest from trying to collect webtest's TestApp as tests:
+    __test__ = False
 
     def _count():
         """Mock Count"""

@@ -19,6 +19,7 @@ Major Features
     * Endpoint Standard
     * Audit and Remediation
     * Enterprise EDR
+    * Platform
     * Workload
 - Reduced Complexity
     The SDK manages the differences among Carbon Black Cloud APIs
@@ -44,7 +45,8 @@ API Credentials
 ---------------
 
 To use the SDK and access data in Carbon Black Cloud, you must set up API keys with
-the correct permissions. Different APIs have different permission requirements for use,
+the correct permissions if you are using the X-Auth-Token authentication method, or create an access token
+if you are using Bearer or Personal API Token. Different APIs have different permission requirements for use,
 which is explained in the `Developer Network Authentication Guide
 <https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/>`_.
 

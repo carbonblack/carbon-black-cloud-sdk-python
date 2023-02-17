@@ -52,6 +52,14 @@ cbc\_sdk.platform.jobs module
    :undoc-members:
    :show-inheritance:
 
+cbc\_sdk.platform.policies module
+----------------------------------
+
+.. automodule:: cbc_sdk.platform.policies
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 cbc\_sdk.platform.processes module
 ----------------------------------
 

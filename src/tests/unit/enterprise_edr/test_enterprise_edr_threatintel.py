@@ -6,7 +6,7 @@ import logging
 import re
 from contextlib import ExitStack as does_not_raise
 from cbc_sdk.enterprise_edr import Watchlist, Report, Feed, IOC_V2
-from cbc_sdk.errors import InvalidObjectError, ApiError
+from cbc_sdk.errors import InvalidObjectError, ApiError, ClientError
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.enterprise_edr.mock_threatintel import (WATCHLIST_GET_RESP,
@@ -84,7 +84,7 @@ def test_watchlist_save(cbcsdk_mock):
     api = cbcsdk_mock.api
     id = "watchlistId"
     cbcsdk_mock.mock_request("POST", "/threathunter/watchlistmgr/v3/orgs/test/watchlists", WATCHLIST_GET_SPECIFIC_RESP)
-    watchlist = Watchlist(api, model_unique_id="watchlistId", initial_data=CREATE_WATCHLIST_DATA)
+    watchlist = Watchlist(api, model_unique_id=None, initial_data=CREATE_WATCHLIST_DATA)
     watchlist.validate()
     watchlist.save()
 
@@ -123,13 +123,14 @@ def test_watchlist_update_id(cbcsdk_mock):
     watchlist = Watchlist(cbcsdk_mock.api, model_unique_id="watchlistId2", initial_data=None)
     assert "description" in watchlist._info
     assert "nonexistant_key" not in watchlist._info
-    cbcsdk_mock.mock_request("POST", "/threathunter/watchlistmgr/v3/orgs/test/watchlists",
-                             WATCHLIST_GET_SPECIFIC_RESP)
+    cbcsdk_mock.mock_request("POST", "/threathunter/watchlistmgr/v3/orgs/test/watchlists/watchlistId",
+                             ClientError(405, "Method Not Allowed"))
     watchlist.id = id2
     result_repr = watchlist.__repr__()
     assert 'id watchlistId' in result_repr
     assert '(*)' in result_repr
-    watchlist._update_object()
+    with pytest.raises(ClientError):
+        watchlist._update_object()
 
 
 def test_watchlist_update_invalid_object(cbcsdk_mock):
@@ -352,7 +353,7 @@ def test_report_query_from_watchlist(cbcsdk_mock, get_watchlist_report):
 
 def test_feed_query_all(cbcsdk_mock):
     """Testing Feed Querying for all Feeds"""
-    cbcsdk_mock.mock_request("GET", "/threathunter/feedmgr/v2/orgs/test/feeds", FEED_GET_RESP)
+    cbcsdk_mock.mock_request("GET", "/threathunter/feedmgr/v2/orgs/test/feeds?include_public=True", FEED_GET_RESP)
     api = cbcsdk_mock.api
     feed = api.select(Feed).where(include_public=True)
     results = [res for res in feed._perform_query()]
@@ -699,6 +700,7 @@ def test_feed_builder_save(cbcsdk_mock):
     builder = Feed.create(api, "NotReal", "http://127.0.0.1", "Not a real summary", "Fake")
     builder.set_name("FeedName").set_provider_url("http://example.com").set_summary("Summary information")
     builder.set_category("Intrusion").set_source_label("SourceLabel").add_reports([report])
+    builder.set_alertable(True)
     feed = builder.build()
     feed.save()
     assert feed.id == "qwertyuiop"

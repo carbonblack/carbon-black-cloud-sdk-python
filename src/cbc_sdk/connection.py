@@ -183,7 +183,8 @@ class Connection(object):
         if not credentials.url or not credentials.url.startswith("https://"):
             raise ConnectionError("Server URL must be a URL: eg. https://localhost")
 
-        if not credentials.token:
+        self.token = credentials.get_token()
+        if not self.token:
             raise ConnectionError("No API token provided")
 
         self.server = credentials.url.rstrip("/")
@@ -204,8 +205,11 @@ class Connection(object):
         if integration_name:
             user_agent = f"{integration_name} {user_agent}"
 
-        self.token = credentials.token
-        self.token_header = {'X-Auth-Token': self.token, 'User-Agent': user_agent}
+        if credentials.get_token_type() == "BEARER":
+            self.token_header = {'Authorization': f"Bearer {self.token}", 'User-Agent': user_agent}
+        else:
+            self.token_header = {'X-Auth-Token': self.token, 'User-Agent': user_agent}
+
         if proxy_session:
             self.session = proxy_session
             credentials.use_custom_proxy_session = True
@@ -230,6 +234,22 @@ class Connection(object):
                            original_exception=e)
 
         self.session.mount(self.server, tls_adapter)
+
+        def refresh_token(r, *args, **kwargs):
+            """Hook to refresh expired OAuth tokens"""
+            if r.status_code == 401 and credentials.get_token_type() == "BEARER":
+                log.debug("Fetching new bearer token as the previous token expired")
+                self.token = credentials.get_token()
+
+                # Update Headers
+                self.token_header.update({"Authorization": f"Bearer {self.token}"})
+                self.session.headers.update({"Authorization": f"Bearer {self.token}"})
+                r.request.headers["Authorization"] = self.session.headers["Authorization"]
+
+                # Resend Request
+                return self.session.send(r.request, **kwargs)
+
+        self.session.hooks["response"].append(refresh_token)
 
         self.proxies = {}
         if credentials.use_custom_proxy_session:
@@ -284,7 +304,6 @@ class Connection(object):
             headers = self.token_header
 
         uri = self.server + url
-
         try:
             raw_data = kwargs.get("data", None)
             if raw_data:
@@ -383,8 +402,13 @@ class BaseAPI(object):
         integration_name = kwargs.pop("integration_name", None)
         self.credential_provider = kwargs.pop("credential_provider", None)
 
-        url, token = kwargs.get("url", None), kwargs.get("token", None)
-        if url and token:
+        url = kwargs.get("url", None)
+        token = kwargs.get("token", None)
+        csp_api_token = kwargs.get("csp_api_token", None)
+        csp_oauth_app_id = kwargs.get("csp_oauth_app_id", None)
+        csp_oauth_app_secret = kwargs.get("csp_oauth_app_secret", None)
+
+        if url and (token or csp_api_token or (csp_oauth_app_id and csp_oauth_app_secret)):
             self.credentials = Credentials(kwargs)
             self.credentials.integration = integration_name
             self.credential_profile_name = None

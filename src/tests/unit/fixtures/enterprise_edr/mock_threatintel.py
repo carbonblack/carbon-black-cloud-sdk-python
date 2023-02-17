@@ -521,7 +521,6 @@ WATCHLIST_GET_SPECIFIC_INVALID_CLASSIFIER_RESP = {
 CREATE_WATCHLIST_DATA = {
     "name": "myWatchlist",
     "description": "My Description.",
-    "id": "watchlistId",
     "tags_enabled": True,
     "alerts_enabled": True,
     "create_timestamp": 1600197345,
@@ -1146,7 +1145,8 @@ FEED_BUILT_VIA_BUILDER = {
         "provider_url": "http://example.com",
         "summary": "Summary information",
         "category": "Intrusion",
-        "source_label": "SourceLabel"
+        "source_label": "SourceLabel",
+        "alertable": True
     },
     "reports": [REPORT_BUILT_VIA_BUILDER]
 }

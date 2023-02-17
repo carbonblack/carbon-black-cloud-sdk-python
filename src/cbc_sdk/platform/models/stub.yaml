@@ -1,0 +1,21 @@
+type: object
+required:
+  - name
+  - device
+  - function
+properties:
+  id:
+    type: integer
+    description: The identifier
+  name:
+    type: string
+    description: Defined name
+  device:
+    type: integer
+    description: Device identifier
+  function:
+    type: string
+    description: Function identifier
+  parameter:
+    type: string
+    description: Function parameter

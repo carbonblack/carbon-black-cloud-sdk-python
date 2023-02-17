@@ -16,7 +16,6 @@ from tests.unit.fixtures.platform.mock_process import (
     GET_FACET_SEARCH_RESULTS_RESP,
     GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1,
     POST_TREE_SEARCH_JOB_RESP,
-    GET_TREE_SEARCH_JOB_RESP,
     GET_PROCESS_TREE_STR,
 )
 from tests.unit.fixtures.platform.mock_reputation_override import (
@@ -137,21 +136,24 @@ class TestReferenceProcess:
         # mock the search validation
         cbcsdk_mock.mock_request(
             "GET",
-            "/api/investigate/v1/orgs/Z100/processes/search_validation",
+            "/api/investigate/v1/orgs/Z100/processes/search_validation?"
+            "process_guid=WNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
+            "&q=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
+            "&query=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00",
             GET_PROCESS_VALIDATION_RESP,
         )
         # mock the POST of a search
         cbcsdk_mock.mock_request(
             "POST",
-            "/api/investigate/v2/orgs/Z100/processes/search_job",
+            "/api/investigate/v2/orgs/Z100/processes/search_jobs",
             POST_PROCESS_SEARCH_JOB_RESP,
         )
         # mock the GET to check search status
         cbcsdk_mock.mock_request(
             "GET",
             (
-                "/api/investigate/v1/orgs/Z100/processes/"
-                "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"
+                "/api/investigate/v2/orgs/Z100/processes/"
+                "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=0"
             ),
             GET_PROCESS_SEARCH_JOB_RESP,
         )
@@ -160,7 +162,7 @@ class TestReferenceProcess:
             "GET",
             (
                 "/api/investigate/v2/orgs/Z100/processes/search_jobs/"
-                "2c292717-80ed-4f0d-845f-779e09470920/results"
+                "2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=500"
             ),
             GET_PROCESS_SEARCH_JOB_RESULTS_RESP,
         )
@@ -170,21 +172,12 @@ class TestReferenceProcess:
             "/api/investigate/v2/orgs/Z100/processes/summary_jobs",
             POST_PROCESS_SEARCH_JOB_RESP,
         )
-        # mock the GET to check summary search status
-        cbcsdk_mock.mock_request(
-            "GET",
-            (
-                "/api/investigate/v2/orgs/Z100/processes/"
-                "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920"
-            ),
-            GET_PROCESS_SUMMARY_RESP,
-        )
         # mock the GET to get summary search results
         cbcsdk_mock.mock_request(
             "GET",
             (
                 "/api/investigate/v2/orgs/Z100/processes/"
-                "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"
+                "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?format=summary"
             ),
             GET_PROCESS_SUMMARY_STR,
         )
@@ -200,21 +193,12 @@ class TestReferenceProcess:
             "/api/investigate/v2/orgs/Z100/processes/summary_jobs",
             POST_PROCESS_SEARCH_JOB_RESP,
         )
-        # mock the GET to check summary search status
-        cbcsdk_mock.mock_request(
-            "GET",
-            (
-                "/api/investigate/v2/orgs/Z100/processes/"
-                "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920"
-            ),
-            GET_PROCESS_SUMMARY_RESP,
-        )
         # mock the GET to get summary search results
         cbcsdk_mock.mock_request(
             "GET",
             (
                 "/api/investigate/v2/orgs/Z100/processes/"
-                "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"
+                "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?format=summary"
             ),
             GET_PROCESS_SUMMARY_RESP,
         )
@@ -242,7 +226,7 @@ class TestReferenceProcess:
             "GET",
             (
                 "/api/investigate/v1/orgs/Z100/processes/"
-                "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"
+                "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=0"
             ),
             GET_PROCESS_SEARCH_JOB_RESP,
         )
@@ -251,7 +235,7 @@ class TestReferenceProcess:
             "GET",
             (
                 "/api/investigate/v2/orgs/Z100/processes/search_jobs/"
-                "2c292717-80ed-4f0d-845f-779e09470920/results"
+                "2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=500"
             ),
             GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1,
         )
@@ -266,16 +250,16 @@ class TestReferenceProcess:
             "GET",
             (
                 "/api/investigate/v2/orgs/Z100/processes/summary_jobs"
-                "/ee158f11-4dfb-4ae2-8f1a-7707b712226d"
+                "/ee158f11-4dfb-4ae2-8f1a-7707b712226d/results?format=summary"
             ),
-            GET_TREE_SEARCH_JOB_RESP,
+            GET_PROCESS_SUMMARY_RESP,
         )
         # mock the GET to get search results
         cbcsdk_mock.mock_request(
             "GET",
             (
                 "/api/investigate/v2/orgs/Z100/processes/summary_jobs/"
-                "ee158f11-4dfb-4ae2-8f1a-7707b712226d/results"
+                "ee158f11-4dfb-4ae2-8f1a-7707b712226d/results?format=tree"
             ),
             GET_PROCESS_TREE_STR,
         )
@@ -338,6 +322,11 @@ class TestReferenceVulnerability:
             "/vulnerability/assessment/api/v1/orgs/Z100/devices/vulnerabilities/_search",
             GET_VULNERABILITY_RESP,
         )
+        cbcsdk_mock.mock_request(
+            "POST",
+            "/vulnerability/assessment/api/v1/orgs/Z100/devices/vulnerabilities/_search?dataForExport=true",
+            GET_VULNERABILITY_RESP,
+        )
         vulnerability = cbcsdk_mock.api.select("Vulnerability", "CVE-2014-4650")
         assert type(vulnerability).__qualname__ == "Vulnerability"
 
@@ -345,7 +334,7 @@ class TestReferenceVulnerability:
         """Test the dynamic reference for the `Vulnerability.OrgSummary` class."""
         cbcsdk_mock.mock_request(
             "GET",
-            "/vulnerability/assessment/api/v1/orgs/Z100/vulnerabilities/summary",
+            "/vulnerability/assessment/api/v1/orgs/Z100/vulnerabilities/summary?severity=CRITICAL",
             GET_VULNERABILITY_SUMMARY_ORG_LEVEL_PER_SEVERITY,
         )
         summary = (
