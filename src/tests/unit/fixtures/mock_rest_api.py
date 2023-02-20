@@ -18,13 +18,13 @@ NOTIFICATIONS_RESP = {
                 "sha256Hash": "2552332222112552332222112552332222112552332222112552332222112552",
                 "action": "TERMINATE",
                 "reputation": "KNOWN_MALWARE",
-                "applicationName": "firefox.exe"
+                "applicationName": "firefox.exe",
             },
             "type": "POLICY_ACTION",
             "eventTime": 1423163263482,
             "eventId": "EV1",
             "url": "http://carbonblack.com/ui#device/100/hash/25523322221125523322221125523322221125523"
-                   "32222112552332222112552/app/firefox.exe/keyword/terminate policy action",
+            "32222112552332222112552/app/firefox.exe/keyword/terminate policy action",
             "deviceInfo": {
                 "deviceType": "WINDOWS",
                 "email": "tester@carbonblack.com",
@@ -36,10 +36,10 @@ NOTIFICATIONS_RESP = {
                 "targetPriorityCode": 0,
                 "internalIpAddress": "55.33.22.11",
                 "groupName": "Executives",
-                "externalIpAddress": "255.233.222.211"
+                "externalIpAddress": "255.233.222.211",
             },
             "eventDescription": "Policy action 1",
-            "ruleName": "Alert Rule 1"
+            "ruleName": "Alert Rule 1",
         },
         {
             "threatInfo": {
@@ -48,17 +48,17 @@ NOTIFICATIONS_RESP = {
                     {
                         "sha256Hash": "aafafafafafafafafafafafafafafafafafafa7347878",
                         "indicatorName": "BUFFER_OVERFLOW",
-                        "applicationName": "chrome.exe"
+                        "applicationName": "chrome.exe",
                     },
                     {
                         "sha256Hash": "ddfdhjhjdfjdfjdhjfdjfhjdfhjdhfjdhfjdhfjdh7347878",
                         "indicatorName": "INJECT_CODE",
-                        "applicationName": "firefox.exe"
-                    }
+                        "applicationName": "firefox.exe",
+                    },
                 ],
                 "summary": "Threat Summary 23",
                 "score": 8,
-                "incidentId": "ABCDEF"
+                "incidentId": "ABCDEF",
             },
             "type": "THREAT",
             "eventTime": 1423163263501,
@@ -75,15 +75,16 @@ NOTIFICATIONS_RESP = {
                 "targetPriorityCode": 0,
                 "internalIpAddress": "55.33.22.11",
                 "groupName": "Executives",
-                "externalIpAddress": "255.233.222.211"
+                "externalIpAddress": "255.233.222.211",
             },
             "eventDescription": "time|Threat summary 23|score",
-            "ruleName": "Alert Rule 2"
-        }
+            "ruleName": "Alert Rule 2",
+        },
     ],
     "message": "Success",
-    "success": True
+    "success": True,
 }
+
 
 AUDITLOGS_RESP = {
     "notifications": [
@@ -96,7 +97,7 @@ AUDITLOGS_RESP = {
             "flagged": False,
             "clientIp": "192.0.2.3",
             "verbose": False,
-            "description": "Logged in successfully"
+            "description": "Logged in successfully",
         },
         {
             "requestUrl": None,
@@ -107,7 +108,7 @@ AUDITLOGS_RESP = {
             "flagged": False,
             "clientIp": "192.0.2.3",
             "verbose": False,
-            "description": "Logged in successfully"
+            "description": "Logged in successfully",
         },
         {
             "requestUrl": None,
@@ -118,7 +119,7 @@ AUDITLOGS_RESP = {
             "flagged": False,
             "clientIp": "192.0.2.1",
             "verbose": False,
-            "description": "Updated connector jason-splunk-test with api key Y8JNJZFBDRUJ2ZSM"
+            "description": "Updated connector jason-splunk-test with api key Y8JNJZFBDRUJ2ZSM",
         },
         {
             "requestUrl": None,
@@ -129,7 +130,7 @@ AUDITLOGS_RESP = {
             "flagged": False,
             "clientIp": "192.0.2.2",
             "verbose": False,
-            "description": "Updated connector Training with api key GRJSDHRR8YVRML3Q"
+            "description": "Updated connector Training with api key GRJSDHRR8YVRML3Q",
         },
         {
             "requestUrl": None,
@@ -140,118 +141,76 @@ AUDITLOGS_RESP = {
             "flagged": False,
             "clientIp": "192.0.2.2",
             "verbose": False,
-            "description": "Logged in successfully"
-        }
+            "description": "Logged in successfully",
+        },
     ],
     "success": True,
-    "message": "Success"
+    "message": "Success",
 }
+
 
 ALERT_SEARCH_SUGGESTIONS_RESP = {
     "suggestions": [
-        {
-            "term": "threat_category",
-            "weight": 525
-        },
-        {
-            "term": "watchlist_name",
-            "weight": 512
-        },
-        {
-            "term": "ttp",
-            "weight": 486
-        },
-        {
-            "term": "run_state",
-            "weight": 481
-        },
-        {
-            "term": "device_name",
-            "weight": 477
-        },
-        {
-            "term": "alert_id",
-            "weight": 472
-        },
-        {
-            "term": "event_id",
-            "weight": 472
-        },
-        {
-            "term": "threat_vector",
-            "weight": 468
-        },
-        {
-            "term": "device_username",
-            "weight": 461
-        },
-        {
-            "term": "report_id",
-            "weight": 458
-        },
-        {
-            "term": "process_guid",
-            "weight": 431
-        },
-        {
-            "term": "process_name",
-            "weight": 431
-        },
-        {
-            "term": "sensor_action",
-            "weight": 424
-        },
-        {
-            "term": "alert_severity",
-            "weight": 419
-        },
-        {
-            "term": "device_id",
-            "weight": 412
-        },
-        {
-            "term": "device_os",
-            "weight": 412
-        },
-        {
-            "term": "device_policy",
-            "weight": 401
-        },
-        {
-            "term": "process_pid",
-            "weight": 311
-        },
-        {
-            "term": "process_hash",
-            "weight": 306
-        },
-        {
-            "term": "process_reputation",
-            "weight": 287
-        }
+        {"term": "threat_category", "weight": 525},
+        {"term": "watchlist_name", "weight": 512},
+        {"term": "ttp", "weight": 486},
+        {"term": "run_state", "weight": 481},
+        {"term": "device_name", "weight": 477},
+        {"term": "alert_id", "weight": 472},
+        {"term": "event_id", "weight": 472},
+        {"term": "threat_vector", "weight": 468},
+        {"term": "device_username", "weight": 461},
+        {"term": "report_id", "weight": 458},
+        {"term": "process_guid", "weight": 431},
+        {"term": "process_name", "weight": 431},
+        {"term": "sensor_action", "weight": 424},
+        {"term": "alert_severity", "weight": 419},
+        {"term": "device_id", "weight": 412},
+        {"term": "device_os", "weight": 412},
+        {"term": "device_policy", "weight": 401},
+        {"term": "process_pid", "weight": 311},
+        {"term": "process_hash", "weight": 306},
+        {"term": "process_reputation", "weight": 287},
     ]
 }
 
-PROCESS_SEARCH_VALIDATIONS_RESP = {
-    "valid": True,
-    "value_search_query": True
-}
 
-CUSTOM_SEVERITY_RESP = {
-    "results": [{"report_id": "id", "severity": 10}]
-}
+PROCESS_SEARCH_VALIDATIONS_RESP = {"valid": True, "value_search_query": True}
 
-PROCESS_LIMITS_RESP = {
-    "time_bounds": {
-        "lower": 1564686473166,
-        "upper": 1579023412990
-    }
-}
+
+CUSTOM_SEVERITY_RESP = {"results": [{"report_id": "id", "severity": 10}]}
+
+
+PROCESS_LIMITS_RESP = {"time_bounds": {"lower": 1564686473166, "upper": 1579023412990}}
+
 
 FETCH_PROCESS_QUERY_RESP = {
-    "query_ids": ['4JDT3MX9Q/3867b4e7-b329-4caa-8f80-76899b1360fa', '4JDT3MX9Q/3871eab1-bb9b-4cb7-9ac4-a840f4a84fab']
+    "query_ids": [
+        "4JDT3MX9Q/3867b4e7-b329-4caa-8f80-76899b1360fa",
+        "4JDT3MX9Q/3871eab1-bb9b-4cb7-9ac4-a840f4a84fab",
+    ]
 }
 
-CONVERT_FEED_QUERY_RESP = {
-    "query": '(process_guid:123) -enriched:true'
+
+CONVERT_FEED_QUERY_RESP = {"query": "(process_guid:123) -enriched:true"}
+
+
+OBSERVATIONS_SEARCH_VALIDATIONS_RESP = {"valid": True, "value_search_query": True}
+
+
+OBSERVATIONS_SEARCH_SUGGESTIONS_RESP = {
+    "suggestions": [
+        {
+            "required_skus_all": [],
+            "required_skus_some": ["threathunter", "defense"],
+            "term": "device_id",
+            "weight": 100,
+        },
+        {
+            "required_skus_all": ["xdr"],
+            "required_skus_some": [],
+            "term": "netconn_remote_device_id",
+            "weight": 70,
+        },
+    ]
 }

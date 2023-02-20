@@ -405,7 +405,7 @@ class CBCloudAPI(BaseAPI):
         """
         return self._bulk_threat_update_status(threat_ids, "DISMISSED", remediation, comment)
 
-    # ---- Observations
+    # ---- Observations -----
 
     def observations_search_suggestions(self, query, count=None):
         """
@@ -444,7 +444,7 @@ class CBCloudAPI(BaseAPI):
             query_params["cb.max_backend_timestamp"] = max_backend_timestamp
         url = "/api/investigate/v2/orgs/{}/observations/search_validation".format(self.credentials.org_key)
         output = self.get_object(url, query_params)
-        return output
+        return output.get("valid", False)
 
     # ---- Enterprise EDR
 
