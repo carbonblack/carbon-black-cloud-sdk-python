@@ -448,13 +448,13 @@ class ObservationQuery(Query):
         }
         """
         data = dict(fields=self._aggregate_fields)
-        if self._max_events_per_group:
+        if self._max_events_per_group is not None:
             data["max_events_per_group"] = self._max_events_per_group
-        if self._range:
+        if self._range is not None:
             data["ranges"] = self._range
-        if self._rows:
+        if self._rows is not None:
             data["rows"] = self._rows
-        if self._start:
+        if self._start is not None:
             data["start"] = self._start
         return data
 
