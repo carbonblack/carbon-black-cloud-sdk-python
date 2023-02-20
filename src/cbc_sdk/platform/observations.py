@@ -17,6 +17,7 @@ from cbc_sdk.errors import ApiError, TimeoutError
 
 import logging
 import time
+from copy import deepcopy
 
 log = logging.getLogger(__name__)
 
@@ -486,8 +487,15 @@ class ObservationQuery(Query):
                 )
                 result = self._cb.post_object(result_url, self._build_aggregated_body()).json()
                 results = []
-                for group in result["group_results"]:
-                    results.extend(group["results"])
+                # flatten the list of results and add the common fields of each group
+                # for each element of the group
+                for group in result.get("group_results", []):
+                    common = deepcopy(group)
+                    del common["results"]
+                    for item in group["results"]:
+                        ditem = deepcopy(item)
+                        ditem.update(common)
+                        results.append(ditem)
             else:
                 result_url = '{}?start={}&rows={}'.format(
                     result_url_template,
