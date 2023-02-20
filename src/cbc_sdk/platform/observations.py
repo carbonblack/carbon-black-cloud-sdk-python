@@ -250,7 +250,7 @@ class ObservationQuery(Query):
         self._timeout = 0
         self._timed_out = False
 
-        self._aggregate = False
+        self._aggregation = False
         self._aggregate_fields = None
         self._max_events_per_group = None
         self._range = None
@@ -374,7 +374,7 @@ class ObservationQuery(Query):
         if not all((gt in ObservationQuery.VALID_GROUP_FIELDS) for gt in fields):
             raise ApiError("One or more invalid aggregation fields")
 
-        self._aggregate = True
+        self._aggregation = True
         self._aggregate_fields = fields
         return self
 
@@ -385,7 +385,7 @@ class ObservationQuery(Query):
         Args:
             max_events_per_group (int): Max events per aggregate
         """
-        if not self._aggregate:
+        if not self._aggregation:
             raise ApiError("You should first aggregate the records.")
         self._max_events_per_group = max_events_per_group
         return self
@@ -397,7 +397,7 @@ class ObservationQuery(Query):
         Args:
             rows (int): Max events per group
         """
-        if not self._aggregate:
+        if not self._aggregation:
             raise ApiError("You should first aggregate the records.")
         self._rows = rows
         return self
@@ -409,7 +409,7 @@ class ObservationQuery(Query):
         Args:
             start (int): start index
         """
-        if not self._aggregate:
+        if not self._aggregation:
             raise ApiError("You should first aggregate the records.")
         self._start = start
         return self
@@ -423,7 +423,7 @@ class ObservationQuery(Query):
             field (str): field
             method (str): either bucket or inteval
         """
-        if not self._aggregate:
+        if not self._aggregation:
             raise ApiError("You should first aggregate the records.")
         self._range = dict(duration=duration, field=field, method=method)
         return self
