@@ -11,7 +11,7 @@
 
 """Model and Query Classes for Observations"""
 
-from cbc_sdk.base import UnrefreshableModel
+from cbc_sdk.base import UnrefreshableModel, FacetQuery
 from cbc_sdk.base import Query
 from cbc_sdk.errors import ApiError, TimeoutError
 
@@ -365,17 +365,17 @@ class ObservationQuery(Query):
         Performs an aggregation search where results are grouped by an aggregation field
 
         Args:
-            field (str): The aggregation field or fields, valid ones are:
+            fields (str): The aggregation field or fields, valid ones are:
                 observation_type, device_name, process_username, attack_tactic
         """
         if not isinstance(fields, list):
             raise ApiError("Fields should be list of values")
 
-        if not all((gtype in ObservationQuery.VALID_GROUP_FIELDS) for gt in fields):
+        if not all((gt in ObservationQuery.VALID_GROUP_FIELDS) for gt in fields):
             raise ApiError("One or more invalid aggregation fields")
 
         self._aggregate = True
-        self._aggregate_fields = [field] if isinstance(field, str) else fields
+        self._aggregate_fields = fields
         return self
 
     def max_events_per_group(self, max_events_per_group):
@@ -425,7 +425,7 @@ class ObservationQuery(Query):
         """
         if not self._aggregate:
             raise ApiError("You should first aggregate the records.")
-        self._range = dict(duration=duration,field=field, method=method)
+        self._range = dict(duration=duration, field=field, method=method)
         return self
 
     def _build_aggregated_body(self):
@@ -454,7 +454,6 @@ class ObservationQuery(Query):
         if self._start:
             data["start"] = self._start
         return data
-
 
     def _search(self, start=0, rows=0):
         if not self._query_token:
@@ -485,7 +484,6 @@ class ObservationQuery(Query):
                 result = self._cb.post_object(result_url, self._build_aggregated_body())
                 results = result.get("group_results", [])
             else:
-                
                 result_url = '{}?start={}&rows={}'.format(
                     result_url_template,
                     current,
@@ -494,10 +492,8 @@ class ObservationQuery(Query):
                 result = self._cb.get_object(result_url, query_parameters=query_parameters)
                 results = result.get('results', [])
 
-
             self._total_results = result.get('num_available', 0)
             self._count_valid = True
-
 
             for item in results:
                 yield item
@@ -512,4 +508,3 @@ class ObservationQuery(Query):
                 still_fetching = False
 
             log.debug("current: {}, total_results: {}".format(current, self._total_results))
-
