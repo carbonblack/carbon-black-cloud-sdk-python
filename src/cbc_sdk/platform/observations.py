@@ -12,7 +12,7 @@
 """Model and Query Classes for Observations"""
 
 from cbc_sdk.base import UnrefreshableModel
-from cbc_sdk.base import Query as BaseEventQuery
+from cbc_sdk.base import Query
 from cbc_sdk.errors import ApiError, TimeoutError
 
 import logging
@@ -140,11 +140,101 @@ class Observation(UnrefreshableModel):
                 return self
 
 
-class ObservationQuery(BaseEventQuery):
+class ObservationFacet(UnrefreshableModel):
+    """Represents an observation retrieved."""
+    primary_key = "job_id"
+    swagger_meta_file = "platform/models/observation_facet.yaml"
+    submit_url = "/api/investigate/v2/orgs/{}/observations/facet_jobs"
+    result_url = "/api/investigate/v2/orgs/{}/observations/facet_jobs/{}/results"
+
+    class Terms(UnrefreshableModel):
+        """Represents the facet fields and values associated with an Observation Facet query."""
+        def __init__(self, cb, initial_data):
+            """Initialize an ObservationFacet Terms object with initial_data."""
+            super(ObservationFacet.Terms, self).__init__(
+                cb,
+                model_unique_id=None,
+                initial_data=initial_data,
+                force_init=False,
+                full_doc=True,
+            )
+            self._facets = {}
+            for facet_term_data in initial_data:
+                field = facet_term_data["field"]
+                values = facet_term_data["values"]
+                self._facets[field] = values
+
+        @property
+        def facets(self):
+            """Returns the terms' facets for this result."""
+            return self._facets
+
+        @property
+        def fields(self):
+            """Returns the terms facets' fields for this result."""
+            return [field for field in self._facets]
+
+    class Ranges(UnrefreshableModel):
+        """Represents the range (bucketed) facet fields and values associated with an Observation Facet query."""
+        def __init__(self, cb, initial_data):
+            """Initialize an ObservationFacet Ranges object with initial_data."""
+            super(ObservationFacet.Ranges, self).__init__(
+                cb,
+                model_unique_id=None,
+                initial_data=initial_data,
+                force_init=False,
+                full_doc=True,
+            )
+            self._facets = {}
+            for facet_range_data in initial_data:
+                field = facet_range_data["field"]
+                values = facet_range_data["values"]
+                self._facets[field] = values
+
+        @property
+        def facets(self):
+            """Returns the reified `ObservationFacet.Terms._facets` for this result."""
+            return self._facets
+
+        @property
+        def fields(self):
+            """Returns the ranges fields for this result."""
+            return [field for field in self._facets]
+
+    @classmethod
+    def _query_implementation(self, cb, **kwargs):
+        # This will emulate a synchronous observation facet query, for now.
+        return FacetQuery(self, cb)
+
+    def __init__(self, cb, model_unique_id, initial_data):
+        """Initialize the Terms object with initial data."""
+        super(ObservationFacet, self).__init__(
+            cb,
+            model_unique_id=model_unique_id,
+            initial_data=initial_data,
+            force_init=False,
+            full_doc=True
+        )
+        self._terms = ObservationFacet.Terms(cb, initial_data=initial_data["terms"])
+        self._ranges = ObservationFacet.Ranges(cb, initial_data=initial_data["ranges"])
+
+    @property
+    def terms_(self):
+        """Returns the reified `ObservationFacet.Terms` for this result."""
+        return self._terms
+
+    @property
+    def ranges_(self):
+        """Returns the reified `ObservationFacet.Ranges` for this result."""
+        return self._ranges
+
+
+class ObservationQuery(Query):
     """Represents the query logic for an Observation query.
 
     This class specializes `Query` to handle the particulars of observations querying.
     """
+    VALID_GROUP_FIELDS = ["observation_type", "device_name", "process_username", "attack_tactic"]
 
     def __init__(self, doc_class, cb):
         """
@@ -159,6 +249,13 @@ class ObservationQuery(BaseEventQuery):
         self._query_token = None
         self._timeout = 0
         self._timed_out = False
+
+        self._aggregate = False
+        self._aggregate_fields = None
+        self._max_events_per_group = None
+        self._range = None
+        self._rows = None
+        self._start = None
 
     def or_(self, **kwargs):
         """
@@ -184,7 +281,7 @@ class ObservationQuery(BaseEventQuery):
         return self
 
     def timeout(self, msecs):
-        """Sets the timeout on a event query.
+        """Sets the timeout on a observation query.
 
         Arguments:
             msecs (int): Timeout duration, in milliseconds.
@@ -214,6 +311,9 @@ class ObservationQuery(BaseEventQuery):
         if not self._query_token:
             self._submit()
 
+        if self._aggregation:
+            return False
+
         status_url = "/api/investigate/v2/orgs/{}/observations/search_jobs/{}/results".format(
             self._cb.credentials.org_key,
             self._query_token,
@@ -242,16 +342,119 @@ class ObservationQuery(BaseEventQuery):
         if self._timed_out:
             raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
 
-        result_url = "/api/investigate/v2/orgs/{}/observations/search_jobs/{}/results".format(
-            self._cb.credentials.org_key,
-            self._query_token,
-        )
-        result = self._cb.get_object(result_url)
+        if self._aggregation:
+            result_url = "/api/investigate/v1/orgs/{}/observations/search_jobs/{}/group_results".format(
+                self._cb.credentials.org_key,
+                self._query_token,
+            )
+            result = self._cb.post_object(result_url, self._build_aggregated_body())
+        else:
+            result_url = "/api/investigate/v2/orgs/{}/observations/search_jobs/{}/results".format(
+                self._cb.credentials.org_key,
+                self._query_token,
+            )
+            result = self._cb.get_object(result_url)
 
         self._total_results = result.get('num_available', 0)
         self._count_valid = True
 
         return self._total_results
+
+    def aggregate(self, fields):
+        """
+        Performs an aggregation search where results are grouped by an aggregation field
+
+        Args:
+            field (str): The aggregation field or fields, valid ones are:
+                observation_type, device_name, process_username, attack_tactic
+        """
+        if not isinstance(fields, list):
+            raise ApiError("Fields should be list of values")
+
+        if not all((gtype in ObservationQuery.VALID_GROUP_FIELDS) for gt in fields):
+            raise ApiError("One or more invalid aggregation fields")
+
+        self._aggregate = True
+        self._aggregate_fields = [field] if isinstance(field, str) else fields
+        return self
+
+    def max_events_per_group(self, max_events_per_group):
+        """
+        Sets the max events per aggregate for aggregated results
+
+        Args:
+            max_events_per_group (int): Max events per aggregate
+        """
+        if not self._aggregate:
+            raise ApiError("You should first aggregate the records.")
+        self._max_events_per_group = max_events_per_group
+        return self
+
+    def rows(self, rows):
+        """
+        Sets the rows for aggregated results
+
+        Args:
+            rows (int): Max events per group
+        """
+        if not self._aggregate:
+            raise ApiError("You should first aggregate the records.")
+        self._rows = rows
+        return self
+
+    def start(self, start):
+        """
+        Sets the start for the aggregated results
+
+        Args:
+            start (int): start index
+        """
+        if not self._aggregate:
+            raise ApiError("You should first aggregate the records.")
+        self._start = start
+        return self
+
+    def range(self, duration, field, method="interval"):
+        """
+        Describes a time window to restrict the search.
+
+        Args:
+            duration (str): duration for the range e.g. -2w
+            field (str): field
+            method (str): either bucket or inteval
+        """
+        if not self._aggregate:
+            raise ApiError("You should first aggregate the records.")
+        self._range = dict(duration=duration,field=field, method=method)
+        return self
+
+    def _build_aggregated_body(self):
+        """
+        Helper to build the group results body:
+
+        {
+          "fields": ["string"],
+          "max_events_per_group": integer,
+          "range": {
+            "duration": "string",
+            "field": "string",
+            "method": "string"
+          },
+          "rows": integer,
+          "start": integer
+        }
+        """
+        data = dict(fields=self._aggregate_fields)
+        if self._max_events_per_group:
+            data["max_events_per_group"] = self._max_events_per_group
+        if self._ranges:
+            data["ranges"] = self._ranges
+        if self._rows:
+            data["rows"] = self._rows
+        if self._start:
+            data["start"] = self._start
+        return data
+
 
     def _search(self, start=0, rows=0):
         if not self._query_token:
@@ -268,24 +471,33 @@ class ObservationQuery(BaseEventQuery):
         current = start
         rows_fetched = 0
         still_fetching = True
+        query_parameters = {}
         result_url_template = "/api/investigate/v2/orgs/{}/observations/search_jobs/{}/results".format(
             self._cb.credentials.org_key,
             self._query_token
         )
-        query_parameters = {}
         while still_fetching:
-            result_url = '{}?start={}&rows={}'.format(
-                result_url_template,
-                current,
-                self._batch_size
-            )
+            if self._aggregation:
+                result_url = "/api/investigate/v1/orgs/{}/observations/search_jobs/{}/group_results".format(
+                    self._cb.credentials.org_key,
+                    self._query_token,
+                )
+                result = self._cb.post_object(result_url, self._build_aggregated_body())
+                results = result.get("group_results", [])
+            else:
+                
+                result_url = '{}?start={}&rows={}'.format(
+                    result_url_template,
+                    current,
+                    self._batch_size
+                )
+                result = self._cb.get_object(result_url, query_parameters=query_parameters)
+                results = result.get('results', [])
 
-            result = self._cb.get_object(result_url, query_parameters=query_parameters)
 
             self._total_results = result.get('num_available', 0)
             self._count_valid = True
 
-            results = result.get('results', [])
 
             for item in results:
                 yield item
@@ -300,3 +512,4 @@ class ObservationQuery(BaseEventQuery):
                 still_fetching = False
 
             log.debug("current: {}, total_results: {}".format(current, self._total_results))
+
