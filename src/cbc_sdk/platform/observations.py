@@ -347,7 +347,7 @@ class ObservationQuery(Query):
                 self._cb.credentials.org_key,
                 self._query_token,
             )
-            result = self._cb.post_object(result_url, self._build_aggregated_body())
+            result = self._cb.post_object(result_url, self._build_aggregated_body()).json()
         else:
             result_url = "/api/investigate/v2/orgs/{}/observations/search_jobs/{}/results".format(
                 self._cb.credentials.org_key,
@@ -360,16 +360,19 @@ class ObservationQuery(Query):
 
         return self._total_results
 
-    def aggregate(self, fields):
+    def aggregation(self, fields):
         """
         Performs an aggregation search where results are grouped by an aggregation field
 
         Args:
-            fields (str): The aggregation field or fields, valid ones are:
+            fields (str or list): The aggregation field or fields, valid ones are:
                 observation_type, device_name, process_username, attack_tactic
         """
-        if not isinstance(fields, list):
-            raise ApiError("Fields should be list of values")
+        if not isinstance(fields, list) and not isinstance(fields, str):
+            raise ApiError("Fields should be either a single field or list of fields")
+
+        if isinstance(fields, str):
+            fields = [fields]
 
         if not all((gt in ObservationQuery.VALID_GROUP_FIELDS) for gt in fields):
             raise ApiError("One or more invalid aggregation fields")
@@ -447,8 +450,8 @@ class ObservationQuery(Query):
         data = dict(fields=self._aggregate_fields)
         if self._max_events_per_group:
             data["max_events_per_group"] = self._max_events_per_group
-        if self._ranges:
-            data["ranges"] = self._ranges
+        if self._range:
+            data["ranges"] = self._range
         if self._rows:
             data["rows"] = self._rows
         if self._start:
@@ -481,8 +484,10 @@ class ObservationQuery(Query):
                     self._cb.credentials.org_key,
                     self._query_token,
                 )
-                result = self._cb.post_object(result_url, self._build_aggregated_body())
-                results = result.get("group_results", [])
+                result = self._cb.post_object(result_url, self._build_aggregated_body()).json()
+                results = []
+                for group in result["group_results"]:
+                    results.extend(group["results"])
             else:
                 result_url = '{}?start={}&rows={}'.format(
                     result_url_template,
