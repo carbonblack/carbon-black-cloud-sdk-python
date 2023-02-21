@@ -23,7 +23,7 @@ from tests.unit.fixtures.platform.mock_observations import (
     GET_OBSERVATIONS_FACET_SEARCH_JOB_RESULTS_RESP_1,
     GET_OBSERVATIONS_FACET_SEARCH_JOB_RESULTS_RESP_2,
     GET_OBSERVATIONS_FACET_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING,
-    GET_OBSERVATIONS_GROUPED_RESULTS_RESP
+    GET_OBSERVATIONS_GROUPED_RESULTS_RESP,
 )
 
 log = logging.basicConfig(
@@ -892,15 +892,17 @@ def test_observation_aggregation_setup_failures(cbcsdk_mock):
     """Testing whether exceptions are raised, when incorrectly setting aggregation properties"""
     api = cbcsdk_mock.api
     with pytest.raises(ApiError):
-        observation = api.select(Observation).where(process_pid=2000).max_events_per_group(10)
+        api.select(Observation).where(process_pid=2000).max_events_per_group(10)
     with pytest.raises(ApiError):
-        observation = api.select(Observation).where(process_pid=2000).rows(5)
+        api.select(Observation).where(process_pid=2000).rows(5)
     with pytest.raises(ApiError):
-        observation = api.select(Observation).where(process_pid=2000).start(0)
+        api.select(Observation).where(process_pid=2000).start(0)
     with pytest.raises(ApiError):
-        observation = api.select(Observation).where(process_pid=2000).range("-2y", "backend_timestamp")
+        api.select(Observation).where(process_pid=2000).range(
+            "-2y", "backend_timestamp"
+        )
     with pytest.raises(ApiError):
-        observation = api.select(Observation).where(process_pid=2000).aggregation(123)
+        api.select(Observation).where(process_pid=2000).aggregation(123)
 
 
 def test_observation_aggregation_wrong_field(cbcsdk_mock):
@@ -912,16 +914,27 @@ def test_observation_aggregation_wrong_field(cbcsdk_mock):
 
 def test_observation_select_aggregation(cbcsdk_mock):
     """Testing Observation Querying with select() and more complex criteria"""
-    cbcsdk_mock.mock_request("POST",
-                             "/api/investigate/v2/orgs/test/observations/search_jobs",
-                             POST_OBSERVATIONS_SEARCH_JOB_RESP)
-    cbcsdk_mock.mock_request("POST",
-                             "/api/investigate/v1/orgs/test/observations/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/group_results",  # noqa: E501
-                             GET_OBSERVATIONS_GROUPED_RESULTS_RESP)
+    cbcsdk_mock.mock_request(
+        "POST",
+        "/api/investigate/v2/orgs/test/observations/search_jobs",
+        POST_OBSERVATIONS_SEARCH_JOB_RESP,
+    )
+    cbcsdk_mock.mock_request(
+        "POST",
+        "/api/investigate/v1/orgs/test/observations/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/group_results",  # noqa: E501
+        GET_OBSERVATIONS_GROUPED_RESULTS_RESP,
+    )
 
     api = cbcsdk_mock.api
-    observations = api.select(Observation).where(process_pid=2000).aggregation("device_name").\
-                  max_events_per_group(10).rows(5).start(0).range("-2y", "backend_timestamp")
+    observations = (
+        api.select(Observation)
+        .where(process_pid=2000)
+        .aggregation("device_name")
+        .max_events_per_group(10)
+        .rows(5)
+        .start(0)
+        .range("-2y", "backend_timestamp")
+    )
     assert observations._count() == 1
     for observation in observations:
         assert observation.device_name is not None
@@ -931,15 +944,24 @@ def test_observation_select_aggregation(cbcsdk_mock):
 
 def test_observation_select_aggregation_async(cbcsdk_mock):
     """Testing Observation Querying with select() and more complex criteria"""
-    cbcsdk_mock.mock_request("POST",
-                             "/api/investigate/v2/orgs/test/observations/search_jobs",
-                             POST_OBSERVATIONS_SEARCH_JOB_RESP)
-    cbcsdk_mock.mock_request("POST",
-                             "/api/investigate/v1/orgs/test/observations/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/group_results",  # noqa: E501
-                             GET_OBSERVATIONS_GROUPED_RESULTS_RESP)
+    cbcsdk_mock.mock_request(
+        "POST",
+        "/api/investigate/v2/orgs/test/observations/search_jobs",
+        POST_OBSERVATIONS_SEARCH_JOB_RESP,
+    )
+    cbcsdk_mock.mock_request(
+        "POST",
+        "/api/investigate/v1/orgs/test/observations/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/group_results",  # noqa: E501
+        GET_OBSERVATIONS_GROUPED_RESULTS_RESP,
+    )
 
     api = cbcsdk_mock.api
-    observations = api.select(Observation).where(process_pid=2000).aggregation("device_name").execute_async()
+    observations = (
+        api.select(Observation)
+        .where(process_pid=2000)
+        .aggregation("device_name")
+        .execute_async()
+    )
     results = observations.result()
     for observation in results:
         assert observation["device_name"] is not None
@@ -950,8 +972,15 @@ def test_observation_select_aggregation_async(cbcsdk_mock):
 def test_observation_aggregation_setup(cbcsdk_mock):
     """Testing whether aggregation-related properties are setup correctly"""
     api = cbcsdk_mock.api
-    observation = api.select(Observation).where(process_pid=2000).aggregation("device_name").\
-                  max_events_per_group(10).rows(5).start(0).range("-2y", "backend_timestamp")
+    observation = (
+        api.select(Observation)
+        .where(process_pid=2000)
+        .aggregation("device_name")
+        .max_events_per_group(10)
+        .rows(5)
+        .start(0)
+        .range("-2y", "backend_timestamp")
+    )
     assert observation._aggregation is True
     assert observation._aggregate_fields == ["device_name"]
     assert observation._start == 0
@@ -960,5 +989,5 @@ def test_observation_aggregation_setup(cbcsdk_mock):
     assert observation._range == {
         "method": "interval",
         "field": "backend_timestamp",
-        "duration": "-2y"
+        "duration": "-2y",
     }

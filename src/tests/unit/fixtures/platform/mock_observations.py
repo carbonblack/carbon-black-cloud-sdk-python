@@ -394,70 +394,58 @@ GET_OBSERVATIONS_FACET_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING = {
 
 
 GET_OBSERVATIONS_GROUPED_RESULTS_RESP = {
-  "approximate_unaggregated": 442,
-  "completed": 7,
-  "contacted": 7,
-  "group_results": [
-    {
-      "group_end_timestamp": "2023-02-14T06:20:35.696Z",
-      "group_key": "device_name",
-      "group_start_timestamp": "2023-02-05T09:34:57.499Z",
-      "group_value": "dev01-39x-1",
-      "results": [
+    "approximate_unaggregated": 442,
+    "completed": 7,
+    "contacted": 7,
+    "group_results": [
         {
-          "alert_category": [
-            "OBSERVED"
-          ],
-          "alert_id": [
-            "fbb78467-f63c-ac52-622a-f41c6f07d815"
-          ],
-          "backend_timestamp": "2023-02-14T06:23:18.887Z",
-          "device_group_id": 0,
-          "device_id": 17482451,
-          "device_name": "dev01-39x-1",
-          "device_policy_id": 20792247,
-          "device_timestamp": "2023-02-14T06:20:35.696Z",
-          "enriched": True,
-          "enriched_event_type": [
-            "NETWORK"
-          ],
-          "event_description": "The script ...",
-          "event_id": "c7bdd379ac2f11ed92c0b59a6de446c9",
-          "event_network_inbound": False,
-          "event_network_local_ipv4": "10.203.105.21",
-          "event_network_location": "Santa Clara,CA,United States",
-          "event_network_protocol": "TCP",
-          "event_network_remote_ipv4": "23.67.33.87",
-          "event_network_remote_port": 80,
-          "event_type": [
-            "netconn"
-          ],
-          "ingress_time": 1676355686412,
-          "legacy": True,
-          "observation_description": "The application",
-          "observation_id": "c7bdd379ac2f11ed92c0b59a6de446c9:fbb78467-f63c-ac52-622a-f41c6f07d815",
-          "observation_type": "CB_ANALYTICS",
-          "org_id": "ABCD123456",
-          "parent_guid": "ABCD123456-010ac2d3-00001164-00000000-1d9403c70fffc03",
-          "parent_pid": 4452,
-          "process_guid": "ABCD123456-010ac2d3-0000066c-00000000-1d9403c710932fb",
-          "process_hash": [
-            "dcb5ffb192d9bce84d21f274a87cb5f839ed92094121cc254b5f3bae2f266d62"
-          ],
-          "process_name": "c:\\programdata\\mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\\updates\\308046b0af4a39cb\\backgroundupdate.moz_log",
-          "process_pid": [
-            2000
-          ],
-          "process_username": [
-            "DEV01-39X-1\\bit9qa"
-          ]
+            "group_end_timestamp": "2023-02-14T06:20:35.696Z",
+            "group_key": "device_name",
+            "group_start_timestamp": "2023-02-05T09:34:57.499Z",
+            "group_value": "dev01-39x-1",
+            "results": [
+                {
+                    "alert_category": ["OBSERVED"],
+                    "alert_id": ["fbb78467-f63c-ac52-622a-f41c6f07d815"],
+                    "backend_timestamp": "2023-02-14T06:23:18.887Z",
+                    "device_group_id": 0,
+                    "device_id": 17482451,
+                    "device_name": "dev01-39x-1",
+                    "device_policy_id": 20792247,
+                    "device_timestamp": "2023-02-14T06:20:35.696Z",
+                    "enriched": True,
+                    "enriched_event_type": ["NETWORK"],
+                    "event_description": "The script ...",
+                    "event_id": "c7bdd379ac2f11ed92c0b59a6de446c9",
+                    "event_network_inbound": False,
+                    "event_network_local_ipv4": "10.203.105.21",
+                    "event_network_location": "Santa Clara,CA,United States",
+                    "event_network_protocol": "TCP",
+                    "event_network_remote_ipv4": "23.67.33.87",
+                    "event_network_remote_port": 80,
+                    "event_type": ["netconn"],
+                    "ingress_time": 1676355686412,
+                    "legacy": True,
+                    "observation_description": "The application",
+                    "observation_id": "c7bdd379ac2f11ed92c0b59a6de446c9:fbb78467-f63c-ac52-622a-f41c6f07d815",
+                    "observation_type": "CB_ANALYTICS",
+                    "org_id": "ABCD123456",
+                    "parent_guid": "ABCD123456-010ac2d3-00001164-00000000-1d9403c70fffc03",
+                    "parent_pid": 4452,
+                    "process_guid": "ABCD123456-010ac2d3-0000066c-00000000-1d9403c710932fb",
+                    "process_hash": [
+                        "dcb5ffb192d9bce84d21f274a87cb5f839ed92094121cc254b5f3bae2f266d62"
+                    ],
+                    "process_name": "c:\\programdata\\mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38",
+                    "process_pid": [2000],
+                    "process_username": ["DEV01-39X-1\\bit9qa"],
+                }
+            ],
+            "total_events": 1,
         }
-      ],
-      "total_events": 1
-    }
-  ],
-  "groups_num_available": 0,
-  "num_aggregated": 0,
-  "num_available": 1,
-  "num_found": 1
+    ],
+    "groups_num_available": 0,
+    "num_aggregated": 0,
+    "num_available": 1,
+    "num_found": 1,
 }
