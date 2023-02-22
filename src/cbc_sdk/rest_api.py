@@ -427,7 +427,7 @@ class CBCloudAPI(BaseAPI):
 
     def observations_search_validation(self, query, min_backend_timestamp=None, max_backend_timestamp=None):
         """
-        Returns suggestions for keys and field values that can be used in a search.
+        Returns validation result of a query.
 
         Args:
             query (str): A search query to be validated.
