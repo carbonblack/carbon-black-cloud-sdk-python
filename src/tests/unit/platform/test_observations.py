@@ -955,12 +955,16 @@ def test_observation_select_group_results(cbcsdk_mock):
     )
 
     api = cbcsdk_mock.api
-    ranges = {"field": "backend_timestamp", "duration": "-2y"}
     observation_groups = list(
         api.select(Observation)
         .where(process_pid=2000)
         .get_group_results(
-            "device_name", max_events_per_group=10, rows=5, start=0, ranges=ranges
+            "device_name",
+            max_events_per_group=10,
+            rows=5,
+            start=0,
+            range_field="backend_timestamp",
+            range_duration="-2y"
         )
     )
     assert observation_groups[0]["group_key"] is not None

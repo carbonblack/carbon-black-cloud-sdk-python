@@ -69,7 +69,7 @@ class Observation(UnrefreshableModel):
 
     def _refresh(self):
         """
-        Refreshes the observation object from the server.
+        Refreshes the observation object from the server, by getting the details.
 
         Required Permissions:
             org.search.events (READ)
@@ -136,30 +136,32 @@ class Observation(UnrefreshableModel):
         submit_time = time.time() * 1000
 
         while True:
-            status_url = "/api/investigate/v2/orgs/{}/observations/detail_jobs/{}/results".format(
+            result_url = "/api/investigate/v2/orgs/{}/observations/detail_jobs/{}/results".format(
                 self._cb.credentials.org_key,
                 job_id,
             )
-            result = self._cb.get_object(status_url)
-            searchers_contacted = result.get("contacted", 0)
-            searchers_completed = result.get("completed", 0)
-            log.debug(
-                "contacted = {}, completed = {}".format(
-                    searchers_contacted, searchers_completed
-                )
-            )
-            if searchers_contacted == 0:
+            result = self._cb.get_object(result_url)
+            contacted = result.get("contacted", 0)
+            completed = result.get("completed", 0)
+            log.debug("contacted = {}, completed = {}".format(contacted, completed))
+
+            if contacted == 0:
                 time.sleep(0.5)
                 continue
-            if searchers_completed < searchers_contacted:
-                if (
-                    self._details_timeout != 0
-                    and (time.time() * 1000) - submit_time > self._details_timeout
-                ):
+            if completed < contacted:
+                if self._details_timeout != 0 and (time.time() * 1000) - submit_time > self._details_timeout:
                     timed_out = True
                     break
             else:
-                break
+                total_results = result.get("num_available", 0)
+                found_results = result.get("num_found", 0)
+                # if found is 0, then no observations were found
+                if found_results == 0:
+                    return self
+                if total_results != 0:
+                    results = result.get("results", [])
+                    self._info = results[0]
+                    return self
 
             time.sleep(0.5)
 
@@ -168,30 +170,9 @@ class Observation(UnrefreshableModel):
                 message="user-specified timeout exceeded while waiting for results"
             )
 
-        log.debug("Pulling detailed results, timed_out={}".format(timed_out))
-
-        still_fetching = True
-        result_url = (
-            "/api/investigate/v2/orgs/{}/observations/detail_jobs/{}/results".format(
-                self._cb.credentials.org_key, job_id
-            )
-        )
-        query_parameters = {}
-        while still_fetching:
-            result = self._cb.get_object(result_url, query_parameters=query_parameters)
-            total_results = result.get("num_available", 0)
-            found_results = result.get("num_found", 0)
-            # if found is 0, then no observations were found
-            if found_results == 0:
-                return self
-            if total_results != 0:
-                results = result.get("results", [])
-                self._info = results[0]
-                return self
-
 
 class ObservationFacet(UnrefreshableModel):
-    """Represents an observation retrieved."""
+    """Represents an observation facet retrieved."""
 
     primary_key = "job_id"
     swagger_meta_file = "platform/models/observation_facet.yaml"
@@ -368,27 +349,21 @@ class ObservationQuery(Query):
         if not self._query_token:
             self._submit()
 
-        status_url = (
+        results_url = (
             "/api/investigate/v2/orgs/{}/observations/search_jobs/{}/results".format(
                 self._cb.credentials.org_key,
                 self._query_token,
             )
         )
-        result = self._cb.get_object(status_url)
-        searchers_contacted = result.get("contacted", 0)
-        searchers_completed = result.get("completed", 0)
-        log.debug(
-            "contacted = {}, completed = {}".format(
-                searchers_contacted, searchers_completed
-            )
-        )
-        if searchers_contacted == 0:
+        result = self._cb.get_object(results_url)
+        contacted = result.get("contacted", 0)
+        completed = result.get("completed", 0)
+        log.debug("contacted = {}, completed = {}".format(contacted, completed))
+
+        if contacted == 0:
             return True
-        if searchers_completed < searchers_contacted:
-            if (
-                self._timeout != 0
-                and (time.time() * 1000) - self._submit_time > self._timeout
-            ):
+        if completed < contacted:
+            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:
                 self._timed_out = True
                 return False
             return True
@@ -466,12 +441,17 @@ class ObservationQuery(Query):
             if current >= self._total_results:
                 still_fetching = False
 
-            log.debug(
-                "current: {}, total_results: {}".format(current, self._total_results)
-            )
+            log.debug("current: {}, total_results: {}".format(current, self._total_results))
 
     def get_group_results(
-        self, fields, max_events_per_group=None, rows=500, start=None, ranges=None
+        self,
+        fields,
+        max_events_per_group=None,
+        rows=500,
+        start=None,
+        range_duration=None,
+        range_field=None,
+        range_method=None
     ):
         """
         Get group results grouped by provided fields.
@@ -492,7 +472,7 @@ class ObservationQuery(Query):
         if isinstance(fields, str):
             fields = [fields]
 
-        if not all((gt in ObservationQuery.VALID_GROUP_FIELDS) for gt in fields):
+        if not all((gf in ObservationQuery.VALID_GROUP_FIELDS) for gf in fields):
             raise ApiError("One or more invalid aggregation fields")
 
         if not self._query_token:
@@ -503,19 +483,23 @@ class ObservationQuery(Query):
             self._query_token,
         )
 
-        data = self._build_aggregated_body(
-            fields, max_events_per_group, ranges, rows, start
+        data = self._build_grouped_body(
+            fields,
+            max_events_per_group,
+            rows,
+            start,
+            range_duration,
+            range_field,
+            range_method
         )
 
         still_fetching = True
-
         while still_fetching:
             result = self._cb.post_object(result_url, data).json()
             contacted = result.get("contacted", 0)
             completed = result.get("completed", 0)
             if contacted < completed:
                 time.sleep(0.5)
-                still_fetching = True
                 continue
             else:
                 still_fetching = False
@@ -523,8 +507,15 @@ class ObservationQuery(Query):
         for group in result.get("group_results", []):
             yield group
 
-    def _build_aggregated_body(
-        self, fields, max_events_per_group=None, rows=500, start=None, ranges=None
+    def _build_grouped_body(
+            self,
+            fields,
+            max_events_per_group=None,
+            rows=500,
+            start=None,
+            range_duration=None,
+            range_field=None,
+            range_method=None
     ):
         """
         Helper to build the group results body:
@@ -544,8 +535,14 @@ class ObservationQuery(Query):
         data = dict(fields=fields, rows=rows)
         if max_events_per_group is not None:
             data["max_events_per_group"] = max_events_per_group
-        if ranges is not None:
-            data["ranges"] = ranges
+        if range_duration or range_field or range_method:
+            data["range"] = {}
+            if range_method:
+                data["range"]["method"] = range_method
+            if range_duration:
+                data["range"]["duration"] = range_duration
+            if range_field:
+                data["range"]["field"] = range_field
         if start is not None:
             data["start"] = start
         return data
