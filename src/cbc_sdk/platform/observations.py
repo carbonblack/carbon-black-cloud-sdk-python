@@ -13,7 +13,7 @@
 
 from cbc_sdk.base import UnrefreshableModel, FacetQuery
 from cbc_sdk.base import Query
-from cbc_sdk.errors import ApiError, TimeoutError
+from cbc_sdk.errors import ApiError, TimeoutError, InvalidObjectError
 
 import logging
 import time
@@ -539,6 +539,8 @@ class ObservationGroup:
             cb (CBCloudAPI): A reference to the CBCloudAPI object.
             initial_data (dict): The data to use when initializing the model object.
         """
+        if not initial_data:
+            raise InvalidObjectError("Cannot create object without initial data")
         self._info = initial_data
         self._cb = cb
         self.observations = [Observation(cb, initial_data=x) for x in initial_data.get("results", [])]
