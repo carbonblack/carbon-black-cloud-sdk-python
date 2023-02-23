@@ -538,6 +538,13 @@ class ObservationGroup:
         Args:
             cb (CBCloudAPI): A reference to the CBCloudAPI object.
             initial_data (dict): The data to use when initializing the model object.
+
+        Notes:
+            The constructed object will have the following data:
+            - group_start_timestamp
+            - group_end_timestamp
+            - group_key
+            - group_value
         """
         if not initial_data:
             raise InvalidObjectError("Cannot create object without initial data")
