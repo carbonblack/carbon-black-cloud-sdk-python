@@ -69,7 +69,7 @@ class Observation(UnrefreshableModel):
 
     def _refresh(self):
         """
-        Refreshes the observation object from the server, by getting the details.
+        Refreshes the observation object from the server by getting the details.
 
         Required Permissions:
             org.search.events (READ)
@@ -100,6 +100,9 @@ class Observation(UnrefreshableModel):
         Args:
             timeout (int): Observations details request timeout in milliseconds.
             async_mode (bool): True to request details in an asynchronous manner.
+
+        Returns:
+            Observation: Observation object enriched with the details fields
 
         Note:
             - When using asynchronous mode, this method returns a python future.
@@ -305,6 +308,12 @@ class ObservationQuery(Query):
 
         Args:
             rows (int): How many rows to request.
+
+        Returns:
+            Query: ObservationQuery object
+
+        Example:
+            >>> cb.select(Observation).where(process_name="foo.exe").set_rows(50)
         """
         if not isinstance(rows, int):
             raise ApiError(f"Rows must be an integer. {rows} is a {type(rows)}.")
@@ -346,6 +355,7 @@ class ObservationQuery(Query):
         self._submit_time = time.time() * 1000
 
     def _still_querying(self):
+        """Check whether there are still records to be collected."""
         if not self._query_token:
             self._submit()
 
@@ -371,6 +381,7 @@ class ObservationQuery(Query):
         return False
 
     def _count(self):
+        """Returns the number of records."""
         if self._count_valid:
             return self._total_results
 
@@ -396,6 +407,7 @@ class ObservationQuery(Query):
         return self._total_results
 
     def _search(self, start=0, rows=0):
+        """Start a search job and get the results."""
         if not self._query_token:
             self._submit()
 
@@ -465,6 +477,10 @@ class ObservationQuery(Query):
 
         Returns:
             dict: grouped results
+
+        Examples:
+            >>> for group in api.select(Observation.where(process_pid=2000).get_group_results("device_name"):
+            >>>     ...
         """
         if not isinstance(fields, list) and not isinstance(fields, str):
             raise ApiError("Fields should be either a single field or list of fields")
@@ -483,15 +499,20 @@ class ObservationQuery(Query):
             self._query_token,
         )
 
-        data = self._build_grouped_body(
-            fields,
-            max_events_per_group,
-            rows,
-            start,
-            range_duration,
-            range_field,
-            range_method
-        )
+        # construct the group results body, required ones are fields and rows
+        data = dict(fields=fields, rows=rows)
+        if max_events_per_group is not None:
+            data["max_events_per_group"] = max_events_per_group
+        if range_duration or range_field or range_method:
+            data["range"] = {}
+            if range_method:
+                data["range"]["method"] = range_method
+            if range_duration:
+                data["range"]["duration"] = range_duration
+            if range_field:
+                data["range"]["field"] = range_field
+        if start is not None:
+            data["start"] = start
 
         still_fetching = True
         while still_fetching:
@@ -506,43 +527,3 @@ class ObservationQuery(Query):
 
         for group in result.get("group_results", []):
             yield group
-
-    def _build_grouped_body(
-            self,
-            fields,
-            max_events_per_group=None,
-            rows=500,
-            start=None,
-            range_duration=None,
-            range_field=None,
-            range_method=None
-    ):
-        """
-        Helper to build the group results body:
-
-        {
-          "fields": ["string"],
-          "max_events_per_group": integer,
-          "range": {
-            "duration": "string",
-            "field": "string",
-            "method": "string"
-          },
-          "rows": integer,
-          "start": integer
-        }
-        """
-        data = dict(fields=fields, rows=rows)
-        if max_events_per_group is not None:
-            data["max_events_per_group"] = max_events_per_group
-        if range_duration or range_field or range_method:
-            data["range"] = {}
-            if range_method:
-                data["range"]["method"] = range_method
-            if range_duration:
-                data["range"]["duration"] = range_duration
-            if range_field:
-                data["range"]["field"] = range_field
-        if start is not None:
-            data["start"] = start
-        return data
