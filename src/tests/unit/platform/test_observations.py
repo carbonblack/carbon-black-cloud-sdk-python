@@ -953,6 +953,16 @@ def test_observation_select_group_results(cbcsdk_mock):
         "/api/investigate/v2/orgs/test/observations/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/group_results",  # noqa: E501
         GET_OBSERVATIONS_GROUPED_RESULTS_RESP,
     )
+    cbcsdk_mock.mock_request(
+        "POST",
+        "/api/investigate/v2/orgs/test/observations/detail_jobs",
+        POST_OBSERVATIONS_SEARCH_JOB_RESP,
+    )
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
+        GET_OBSERVATIONS_DETAIL_JOB_RESULTS_RESP,
+    )
 
     api = cbcsdk_mock.api
     observation_groups = list(
@@ -967,6 +977,10 @@ def test_observation_select_group_results(cbcsdk_mock):
             range_duration="-2y"
         )
     )
+    # invoke get_details() on the first Observation in the list
+    observation_groups[0].observations[0].get_details()
+    assert len(observation_groups[0].observations[0].ttp) == 4
+    assert observation_groups[0].group_key is not None
     assert observation_groups[0]["group_key"] is not None
-    assert observation_groups[0]["results"][0]["enriched"] is not None
-    assert observation_groups[0]["results"][0]["process_pid"][0] == 2000
+    assert observation_groups[0].observations[0]["enriched"] is not None
+    assert observation_groups[0].observations[0]["process_pid"][0] == 2000

@@ -526,4 +526,69 @@ class ObservationQuery(Query):
                 still_fetching = False
 
         for group in result.get("group_results", []):
-            yield group
+            yield ObservationGroup(self._cb, initial_data=group)
+
+
+class ObservationGroup:
+    """Represents ObservationGroup"""
+    def __init__(self, cb, initial_data=None):
+        """
+        Initialize ObservationGroup object
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            initial_data (dict): The data to use when initializing the model object.
+        """
+        self._info = initial_data
+        self._cb = cb
+        self.observations = [Observation(cb, initial_data=x) for x in initial_data.get("results", [])]
+
+    def __getattr__(self, item):
+        """
+        Return an attribute of this object.
+
+        Args:
+            item (str): Name of the attribute to be returned.
+
+        Returns:
+            Any: The returned attribute value.
+
+        Raises:
+            AttributeError: If the object has no such attribute.
+        """
+        try:
+            super(ObservationGroup, self).__getattribute__(item)
+        except AttributeError:
+            pass  # fall through to the rest of the logic...
+
+        # try looking up via self._info, if we already have it.
+        if item in self._info:
+            return self._info[item]
+        else:
+            raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
+                                                                              item))
+
+    def __getitem__(self, item):
+        """
+        Return an attribute of this object.
+
+        Args:
+            item (str): Name of the attribute to be returned.
+
+        Returns:
+            Any: The returned attribute value.
+
+        Raises:
+            AttributeError: If the object has no such attribute.
+        """
+        try:
+            super(ObservationGroup, self).__getattribute__(item)
+        except AttributeError:
+            pass  # fall through to the rest of the logic...
+
+        # try looking up via self._info, if we already have it.
+        if item in self._info:
+            return self._info[item]
+        else:
+            raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
+                                                                              item))
