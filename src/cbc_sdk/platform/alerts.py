@@ -928,6 +928,9 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
 
         Returns:
             BaseAlertSearchQuery: This instance.
+
+        Note: - When filtering by fields that take a list parameter, an empty list will be treated as a wildcard and
+        match everything.
         """
         if not all((t in BaseAlertSearchQuery.VALID_ALERT_TYPES) for t in alerttypes):
             raise ApiError("One or more invalid alert type values")
