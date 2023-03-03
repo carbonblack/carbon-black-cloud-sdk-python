@@ -42,8 +42,6 @@ except ImportError:
 import logging
 import json
 
-import urllib
-
 from .credentials import Credentials
 from .credential_providers.default import default_credential_provider
 from .errors import ClientError, QuerySyntaxError, ServerError, TimeoutError, ApiError, ObjectNotFoundError, \
@@ -52,7 +50,6 @@ from . import __version__
 
 from .cache.lru import lru_cache_function
 from .base import CreatableModelMixin, NewBaseModel
-from .utils import convert_query_params
 
 log = logging.getLogger(__name__)
 DEFAULT_STREAM_BUFFER_SIZE = 1024
@@ -470,12 +467,7 @@ class BaseAPI(object):
         Returns:
             object: Result of the GET request.
         """
-        if query_parameters:
-            if isinstance(query_parameters, dict):
-                query_parameters = convert_query_params(query_parameters)
-            uri += '?%s' % (urllib.parse.urlencode(sorted(query_parameters)))
-
-        result = self.api_json_request("GET", uri)
+        result = self.api_json_request("GET", uri, params=query_parameters)
         if result.status_code == 200:
             try:
                 return result.json()
@@ -500,13 +492,8 @@ class BaseAPI(object):
         Returns:
             object: Result of the GET request.
         """
-        if query_parameters:
-            if isinstance(query_parameters, dict):
-                query_parameters = convert_query_params(query_parameters)
-            uri += '?%s' % (urllib.parse.urlencode(sorted(query_parameters)))
-
         hdrs = kwargs.pop("headers", {})
-        result = self.api_json_request("GET", uri, headers=hdrs)
+        result = self.api_json_request("GET", uri, headers=hdrs, params=query_parameters)
         if result.status_code == 200:
             return result.text
         elif result.status_code == 204:
