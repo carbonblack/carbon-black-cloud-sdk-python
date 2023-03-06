@@ -21,7 +21,7 @@ import time
 log = logging.getLogger(__name__)
 
 
-class Observation(UnrefreshableModel):
+class Observation(NewBaseModel):
     """Represents an Observation"""
 
     primary_key = "observation_id"
