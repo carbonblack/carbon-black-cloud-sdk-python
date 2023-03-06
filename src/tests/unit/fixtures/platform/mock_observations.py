@@ -46,6 +46,7 @@ GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP = {
             "process_name": "c:\\programdata\\mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\\updates",
             "process_pid": [2000],
             "process_username": ["DEV01-39X-1\\bit9qa"],
+            "tms_rule_id": "8a4b43c5-5e0a-4f7d-aa46-bd729f1989a7",
         }
     ],
 }
@@ -448,4 +449,13 @@ GET_OBSERVATIONS_GROUPED_RESULTS_RESP = {
     "num_aggregated": 0,
     "num_available": 1,
     "num_found": 1,
+}
+
+
+GET_NETWORK_THREAT_METADATA_RESP = {
+    "detector_abstract": "QE Test signature",
+    "detector_goal": "QE Test signature",
+    "false_negatives": None,
+    "false_positives": None,
+    "threat_public_comment": "Threat class used for VMWARE NSX Testing",
 }

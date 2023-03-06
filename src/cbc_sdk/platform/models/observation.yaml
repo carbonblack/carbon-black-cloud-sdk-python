@@ -78,3 +78,5 @@ properties:
     type: array
     items:
       type: string
+  tms_rule_id:
+    type: string

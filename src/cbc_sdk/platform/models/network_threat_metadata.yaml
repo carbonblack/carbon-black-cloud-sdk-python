@@ -1,0 +1,17 @@
+type: object
+properties:
+  detector_abstract:
+    type: string
+    description: Abstract or description of the detector
+  detector_goal:
+    type: string
+    description: Description of what the detector is achieving
+  false_negatives:
+    type: string
+    description: Highlights why detector could not have been triggered
+  false_positives:
+    type: string
+    description: Highlights why detector could have been triggered
+  threat_public_comment:
+    type: string
+    description: Public comment of the threat
