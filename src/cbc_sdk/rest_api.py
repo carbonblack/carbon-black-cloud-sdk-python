@@ -437,7 +437,7 @@ class CBCloudAPI(BaseAPI):
         Returns:
             dict: A dict with status of the validation
         """
-        query_params = {"suggest.q": query}
+        query_params = {"q": query}
         if min_backend_timestamp:
             query_params["cb.min_backend_timestamp"] = min_backend_timestamp
         if max_backend_timestamp:
