@@ -179,7 +179,7 @@ class Observation(NewBaseModel):
         Returns:
             NetworkThreatMetadata: Get the metadata for a given detector (rule).
         """
-        return NetworkThreatMetadata(self._cb, self.tms_rule_id)
+        return NetworkThreatMetadata(self._cb, self.rule_id)
 
 
 class ObservationFacet(UnrefreshableModel):
@@ -615,7 +615,7 @@ class ObservationGroup:
 class NetworkThreatMetadata(NewBaseModel):
     """Represents an NetworkThreatMetadata"""
 
-    primary_key = "tms_rule_id"
+    primary_key = "rule_id"
     swagger_meta_file = "platform/models/network_threat_metadata.yaml"
     urlobject = "/threatmetadata/v1/orgs/{0}/detectors/{1}"
 
