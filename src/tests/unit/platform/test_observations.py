@@ -1038,9 +1038,16 @@ def test_get_threat_metadata(cbcsdk_mock):
     )
 
     api = cbcsdk_mock.api
-    threat_meta_data = cb.select(
+    threat_meta_data = api.select(
         NetworkThreatMetadata, "8a4b43c5-5e0a-4f7d-aa46-bd729f1989a7"
     )
     assert threat_meta_data["detector_abstract"]
     assert threat_meta_data["detector_goal"]
     assert threat_meta_data["threat_public_comment"]
+
+
+def test_get_threat_metadata_without_id(cbcsdk_mock):
+    """Testing get network threat metadata - exception"""
+    api = cbcsdk_mock.api
+    with pytest.raises(ApiError):
+        api.select(NetworkThreatMetadata)

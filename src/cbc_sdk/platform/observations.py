@@ -617,14 +617,14 @@ class NetworkThreatMetadata(NewBaseModel):
 
     primary_key = "tms_rule_id"
     swagger_meta_file = "platform/models/network_threat_metadata.yaml"
-    urlobject = "/threatmetadata/v1/orgs/{0}/detectors"
+    urlobject = "/threatmetadata/v1/orgs/{0}/detectors/{1}"
 
     def __init__(
         self,
         cb,
         model_unique_id=None,
         initial_data=None,
-        force_init=True,
+        force_init=False,
         full_doc=True,
     ):
         """
@@ -637,8 +637,9 @@ class NetworkThreatMetadata(NewBaseModel):
             cb (CBCloudAPI): A reference to the CBCloudAPI object.
             model_unique_id (Any): The unique ID for this particular instance of the model object.
             initial_data (dict): Not used, retained for compatibility.
-            force_init (bool): True to force object initialization.
+            force_init (bool): False to not force object initialization.
             full_doc (bool): True to mark the object as fully initialized.
+
         Raises:
             ApiError: if model_unique_id is not provided
         """
@@ -647,10 +648,14 @@ class NetworkThreatMetadata(NewBaseModel):
         if model_unique_id is None:
             raise ApiError("model_unique_id is required.")
 
+        url = NetworkThreatMetadata.urlobject.format(cb.credentials.org_key, model_unique_id)
+        data = cb.get_object(url)
+        data[NetworkThreatMetadata.primary_key] = model_unique_id
+
         super(NetworkThreatMetadata, self).__init__(
             cb,
             model_unique_id=model_unique_id,
-            initial_data=None,
+            initial_data=data,
             force_init=force_init,
             full_doc=full_doc,
         )
