@@ -53,7 +53,7 @@ cbc\_sdk.platform.jobs module
    :show-inheritance:
 
 cbc\_sdk.platform.observations module
-----------------------------------
+-------------------------------------
 
 .. automodule:: cbc_sdk.platform.observations
    :members:
