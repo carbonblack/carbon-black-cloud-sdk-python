@@ -431,11 +431,11 @@ class CBCloudAPI(BaseAPI):
 
         Args:
             query (str): A search query to be validated.
-            min_backend_timestamp (str): (optional) The start time for the query
-            max_backend_timestamp (str): (optional) The end time for the query
+            min_backend_timestamp (int): (optional) The start time for the query
+            max_backend_timestamp (int): (optional) The end time for the query
 
         Returns:
-            dict: A dict with status of the validation
+            boolean: A flag showing the status of the validation
         """
         query_params = {"suggest.q": query}
         if min_backend_timestamp:
