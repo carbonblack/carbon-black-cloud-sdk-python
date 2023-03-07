@@ -178,6 +178,10 @@ class Observation(NewBaseModel):
 
         Returns:
             NetworkThreatMetadata: Get the metadata for a given detector (rule).
+
+        Examples:
+            >>> observation = api.select(Observation, observation_id)
+            >>> threat_metadata = observation.get_network_threat_metadata()
         """
         return NetworkThreatMetadata(self._cb, self.rule_id)
 
@@ -613,7 +617,7 @@ class ObservationGroup:
 
 
 class NetworkThreatMetadata(NewBaseModel):
-    """Represents an NetworkThreatMetadata"""
+    """Represents a NetworkThreatMetadata"""
 
     primary_key = "rule_id"
     swagger_meta_file = "platform/models/network_threat_metadata.yaml"
