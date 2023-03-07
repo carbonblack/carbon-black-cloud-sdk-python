@@ -491,7 +491,7 @@ class ObservationQuery(Query):
             dict: grouped results
 
         Examples:
-            >>> for group in api.select(Observation.where(process_pid=2000).get_group_results("device_name"):
+            >>> for group in api.select(Observation).where(process_pid=2000).get_group_results("device_name"):
             >>>     ...
         """
         if not isinstance(fields, list) and not isinstance(fields, str):
