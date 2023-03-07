@@ -161,6 +161,7 @@ class USBDeviceApproval(MutableBaseModel):
 
         Example:
             vendor_id,product_id,serial_number,approval_name,notes
+
             string,string,string,string,string
 
         Returns:

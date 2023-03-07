@@ -385,18 +385,22 @@ def test_refresh_if_needed_mbm(cbcsdk_mock):
 def test_print_unrefreshablemodel(cbcsdk_mock):
     """Test printing an UnrefreshableModel"""
     # mock the search validation
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v1/orgs/test/processes/search_validation?"
+                             "process_guid=WNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
+                             "&q=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
+                             "&query=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00",
                              GET_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_job",
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
     # mock the GET to check search status
-    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
-                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=0"),
                              GET_PROCESS_SEARCH_JOB_RESP)
     # mock the GET to get search results
     cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
-                                     "2c292717-80ed-4f0d-845f-779e09470920/results"),
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=500"),
                              GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
 
     api = cbcsdk_mock.api
