@@ -1,4 +1,4 @@
-"""Testing Observation objects of cbc_sdk.endpoint_standard"""
+"""Testing Observation objects of cbc_sdk.platform"""
 
 import pytest
 import logging
@@ -7,8 +7,7 @@ from cbc_sdk.base import FacetQuery
 from cbc_sdk.platform import Observation
 from cbc_sdk.platform.observations import (
     ObservationQuery,
-    ObservationFacet,
-    NetworkThreatMetadata,
+    ObservationFacet
 )
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError, TimeoutError
@@ -23,13 +22,14 @@ from tests.unit.fixtures.platform.mock_observations import (
     GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_ZERO_COMP,
     GET_OBSERVATIONS_DETAIL_JOB_RESULTS_RESP,
     GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP,
+    GET_OBSERVATIONS_SEARCH_JOB_RESULTS_NO_RULE_ID_RESP,
     POST_OBSERVATIONS_FACET_SEARCH_JOB_RESP,
     GET_OBSERVATIONS_FACET_SEARCH_JOB_RESULTS_RESP_1,
     GET_OBSERVATIONS_FACET_SEARCH_JOB_RESULTS_RESP_2,
     GET_OBSERVATIONS_FACET_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING,
     GET_OBSERVATIONS_GROUPED_RESULTS_RESP,
-    GET_NETWORK_THREAT_METADATA_RESP,
 )
+from tests.unit.fixtures.platform.mock_network_threat_metadata import GET_NETWORK_THREAT_METADATA_RESP
 
 log = logging.basicConfig(
     format="%(asctime)s %(levelname)s:%(message)s",
@@ -994,6 +994,45 @@ def test_observation_select_group_results(cbcsdk_mock):
 # ---------- Network Threat Metadata
 
 
+def test_observation_get_threat_metadata_api_error(cbcsdk_mock):
+    """Testing get network threat metadata through observation - no rule_id"""
+    cbcsdk_mock.mock_request(
+        "POST",
+        "/api/investigate/v2/orgs/test/observations/search_jobs",
+        POST_OBSERVATIONS_SEARCH_JOB_RESP,
+    )
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
+        GET_OBSERVATIONS_SEARCH_JOB_RESULTS_NO_RULE_ID_RESP,
+    )
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results?start=0&rows=500",  # noqa: E501
+        GET_OBSERVATIONS_SEARCH_JOB_RESULTS_NO_RULE_ID_RESP,
+    )
+
+    cbcsdk_mock.mock_request(
+        "POST",
+        "/api/investigate/v2/orgs/test/observations/detail_jobs",
+        POST_OBSERVATIONS_SEARCH_JOB_RESP,
+    )
+
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
+        GET_OBSERVATIONS_DETAIL_JOB_RESULTS_RESP,
+    )
+
+    api = cbcsdk_mock.api
+    obs_list = api.select(Observation).where(
+        observation_id="8fbccc2da75f11ed937ae3cb089984c6:be6ff259-88e3-6286-789f-74defa192d2e"
+    )
+    obs = obs_list[0]
+    with pytest.raises(ApiError):
+        obs.get_network_threat_metadata()
+
+
 def test_observation_get_threat_metadata(cbcsdk_mock):
     """Testing get network threat metadata through observation"""
     cbcsdk_mock.mock_request(
@@ -1027,27 +1066,3 @@ def test_observation_get_threat_metadata(cbcsdk_mock):
     assert threat_meta_data["detector_abstract"]
     assert threat_meta_data["detector_goal"]
     assert threat_meta_data["threat_public_comment"]
-
-
-def test_get_threat_metadata(cbcsdk_mock):
-    """Testing get network threat metadata"""
-    cbcsdk_mock.mock_request(
-        "GET",
-        "/threatmetadata/v1/orgs/test/detectors/8a4b43c5-5e0a-4f7d-aa46-bd729f1989a7",
-        GET_NETWORK_THREAT_METADATA_RESP,
-    )
-
-    api = cbcsdk_mock.api
-    threat_meta_data = api.select(
-        NetworkThreatMetadata, "8a4b43c5-5e0a-4f7d-aa46-bd729f1989a7"
-    )
-    assert threat_meta_data["detector_abstract"]
-    assert threat_meta_data["detector_goal"]
-    assert threat_meta_data["threat_public_comment"]
-
-
-def test_get_threat_metadata_without_id(cbcsdk_mock):
-    """Testing get network threat metadata - exception"""
-    api = cbcsdk_mock.api
-    with pytest.raises(ApiError):
-        api.select(NetworkThreatMetadata)

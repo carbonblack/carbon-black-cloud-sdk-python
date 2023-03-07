@@ -3,6 +3,54 @@
 POST_OBSERVATIONS_SEARCH_JOB_RESP = {"job_id": "08ffa932-b633-4107-ba56-8741e929e48b"}
 
 
+GET_OBSERVATIONS_SEARCH_JOB_RESULTS_NO_RULE_ID_RESP = {
+    "approximate_unaggregated": 1,
+    "completed": 4,
+    "contacted": 4,
+    "num_aggregated": 1,
+    "num_available": 1,
+    "num_found": 1,
+    "results": [
+        {
+            "alert_category": ["OBSERVED"],
+            "alert_id": None,
+            "backend_timestamp": "2023-02-08T03:22:59.196Z",
+            "device_group_id": 0,
+            "device_id": 17482451,
+            "device_name": "dev01-39x-1",
+            "device_policy_id": 20792247,
+            "device_timestamp": "2023-02-08T03:20:33.751Z",
+            "enriched": True,
+            "enriched_event_type": ["NETWORK"],
+            "event_description": "The script",
+            "event_id": "8fbccc2da75f11ed937ae3cb089984c6",
+            "event_network_inbound": False,
+            "event_network_local_ipv4": "10.203.105.21",
+            "event_network_location": "Santa Clara,CA,United States",
+            "event_network_protocol": "TCP",
+            "event_network_remote_ipv4": "23.44.229.234",
+            "event_network_remote_port": 80,
+            "event_type": ["netconn"],
+            "ingress_time": 1675826462036,
+            "legacy": True,
+            "observation_description": "The application firefox.exe invoked ",
+            "observation_id": "8fbccc2da75f11ed937ae3cb089984c6:be6ff259-88e3-6286-789f-74defa192d2e",
+            "observation_type": "CB_ANALYTICS",
+            "org_id": "ABCD123456",
+            "parent_guid": "ABCD123456-010ac2d3-00001c68-00000000-1d93b6c4d1f20ad",
+            "parent_pid": 7272,
+            "process_guid": "ABCD123456-010ac2d3-00001cf8-00000000-1d93b6c4d2b16a4",
+            "process_hash": [
+                "9df1ec5e25919660a1b0b85d3965d55797b9aac81e028008428106c4dcda7b29"
+            ],
+            "process_name": "c:\\programdata\\mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\\updates",
+            "process_pid": [2000],
+            "process_username": ["DEV01-39X-1\\bit9qa"]
+        }
+    ],
+}
+
+
 GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP = {
     "approximate_unaggregated": 1,
     "completed": 4,
@@ -46,7 +94,7 @@ GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP = {
             "process_name": "c:\\programdata\\mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\\updates",
             "process_pid": [2000],
             "process_username": ["DEV01-39X-1\\bit9qa"],
-            "rule_id": "8a4b43c5-5e0a-4f7d-aa46-bd729f1989a7",
+            "rule_id": "8a4b43c5-5e0a-4f7d-aa46-bd729f1989a7"
         }
     ],
 }
@@ -253,6 +301,7 @@ GET_OBSERVATIONS_DETAIL_JOB_RESULTS_RESP = {
     ],
 }
 
+
 GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_ALERTS = {
     "approximate_unaggregated": 2,
     "completed": 4,
@@ -449,13 +498,4 @@ GET_OBSERVATIONS_GROUPED_RESULTS_RESP = {
     "num_aggregated": 0,
     "num_available": 1,
     "num_found": 1,
-}
-
-
-GET_NETWORK_THREAT_METADATA_RESP = {
-    "detector_abstract": "QE Test signature",
-    "detector_goal": "QE Test signature",
-    "false_negatives": None,
-    "false_positives": None,
-    "threat_public_comment": "Threat class used for VMWARE NSX Testing",
 }

@@ -14,6 +14,7 @@
 from cbc_sdk.base import UnrefreshableModel, NewBaseModel, FacetQuery
 from cbc_sdk.base import Query
 from cbc_sdk.errors import ApiError, TimeoutError, InvalidObjectError
+from cbc_sdk.platform.network_threat_metadata import NetworkThreatMetadata
 
 import logging
 import time
@@ -179,11 +180,17 @@ class Observation(NewBaseModel):
         Returns:
             NetworkThreatMetadata: Get the metadata for a given detector (rule).
 
+        Raises:
+            ApiError: when rule_id is not returned for the Observation
+
         Examples:
             >>> observation = api.select(Observation, observation_id)
             >>> threat_metadata = observation.get_network_threat_metadata()
         """
-        return NetworkThreatMetadata(self._cb, self.rule_id)
+        try:
+            return NetworkThreatMetadata(self._cb, self.rule_id)
+        except AttributeError:
+            raise ApiError("No available network threat metadata.")
 
 
 class ObservationFacet(UnrefreshableModel):
@@ -614,52 +621,3 @@ class ObservationGroup:
         else:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
                                                                               item))
-
-
-class NetworkThreatMetadata(NewBaseModel):
-    """Represents a NetworkThreatMetadata"""
-
-    primary_key = "rule_id"
-    swagger_meta_file = "platform/models/network_threat_metadata.yaml"
-    urlobject = "/threatmetadata/v1/orgs/{0}/detectors/{1}"
-
-    def __init__(
-        self,
-        cb,
-        model_unique_id=None,
-        initial_data=None,
-        force_init=False,
-        full_doc=True,
-    ):
-        """
-        Initialize the NetworkThreatMetadata object.
-
-        Required Permissions:
-            org.xdr.metadata (READ)
-
-        Args:
-            cb (CBCloudAPI): A reference to the CBCloudAPI object.
-            model_unique_id (Any): The unique ID for this particular instance of the model object.
-            initial_data (dict): Not used, retained for compatibility.
-            force_init (bool): False to not force object initialization.
-            full_doc (bool): True to mark the object as fully initialized.
-
-        Raises:
-            ApiError: if model_unique_id is not provided
-        """
-        self._info = None
-
-        if model_unique_id is None:
-            raise ApiError("model_unique_id is required.")
-
-        url = NetworkThreatMetadata.urlobject.format(cb.credentials.org_key, model_unique_id)
-        data = cb.get_object(url)
-        data[NetworkThreatMetadata.primary_key] = model_unique_id
-
-        super(NetworkThreatMetadata, self).__init__(
-            cb,
-            model_unique_id=model_unique_id,
-            initial_data=data,
-            force_init=force_init,
-            full_doc=full_doc,
-        )
