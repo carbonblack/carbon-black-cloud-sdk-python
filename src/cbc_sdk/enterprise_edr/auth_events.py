@@ -323,7 +323,7 @@ class AuthEventsGroup:
         if item in self._info:
             return self._info[item]
         raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
-                                                                              item))
+                                                                          item))
 
     def __getitem__(self, item):
         """
@@ -347,7 +347,7 @@ class AuthEventsGroup:
         if item in self._info:
             return self._info[item]
         raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
-                                                                              item))
+                                                                          item))
 
 
 class AuthEventsQuery(Query):
@@ -574,7 +574,7 @@ class AuthEventsQuery(Query):
 
         Args:
             fields (str / list): field or fields by which to perform the grouping
-            max_events_per_group (int): Maximum number of events in a group, if not provided, all events will be returned
+            max_events_per_group (int): Maximum number of events in a group, if not provided all events will be returned
             rows (int): Number of rows to request, can be paginated
             start (int): First row to use for pagination
             ranges (dict): dict with information about duration, field, method
