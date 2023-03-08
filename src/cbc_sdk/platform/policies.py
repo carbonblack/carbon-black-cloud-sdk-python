@@ -14,9 +14,15 @@
 """Policy implementation as part of Platform API"""
 import copy
 import json
+from types import MappingProxyType
 from cbc_sdk.base import MutableBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
-from cbc_sdk.platform.policy_ruleconfigs import PolicyRuleConfig
+from cbc_sdk.platform.policy_ruleconfigs import PolicyRuleConfig, CorePreventionRuleConfig
 from cbc_sdk.errors import ApiError, ServerError, InvalidObjectError
+
+
+SPECIFIC_RULECONFIGS = MappingProxyType({
+    "core_prevention": CorePreventionRuleConfig
+})
 
 
 class Policy(MutableBaseModel):
@@ -686,7 +692,8 @@ class Policy(MutableBaseModel):
         Returns:
             PolicyRuleConfig: The new object.
         """
-        return PolicyRuleConfig(cb, parent, data.get("id", None), data, False, True)
+        newclass = SPECIFIC_RULECONFIGS.get(data.get("category", None), PolicyRuleConfig)
+        return newclass(cb, parent, data.get("id", None), data, False, True)
 
     def get_ruleconfig_parameter_schema(self, ruleconfig_id):
         """
@@ -774,10 +781,8 @@ class Policy(MutableBaseModel):
         if rule_config._parent is not self:
             raise ApiError("internal error: updated rule configuration does not belong to this policy")
         existed = rule_config.id in self.object_rule_configs
-        old_rule_configs = dict(self.object_rule_configs)
         self._object_rule_configs[rule_config.id] = rule_config
         raw_rule_configs = self._info.get("rule_configs", [])
-        old_raw_rules = copy.deepcopy(raw_rule_configs)
         if existed:
             for index, raw_rule_config in enumerate(raw_rule_configs):
                 if raw_rule_config['id'] == rule_config.id:
@@ -786,18 +791,6 @@ class Policy(MutableBaseModel):
         else:
             raw_rule_configs.append(copy.deepcopy(rule_config._info))
         self._info['rule_configs'] = raw_rule_configs
-        self.touch()
-        rollback = True
-        try:
-            self.save()
-            rollback = False
-        finally:
-            if rollback:
-                self._object_rule_configs = old_rule_configs
-                self._info['rule_configs'] = old_raw_rules
-            else:
-                self._object_rules_need_load = True
-                self._object_rule_configs_need_load = True
 
     def _on_deleted_rule_config(self, rule_config):
         """
@@ -809,25 +802,11 @@ class Policy(MutableBaseModel):
         if rule_config._parent is not self:
             raise ApiError("internal error: updated rule configuration does not belong to this policy")
         if rule_config.id in self.object_rule_configs:
-            old_rule_configs = dict(self.object_rule_configs)
             del self._object_rule_configs[rule_config.id]
         else:
             raise ApiError("internal error: updated rule configuration does not belong to this policy")
-        old_raw_rule_configs = self._info.get("rule_configs", [])
         new_raw_rule_configs = [raw for raw in old_raw_rule_configs if raw['id'] != rule_config.id]
         self._info['rule_configs'] = new_raw_rule_configs
-        self.touch()
-        rollback = True
-        try:
-            self.save()
-            rollback = False
-        finally:
-            if rollback:
-                self._object_rule_configs = old_rule_configs
-                self._info['rule_configs'] = old_raw_rule_configs
-            else:
-                self._object_rules_need_load = True
-                self._object_rule_configs_need_load = True
 
     def add_rule(self, new_rule):
         """Adds a rule to this Policy.

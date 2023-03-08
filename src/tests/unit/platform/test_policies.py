@@ -515,7 +515,7 @@ def test_policy_builder_make_policy(cbcsdk_mock):
     builder.set_managed_detection_response_permissions(False, True)
     rule_config = PolicyRuleConfig(api, None, BUILD_RULECONFIG_1['id'], BUILD_RULECONFIG_1, False, True)
     builder.add_rule_config_copy(rule_config)
-    builder.add_rule_config("ac67fa14-f6be-4df9-93f2-6de0dbd96061", "Credential Theft", "core-prevention",
+    builder.add_rule_config("ac67fa14-f6be-4df9-93f2-6de0dbd96061", "Credential Theft", "core_prevention",
                             WindowsAssignmentMode='REPORT')
     policy = builder.build()
     assert policy._info == NEW_POLICY_CONSTRUCT_1

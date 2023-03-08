@@ -32,6 +32,7 @@ class PolicyRuleConfig(MutableBaseModel):
     To delete an existing PolicyRuleConfig, call its delete() method. This requires the org.policies(DELETE) permission.
 
     """
+    urlobject = "/policyservice/v1/orgs/{0}/policies"
     primary_key = "id"
     swagger_meta_file = "platform/models/policy_ruleconfig.yaml"
 
@@ -53,6 +54,21 @@ class PolicyRuleConfig(MutableBaseModel):
         if model_unique_id is None:
             self.touch(True)
 
+    def _base_url(self):
+        """
+        Calculates the base URL for these particular rule configs, including the org key and the parent policy ID.
+
+        Returns:
+            str: The base URL for these particular rule configs.
+
+        Raises:
+            InvalidObjectError: If the rule config object is unparented.
+        """
+        if self._parent is None:
+            raise InvalidObjectError("no parent for rule config")
+        return PolicyRuleConfig.urlobject.format(self._cb.credentials.org_key) \
+            + f"/{self._parent._model_unique_id}/rule_configs"
+
     def _refresh(self):
         """
         Refreshes the rule configuration object from the server.
@@ -71,6 +87,10 @@ class PolicyRuleConfig(MutableBaseModel):
                     self._info = newobj._info
             return rc
 
+    def _update_ruleconfig(self):
+        """Perform the internal update of the rule configuration object."""
+        raise NotImplementedError("update not defined for this category of rule configuration")
+
     def _update_object(self):
         """
         Updates the rule configuration object on the policy on the server.
@@ -78,7 +98,13 @@ class PolicyRuleConfig(MutableBaseModel):
         Required Permissions:
             org.policies(UPDATE)
         """
+        self._update_ruleconfig()
+        self._full_init = True
         self._parent._on_updated_rule_config(self)
+
+    def _delete_ruleconfig(self):
+        """Perform the internal delete of the rule configuration object."""
+        raise NotImplementedError("delete not defined for this category of rule configuration")
 
     def _delete_object(self):
         """
@@ -89,8 +115,9 @@ class PolicyRuleConfig(MutableBaseModel):
         """
         was_deleted = False
         try:
-            self._parent._on_deleted_rule_config(self)
-            was_deleted = True
+            if self._delete_ruleconfig():
+                self._parent._on_deleted_rule_config(self)
+                was_deleted = True
         finally:
             if was_deleted:
                 self._parent = None
@@ -162,3 +189,95 @@ class PolicyRuleConfig(MutableBaseModel):
     def is_deleted(self):
         """Returns True if this rule configuration object has been deleted."""
         return self._parent is None
+
+
+class CorePreventionRuleConfig(PolicyRuleConfig):
+    """
+    Represents a core prevention rule configuration in the policy.
+
+    Create one of these objects, associating it with a Policy, and set its properties, then call its save() method to
+    add the rule configuration to the policy. This requires the org.policies(UPDATE) permission.
+
+    To update a CorePreventionRuleConfig, change the values of its property fields, then call its save() method.  This
+    requires the org.policies(UPDATE) permission.
+
+    To delete an existing CorePreventionRuleConfig, call its delete() method. This requires the org.policies(DELETE)
+    permission.
+
+    """
+    def __init__(self, cb, parent, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
+        """
+        Initialize the CorePreventionRuleConfig object.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            parent (Policy): The "parent" policy of this rule configuration.
+            model_unique_id (str): ID of the rule configuration.
+            initial_data (dict): Initial data used to populate the rule configuration.
+            force_init (bool): If True, forces the object to be refreshed after constructing.  Default False.
+            full_doc (bool): If True, object is considered "fully" initialized. Default False.
+        """
+        super(CorePreventionRuleConfig, self).__init__(cb, parent, model_unique_id, initial_data, force_init, full_doc)
+
+    def _base_url(self):
+        """
+        Calculates the base URL for these particular rule configs, including the org key and the parent policy ID.
+
+        Returns:
+            str: The base URL for these particular rule configs.
+
+        Raises:
+            InvalidObjectError: If the rule config object is unparented.
+        """
+        return super(CorePreventionRuleConfig, self)._base_url() + "/core_prevention"
+
+    def _refresh(self):
+        """
+        Refreshes the rule configuration object from the server.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Returns:
+            bool: True if the refresh was successful.
+
+        Raises:
+            InvalidObjectError: If the object is unparented or its ID is invalid.
+        """
+        return_data = self._cb.get_object(self._base_url())
+        ruleconfig_data = [d for d in return_data.get("results", []) if d.get("id", "") == self._model_unique_id]
+        if ruleconfig_data:
+            self._info = ruleconfig_data[0]
+        else:
+            raise InvalidObjectError(f"invalid core prevention ID: {self._model_unique_id}")
+        return True
+
+    def _update_ruleconfig(self):
+        """Perform the internal update of the rule configuration object."""
+        body = [{"id": self.id, "parameters": self.parameters}]
+        self._cb.put_object(self._base_url(), body)
+
+    def _delete_ruleconfig(self):
+        """Perform the internal delete of the rule configuration object."""
+        self._cb.delete_object(self._base_url() + f"/{self.id}")
+        return False
+
+    def get_assignment_mode(self):
+        """
+        Returns the assignment mode of this core prevention rule configuration.
+
+        Returns:
+            str: The assignment mode, either "REPORT" or "BLOCK".
+        """
+        return self.get_parameter("WindowsAssignmentMode")
+
+    def set_assignment_mode(self, mode):
+        """
+        Sets the assignment mode of this core prevention rule configuration.
+
+        Args:
+            mode (str): The new mode to set, either "REPORT" or "BLOCK". The default is "BLOCK".
+        """
+        if mode not in ("REPORT", "BLOCK"):
+            raise ApiError(f"invalid assignment mode: {mode}")
+        self.set_parameter("WindowsAssignmentMode", mode)
