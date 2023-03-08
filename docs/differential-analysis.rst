@@ -34,6 +34,8 @@ This example shows the basic result of the ``Differential`` object. The ``.newer
 run id that you want to mark as the starting point-in-time snapshot. By default, only the number of changes between the two runs are returned.
 To receive the actual differential data, use the ``.count_only()`` method, as featured in the Actual Changes example.
 
+.. code-block:: python
+
     >>> from cbc_sdk import CBCloudAPI
     >>> from cbc_sdk.audit_remediation import Differential
     >>>

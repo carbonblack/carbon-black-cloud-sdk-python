@@ -14,7 +14,7 @@
 """Definition of the CBCloudAPI object, the core object for interacting with the Carbon Black Cloud SDK."""
 
 from cbc_sdk.connection import BaseAPI
-from cbc_sdk.errors import ApiError, CredentialError, ServerError
+from cbc_sdk.errors import ApiError, CredentialError, ServerError, InvalidObjectError
 from cbc_sdk.live_response_api import LiveResponseSessionManager
 from cbc_sdk.audit_remediation import Run, RunHistory
 from cbc_sdk.enterprise_edr.threat_intelligence import ReportSeverity
@@ -489,3 +489,25 @@ class CBCloudAPI(BaseAPI):
             self.credentials.org_key
         )
         return self.get_object(url)
+
+    # --- Policies
+
+    def get_policy_ruleconfig_parameter_schema(self, ruleconfig_id):
+        """
+        Returns the parameter schema for a specified rule configuration.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            ruleconfig_id (str): The rule configuration ID (UUID).
+
+        Returns:
+            dict: The parameter schema for this particular rule configuration (as a JSON schema).
+
+        Raises:
+            InvalidObjectError: If the rule configuration ID is not valid.
+        """
+        url = f"/policyservice/v1/orgs/{self.credentials.org_key}/rule_configs/{ruleconfig_id}/parameters/schema"
+        try:
+            return self.get_object(url)
+        except ServerError:
+            raise InvalidObjectError(f"invalid rule config ID {ruleconfig_id}")

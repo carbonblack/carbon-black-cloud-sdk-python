@@ -61,7 +61,7 @@ def test_get_auditlogs(cbcsdk_mock):
 def test_alert_search_suggestions(cbcsdk_mock):
     """Tests getting alert search suggestions"""
     api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/alerts/search_suggestions",
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/alerts/search_suggestions?suggest.q=",
                                     ALERT_SEARCH_SUGGESTIONS_RESP)
     result = api.alert_search_suggestions('')
     assert len(result) == 20
@@ -70,7 +70,7 @@ def test_alert_search_suggestions(cbcsdk_mock):
 def test_process_search_validations(cbcsdk_mock):
     """Tests getting process search validations"""
     api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation?q=process",
                                     PROCESS_SEARCH_VALIDATIONS_RESP)
     result = api.validate_process_query('process')
     assert result
