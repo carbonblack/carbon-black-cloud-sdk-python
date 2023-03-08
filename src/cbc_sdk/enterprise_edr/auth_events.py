@@ -11,7 +11,7 @@
 
 """Model and Query Classes for Auth Events"""
 
-from cbc_sdk.base import UnrefreshableModel, FacetQuery
+from cbc_sdk.base import UnrefreshableModel, NewBaseModel, FacetQuery
 from cbc_sdk.base import Query
 from cbc_sdk.errors import ApiError, TimeoutError, InvalidObjectError
 
@@ -21,7 +21,7 @@ import time
 log = logging.getLogger(__name__)
 
 
-class AuthEvents(UnrefreshableModel):
+class AuthEvents(NewBaseModel):
     """Represents an AuthEvents"""
 
     primary_key = "event_id"
