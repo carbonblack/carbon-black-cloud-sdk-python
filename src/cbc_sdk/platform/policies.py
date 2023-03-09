@@ -780,17 +780,14 @@ class Policy(MutableBaseModel):
         """
         if rule_config._parent is not self:
             raise ApiError("internal error: updated rule configuration does not belong to this policy")
-        existed = rule_config.id in self.object_rule_configs
+        if rule_config.id not in self.object_rule_configs:
+            raise ApiError(f"internal error: unvalid rule configuration ID {rule_config.id}")
         self._object_rule_configs[rule_config.id] = rule_config
         raw_rule_configs = self._info.get("rule_configs", [])
-        if existed:
-            for index, raw_rule_config in enumerate(raw_rule_configs):
-                if raw_rule_config['id'] == rule_config.id:
-                    raw_rule_configs[index] = copy.deepcopy(rule_config._info)
-                    break
-        else:
-            raw_rule_configs.append(copy.deepcopy(rule_config._info))
-        self._info['rule_configs'] = raw_rule_configs
+        location = [index for (index, item) in enumerate(raw_rule_configs) if item['id'] == rule_config.id]
+        if location:
+            raw_rule_configs[location[0]] = copy.deepcopy(rule_config._info)
+            self._info['rule_configs'] = raw_rule_configs
 
     def _on_deleted_rule_config(self, rule_config):
         """
@@ -801,12 +798,11 @@ class Policy(MutableBaseModel):
         """
         if rule_config._parent is not self:
             raise ApiError("internal error: updated rule configuration does not belong to this policy")
-        if rule_config.id in self.object_rule_configs:
-            del self._object_rule_configs[rule_config.id]
-        else:
-            raise ApiError("internal error: updated rule configuration does not belong to this policy")
-        new_raw_rule_configs = [raw for raw in old_raw_rule_configs if raw['id'] != rule_config.id]
-        self._info['rule_configs'] = new_raw_rule_configs
+        rconfs = self._info.get("rule_configs", [])
+        location = [index for (index, item) in enumerate(rconfs) if item['id'] == rule_config.id]
+        if location:
+            rconfs[location[0]] = copy.deepcopy(rule_config._info)
+            self._info['rule_configs'] = rconfs
 
     def add_rule(self, new_rule):
         """Adds a rule to this Policy.
@@ -887,17 +883,6 @@ class Policy(MutableBaseModel):
         else:
             raise ApiError(f"rule #{rule_id} not found in policy")
 
-    def add_rule_config(self, new_rule_config):
-        """
-        Adds a rule configuration to this policy.
-
-        Args:
-            new_rule_config (dict): The new rule configuration to add to this Policy.
-        """
-        new_obj = self._create_rule_config(self._cb, self, new_rule_config)
-        new_obj.touch()
-        new_obj.save()
-
     def delete_rule_config(self, rule_config_id):
         """
         Deletes a rule configuration from this Policy.
@@ -931,7 +916,7 @@ class Policy(MutableBaseModel):
             new_rule_config_info['id'] = rule_config_id
             saved_rule_config_info = old_rule_config._info
             old_rule_config._info = new_rule_config_info
-            old_rule_config.touch()
+            old_rule_config.touch(True)
             restore_rule_config = True
             try:
                 old_rule_config.save()

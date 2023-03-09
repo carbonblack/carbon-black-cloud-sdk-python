@@ -113,14 +113,8 @@ class PolicyRuleConfig(MutableBaseModel):
         Required Permissions:
             org.policies(DELETE)
         """
-        was_deleted = False
-        try:
-            if self._delete_ruleconfig():
-                self._parent._on_deleted_rule_config(self)
-                was_deleted = True
-        finally:
-            if was_deleted:
-                self._parent = None
+        self._delete_ruleconfig()
+        self._parent._on_deleted_rule_config(self)
 
     def get_parameter(self, name):
         """
@@ -185,11 +179,6 @@ class PolicyRuleConfig(MutableBaseModel):
             raise ApiError(f"internal error: {e.message}", e)
         self._info['parameters'] = my_parameters
 
-    @property
-    def is_deleted(self):
-        """Returns True if this rule configuration object has been deleted."""
-        return self._parent is None
-
 
 class CorePreventionRuleConfig(PolicyRuleConfig):
     """
@@ -205,6 +194,8 @@ class CorePreventionRuleConfig(PolicyRuleConfig):
     permission.
 
     """
+    swagger_meta_file = "platform/models/policy_ruleconfig.yaml"
+
     def __init__(self, cb, parent, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
         """
         Initialize the CorePreventionRuleConfig object.
@@ -260,7 +251,7 @@ class CorePreventionRuleConfig(PolicyRuleConfig):
     def _delete_ruleconfig(self):
         """Perform the internal delete of the rule configuration object."""
         self._cb.delete_object(self._base_url() + f"/{self.id}")
-        return False
+        self._info["parameters"] = copy.deepcopy({"WindowsAssignmentMode": "BLOCK"})  # mirror server side
 
     def get_assignment_mode(self):
         """
