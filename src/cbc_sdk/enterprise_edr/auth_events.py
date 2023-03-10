@@ -294,6 +294,11 @@ class AuthEventsGroup:
             - group_end_timestamp
             - group_key
             - group_value
+        Example:
+            >>> cb = CBCloudAPI(profile="example_profile")
+            >>> groups = set(cb.select(AuthEvents).where(process_pid=2000).group_results("device_name"))
+            >>> for group in groups:
+            >>>     print(group._info)
         """
         if not initial_data:
             raise InvalidObjectError("Cannot create object without initial data")
