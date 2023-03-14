@@ -7,4 +7,4 @@ from cbc_sdk.enterprise_edr.threat_intelligence import (Watchlist, Feed, Report,
                                                       WatchlistQuery)
 
 from cbc_sdk.enterprise_edr.ubs import Binary, Downloads
-from cbc_sdk.enterprise_edr.auth_events import AuthEvents, AuthEventsFacet
+from cbc_sdk.enterprise_edr.auth_events import AuthEvent, AuthEventFacet

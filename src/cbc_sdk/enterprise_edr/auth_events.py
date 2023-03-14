@@ -21,8 +21,8 @@ import time
 log = logging.getLogger(__name__)
 
 
-class AuthEvents(NewBaseModel):
-    """Represents an AuthEvents"""
+class AuthEvent(NewBaseModel):
+    """Represents an AuthEvent"""
 
     primary_key = "event_id"
     swagger_meta_file = "enterprise_edr/models/auth_events.yaml"
@@ -36,7 +36,7 @@ class AuthEvents(NewBaseModel):
         full_doc=False,
     ):
         """
-        Initialize the AuthEvents object.
+        Initialize the AuthEvent object.
 
         Required RBAC Permissions:
             org.search.events (CREATE, READ)
@@ -50,21 +50,21 @@ class AuthEvents(NewBaseModel):
 
         Example:
             >>> cb = CBCloudAPI(profile="example_profile")
-            >>> events = cb.select(AuthEvents).where("auth_username:SYSTEM")
+            >>> events = cb.select(AuthEvent).where("auth_username:SYSTEM")
             >>> print(*events)
         """
         self._details_timeout = 0
         self._info = None
         if model_unique_id is not None and initial_data is None:
             auth_events_future = (
-                cb.select(AuthEvents)
+                cb.select(AuthEvent)
                 .where(event_id=model_unique_id)
                 .execute_async()
             )
             result = auth_events_future.result()
             if len(result) == 1:
                 initial_data = result[0]
-        super(AuthEvents, self).__init__(
+        super(AuthEvent, self).__init__(
             cb,
             model_unique_id=model_unique_id,
             initial_data=initial_data,
@@ -74,7 +74,7 @@ class AuthEvents(NewBaseModel):
 
     def _refresh(self):
         """
-        Refreshes the AuthEvents object from the server by getting the details.
+        Refreshes the AuthEvent object from the server by getting the details.
 
         Required RBAC Permissions:
             org.search.events (READ)
@@ -97,17 +97,17 @@ class AuthEvents(NewBaseModel):
         Returns:
             Query: The query object for this Auth Event.
         """
-        return AuthEventsQuery(self, cb)
+        return AuthEventQuery(self, cb)
 
     def get_details(self, timeout=0, async_mode=False):
         """Requests detailed results.
 
         Args:
-            timeout (int): AuthEvents details request timeout in milliseconds.
+            timeout (int): AuthEvent details request timeout in milliseconds.
             async_mode (bool): True to request details in an asynchronous manner.
 
         Returns:
-            AuthEvents: Auth Events object enriched with the details fields
+            AuthEvent: Auth Events object enriched with the details fields
 
         Note:
             - When using asynchronous mode, this method returns a python future.
@@ -116,10 +116,10 @@ class AuthEvents(NewBaseModel):
         Examples:
             >>> cb = CBCloudAPI(profile="example_profile")
 
-            >>> event = cb.select(AuthEvents, "example-auth-event-id")
+            >>> event = cb.select(AuthEvent, "example-auth-event-id")
             >>> print(event.get_details())
 
-            >>> events = cb.select(AuthEvents).where(process_pid=2000)
+            >>> events = cb.select(AuthEvent).where(process_pid=2000)
             >>> print(events[0].get_details())
         """
         self._details_timeout = timeout
@@ -179,13 +179,13 @@ class AuthEvents(NewBaseModel):
             )
 
 
-class AuthEventsFacet(UnrefreshableModel):
+class AuthEventFacet(UnrefreshableModel):
     """
-    Represents an AuthEvents facet retrieved.
+    Represents an AuthEvent facet retrieved.
 
     Example:
         >>> cb = CBCloudAPI(profile="example_profile")
-        >>> events_facet = cb.select(AuthEventsFacet).where("auth_username:SYSTEM").add_facet_field("process_name")
+        >>> events_facet = cb.select(AuthEventFacet).where("auth_username:SYSTEM").add_facet_field("process_name")
         >>> print(events_facet.results)
     """
 
@@ -195,11 +195,11 @@ class AuthEventsFacet(UnrefreshableModel):
     result_url = "/api/investigate/v2/orgs/{}/auth_events/facet_jobs/{}/results"
 
     class Terms(UnrefreshableModel):
-        """Represents the facet fields and values associated with an AuthEvents Facet query."""
+        """Represents the facet fields and values associated with an AuthEvent Facet query."""
 
         def __init__(self, cb, initial_data):
-            """Initialize an AuthEventsFacet Terms object with initial_data."""
-            super(AuthEventsFacet.Terms, self).__init__(
+            """Initialize an AuthEventFacet Terms object with initial_data."""
+            super(AuthEventFacet.Terms, self).__init__(
                 cb,
                 model_unique_id=None,
                 initial_data=initial_data,
@@ -223,11 +223,11 @@ class AuthEventsFacet(UnrefreshableModel):
             return [field for field in self._facets]
 
     class Ranges(UnrefreshableModel):
-        """Represents the range (bucketed) facet fields and values associated with an AuthEvents Facet query."""
+        """Represents the range (bucketed) facet fields and values associated with an AuthEvent Facet query."""
 
         def __init__(self, cb, initial_data):
-            """Initialize an AuthEventsFacet Ranges object with initial_data."""
-            super(AuthEventsFacet.Ranges, self).__init__(
+            """Initialize an AuthEventFacet Ranges object with initial_data."""
+            super(AuthEventFacet.Ranges, self).__init__(
                 cb,
                 model_unique_id=None,
                 initial_data=initial_data,
@@ -242,7 +242,7 @@ class AuthEventsFacet(UnrefreshableModel):
 
         @property
         def facets(self):
-            """Returns the reified `AuthEventsFacet.Terms._facets` for this result."""
+            """Returns the reified `AuthEventFacet.Terms._facets` for this result."""
             return self._facets
 
         @property
@@ -257,32 +257,32 @@ class AuthEventsFacet(UnrefreshableModel):
 
     def __init__(self, cb, model_unique_id, initial_data):
         """Initialize the Terms object with initial data."""
-        super(AuthEventsFacet, self).__init__(
+        super(AuthEventFacet, self).__init__(
             cb,
             model_unique_id=model_unique_id,
             initial_data=initial_data,
             force_init=False,
             full_doc=True,
         )
-        self._terms = AuthEventsFacet.Terms(cb, initial_data=initial_data["terms"])
-        self._ranges = AuthEventsFacet.Ranges(cb, initial_data=initial_data["ranges"])
+        self._terms = AuthEventFacet.Terms(cb, initial_data=initial_data["terms"])
+        self._ranges = AuthEventFacet.Ranges(cb, initial_data=initial_data["ranges"])
 
     @property
     def terms_(self):
-        """Returns the reified `AuthEventsFacet.Terms` for this result."""
+        """Returns the reified `AuthEventFacet.Terms` for this result."""
         return self._terms
 
     @property
     def ranges_(self):
-        """Returns the reified `AuthEventsFacet.Ranges` for this result."""
+        """Returns the reified `AuthEventFacet.Ranges` for this result."""
         return self._ranges
 
 
-class AuthEventsGroup:
-    """Represents AuthEventsGroup"""
+class AuthEventGroup:
+    """Represents AuthEventGroup"""
     def __init__(self, cb, initial_data=None):
         """
-        Initialize AuthEventsGroup object
+        Initialize AuthEventGroup object
 
         Args:
             cb (CBCloudAPI): A reference to the CBCloudAPI object.
@@ -296,7 +296,7 @@ class AuthEventsGroup:
             - group_value
         Example:
             >>> cb = CBCloudAPI(profile="example_profile")
-            >>> groups = set(cb.select(AuthEvents).where(process_pid=2000).group_results("device_name"))
+            >>> groups = set(cb.select(AuthEvent).where(process_pid=2000).group_results("device_name"))
             >>> for group in groups:
             >>>     print(group._info)
         """
@@ -304,7 +304,7 @@ class AuthEventsGroup:
             raise InvalidObjectError("Cannot create object without initial data")
         self._info = initial_data
         self._cb = cb
-        self.auth_events = [AuthEvents(cb, initial_data=x) for x in initial_data.get("results", [])]
+        self.auth_events = [AuthEvent(cb, initial_data=x) for x in initial_data.get("results", [])]
 
     def __getattr__(self, item):
         """
@@ -320,7 +320,7 @@ class AuthEventsGroup:
             AttributeError: If the object has no such attribute.
         """
         try:
-            super(AuthEventsGroup, self).__getattribute__(item)
+            super(AuthEventGroup, self).__getattribute__(item)
         except AttributeError:
             pass  # fall through to the rest of the logic...
 
@@ -344,7 +344,7 @@ class AuthEventsGroup:
             AttributeError: If the object has no such attribute.
         """
         try:
-            super(AuthEventsGroup, self).__getattribute__(item)
+            super(AuthEventGroup, self).__getattribute__(item)
         except AttributeError:
             pass  # fall through to the rest of the logic...
 
@@ -355,8 +355,8 @@ class AuthEventsGroup:
                                                                           item))
 
 
-class AuthEventsQuery(Query):
-    """Represents the query logic for an AuthEvents query.
+class AuthEventQuery(Query):
+    """Represents the query logic for an AuthEvent query.
 
     This class specializes `Query` to handle the particulars of Auth Events querying.
     """
@@ -376,7 +376,7 @@ class AuthEventsQuery(Query):
 
     def __init__(self, doc_class, cb):
         """
-        Initialize the AuthEventsQuery object.
+        Initialize the AuthEventQuery object.
 
         Args:
             doc_class (class): The class of the model this query returns.
@@ -384,10 +384,10 @@ class AuthEventsQuery(Query):
 
         Example:
             >>> cb = CBCloudAPI(profile="example_profile")
-            >>> events = cb.select(AuthEvents).where("auth_username:SYSTEM")
+            >>> events = cb.select(AuthEvent).where("auth_username:SYSTEM")
             >>> print(*events)
         """
-        super(AuthEventsQuery, self).__init__(doc_class, cb)
+        super(AuthEventQuery, self).__init__(doc_class, cb)
         self._default_args["rows"] = self._batch_size
         self._query_token = None
         self._timeout = 0
@@ -395,13 +395,13 @@ class AuthEventsQuery(Query):
 
     def or_(self, **kwargs):
         """
-        :meth:`or_` criteria are explicitly provided to AuthEvents queries.
+        :meth:`or_` criteria are explicitly provided to AuthEvent queries.
 
         This method overrides the base class in order to provide or_() functionality rather than raising an exception.
 
         Example:
             >>> cb = CBCloudAPI(profile="example_profile")
-            >>> events = cb.select(AuthEvents).where(process_name="chrome.exe").or_(process_name="firefox.exe")
+            >>> events = cb.select(AuthEvent).where(process_name="chrome.exe").or_(process_name="firefox.exe")
             >>> print(*events)
         """
         self._query_builder.or_(None, **kwargs)
@@ -415,18 +415,18 @@ class AuthEventsQuery(Query):
             rows (int): How many rows to request.
 
         Returns:
-            Query: AuthEventsQuery object
+            Query: AuthEventQuery object
 
         Example:
             >>> cb = CBCloudAPI(profile="example_profile")
-            >>> events = cb.select(AuthEvents).where(process_name="chrome.exe").set_rows(5)
+            >>> events = cb.select(AuthEvent).where(process_name="chrome.exe").set_rows(5)
             >>> print(*events)
         """
         if not isinstance(rows, int):
             raise ApiError(f"Rows must be an integer. {rows} is a {type(rows)}.")
         if rows > 10000:
             raise ApiError("Maximum allowed value for rows is 10000")
-        super(AuthEventsQuery, self).set_rows(rows)
+        super(AuthEventQuery, self).set_rows(rows)
         return self
 
     def timeout(self, msecs):
@@ -436,12 +436,12 @@ class AuthEventsQuery(Query):
             msecs (int): Timeout duration, in milliseconds.
 
         Returns:
-            Query (AuthEventsQuery): The Query object with new milliseconds
+            Query (AuthEventQuery): The Query object with new milliseconds
                 parameter.
 
         Example:
             >>> cb = CBCloudAPI(profile="example_profile")
-            >>> events = cb.select(AuthEvents).where(process_name="chrome.exe").timeout(5000)
+            >>> events = cb.select(AuthEvent).where(process_name="chrome.exe").timeout(5000)
             >>> print(*events)
         """
         self._timeout = msecs
@@ -589,7 +589,7 @@ class AuthEventsQuery(Query):
 
         Examples:
             >>> cb = CBCloudAPI(profile="example_profile")
-            >>> groups = set(cb.select(AuthEvents).where(process_pid=2000).group_results("device_name"))
+            >>> groups = set(cb.select(AuthEvent).where(process_pid=2000).group_results("device_name"))
             >>> for group in groups:
             >>>     print(group._info)
         """
@@ -599,7 +599,7 @@ class AuthEventsQuery(Query):
         if isinstance(fields, str):
             fields = [fields]
 
-        if not all((gf in AuthEventsQuery.VALID_GROUP_FIELDS) for gf in fields):
+        if not all((gf in AuthEventQuery.VALID_GROUP_FIELDS) for gf in fields):
             raise ApiError("One or more invalid aggregation fields")
 
         if not self._query_token:
@@ -636,7 +636,7 @@ class AuthEventsQuery(Query):
             still_fetching = False
 
         for group in result.get("group_results", []):
-            yield AuthEventsGroup(self._cb, initial_data=group)
+            yield AuthEventGroup(self._cb, initial_data=group)
 
     def get_auth_events_descriptions(self):
         """
@@ -646,7 +646,7 @@ class AuthEventsQuery(Query):
             dict: Descriptions and status messages of Auth Events as dict objects.
         Example:
             >>> cb = CBCloudAPI(profile="example_profile")
-            >>> descriptions = cb.select(AuthEvents).get_auth_events_descriptions()
+            >>> descriptions = cb.select(AuthEvent).get_auth_events_descriptions()
             >>> print(descriptions)
         """
         url = "/api/investigate/v2/orgs/{}/auth_events/descriptions".format(self._cb.credentials.org_key)
@@ -665,7 +665,7 @@ class AuthEventsQuery(Query):
             list: A list of search suggestions expressed as dict objects.
         Example:
             >>> cb = CBCloudAPI(profile="example_profile")
-            >>> suggestions = cb.select(AuthEvents).search_suggestions('auth')
+            >>> suggestions = cb.select(AuthEvent).search_suggestions('auth')
             >>> print(suggestions)
         """
         query_params = {"suggest.q": query}
@@ -686,7 +686,7 @@ class AuthEventsQuery(Query):
             bool: Status of the validation
         Example:
             >>> cb = CBCloudAPI(profile="example_profile")
-            >>> validation = cb.select(AuthEvents).search_validation('auth_username:Administrator')
+            >>> validation = cb.select(AuthEvent).search_validation('auth_username:Administrator')
             >>> print(validation)
         """
         query_params = {"q": query}

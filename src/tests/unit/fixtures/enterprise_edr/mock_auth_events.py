@@ -1,8 +1,8 @@
 """Mock responses for Auth Events queries."""
 
-POST_AUTH_EVENTS_SEARCH_JOB_RESP = {"job_id": "62be5c2c-d080-4ce6-b4f3-7c519cc2b41c-sqs"}
+POST_AUTH_EVENT_SEARCH_JOB_RESP = {"job_id": "62be5c2c-d080-4ce6-b4f3-7c519cc2b41c-sqs"}
 
-GET_AUTH_EVENTS_SEARCH_JOB_RESULTS_RESP = {
+GET_AUTH_EVENT_SEARCH_JOB_RESULTS_RESP = {
   "results": [
     {
       "auth_domain_name": "NT AUTHORITY",
@@ -52,7 +52,7 @@ GET_AUTH_EVENTS_SEARCH_JOB_RESULTS_RESP = {
 }
 
 
-GET_AUTH_EVENTS_SEARCH_JOB_RESULTS_RESP_0 = {
+GET_AUTH_EVENT_SEARCH_JOB_RESULTS_RESP_0 = {
   "results": [],
   "num_found": 0,
   "num_available": 0,
@@ -63,7 +63,7 @@ GET_AUTH_EVENTS_SEARCH_JOB_RESULTS_RESP_0 = {
 }
 
 
-GET_AUTH_EVENTS_SEARCH_JOB_RESULTS_RESP_ZERO_COMP = {
+GET_AUTH_EVENT_SEARCH_JOB_RESULTS_RESP_ZERO_COMP = {
   "results": [],
   "num_found": 0,
   "num_available": 0,
@@ -74,7 +74,7 @@ GET_AUTH_EVENTS_SEARCH_JOB_RESULTS_RESP_ZERO_COMP = {
 }
 
 
-GET_AUTH_EVENTS_SEARCH_JOB_RESULTS_ZERO = {
+GET_AUTH_EVENT_SEARCH_JOB_RESULTS_ZERO = {
   "results": [],
   "num_found": 0,
   "num_available": 0,
@@ -85,7 +85,7 @@ GET_AUTH_EVENTS_SEARCH_JOB_RESULTS_ZERO = {
 }
 
 
-GET_AUTH_EVENTS_SEARCH_JOB_RESULTS_RESP_2 = {
+GET_AUTH_EVENT_SEARCH_JOB_RESULTS_RESP_2 = {
   "results": [
     {
       "auth_domain_name": "NT AUTHORITY",
@@ -171,7 +171,7 @@ GET_AUTH_EVENTS_SEARCH_JOB_RESULTS_RESP_2 = {
 }
 
 
-GET_AUTH_EVENTS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING = {
+GET_AUTH_EVENT_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING = {
     "num_found": 808,
     "num_available": 1,
     "contacted": 6,
@@ -180,7 +180,7 @@ GET_AUTH_EVENTS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING = {
 }
 
 
-GET_AUTH_EVENTS_DETAIL_JOB_RESULTS_RESP = {
+GET_AUTH_EVENT_DETAIL_JOB_RESULTS_RESP = {
   "results": [
     {
       "auth_cleartext_credentials_logon": False,
@@ -281,12 +281,12 @@ GET_AUTH_EVENTS_DETAIL_JOB_RESULTS_RESP = {
 """Mocks for auth events facet query testing."""
 
 
-POST_AUTH_EVENTS_FACET_SEARCH_JOB_RESP = {
+POST_AUTH_EVENT_FACET_SEARCH_JOB_RESP = {
     "job_id": "62be5c2c-d080-4ce6-b4f3-7c519cc2b41c-sqs"
 }
 
 
-GET_AUTH_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_1 = {
+GET_AUTH_EVENT_FACET_SEARCH_JOB_RESULTS_RESP_1 = {
     "ranges": [
         {
             "start": "2020-08-04T08:01:32.077Z",
@@ -308,7 +308,7 @@ GET_AUTH_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_1 = {
 }
 
 
-GET_AUTH_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_2 = {
+GET_AUTH_EVENT_FACET_SEARCH_JOB_RESULTS_RESP_2 = {
     "ranges": [],
     "terms": [
         {
@@ -322,7 +322,7 @@ GET_AUTH_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_2 = {
 }
 
 
-GET_AUTH_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING = {
+GET_AUTH_EVENT_FACET_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING = {
     "ranges": [],
     "terms": [],
     "num_found": 0,
@@ -331,7 +331,7 @@ GET_AUTH_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING = {
 }
 
 
-GET_AUTH_EVENTS_GROUPED_RESULTS_RESP = {
+GET_AUTH_EVENT_GROUPED_RESULTS_RESP = {
   "group_results": [
     {
       "group_key": "auth_username",
@@ -389,7 +389,7 @@ GET_AUTH_EVENTS_GROUPED_RESULTS_RESP = {
   "completed": 169
 }
 
-AUTH_EVENTS_SEARCH_SUGGESTIONS_RESP = {
+AUTH_EVENT_SEARCH_SUGGESTIONS_RESP = {
   "suggestions": [
     {
       "term": "auth_cleartext_credentials_logon",
@@ -578,7 +578,7 @@ AUTH_EVENTS_SEARCH_SUGGESTIONS_RESP = {
   ]
 }
 
-AUTH_EVENTS_SEARCH_VALIDATIONS_RESP = {
+AUTH_EVENT_SEARCH_VALIDATIONS_RESP = {
   "valid": True,
   "value_search_query": True
 }
