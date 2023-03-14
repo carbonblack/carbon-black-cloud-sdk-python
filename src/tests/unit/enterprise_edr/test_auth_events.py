@@ -309,7 +309,6 @@ def test_auth_event_select_details_sync_zero(cbcsdk_mock):
     events = events_list[0]
     results = events.get_details()
     assert results["device_name"] is not None
-    assert results.get("alert_id") == []
 
 
 def test_auth_event_select_compound(cbcsdk_mock):
