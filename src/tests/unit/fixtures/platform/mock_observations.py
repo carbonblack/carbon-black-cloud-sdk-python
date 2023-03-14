@@ -45,7 +45,7 @@ GET_OBSERVATIONS_SEARCH_JOB_RESULTS_NO_RULE_ID_RESP = {
             ],
             "process_name": "c:\\programdata\\mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\\updates",
             "process_pid": [2000],
-            "process_username": ["DEV01-39X-1\\bit9qa"]
+            "process_username": ["DEV01-39X-1\\bit9qa"],
         }
     ],
 }
@@ -94,7 +94,7 @@ GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP = {
             "process_name": "c:\\programdata\\mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\\updates",
             "process_pid": [2000],
             "process_username": ["DEV01-39X-1\\bit9qa"],
-            "rule_id": "8a4b43c5-5e0a-4f7d-aa46-bd729f1989a7"
+            "rule_id": "8a4b43c5-5e0a-4f7d-aa46-bd729f1989a7",
         }
     ],
 }
@@ -498,4 +498,25 @@ GET_OBSERVATIONS_GROUPED_RESULTS_RESP = {
     "num_aggregated": 0,
     "num_available": 1,
     "num_found": 1,
+}
+
+
+OBSERVATIONS_SEARCH_VALIDATIONS_RESP = {"valid": True, "value_search_query": True}
+
+
+OBSERVATIONS_SEARCH_SUGGESTIONS_RESP = {
+    "suggestions": [
+        {
+            "required_skus_all": [],
+            "required_skus_some": ["threathunter", "defense"],
+            "term": "device_id",
+            "weight": 100,
+        },
+        {
+            "required_skus_all": ["xdr"],
+            "required_skus_some": [],
+            "term": "netconn_remote_device_id",
+            "weight": 70,
+        },
+    ]
 }

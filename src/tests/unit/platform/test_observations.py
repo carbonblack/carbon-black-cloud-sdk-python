@@ -5,10 +5,7 @@ import logging
 
 from cbc_sdk.base import FacetQuery
 from cbc_sdk.platform import Observation
-from cbc_sdk.platform.observations import (
-    ObservationQuery,
-    ObservationFacet
-)
+from cbc_sdk.platform.observations import ObservationQuery, ObservationFacet
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError, TimeoutError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -28,8 +25,12 @@ from tests.unit.fixtures.platform.mock_observations import (
     GET_OBSERVATIONS_FACET_SEARCH_JOB_RESULTS_RESP_2,
     GET_OBSERVATIONS_FACET_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING,
     GET_OBSERVATIONS_GROUPED_RESULTS_RESP,
+    OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
+    OBSERVATIONS_SEARCH_SUGGESTIONS_RESP,
 )
-from tests.unit.fixtures.platform.mock_network_threat_metadata import GET_NETWORK_THREAT_METADATA_RESP
+from tests.unit.fixtures.platform.mock_network_threat_metadata import (
+    GET_NETWORK_THREAT_METADATA_RESP,
+)
 
 log = logging.basicConfig(
     format="%(asctime)s %(levelname)s:%(message)s",
@@ -58,6 +59,11 @@ def cbcsdk_mock(monkeypatch, cb):
 def test_observation_select_where(cbcsdk_mock):
     """Testing Observation Querying with select()"""
     cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/search_validation?q=observation_id%3A8fbccc2da75f11ed937ae3cb089984c6%5C%3Abe6ff259%5C-88e3%5C-6286%5C-789f%5C-74defa192d2e",  # noqa: E501
+        OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
+    )
+    cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/observations/search_jobs",
         POST_OBSERVATIONS_SEARCH_JOB_RESP,
@@ -84,6 +90,11 @@ def test_observation_select_where(cbcsdk_mock):
 
 def test_observation_select_async(cbcsdk_mock):
     """Testing Observation Querying with select() - asynchronous way"""
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/search_validation?q=observation_id%3A8fbccc2da75f11ed937ae3cb089984c6%5C%3Abe6ff259%5C-88e3%5C-6286%5C-789f%5C-74defa192d2e",  # noqa: E501
+        OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
+    )
     cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/observations/search_jobs",
@@ -116,6 +127,11 @@ def test_observation_select_async(cbcsdk_mock):
 def test_observation_select_by_id(cbcsdk_mock):
     """Testing Observation Querying with select() - asynchronous way"""
     cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/search_validation?q=observation_id%3A8fbccc2da75f11ed937ae3cb089984c6%5C%3Abe6ff259%5C-88e3%5C-6286%5C-789f%5C-74defa192d2e",  # noqa: E501
+        OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
+    )
+    cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/observations/search_jobs",
         POST_OBSERVATIONS_SEARCH_JOB_RESP,
@@ -142,6 +158,11 @@ def test_observation_select_by_id(cbcsdk_mock):
 
 def test_observation_select_details_async(cbcsdk_mock):
     """Testing Observation Querying with get_details - asynchronous mode"""
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/search_validation?q=process_pid%3A2000",
+        OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
+    )
     cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/observations/search_jobs",
@@ -226,6 +247,11 @@ def test_observations_details_timeout(cbcsdk_mock):
 def test_observations_select_details_sync(cbcsdk_mock):
     """Testing Observation Querying with get_details"""
     cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/search_validation?q=process_pid%3A2000",
+        OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
+    )
+    cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/observations/search_jobs",
         POST_OBSERVATIONS_SEARCH_JOB_RESP,
@@ -263,6 +289,11 @@ def test_observations_select_details_sync(cbcsdk_mock):
 
 def test_observations_select_details_refresh(cbcsdk_mock):
     """Testing Observation Querying with get_details"""
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/search_validation?q=process_pid%3A2000",
+        OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
+    )
     cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/observations/search_jobs",
@@ -302,6 +333,11 @@ def test_observations_select_details_refresh(cbcsdk_mock):
 def test_observations_select_details_sync_zero(cbcsdk_mock):
     """Testing Observation Querying with get_details"""
     cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/search_validation?q=process_pid%3A2000",
+        OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
+    )
+    cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/observations/search_jobs",
         POST_OBSERVATIONS_SEARCH_JOB_RESP,
@@ -338,13 +374,18 @@ def test_observations_select_details_sync_zero(cbcsdk_mock):
 def test_observations_select_compound(cbcsdk_mock):
     """Testing Observation Querying with select() and more complex criteria"""
     cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/search_validation?q=process_pid%3A1000+OR+process_pid%3A1000",
+        OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
+    )
+    cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/observations/search_jobs",
         POST_OBSERVATIONS_SEARCH_JOB_RESP,
     )
     cbcsdk_mock.mock_request(
         "GET",
-        "/api/investigate/v2/orgs/test/observations/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
+        "/api/investigate/v2/orgs/test/observations/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",
         GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP,
     )
     cbcsdk_mock.mock_request(
@@ -362,6 +403,11 @@ def test_observations_select_compound(cbcsdk_mock):
 
 def test_observations_query_implementation(cbcsdk_mock):
     """Testing Observation querying with where()."""
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/search_validation?q=observation_id%3A8fbccc2da75f11ed937ae3cb089984c6%3Abe6ff259-88e3-6286-789f-74defa192d2e",  # noqa: E501
+        OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
+    )
     cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/observations/search_jobs",
@@ -388,6 +434,11 @@ def test_observations_query_implementation(cbcsdk_mock):
 
 def test_observations_timeout(cbcsdk_mock):
     """Testing ObservationQuery.timeout()."""
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/search_validation?q=observation_id%3A8fbccc2da75f11ed937ae3cb089984c6%5C%3Abe6ff259%5C-88e3%5C-6286%5C-789f%5C-74defa192d2e",  # noqa: E501
+        OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
+    )
     api = cbcsdk_mock.api
     query = api.select(Observation).where("observation_id:some_id")
     assert query._timeout == 0
@@ -397,6 +448,11 @@ def test_observations_timeout(cbcsdk_mock):
 
 def test_observations_timeout_error(cbcsdk_mock):
     """Testing that a timeout in Observation querying throws a TimeoutError correctly"""
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/search_validation?q=observation_id%3A8fbccc2da75f11ed937ae3cb089984c6%3Abe6ff259-88e3-6286-789f-74defa192d2e",  # noqa: E501
+        OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
+    )
     cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/observations/search_jobs",
@@ -472,6 +528,11 @@ def test_observations_time_range(cbcsdk_mock):
 def test_observations_submit(cbcsdk_mock):
     """Test _submit method of ObservationQuery class"""
     cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/search_validation?q=process_pid%3A1000",
+        OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
+    )
+    cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/observations/search_jobs",
         POST_OBSERVATIONS_SEARCH_JOB_RESP,
@@ -487,6 +548,11 @@ def test_observations_submit(cbcsdk_mock):
 
 def test_observations_count(cbcsdk_mock):
     """Test _submit method of Observationquery class"""
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/search_validation?q=process_pid%3A1000",
+        OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
+    )
     cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/observations/search_jobs",
@@ -511,6 +577,11 @@ def test_observations_count(cbcsdk_mock):
 
 def test_observations_search(cbcsdk_mock):
     """Test _search method of Observationquery class"""
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/search_validation?q=process_pid%3A2000",
+        OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
+    )
     cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/observations/search_jobs",
@@ -538,6 +609,11 @@ def test_observations_search(cbcsdk_mock):
 def test_observations_still_querying(cbcsdk_mock):
     """Test _search method of Observationquery class"""
     cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/search_validation?q=process_pid%3A1000",
+        OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
+    )
+    cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/observations/search_jobs",
         POST_OBSERVATIONS_SEARCH_JOB_RESP,
@@ -560,6 +636,11 @@ def test_observations_still_querying(cbcsdk_mock):
 
 def test_observations_still_querying2(cbcsdk_mock):
     """Test _search method of Observationquery class"""
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/search_validation?q=process_pid%3A1000",
+        OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
+    )
     cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/observations/search_jobs",
@@ -664,6 +745,11 @@ def test_observation_facet_select_compound(cbcsdk_mock):
 
 def test_observation_facet_query_implementation(cbcsdk_mock):
     """Testing Observation querying with where()."""
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/search_validation?q=process_pid%3A2000",
+        OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
+    )
     cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/observations/facet_jobs",
@@ -949,6 +1035,11 @@ def test_observation_aggregation_wrong_field(cbcsdk_mock):
 def test_observation_select_group_results(cbcsdk_mock):
     """Testing Observation Querying with select() and more complex criteria"""
     cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/search_validation?q=process_pid%3A2000",
+        OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
+    )
+    cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/observations/search_jobs",
         POST_OBSERVATIONS_SEARCH_JOB_RESP,
@@ -980,6 +1071,7 @@ def test_observation_select_group_results(cbcsdk_mock):
             start=0,
             range_field="backend_timestamp",
             range_duration="-2y",
+            range_method="interval"
         )
     )
     # invoke get_details() on the first Observation in the list
@@ -996,6 +1088,11 @@ def test_observation_select_group_results(cbcsdk_mock):
 
 def test_observation_get_threat_metadata_api_error(cbcsdk_mock):
     """Testing get network threat metadata through observation - no rule_id"""
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/search_validation?q=observation_id%3A8fbccc2da75f11ed937ae3cb089984c6%5C%3Abe6ff259%5C-88e3%5C-6286%5C-789f%5C-74defa192d2e",  # noqa: E501
+        OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
+    )
     cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/observations/search_jobs",
@@ -1036,6 +1133,11 @@ def test_observation_get_threat_metadata_api_error(cbcsdk_mock):
 def test_observation_get_threat_metadata(cbcsdk_mock):
     """Testing get network threat metadata through observation"""
     cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/search_validation?q=observation_id%3A8fbccc2da75f11ed937ae3cb089984c6%5C%3Abe6ff259%5C-88e3%5C-6286%5C-789f%5C-74defa192d2e",  # noqa: E501
+        OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
+    )
+    cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/observations/search_jobs",
         POST_OBSERVATIONS_SEARCH_JOB_RESP,
@@ -1066,3 +1168,99 @@ def test_observation_get_threat_metadata(cbcsdk_mock):
     assert threat_meta_data["detector_abstract"]
     assert threat_meta_data["detector_goal"]
     assert threat_meta_data["threat_public_comment"]
+
+
+def test_observations_search_suggestions(cbcsdk_mock):
+    """Tests getting observations search suggestions"""
+    api = cbcsdk_mock.api
+    q = "suggest.count=10&suggest.q=device_id"
+    cbcsdk_mock.mock_request(
+        "GET",
+        f"/api/investigate/v2/orgs/test/observations/search_suggestions?{q}",
+        OBSERVATIONS_SEARCH_SUGGESTIONS_RESP,
+    )
+    result = Observation.search_suggestions(api, "device_id", 10)
+    assert len(result) != 0
+
+
+def test_observations_search_suggestions_api_error():
+    """Tests getting observations search suggestions - no CBCloudAPI arg"""
+    with pytest.raises(ApiError):
+        Observation.search_suggestions("", "device_id", 10)
+
+
+def test_bulk_get_details_api_error():
+    """Tests bulk_get_details - no CBCloudAPI arg"""
+    with pytest.raises(ApiError):
+        Observation.bulk_get_details("", alert_id="xx")
+
+
+def test_helper_get_details_api_error():
+    """Tests _helper_get_details - no CBCloudAPI arg"""
+    with pytest.raises(ApiError):
+        Observation._helper_get_details("", alert_id="xx")
+
+
+def test_bulk_get_details_neither(cbcsdk_mock):
+    """Tests getting bulk_get_details - no alert_id or observation_ids"""
+    api = cbcsdk_mock.api
+    with pytest.raises(ApiError):
+        Observation.bulk_get_details(api)
+
+
+def test_bulk_get_details_both(cbcsdk_mock):
+    """Tests getting bulk_get_details - both alert_id and observation_ids is provided"""
+    api = cbcsdk_mock.api
+    with pytest.raises(ApiError):
+        Observation.bulk_get_details(api, "xxx", ["xxx"])
+
+
+def test_bulk_get_details(cbcsdk_mock):
+    """Tests getting bulk_get_details with observation_ids"""
+    cbcsdk_mock.mock_request(
+        "POST",
+        "/api/investigate/v2/orgs/test/observations/detail_jobs",
+        POST_OBSERVATIONS_SEARCH_JOB_RESP,
+    )
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
+        GET_OBSERVATIONS_DETAIL_JOB_RESULTS_RESP,
+    )
+
+    api = cbcsdk_mock.api
+    results = Observation.bulk_get_details(
+        api,
+        observation_ids=[
+            "c7bdd379ac2f11ed92c0b59a6de446c9:fbb78467-f63c-ac52-622a-f41c6f07d815"
+        ],
+    )
+    assert len(results) == 1
+    assert results[0]["device_name"] is not None
+    assert results[0].device_name is not None
+    assert results[0].enriched is True
+    assert results[0].process_pid[0] == 2000
+
+
+def test_bulk_get_details_alert_id(cbcsdk_mock):
+    """Tests getting bulk_get_details with alert_id"""
+    cbcsdk_mock.mock_request(
+        "POST",
+        "/api/investigate/v2/orgs/test/observations/detail_jobs",
+        POST_OBSERVATIONS_SEARCH_JOB_RESP,
+    )
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
+        GET_OBSERVATIONS_DETAIL_JOB_RESULTS_RESP,
+    )
+
+    api = cbcsdk_mock.api
+    results = Observation.bulk_get_details(
+        api, alert_id="fbb78467-f63c-ac52-622a-f41c6f07d815"
+    )
+    assert len(results) == 1
+    assert results[0]["device_name"] is not None
+    assert results[0].device_name is not None
+    assert results[0].enriched is True
+    assert results[0].process_pid[0] == 2000
