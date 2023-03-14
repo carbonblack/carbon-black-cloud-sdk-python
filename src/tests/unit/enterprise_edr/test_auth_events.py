@@ -843,7 +843,7 @@ def test_auth_event_facet_count(cbcsdk_mock):
     assert auth_events._count() == 116
 
 
-def test_auth_event_search(cbcsdk_mock):
+def test_auth_event_search_facet(cbcsdk_mock):
     """Test _search method of AuthEventQuery class"""
     cbcsdk_mock.mock_request(
         "POST",
@@ -952,6 +952,7 @@ def test_auth_event_select_group_results(cbcsdk_mock):
     assert event_groups[0]["group_key"] is not None
     assert event_groups[0].auth_events[0]["process_pid"][0] == 764
 
+
 def test_auth_event_search_validations(cbcsdk_mock):
     """Tests getting auth_events search validations"""
     api = cbcsdk_mock.api
@@ -963,6 +964,7 @@ def test_auth_event_search_validations(cbcsdk_mock):
     )
     result = api.select(AuthEvent).search_validation('auth_username')
     assert result is True
+
 
 def test_auth_event_search_suggestions(cbcsdk_mock):
     """Tests getting auth_events search suggestions"""
