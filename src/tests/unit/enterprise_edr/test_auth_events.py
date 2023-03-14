@@ -961,7 +961,7 @@ def test_auth_event_search_validations(cbcsdk_mock):
         f"/api/investigate/v2/orgs/test/auth_events/search_validation?{q}",
         AUTH_EVENT_SEARCH_VALIDATIONS_RESP,
     )
-    result = api.select(AuthEvent).search_validation('auth_username')
+    result = AuthEvent.search_validation(api, 'auth_username')
     assert result is True
 
 
@@ -974,6 +974,6 @@ def test_auth_event_search_suggestions(cbcsdk_mock):
         f"/api/investigate/v2/orgs/test/auth_events/search_suggestions?{q}",
         AUTH_EVENT_SEARCH_SUGGESTIONS_RESP,
     )
-    result = api.select(AuthEvent).search_suggestions('auth')
+    result = AuthEvent.search_suggestions(api, 'auth')
 
     assert len(result) != 0

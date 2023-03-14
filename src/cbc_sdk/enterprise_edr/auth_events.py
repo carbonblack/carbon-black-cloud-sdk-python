@@ -179,6 +179,67 @@ class AuthEvent(NewBaseModel):
             )
 
 
+    @staticmethod
+    def get_auth_events_descriptions(cb):
+        """
+        Returns descriptions and status messages of Auth Events.
+
+        Returns:
+            dict: Descriptions and status messages of Auth Events as dict objects.
+        Example:
+            >>> cb = CBCloudAPI(profile="example_profile")
+            >>> descriptions = AuthEvent.get_auth_events_descriptions(cb)
+            >>> print(descriptions)
+        """
+        url = "/api/investigate/v2/orgs/{}/auth_events/descriptions".format(cb.credentials.org_key)
+
+        return cb.get_object(url)
+
+    @staticmethod
+    def search_suggestions(cb, query, count=None):
+        """
+        Returns suggestions for keys and field values that can be used in a search.
+
+        Args:
+            cb
+            query (str): A search query to use.
+            count (int): (optional) Number of suggestions to be returned
+
+        Returns:
+            list: A list of search suggestions expressed as dict objects.
+        Example:
+            >>> cb = CBCloudAPI(profile="example_profile")
+            >>> suggestions = AuthEvent.search_suggestions(cb, 'auth')
+            >>> print(suggestions)
+        """
+        query_params = {"suggest.q": query}
+        if count:
+            query_params["suggest.count"] = count
+        url = "/api/investigate/v2/orgs/{}/auth_events/search_suggestions".format(cb.credentials.org_key)
+        output = cb.get_object(url, query_params)
+        return output["suggestions"]
+
+    @staticmethod
+    def search_validation(cb, query):
+        """
+        Returns validation result of a query.
+
+        Args:
+            query (str): A search query to be validated.
+
+        Returns:
+            bool: Status of the validation
+        Example:
+            >>> cb = CBCloudAPI(profile="example_profile")
+            >>> validation = AuthEvent.search_validation(cb, 'auth_username:Administrator')
+            >>> print(validation)
+        """
+        query_params = {"q": query}
+        url = "/api/investigate/v2/orgs/{}/auth_events/search_validation".format(cb.credentials.org_key)
+        output = cb.get_object(url, query_params)
+        return output.get("valid", False)
+
+
 class AuthEventFacet(UnrefreshableModel):
     """
     Represents an AuthEvent facet retrieved.
@@ -637,59 +698,3 @@ class AuthEventQuery(Query):
 
         for group in result.get("group_results", []):
             yield AuthEventGroup(self._cb, initial_data=group)
-
-    def get_auth_events_descriptions(self):
-        """
-        Returns descriptions and status messages of Auth Events.
-
-        Returns:
-            dict: Descriptions and status messages of Auth Events as dict objects.
-        Example:
-            >>> cb = CBCloudAPI(profile="example_profile")
-            >>> descriptions = cb.select(AuthEvent).get_auth_events_descriptions()
-            >>> print(descriptions)
-        """
-        url = "/api/investigate/v2/orgs/{}/auth_events/descriptions".format(self._cb.credentials.org_key)
-
-        return self._cb.get_object(url)
-
-    def search_suggestions(self, query, count=None):
-        """
-        Returns suggestions for keys and field values that can be used in a search.
-
-        Args:
-            query (str): A search query to use.
-            count (int): (optional) Number of suggestions to be returned
-
-        Returns:
-            list: A list of search suggestions expressed as dict objects.
-        Example:
-            >>> cb = CBCloudAPI(profile="example_profile")
-            >>> suggestions = cb.select(AuthEvent).search_suggestions('auth')
-            >>> print(suggestions)
-        """
-        query_params = {"suggest.q": query}
-        if count:
-            query_params["suggest.count"] = count
-        url = "/api/investigate/v2/orgs/{}/auth_events/search_suggestions".format(self._cb.credentials.org_key)
-        output = self._cb.get_object(url, query_params)
-        return output["suggestions"]
-
-    def search_validation(self, query):
-        """
-        Returns validation result of a query.
-
-        Args:
-            query (str): A search query to be validated.
-
-        Returns:
-            bool: Status of the validation
-        Example:
-            >>> cb = CBCloudAPI(profile="example_profile")
-            >>> validation = cb.select(AuthEvent).search_validation('auth_username:Administrator')
-            >>> print(validation)
-        """
-        query_params = {"q": query}
-        url = "/api/investigate/v2/orgs/{}/auth_events/search_validation".format(self._cb.credentials.org_key)
-        output = self._cb.get_object(url, query_params)
-        return output.get("valid", False)
