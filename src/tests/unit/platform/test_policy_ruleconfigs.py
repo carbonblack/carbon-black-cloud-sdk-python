@@ -14,7 +14,6 @@
 import copy
 import pytest
 import logging
-import random
 from contextlib import ExitStack as does_not_raise
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.platform import Policy, PolicyRuleConfig
@@ -132,14 +131,14 @@ def test_rule_config_refresh(cbcsdk_mock):
     policy._object_rule_configs = dict([(rconf.id, rconf) for rconf in ruleconfigobjects])
     policy._object_rule_configs_need_load = False
     # proceed with test
-    rule_config = random.choice(list(policy.object_rule_configs.values()))
-    old_name = rule_config.name
-    old_category = rule_config.category
-    old_parameters = rule_config.parameters
-    rule_config.refresh()
-    assert rule_config.name == old_name
-    assert rule_config.category == old_category
-    assert rule_config.parameters == old_parameters
+    for rule_config in policy.object_rule_configs.values():
+        old_name = rule_config.name
+        old_category = rule_config.category
+        old_parameters = rule_config.parameters
+        rule_config.refresh()
+        assert rule_config.name == old_name
+        assert rule_config.category == old_category
+        assert rule_config.parameters == old_parameters
 
 
 def test_rule_config_add_base_not_implemented(cbcsdk_mock):
@@ -207,24 +206,22 @@ def test_core_prevention_refresh(cbcsdk_mock):
                              CORE_PREVENTION_RETURNS)
     api = cbcsdk_mock.api
     policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
-    rule_config = random.choice([cfg for cfg in policy.object_rule_configs.values()
-                                if isinstance(cfg, CorePreventionRuleConfig)])
-    rule_config.refresh()
+    for rule_config in policy.core_prevention_rule_configs.values():
+        rule_config.refresh()
 
 
 def test_core_prevention_set_assignment_mode(cb):
     """Tests the assignment mode setting, which uses the underlying parameter setting."""
     policy = Policy(cb, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
-    rule_config = random.choice([cfg for cfg in policy.object_rule_configs.values()
-                                 if isinstance(cfg, CorePreventionRuleConfig)])
-    old_mode = rule_config.get_assignment_mode()
-    assert not rule_config.is_dirty()
-    rule_config.set_assignment_mode(old_mode)
-    assert not rule_config.is_dirty()
-    rule_config.set_assignment_mode('BLOCK' if old_mode == 'REPORT' else 'REPORT')
-    assert rule_config.is_dirty()
-    with pytest.raises(ApiError):
-        rule_config.set_assignment_mode('BOGUSVALUE')
+    for rule_config in policy.core_prevention_rule_configs.values():
+        old_mode = rule_config.get_assignment_mode()
+        assert not rule_config.is_dirty()
+        rule_config.set_assignment_mode(old_mode)
+        assert not rule_config.is_dirty()
+        rule_config.set_assignment_mode('BLOCK' if old_mode == 'REPORT' else 'REPORT')
+        assert rule_config.is_dirty()
+        with pytest.raises(ApiError):
+            rule_config.set_assignment_mode('BOGUSVALUE')
 
 
 def test_core_prevention_update_and_save(cbcsdk_mock):

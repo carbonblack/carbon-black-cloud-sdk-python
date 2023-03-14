@@ -663,6 +663,18 @@ class Policy(MutableBaseModel):
             self._object_rule_configs_need_load = False
         return self._object_rule_configs
 
+    @property
+    def core_prevention_rule_configs(self):
+        """
+        Returns a dictionary of core prevention rule configuration IDs and objects for this Policy.
+
+        Returns:
+            dict: A dictionary with core prevention rule configuration IDs as keys and CorePreventionRuleConfig objects
+                  as values.
+        """
+        return {key: rconf for (key, rconf) in self.object_rule_configs.items()
+                if isinstance(rconf, CorePreventionRuleConfig)}
+
     def valid_rule_configs(self):
         """
         Returns a dictionary identifying all valid rule configurations for this policy.
