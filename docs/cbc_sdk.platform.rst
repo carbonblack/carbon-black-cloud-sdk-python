@@ -52,8 +52,16 @@ cbc\_sdk.platform.jobs module
    :undoc-members:
    :show-inheritance:
 
+cbc\_sdk.platform.network_threat_metadata module
+------------------------------------------------
+
+.. automodule:: cbc_sdk.platform.network_threat_metadata
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 cbc\_sdk.platform.observations module
-----------------------------------
+-------------------------------------
 
 .. automodule:: cbc_sdk.platform.observations
    :members:

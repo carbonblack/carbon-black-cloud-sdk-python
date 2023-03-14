@@ -145,7 +145,7 @@ def test_observations_search_validations(cbcsdk_mock):
     """Tests getting observations search validations"""
     api = cbcsdk_mock.api
     q = "?cb.max_backend_timestamp=2020-08-05T08%3A01%3A32.077Z&cb.min_backend_timestamp=" \
-        "2020-08-04T08%3A01%3A32.077Z&suggest.q=device_id"
+        "2020-08-04T08%3A01%3A32.077Z&q=device_id"
     cbcsdk_mock.mock_request(
         "GET",
         f"/api/investigate/v2/orgs/test/observations/search_validation{q}",

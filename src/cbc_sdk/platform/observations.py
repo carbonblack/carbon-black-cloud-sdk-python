@@ -11,9 +11,10 @@
 
 """Model and Query Classes for Observations"""
 
-from cbc_sdk.base import UnrefreshableModel, FacetQuery
+from cbc_sdk.base import UnrefreshableModel, NewBaseModel, FacetQuery
 from cbc_sdk.base import Query
 from cbc_sdk.errors import ApiError, TimeoutError, InvalidObjectError
+from cbc_sdk.platform.network_threat_metadata import NetworkThreatMetadata
 
 import logging
 import time
@@ -21,7 +22,7 @@ import time
 log = logging.getLogger(__name__)
 
 
-class Observation(UnrefreshableModel):
+class Observation(NewBaseModel):
     """Represents an Observation"""
 
     primary_key = "observation_id"
@@ -172,6 +173,24 @@ class Observation(UnrefreshableModel):
             raise TimeoutError(
                 message="user-specified timeout exceeded while waiting for results"
             )
+
+    def get_network_threat_metadata(self):
+        """Requests Network Threat Metadata.
+
+        Returns:
+            NetworkThreatMetadata: Get the metadata for a given detector (rule).
+
+        Raises:
+            ApiError: when rule_id is not returned for the Observation
+
+        Examples:
+            >>> observation = api.select(Observation, observation_id)
+            >>> threat_metadata = observation.get_network_threat_metadata()
+        """
+        try:
+            return NetworkThreatMetadata(self._cb, self.rule_id)
+        except AttributeError:
+            raise ApiError("No available network threat metadata.")
 
 
 class ObservationFacet(UnrefreshableModel):
@@ -479,7 +498,7 @@ class ObservationQuery(Query):
             dict: grouped results
 
         Examples:
-            >>> for group in api.select(Observation.where(process_pid=2000).get_group_results("device_name"):
+            >>> for group in api.select(Observation).where(process_pid=2000).get_group_results("device_name"):
             >>>     ...
         """
         if not isinstance(fields, list) and not isinstance(fields, str):
@@ -531,6 +550,7 @@ class ObservationQuery(Query):
 
 class ObservationGroup:
     """Represents ObservationGroup"""
+
     def __init__(self, cb, initial_data=None):
         """
         Initialize ObservationGroup object

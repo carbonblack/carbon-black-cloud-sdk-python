@@ -78,3 +78,5 @@ properties:
     type: array
     items:
       type: string
+  rule_id:
+    type: string
