@@ -24,7 +24,8 @@ from tests.unit.fixtures.enterprise_edr.mock_auth_events import (
     GET_AUTH_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_1,
     GET_AUTH_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING,
     GET_AUTH_EVENTS_GROUPED_RESULTS_RESP,
-    # GET_AUTH_EVENTS_SEARCH_JOB_RESULTS_RESP,
+    AUTH_EVENTS_SEARCH_VALIDATIONS_RESP,
+    AUTH_EVENTS_SEARCH_SUGGESTIONS_RESP
 )
 
 log = logging.basicConfig(
@@ -950,3 +951,28 @@ def test_auth_events_select_group_results(cbcsdk_mock):
     assert event_groups[0].group_key is not None
     assert event_groups[0]["group_key"] is not None
     assert event_groups[0].auth_events[0]["process_pid"][0] == 764
+
+def test_auth_events_search_validations(cbcsdk_mock):
+    """Tests getting auth_events search validations"""
+    api = cbcsdk_mock.api
+    q = 'q=auth_username'
+    cbcsdk_mock.mock_request(
+        "GET",
+        f"/api/investigate/v2/orgs/test/auth_events/search_validation?{q}",
+        AUTH_EVENTS_SEARCH_VALIDATIONS_RESP,
+    )
+    result = api.select(AuthEvents).search_validation('auth_username')
+    assert result is True
+
+def test_auth_events_search_suggestions(cbcsdk_mock):
+    """Tests getting auth_events search suggestions"""
+    api = cbcsdk_mock.api
+    q = "suggest.q=auth"
+    cbcsdk_mock.mock_request(
+        "GET",
+        f"/api/investigate/v2/orgs/test/auth_events/search_suggestions?{q}",
+        AUTH_EVENTS_SEARCH_SUGGESTIONS_RESP,
+    )
+    result = api.select(AuthEvents).search_suggestions('auth')
+
+    assert len(result) != 0

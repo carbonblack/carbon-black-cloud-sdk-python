@@ -85,86 +85,6 @@ GET_AUTH_EVENTS_SEARCH_JOB_RESULTS_ZERO = {
 }
 
 
-# GET_AUTH_EVENTS_SEARCH_JOB_RESULTS_RESP_2 = {
-#     "num_found": 808,
-#     "num_available": 52,
-#     "contacted": 6,
-#     "completed": 6,
-#     "results": [
-#         {
-#             "alert_category": ["OBSERVED"],
-#             "alert_id": None,
-#             "backend_timestamp": "2023-02-08T03:22:59.196Z",
-#             "device_group_id": 0,
-#             "device_id": 17482451,
-#             "device_name": "dev01-39x-1",
-#             "device_policy_id": 20792247,
-#             "device_timestamp": "2023-02-08T03:20:33.751Z",
-#             "enriched": True,
-#             "enriched_event_type": ["NETWORK"],
-#             "event_description": "The script",
-#             "event_id": "8fbccc2da75f11ed937ae3cb089984c6",
-#             "event_network_inbound": False,
-#             "event_network_local_ipv4": "10.203.105.21",
-#             "event_network_location": "Santa Clara,CA,United States",
-#             "event_network_protocol": "TCP",
-#             "event_network_remote_ipv4": "23.44.229.234",
-#             "event_network_remote_port": 80,
-#             "event_type": ["netconn"],
-#             "ingress_time": 1675826462036,
-#             "legacy": True,
-#             "observation_description": "The application firefox.exe invoked ",
-#             "observation_id": "8fbccc2da75f11ed937ae3cb089984c6:be6ff259-88e3-6286-789f-74defa192d2e",
-#             "observation_type": "CB_ANALYTICS",
-#             "org_id": "ABCD123456",
-#             "parent_guid": "ABCD123456-010ac2d3-00001c68-00000000-1d93b6c4d1f20ad",
-#             "parent_pid": 7272,
-#             "process_guid": "ABCD123456-010ac2d3-00001cf8-00000000-1d93b6c4d2b16a4",
-#             "process_hash": [
-#                 "9df1ec5e25919660a1b0b85d3965d55797b9aac81e028008428106c4dcda7b29"
-#             ],
-#             "process_name": "c:\\programdata\\mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\\updates",
-#             "process_pid": [2000],
-#             "process_username": ["DEV01-39X-1\\bit9qa"],
-#         },
-#         {
-#             "alert_category": ["OBSERVED"],
-#             "alert_id": None,
-#             "backend_timestamp": "2023-02-08T03:22:59.196Z",
-#             "device_group_id": 0,
-#             "device_id": 17482451,
-#             "device_name": "dev01-39x-1",
-#             "device_policy_id": 20792247,
-#             "device_timestamp": "2023-02-08T03:20:33.751Z",
-#             "enriched": True,
-#             "enriched_event_type": ["NETWORK"],
-#             "event_description": "The script",
-#             "event_id": "8fbccc2da75f11ed937ae3cb089984c6",
-#             "event_network_inbound": False,
-#             "event_network_local_ipv4": "10.203.105.21",
-#             "event_network_location": "Santa Clara,CA,United States",
-#             "event_network_protocol": "TCP",
-#             "event_network_remote_ipv4": "23.44.229.234",
-#             "event_network_remote_port": 80,
-#             "event_type": ["netconn"],
-#             "ingress_time": 1675826462036,
-#             "legacy": True,
-#             "observation_description": "The application firefox.exe invoked ",
-#             "observation_id": "8fbccc2da75f11ed937ae3cb089984c6:be6ff259-88e3-6286-789f-74defa192d2e",
-#             "observation_type": "CB_ANALYTICS",
-#             "org_id": "ABCD123456",
-#             "parent_guid": "ABCD123456-010ac2d3-00001c68-00000000-1d93b6c4d1f20ad",
-#             "parent_pid": 7272,
-#             "process_guid": "ABCD123456-010ac2d3-00001cf8-00000000-1d93b6c4d2b16a4",
-#             "process_hash": [
-#                 "9df1ec5e25919660a1b0b85d3965d55797b9aac81e028008428106c4dcda7b29"
-#             ],
-#             "process_name": "c:\\programdata\\mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\\updates",
-#             "process_pid": [2000],
-#             "process_username": ["DEV01-39X-1\\bit9qa"],
-#         },
-#     ],
-# }
 GET_AUTH_EVENTS_SEARCH_JOB_RESULTS_RESP_2 = {
   "results": [
     {
@@ -358,7 +278,7 @@ GET_AUTH_EVENTS_DETAIL_JOB_RESULTS_RESP = {
 }
 
 
-"""Mocks for observations facet query testing."""
+"""Mocks for auth events facet query testing."""
 
 
 POST_AUTH_EVENTS_FACET_SEARCH_JOB_RESP = {
@@ -467,4 +387,199 @@ GET_AUTH_EVENTS_GROUPED_RESULTS_RESP = {
   "num_aggregated": 174,
   "contacted": 169,
   "completed": 169
+}
+
+AUTH_EVENTS_SEARCH_SUGGESTIONS_RESP = {
+  "suggestions": [
+    {
+      "term": "auth_cleartext_credentials_logon",
+      "weight": 300,
+      "required_skus_all": [
+        "auth"
+      ],
+      "required_skus_some": []
+    },
+    {
+      "term": "auth_daemon_logon",
+      "weight": 300,
+      "required_skus_all": [
+        "auth"
+      ],
+      "required_skus_some": []
+    },
+    {
+      "term": "auth_domain_name",
+      "weight": 300,
+      "required_skus_all": [
+        "auth"
+      ],
+      "required_skus_some": []
+    },
+    {
+      "term": "auth_elevated_token_logon",
+      "weight": 300,
+      "required_skus_all": [
+        "auth"
+      ],
+      "required_skus_some": []
+    },
+    {
+      "term": "auth_event_action",
+      "weight": 300,
+      "required_skus_all": [
+        "auth"
+      ],
+      "required_skus_some": []
+    },
+    {
+      "term": "auth_failed_logon_count",
+      "weight": 300,
+      "required_skus_all": [
+        "auth"
+      ],
+      "required_skus_some": []
+    },
+    {
+      "term": "auth_failure_status",
+      "weight": 300,
+      "required_skus_all": [
+        "auth"
+      ],
+      "required_skus_some": []
+    },
+    {
+      "term": "auth_failure_sub_status",
+      "weight": 300,
+      "required_skus_all": [
+        "auth"
+      ],
+      "required_skus_some": []
+    },
+    {
+      "term": "auth_interactive_logon",
+      "weight": 300,
+      "required_skus_all": [
+        "auth"
+      ],
+      "required_skus_some": []
+    },
+    {
+      "term": "auth_logon_id",
+      "weight": 300,
+      "required_skus_all": [
+        "auth"
+      ],
+      "required_skus_some": []
+    },
+    {
+      "term": "auth_logon_type",
+      "weight": 300,
+      "required_skus_all": [
+        "auth"
+      ],
+      "required_skus_some": []
+    },
+    {
+      "term": "auth_privileges",
+      "weight": 300,
+      "required_skus_all": [
+        "auth"
+      ],
+      "required_skus_some": []
+    },
+    {
+      "term": "auth_remote_device",
+      "weight": 300,
+      "required_skus_all": [
+        "auth"
+      ],
+      "required_skus_some": []
+    },
+    {
+      "term": "auth_remote_ipv4",
+      "weight": 300,
+      "required_skus_all": [
+        "auth"
+      ],
+      "required_skus_some": []
+    },
+    {
+      "term": "auth_remote_ipv6",
+      "weight": 300,
+      "required_skus_all": [
+        "auth"
+      ],
+      "required_skus_some": []
+    },
+    {
+      "term": "auth_remote_location",
+      "weight": 300,
+      "required_skus_all": [
+        "auth"
+      ],
+      "required_skus_some": []
+    },
+    {
+      "term": "auth_remote_logon",
+      "weight": 300,
+      "required_skus_all": [
+        "auth"
+      ],
+      "required_skus_some": []
+    },
+    {
+      "term": "auth_remote_port",
+      "weight": 300,
+      "required_skus_all": [
+        "auth"
+      ],
+      "required_skus_some": []
+    },
+    {
+      "term": "auth_restricted_admin_logon",
+      "weight": 300,
+      "required_skus_all": [
+        "auth"
+      ],
+      "required_skus_some": []
+    },
+    {
+      "term": "auth_user_id",
+      "weight": 300,
+      "required_skus_all": [
+        "auth"
+      ],
+      "required_skus_some": []
+    },
+    {
+      "term": "auth_user_principal_name",
+      "weight": 300,
+      "required_skus_all": [
+        "auth"
+      ],
+      "required_skus_some": []
+    },
+    {
+      "term": "auth_username",
+      "weight": 300,
+      "required_skus_all": [
+        "auth"
+      ],
+      "required_skus_some": []
+    },
+    {
+      "term": "auth_virtual_account_logon",
+      "weight": 300,
+      "required_skus_all": [
+        "auth"
+      ],
+      "required_skus_some": []
+    }
+  ]
+}
+
+
+AUTH_EVENTS_SEARCH_VALIDATIONS_RESP = {
+  "valid": True,
+  "value_search_query": True
 }
