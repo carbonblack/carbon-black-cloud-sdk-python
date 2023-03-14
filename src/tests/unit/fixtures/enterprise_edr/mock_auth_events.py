@@ -578,7 +578,6 @@ AUTH_EVENTS_SEARCH_SUGGESTIONS_RESP = {
   ]
 }
 
-
 AUTH_EVENTS_SEARCH_VALIDATIONS_RESP = {
   "valid": True,
   "value_search_query": True
