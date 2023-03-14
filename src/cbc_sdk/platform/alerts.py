@@ -267,8 +267,7 @@ class BaseAlert(PlatformModel):
         Raises:
             ApiError: if cb is not instance of CBCloudAPI
         """
-        from cbc_sdk.rest_api import CBCloudAPI
-        if not isinstance(cb, CBCloudAPI):
+        if cb.__class__.__name__ != "CBCloudAPI":
             raise ApiError("cb argument should be instance of CBCloudAPI.")
         query_params = {"suggest.q": query}
         url = "/appservices/v6/orgs/{0}/alerts/search_suggestions".format(cb.credentials.org_key)

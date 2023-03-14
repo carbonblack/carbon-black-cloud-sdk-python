@@ -158,8 +158,7 @@ class Observation(NewBaseModel):
         Raises:
             ApiError: if cb is not instance of CBCloudAPI
         """
-        from cbc_sdk.rest_api import CBCloudAPI
-        if not isinstance(cb, CBCloudAPI):
+        if cb.__class__.__name__ != "CBCloudAPI":
             raise ApiError("cb argument should be instance of CBCloudAPI.")
         if (alert_id and observation_ids) or not (alert_id or observation_ids):
             raise ApiError("Either alert_id or observation_ids should be provided.")
@@ -243,8 +242,7 @@ class Observation(NewBaseModel):
         Raises:
             ApiError: if cb is not instance of CBCloudAPI
         """
-        from cbc_sdk.rest_api import CBCloudAPI
-        if not isinstance(cb, CBCloudAPI):
+        if cb.__class__.__name__ != "CBCloudAPI":
             raise ApiError("cb argument should be instance of CBCloudAPI.")
         query_params = {"suggest.q": query}
         if count:
@@ -269,8 +267,7 @@ class Observation(NewBaseModel):
         Raises:
             ApiError: if cb is not instance of CBCloudAPI
         """
-        from cbc_sdk.rest_api import CBCloudAPI
-        if not isinstance(cb, CBCloudAPI):
+        if cb.__class__.__name__ != "CBCloudAPI":
             raise ApiError("cb argument should be instance of CBCloudAPI.")
         return Observation._helper_get_details(
             cb,
