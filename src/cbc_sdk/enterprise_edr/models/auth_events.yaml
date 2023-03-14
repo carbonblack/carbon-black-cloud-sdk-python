@@ -1,0 +1,66 @@
+type: object
+properties:
+  auth_domain_name:
+    type: string
+  auth_event_action:
+    type: string
+  auth_remote_device:
+    type: string
+  auth_remote_port:
+    type: integer
+  auth_username:
+    type: string
+  backend_timestamp:
+    type: string
+  childproc_count:
+    type: integer
+  crossproc_count:
+    type: integer
+  device_group_id:
+    type: integer
+  device_id:
+    type: integer
+  device_name:
+    type: string
+  device_policy_id:
+    type: integer
+  device_timestamp:
+    type: string
+  event_id:
+    type: string
+  filemod_count:
+    type: integer
+  ingress_time:
+    type: integer
+  modload_count:
+    type: integer
+  netconn_count:
+    type: integer
+  org_id:
+    type: string
+  parent_guid:
+    type: string
+  parent_pid:
+    type: integer
+  process_guid:
+    type: string
+  process_hash:
+    type: array
+    items:
+      type: string
+  process_name:
+    type: string
+  process_pid:
+    type: array
+    items:
+      type: integer
+  process_username:
+    type: array
+    items:
+      type: string
+  regmod_count:
+    type: integer
+  scriptload_count:
+    type: integer
+  windows_event_id:
+    type: integer
