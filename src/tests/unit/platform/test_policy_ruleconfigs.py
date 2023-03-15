@@ -44,6 +44,12 @@ def cbcsdk_mock(monkeypatch, cb):
     return CBCSDKMock(monkeypatch, cb)
 
 
+@pytest.fixture(scope="function")
+def policy(cb):
+    """Mocks a sample policy for unit tests"""
+    return Policy(cb, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+
+
 # ==================================== UNIT TESTS BELOW ====================================
 
 @pytest.mark.parametrize("initial_data, param_schema_return, handler, message", [
@@ -105,12 +111,10 @@ def test_rule_config_validate(cbcsdk_mock, initial_data, param_schema_return, ha
       "category": "core_prevention", "parameters": {"WindowsAssignmentMode": "BOGUSVALUE"}},
      None, pytest.raises(InvalidObjectError), "parameter error: 'BOGUSVALUE' is not one of ['REPORT', 'BLOCK']"),
 ])
-def test_rule_config_validate_inside_policy(cbcsdk_mock, new_data, get_id, handler, message):
+def test_rule_config_validate_inside_policy(cbcsdk_mock, policy, new_data, get_id, handler, message):
     """Tests rule configuration validation when it's part of a policy."""
-    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65535/configs/presentation',
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/configs/presentation',
                              POLICY_CONFIG_PRESENTATION)
-    api = cbcsdk_mock.api
-    policy = Policy(api, 65535, copy.deepcopy(FULL_POLICY_1), False, True)
     rule_config_id = get_id if get_id is not None else new_data['id']
     rule_config = policy.object_rule_configs[rule_config_id]
     rule_config._info = copy.deepcopy(new_data)
@@ -120,14 +124,13 @@ def test_rule_config_validate_inside_policy(cbcsdk_mock, new_data, get_id, handl
         assert h.value.args[0] == message
 
 
-def test_rule_config_refresh(cbcsdk_mock):
+def test_rule_config_refresh(cbcsdk_mock, policy):
     """Tests the rule config refresh() operation."""
     cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536', FULL_POLICY_1)
-    api = cbcsdk_mock.api
-    policy = Policy(api, 65536, FULL_POLICY_1, False, True)
     # Replace all rule configs with the base class for purposes of this test
     cfgs = policy._info.get("rule_configs", [])
-    ruleconfigobjects = [PolicyRuleConfig(api, policy, cfg['id'], cfg, force_init=False, full_doc=True) for cfg in cfgs]
+    ruleconfigobjects = [PolicyRuleConfig(cbcsdk_mock.api, policy, cfg['id'], cfg, force_init=False, full_doc=True)
+                         for cfg in cfgs]
     policy._object_rule_configs = dict([(rconf.id, rconf) for rconf in ruleconfigobjects])
     policy._object_rule_configs_need_load = False
     # proceed with test
@@ -151,7 +154,7 @@ def test_rule_config_add_base_not_implemented(cbcsdk_mock):
                          if p[1]['id'] == '88b19232-7ebb-48ef-a198-2a75a282de5d']
     rule_config_data = rule_config_data1[0][1]
     del policy_data['rule_configs'][rule_config_data1[0][0]]
-    policy = Policy(api, 65536, policy_data, False, True)
+    policy = Policy(api, 65536, policy_data, False, True)  # this policy HAS to be created here because data was altered
     new_rule_config = PolicyRuleConfig(api, policy, '88b19232-7ebb-48ef-a198-2a75a282de5d', rule_config_data,
                                        force_init=False, full_doc=True)
     new_rule_config.touch()
@@ -159,15 +162,14 @@ def test_rule_config_add_base_not_implemented(cbcsdk_mock):
         new_rule_config.save()
 
 
-def test_rule_config_delete_base_not_implemented(cbcsdk_mock):
+def test_rule_config_delete_base_not_implemented(cbcsdk_mock, policy):
     """Verifies that deleting a BaseRuleConfig is not implemented."""
     cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/configs/presentation',
                              POLICY_CONFIG_PRESENTATION)
-    api = cbcsdk_mock.api
-    policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
     # Replace all rule configs with the base class for purposes of this test
     cfgs = policy._info.get("rule_configs", [])
-    ruleconfigobjects = [PolicyRuleConfig(api, policy, cfg['id'], cfg, force_init=False, full_doc=True) for cfg in cfgs]
+    ruleconfigobjects = [PolicyRuleConfig(cbcsdk_mock.api, policy, cfg['id'], cfg, force_init=False, full_doc=True)
+                         for cfg in cfgs]
     policy._object_rule_configs = dict([(rconf.id, rconf) for rconf in ruleconfigobjects])
     policy._object_rule_configs_need_load = False
     # proceed with test
@@ -175,24 +177,20 @@ def test_rule_config_delete_base_not_implemented(cbcsdk_mock):
         policy.delete_rule_config('88b19232-7ebb-48ef-a198-2a75a282de5d')
 
 
-def test_rule_config_modify_by_base_method_invalid_id(cb):
+def test_rule_config_modify_by_base_method_invalid_id(policy):
     """Tests modifying a PolicyRuleConfig object using replace_rule_config, but with an invalid ID."""
-    policy = Policy(cb, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
     with pytest.raises(ApiError):
         policy.replace_rule_config('88b19266-7ebb-48ef-a198-2a75a282de5d', REPLACE_RULECONFIG)
 
 
-def test_rule_config_delete_by_base_method_nonexistent(cb):
+def test_rule_config_delete_by_base_method_nonexistent(policy):
     """Tests what happens when you try to delete a nonexistent rule configuration via delete_rule_config."""
-    policy = Policy(cb, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
     with pytest.raises(ApiError):
         policy.delete_rule_config('88b19266-7ebb-48ef-a198-2a75a282de5d')
 
 
-def test_rule_config_initialization_matches_categories(cbcsdk_mock):
+def test_rule_config_initialization_matches_categories(policy):
     """Tests that rule configurations are initialized with the correct classes."""
-    api = cbcsdk_mock.api
-    policy = Policy(api, 65536, FULL_POLICY_1, False, True)
     for cfg in policy.object_rule_configs.values():
         if cfg.category == "core_prevention":
             assert isinstance(cfg, CorePreventionRuleConfig)
@@ -200,19 +198,16 @@ def test_rule_config_initialization_matches_categories(cbcsdk_mock):
             assert not isinstance(cfg, CorePreventionRuleConfig)
 
 
-def test_core_prevention_refresh(cbcsdk_mock):
+def test_core_prevention_refresh(cbcsdk_mock, policy):
     """Tests the refresh operation for a CorePreventionRuleConfig."""
     cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/rule_configs/core_prevention',
                              CORE_PREVENTION_RETURNS)
-    api = cbcsdk_mock.api
-    policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
     for rule_config in policy.core_prevention_rule_configs.values():
         rule_config.refresh()
 
 
-def test_core_prevention_set_assignment_mode(cb):
+def test_core_prevention_set_assignment_mode(policy):
     """Tests the assignment mode setting, which uses the underlying parameter setting."""
-    policy = Policy(cb, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
     for rule_config in policy.core_prevention_rule_configs.values():
         old_mode = rule_config.get_assignment_mode()
         assert not rule_config.is_dirty()
@@ -224,7 +219,7 @@ def test_core_prevention_set_assignment_mode(cb):
             rule_config.set_assignment_mode('BOGUSVALUE')
 
 
-def test_core_prevention_update_and_save(cbcsdk_mock):
+def test_core_prevention_update_and_save(cbcsdk_mock, policy):
     """Tests updating the core prevention data and saving it."""
     put_called = False
 
@@ -237,8 +232,6 @@ def test_core_prevention_update_and_save(cbcsdk_mock):
     cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/configs/presentation',
                              POLICY_CONFIG_PRESENTATION)
     cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/65536/rule_configs/core_prevention', on_put)
-    api = cbcsdk_mock.api
-    policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
     rule_config = policy.object_rule_configs['c4ed61b3-d5aa-41a9-814f-0f277451532b']
     assert rule_config.name == 'Carbon Black Threat Intel'
     assert rule_config.get_assignment_mode() == 'REPORT'
@@ -247,7 +240,7 @@ def test_core_prevention_update_and_save(cbcsdk_mock):
     assert put_called
 
 
-def test_core_prevention_update_via_replace(cbcsdk_mock):
+def test_core_prevention_update_via_replace(cbcsdk_mock, policy):
     """Tests updating the core prevention data and saving it via replace_rule_config."""
     put_called = False
 
@@ -260,8 +253,6 @@ def test_core_prevention_update_via_replace(cbcsdk_mock):
     cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/configs/presentation',
                              POLICY_CONFIG_PRESENTATION)
     cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/65536/rule_configs/core_prevention', on_put)
-    api = cbcsdk_mock.api
-    policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
     rule_config = policy.object_rule_configs['c4ed61b3-d5aa-41a9-814f-0f277451532b']
     assert rule_config.name == 'Carbon Black Threat Intel'
     assert rule_config.get_assignment_mode() == 'REPORT'
@@ -272,7 +263,7 @@ def test_core_prevention_update_via_replace(cbcsdk_mock):
     assert rule_config.get_assignment_mode() == "BLOCK"
 
 
-def test_core_prevention_delete(cbcsdk_mock):
+def test_core_prevention_delete(cbcsdk_mock, policy):
     """Tests delete of a core prevention data item."""
     delete_called = False
 
@@ -285,8 +276,6 @@ def test_core_prevention_delete(cbcsdk_mock):
                              POLICY_CONFIG_PRESENTATION)
     cbcsdk_mock.mock_request('DELETE', '/policyservice/v1/orgs/test/policies/65536/rule_configs/core_prevention'
                                        '/c4ed61b3-d5aa-41a9-814f-0f277451532b', on_delete)
-    api = cbcsdk_mock.api
-    policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
     rule_config = policy.object_rule_configs['c4ed61b3-d5aa-41a9-814f-0f277451532b']
     assert rule_config.name == 'Carbon Black Threat Intel'
     rule_config.delete()
