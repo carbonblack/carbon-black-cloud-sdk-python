@@ -230,10 +230,6 @@ class AuthEvent(NewBaseModel):
             >>> descriptions = AuthEvent.get_auth_events_descriptions(cb)
             >>> print(descriptions)
         """
-        try:
-            type(cb)
-        except TypeError:
-            pass
         if cb.__class__.__name__ != "CBCloudAPI":
             message = "cb argument should be instance of CBCloudAPI."
             message += "\nExample:\ncb = CBCloudAPI(profile='example_profile')"
