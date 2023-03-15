@@ -25,7 +25,7 @@ from tests.unit.fixtures.enterprise_edr.mock_auth_events import (
     GET_AUTH_EVENT_FACET_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING,
     GET_AUTH_EVENT_GROUPED_RESULTS_RESP,
     AUTH_EVENT_SEARCH_VALIDATIONS_RESP,
-    AUTH_EVENT_SEARCH_SUGGESTIONS_RESP
+    AUTH_EVENT_SEARCH_SUGGESTIONS_RESP,
 )
 
 log = logging.basicConfig(
@@ -55,6 +55,11 @@ def cbcsdk_mock(monkeypatch, cb):
 def test_auth_event_select_where(cbcsdk_mock):
     """Testing AuthEvent Querying with select()"""
     cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/auth_events/search_validation?q=auth_username%3ASYSTEM",  # noqa: E501
+        AUTH_EVENT_SEARCH_VALIDATIONS_RESP,
+    )
+    cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/auth_events/search_jobs",
         POST_AUTH_EVENT_SEARCH_JOB_RESP,
@@ -78,6 +83,11 @@ def test_auth_event_select_where(cbcsdk_mock):
 
 def test_auth_event_select_async(cbcsdk_mock):
     """Testing AuthEvent Querying with select() - asynchronous way"""
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/auth_events/search_validation?q=event_id%3ADA9E269E%5C-421D%5C-469D%5C-A212%5C-9062888A02F4",  # noqa: E501
+        AUTH_EVENT_SEARCH_VALIDATIONS_RESP,
+    )
     cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/auth_events/search_jobs",
@@ -103,6 +113,11 @@ def test_auth_event_select_async(cbcsdk_mock):
 def test_auth_event_select_by_id(cbcsdk_mock):
     """Testing AuthEvent Querying with select() - asynchronous way"""
     cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/auth_events/search_validation?q=event_id%3ADA9E269E%5C-421D%5C-469D%5C-A212%5C-9062888A02F4",  # noqa: E501
+        AUTH_EVENT_SEARCH_VALIDATIONS_RESP,
+    )
+    cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/auth_events/search_jobs",
         POST_AUTH_EVENT_SEARCH_JOB_RESP,
@@ -125,6 +140,11 @@ def test_auth_event_select_by_id(cbcsdk_mock):
 
 def test_auth_event_select_details_async(cbcsdk_mock):
     """Testing AuthEvent Querying with get_details - asynchronous mode"""
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/auth_events/search_validation?q=event_id%3ADA9E269E%5C-421D%5C-469D%5C-A212%5C-9062888A02F4",  # noqa: E501
+        AUTH_EVENT_SEARCH_VALIDATIONS_RESP,
+    )
     cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/auth_events/search_jobs",
@@ -207,6 +227,11 @@ def test_auth_event_details_timeout(cbcsdk_mock):
 def test_auth_event_select_details_sync(cbcsdk_mock):
     """Testing AuthEvent Querying with get_details"""
     cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/auth_events/search_validation?q=process_pid%3A2000",  # noqa: E501
+        AUTH_EVENT_SEARCH_VALIDATIONS_RESP,
+    )
+    cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/auth_events/search_jobs",
         POST_AUTH_EVENT_SEARCH_JOB_RESP,
@@ -244,6 +269,11 @@ def test_auth_event_select_details_sync(cbcsdk_mock):
 def test_auth_event_select_details_refresh(cbcsdk_mock):
     """Testing AuthEvent Querying with get_details"""
     cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/auth_events/search_validation?q=event_id%3ADA9E269E%5C-421D%5C-469D%5C-A212%5C-9062888A02F4",  # noqa: E501
+        AUTH_EVENT_SEARCH_VALIDATIONS_RESP,
+    )
+    cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/auth_events/search_jobs",
         POST_AUTH_EVENT_SEARCH_JOB_RESP,
@@ -278,6 +308,11 @@ def test_auth_event_select_details_refresh(cbcsdk_mock):
 
 def test_auth_event_select_details_sync_zero(cbcsdk_mock):
     """Testing AuthEvent Querying with get_details"""
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/auth_events/search_validation?q=process_pid%3A2000",  # noqa: E501
+        AUTH_EVENT_SEARCH_VALIDATIONS_RESP,
+    )
     cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/auth_events/search_jobs",
@@ -314,6 +349,11 @@ def test_auth_event_select_details_sync_zero(cbcsdk_mock):
 def test_auth_event_select_compound(cbcsdk_mock):
     """Testing AuthEvent Querying with select() and more complex criteria"""
     cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/auth_events/search_validation?q=process_pid%3A776+OR+parent_pid%3A608",  # noqa: E501
+        AUTH_EVENT_SEARCH_VALIDATIONS_RESP,
+    )
+    cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/auth_events/search_jobs",
         POST_AUTH_EVENT_SEARCH_JOB_RESP,
@@ -337,6 +377,12 @@ def test_auth_event_select_compound(cbcsdk_mock):
 
 def test_auth_event_query_implementation(cbcsdk_mock):
     """Testing AuthEvent querying with where()."""
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/auth_events/search_validation?q=event_id%3ADA9E269E-421D-469D-A212-9062888A02F4",  # noqa: E501
+        AUTH_EVENT_SEARCH_VALIDATIONS_RESP,
+    )
+
     cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/auth_events/search_jobs",
@@ -372,6 +418,11 @@ def test_auth_event_timeout(cbcsdk_mock):
 
 def test_auth_event_timeout_error(cbcsdk_mock):
     """Testing that a timeout in AuthEvent querying throws a TimeoutError correctly"""
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/auth_events/search_validation?q=event_id%3ADA9E269E-421D-469D-A212-9062888A02F4",  # noqa: E501
+        AUTH_EVENT_SEARCH_VALIDATIONS_RESP,
+    )
     cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/auth_events/search_jobs",
@@ -435,6 +486,11 @@ def test_auth_event_time_range(cbcsdk_mock):
 def test_auth_event_submit(cbcsdk_mock):
     """Test _submit method of AuthEventQuery class"""
     cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/auth_events/search_validation?q=process_pid%3A1000",  # noqa: E501
+        AUTH_EVENT_SEARCH_VALIDATIONS_RESP,
+    )
+    cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/auth_events/search_jobs",
         POST_AUTH_EVENT_SEARCH_JOB_RESP,
@@ -450,6 +506,11 @@ def test_auth_event_submit(cbcsdk_mock):
 
 def test_auth_event_count(cbcsdk_mock):
     """Test _submit method of AuthEventquery class"""
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/auth_events/search_validation?q=process_pid%3A1000",  # noqa: E501
+        AUTH_EVENT_SEARCH_VALIDATIONS_RESP,
+    )
     cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/auth_events/search_jobs",
@@ -474,6 +535,11 @@ def test_auth_event_count(cbcsdk_mock):
 
 def test_auth_event_search(cbcsdk_mock):
     """Test _search method of AuthEventquery class"""
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/auth_events/search_validation?q=process_pid%3A828",  # noqa: E501
+        AUTH_EVENT_SEARCH_VALIDATIONS_RESP,
+    )
     cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/auth_events/search_jobs",
@@ -501,6 +567,11 @@ def test_auth_event_search(cbcsdk_mock):
 def test_auth_event_still_querying(cbcsdk_mock):
     """Test _search method of AuthEventquery class"""
     cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/auth_events/search_validation?q=process_pid%3A1000",  # noqa: E501
+        AUTH_EVENT_SEARCH_VALIDATIONS_RESP,
+    )
+    cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/auth_events/search_jobs",
         POST_AUTH_EVENT_SEARCH_JOB_RESP,
@@ -523,6 +594,11 @@ def test_auth_event_still_querying(cbcsdk_mock):
 
 def test_auth_event_still_querying2(cbcsdk_mock):
     """Test _search method of AuthEventquery class"""
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/auth_events/search_validation?q=process_pid%3A1000",  # noqa: E501
+        AUTH_EVENT_SEARCH_VALIDATIONS_RESP,
+    )
     cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/auth_events/search_jobs",
@@ -912,6 +988,11 @@ def test_auth_event_aggregation_wrong_field(cbcsdk_mock):
 def test_auth_event_select_group_results(cbcsdk_mock):
     """Testing AuthEvent Querying with select() and more complex criteria"""
     cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/auth_events/search_validation?q=process_pid%3A2000",  # noqa: E501
+        AUTH_EVENT_SEARCH_VALIDATIONS_RESP,
+    )
+    cbcsdk_mock.mock_request(
         "POST",
         "/api/investigate/v2/orgs/test/auth_events/search_jobs",
         POST_AUTH_EVENT_SEARCH_JOB_RESP,
@@ -952,19 +1033,6 @@ def test_auth_event_select_group_results(cbcsdk_mock):
     assert event_groups[0].auth_events[0]["process_pid"][0] == 764
 
 
-def test_auth_event_search_validations(cbcsdk_mock):
-    """Tests getting auth_events search validations"""
-    api = cbcsdk_mock.api
-    q = 'q=auth_username'
-    cbcsdk_mock.mock_request(
-        "GET",
-        f"/api/investigate/v2/orgs/test/auth_events/search_validation?{q}",
-        AUTH_EVENT_SEARCH_VALIDATIONS_RESP,
-    )
-    result = AuthEvent.search_validation(api, 'auth_username')
-    assert result is True
-
-
 def test_auth_event_search_suggestions(cbcsdk_mock):
     """Tests getting auth_events search suggestions"""
     api = cbcsdk_mock.api
@@ -977,3 +1045,15 @@ def test_auth_event_search_suggestions(cbcsdk_mock):
     result = AuthEvent.search_suggestions(api, 'auth')
 
     assert len(result) != 0
+
+
+def test_auth_event_descriptions_api_error():
+    """Tests getting auth event descriptions error - no CBCloudAPI arg"""
+    with pytest.raises(ApiError):
+        AuthEvent.get_auth_events_descriptions("")
+
+
+def test_auth_event_bulk_get_details_api_error():
+    """Tests getting auth event get bulk details error - no CBCloudAPI arg"""
+    with pytest.raises(ApiError):
+        AuthEvent.bulk_get_details("", "device_id", 10)

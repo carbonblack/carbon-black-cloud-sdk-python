@@ -17,6 +17,7 @@ from cbc_sdk.errors import ApiError, TimeoutError, InvalidObjectError
 
 import logging
 import time
+from copy import deepcopy
 
 log = logging.getLogger(__name__)
 
@@ -25,6 +26,7 @@ class AuthEvent(NewBaseModel):
     """Represents an AuthEvent"""
 
     primary_key = "event_id"
+    validation_url = "/api/investigate/v2/orgs/{}/auth_events/search_validation"
     swagger_meta_file = "enterprise_edr/models/auth_events.yaml"
 
     def __init__(
@@ -116,9 +118,6 @@ class AuthEvent(NewBaseModel):
         Examples:
             >>> cb = CBCloudAPI(profile="example_profile")
 
-            >>> event = cb.select(AuthEvent, "example-auth-event-id")
-            >>> print(event.get_details())
-
             >>> events = cb.select(AuthEvent).where(process_pid=2000)
             >>> print(events[0].get_details())
         """
@@ -135,41 +134,75 @@ class AuthEvent(NewBaseModel):
 
     def _get_detailed_results(self):
         """Actual get details implementation"""
-        args = {"event_ids": [self.event_id]}
-        url = "/api/investigate/v2/orgs/{}/auth_events/detail_jobs".format(
-            self._cb.credentials.org_key
+        obj = AuthEvent._helper_get_details(
+            self._cb,
+            event_ids=[self.event_id],
+            timeout=self._details_timeout,
         )
-        query_start = self._cb.post_object(url, body=args)
+        if obj:
+            self._info = deepcopy(obj._info)
+        return self
+
+    @staticmethod
+    def _helper_get_details(cb, alert_id=None, event_ids=None, bulk=False, timeout=0):
+        """
+        Helper to get auth_event details
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            alert_id (str):  An alert id to fetch associated auth_events
+            event_ids (list): A list of auth_event ids to fetch
+            bulk (bool): Whether it is a bulk request
+            timeout (int): AuthEvents details request timeout in milliseconds.
+
+        Returns:
+            AuthEvent or list(AuthEvent): if it is a bulk operation a list, otherwise AuthEvent
+
+        Raises:
+            ApiError: if cb is not instance of CBCloudAPI
+        """
+        if cb.__class__.__name__ != "CBCloudAPI":
+            raise ApiError("cb argument should be instance of CBCloudAPI.")
+        if (alert_id and event_ids) or not (alert_id or event_ids):
+            raise ApiError("Either alert_id or event_ids should be provided.")
+        elif alert_id:
+            args = {"alert_id": alert_id}
+        else:
+            args = {"event_ids": event_ids}
+        url = "/api/investigate/v2/orgs/{}/auth_events/detail_jobs".format(cb.credentials.org_key)
+        query_start = cb.post_object(url, body=args)
         job_id = query_start.json().get("job_id")
         timed_out = False
         submit_time = time.time() * 1000
 
         while True:
             result_url = "/api/investigate/v2/orgs/{}/auth_events/detail_jobs/{}/results".format(
-                self._cb.credentials.org_key,
+                cb.credentials.org_key,
                 job_id,
             )
-            result = self._cb.get_object(result_url)
+            result = cb.get_object(result_url)
             contacted = result.get("contacted", 0)
             completed = result.get("completed", 0)
-            log.debug(f"contacted = {contacted}, completed = {completed}")
+            log.debug("contacted = {}, completed = {}".format(contacted, completed))
 
             if contacted == 0:
                 time.sleep(0.5)
                 continue
             if completed < contacted:
-                if self._details_timeout != 0 and (time.time() * 1000) - submit_time > self._details_timeout:
+                if timeout != 0 and (time.time() * 1000) - submit_time > timeout:
                     timed_out = True
                     break
             else:
                 total_results = result.get("num_available", 0)
                 found_results = result.get("num_found", 0)
+                # if found is 0, then no auth_events were found
                 if found_results == 0:
-                    return self
+                    return None
                 if total_results != 0:
                     results = result.get("results", [])
-                    self._info = results[0]
-                    return self
+                    if bulk:
+                        return [AuthEvent(cb, initial_data=x) for x in results]
+                    return AuthEvent(cb, initial_data=results[0])
 
             time.sleep(0.5)
 
@@ -178,19 +211,35 @@ class AuthEvent(NewBaseModel):
                 message="user-specified timeout exceeded while waiting for results"
             )
 
-
     @staticmethod
     def get_auth_events_descriptions(cb):
         """
         Returns descriptions and status messages of Auth Events.
 
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+
         Returns:
             dict: Descriptions and status messages of Auth Events as dict objects.
+
+        Raises:
+             ApiError: if cb is not instance of CBCloudAPI
+
         Example:
             >>> cb = CBCloudAPI(profile="example_profile")
             >>> descriptions = AuthEvent.get_auth_events_descriptions(cb)
             >>> print(descriptions)
         """
+        try:
+            type(cb)
+        except TypeError:
+            pass
+        if cb.__class__.__name__ != "CBCloudAPI":
+            message = "cb argument should be instance of CBCloudAPI."
+            message += "\nExample:\ncb = CBCloudAPI(profile='example_profile')"
+            message += "\ndescriptions = AuthEvent.get_auth_events_descriptions(cb)"
+            raise ApiError(message)
+
         url = "/api/investigate/v2/orgs/{}/auth_events/descriptions".format(cb.credentials.org_key)
 
         return cb.get_object(url)
@@ -201,17 +250,27 @@ class AuthEvent(NewBaseModel):
         Returns suggestions for keys and field values that can be used in a search.
 
         Args:
-            cb
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
             query (str): A search query to use.
             count (int): (optional) Number of suggestions to be returned
 
         Returns:
             list: A list of search suggestions expressed as dict objects.
+
+        Raises:
+             ApiError: if cb is not instance of CBCloudAPI
+
         Example:
             >>> cb = CBCloudAPI(profile="example_profile")
             >>> suggestions = AuthEvent.search_suggestions(cb, 'auth')
             >>> print(suggestions)
         """
+        if cb.__class__.__name__ != "CBCloudAPI":
+            message = "cb argument should be instance of CBCloudAPI."
+            message += "\nExample:\ncb = CBCloudAPI(profile='example_profile')"
+            message += "\nsuggestions = AuthEvent.search_suggestions(cb, 'example-value')"
+            raise ApiError(message)
+
         query_params = {"suggest.q": query}
         if count:
             query_params["suggest.count"] = count
@@ -220,24 +279,38 @@ class AuthEvent(NewBaseModel):
         return output["suggestions"]
 
     @staticmethod
-    def search_validation(cb, query):
-        """
-        Returns validation result of a query.
+    def bulk_get_details(cb, alert_id=None, event_ids=None, timeout=0):
+        """Bulk get details
 
         Args:
-            query (str): A search query to be validated.
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            alert_id (str):  An alert id to fetch associated events
+            event_ids (list): A list of event ids to fetch
+            timeout (int): AuthEvent details request timeout in milliseconds.
 
         Returns:
-            bool: Status of the validation
+            list: list of Auth Events
+
         Example:
             >>> cb = CBCloudAPI(profile="example_profile")
-            >>> validation = AuthEvent.search_validation(cb, 'auth_username:Administrator')
-            >>> print(validation)
+            >>> bulk_details = AuthEvent.bulk_get_details(cb, event_ids=['example-value'])
+            >>> print(bulk_details)
+
+        Raises:
+            ApiError: if cb is not instance of CBCloudAPI
         """
-        query_params = {"q": query}
-        url = "/api/investigate/v2/orgs/{}/auth_events/search_validation".format(cb.credentials.org_key)
-        output = cb.get_object(url, query_params)
-        return output.get("valid", False)
+        if cb.__class__.__name__ != "CBCloudAPI":
+            message = "cb argument should be instance of CBCloudAPI."
+            message += "\nExample:\ncb = CBCloudAPI(profile='example_profile')"
+            message += "\nvalidation = AuthEvent.bulk_get_details(cb, alert_id='example-value')"
+            raise ApiError(message)
+        return AuthEvent._helper_get_details(
+            cb,
+            alert_id=alert_id,
+            event_ids=event_ids,
+            bulk=True,
+            timeout=timeout
+        )
 
 
 class AuthEventFacet(UnrefreshableModel):
@@ -516,6 +589,7 @@ class AuthEventQuery(Query):
             )
 
         args = self._get_query_parameters()
+        self._validate({"q": args.get("query", "")})
         url = "/api/investigate/v2/orgs/{}/auth_events/search_jobs".format(
             self._cb.credentials.org_key
         )
