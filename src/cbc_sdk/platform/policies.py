@@ -664,6 +664,16 @@ class Policy(MutableBaseModel):
         return self._object_rule_configs
 
     @property
+    def object_rule_configs_list(self):
+        """
+        Returns a list of rule configuration objects for this Policy.
+
+        Returns:
+            list: A list of PolicyRuleConfig objects.
+        """
+        return [rconf for rconf in self.object_rule_configs.values()]
+
+    @property
     def core_prevention_rule_configs(self):
         """
         Returns a dictionary of core prevention rule configuration IDs and objects for this Policy.
@@ -674,6 +684,16 @@ class Policy(MutableBaseModel):
         """
         return {key: rconf for (key, rconf) in self.object_rule_configs.items()
                 if isinstance(rconf, CorePreventionRuleConfig)}
+
+    @property
+    def core_prevention_rule_configs_list(self):
+        """
+        Returns a list of core prevention rule configuration objects for this Policy.
+
+        Returns:
+            list: A list of CorePreventionRuleConfig objects.
+        """
+        return [rconf for rconf in self.object_rule_configs.values() if isinstance(rconf, CorePreventionRuleConfig)]
 
     def valid_rule_configs(self):
         """

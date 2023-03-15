@@ -134,7 +134,7 @@ def test_rule_config_refresh(cbcsdk_mock, policy):
     policy._object_rule_configs = dict([(rconf.id, rconf) for rconf in ruleconfigobjects])
     policy._object_rule_configs_need_load = False
     # proceed with test
-    for rule_config in policy.object_rule_configs.values():
+    for rule_config in policy.object_rule_configs_list:
         old_name = rule_config.name
         old_category = rule_config.category
         old_parameters = rule_config.parameters
@@ -202,13 +202,13 @@ def test_core_prevention_refresh(cbcsdk_mock, policy):
     """Tests the refresh operation for a CorePreventionRuleConfig."""
     cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/rule_configs/core_prevention',
                              CORE_PREVENTION_RETURNS)
-    for rule_config in policy.core_prevention_rule_configs.values():
+    for rule_config in policy.core_prevention_rule_configs_list:
         rule_config.refresh()
 
 
 def test_core_prevention_set_assignment_mode(policy):
     """Tests the assignment mode setting, which uses the underlying parameter setting."""
-    for rule_config in policy.core_prevention_rule_configs.values():
+    for rule_config in policy.core_prevention_rule_configs_list:
         old_mode = rule_config.get_assignment_mode()
         assert not rule_config.is_dirty()
         rule_config.set_assignment_mode(old_mode)
@@ -232,7 +232,7 @@ def test_core_prevention_update_and_save(cbcsdk_mock, policy):
     cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/configs/presentation',
                              POLICY_CONFIG_PRESENTATION)
     cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/65536/rule_configs/core_prevention', on_put)
-    rule_config = policy.object_rule_configs['c4ed61b3-d5aa-41a9-814f-0f277451532b']
+    rule_config = policy.core_prevention_rule_configs['c4ed61b3-d5aa-41a9-814f-0f277451532b']
     assert rule_config.name == 'Carbon Black Threat Intel'
     assert rule_config.get_assignment_mode() == 'REPORT'
     rule_config.set_assignment_mode('BLOCK')
@@ -253,7 +253,7 @@ def test_core_prevention_update_via_replace(cbcsdk_mock, policy):
     cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/configs/presentation',
                              POLICY_CONFIG_PRESENTATION)
     cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/65536/rule_configs/core_prevention', on_put)
-    rule_config = policy.object_rule_configs['c4ed61b3-d5aa-41a9-814f-0f277451532b']
+    rule_config = policy.core_prevention_rule_configs['c4ed61b3-d5aa-41a9-814f-0f277451532b']
     assert rule_config.name == 'Carbon Black Threat Intel'
     assert rule_config.get_assignment_mode() == 'REPORT'
     new_data = copy.deepcopy(rule_config._info)
@@ -276,7 +276,7 @@ def test_core_prevention_delete(cbcsdk_mock, policy):
                              POLICY_CONFIG_PRESENTATION)
     cbcsdk_mock.mock_request('DELETE', '/policyservice/v1/orgs/test/policies/65536/rule_configs/core_prevention'
                                        '/c4ed61b3-d5aa-41a9-814f-0f277451532b', on_delete)
-    rule_config = policy.object_rule_configs['c4ed61b3-d5aa-41a9-814f-0f277451532b']
+    rule_config = policy.core_prevention_rule_configs['c4ed61b3-d5aa-41a9-814f-0f277451532b']
     assert rule_config.name == 'Carbon Black Threat Intel'
     rule_config.delete()
     assert delete_called
