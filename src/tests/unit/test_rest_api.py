@@ -23,8 +23,6 @@ from tests.unit.fixtures.mock_rest_api import (
     PROCESS_LIMITS_RESP,
     FETCH_PROCESS_QUERY_RESP,
     CONVERT_FEED_QUERY_RESP,
-    OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
-    OBSERVATIONS_SEARCH_SUGGESTIONS_RESP,
 )
 
 
@@ -139,32 +137,3 @@ def test_convert_feed_query(cbcsdk_mock):
     )
     result = api.convert_feed_query("id:123")
     assert "process_guid:123" in result
-
-
-def test_observations_search_validations(cbcsdk_mock):
-    """Tests getting observations search validations"""
-    api = cbcsdk_mock.api
-    q = "?cb.max_backend_timestamp=2020-08-05T08%3A01%3A32.077Z&cb.min_backend_timestamp=" \
-        "2020-08-04T08%3A01%3A32.077Z&q=device_id"
-    cbcsdk_mock.mock_request(
-        "GET",
-        f"/api/investigate/v2/orgs/test/observations/search_validation{q}",
-        OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
-    )
-    result = api.observations_search_validation(
-        "device_id", "2020-08-04T08:01:32.077Z", "2020-08-05T08:01:32.077Z"
-    )
-    assert result
-
-
-def test_observations_search_suggestions(cbcsdk_mock):
-    """Tests getting observations search suggestions"""
-    api = cbcsdk_mock.api
-    q = "suggest.count=10&suggest.q=device_id"
-    cbcsdk_mock.mock_request(
-        "GET",
-        f"/api/investigate/v2/orgs/test/observations/search_suggestions?{q}",
-        OBSERVATIONS_SEARCH_SUGGESTIONS_RESP,
-    )
-    result = api.observations_search_suggestions("device_id", 10)
-    assert len(result) != 0

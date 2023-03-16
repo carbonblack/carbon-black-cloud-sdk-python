@@ -405,47 +405,6 @@ class CBCloudAPI(BaseAPI):
         """
         return self._bulk_threat_update_status(threat_ids, "DISMISSED", remediation, comment)
 
-    # ---- Observations -----
-
-    def observations_search_suggestions(self, query, count=None):
-        """
-        Returns suggestions for keys and field values that can be used in a search.
-
-        Args:
-            query (str): A search query to use.
-            count (int): (optional) Number of suggestions to be returned
-
-        Returns:
-            list: A list of search suggestions expressed as dict objects.
-        """
-        query_params = {"suggest.q": query}
-        if count:
-            query_params["suggest.count"] = count
-        url = "/api/investigate/v2/orgs/{}/observations/search_suggestions".format(self.credentials.org_key)
-        output = self.get_object(url, query_params)
-        return output["suggestions"]
-
-    def observations_search_validation(self, query, min_backend_timestamp=None, max_backend_timestamp=None):
-        """
-        Returns validation result of a query.
-
-        Args:
-            query (str): A search query to be validated.
-            min_backend_timestamp (int): (optional) The start time for the query
-            max_backend_timestamp (int): (optional) The end time for the query
-
-        Returns:
-            boolean: A flag showing the status of the validation
-        """
-        query_params = {"q": query}
-        if min_backend_timestamp:
-            query_params["cb.min_backend_timestamp"] = min_backend_timestamp
-        if max_backend_timestamp:
-            query_params["cb.max_backend_timestamp"] = max_backend_timestamp
-        url = "/api/investigate/v2/orgs/{}/observations/search_validation".format(self.credentials.org_key)
-        output = self.get_object(url, query_params)
-        return output.get("valid", False)
-
     # ---- Enterprise EDR
 
     def create(self, cls, data=None):

@@ -193,24 +193,3 @@ FETCH_PROCESS_QUERY_RESP = {
 
 
 CONVERT_FEED_QUERY_RESP = {"query": "(process_guid:123) -enriched:true"}
-
-
-OBSERVATIONS_SEARCH_VALIDATIONS_RESP = {"valid": True, "value_search_query": True}
-
-
-OBSERVATIONS_SEARCH_SUGGESTIONS_RESP = {
-    "suggestions": [
-        {
-            "required_skus_all": [],
-            "required_skus_some": ["threathunter", "defense"],
-            "term": "device_id",
-            "weight": 100,
-        },
-        {
-            "required_skus_all": ["xdr"],
-            "required_skus_some": [],
-            "term": "netconn_remote_device_id",
-            "weight": 70,
-        },
-    ]
-}

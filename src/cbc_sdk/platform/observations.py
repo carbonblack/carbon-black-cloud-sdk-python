@@ -18,6 +18,7 @@ from cbc_sdk.platform.network_threat_metadata import NetworkThreatMetadata
 
 import logging
 import time
+from copy import deepcopy
 
 log = logging.getLogger(__name__)
 
@@ -26,6 +27,7 @@ class Observation(NewBaseModel):
     """Represents an Observation"""
 
     primary_key = "observation_id"
+    validation_url = "/api/investigate/v2/orgs/{}/observations/search_validation"
     swagger_meta_file = "platform/models/observation.yaml"
 
     def __init__(
@@ -130,21 +132,52 @@ class Observation(NewBaseModel):
 
     def _get_detailed_results(self):
         """Actual get details implementation"""
-        args = {"observation_ids": [self.observation_id]}
-        url = "/api/investigate/v2/orgs/{}/observations/detail_jobs".format(
-            self._cb.credentials.org_key
+        obj = Observation._helper_get_details(
+            self._cb,
+            observation_ids=[self.observation_id],
+            timeout=self._details_timeout,
         )
-        query_start = self._cb.post_object(url, body=args)
+        if obj:
+            self._info = deepcopy(obj._info)
+        return self
+
+    @staticmethod
+    def _helper_get_details(cb, alert_id=None, observation_ids=None, bulk=False, timeout=0):
+        """Helper to get observation details
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            alert_id (str):  An alert id to fetch associated observations
+            observation_ids (list): A list of observation ids to fetch
+            bulk (bool): Whether it is a bulk request
+            timeout (int): Observations details request timeout in milliseconds.
+
+        Returns:
+            Observation or list(Observation): if it is a bulk operation a list, otherwise Observation
+
+        Raises:
+            ApiError: if cb is not instance of CBCloudAPI
+        """
+        if cb.__class__.__name__ != "CBCloudAPI":
+            raise ApiError("cb argument should be instance of CBCloudAPI.")
+        if (alert_id and observation_ids) or not (alert_id or observation_ids):
+            raise ApiError("Either alert_id or observation_ids should be provided.")
+        elif alert_id:
+            args = {"alert_id": alert_id}
+        else:
+            args = {"observation_ids": observation_ids}
+        url = "/api/investigate/v2/orgs/{}/observations/detail_jobs".format(cb.credentials.org_key)
+        query_start = cb.post_object(url, body=args)
         job_id = query_start.json().get("job_id")
         timed_out = False
         submit_time = time.time() * 1000
 
         while True:
             result_url = "/api/investigate/v2/orgs/{}/observations/detail_jobs/{}/results".format(
-                self._cb.credentials.org_key,
+                cb.credentials.org_key,
                 job_id,
             )
-            result = self._cb.get_object(result_url)
+            result = cb.get_object(result_url)
             contacted = result.get("contacted", 0)
             completed = result.get("completed", 0)
             log.debug("contacted = {}, completed = {}".format(contacted, completed))
@@ -153,7 +186,7 @@ class Observation(NewBaseModel):
                 time.sleep(0.5)
                 continue
             if completed < contacted:
-                if self._details_timeout != 0 and (time.time() * 1000) - submit_time > self._details_timeout:
+                if timeout != 0 and (time.time() * 1000) - submit_time > timeout:
                     timed_out = True
                     break
             else:
@@ -161,11 +194,12 @@ class Observation(NewBaseModel):
                 found_results = result.get("num_found", 0)
                 # if found is 0, then no observations were found
                 if found_results == 0:
-                    return self
+                    return None
                 if total_results != 0:
                     results = result.get("results", [])
-                    self._info = results[0]
-                    return self
+                    if bulk:
+                        return [Observation(cb, initial_data=x) for x in results]
+                    return Observation(cb, initial_data=results[0])
 
             time.sleep(0.5)
 
@@ -191,6 +225,57 @@ class Observation(NewBaseModel):
             return NetworkThreatMetadata(self._cb, self.rule_id)
         except AttributeError:
             raise ApiError("No available network threat metadata.")
+
+    @staticmethod
+    def search_suggestions(cb, query, count=None):
+        """
+        Returns suggestions for keys and field values that can be used in a search.
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            query (str): A search query to use.
+            count (int): (optional) Number of suggestions to be returned
+
+        Returns:
+            list: A list of search suggestions expressed as dict objects.
+
+        Raises:
+            ApiError: if cb is not instance of CBCloudAPI
+        """
+        if cb.__class__.__name__ != "CBCloudAPI":
+            raise ApiError("cb argument should be instance of CBCloudAPI.")
+        query_params = {"suggest.q": query}
+        if count:
+            query_params["suggest.count"] = count
+        url = "/api/investigate/v2/orgs/{}/observations/search_suggestions".format(cb.credentials.org_key)
+        output = cb.get_object(url, query_params)
+        return output["suggestions"]
+
+    @staticmethod
+    def bulk_get_details(cb, alert_id=None, observation_ids=None, timeout=0):
+        """Bulk get details
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            alert_id (str):  An alert id to fetch associated observations
+            observation_ids (list): A list of observation ids to fetch
+            timeout (int): Observations details request timeout in milliseconds.
+
+        Returns:
+            list: list of Observations
+
+        Raises:
+            ApiError: if cb is not instance of CBCloudAPI
+        """
+        if cb.__class__.__name__ != "CBCloudAPI":
+            raise ApiError("cb argument should be instance of CBCloudAPI.")
+        return Observation._helper_get_details(
+            cb,
+            alert_id=alert_id,
+            observation_ids=observation_ids,
+            bulk=True,
+            timeout=timeout
+        )
 
 
 class ObservationFacet(UnrefreshableModel):
@@ -365,6 +450,7 @@ class ObservationQuery(Query):
             )
 
         args = self._get_query_parameters()
+        self._validate({"q": args.get("query", "")})
         url = "/api/investigate/v2/orgs/{}/observations/search_jobs".format(
             self._cb.credentials.org_key
         )

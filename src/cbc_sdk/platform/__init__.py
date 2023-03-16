@@ -25,6 +25,6 @@ from cbc_sdk.platform.vulnerability_assessment import Vulnerability
 
 from cbc_sdk.platform.jobs import Job
 
-from cbc_sdk.platform.observations import Observation
+from cbc_sdk.platform.observations import Observation, ObservationFacet
 
 from cbc_sdk.platform.network_threat_metadata import NetworkThreatMetadata
