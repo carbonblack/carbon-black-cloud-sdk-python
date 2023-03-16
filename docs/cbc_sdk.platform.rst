@@ -60,6 +60,14 @@ cbc\_sdk.platform.policies module
    :undoc-members:
    :show-inheritance:
 
+cbc\_sdk.platform.policy_ruleconfigs module
+-------------------------------------------
+
+.. automodule:: cbc_sdk.platform.policy_ruleconfigs
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 cbc\_sdk.platform.processes module
 ----------------------------------
 
