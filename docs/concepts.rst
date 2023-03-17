@@ -517,7 +517,8 @@ Get details for all events per alert
 
 Static Methods
 --------------
-As of version 1.4.2 we are introducing static methods on some classes. They handle API requests that are not tied with a specific instance of the class, but are like helper methods for that class. Because those methods are static, you need to pass CBCloudAPI object as a first argument.
+
+As of version 1.4.2 we are introducing static methods on some classes. They handle API requests that are not tied with a specific resouce id, thus they cannot be instance methods, but static helper methods. And because those methods are static, you need to pass CBCloudAPI object as a first argument.
 
 Search suggestions
 ^^^^^^^^^^^^^^^^^^
@@ -544,18 +545,18 @@ Search suggestions
   >>> suggestions = BaseAlert.search_suggestions(api, query="device_id")
   >>> for suggestion in suggestions:
   ...     print(suggestion["term"], suggestion["required_skus_some"])
-  ... 
   device_id ['defense', 'threathunter', 'deviceControl']
   device_os ['defense', 'threathunter', 'deviceControl']
   ...
   workload_name ['kubernetesSecurityRuntimeProtection']
+
 
 Bulk Get Details
 ^^^^^^^^^^^^^^^^
 
 ::
 
-  # Observation get details per alert id
+  # Observations get details per alert id
   >>> from cbc_sdk import CBCloudAPI
   >>> from cbc_sdk.platform import Observation
   >>> api = CBCloudAPI(profile='platform')
@@ -571,12 +572,13 @@ Bulk Get Details
   Type: CB_ANALYTICS
   Alert Id: ['4d49d171-0a11-0731-5172-d0963b77d422']
 
+::
 
-  # Observation get details per observation_ids
+  # Observations get details per observation_ids
   >>> from cbc_sdk import CBCloudAPI
   >>> from cbc_sdk.platform import Observation
   >>> api = CBCloudAPI(profile='platform')
-  >>> bulk_details = Observation.bulk_get_details(api, observation_ids=["13A5F4E5-C4BD-11ED-A7AB-005056A5B601:13a5f4e4-c4bd-11ed-a7ab-005056a5b611"])
+  >>> bulk_details = Observation.bulk_get_details(api, observation_ids=["13A5F4E5-C4BD-11ED-A7AB-005056A5B601:13a5f4e4-c4bd-11ed-a7ab-005056a5b611", "13A5F4E5-C4BD-11ED-A7AB-005056A5B601:13a5f4e4-c4bd-11ed-a7ab-005056a5b622"])
   >>> for obs in bulk_details:
   ...     print(
   ...         f'''
@@ -587,4 +589,8 @@ Bulk Get Details
   Category: ['THREAT']
   Type: CB_ANALYTICS
   Alert Id: ['4d49d171-0a11-0731-5172-d0963b77d422']
+
+  Category: ['THREAT']
+  Type: CB_ANALYTICS
+  Alert Id: ['4d49d171-0a11-0731-5172-d0963b77d411']
   
