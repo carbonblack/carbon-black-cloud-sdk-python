@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2023. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -18,27 +18,6 @@ import dateutil.parser
 
 
 cb_datetime_format = "%Y-%m-%d %H:%M:%S.%f"
-
-
-def convert_query_params(qd):
-    """
-    Expand a dictionary of query parameters by turning "list" values into multiple pairings of key with value.
-
-    Args:
-        qd (dict): A mapping of parameter names to values.
-
-    Returns:
-        list: A list of query parameters, each one a tuple containing name and value, after the expansion is applied.
-    """
-    o = []
-    for k, v in iter(qd.items()):
-        if type(v) == list:
-            for item in v:
-                o.append((k, item))
-        else:
-            o.append((k, v))
-
-    return o
 
 
 def convert_from_cb(s):

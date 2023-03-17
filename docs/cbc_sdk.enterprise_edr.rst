@@ -4,6 +4,14 @@ Enterprise EDR
 Submodules
 ----------
 
+cbc\_sdk.enterprise\_edr.auth\_events module
+--------------------------------------------
+
+.. automodule:: cbc_sdk.enterprise_edr.auth_events
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 cbc\_sdk.enterprise\_edr.threat\_intelligence module
 ----------------------------------------------------
 

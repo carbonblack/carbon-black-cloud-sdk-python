@@ -1,5 +1,5 @@
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2023. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -185,15 +185,15 @@ def test_BaseAPI_raise_unless_json_raises(response, expected, scode):
 
 @pytest.mark.parametrize("expath, response, params, default, expected", [
     ('/path', StubResponse({'a': 1, 'b': 2}), None, {'a': 8, 'b': 9}, {'a': 1, 'b': 2}),
-    ('/path?x=1&y=2', StubResponse({'a': 1, 'b': 2}), [('x', 1), ('y', 2)], {'a': 8, 'b': 9}, {'a': 1, 'b': 2}),
-    ('/path?x=1&y=2', StubResponse({'a': 1, 'b': 2}), {'x': 1, 'y': 2}, {'a': 8, 'b': 9}, {'a': 1, 'b': 2}),
+    ('/path', StubResponse({'a': 1, 'b': 2}), [('x', 1), ('y', 2)], {'a': 8, 'b': 9}, {'a': 1, 'b': 2}),
+    ('/path', StubResponse({'a': 1, 'b': 2}), {'x': 1, 'y': 2}, {'a': 8, 'b': 9}, {'a': 1, 'b': 2}),
     ('/path', StubResponse({'a': 1, 'b': 2}, 204), None, {'a': 8, 'b': 9}, {'a': 8, 'b': 9})
 ])
 def test_BaseAPI_get_object_returns(mox, expath, response, params, default, expected):
     """Test the cases where get_object returns a value."""
     sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
     mox.StubOutWithMock(sut.session, 'http_request')
-    sut.session.http_request('GET', expath, headers={}, data=None).AndReturn(response)
+    sut.session.http_request('GET', expath, headers={}, data=None, params=params).AndReturn(response)
     mox.ReplayAll()
     rc = sut.get_object('/path', params, default)
     assert rc == expected
@@ -209,7 +209,7 @@ def test_BaseAPI_get_object_raises_from_returns(mox, response, errcode, prefix):
     """Test the cases where get_object raises an exception based on what it receives."""
     sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
     mox.StubOutWithMock(sut.session, 'http_request')
-    sut.session.http_request('GET', '/path', headers={}, data=None).AndReturn(response)
+    sut.session.http_request('GET', '/path', headers={}, data=None, params=None).AndReturn(response)
     mox.ReplayAll()
     with pytest.raises(ServerError) as excinfo:
         sut.get_object('/path')
@@ -220,15 +220,16 @@ def test_BaseAPI_get_object_raises_from_returns(mox, response, errcode, prefix):
 
 @pytest.mark.parametrize("expath, code, response, params, default, expected", [
     ('/path', 200, 'Boston1', None, 'Denver0', 'Boston1'),
-    ('/path?x=1&y=2', 200, 'Boston1', [('x', 1), ('y', 2)], 'Denver0', 'Boston1'),
-    ('/path?x=1&y=2', 200, 'Boston1', {'x': 1, 'y': 2}, 'Denver0', 'Boston1'),
+    ('/path', 200, 'Boston1', [('x', 1), ('y', 2)], 'Denver0', 'Boston1'),
+    ('/path', 200, 'Boston1', {'x': 1, 'y': 2}, 'Denver0', 'Boston1'),
     ('/path', 204, 'Boston1', None, 'Denver0', 'Denver0')
 ])
 def test_BaseAPI_get_raw_data_returns(mox, expath, code, response, params, default, expected):
     """Test the cases where get_raw_data returns a value."""
     sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
     mox.StubOutWithMock(sut.session, 'http_request')
-    sut.session.http_request('GET', expath, headers={}, data=None).AndReturn(StubResponse(None, code, response))
+    sut.session.http_request('GET', expath, headers={}, data=None, params=params) \
+       .AndReturn(StubResponse(None, code, response))
     mox.ReplayAll()
     rc = sut.get_raw_data('/path', params, default)
     assert rc == expected
@@ -243,7 +244,7 @@ def test_BaseAPI_get_raw_data_raises_from_returns(mox, response, errcode, prefix
     """Test the cases where get_raw_data raises an exception based on what it receives."""
     sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
     mox.StubOutWithMock(sut.session, 'http_request')
-    sut.session.http_request('GET', '/path', headers={}, data=None).AndReturn(response)
+    sut.session.http_request('GET', '/path', headers={}, data=None, params=None).AndReturn(response)
     mox.ReplayAll()
     with pytest.raises(ServerError) as excinfo:
         sut.get_raw_data('/path')
