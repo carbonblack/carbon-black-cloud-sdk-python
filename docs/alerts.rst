@@ -49,6 +49,15 @@ for more complex searches. The example below will search with a solr query searc
     aab3c640-<truncated> WINDOWS WINDOWS-TEST THREAT
 
 .. tip::
+    When filtering by fields that take a list parameter, an empty list will be treated as a wildcard and match everything.
+
+Ex: Returns all types
+
+.. code-block:: python
+
+    >>> alerts = list(cb.select(BaseAlert).set_types([]))
+
+.. tip::
     More information about the ``solrq`` can be found in the
     their `documentation <https://solrq.readthedocs.io/en/latest/index.html>`_.
 
