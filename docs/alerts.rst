@@ -78,7 +78,7 @@ You can also filter on different kind of **TTPs** (*Tools Techniques Procedures*
 
 
 Retrieving Alerts for Multiple Organizations
---------------------
+--------------------------------------------
 
 With the example below, you can retrieve alerts for multiple organizations.
 
@@ -86,17 +86,20 @@ Create a csv file with values that match the profile names in your credentials.c
 
 .. code-block:: python
 
-    >>> from cbc_sdk import CBCloudAPI
+ >>> from cbc_sdk import CBCloudAPI
     >>> from cbc_sdk.platform import BaseAlert
     >>> import csv
-    >>> file = open ("myFile.csv", "r", encoding='utf-8-sig')
+    >>> file = open ("data.csv", "r", encoding='utf-8-sig')
     >>> org_list = list(csv.reader(file, delimiter=","))
     >>> file.close()
     >>> for org in org_list:
     ...     org = ''.join(org)
     ...     api = CBCloudAPI(profile=org)
     ...     alerts = api.select(BaseAlert).set_minimum_severity(7)[:5]
+    ...     print('Results for Org {}'.format(org))
+    >>> for alert in alerts:
     ...     print(alerts[0].id, alerts[0].device_os, alerts[0].device_name, alerts[0].category)
+    ...
     ...
 
 
