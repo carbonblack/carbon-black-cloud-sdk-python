@@ -55,7 +55,7 @@ Ex: Returns all types
 
 .. code-block:: python
 
-    >>> alerts = (cb.select(BaseAlert).set_types([]))
+    >>> alerts = list(cb.select(BaseAlert).set_types([]))
 
 .. tip::
     More information about the ``solrq`` can be found in the
