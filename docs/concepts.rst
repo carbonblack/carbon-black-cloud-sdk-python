@@ -518,7 +518,7 @@ Get details for all events per alert
 Static Methods
 --------------
 
-As of version 1.4.2 we are introducing static methods on some classes. They handle API requests that are not tied with a specific resouce id, thus they cannot be instance methods, but static helper methods. And because those methods are static, you need to pass CBCloudAPI object as a first argument.
+As of version 1.4.2 we are introducing static methods on some classes. They handle API requests that are not tied with a specific resource id, thus they cannot be instance methods, but static helper methods. And because those methods are static, you need to pass CBCloudAPI object as a first argument.
 
 Search suggestions
 ^^^^^^^^^^^^^^^^^^
