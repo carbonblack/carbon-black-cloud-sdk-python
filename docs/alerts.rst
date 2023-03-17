@@ -89,7 +89,7 @@ Create a csv file with values that match the profile names in your credentials.c
     ...     alerts = api.select(BaseAlert).set_minimum_severity(7)[:5]
     ...     print('Results for Org {}'.format(org))
     >>> for alert in alerts:
-    ...     print(alerts[0].id, alerts[0].device_os, alerts[0].device_name, alerts[0].category)
+    ...     print(alert.id, alert.device_os, alert.device_name, alert.category)
     ...
     ...
 
