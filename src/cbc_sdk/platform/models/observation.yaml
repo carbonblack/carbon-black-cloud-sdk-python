@@ -1,0 +1,82 @@
+type: object
+properties:
+  alert_category:
+    type: array
+    items:
+      type: string
+  alert_id:
+    type: array
+    items:
+      type: string
+  backend_timestamp:
+    type: string
+  device_group_id:
+    type: integer
+  device_id:
+    type: integer
+  device_name:
+    type: string
+  device_policy:
+    type: string
+  device_policy_id:
+    type: integer
+  device_timestamp:
+    type: string
+  enriched:
+    type: boolean
+  enriched_event_type:
+    type: string
+  event_description:
+    type: string
+  event_id:
+    type: string
+  event_network_inbound:
+    type: boolean
+  event_network_local_ipv4:
+    type: string
+  event_network_location:
+    type: string
+  event_network_protocol:
+    type: string
+  event_network_remote_ipv4:
+    type: string
+  event_network_remote_port:
+    type: integer
+  event_type:
+    type: array
+    items:
+      type: string
+  ingress_time:
+    type: integer
+  legacy:
+    type: boolean
+  observation_description:
+    type: string
+  observation_id:
+    type: string
+  observation_type:
+    type: string
+  org_id:
+    type: string
+  parent_guid:
+    type: string
+  parent_pid:
+    type: integer
+  process_guid:
+    type: string
+  process_hash:
+    type: array
+    items:
+      type: string
+  process_name:
+    type: string
+  process_pid:
+    type: array
+    items:
+      type: integer
+  process_username:
+    type: array
+    items:
+      type: string
+  rule_id:
+    type: string
