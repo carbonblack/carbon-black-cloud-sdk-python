@@ -7,4 +7,4 @@ WORKDIR /app
 RUN dnf install -y redhat-rpm-config gcc libffi-devel python38-devel openssl-devel
 RUN pip3 install --upgrade pip
 #RUN pip3 install -r requirements.txt
-RUN python3 setup.py test
+RUN pip3 install .[test]
