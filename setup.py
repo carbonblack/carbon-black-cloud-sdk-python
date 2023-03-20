@@ -23,7 +23,6 @@ install_requires = [
     'schema',
     'solrq',
     'validators',
-    'rpds',
     'jsonschema',
     "keyring;platform_system=='Darwin'",
     'boto3'
