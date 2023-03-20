@@ -126,6 +126,10 @@ The documentation is built in `docs/_build/html`.
 `No module named 'cbc_sdk'`.  If so, set your `PYTHONPATH` to include the `src/` subdirectory of the SDK project
 directory before running `make html`, or the equivalent command `sphinx-build -M html . _build`.
 
+#### Pull-Requests
+
+The webhook with readthedocs will create a build of the branch and report on the status of the build to the GitHub pull request
+
 #### Using Docker
 
 Build the documentation by running:
