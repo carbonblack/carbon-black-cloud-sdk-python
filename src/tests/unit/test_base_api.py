@@ -1,5 +1,5 @@
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2023. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -228,7 +228,8 @@ def test_BaseAPI_get_raw_data_returns(mox, expath, code, response, params, defau
     """Test the cases where get_raw_data returns a value."""
     sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
     mox.StubOutWithMock(sut.session, 'http_request')
-    sut.session.http_request('GET', expath, headers={}, data=None, params=params).AndReturn(StubResponse(None, code, response))
+    sut.session.http_request('GET', expath, headers={}, data=None, params=params) \
+       .AndReturn(StubResponse(None, code, response))
     mox.ReplayAll()
     rc = sut.get_raw_data('/path', params, default)
     assert rc == expected

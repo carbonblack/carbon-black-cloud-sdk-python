@@ -52,10 +52,34 @@ cbc\_sdk.platform.jobs module
    :undoc-members:
    :show-inheritance:
 
+cbc\_sdk.platform.network_threat_metadata module
+------------------------------------------------
+
+.. automodule:: cbc_sdk.platform.network_threat_metadata
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+cbc\_sdk.platform.observations module
+-------------------------------------
+
+.. automodule:: cbc_sdk.platform.observations
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 cbc\_sdk.platform.policies module
 ----------------------------------
 
 .. automodule:: cbc_sdk.platform.policies
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+cbc\_sdk.platform.policy_ruleconfigs module
+-------------------------------------------
+
+.. automodule:: cbc_sdk.platform.policy_ruleconfigs
    :members:
    :undoc-members:
    :show-inheritance:

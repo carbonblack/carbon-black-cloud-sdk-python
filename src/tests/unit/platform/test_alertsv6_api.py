@@ -1,5 +1,5 @@
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2023. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -51,6 +51,7 @@ from tests.unit.fixtures.platform.mock_alerts import (
     GET_ALERT_NOTES,
     CREATE_ALERT_NOTE,
 )
+from tests.unit.fixtures.mock_rest_api import ALERT_SEARCH_SUGGESTIONS_RESP
 
 
 @pytest.fixture(scope="function")
@@ -1074,3 +1075,21 @@ def test_base_alert_refresh_note(cbcsdk_mock):
     alert = api.select(BaseAlert, "1ba0c35f-9c01-4413-afd8-fe4f01365e35")
     notes = alert.notes_()
     assert notes[0]._refresh() is True
+
+
+def test_alert_search_suggestions(cbcsdk_mock):
+    """Tests getting alert search suggestions"""
+    api = cbcsdk_mock.api
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/appservices/v6/orgs/test/alerts/search_suggestions?suggest.q=",
+        ALERT_SEARCH_SUGGESTIONS_RESP,
+    )
+    result = BaseAlert.search_suggestions(api, "")
+    assert len(result) == 20
+
+
+def test_alert_search_suggestions_api_error():
+    """Tests getting alert search suggestions - no CBCloudAPI arg"""
+    with pytest.raises(ApiError):
+        BaseAlert.search_suggestions("", "")
