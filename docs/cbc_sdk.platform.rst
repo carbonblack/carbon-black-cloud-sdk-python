@@ -1,5 +1,5 @@
-Platform
-========
+cbc\_sdk.platform package
+=========================
 
 Submodules
 ----------
@@ -52,8 +52,8 @@ cbc\_sdk.platform.jobs module
    :undoc-members:
    :show-inheritance:
 
-cbc\_sdk.platform.network_threat_metadata module
-------------------------------------------------
+cbc\_sdk.platform.network\_threat\_metadata module
+--------------------------------------------------
 
 .. automodule:: cbc_sdk.platform.network_threat_metadata
    :members:
@@ -69,15 +69,15 @@ cbc\_sdk.platform.observations module
    :show-inheritance:
 
 cbc\_sdk.platform.policies module
-----------------------------------
+---------------------------------
 
 .. automodule:: cbc_sdk.platform.policies
    :members:
    :undoc-members:
    :show-inheritance:
 
-cbc\_sdk.platform.policy_ruleconfigs module
--------------------------------------------
+cbc\_sdk.platform.policy\_ruleconfigs module
+--------------------------------------------
 
 .. automodule:: cbc_sdk.platform.policy_ruleconfigs
    :members:

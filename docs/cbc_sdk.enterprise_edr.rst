@@ -1,5 +1,5 @@
-Enterprise EDR
-==============
+cbc\_sdk.enterprise\_edr package
+================================
 
 Submodules
 ----------

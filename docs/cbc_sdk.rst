@@ -1,5 +1,5 @@
-CBC SDK
-=======
+cbc\_sdk package
+================
 
 Subpackages
 -----------
