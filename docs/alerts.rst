@@ -82,11 +82,25 @@ Retrieving Alerts for Multiple Organizations
 
 With the example below, you can retrieve alerts for multiple organizations.
 
-Create a csv file with values that match the profile names in your credentials.cbc file. You can modify the code inside the for loop to fit your needs.
-
 .. code-block:: python
 
- >>> from cbc_sdk import CBCloudAPI
+    >>> from cbc_sdk import CBCloudAPI
+    >>> from cbc_sdk.platform import BaseAlert
+    >>> org_list = ["org1", "org2"]
+    >>> for org in org_list:
+    ...     org = ''.join(org)
+    ...     api = CBCloudAPI(profile=org)
+    ...     alerts = api.select(BaseAlert).set_minimum_severity(7)[:5]
+    ...     print('Results for Org {}'.format(org))
+    >>> for alert in alerts:
+    ...     print(alert.id, alert.device_os, alert.device_name, alert.category)
+    ...
+    ...
+
+
+You can also read from a csv file with values that match the profile names in your credentials.cbc file.
+
+    >>> from cbc_sdk import CBCloudAPI
     >>> from cbc_sdk.platform import BaseAlert
     >>> import csv
     >>> file = open ("data.csv", "r", encoding='utf-8-sig')
@@ -101,7 +115,6 @@ Create a csv file with values that match the profile names in your credentials.c
     ...     print(alert.id, alert.device_os, alert.device_name, alert.category)
     ...
     ...
-
 
 Retrieving of Carbon Black Analytics Alerts (CBAnalyticsAlert)
 --------------------------------------------------------------
