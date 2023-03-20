@@ -28,8 +28,15 @@ install_requires = [
 ]
 
 tests_requires = [
-    'pytest',
-    'pymox'
+    'pytest==7.2.1',
+    'pymox==0.7.8',
+    'coverage==6.5.0',
+    'coveralls==3.3.1',
+    'flake8==5.0.4',
+    'flake8-colors==0.1.9',
+    'flake8-docstrings==1.7.0',
+    'pre-commit>=2.15.0',
+    'requests-mock==1.10.0'
 ]
 
 if sys.version_info < (3, 0):
