@@ -15,6 +15,7 @@ packages = [
     'cbc_sdk.workload'
 ]
 
+
 install_requires = [
     'requests',
     'pyyaml',
@@ -22,6 +23,7 @@ install_requires = [
     'schema',
     'solrq',
     'validators',
+    'jsonschema',
     "keyring;platform_system=='Darwin'",
     'boto3'
 ]
