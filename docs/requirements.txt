@@ -2,3 +2,7 @@
 sphinxcontrib-apidoc
 sphinx-copybutton==0.4.0
 pygments
+
+# Broken dependencies (Need pre-installed to prevent build failure)
+jsonschema
+keyring
