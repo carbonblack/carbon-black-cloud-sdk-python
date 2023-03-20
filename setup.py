@@ -27,7 +27,7 @@ install_requires = [
     'boto3'
 ]
 
-tests_requires = [
+extra_requires = [
     'pytest==7.2.1',
     'pymox==0.7.8',
     'coverage==6.5.0',
