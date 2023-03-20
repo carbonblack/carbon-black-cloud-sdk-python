@@ -1,5 +1,5 @@
-cbc\_sdk.audit\_remediation package
-===================================
+Audit and Remediation
+=====================
 
 Submodules
 ----------
