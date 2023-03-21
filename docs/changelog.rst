@@ -7,7 +7,8 @@ New Features:
 
 * Policy Rule Configurations - allows users to make adjustments to Carbon Black-defined rules.
 * Core Prevention Rule Configurations - controls settings for core prevention rules as supplied by Carbon Black.
-* Observations - search through data supplied by all sensors to find enriched events matching search criteria.
+* Observations - search through all the noteworthy, searchable activity that was reported by your organization’s
+  sensors.
 * Auth Events - visibility into authentication events on Windows endpoints.
 
 Updates:
