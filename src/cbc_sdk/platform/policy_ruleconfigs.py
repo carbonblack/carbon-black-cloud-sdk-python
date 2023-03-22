@@ -272,3 +272,7 @@ class CorePreventionRuleConfig(PolicyRuleConfig):
         if mode not in ("REPORT", "BLOCK"):
             raise ApiError(f"invalid assignment mode: {mode}")
         self.set_parameter("WindowsAssignmentMode", mode)
+
+
+class HostBasedFirewallRuleConfig(PolicyRuleConfig):
+    pass
