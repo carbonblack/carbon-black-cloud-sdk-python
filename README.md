@@ -1,8 +1,8 @@
 # VMware Carbon Black Cloud Python SDK
 
-**Latest Version:** 1.4.1
+**Latest Version:** 1.4.2
 <br>
-**Release Date:** October 21, 2022
+**Release Date:** March 22, 2023
 
 [![Coverage Status](https://coveralls.io/repos/github/carbonblack/carbon-black-cloud-sdk-python/badge.svg?t=Id6Baf)](https://coveralls.io/github/carbonblack/carbon-black-cloud-sdk-python)
 [![Codeship Status for carbonblack/carbon-black-cloud-sdk-python](https://app.codeship.com/projects/9e55a370-a772-0138-aae4-129773225755/status?branch=develop)](https://app.codeship.com/projects/402767)
@@ -51,6 +51,7 @@ At least one Carbon Black Cloud product is required to use this SDK:
 - python-dateutil
 - schema
 - solrq
+- jsonschema
 - validators
 - keyring (for MacOS)
 
