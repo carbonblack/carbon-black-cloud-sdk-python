@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2023. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -251,6 +251,28 @@ class BaseAlert(PlatformModel):
             comment (str): The comment to set for the alert.
         """
         return self._update_threat_workflow_status("OPEN", remediation, comment)
+
+    @staticmethod
+    def search_suggestions(cb, query):
+        """
+        Returns suggestions for keys and field values that can be used in a search.
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            query (str): A search query to use.
+
+        Returns:
+            list: A list of search suggestions expressed as dict objects.
+
+        Raises:
+            ApiError: if cb is not instance of CBCloudAPI
+        """
+        if cb.__class__.__name__ != "CBCloudAPI":
+            raise ApiError("cb argument should be instance of CBCloudAPI.")
+        query_params = {"suggest.q": query}
+        url = "/appservices/v6/orgs/{0}/alerts/search_suggestions".format(cb.credentials.org_key)
+        output = cb.get_object(url, query_params)
+        return output["suggestions"]
 
 
 class WatchlistAlert(BaseAlert):
@@ -928,6 +950,9 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
 
         Returns:
             BaseAlertSearchQuery: This instance.
+
+        Note: - When filtering by fields that take a list parameter, an empty list will be treated as a wildcard and
+        match everything.
         """
         if not all((t in BaseAlertSearchQuery.VALID_ALERT_TYPES) for t in alerttypes):
             raise ApiError("One or more invalid alert type values")

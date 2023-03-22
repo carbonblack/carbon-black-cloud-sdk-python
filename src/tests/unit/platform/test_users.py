@@ -226,6 +226,12 @@ def test_create_user_fails(cbcsdk_mock):
         builder.build()
 
 
+def test_create_user_invalid_CBCloudAPI(cbcsdk_mock):
+    """Test a invalid API object when creating a user."""
+    with pytest.raises(ApiError):
+        User.create("BAD")
+
+
 def test_user_unsupported_create(cbcsdk_mock):
     """We don't support creating the user just by saving it. Test that."""
     api = cbcsdk_mock.api

@@ -1,8 +1,8 @@
 # VMware Carbon Black Cloud Python SDK
 
-**Latest Version:** 1.4.1
+**Latest Version:** 1.4.2
 <br>
-**Release Date:** October 21, 2022
+**Release Date:** March 22, 2023
 
 [![Coverage Status](https://coveralls.io/repos/github/carbonblack/carbon-black-cloud-sdk-python/badge.svg?t=Id6Baf)](https://coveralls.io/github/carbonblack/carbon-black-cloud-sdk-python)
 [![Codeship Status for carbonblack/carbon-black-cloud-sdk-python](https://app.codeship.com/projects/9e55a370-a772-0138-aae4-129773225755/status?branch=develop)](https://app.codeship.com/projects/402767)
@@ -51,6 +51,7 @@ At least one Carbon Black Cloud product is required to use this SDK:
 - python-dateutil
 - schema
 - solrq
+- jsonschema
 - validators
 - keyring (for MacOS)
 
@@ -125,6 +126,10 @@ The documentation is built in `docs/_build/html`.
 **N.B.:** If your documentation pages appear to generate incorrectly, check to see if you received the warning message
 `No module named 'cbc_sdk'`.  If so, set your `PYTHONPATH` to include the `src/` subdirectory of the SDK project
 directory before running `make html`, or the equivalent command `sphinx-build -M html . _build`.
+
+#### Pull-Requests
+
+The webhook with readthedocs will create a build of the branch and report on the status of the build to the GitHub pull request
 
 #### Using Docker
 

@@ -1,5 +1,5 @@
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2023. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -17,13 +17,14 @@ import logging
 import random
 from contextlib import ExitStack as does_not_raise
 from cbc_sdk.rest_api import CBCloudAPI
-from cbc_sdk.platform import Policy, PolicyRule
+from cbc_sdk.platform import Policy, PolicyRule, PolicyRuleConfig
 from cbc_sdk.errors import ApiError, InvalidObjectError, ServerError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_policies import (FULL_POLICY_1, SUMMARY_POLICY_1, SUMMARY_POLICY_2,
                                                         SUMMARY_POLICY_3, OLD_POLICY_1, FULL_POLICY_2, OLD_POLICY_2,
                                                         RULE_ADD_1, RULE_ADD_2, RULE_MODIFY_1, NEW_POLICY_CONSTRUCT_1,
-                                                        NEW_POLICY_RETURN_1)
+                                                        NEW_POLICY_RETURN_1, BASIC_CONFIG_TEMPLATE_RETURN,
+                                                        BUILD_RULECONFIG_1)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -58,6 +59,11 @@ def test_policy_compatibility_aliases_read(cb):
     objs = policy.object_rules
     for raw_rule in FULL_POLICY_1["rules"]:
         assert objs[raw_rule["id"]]._info == raw_rule
+    rule_configs = policy.object_rule_configs
+    assert rule_configs["1f8a5e4b-34f2-4d31-9f8f-87c56facaec8"].name == "Advanced Scripting Prevention"
+    assert rule_configs["ac67fa14-f6be-4df9-93f2-6de0dbd96061"].name == "Credential Theft"
+    assert rule_configs["c4ed61b3-d5aa-41a9-814f-0f277451532b"].name == "Carbon Black Threat Intel"
+    assert rule_configs["88b19232-7ebb-48ef-a198-2a75a282de5d"].name == "Privilege Escalation"
 
 
 def test_policy_compatibility_aliases_write(cb):
@@ -91,6 +97,8 @@ def test_policy_autoload(cbcsdk_mock):
     assert policy.auto_delete_known_bad_hashes_delay == 86400000
     assert called_full_get is True
     assert policy.rules == FULL_POLICY_1["rules"]
+    rule_configs = policy.object_rule_configs
+    assert rule_configs["1f8a5e4b-34f2-4d31-9f8f-87c56facaec8"].name == "Advanced Scripting Prevention"
 
 
 def test_policy_lookup_by_id(cbcsdk_mock):
@@ -102,11 +110,13 @@ def test_policy_lookup_by_id(cbcsdk_mock):
     assert policy.priority_level == "HIGH"
     assert policy.auto_delete_known_bad_hashes_delay == 86400000
     assert policy.rules == FULL_POLICY_1["rules"]
+    rule_configs = policy.object_rule_configs
+    assert rule_configs["1f8a5e4b-34f2-4d31-9f8f-87c56facaec8"].name == "Advanced Scripting Prevention"
 
 
 def test_policy_get_summaries(cbcsdk_mock):
     """Tests getting the list of policy summaries."""
-    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies',
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/summary',
                              {"policies": [SUMMARY_POLICY_1, SUMMARY_POLICY_2, SUMMARY_POLICY_3]})
     api = cbcsdk_mock.api
     my_list = list(api.select(Policy))
@@ -137,7 +147,7 @@ def test_policy_get_summaries_async(cbcsdk_mock):
 
 def test_policy_filter_by_id(cbcsdk_mock):
     """Tests filtering the policy summaries by ID."""
-    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies',
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/summary',
                              {"policies": [SUMMARY_POLICY_1, SUMMARY_POLICY_2, SUMMARY_POLICY_3]})
     api = cbcsdk_mock.api
     query = api.select(Policy).add_policy_ids([10191, 74656])
@@ -479,6 +489,12 @@ def test_policy_builder_make_policy(cbcsdk_mock):
         assert body == NEW_POLICY_CONSTRUCT_1
         return NEW_POLICY_RETURN_1
 
+    cbcsdk_mock.mock_request('GET', "/policyservice/v1/orgs/test/rule_configs/"
+                                    "88b19232-7ebb-48ef-a198-2a75a282de5d/parameters/schema",
+                             BASIC_CONFIG_TEMPLATE_RETURN)
+    cbcsdk_mock.mock_request('GET', "/policyservice/v1/orgs/test/rule_configs/"
+                                    "ac67fa14-f6be-4df9-93f2-6de0dbd96061/parameters/schema",
+                             BASIC_CONFIG_TEMPLATE_RETURN)
     cbcsdk_mock.mock_request('POST', '/policyservice/v1/orgs/test/policies', on_post)
     api = cbcsdk_mock.api
     builder = Policy.create(api)
@@ -497,6 +513,10 @@ def test_policy_builder_make_policy(cbcsdk_mock):
     builder.add_sensor_setting("SCAN_EXECUTE_ON_NETWORK_DRIVE", "false").add_sensor_setting("UBS_OPT_IN", "true")
     builder.add_sensor_setting("SCAN_EXECUTE_ON_NETWORK_DRIVE", "true").add_sensor_setting("ALLOW_UNINSTALL", "true")
     builder.set_managed_detection_response_permissions(False, True)
+    rule_config = PolicyRuleConfig(api, None, BUILD_RULECONFIG_1['id'], BUILD_RULECONFIG_1, False, True)
+    builder.add_rule_config_copy(rule_config)
+    builder.add_rule_config("ac67fa14-f6be-4df9-93f2-6de0dbd96061", "Credential Theft", "core_prevention",
+                            WindowsAssignmentMode='REPORT')
     policy = builder.build()
     assert policy._info == NEW_POLICY_CONSTRUCT_1
     policy.save()

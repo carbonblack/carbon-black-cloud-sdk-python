@@ -1,5 +1,5 @@
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2023. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -18,7 +18,7 @@ import io
 from queue import Queue
 from cbc_sdk.errors import ApiError, ObjectNotFoundError, ServerError, TimeoutError
 from cbc_sdk.live_response_api import (LiveResponseError, LiveResponseSessionManager, CbLRManagerBase,
-                                       CompletionNotification, WorkerStatus, JobWorker, GetFileJob,
+                                       CompletionNotification, WorkItem, WorkerStatus, JobWorker, GetFileJob,
                                        LiveResponseJobScheduler)
 from cbc_sdk.connection import Connection
 from cbc_sdk.credentials import Credentials
@@ -1237,7 +1237,7 @@ def test_registry_unsupported_command(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', USESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:7777', USESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/7777', UDEVICE_RESPONSE)
-    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions', None)
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:7777', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
     with manager.request_session(7777) as session:
         with pytest.raises(ApiError) as excinfo:
@@ -1535,7 +1535,7 @@ def test_completion_notification_work_status(cbcsdk_mock):
 
 
 def test_job_worker(cbcsdk_mock):
-    """Test JobWorker"""
+    """Test JobWorker Success Flow"""
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', SESSION_POLL_RESP)
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
@@ -1543,10 +1543,15 @@ def test_job_worker(cbcsdk_mock):
     results = Queue()
     job_worker = JobWorker(cbcsdk_mock.api, 2468, results)
     assert job_worker.device_id == 2468
-    job_worker.job_queue.put('element')
+    work_item = WorkItem(lambda lr_session: True, 2468)
+    job_worker.job_queue.put(work_item)
+    job_worker.job_queue.put(None)
     job_worker.run()
-    assert not job_worker.result_queue.empty()
+    assert job_worker.result_queue.get().status == "READY"
+    assert isinstance(job_worker.result_queue.get(), CompletionNotification)
+    assert job_worker.result_queue.get().status == "EXITING"
     assert job_worker.job_queue.empty()
+    assert work_item.future.result() is True
 
 
 def test_job_worker_no_item(cbcsdk_mock):
@@ -1560,8 +1565,28 @@ def test_job_worker_no_item(cbcsdk_mock):
     assert job_worker.device_id == 2468
     job_worker.job_queue.put(None)
     job_worker.run()
-    assert not job_worker.result_queue.empty()
+    assert job_worker.result_queue.get().status == "READY"
+    assert job_worker.result_queue.get().status == "EXITING"
     assert job_worker.job_queue.empty()
+
+
+def test_job_worker_device_not_found(cbcsdk_mock):
+    """Test JobWorker unable to make session with device"""
+    cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions', SESSION_INIT_RESP)
+    cbcsdk_mock.mock_request('GET',
+                             '/appservices/v6/orgs/test/liveresponse/sessions/1:2468',
+                             ObjectNotFoundError("/appservices/v6/orgs/test/liveresponse/sessions/1:2468",
+                                                 "Could not establish session with device 2468"))
+    cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
+    results = Queue()
+    job_worker = JobWorker(cbcsdk_mock.api, 2468, results)
+    assert job_worker.device_id == 2468
+    work_item = WorkItem(lambda lr_session: True, 2468)
+    job_worker.job_queue.put(work_item)
+    job_worker.run()
+    assert job_worker.result_queue.get().status == "ERROR"
+    assert job_worker.job_queue.empty()
+    assert isinstance(work_item.future.exception(), Exception)
 
 
 def test_get_file_job(cbcsdk_mock, connection_mock):
@@ -1614,7 +1639,7 @@ def test_job_scheduler_exiting(cbcsdk_mock, mox):
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     job_scheduler = LiveResponseJobScheduler(cbcsdk_mock.api)
-    ws_obj_exiting = WorkerStatus(2468, status="EXISTING")
+    ws_obj_exiting = WorkerStatus(2468, status="EXITING")
     job_scheduler.schedule_queue.put(ws_obj_exiting)
     job_scheduler._idle_workers.add(2469)
     job_worker = JobWorker(cbcsdk_mock.api, 2468, Queue())

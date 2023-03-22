@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2023. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -14,8 +14,15 @@
 """Policy implementation as part of Platform API"""
 import copy
 import json
+from types import MappingProxyType
 from cbc_sdk.base import MutableBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
+from cbc_sdk.platform.policy_ruleconfigs import PolicyRuleConfig, CorePreventionRuleConfig
 from cbc_sdk.errors import ApiError, ServerError, InvalidObjectError
+
+
+SPECIFIC_RULECONFIGS = MappingProxyType({
+    "core_prevention": CorePreventionRuleConfig
+})
 
 
 class Policy(MutableBaseModel):
@@ -72,6 +79,9 @@ class Policy(MutableBaseModel):
                                      force_init=force_init if initial_data else True, full_doc=full_doc)
         self._object_rules = None
         self._object_rules_need_load = True
+        self._object_rule_configs = None
+        self._object_rule_configs_need_load = True
+        self._ruleconfig_presentation = None
         if "version" not in self._info:
             self._info["version"] = 2
         if model_unique_id is None:
@@ -100,10 +110,10 @@ class Policy(MutableBaseModel):
                 cb (BaseAPI): Reference to API object used to communicate with the server.
             """
             self._cb = cb
-            self._new_policy_data = {"org_key": cb.credentials.org_key, "priority_level": "MEDIUM",
-                                     "is_system": False, "rapid_configs": []}
+            self._new_policy_data = {"org_key": cb.credentials.org_key, "priority_level": "MEDIUM", "is_system": False}
             self._sensor_settings = {}
             self._new_rules = []
+            self._new_rule_configs = []
 
         def set_name(self, name):
             """
@@ -408,6 +418,20 @@ class Policy(MutableBaseModel):
             new_rule.validate()
             self._new_rules.append(new_rule)
 
+        def _add_rule_config(self, rule_config_data):
+            """
+            Add rule configuration data to the new policy.
+
+            Args:
+                rule_config_data (dict): Rule configuration data specified as a dictionary.
+
+            Raises:
+                InvalidObjectError: If the rule configuration data passed in is not valid.
+            """
+            new_rule_config = Policy._create_rule_config(self._cb, None, rule_config_data)
+            new_rule_config.validate()
+            self._new_rule_configs.append(new_rule_config)
+
         def add_rule_copy(self, rule):
             """
             Adds a copy of an existing rule to this new policy.
@@ -447,6 +471,44 @@ class Policy(MutableBaseModel):
             ruledata = {"required": required, "action": action, "application": {"type": app_type, "value": app_value},
                         "operation": operation}
             self._add_rule(ruledata)
+            return self
+
+        def add_rule_config_copy(self, rule_config):
+            """
+            Adds a copy of an existing rule configuration to this new policy.
+
+            Args:
+                rule_config (PolicyRuleConfig): The rule configuration to copy and add to this object.
+
+            Returns:
+                PolicyBuilder: This object.
+
+            Raises:
+                InvalidObjectError: If the rule configuration data passed in is not valid.
+            """
+            ruleconfigdata = copy.deepcopy(rule_config._info)
+            self._add_rule_config(ruleconfigdata)
+            return self
+
+        def add_rule_config(self, config_id, name, category, **kwargs):
+            """
+            Add a new rule configuration as discrete data elements to the new policy.
+
+            Args:
+                config_id (str): ID of the rule configuration object (a GUID).
+                name (str): Name of the rule configuration object.
+                category (str): Category of the rule configuration object.
+                **kwargs (dict): Parameter values for the rule configuration object.
+
+            Returns:
+                PolicyBuilder: This object.
+
+            Raises:
+                InvalidObjectError: If the rule configuration data passed in is not valid.
+            """
+            ruleconfigdata = {"id": config_id, "name": name, "category": category, "inherited_from": "",
+                              "parameters": copy.deepcopy(kwargs)}
+            self._add_rule_config(ruleconfigdata)
             return self
 
         def add_sensor_setting(self, name, value):
@@ -498,6 +560,7 @@ class Policy(MutableBaseModel):
             settings.sort(key=lambda item: item["name"])
             new_policy["sensor_settings"] = settings
             new_policy["rules"] = [copy.deepcopy(r._info) for r in self._new_rules]
+            new_policy["rule_configs"] = [copy.deepcopy(rcfg._info) for rcfg in self._new_rule_configs]
             return Policy(self._cb, None, new_policy, False, True)
 
     def _subobject(self, name):
@@ -512,6 +575,8 @@ class Policy(MutableBaseModel):
         """
         if name == 'rules':
             return list(self.object_rules.values())
+        if name == 'rule_configs':
+            return list(self.object_rule_configs.values())
         return super(Policy, self)._subobject(name)
 
     @classmethod
@@ -555,6 +620,7 @@ class Policy(MutableBaseModel):
         """
         rc = super(Policy, self)._refresh()
         self._object_rules_need_load = True
+        self._object_rule_configs_need_load = True
         return rc
 
     @property
@@ -581,6 +647,124 @@ class Policy(MutableBaseModel):
             self._object_rules = dict([(robj.id, robj) for robj in ruleobjects])
             self._object_rules_need_load = False
         return self._object_rules
+
+    @property
+    def object_rule_configs(self):
+        """
+        Returns a dictionary of rule configuration IDs and objects for this Policy.
+
+        Returns:
+            dict: A dictionary with rule configuration IDs as keys and PolicyRuleConfig objects as values.
+        """
+        if self._object_rule_configs_need_load:
+            cfgs = self._info.get("rule_configs", [])
+            ruleconfigobjects = [self._create_rule_config(self._cb, self, cfg) for cfg in cfgs]
+            self._object_rule_configs = dict([(rconf.id, rconf) for rconf in ruleconfigobjects])
+            self._object_rule_configs_need_load = False
+        return self._object_rule_configs
+
+    @property
+    def object_rule_configs_list(self):
+        """
+        Returns a list of rule configuration objects for this Policy.
+
+        Returns:
+            list: A list of PolicyRuleConfig objects.
+        """
+        return [rconf for rconf in self.object_rule_configs.values()]
+
+    @property
+    def core_prevention_rule_configs(self):
+        """
+        Returns a dictionary of core prevention rule configuration IDs and objects for this Policy.
+
+        Returns:
+            dict: A dictionary with core prevention rule configuration IDs as keys and CorePreventionRuleConfig objects
+                  as values.
+        """
+        return {key: rconf for (key, rconf) in self.object_rule_configs.items()
+                if isinstance(rconf, CorePreventionRuleConfig)}
+
+    @property
+    def core_prevention_rule_configs_list(self):
+        """
+        Returns a list of core prevention rule configuration objects for this Policy.
+
+        Returns:
+            list: A list of CorePreventionRuleConfig objects.
+        """
+        return [rconf for rconf in self.object_rule_configs.values() if isinstance(rconf, CorePreventionRuleConfig)]
+
+    def valid_rule_configs(self):
+        """
+        Returns a dictionary identifying all valid rule configurations for this policy.
+
+        Returns:
+            dict: A dictionary mapping string ID values (UUIDs) to dicts containing entries for name, description,
+                  and category.
+        """
+        if self._ruleconfig_presentation is None and self._model_unique_id is not None:
+            uri = Policy.urlobject.format(self._cb.credentials.org_key) + \
+                f"/{self._model_unique_id}/configs/presentation"
+            result = self._cb.get_object(uri)
+            self._ruleconfig_presentation = {cfg['id']: cfg for cfg in result.get('configs', [])}
+        return {k: {'name': v['name'], 'description': v['description'], 'category': v['presentation']['category']}
+                for k, v in self._ruleconfig_presentation.items()}
+
+    @classmethod
+    def _create_rule_config(cls, cb, parent, data):
+        """
+        Creates a PolicyRuleConfig object, or specialized subclass thereof, from a block of data in the policy.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            parent (Policy): The "parent" policy of this rule configuration.
+            data (dict): Initial data used to populate the rule configuration.
+
+        Returns:
+            PolicyRuleConfig: The new object.
+        """
+        newclass = SPECIFIC_RULECONFIGS.get(data.get("category", None), PolicyRuleConfig)
+        return newclass(cb, parent, data.get("id", None), data, False, True)
+
+    def get_ruleconfig_parameter_schema(self, ruleconfig_id):
+        """
+        Returns the parameter schema for a specified rule configuration.
+
+        Uses cached rule configuration presentation data if present.
+
+        Args:
+            ruleconfig_id (str): The rule configuration ID (UUID).
+
+        Returns:
+            dict: The parameter schema for this particular rule configuration (a JSON schema).
+
+        Raises:
+            InvalidObjectError: If the rule configuration ID is not valid.
+        """
+        if self._ruleconfig_presentation is not None:
+            block = self._ruleconfig_presentation.get(ruleconfig_id, None)
+            if block is None:
+                raise InvalidObjectError(f"invalid rule config ID {ruleconfig_id}")
+            param_items = block.get("parameters", [])
+            # morph the parameter presentation into a parameter schema
+            schema = {}
+            for item in param_items:
+                schema_item = {'default': item['default'], 'description': item['description']}
+                for validation in item.get('validations', []):
+                    val_type = validation.get('type', None)
+                    if val_type == 'enum':
+                        schema_item['type'] = 'string'
+                        schema_item['enum'] = validation.get('values', [])
+                    else:
+                        # other item types may be defined later
+                        schema_item['type'] = val_type
+                if 'type' not in schema_item:  # fallback to string if nothing specified
+                    schema_item['type'] = 'string'
+                schema[item['name']] = schema_item
+            return {'type': 'object', 'properties': schema}
+        else:
+            return self._cb.get_policy_ruleconfig_parameter_schema(ruleconfig_id)
 
     def _on_updated_rule(self, rule):
         """
@@ -619,6 +803,39 @@ class Policy(MutableBaseModel):
         new_raw_rules = [raw_rule for raw_rule in self._info.get("rules", []) if raw_rule['id'] != rule.id]
         self._info["rules"] = new_raw_rules
 
+    def _on_updated_rule_config(self, rule_config):
+        """
+        Called when a rule configuration object is added or updated.
+
+        Args:
+            rule_config (PolicyRuleConfig): The rule configuration being added or updated.
+        """
+        if rule_config._parent is not self:
+            raise ApiError("internal error: updated rule configuration does not belong to this policy")
+        if rule_config.id not in self.object_rule_configs:
+            raise ApiError(f"internal error: unvalid rule configuration ID {rule_config.id}")
+        self._object_rule_configs[rule_config.id] = rule_config
+        raw_rule_configs = self._info.get("rule_configs", [])
+        location = [index for (index, item) in enumerate(raw_rule_configs) if item['id'] == rule_config.id]
+        if location:
+            raw_rule_configs[location[0]] = copy.deepcopy(rule_config._info)
+            self._info['rule_configs'] = raw_rule_configs
+
+    def _on_deleted_rule_config(self, rule_config):
+        """
+        Called when a rule configuration object is deleted.
+
+        Args:
+            rule_config (PolicyRuleConfig): The rule configuration being deleted.
+        """
+        if rule_config._parent is not self:
+            raise ApiError("internal error: updated rule configuration does not belong to this policy")
+        rconfs = self._info.get("rule_configs", [])
+        location = [index for (index, item) in enumerate(rconfs) if item['id'] == rule_config.id]
+        if location:
+            rconfs[location[0]] = copy.deepcopy(rule_config._info)
+            self._info['rule_configs'] = rconfs
+
     def add_rule(self, new_rule):
         """Adds a rule to this Policy.
 
@@ -650,6 +867,7 @@ class Policy(MutableBaseModel):
                 "required": [True, False]
         """
         new_obj = PolicyRule(self._cb, self, None, new_rule, False, True)
+        new_obj.touch()
         new_obj.save()
 
     def delete_rule(self, rule_id):
@@ -696,6 +914,53 @@ class Policy(MutableBaseModel):
                     old_rule._dirty_attributes = {}
         else:
             raise ApiError(f"rule #{rule_id} not found in policy")
+
+    def delete_rule_config(self, rule_config_id):
+        """
+        Deletes a rule configuration from this Policy.
+
+        Args:
+            rule_config_id (str): The ID of the rule configuration to be deleted.
+
+        Raises:
+            ApiError: If the rule configuration ID does not exist in this policy.
+        """
+        old_rule_config = self.object_rule_configs.get(rule_config_id, None)
+        if old_rule_config:
+            old_rule_config.delete()
+        else:
+            raise ApiError(f"rule configuration '{rule_config_id}' not found in policy")
+
+    def replace_rule_config(self, rule_config_id, new_rule_config):
+        """
+        Replaces a rule configuration in this policy.
+
+        Args:
+            rule_config_id (str): The ID of the rule configuration to be replaced.
+            new_rule_config (dict): The data for the new rule configuration.
+
+        Raises:
+            ApiError: If the rule configuration ID does not exist in this policy.
+        """
+        old_rule_config = self.object_rule_configs.get(rule_config_id, None)
+        if old_rule_config:
+            new_rule_config_info = copy.deepcopy(new_rule_config)
+            new_rule_config_info['id'] = rule_config_id
+            saved_rule_config_info = old_rule_config._info
+            old_rule_config._info = new_rule_config_info
+            old_rule_config.touch(True)
+            restore_rule_config = True
+            try:
+                old_rule_config.save()
+                restore_rule_config = False
+            finally:
+                if restore_rule_config:
+                    old_rule_config._info = saved_rule_config_info
+                    old_rule_config._dirty_attributes = {}
+        else:
+            raise ApiError(f"rule configuration '{rule_config_id}' not found in policy")
+
+    # --- BEGIN policy v1 compatibility methods ---
 
     @property
     def priorityLevel(self):
@@ -841,6 +1106,8 @@ class Policy(MutableBaseModel):
         if "rules" in oldpolicy:
             newpolicy["rules"] = copy.deepcopy(oldpolicy["rules"])
         self._info = newpolicy
+
+    # --- END policy v1 compatibility methods ---
 
     @classmethod
     def create(cls, cb):

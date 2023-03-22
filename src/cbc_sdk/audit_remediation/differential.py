@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2023. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -27,8 +27,7 @@ ASYNC_RATE_LIMIT = 100
 
 
 class Differential(NewBaseModel):
-    """
-    Represents a Differential Analysis run.
+    """Represents a Differential Analysis run.
 
     Example:
         >>> query = cb.select(Differential).newer_run_id(newer_run_id)
@@ -36,6 +35,7 @@ class Differential(NewBaseModel):
         >>> print(run)
         >>> print(run.diff_results)
     """
+
     swagger_meta_file = "audit_remediation/models/differential.yaml"
     urlobject = "/livequery/v1/orgs/{}/differential/runs/_search"
 

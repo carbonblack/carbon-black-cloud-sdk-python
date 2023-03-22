@@ -1,5 +1,5 @@
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2023. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -13,25 +13,10 @@
 
 # import pytest
 from datetime import datetime
-from cbc_sdk.utils import convert_query_params, convert_from_cb, convert_to_cb
+from cbc_sdk.utils import convert_from_cb, convert_to_cb
 
 
 # ==================================== Unit TESTS BELOW ====================================
-
-
-def test_convert_query_params():
-    """Test that query parameter dicts are properly converted."""
-    lv = convert_query_params({'answer': 42, 'hup': [2, 3, 4], 'goody': 'twoshoes'})
-    assert isinstance(lv, list)
-    assert len(lv) == 5
-    assert ('answer', 42) in lv
-    assert ('hup', 2) in lv
-    assert ('hup', 3) in lv
-    assert ('hup', 4) in lv
-    assert ('goody', 'twoshoes') in lv
-    lv = convert_query_params({})
-    assert isinstance(lv, list)
-    assert len(lv) == 0
 
 
 def test_convert_from_cb():

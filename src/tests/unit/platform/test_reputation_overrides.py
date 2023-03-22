@@ -1,5 +1,5 @@
 # *******************************************************
-# Copyright (c) VMware, Inc. 2021-2022. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2021-2023. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -27,8 +27,7 @@ from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_VALIDATION_RE
                                                        GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
 
 from tests.unit.fixtures.endpoint_standard.mock_enriched_events import (POST_ENRICHED_EVENTS_SEARCH_JOB_RESP,
-                                                                        GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP,
-                                                                        GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_1)
+                                                                        GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -181,18 +180,22 @@ def test_reputation_override_bulk_delete(cbcsdk_mock):
 def test_reputation_override_process_ban_process_sha256(cbcsdk_mock):
     """Testing Reputation Override creation from process"""
     # mock the search validation
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v1/orgs/test/processes/search_validation?"
+                             "process_guid=WNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
+                             "&q=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
+                             "&query=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00",
                              GET_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_job",
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
     # mock the GET to check search status
-    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
-                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=0"),
                              GET_PROCESS_SEARCH_JOB_RESP)
     # mock the GET to get search results
     cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
-                                     "2c292717-80ed-4f0d-845f-779e09470920/results"),
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=500"),
                              GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
 
     api = cbcsdk_mock.api
@@ -222,18 +225,22 @@ def test_reputation_override_process_ban_process_sha256(cbcsdk_mock):
 def test_reputation_override_process_approve_process_sha256(cbcsdk_mock):
     """Testing Reputation Override creation from process"""
     # mock the search validation
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation",
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v1/orgs/test/processes/search_validation?"
+                             "process_guid=WNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
+                             "&q=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
+                             "&query=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00",
                              GET_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_job",
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
     # mock the GET to check search status
-    cbcsdk_mock.mock_request("GET", ("/api/investigate/v1/orgs/test/processes/"
-                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920"),
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=0"),
                              GET_PROCESS_SEARCH_JOB_RESP)
     # mock the GET to get search results
     cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
-                                     "2c292717-80ed-4f0d-845f-779e09470920/results"),
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=500"),
                              GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
 
     api = cbcsdk_mock.api
@@ -262,14 +269,14 @@ def test_reputation_override_process_approve_process_sha256(cbcsdk_mock):
 
 def test_reputation_override_enriched_event_ban_process_sha256(cbcsdk_mock):
     """Testing Reputation Override creation from enriched event"""
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/search_job",
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/search_jobs",
                              POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b",  # noqa: E501
+                             "/api/investigate/v2/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results?start=0&rows=0",  # noqa: E501
                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_1)
+                             "/api/investigate/v2/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results?start=0&rows=500",  # noqa: E501
+                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
 
     api = cbcsdk_mock.api
 
@@ -297,14 +304,14 @@ def test_reputation_override_enriched_event_ban_process_sha256(cbcsdk_mock):
 
 def test_reputation_override_enriched_event_approve_process_sha256(cbcsdk_mock):
     """Testing Reputation Override creation from enriched event"""
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/search_job",
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/search_jobs",
                              POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b",  # noqa: E501
+                             "/api/investigate/v2/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results?start=0&rows=0",  # noqa: E501
                              GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
     cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_1)
+                             "/api/investigate/v2/orgs/test/enriched_events/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results?start=0&rows=500",  # noqa: E501
+                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
 
     api = cbcsdk_mock.api
     event = api.select(EnrichedEvent, "27a278d5150911eb86f1011a55e73b72")

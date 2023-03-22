@@ -1,5 +1,5 @@
 # *******************************************************
-# Copyright (c) VMware, Inc. 2021-2022. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2021-2023. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *

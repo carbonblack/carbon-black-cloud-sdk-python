@@ -17,7 +17,9 @@ to initialize your credential provider in any desired fashion.
 Using the Credential Provider
 -----------------------------
 Create an instance of your credential provider object and pass it as the keyword parameter
-``credential_provider`` when creating your ``CBCloudAPI`` object.  Example:
+``credential_provider`` when creating your ``CBCloudAPI`` object.
+
+Example:
 
     >>> provider = MyCredentialProvider()
     >>> cbc_api = CBCloudAPI(credential_provider=provider, profile='default')

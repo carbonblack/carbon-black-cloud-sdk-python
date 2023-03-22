@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2023. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -68,7 +68,7 @@ def split_cli(line):
         if (tok[:1] == '"'):
             tok = tok[1:]
             next = parts.pop(0)
-            while(next[-1:] != '"' and len(parts) > 0):
+            while (next[-1:] != '"' and len(parts) > 0):
                 tok += ' ' + next
                 next = parts.pop(0)
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2023. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -71,8 +71,8 @@ def list_policies(cb, parser, args):
     for p in cb.select(Policy):
         print(u"Policy id {0}: {1} {2}".format(p.id, p.name, "({0})".format(p.description) if p.description else ""))
         print("Rules:")
-        for r in p.rules.values():
-            print("  {0}: {1} when {2} {3} is {4}".format(r.get('id'), r.get("action"),
+        for r in p.rules:
+            print("  {0}: {1} when {2} {3} is {4}".format(r.get("id"), r.get("action"),
                                                           r.get("application", {}).get("type"),
                                                           r.get("application", {}).get("value"), r.get("operation")))
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2023. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -17,6 +17,9 @@ from cbc_sdk.errors import ApiError, ServerError, ObjectNotFoundError
 from cbc_sdk.platform.grants import Grant, normalize_org
 import time
 import copy
+import logging
+
+log = logging.getLogger(__name__)
 
 """User Models"""
 
@@ -290,6 +293,12 @@ class User(MutableBaseModel):
             UserBuilder: If template is None, returns an instance of this object. Call methods on the object to set
                          the values associated with the new user, and then call build() to create it.
         """
+        try:
+            if cb.__class__.__name__ != 'CBCloudAPI':
+                raise Exception
+        except:
+            raise ApiError("Unable to create User without CBCloudAPI")
+
         if template:
             my_templ = copy.deepcopy(template)
             my_templ['org_id'] = 0

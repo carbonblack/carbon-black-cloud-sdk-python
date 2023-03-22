@@ -1,5 +1,5 @@
 # *******************************************************
-# Copyright (c) VMware, Inc. 2021-2022. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2021-2023. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -152,7 +152,13 @@ def test_read_iocs(cbcsdk_mock):
             return {"valid": True}
         return {"valid": False}
 
-    cbcsdk_mock.mock_request("GET", "/api/investigate/v1/orgs/test/processes/search_validation", post_validate)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v1/orgs/test/processes/search_validation?q=process_name%3Achrome.exe",
+                             post_validate)
+    cbcsdk_mock.mock_request("GET",
+                             "/api/investigate/v1/orgs/test/processes/search_validation?q=invalid",
+                             post_validate)
+
     api = cbcsdk_mock.api
     sha256 = '8005557c1614c1e2c89f7db3702199de2b1e4605718fa32ff6ffdb2b41ed3759'
     md5 = 'f586835082f632dc8d9404d83bc16316'
