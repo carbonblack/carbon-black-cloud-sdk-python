@@ -275,4 +275,189 @@ class CorePreventionRuleConfig(PolicyRuleConfig):
 
 
 class HostBasedFirewallRuleConfig(PolicyRuleConfig):
-    pass
+    """
+    Represents a host-based firewall rule configuration in the policy.
+    """
+    swagger_meta_file = "platform/models/policy_ruleconfig.yaml"
+
+    def __init__(self, cb, parent, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
+        """
+        Initialize the CorePreventionRuleConfig object.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            parent (Policy): The "parent" policy of this rule configuration.
+            model_unique_id (str): ID of the rule configuration.
+            initial_data (dict): Initial data used to populate the rule configuration.
+            force_init (bool): If True, forces the object to be refreshed after constructing.  Default False.
+            full_doc (bool): If True, object is considered "fully" initialized. Default False.
+        """
+        super(HostBasedFirewallRuleConfig, self).__init__(cb, parent, model_unique_id, initial_data, force_init,
+                                                          full_doc)
+        self._rule_groups = []
+        self._rule_groups_valid = False
+
+    class FirewallRuleGroup(MutableBaseModel):
+        """Represents a group of related firewall rules."""
+        swagger_meta_file = "platform/models/firewall_rule_group.yaml"
+
+        def __init__(self, cb, initial_data):
+            """
+            Initialize the FirewallRuleGroup object.
+
+            Args:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+                initial_data (dict): Initial data used to populate the firewall rule group.
+            """
+            super(HostBasedFirewallRuleConfig.FirewallRuleGroup, self).__init__(cb, None, initial_data, False, True)
+            self._rules = [HostBasedFirewallRuleConfig.FirewallRule(cb, d) for d in initial_data.get("rules", [])]
+
+        def _flatten(self):
+            """
+            Turns this rule group into a dict for transferral to the server.
+
+            Returns:
+                dict: The information defining the rule group and its constituent rules.
+            """
+            rc = copy.deepcopy(self._info)
+            rc['rules'] = [rule._flatten() for rule in self._rules]
+            return rc
+
+        @property
+        def rules(self):
+            """
+            Returns a list of the firewall rules within this rule group.
+
+            Returns:
+                list(HostBasedFirewallRuleConfig.FirewallRule): List of contained firewall rules.
+            """
+            return self._rules
+
+        def append_rule(self, rule):
+            self._rules.append(rule)
+
+        def remove(self):
+            if self in self.rule_groups:
+                self.rule_groups.remove(self)
+
+    class FirewallRule(MutableBaseModel):
+        """Represents a single firewall rule."""
+        swagger_meta_file = "platform/models/firewall_rule.yaml"
+
+        def __init__(self, cb, initial_data):
+            """
+            Initialize the FirewallRule object.
+
+            Args:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+                initial_data (dict): Initial data used to populate the firewall rule.
+            """
+            super(HostBasedFirewallRuleConfig.FirewallRule, self).__init__(cb, None, initial_data, False, True)
+
+        def _flatten(self):
+            """
+            Turns this rule into a dict for transferral to the server.
+
+            Returns:
+                dict: The information defining the rule.
+            """
+            return copy.deepcopy(self._info)
+
+        def remove(self):
+            group_list = [group for group in self.rule_groups if self in group._rules]
+            if group_list:
+                group_list[0]._rules.remove(self)
+
+    def _base_url(self):
+        """
+        Calculates the base URL for these particular rule configs, including the org key and the parent policy ID.
+
+        Returns:
+            str: The base URL for these particular rule configs.
+
+        Raises:
+            InvalidObjectError: If the rule config object is unparented.
+        """
+        return super(HostBasedFirewallRuleConfig, self)._base_url() + "/host_based_firewall"
+
+    def _refresh(self):
+        """
+        Refreshes the rule configuration object from the server.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Returns:
+            bool: True if the refresh was successful.
+
+        Raises:
+            InvalidObjectError: If the object is unparented or its ID is invalid.
+        """
+        return_data = self._cb.get_object(self._base_url())
+        ruleconfig_data = [d for d in return_data.get("results", []) if d.get("id", "") == self._model_unique_id]
+        if ruleconfig_data:
+            self._info = ruleconfig_data[0]
+            self._rule_groups = []
+            self._rule_groups_valid = False
+        else:
+            raise InvalidObjectError(f"invalid host-based firewall ID: {self._model_unique_id}")
+        return True
+
+    def _update_ruleconfig(self):
+        """Perform the internal update of the rule configuration object."""
+        ...
+
+    def _delete_ruleconfig(self):
+        """Perform the internal delete of the rule configuration object."""
+        ...
+
+    @property
+    def enabled(self):
+        return self.get_parameter('enable_host_based_firewall')
+
+    def set_enabled(self, flag):
+        self.set_parameter('enable_host_based_firewall', flag)
+
+    @property
+    def default_action(self):
+        default_rule = self.get_parameter('default_rule')
+        return default_rule.get("action", "ALLOW")
+
+    def set_default_action(self, action):
+        if action not in ("ALLOW", "BLOCK"):
+            raise ApiError(f"invalid default action: {action}")
+        default_rule = self.get_parameter('default_rule')
+        default_rule['action'] = action
+        self.set_parameter("default_rule", default_rule)
+
+    @property
+    def rule_groups(self):
+        if not self._rule_groups_valid:
+            rg_param = self.get_parameter("rule_groups")
+            if rg_param is not None:
+                self._rule_groups = [HostBasedFirewallRuleConfig.FirewallRuleGroup(self._cb, d) for d in rg_param]
+            else:
+                self._rule_groups = []
+            self._rule_groups_valid = True
+        return self._rule_groups
+
+    def new_rule_group(self, name, description):
+        return HostBasedFirewallRuleConfig.FirewallRuleGroup(self._cb, {"name": name, "description": description,
+                                                                        "rules": []})
+
+    def append_rule_group(self, rule_group):
+        self.rule_groups.append(rule_group)
+
+    def new_rule(self, action, direction, protocol, remote_ip):
+        if action not in ("ALLOW", "BLOCK", "BLOCK_ALERT"):
+            raise ApiError(f"invalid rule action: {action}")
+        if direction not in ("IN", "OUT", "BOTH"):
+            raise ApiError(f"invalid rule direction: {direction}")
+        if protocol not in ("TCP", "UDP"):
+            raise ApiError(f"invalid rule protocol: {protocol}")
+        return HostBasedFirewallRuleConfig.FirewallRule(self._cb, {"action": action, "application_path": "*",
+                                                                   "direction": direction, "enabled": True,
+                                                                   "protocol": protocol, "local_ip_address": "*",
+                                                                   "local_port_ranges": "*",
+                                                                   "remote_ip_address": remote_ip,
+                                                                   "remote_port_ranges": "*", "test_mode": False})
