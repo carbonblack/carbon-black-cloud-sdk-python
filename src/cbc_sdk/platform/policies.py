@@ -16,12 +16,13 @@ import copy
 import json
 from types import MappingProxyType
 from cbc_sdk.base import MutableBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
-from cbc_sdk.platform.policy_ruleconfigs import PolicyRuleConfig, CorePreventionRuleConfig
+from cbc_sdk.platform.policy_ruleconfigs import PolicyRuleConfig, CorePreventionRuleConfig, HostBasedFirewallRuleConfig
 from cbc_sdk.errors import ApiError, ServerError, InvalidObjectError
 
 
 SPECIFIC_RULECONFIGS = MappingProxyType({
-    "core_prevention": CorePreventionRuleConfig
+    "core_prevention": CorePreventionRuleConfig,
+    "host_based_firewall": HostBasedFirewallRuleConfig
 })
 
 

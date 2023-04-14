@@ -51,6 +51,7 @@ class PolicyRuleConfig(MutableBaseModel):
         super(PolicyRuleConfig, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
                                                force_init=force_init, full_doc=full_doc)
         self._parent = parent
+        self._params_changed = False
         if model_unique_id is None:
             self.touch(True)
 
@@ -79,13 +80,15 @@ class PolicyRuleConfig(MutableBaseModel):
         Returns:
             bool: True if the refresh was successful.
         """
+        rc = False
         if self._model_unique_id is not None:
             rc = self._parent._refresh()
             if rc:
                 newobj = self._parent.object_rule_configs.get(self.id, None)
                 if newobj:
                     self._info = newobj._info
-            return rc
+                    self._params_changed = False
+        return rc
 
     def _update_ruleconfig(self):
         """Perform the internal update of the rule configuration object."""
@@ -100,6 +103,7 @@ class PolicyRuleConfig(MutableBaseModel):
         """
         self._update_ruleconfig()
         self._full_init = True
+        self._params_changed = False
         self._parent._on_updated_rule_config(self)
 
     def _delete_ruleconfig(self):
@@ -115,6 +119,15 @@ class PolicyRuleConfig(MutableBaseModel):
         """
         self._delete_ruleconfig()
         self._parent._on_deleted_rule_config(self)
+
+    def is_dirty(self):
+        """
+        Returns whether or not any fields of this object have been changed.
+
+        Returns:
+            bool: True if any fields of this object have been changed, False if not.
+        """
+        return self._params_changed or super(PolicyRuleConfig, self).is_dirty()
 
     def get_parameter(self, name):
         """
@@ -239,6 +252,7 @@ class CorePreventionRuleConfig(PolicyRuleConfig):
         ruleconfig_data = [d for d in return_data.get("results", []) if d.get("id", "") == self._model_unique_id]
         if ruleconfig_data:
             self._info = ruleconfig_data[0]
+            self._params_changed = False
         else:
             raise InvalidObjectError(f"invalid core prevention ID: {self._model_unique_id}")
         return True
@@ -312,6 +326,10 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             super(HostBasedFirewallRuleConfig.FirewallRuleGroup, self).__init__(cb, None, initial_data, False, True)
             self._rules = [HostBasedFirewallRuleConfig.FirewallRule(cb, d) for d in initial_data.get("rules", [])]
 
+        def _field_updated(self, attrname):
+            """Method called whenever a field is updated."""
+            self._params_changed = True
+
         def _flatten(self):
             """
             Turns this rule group into a dict for transferral to the server.
@@ -334,11 +352,20 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             return self._rules
 
         def append_rule(self, rule):
+            """
+            Appends a new rule to this rule group.
+
+            Args:
+                rule (HostBasedFirewallRuleConfig.FirewallRule): The new rule.
+            """
             self._rules.append(rule)
+            self._params_changed = True
 
         def remove(self):
+            """Removes this rule group from the rule configuration."""
             if self in self.rule_groups:
                 self.rule_groups.remove(self)
+                self._params_changed = True
 
     class FirewallRule(MutableBaseModel):
         """Represents a single firewall rule."""
@@ -354,6 +381,10 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             """
             super(HostBasedFirewallRuleConfig.FirewallRule, self).__init__(cb, None, initial_data, False, True)
 
+        def _field_updated(self, attrname):
+            """Method called whenever a field is updated."""
+            self._params_changed = True
+
         def _flatten(self):
             """
             Turns this rule into a dict for transferral to the server.
@@ -364,9 +395,11 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             return copy.deepcopy(self._info)
 
         def remove(self):
+            """Removes this rule from the rule group that contains it."""
             group_list = [group for group in self.rule_groups if self in group._rules]
             if group_list:
                 group_list[0]._rules.remove(self)
+                self._params_changed = True
 
     def _base_url(self):
         """
@@ -399,31 +432,75 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             self._info = ruleconfig_data[0]
             self._rule_groups = []
             self._rule_groups_valid = False
+            self._params_changed = False
         else:
             raise InvalidObjectError(f"invalid host-based firewall ID: {self._model_unique_id}")
         return True
 
     def _update_ruleconfig(self):
         """Perform the internal update of the rule configuration object."""
-        ...
+        put_data = {"id": self.id, "parameters": {"enable_host_based_firewall": self.enabled,
+                                                  "default_rule": self.get_parameter('default_rule')}}
+        if self._rule_groups_valid:
+            put_data['parameters']['rule_groups'] = [group._flatten() for group in self._rule_groups]
+        else:
+            put_data['parameters']['rule_groups'] = self.get_parameter('rule_groups')
+        resp = self._cb.put_object(self._base_url(), [put_data])
+        success = [d for d in resp.get("successful", []) if d.get("id", None) == self.id]
+        if not success:
+            raise ApiError("update of host-based firewall failed")
+        self._info = success[0]
+        self._rule_groups = []
+        self._rule_groups_valid = False
+        self._params_changed = False
 
     def _delete_ruleconfig(self):
         """Perform the internal delete of the rule configuration object."""
-        ...
+        my_id = self.id
+        self._cb.delete_object(self._base_url() + f"/{my_id}")
+        self._info = {"id": my_id}
+        self._full_init = False  # forcing _refresh() next time we read an attribute
+        self._rule_groups = []
+        self._rule_groups_valid = False
+        self._params_changed = False
 
     @property
     def enabled(self):
+        """
+        Returns whether or not the host-based firewall is enabled.
+
+        Returns:
+            bool: True if the host-based firewall is enabled, False if not.
+        """
         return self.get_parameter('enable_host_based_firewall')
 
     def set_enabled(self, flag):
+        """
+        Sets whether or not the host-based firewall is enabled.
+
+        Args:
+            flag (bool): True if the host-based firewall should be enabled, False if not.
+        """
         self.set_parameter('enable_host_based_firewall', flag)
 
     @property
     def default_action(self):
+        """
+        Returns the default action of this rule configuration.
+
+        Returns:
+            str: The default action of this rule configuration, either "ALLOW" or "BLOCK."
+        """
         default_rule = self.get_parameter('default_rule')
         return default_rule.get("action", "ALLOW")
 
     def set_default_action(self, action):
+        """
+        Sets the default action of this rule configuration.
+
+        Args:
+            action (str): The new default action of this rule configuration. Valid values are "ALLOW" and "BLOCK."
+        """
         if action not in ("ALLOW", "BLOCK"):
             raise ApiError(f"invalid default action: {action}")
         default_rule = self.get_parameter('default_rule')
@@ -432,6 +509,12 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
 
     @property
     def rule_groups(self):
+        """
+        Returns the list of rule groups in this rule configuration.
+
+        Returns:
+            list[FirewallRuleGroup]: The list of rule groups.
+        """
         if not self._rule_groups_valid:
             rg_param = self.get_parameter("rule_groups")
             if rg_param is not None:
@@ -442,13 +525,42 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
         return self._rule_groups
 
     def new_rule_group(self, name, description):
+        """
+        Creates a new FirewallRuleGroup object.
+
+        Args:
+            name (str): The name of the new rule group.
+            description (str): The description of the new rule group.
+
+        Returns:
+            FirewallRuleGroup: The new rule group object.  Add it to this rule configuration with append_rule_group.
+        """
         return HostBasedFirewallRuleConfig.FirewallRuleGroup(self._cb, {"name": name, "description": description,
                                                                         "rules": []})
 
     def append_rule_group(self, rule_group):
+        """
+        Appends a rule group to the list of rule groups in the rule configuration.
+
+        Args:
+            rule_group (FirewallRuleGroup): The rule group to be added.
+        """
         self.rule_groups.append(rule_group)
+        self._params_changed = True
 
     def new_rule(self, action, direction, protocol, remote_ip):
+        """
+        Creates a new FirewallRule object.
+
+        Args:
+            action (str): The action to be taken by this rule. Valid values are "ALLOW," "BLOCK," and "BLOCK_ALERT."
+            direction (str): The traffic direction this rule matches. Valid values are "IN," "OUT," and "BOTH."
+            protocol (str): The network protocol this rule matches. Valid values are "TCP" and "UDP."
+            remote_ip (str): The remote IP address this rule matches.
+
+        Returns:
+            FirewallRule: The new firewall rule. Append it to a rule group using the group's append_rule method.
+        """
         if action not in ("ALLOW", "BLOCK", "BLOCK_ALERT"):
             raise ApiError(f"invalid rule action: {action}")
         if direction not in ("IN", "OUT", "BOTH"):
