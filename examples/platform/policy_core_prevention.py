@@ -26,8 +26,9 @@ def list_core_prevention_status(policy):
 def set_core_prevention_status(policy, config_name, mode):
     if mode not in ('BLOCK', 'REPORT'):
         raise RuntimeError(f"unknown assignment mode '{mode}'")
+    match_name = config_name.casefold()
     rule_configs = [config for config in policy.object_rule_configs_list
-                    if config.category == "core_prevention" and config.name.startswith(config_name)]
+                    if config.category == "core_prevention" and config.name.casefold().startswith(match_name)]
     if not rule_configs:
         raise RuntimeError(f"core prevention rule config '{config_name}' not found")
     elif len(rule_configs) > 1:
