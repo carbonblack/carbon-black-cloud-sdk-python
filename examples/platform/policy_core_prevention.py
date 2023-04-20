@@ -18,12 +18,29 @@ from cbc_sdk.platform import Policy
 
 
 def list_core_prevention_status(policy):
+    """
+    Lists all core prevention assignment modes.
+
+    Args:
+        policy (Policy): Policy to perform the list operation on.
+    """
     rule_configs = [config for config in policy.object_rule_configs_list if config.category == "core_prevention"]
     for config in sorted(rule_configs, key=lambda c: c.name):
         print(f"{config.name} = {config.get_assignment_mode()}")
 
 
 def set_core_prevention_status(policy, config_name, mode):
+    """
+    Sets a core prevention assignment mode.
+
+    Args:
+        policy (Policy): Policy to perform the set operation on.
+        config_name (str): Name of the core prevention rule config to change. Must match a prefix of exactly one name.
+        mode (str): New assignment mode. Valid values are "BLOCK" and "REPORT."
+
+    Raises:
+        RuntimeError: If there was an error in one of the parameters.
+    """
     if mode not in ('BLOCK', 'REPORT'):
         raise RuntimeError(f"unknown assignment mode '{mode}'")
     match_name = config_name.casefold()
