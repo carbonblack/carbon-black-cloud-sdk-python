@@ -61,6 +61,7 @@ def main():
         set_core_prevention_status(policy, args.config, args.mode)
     else:
         raise NotImplementedError("Unknown command")
+    return 0
 
 
 if __name__ == "__main__":
