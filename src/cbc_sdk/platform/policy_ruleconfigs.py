@@ -120,6 +120,15 @@ class PolicyRuleConfig(MutableBaseModel):
         self._delete_ruleconfig()
         self._parent._on_deleted_rule_config(self)
 
+    def _mark_changed(self, flag=True):
+        """
+        Marks this object as changed.
+
+        Args:
+            flag (bool): Changed flag, default is True.
+        """
+        self._params_changed = flag
+
     def is_dirty(self):
         """
         Returns whether or not any fields of this object have been changed.
@@ -139,6 +148,8 @@ class PolicyRuleConfig(MutableBaseModel):
         Returns:
             Any: The parameter value, or None if there is no value.
         """
+        if 'parameters' not in self._info:
+            self.refresh()
         params = self._info['parameters']
         return params.get(name, None)
 
@@ -150,6 +161,8 @@ class PolicyRuleConfig(MutableBaseModel):
             name (str): The parameter name.
             value (Any): The new value to be set.
         """
+        if 'parameters' not in self._info:
+            self.refresh()
         params = self._info['parameters']
         old_value = params.get(name, None)
         if old_value != value:
@@ -252,7 +265,7 @@ class CorePreventionRuleConfig(PolicyRuleConfig):
         ruleconfig_data = [d for d in return_data.get("results", []) if d.get("id", "") == self._model_unique_id]
         if ruleconfig_data:
             self._info = ruleconfig_data[0]
-            self._params_changed = False
+            self._mark_changed(False)
         else:
             raise InvalidObjectError(f"invalid core prevention ID: {self._model_unique_id}")
         return True
@@ -315,7 +328,7 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
         """Represents a group of related firewall rules."""
         swagger_meta_file = "platform/models/firewall_rule_group.yaml"
 
-        def __init__(self, cb, initial_data):
+        def __init__(self, cb, parent, initial_data):
             """
             Initialize the FirewallRuleGroup object.
 
@@ -324,11 +337,13 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
                 initial_data (dict): Initial data used to populate the firewall rule group.
             """
             super(HostBasedFirewallRuleConfig.FirewallRuleGroup, self).__init__(cb, None, initial_data, False, True)
-            self._rules = [HostBasedFirewallRuleConfig.FirewallRule(cb, d) for d in initial_data.get("rules", [])]
+            self._parent = parent
+            self._rules = [HostBasedFirewallRuleConfig.FirewallRule(cb, parent, d)
+                           for d in initial_data.get("rules", [])]
 
         def _field_updated(self, attrname):
             """Method called whenever a field is updated."""
-            self._params_changed = True
+            self._parent._mark_changed()
 
         def _flatten(self):
             """
@@ -342,7 +357,7 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             return rc
 
         @property
-        def rules(self):
+        def rules_(self):
             """
             Returns a list of the firewall rules within this rule group.
 
@@ -359,19 +374,19 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
                 rule (HostBasedFirewallRuleConfig.FirewallRule): The new rule.
             """
             self._rules.append(rule)
-            self._params_changed = True
+            self._parent._mark_changed()
 
         def remove(self):
             """Removes this rule group from the rule configuration."""
             if self in self.rule_groups:
                 self.rule_groups.remove(self)
-                self._params_changed = True
+                self._parent._mark_changed()
 
     class FirewallRule(MutableBaseModel):
         """Represents a single firewall rule."""
         swagger_meta_file = "platform/models/firewall_rule.yaml"
 
-        def __init__(self, cb, initial_data):
+        def __init__(self, cb, parent, initial_data):
             """
             Initialize the FirewallRule object.
 
@@ -380,10 +395,11 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
                 initial_data (dict): Initial data used to populate the firewall rule.
             """
             super(HostBasedFirewallRuleConfig.FirewallRule, self).__init__(cb, None, initial_data, False, True)
+            self._parent = parent
 
         def _field_updated(self, attrname):
             """Method called whenever a field is updated."""
-            self._params_changed = True
+            self._parent._mark_changed()
 
         def _flatten(self):
             """
@@ -399,7 +415,7 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             group_list = [group for group in self.rule_groups if self in group._rules]
             if group_list:
                 group_list[0]._rules.remove(self)
-                self._params_changed = True
+                self._parent._mark_changed()
 
     def _base_url(self):
         """
@@ -432,7 +448,7 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             self._info = ruleconfig_data[0]
             self._rule_groups = []
             self._rule_groups_valid = False
-            self._params_changed = False
+            self._mark_changed(False)
         else:
             raise InvalidObjectError(f"invalid host-based firewall ID: {self._model_unique_id}")
         return True
@@ -446,13 +462,14 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
         else:
             put_data['parameters']['rule_groups'] = self.get_parameter('rule_groups')
         resp = self._cb.put_object(self._base_url(), [put_data])
-        success = [d for d in resp.get("successful", []) if d.get("id", None) == self.id]
+        result = resp.json()
+        success = [d for d in result.get("successful", []) if d.get("id", None) == self.id]
         if not success:
             raise ApiError("update of host-based firewall failed")
         self._info = success[0]
         self._rule_groups = []
         self._rule_groups_valid = False
-        self._params_changed = False
+        self._mark_changed(False)
 
     def _delete_ruleconfig(self):
         """Perform the internal delete of the rule configuration object."""
@@ -462,7 +479,7 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
         self._full_init = False  # forcing _refresh() next time we read an attribute
         self._rule_groups = []
         self._rule_groups_valid = False
-        self._params_changed = False
+        self._mark_changed(False)
 
     @property
     def enabled(self):
@@ -518,7 +535,7 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
         if not self._rule_groups_valid:
             rg_param = self.get_parameter("rule_groups")
             if rg_param is not None:
-                self._rule_groups = [HostBasedFirewallRuleConfig.FirewallRuleGroup(self._cb, d) for d in rg_param]
+                self._rule_groups = [HostBasedFirewallRuleConfig.FirewallRuleGroup(self._cb, self, d) for d in rg_param]
             else:
                 self._rule_groups = []
             self._rule_groups_valid = True
@@ -535,8 +552,8 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
         Returns:
             FirewallRuleGroup: The new rule group object.  Add it to this rule configuration with append_rule_group.
         """
-        return HostBasedFirewallRuleConfig.FirewallRuleGroup(self._cb, {"name": name, "description": description,
-                                                                        "rules": []})
+        return HostBasedFirewallRuleConfig.FirewallRuleGroup(self._cb, self, {"name": name, "description": description,
+                                                                              "rules": []})
 
     def append_rule_group(self, rule_group):
         """
@@ -546,13 +563,14 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             rule_group (FirewallRuleGroup): The rule group to be added.
         """
         self.rule_groups.append(rule_group)
-        self._params_changed = True
+        self._mark_changed()
 
-    def new_rule(self, action, direction, protocol, remote_ip):
+    def new_rule(self, name, action, direction, protocol, remote_ip):
         """
         Creates a new FirewallRule object.
 
         Args:
+            name (str): The name for the new rule.
             action (str): The action to be taken by this rule. Valid values are "ALLOW," "BLOCK," and "BLOCK_ALERT."
             direction (str): The traffic direction this rule matches. Valid values are "IN," "OUT," and "BOTH."
             protocol (str): The network protocol this rule matches. Valid values are "TCP" and "UDP."
@@ -567,9 +585,11 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             raise ApiError(f"invalid rule direction: {direction}")
         if protocol not in ("TCP", "UDP"):
             raise ApiError(f"invalid rule protocol: {protocol}")
-        return HostBasedFirewallRuleConfig.FirewallRule(self._cb, {"action": action, "application_path": "*",
-                                                                   "direction": direction, "enabled": True,
-                                                                   "protocol": protocol, "local_ip_address": "*",
-                                                                   "local_port_ranges": "*",
-                                                                   "remote_ip_address": remote_ip,
-                                                                   "remote_port_ranges": "*", "test_mode": False})
+        return HostBasedFirewallRuleConfig.FirewallRule(self._cb, self, {"action": action, "application_path": "*",
+                                                                         "direction": direction, "enabled": True,
+                                                                         "name": name,
+                                                                         "protocol": protocol, "local_ip_address": "*",
+                                                                         "local_port_ranges": "*",
+                                                                         "remote_ip_address": remote_ip,
+                                                                         "remote_port_ranges": "*",
+                                                                         "test_mode": False})

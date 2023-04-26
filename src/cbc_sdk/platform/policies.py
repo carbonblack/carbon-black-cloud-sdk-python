@@ -696,6 +696,24 @@ class Policy(MutableBaseModel):
         """
         return [rconf for rconf in self.object_rule_configs.values() if isinstance(rconf, CorePreventionRuleConfig)]
 
+    @property
+    def host_based_firewall_rule_config(self):
+        """
+        Returns the host-based firewall rule configuration for this policy.
+
+        Returns:
+            HostBasedFirewallRuleConfig: The host-based firewall rule configuration, or None.
+
+        Raises:
+            InvalidObjectError: If there's more than one host-based firewall rule configuration (should not happen).
+        """
+        tmp = [rconf for rconf in self.object_rule_configs.values() if isinstance(rconf, HostBasedFirewallRuleConfig)]
+        if not tmp:
+            return None
+        if len(tmp) > 1:
+            raise InvalidObjectError("found multiple host-based firewall rule configurations")
+        return tmp[0]
+
     def valid_rule_configs(self):
         """
         Returns a dictionary identifying all valid rule configurations for this policy.
