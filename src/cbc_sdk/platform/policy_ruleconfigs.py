@@ -328,7 +328,7 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
         """Represents a group of related firewall rules."""
         swagger_meta_file = "platform/models/firewall_rule_group.yaml"
 
-        def __init__(self, cb, parent, initial_data):
+        def __init__(self, cb, initial_data):
             """
             Initialize the FirewallRuleGroup object.
 
@@ -337,13 +337,25 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
                 initial_data (dict): Initial data used to populate the firewall rule group.
             """
             super(HostBasedFirewallRuleConfig.FirewallRuleGroup, self).__init__(cb, None, initial_data, False, True)
-            self._parent = parent
-            self._rules = [HostBasedFirewallRuleConfig.FirewallRule(cb, parent, d)
+            self._parent = None
+            self._rules = [HostBasedFirewallRuleConfig.FirewallRule(cb, d)
                            for d in initial_data.get("rules", [])]
+
+        def _init_parent(self, parent):
+            """
+            Initialize the parent of this group and its rules.
+
+            Args:
+                parent (HostBasedFirewallRuleConfig): The parent to be set.
+            """
+            self._parent = parent
+            for rule in self._rules:
+                rule._parent = parent
 
         def _field_updated(self, attrname):
             """Method called whenever a field is updated."""
-            self._parent._mark_changed()
+            if self._parent:
+                self._parent._mark_changed()
 
         def _flatten(self):
             """
@@ -373,20 +385,23 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             Args:
                 rule (HostBasedFirewallRuleConfig.FirewallRule): The new rule.
             """
+            rule._parent = self._parent
             self._rules.append(rule)
-            self._parent._mark_changed()
+            if self._parent:
+                self._parent._mark_changed()
 
         def remove(self):
             """Removes this rule group from the rule configuration."""
-            if self in self.rule_groups:
-                self.rule_groups.remove(self)
+            if self._parent and self in self._parent.rule_groups:
+                self._parent.rule_groups.remove(self)
                 self._parent._mark_changed()
+                self._parent = None
 
     class FirewallRule(MutableBaseModel):
         """Represents a single firewall rule."""
         swagger_meta_file = "platform/models/firewall_rule.yaml"
 
-        def __init__(self, cb, parent, initial_data):
+        def __init__(self, cb, initial_data):
             """
             Initialize the FirewallRule object.
 
@@ -395,11 +410,12 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
                 initial_data (dict): Initial data used to populate the firewall rule.
             """
             super(HostBasedFirewallRuleConfig.FirewallRule, self).__init__(cb, None, initial_data, False, True)
-            self._parent = parent
+            self._parent = None
 
         def _field_updated(self, attrname):
             """Method called whenever a field is updated."""
-            self._parent._mark_changed()
+            if self._parent:
+                self._parent._mark_changed()
 
         def _flatten(self):
             """
@@ -412,10 +428,12 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
 
         def remove(self):
             """Removes this rule from the rule group that contains it."""
-            group_list = [group for group in self.rule_groups if self in group._rules]
-            if group_list:
-                group_list[0]._rules.remove(self)
-                self._parent._mark_changed()
+            if self._parent:
+                group_list = [group for group in self._parent.rule_groups if self in group._rules]
+                if group_list:
+                    group_list[0]._rules.remove(self)
+                    self._parent._mark_changed()
+                    self._parent = None
 
     def _base_url(self):
         """
@@ -535,7 +553,9 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
         if not self._rule_groups_valid:
             rg_param = self.get_parameter("rule_groups")
             if rg_param is not None:
-                self._rule_groups = [HostBasedFirewallRuleConfig.FirewallRuleGroup(self._cb, self, d) for d in rg_param]
+                self._rule_groups = [HostBasedFirewallRuleConfig.FirewallRuleGroup(self._cb, d) for d in rg_param]
+                for group in self._rule_groups:
+                    group._init_parent(self)
             else:
                 self._rule_groups = []
             self._rule_groups_valid = True
@@ -552,8 +572,8 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
         Returns:
             FirewallRuleGroup: The new rule group object.  Add it to this rule configuration with append_rule_group.
         """
-        return HostBasedFirewallRuleConfig.FirewallRuleGroup(self._cb, self, {"name": name, "description": description,
-                                                                              "rules": []})
+        return HostBasedFirewallRuleConfig.FirewallRuleGroup(self._cb, {"name": name, "description": description,
+                                                                        "rules": []})
 
     def append_rule_group(self, rule_group):
         """
@@ -563,6 +583,7 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             rule_group (FirewallRuleGroup): The rule group to be added.
         """
         self.rule_groups.append(rule_group)
+        rule_group._parent = self
         self._mark_changed()
 
     def new_rule(self, name, action, direction, protocol, remote_ip):
@@ -585,11 +606,11 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             raise ApiError(f"invalid rule direction: {direction}")
         if protocol not in ("TCP", "UDP"):
             raise ApiError(f"invalid rule protocol: {protocol}")
-        return HostBasedFirewallRuleConfig.FirewallRule(self._cb, self, {"action": action, "application_path": "*",
-                                                                         "direction": direction, "enabled": True,
-                                                                         "name": name,
-                                                                         "protocol": protocol, "local_ip_address": "*",
-                                                                         "local_port_ranges": "*",
-                                                                         "remote_ip_address": remote_ip,
-                                                                         "remote_port_ranges": "*",
-                                                                         "test_mode": False})
+        return HostBasedFirewallRuleConfig.FirewallRule(self._cb, {"action": action, "application_path": "*",
+                                                                   "direction": direction, "enabled": True,
+                                                                   "name": name,
+                                                                   "protocol": protocol, "local_ip_address": "*",
+                                                                   "local_port_ranges": "*",
+                                                                   "remote_ip_address": remote_ip,
+                                                                   "remote_port_ranges": "*",
+                                                                   "test_mode": False})

@@ -22,13 +22,17 @@ from cbc_sdk.errors import ApiError, InvalidObjectError, ServerError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_policies import (FULL_POLICY_1, BASIC_CONFIG_TEMPLATE_RETURN,
                                                         TEMPLATE_RETURN_BOGUS_TYPE, POLICY_CONFIG_PRESENTATION,
-                                                        REPLACE_RULECONFIG)
+                                                        REPLACE_RULECONFIG, FULL_POLICY_5)
 from tests.unit.fixtures.platform.mock_policy_ruleconfigs import (CORE_PREVENTION_RETURNS, CORE_PREVENTION_UPDATE_1,
                                                                   HBFW_GET_RESULT, HBFW_MODIFY_PUT_REQUEST,
                                                                   HBFW_MODIFY_PUT_RESPONSE, HBFW_ADD_RULE_PUT_REQUEST,
                                                                   HBFW_ADD_RULE_PUT_RESPONSE,
                                                                   HBFW_ADD_RULE_GROUP_PUT_REQUEST,
-                                                                  HBFW_ADD_RULE_GROUP_PUT_RESPONSE)
+                                                                  HBFW_ADD_RULE_GROUP_PUT_RESPONSE,
+                                                                  HBFW_REMOVE_RULE_PUT_REQUEST,
+                                                                  HBFW_REMOVE_RULE_PUT_RESPONSE,
+                                                                  HBFW_REMOVE_RULE_GROUP_PUT_REQUEST,
+                                                                  HBFW_REMOVE_RULE_GROUP_PUT_RESPONSE)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -489,3 +493,61 @@ def test_modify_add_rule_group_to_host_based_firewall(cbcsdk_mock):
     rules = groups[1].rules_
     assert len(rules) == 1
     assert rules[0].name == "DoomyDoomsOfDoom"
+
+
+def test_modify_remove_rule_from_host_based_firewall(cbcsdk_mock):
+    """Tests modifying a host-based firewall rule configuration by removing a rule."""
+    put_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal put_called
+        assert body == HBFW_REMOVE_RULE_PUT_REQUEST
+        put_called = True
+        return copy.deepcopy(HBFW_REMOVE_RULE_PUT_RESPONSE)
+
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/1492/configs/presentation',
+                             POLICY_CONFIG_PRESENTATION)
+    cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/1492/rule_configs/host_based_firewall',
+                             on_put)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 1492, copy.deepcopy(FULL_POLICY_5), False, True)
+    rule_config = policy.host_based_firewall_rule_config
+    result_groups = [group for group in rule_config.rule_groups if group.name == "Crapco_firewall"]
+    assert len(result_groups) == 1
+    result_rules = [rule for rule in result_groups[0].rules_ if rule.name == "DoomyDoomsOfDoom"]
+    assert len(result_rules) == 1
+    result_rules[0].remove()
+    rule_config.save()
+    assert put_called
+    result_groups = [group for group in rule_config.rule_groups if group.name == "Crapco_firewall"]
+    assert len(result_groups) == 1
+    result_rules = result_groups[0].rules_
+    assert len(result_rules) == 1
+    assert result_rules[0].name == "my_first_rule"
+
+
+def test_modify_remove_rule_group_from_host_based_firewall(cbcsdk_mock):
+    """Tests modifying a host-based firewall rule configuration by removing a rule group."""
+    put_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal put_called
+        assert body == HBFW_REMOVE_RULE_GROUP_PUT_REQUEST
+        put_called = True
+        return copy.deepcopy(HBFW_REMOVE_RULE_GROUP_PUT_RESPONSE)
+
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/1492/configs/presentation',
+                             POLICY_CONFIG_PRESENTATION)
+    cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/1492/rule_configs/host_based_firewall',
+                             on_put)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 1492, copy.deepcopy(FULL_POLICY_5), False, True)
+    rule_config = policy.host_based_firewall_rule_config
+    result_groups = [group for group in rule_config.rule_groups if group.name == "Isolate"]
+    assert len(result_groups) == 1
+    result_groups[0].remove()
+    rule_config.save()
+    assert put_called
+    result_groups = rule_config.rule_groups
+    assert len(result_groups) == 1
+    assert result_groups[0].name == "Crapco_firewall"
