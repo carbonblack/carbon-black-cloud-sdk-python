@@ -17,6 +17,9 @@
   - name: testing python 3.10
     service: testingpython310
     command: pytest
+  - name: testing python 3.11
+    service: testingpython311
+    command: pytest
   - name: testing red hat
     service: testingrhel
     command: pytest
