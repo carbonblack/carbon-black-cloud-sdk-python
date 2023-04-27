@@ -1,3 +1,6 @@
+"""Mock responses for PolicyRuleConfig and subclasses"""
+
+
 CORE_PREVENTION_RETURNS = {
     "results": [
         {

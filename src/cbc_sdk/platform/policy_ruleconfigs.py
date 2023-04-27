@@ -302,9 +302,7 @@ class CorePreventionRuleConfig(PolicyRuleConfig):
 
 
 class HostBasedFirewallRuleConfig(PolicyRuleConfig):
-    """
-    Represents a host-based firewall rule configuration in the policy.
-    """
+    """Represents a host-based firewall rule configuration in the policy."""
     swagger_meta_file = "platform/models/policy_ruleconfig.yaml"
 
     def __init__(self, cb, parent, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
