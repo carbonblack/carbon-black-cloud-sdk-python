@@ -33,6 +33,7 @@ class PolicyRuleConfig(MutableBaseModel):
 
     """
     urlobject = "/policyservice/v1/orgs/{0}/policies"
+    urlobject_single = "/policyservice/v1/orgs/{0}/policies/{1}/rule_configs"
     primary_key = "id"
     swagger_meta_file = "platform/models/policy_ruleconfig.yaml"
 
@@ -54,21 +55,6 @@ class PolicyRuleConfig(MutableBaseModel):
         self._params_changed = False
         if model_unique_id is None:
             self.touch(True)
-
-    def _base_url(self):
-        """
-        Calculates the base URL for these particular rule configs, including the org key and the parent policy ID.
-
-        Returns:
-            str: The base URL for these particular rule configs.
-
-        Raises:
-            InvalidObjectError: If the rule config object is unparented.
-        """
-        if self._parent is None:
-            raise InvalidObjectError("no parent for rule config")
-        return PolicyRuleConfig.urlobject.format(self._cb.credentials.org_key) \
-            + f"/{self._parent._model_unique_id}/rule_configs"
 
     def _refresh(self):
         """
@@ -221,6 +207,7 @@ class CorePreventionRuleConfig(PolicyRuleConfig):
     permission.
 
     """
+    urlobject_single = "/policyservice/v1/orgs/{0}/policies/{1}/rule_configs/core_prevention"
     swagger_meta_file = "platform/models/policy_ruleconfig.yaml"
 
     def __init__(self, cb, parent, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
@@ -237,18 +224,6 @@ class CorePreventionRuleConfig(PolicyRuleConfig):
         """
         super(CorePreventionRuleConfig, self).__init__(cb, parent, model_unique_id, initial_data, force_init, full_doc)
 
-    def _base_url(self):
-        """
-        Calculates the base URL for these particular rule configs, including the org key and the parent policy ID.
-
-        Returns:
-            str: The base URL for these particular rule configs.
-
-        Raises:
-            InvalidObjectError: If the rule config object is unparented.
-        """
-        return super(CorePreventionRuleConfig, self)._base_url() + "/core_prevention"
-
     def _refresh(self):
         """
         Refreshes the rule configuration object from the server.
@@ -262,7 +237,8 @@ class CorePreventionRuleConfig(PolicyRuleConfig):
         Raises:
             InvalidObjectError: If the object is unparented or its ID is invalid.
         """
-        return_data = self._cb.get_object(self._base_url())
+        url = self.urlobject_single.format(self._cb.credentials.org_key, self._parent._model_unique_id)
+        return_data = self._cb.get_object(url)
         ruleconfig_data = [d for d in return_data.get("results", []) if d.get("id", "") == self._model_unique_id]
         if ruleconfig_data:
             self._info = ruleconfig_data[0]
@@ -273,12 +249,14 @@ class CorePreventionRuleConfig(PolicyRuleConfig):
 
     def _update_ruleconfig(self):
         """Perform the internal update of the rule configuration object."""
+        url = self.urlobject_single.format(self._cb.credentials.org_key, self._parent._model_unique_id)
         body = [{"id": self.id, "parameters": self.parameters}]
-        self._cb.put_object(self._base_url(), body)
+        self._cb.put_object(url, body)
 
     def _delete_ruleconfig(self):
         """Perform the internal delete of the rule configuration object."""
-        self._cb.delete_object(self._base_url() + f"/{self.id}")
+        url = self.urlobject_single.format(self._cb.credentials.org_key, self._parent._model_unique_id) + f"/{self.id}"
+        self._cb.delete_object(url)
         self._info["parameters"] = copy.deepcopy({"WindowsAssignmentMode": "BLOCK"})  # mirror server side
 
     def get_assignment_mode(self):
@@ -304,6 +282,7 @@ class CorePreventionRuleConfig(PolicyRuleConfig):
 
 class HostBasedFirewallRuleConfig(PolicyRuleConfig):
     """Represents a host-based firewall rule configuration in the policy."""
+    urlobject_single = "/policyservice/v1/orgs/{0}/policies/{1}/rule_configs/host_based_firewall"
     swagger_meta_file = "platform/models/policy_ruleconfig.yaml"
 
     def __init__(self, cb, parent, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
@@ -425,18 +404,6 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
                     self._parent._mark_changed()
                     self._parent = None
 
-    def _base_url(self):
-        """
-        Calculates the base URL for these particular rule configs, including the org key and the parent policy ID.
-
-        Returns:
-            str: The base URL for these particular rule configs.
-
-        Raises:
-            InvalidObjectError: If the rule config object is unparented.
-        """
-        return super(HostBasedFirewallRuleConfig, self)._base_url() + "/host_based_firewall"
-
     def _refresh(self):
         """
         Refreshes the rule configuration object from the server.
@@ -450,7 +417,8 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
         Raises:
             InvalidObjectError: If the object is unparented or its ID is invalid.
         """
-        return_data = self._cb.get_object(self._base_url())
+        url = self.urlobject_single.format(self._cb.credentials.org_key, self._parent._model_unique_id)
+        return_data = self._cb.get_object(url)
         ruleconfig_data = [d for d in return_data.get("results", []) if d.get("id", "") == self._model_unique_id]
         if ruleconfig_data:
             self._info = ruleconfig_data[0]
@@ -463,13 +431,14 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
 
     def _update_ruleconfig(self):
         """Perform the internal update of the rule configuration object."""
+        url = self.urlobject_single.format(self._cb.credentials.org_key, self._parent._model_unique_id)
         put_data = {"id": self.id, "parameters": {"enable_host_based_firewall": self.enabled,
                                                   "default_rule": self.get_parameter('default_rule')}}
         if self._rule_groups_loaded:
             put_data['parameters']['rule_groups'] = [group._flatten() for group in self._rule_groups]
         else:
             put_data['parameters']['rule_groups'] = self.get_parameter('rule_groups')
-        resp = self._cb.put_object(self._base_url(), [put_data])
+        resp = self._cb.put_object(url, [put_data])
         result = resp.json()
         success = [d for d in result.get("successful", []) if d.get("id", None) == self.id]
         if not success:
@@ -482,7 +451,8 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
     def _delete_ruleconfig(self):
         """Perform the internal delete of the rule configuration object."""
         my_id = self.id
-        self._cb.delete_object(self._base_url() + f"/{my_id}")
+        url = self.urlobject_single.format(self._cb.credentials.org_key, self._parent._model_unique_id) + f"/{my_id}"
+        self._cb.delete_object(url)
         self._info = {"id": my_id}
         self._full_init = False  # forcing _refresh() next time we read an attribute
         self._rule_groups = []

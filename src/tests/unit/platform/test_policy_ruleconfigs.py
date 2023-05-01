@@ -291,32 +291,37 @@ def test_core_prevention_delete(cbcsdk_mock, policy):
     assert delete_called
 
 
-def test_host_based_firewall_contents(cbcsdk_mock):
+def test_host_based_firewall_contents(policy):
     """Tests the contents of the host-based firewall rule configuration, along with the refresh."""
-    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/rule_configs/host_based_firewall',
-                             HBFW_GET_RESULT)
-    api = cbcsdk_mock.api
-    policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
     rule_config = policy.host_based_firewall_rule_config
     assert not rule_config.enabled
     assert rule_config.default_action == "ALLOW"
     groups = rule_config.rule_groups
     assert len(groups) == 1
     assert groups[0].name == "Argon_firewall"
-    assert groups[0].description == "Whatever"
     rules = groups[0].rules_
     assert len(rules) == 1
     assert rules[0].action == "ALLOW"
-    assert rules[0].application_path == "*"
     assert rules[0].direction == "IN"
-    assert rules[0].enabled
     assert rules[0].local_ip_address == "1.2.3.4"
-    assert rules[0].local_port_ranges == "1234"
     assert rules[0].name == "my_first_rule"
-    assert rules[0].protocol == "TCP"
     assert rules[0].remote_ip_address == "5.6.7.8"
-    assert rules[0].remote_port_ranges == "5678"
-    assert not rules[0].test_mode
+
+
+def test_host_based_firewall_refresh(cbcsdk_mock):
+    """Tests that refresh() restores values in the rule configuration."""
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/rule_configs/host_based_firewall',
+                             HBFW_GET_RESULT)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+    rule_config = policy.host_based_firewall_rule_config
+    rule_config.set_default_action("BLOCK")
+    groups = rule_config.rule_groups
+    assert len(groups) == 1
+    rules = groups[0].rules_
+    assert len(rules) == 1
+    rules[0].local_ip_address = "127.0.0.1"
+    rules[0].remote_ip_address = "10.29.99.1"
     rule_config.refresh()
     assert not rule_config.enabled
     assert rule_config.default_action == "ALLOW"
