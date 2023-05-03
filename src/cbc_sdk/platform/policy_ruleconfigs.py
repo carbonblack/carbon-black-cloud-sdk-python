@@ -320,9 +320,17 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             self._rules = [HostBasedFirewallRuleConfig.FirewallRule(cb, parent, d)
                            for d in initial_data.get("rules", [])]
 
-        def _field_updated(self, attrname):
-            """Method called whenever a field is updated."""
-            if self._parent:
+        def _set(self, attrname, new_value):
+            """
+            Sets the value of an attribute on the object.
+
+            Args:
+                attrname (str): Name of the attribute.
+                new_value (Any): Value of the attribute.
+            """
+            pristine = (attrname not in self._dirty_attributes)
+            super(HostBasedFirewallRuleConfig.FirewallRuleGroup, self)._set(attrname, new_value)
+            if self._parent and pristine and attrname in self._dirty_attributes:
                 self._parent._mark_changed()
 
         def _flatten(self):
@@ -381,9 +389,17 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             super(HostBasedFirewallRuleConfig.FirewallRule, self).__init__(cb, None, initial_data, False, True)
             self._parent = parent
 
-        def _field_updated(self, attrname):
-            """Method called whenever a field is updated."""
-            if self._parent:
+        def _set(self, attrname, new_value):
+            """
+            Sets the value of an attribute on the object.
+
+            Args:
+                attrname (str): Name of the attribute.
+                new_value (Any): Value of the attribute.
+            """
+            pristine = (attrname not in self._dirty_attributes)
+            super(HostBasedFirewallRuleConfig.FirewallRule, self)._set(attrname, new_value)
+            if self._parent and pristine and attrname in self._dirty_attributes:
                 self._parent._mark_changed()
 
         def _flatten(self):
