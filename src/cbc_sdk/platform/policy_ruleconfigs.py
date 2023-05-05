@@ -359,12 +359,13 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
         def remove(self):
             """Removes this rule group from the rule configuration."""
             if self._parent:
-                location = [ndx for ndx, item in enumerate(self._parent.rule_groups) if item == self]
-                if location:
-                    self._parent.rule_groups.remove(self)
-                    del self._parent._info["parameters"]["rule_groups"][location[0]]
+                try:
+                    location = self._parent.rule_groups.index(self)
+                    del self._parent._info["parameters"]["rule_groups"][location]
                     self._parent._mark_changed()
                     self._parent = None
+                except ValueError:
+                    pass
 
     class FirewallRule(MutableBaseModel):
         """Represents a single firewall rule."""
@@ -400,9 +401,9 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             if self._parent:
                 group_list = [group for group in self._parent.rule_groups if self in group._rules]
                 if group_list:
-                    location = [ndx for ndx, item in enumerate(group_list[0]._rules) if item == self]
+                    location = group_list[0]._rules.index(self)
                     group_list[0]._rules.remove(self)
-                    del group_list[0]._info['rules'][location[0]]
+                    del group_list[0]._info['rules'][location]
                     self._parent._mark_changed()
                     self._parent = None
 
