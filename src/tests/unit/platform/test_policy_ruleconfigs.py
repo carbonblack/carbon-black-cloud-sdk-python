@@ -425,10 +425,9 @@ def test_modify_add_rule_to_host_based_firewall(cbcsdk_mock):
     assert not policy.is_dirty()
     rule_config = policy.host_based_firewall_rule_config
     groups = rule_config.rule_groups
-    new_rule = rule_config.new_rule("DoomyDoomsOfDoom", "BLOCK", "BOTH", "TCP", "199.201.128.1")
-    new_rule.remote_port_ranges = "666"
-    new_rule.local_ip_address = "10.29.99.1"
-    new_rule.application_path = "C:\\DOOM\\DOOM.EXE"
+    new_rule = rule_config.new_rule("DoomyDoomsOfDoom", "BLOCK", "BOTH", "TCP", "199.201.128.1",
+                                    remote_port_ranges="666", local_ip_address="10.29.99.1",
+                                    application_path="C:\\DOOM\\DOOM.EXE")
     groups[0].append_rule(new_rule)
     assert policy.is_dirty()
     rule_config.save()
@@ -481,10 +480,9 @@ def test_modify_add_rule_group_to_host_based_firewall(cbcsdk_mock):
     assert not policy.is_dirty()
     rule_config = policy.host_based_firewall_rule_config
     new_group = rule_config.new_rule_group("DOOM_firewall", "No playing DOOM!")
-    new_rule = rule_config.new_rule("DoomyDoomsOfDoom", "BLOCK", "BOTH", "TCP", "199.201.128.1")
-    new_rule.remote_port_ranges = "666"
-    new_rule.local_ip_address = "10.29.99.1"
-    new_rule.application_path = "C:\\DOOM\\DOOM.EXE"
+    new_rule = rule_config.new_rule("DoomyDoomsOfDoom", "BLOCK", "BOTH", "TCP", "199.201.128.1",
+                                    remote_port_ranges="666", local_ip_address="10.29.99.1",
+                                    application_path="C:\\DOOM\\DOOM.EXE")
     new_group.append_rule(new_rule)
     rule_config.append_rule_group(new_group)
     assert policy.is_dirty()

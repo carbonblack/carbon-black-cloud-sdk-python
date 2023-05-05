@@ -541,7 +541,7 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
         rule_group._parent = self
         self._mark_changed()
 
-    def new_rule(self, name, action, direction, protocol, remote_ip):
+    def new_rule(self, name, action, direction, protocol, remote_ip, **kwargs):
         """
         Creates a new FirewallRule object.
 
@@ -551,6 +551,7 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             direction (str): The traffic direction this rule matches. Valid values are "IN," "OUT," and "BOTH."
             protocol (str): The network protocol this rule matches. Valid values are "TCP" and "UDP."
             remote_ip (str): The remote IP address this rule matches.
+            kwargs (dict): Additional parameters which may be added to the new rule.
 
         Returns:
             FirewallRule: The new firewall rule. Append it to a rule group using the group's append_rule method.
@@ -561,11 +562,11 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             raise ApiError(f"invalid rule direction: {direction}")
         if protocol not in ("TCP", "UDP"):
             raise ApiError(f"invalid rule protocol: {protocol}")
-        return HostBasedFirewallRuleConfig.FirewallRule(self._cb, None, {"action": action, "application_path": "*",
-                                                                         "direction": direction, "enabled": True,
-                                                                         "name": name,
-                                                                         "protocol": protocol, "local_ip_address": "*",
-                                                                         "local_port_ranges": "*",
-                                                                         "remote_ip_address": remote_ip,
-                                                                         "remote_port_ranges": "*",
-                                                                         "test_mode": False})
+        # specify defaults for optional params, overlay kwargs, then add in the required params
+        params = {"application_path": "*", "enabled": True, "local_ip_address": "*", "local_port_ranges": "*",
+                  "remote_port_ranges": "*", "test_mode": False}
+        specified_params = {k: v for k, v in kwargs.items() if k in params.keys()}
+        params.update(specified_params)
+        params.update({"action": action, "direction": direction, "name": name, "protocol": protocol,
+                       "remote_ip_address": remote_ip})
+        return HostBasedFirewallRuleConfig.FirewallRule(self._cb, None, params)
