@@ -422,6 +422,7 @@ def test_modify_add_rule_to_host_based_firewall(cbcsdk_mock):
                              on_put)
     api = cbcsdk_mock.api
     policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+    assert not policy.is_dirty()
     rule_config = policy.host_based_firewall_rule_config
     groups = rule_config.rule_groups
     new_rule = rule_config.new_rule("DoomyDoomsOfDoom", "BLOCK", "BOTH", "TCP", "199.201.128.1")
@@ -429,6 +430,7 @@ def test_modify_add_rule_to_host_based_firewall(cbcsdk_mock):
     new_rule.local_ip_address = "10.29.99.1"
     new_rule.application_path = "C:\\DOOM\\DOOM.EXE"
     groups[0].append_rule(new_rule)
+    assert policy.is_dirty()
     rule_config.save()
     assert put_called
     groups = rule_config.rule_groups
@@ -476,6 +478,7 @@ def test_modify_add_rule_group_to_host_based_firewall(cbcsdk_mock):
                              on_put)
     api = cbcsdk_mock.api
     policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+    assert not policy.is_dirty()
     rule_config = policy.host_based_firewall_rule_config
     new_group = rule_config.new_rule_group("DOOM_firewall", "No playing DOOM!")
     new_rule = rule_config.new_rule("DoomyDoomsOfDoom", "BLOCK", "BOTH", "TCP", "199.201.128.1")
@@ -484,6 +487,7 @@ def test_modify_add_rule_group_to_host_based_firewall(cbcsdk_mock):
     new_rule.application_path = "C:\\DOOM\\DOOM.EXE"
     new_group.append_rule(new_rule)
     rule_config.append_rule_group(new_group)
+    assert policy.is_dirty()
     rule_config.save()
     assert put_called
     groups = rule_config.rule_groups
@@ -516,12 +520,14 @@ def test_modify_remove_rule_from_host_based_firewall(cbcsdk_mock):
                              on_put)
     api = cbcsdk_mock.api
     policy = Policy(api, 1492, copy.deepcopy(FULL_POLICY_5), False, True)
+    assert not policy.is_dirty()
     rule_config = policy.host_based_firewall_rule_config
     result_groups = [group for group in rule_config.rule_groups if group.name == "Crapco_firewall"]
     assert len(result_groups) == 1
     result_rules = [rule for rule in result_groups[0].rules_ if rule.name == "DoomyDoomsOfDoom"]
     assert len(result_rules) == 1
     result_rules[0].remove()
+    assert policy.is_dirty()
     rule_config.save()
     assert put_called
     result_groups = [group for group in rule_config.rule_groups if group.name == "Crapco_firewall"]
@@ -547,10 +553,12 @@ def test_modify_remove_rule_group_from_host_based_firewall(cbcsdk_mock):
                              on_put)
     api = cbcsdk_mock.api
     policy = Policy(api, 1492, copy.deepcopy(FULL_POLICY_5), False, True)
+    assert not policy.is_dirty()
     rule_config = policy.host_based_firewall_rule_config
     result_groups = [group for group in rule_config.rule_groups if group.name == "Isolate"]
     assert len(result_groups) == 1
     result_groups[0].remove()
+    assert policy.is_dirty()
     rule_config.save()
     assert put_called
     result_groups = rule_config.rule_groups

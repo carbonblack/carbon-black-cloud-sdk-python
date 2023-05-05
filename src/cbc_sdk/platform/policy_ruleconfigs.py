@@ -333,17 +333,6 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             if self._parent and pristine and attrname in self._dirty_attributes:
                 self._parent._mark_changed()
 
-        def _flatten(self):
-            """
-            Turns this rule group into a dict for transferral to the server.
-
-            Returns:
-                dict: The information defining the rule group and its constituent rules.
-            """
-            rc = copy.deepcopy(self._info)
-            rc['rules'] = [rule._flatten() for rule in self._rules]
-            return rc
-
         @property
         def rules_(self):
             """
@@ -363,15 +352,19 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             """
             rule._parent = self._parent
             self._rules.append(rule)
+            self._info['rules'].append(rule._info)
             if self._parent:
                 self._parent._mark_changed()
 
         def remove(self):
             """Removes this rule group from the rule configuration."""
-            if self._parent and self in self._parent.rule_groups:
-                self._parent.rule_groups.remove(self)
-                self._parent._mark_changed()
-                self._parent = None
+            if self._parent:
+                location = [ndx for ndx, item in enumerate(self._parent.rule_groups) if item == self]
+                if location:
+                    self._parent.rule_groups.remove(self)
+                    del self._parent._info["parameters"]["rule_groups"][location[0]]
+                    self._parent._mark_changed()
+                    self._parent = None
 
     class FirewallRule(MutableBaseModel):
         """Represents a single firewall rule."""
@@ -402,21 +395,14 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             if self._parent and pristine and attrname in self._dirty_attributes:
                 self._parent._mark_changed()
 
-        def _flatten(self):
-            """
-            Turns this rule into a dict for transferral to the server.
-
-            Returns:
-                dict: The information defining the rule.
-            """
-            return copy.deepcopy(self._info)
-
         def remove(self):
             """Removes this rule from the rule group that contains it."""
             if self._parent:
                 group_list = [group for group in self._parent.rule_groups if self in group._rules]
                 if group_list:
+                    location = [ndx for ndx, item in enumerate(group_list[0]._rules) if item == self]
                     group_list[0]._rules.remove(self)
+                    del group_list[0]._info['rules'][location[0]]
                     self._parent._mark_changed()
                     self._parent = None
 
@@ -449,11 +435,8 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
         """Perform the internal update of the rule configuration object."""
         url = self.urlobject_single.format(self._cb.credentials.org_key, self._parent._model_unique_id)
         put_data = {"id": self.id, "parameters": {"enable_host_based_firewall": self.enabled,
-                                                  "default_rule": self.get_parameter('default_rule')}}
-        if self._rule_groups_loaded:
-            put_data['parameters']['rule_groups'] = [group._flatten() for group in self._rule_groups]
-        else:
-            put_data['parameters']['rule_groups'] = self.get_parameter('rule_groups')
+                                                  "default_rule": self.get_parameter('default_rule'),
+                                                  "rule_groups": self.get_parameter('rule_groups')}}
         resp = self._cb.put_object(url, [put_data])
         result = resp.json()
         success = [d for d in result.get("successful", []) if d.get("id", None) == self.id]
@@ -554,6 +537,7 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             rule_group (FirewallRuleGroup): The rule group to be added.
         """
         self.rule_groups.append(rule_group)
+        self._info['parameters']['rule_groups'].append(rule_group._info)
         rule_group._parent = self
         self._mark_changed()
 

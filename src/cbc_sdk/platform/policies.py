@@ -624,6 +624,24 @@ class Policy(MutableBaseModel):
         self._object_rule_configs_need_load = True
         return rc
 
+    def is_dirty(self):
+        """
+        Returns whether or not any fields of this object have been changed.
+
+        Returns:
+            bool: True if any fields of this object have been changed, False if not.
+        """
+        if super(Policy, self).is_dirty():
+            return True
+        # we need to check the rules and rule configs as well
+        if not self._object_rules_need_load:
+            if any(rule.is_dirty() for rule in self._object_rules.values()):
+                return True
+        if not self._object_rule_configs_need_load:
+            if any(rule_config.is_dirty() for rule_config in self._object_rule_configs.values()):
+                return True
+        return False
+
     @property
     def rules(self):
         """
