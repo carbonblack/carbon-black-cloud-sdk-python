@@ -1,5 +1,5 @@
 # Package dependencies
-requests<=2.29.0
+requests
 pyyaml
 python-dateutil
 schema
