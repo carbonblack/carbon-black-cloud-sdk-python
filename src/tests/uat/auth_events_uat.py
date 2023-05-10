@@ -60,7 +60,7 @@ TITLES = [
     "Get Search Results",
     "Get Search Grouped Results",
     "Get Details Results",
-    "Get Facet Data"
+    "Get Facet Data",
 ]
 
 # ------------------------------ Helper functions -------------------------------------
@@ -167,17 +167,13 @@ def main():
     # check get details job
     api_result = get_details_results(auth_event.event_id)
     sdk_result = auth_event.get_details()._info
-    assert api_result == sdk_result, f"Test Failed Expected: {api_result} Actual: {sdk_result}"
+    sdk_result2 = cb.select(AuthEvent, auth_event.event_id).get_details()
+    assert api_result == sdk_result == sdk_result2, f"Test Failed Expected: {api_result} Actual: {sdk_result}"
     print(TITLES[4] + "." * (SYMBOLS - len(TITLES[4]) - 2) + "OK")
 
     # check get facet job
     api_result = get_facet_results()["terms"]
-    xx = (
-        cb.select(AuthEventFacet)
-        .where(QUERY)
-        .add_facet_field("device_name")
-        .results
-    )
+    xx = cb.select(AuthEventFacet).where(QUERY).add_facet_field("device_name").results
     sdk_result = xx.terms
     assert api_result == sdk_result, f"Test Failed Expected: {api_result} Actual: {sdk_result}"
     print(TITLES[5] + "." * (SYMBOLS - len(TITLES[5]) - 2) + "OK")
