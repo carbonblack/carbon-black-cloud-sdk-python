@@ -343,18 +343,40 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             """
             return self._rules
 
-        def append_rule(self, rule):
+        def append_rule(self, name, action, direction, protocol, remote_ip, **kwargs):
             """
-            Appends a new rule to this rule group.
+            Creates a new FirewallRule object and appends it to this rule group.
 
             Args:
-                rule (HostBasedFirewallRuleConfig.FirewallRule): The new rule.
+                name (str): The name for the new rule.
+                action (str): The action to be taken by this rule. Valid values are "ALLOW," "BLOCK," and "BLOCK_ALERT."
+                direction (str): The traffic direction this rule matches. Valid values are "IN," "OUT," and "BOTH."
+                protocol (str): The network protocol this rule matches. Valid values are "TCP" and "UDP."
+                remote_ip (str): The remote IP address this rule matches.
+                kwargs (dict): Additional parameters which may be added to the new rule.
+
+            Returns:
+                FirewallRule: The new rule object.
             """
-            rule._parent = self._parent
+            if action not in ("ALLOW", "BLOCK", "BLOCK_ALERT"):
+                raise ApiError(f"invalid rule action: {action}")
+            if direction not in ("IN", "OUT", "BOTH"):
+                raise ApiError(f"invalid rule direction: {direction}")
+            if protocol not in ("TCP", "UDP"):
+                raise ApiError(f"invalid rule protocol: {protocol}")
+            # specify defaults for optional params, overlay kwargs, then add in the required params
+            params = {"application_path": "*", "enabled": True, "local_ip_address": "*", "local_port_ranges": "*",
+                      "remote_port_ranges": "*", "test_mode": False}
+            specified_params = {k: v for k, v in kwargs.items() if k in params.keys()}
+            params.update(specified_params)
+            params.update({"action": action, "direction": direction, "name": name, "protocol": protocol,
+                           "remote_ip_address": remote_ip})
+            rule = HostBasedFirewallRuleConfig.FirewallRule(self._cb, self._parent, params)
             self._rules.append(rule)
             self._info['rules'].append(rule._info)
             if self._parent:
                 self._parent._mark_changed()
+            return rule
 
         def remove(self):
             """Removes this rule group from the rule configuration."""
@@ -516,58 +538,21 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             self._rule_groups_loaded = True
         return self._rule_groups
 
-    def new_rule_group(self, name, description):
+    def append_rule_group(self, name, description):
         """
-        Creates a new FirewallRuleGroup object.
+        Creates a new FirewallRuleGroup object and appends it to the list of rule groups in the rule configuration.
 
         Args:
             name (str): The name of the new rule group.
             description (str): The description of the new rule group.
 
         Returns:
-            FirewallRuleGroup: The new rule group object.  Add it to this rule configuration with append_rule_group.
+            FirewallRuleGroup: The newly added rule group.
         """
-        return HostBasedFirewallRuleConfig.FirewallRuleGroup(self._cb, None, {"name": name, "description": description,
-                                                                              "rules": []})
-
-    def append_rule_group(self, rule_group):
-        """
-        Appends a rule group to the list of rule groups in the rule configuration.
-
-        Args:
-            rule_group (FirewallRuleGroup): The rule group to be added.
-        """
+        rule_group = HostBasedFirewallRuleConfig.FirewallRuleGroup(self._cb, self,
+                                                                   {"name": name, "description": description,
+                                                                    "rules": []})
         self.rule_groups.append(rule_group)
         self._info['parameters']['rule_groups'].append(rule_group._info)
-        rule_group._parent = self
         self._mark_changed()
-
-    def new_rule(self, name, action, direction, protocol, remote_ip, **kwargs):
-        """
-        Creates a new FirewallRule object.
-
-        Args:
-            name (str): The name for the new rule.
-            action (str): The action to be taken by this rule. Valid values are "ALLOW," "BLOCK," and "BLOCK_ALERT."
-            direction (str): The traffic direction this rule matches. Valid values are "IN," "OUT," and "BOTH."
-            protocol (str): The network protocol this rule matches. Valid values are "TCP" and "UDP."
-            remote_ip (str): The remote IP address this rule matches.
-            kwargs (dict): Additional parameters which may be added to the new rule.
-
-        Returns:
-            FirewallRule: The new firewall rule. Append it to a rule group using the group's append_rule method.
-        """
-        if action not in ("ALLOW", "BLOCK", "BLOCK_ALERT"):
-            raise ApiError(f"invalid rule action: {action}")
-        if direction not in ("IN", "OUT", "BOTH"):
-            raise ApiError(f"invalid rule direction: {direction}")
-        if protocol not in ("TCP", "UDP"):
-            raise ApiError(f"invalid rule protocol: {protocol}")
-        # specify defaults for optional params, overlay kwargs, then add in the required params
-        params = {"application_path": "*", "enabled": True, "local_ip_address": "*", "local_port_ranges": "*",
-                  "remote_port_ranges": "*", "test_mode": False}
-        specified_params = {k: v for k, v in kwargs.items() if k in params.keys()}
-        params.update(specified_params)
-        params.update({"action": action, "direction": direction, "name": name, "protocol": protocol,
-                       "remote_ip_address": remote_ip})
-        return HostBasedFirewallRuleConfig.FirewallRule(self._cb, None, params)
+        return rule_group
