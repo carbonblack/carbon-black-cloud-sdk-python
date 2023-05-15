@@ -18,12 +18,10 @@ prevention and host-based firewall rules.
 This is an example of the command line to execute.  --all_details True will include the rules.
 > python examples/platform/policy_host_based_firewall.py --profile EXAMPLE_CREDENTIALS --all_details True
 
-The second method creates two new host-based firewall rules in a new rule group on an existing policy.
-The name and description of the group are passed in on the command line, the rules are hard coded for
-to make the example easier to read.
-This is an example of the command line to execute where -p 12345678 specifies the policy to operate on
-> python examples/platform/policy_host_based_firewall.py --profile EXAMPLE_CREDENTIALS -p 12345678 /
-    create_rule --rule_group_name sdk_test_two --rule_group_desc sdk_test_two_desc
+The second method creates new host-based firewall rules in a new rule group on an existing policy.
+Command line prompts ask for required info and defaults are provided.
+This is an example of the command line to execute. The script will prompt on the command line for Policy Id.
+> python examples/platform/policy_host_based_firewall.py --profile EXAMPLE_CREDENTIALS create_rule
 """
 
 import sys
@@ -80,11 +78,12 @@ def list_policy_summaries(cb, args):
         print("")
 
 
-def add_hbfw_rule(cb, args):
+def add_hbfw_rule(cb):
     """Create a rule and add it to the rule group specified in the input args"""
-    # get the policy specified in the input parameters
-    policy = cb.select(Policy, args.policy)
-    print("id: {0}.  name: {1}".format(policy.id, policy.name))
+    # prompt the user for a policy Id
+    user_input = input("Enter the policy Id to add a rule group and rules to")
+    policy = cb.select(Policy, user_input)
+    print("Using policy id: {0}.  name: {1}".format(policy.id, policy.name))
     # If the policy does not yet have a host-based firewall section then create it
     if policy.host_based_firewall_rule_config is None:
         policy.host_based_firewall_rule_config = HostBasedFirewallRuleConfig(cb, policy)
@@ -92,31 +91,95 @@ def add_hbfw_rule(cb, args):
     # get the rule config in a variable to work with
     rc = policy.host_based_firewall_rule_config
     # create a new rule group
-    rg = rc.new_rule_group(args.rule_group_name, args.rule_group_desc)
-    # add the rule group to the rule config
-    rc.append_rule_group(rg)  # to do remove this
+    rule_group_name = "Demo Rule Group"
+    rule_group_desc = "Description of Demo Rule Group"
+    user_input = input("Creating a rule group.  Enter a name for the rule group or press Enter to use the default of {}"
+                       .format(rule_group_name))
+    if user_input:
+        rule_group_name = user_input
 
-    # create two rules
-    # name = SDK Example Rule One, action = ALLOW, direction = IN, protocol = TCP, remote ip address = 15.16.17.18
-    r1 = rc.new_rule("SDK Example Rule One", "ALLOW", "IN", "TCP", "15.16.17.18")
-    # then set the rest of the fields in the rule
-    r1.application_path = "C:\\sdk\\example\\allow\\rule\\path"
-    r1.enabled = False
-    r1.local_ip_address = "11.12.13.14"
-    r1.local_port_ranges = "1313"
-    r1.remote_port_ranges = "2121"
-    # append the rule to the group
-    rg.append_rule(r1)  # TO DO - remove this
-    # create the second rule
-    r2 = rc.new_rule("The second SDK Example Rule", "BLOCK", "OUT", "UDP", "5.6.7.8")
-    # then set the rest of the fields in the rule
-    r2.application_path = "C:\\another\\sdk\\example\\path"
-    r2.enabled = True
-    r2.local_ip_address = "1.2.3.4"
-    r2.local_port_ranges = "3131"
-    r2.remote_port_ranges = "1212"
-    # append the rule to the group
-    rg.append_rule(r2)  # TO DO - remove this
+    user_input = input("Enter a description for the rule group press Enter to use the default of {}"
+                       .format(rule_group_desc))
+    if user_input:
+        rule_group_desc = user_input
+
+    rg = rc.append_rule_group(rule_group_name, rule_group_desc)
+
+    # prompt the user to enter rule config or use defaults
+    # Set default values
+    rule_name = "SDK Example Rule"
+    rule_action = "ALLOW"
+    direction = "IN"
+    protocol = "TCP"
+    application_path = "C:\\sdk\\example\\allow\\rule\\path"
+    enabled = False
+    remote_ip_address = "15.16.17.18"
+    local_ip_address = "11.12.13.14"
+    local_port_ranges = "1313"
+    remote_port_ranges = "2121"
+    create_rule = True
+
+    while create_rule:
+        # prompt user to enter values
+        user_input = input("Enter Rule Name or press Enter to use the default of {}".format(rule_name))
+        if user_input:
+            rule_name = user_input
+
+        user_input = input("Enter Rule Action (ALLOW or BLOCK) or press Enter to use the default of {}"
+                           .format(rule_action))
+        if user_input:
+            rule_action = user_input.upper()
+
+        user_input = input("Set Direction (IN or OUT)or press Enter to use the default of {}".format(direction))
+        if user_input:
+            direction = user_input.upper()
+
+        user_input = input("Set Protocol or press Enter to use the default of {}".format(protocol))
+        if user_input:
+            protocol = user_input.upper()
+
+        user_input = input("Enter the application path or press Enter use default of {}".format(application_path))
+        if user_input:
+            application_path = user_input
+
+        user_input = input("Enter T for the rule to be enabled or press Enter to use the default of disabled")
+        if user_input:
+            enabled = True
+
+        user_input = input("Enter the Remote IP Address or press Enter to use the default of {}"
+                           .format(remote_ip_address))
+        if user_input:
+            remote_ip_address = user_input
+
+        user_input = input("Enter the Local IP Address or press Enter to use the default of {}"
+                           .format(local_ip_address))
+        if user_input:
+            local_ip_address = user_input
+
+        user_input = input("Enter the Remote port range or press Enter to use the default of {}"
+                           .format(remote_port_ranges))
+        if user_input:
+            remote_port_ranges = user_input
+
+        user_input = input("Enter the Local port range or press Enter to use the default of {}"
+                           .format(local_port_ranges))
+        if user_input:
+            local_port_ranges = user_input
+
+        rule = rg.append_rule(rule_name, rule_action, direction, protocol, remote_ip_address)
+        # then set the rest of the fields in the rule
+        rule.application_path = application_path
+        rule.enabled = enabled
+        rule.local_ip_address = local_ip_address
+        rule.local_port_ranges = local_port_ranges
+        rule.remote_port_ranges = remote_port_ranges
+
+        create_rule = False
+        user_input = input("Enter Y to create another rule.  Press Enter to finish and save.")
+        if user_input:
+            if user_input == "Y":
+                create_rule = True
+
     # To do - either remove rc.save() if the policy.save() does the rules too or document that rule config must be saved
     rc.save()
     policy.save()
@@ -126,15 +189,12 @@ def add_hbfw_rule(cb, args):
 def main():
     """Main function for Policy - Host-Based Firewall script."""
     parser = build_cli_parser("View or set host based firewall rules on a policy")
-    parser.add_argument("-p", "--policy", type=int, required=False, help="The ID of the policy to be manipulated")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     policy_summaries = subparsers.add_parser("list_policies", help="List summary information about each policy")
     policy_summaries.add_argument("--all_details", help="Print core prevention and host-based firewall rules")
 
-    create_rule = subparsers.add_parser("create_rule", help="Create a new Host-Based Firewall rule")
-    create_rule.add_argument("--rule_group_name", help="The name of the rule group to hold the new rule")
-    create_rule.add_argument("--rule_group_desc", help="The description of the new rule group")
+    subparsers.add_parser("create_rule", help="Create a new Host-Based Firewall rule")
 
     args = parser.parse_args()
     cb = get_cb_cloud_object(args)
@@ -142,7 +202,7 @@ def main():
     if args.command == "list_policies":
         list_policy_summaries(cb, args)
     elif args.command == "create_rule":
-        add_hbfw_rule(cb, args)
+        add_hbfw_rule(cb)
     else:
         raise NotImplementedError("Unknown command")
     return 0
