@@ -425,10 +425,8 @@ def test_modify_add_rule_to_host_based_firewall(cbcsdk_mock):
     assert not policy.is_dirty()
     rule_config = policy.host_based_firewall_rule_config
     groups = rule_config.rule_groups
-    new_rule = rule_config.new_rule("DoomyDoomsOfDoom", "BLOCK", "BOTH", "TCP", "199.201.128.1",
-                                    remote_port_ranges="666", local_ip_address="10.29.99.1",
-                                    application_path="C:\\DOOM\\DOOM.EXE")
-    groups[0].append_rule(new_rule)
+    groups[0].append_rule("DoomyDoomsOfDoom", "BLOCK", "BOTH", "TCP", "199.201.128.1", remote_port_ranges="666",
+                          local_ip_address="10.29.99.1", application_path="C:\\DOOM\\DOOM.EXE")
     assert policy.is_dirty()
     rule_config.save()
     assert put_called
@@ -450,15 +448,16 @@ def test_modify_add_rule_to_host_based_firewall(cbcsdk_mock):
     assert not rules[1].test_mode
 
 
-def test_new_rule_parameter_errors(cb, policy):
-    """Tests the parameter check errors on the new_rule() method."""
+def test_append_rule_parameter_errors(cb, policy):
+    """Tests the parameter check errors on the append_rule() method."""
     rule_config = policy.host_based_firewall_rule_config
+    groups = rule_config.rule_groups
     with pytest.raises(ApiError):
-        rule_config.new_rule("DoomyDoomsOfDoom", "NOTEXIST", "BOTH", "TCP", "199.201.128.1")
+        groups[0].append_rule("DoomyDoomsOfDoom", "NOTEXIST", "BOTH", "TCP", "199.201.128.1")
     with pytest.raises(ApiError):
-        rule_config.new_rule("DoomyDoomsOfDoom", "BLOCK", "NOTEXIST", "TCP", "199.201.128.1")
+        groups[0].append_rule("DoomyDoomsOfDoom", "BLOCK", "NOTEXIST", "TCP", "199.201.128.1")
     with pytest.raises(ApiError):
-        rule_config.new_rule("DoomyDoomsOfDoom", "BLOCK", "BOTH", "NOTEXIST", "199.201.128.1")
+        groups[0].append_rule("DoomyDoomsOfDoom", "BLOCK", "BOTH", "NOTEXIST", "199.201.128.1")
 
 
 def test_modify_add_rule_group_to_host_based_firewall(cbcsdk_mock):
@@ -479,12 +478,9 @@ def test_modify_add_rule_group_to_host_based_firewall(cbcsdk_mock):
     policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
     assert not policy.is_dirty()
     rule_config = policy.host_based_firewall_rule_config
-    new_group = rule_config.new_rule_group("DOOM_firewall", "No playing DOOM!")
-    new_rule = rule_config.new_rule("DoomyDoomsOfDoom", "BLOCK", "BOTH", "TCP", "199.201.128.1",
-                                    remote_port_ranges="666", local_ip_address="10.29.99.1",
-                                    application_path="C:\\DOOM\\DOOM.EXE")
-    new_group.append_rule(new_rule)
-    rule_config.append_rule_group(new_group)
+    new_group = rule_config.append_rule_group("DOOM_firewall", "No playing DOOM!")
+    new_group.append_rule("DoomyDoomsOfDoom", "BLOCK", "BOTH", "TCP", "199.201.128.1", remote_port_ranges="666",
+                          local_ip_address="10.29.99.1", application_path="C:\\DOOM\\DOOM.EXE")
     assert policy.is_dirty()
     rule_config.save()
     assert put_called
