@@ -104,22 +104,21 @@ def add_hbfw_rule(cb):
         rule_group_desc = user_input
 
     rg = rc.append_rule_group(rule_group_name, rule_group_desc)
-
-    # prompt the user to enter rule config or use defaults
-    # Set default values
-    rule_name = "SDK Example Rule"
-    rule_action = "ALLOW"
-    direction = "IN"
-    protocol = "TCP"
-    application_path = "C:\\sdk\\example\\allow\\rule\\path"
-    enabled = False
-    remote_ip_address = "15.16.17.18"
-    local_ip_address = "11.12.13.14"
-    local_port_ranges = "1313"
-    remote_port_ranges = "2121"
     create_rule = True
-
     while create_rule:
+        # prompt the user to enter rule config or use defaults
+        # Set default values
+        rule_name = "SDK Example Rule"
+        rule_action = "ALLOW"
+        direction = "IN"
+        protocol = "TCP"
+        application_path = "C:\\sdk\\example\\allow\\rule\\path"
+        enabled = False
+        remote_ip_address = "15.16.17.18"
+        local_ip_address = "11.12.13.14"
+        local_port_ranges = "1313"
+        remote_port_ranges = "2121"
+
         # prompt user to enter values
         user_input = input("Enter Rule Name or press Enter to use the default of {}".format(rule_name))
         if user_input:
@@ -180,8 +179,10 @@ def add_hbfw_rule(cb):
             if user_input == "Y":
                 create_rule = True
 
-    # To do - either remove rc.save() if the policy.save() does the rules too or document that rule config must be saved
+    # There is a known issue in Carbon Black Cloud that requires the rule_configs to be saved explicitly.
+    # There is no adverse impact to performing this call but in the future will be un-necessary
     rc.save()
+    # save the policy and all child elements.
     policy.save()
     print(rc)
 
