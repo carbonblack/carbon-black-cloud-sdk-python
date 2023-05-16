@@ -190,6 +190,15 @@ def build_minimal_policy(cb, parser, args):
         print("Added policy. New policy ID is {0}".format(policy.id))
 
 
+def get_core_prevention_rule_configs(cb, parser, args):
+    """Get the core prevention rules"""
+    # cp_rule_configs = list(cb.select(CorePreventionRuleConfig, args.id))
+    policy = cb.select(Policy, args.id)
+    cp_rule_configs = policy.core_prevention_rule_configs_list
+    for rc in cp_rule_configs:
+        print(rc)
+
+
 def main():
     """Main function for the Policy Operations script.
 
@@ -250,6 +259,11 @@ def main():
     build_minimal_policy_command.add_argument("-p", "--prioritylevel", help="Priority level (HIGH, MEDIUM, LOW)",
                                               default="LOW")
 
+    print_core_prevention_rule_configs_command = \
+        commands.add_parser("print_core_prevention",
+                            help="Print all core prevention rule configs in specified policy")
+    print_core_prevention_rule_configs_command.add_argument("-i", "--id", type=int, help="ID of policy")
+
     args = parser.parse_args()
     cb = get_cb_cloud_object(args)
 
@@ -269,6 +283,8 @@ def main():
         return replace_rule(cb, parser, args)
     elif args.command_name == "build-minimal-policy":
         return build_minimal_policy(cb, parser, args)
+    elif args.command_name == "print_core_prevention":
+        return get_core_prevention_rule_configs(cb, parser, args)
 
 
 if __name__ == "__main__":
