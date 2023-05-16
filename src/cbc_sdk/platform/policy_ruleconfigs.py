@@ -553,6 +553,9 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
                                                                    {"name": name, "description": description,
                                                                     "rules": []})
         self.rule_groups.append(rule_group)
-        self._info['parameters']['rule_groups'].append(rule_group._info)
+        if 'rule_groups' in self._info['parameters']:
+            self._info['parameters']['rule_groups'].append(rule_group._info)
+        else:
+            self._info['parameters']['rule_groups'] = [rule_group._info]
         self._mark_changed()
         return rule_group

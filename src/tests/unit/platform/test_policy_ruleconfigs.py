@@ -29,6 +29,8 @@ from tests.unit.fixtures.platform.mock_policy_ruleconfigs import (CORE_PREVENTIO
                                                                   HBFW_ADD_RULE_PUT_RESPONSE,
                                                                   HBFW_ADD_RULE_GROUP_PUT_REQUEST,
                                                                   HBFW_ADD_RULE_GROUP_PUT_RESPONSE,
+                                                                  HBFW_ADD_RULE_GROUP_EMPTY_PUT_REQUEST,
+                                                                  HBFW_ADD_RULE_GROUP_EMPTY_PUT_RESPONSE,
                                                                   HBFW_REMOVE_RULE_PUT_REQUEST,
                                                                   HBFW_REMOVE_RULE_PUT_RESPONSE,
                                                                   HBFW_REMOVE_RULE_GROUP_PUT_REQUEST,
@@ -494,6 +496,47 @@ def test_modify_add_rule_group_to_host_based_firewall(cbcsdk_mock):
     assert groups[1].name == "DOOM_firewall"
     assert groups[1].description == "No playing DOOM!"
     rules = groups[1].rules_
+    assert len(rules) == 1
+    assert rules[0].name == "DoomyDoomsOfDoom"
+
+
+def test_modify_add_rule_group_to_host_based_firewall_when_empty(cbcsdk_mock):
+    """Tests modifying an empty host-based firewall rule configuration by adding a rule group."""
+    put_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal put_called
+        assert body == HBFW_ADD_RULE_GROUP_EMPTY_PUT_REQUEST
+        put_called = True
+        return copy.deepcopy(HBFW_ADD_RULE_GROUP_EMPTY_PUT_RESPONSE)
+
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/configs/presentation',
+                             POLICY_CONFIG_PRESENTATION)
+    cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/65536/rule_configs/host_based_firewall',
+                             on_put)
+    api = cbcsdk_mock.api
+    # remove all rule groups from HBFW rule config
+    policy_data = copy.deepcopy(FULL_POLICY_1)
+    hbfw = [ruleconfig for ruleconfig in policy_data.get('rule_configs', [])
+            if ruleconfig['category'] == 'host_based_firewall']
+    assert len(hbfw) == 1
+    params = hbfw[0]['parameters']
+    if 'rule_groups' in params:
+        del params['rule_groups']
+    policy = Policy(api, 65536, policy_data, False, True)
+    assert not policy.is_dirty()
+    rule_config = policy.host_based_firewall_rule_config
+    new_group = rule_config.append_rule_group("DOOM_firewall", "No playing DOOM!")
+    new_group.append_rule("DoomyDoomsOfDoom", "BLOCK", "BOTH", "TCP", "199.201.128.1", remote_port_ranges="666",
+                          local_ip_address="10.29.99.1", application_path="C:\\DOOM\\DOOM.EXE")
+    assert policy.is_dirty()
+    rule_config.save()
+    assert put_called
+    groups = rule_config.rule_groups
+    assert len(groups) == 1
+    assert groups[0].name == "DOOM_firewall"
+    assert groups[0].description == "No playing DOOM!"
+    rules = groups[0].rules_
     assert len(rules) == 1
     assert rules[0].name == "DoomyDoomsOfDoom"
 

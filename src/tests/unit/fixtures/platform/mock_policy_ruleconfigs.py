@@ -572,6 +572,114 @@ HBFW_ADD_RULE_GROUP_PUT_RESPONSE = {
     "failed": []
 }
 
+HBFW_ADD_RULE_GROUP_EMPTY_PUT_REQUEST = [
+    {
+        "id": "df181779-f623-415d-879e-91c40246535d",
+        "parameters": {
+            "rule_groups": [
+                {
+                    "description": "No playing DOOM!",
+                    "name": "DOOM_firewall",
+                    "rules": [
+                        {
+                            "action": "BLOCK",
+                            "application_path": "C:\\DOOM\\DOOM.EXE",
+                            "direction": "BOTH",
+                            "enabled": True,
+                            "local_ip_address": "10.29.99.1",
+                            "local_port_ranges": "*",
+                            "name": "DoomyDoomsOfDoom",
+                            "protocol": "TCP",
+                            "remote_ip_address": "199.201.128.1",
+                            "remote_port_ranges": "666",
+                            "test_mode": False
+                        }
+                    ]
+                }
+            ],
+            "default_rule": {
+                "action": "ALLOW",
+                "default_rule_access_check_guid": "08dc129b-ab72-4ed7-8282-8db7f62bc7e8",
+                "default_rule_inbound_event_check_guid": "40dd836c-e676-4e3b-b98b-c870c4b6faa7",
+                "default_rule_outbound_event_check_guid": "94283d79-c2d1-472c-b303-77a0fb387bcc"
+            },
+            "enable_host_based_firewall": False
+        }
+    }
+]
+
+HBFW_ADD_RULE_GROUP_EMPTY_PUT_RESPONSE = {
+    "successful": [
+        {
+            "id": "df181779-f623-415d-879e-91c40246535d",
+            "name": "Host Based Firewall",
+            "description": "These are the Host based Firewall Rules which will be executed by the sensor. [...].",
+            "inherited_from": "",
+            "category": "host_based_firewall",
+            "parameters": {
+                "rulesets": [
+                    {
+                        "description": "No playing DOOM!",
+                        "name": "DOOM_firewall",
+                        "rules": [
+                            {
+                                "action": "BLOCK",
+                                "application_path": "C:\\DOOM\\DOOM.EXE",
+                                "direction": "BOTH",
+                                "enabled": True,
+                                "local_ip_address": "10.29.99.1",
+                                "local_port_ranges": "*",
+                                "name": "DoomyDoomsOfDoom",
+                                "protocol": "TCP",
+                                "remote_ip_address": "199.201.128.1",
+                                "remote_port_ranges": "666",
+                                "rule_access_check_guid": "6d36954a-a944-4944-ae94-df6f94b877b8",
+                                "rule_inbound_event_check_guid": "8a39c00b-f907-4085-929f-f2e98e8b7b87",
+                                "rule_outbound_event_check_guid": "7e7a9761-4187-4065-8ae1-b5161fae75a2",
+                                "test_mode": False
+                            }
+                        ],
+                        "ruleset_id": "0c0ce332-6f81-43d9-ad9b-875e82eb53f9"
+                    }
+                ],
+                "rule_groups": [
+                    {
+                        "description": "No playing DOOM!",
+                        "name": "DOOM_firewall",
+                        "rules": [
+                            {
+                                "action": "BLOCK",
+                                "application_path": "C:\\DOOM\\DOOM.EXE",
+                                "direction": "BOTH",
+                                "enabled": True,
+                                "local_ip_address": "10.29.99.1",
+                                "local_port_ranges": "*",
+                                "name": "DoomyDoomsOfDoom",
+                                "protocol": "TCP",
+                                "remote_ip_address": "199.201.128.1",
+                                "remote_port_ranges": "666",
+                                "rule_access_check_guid": "6d36954a-a944-4944-ae94-df6f94b877b8",
+                                "rule_inbound_event_check_guid": "8a39c00b-f907-4085-929f-f2e98e8b7b87",
+                                "rule_outbound_event_check_guid": "7e7a9761-4187-4065-8ae1-b5161fae75a2",
+                                "test_mode": False
+                            }
+                        ],
+                        "ruleset_id": "0c0ce332-6f81-43d9-ad9b-875e82eb53f9"
+                    }
+                ],
+                "default_rule": {
+                    "action": "ALLOW",
+                    "default_rule_access_check_guid": "08dc129b-ab72-4ed7-8282-8db7f62bc7e8",
+                    "default_rule_inbound_event_check_guid": "40dd836c-e676-4e3b-b98b-c870c4b6faa7",
+                    "default_rule_outbound_event_check_guid": "94283d79-c2d1-472c-b303-77a0fb387bcc"
+                },
+                "enable_host_based_firewall": False
+            }
+        }
+    ],
+    "failed": []
+}
+
 HBFW_REMOVE_RULE_PUT_REQUEST = [
     {
         "id": "df181779-f623-415d-879e-91c40246535d",
