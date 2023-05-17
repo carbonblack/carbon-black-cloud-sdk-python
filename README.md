@@ -58,7 +58,7 @@ At least one Carbon Black Cloud product is required to use this SDK:
 If developing the SDK, you also need:
 
 - pytest==5.4.2
-- pymox==0.7.8
+- pymox==1.0.0
 - coverage==5.1
 - coveralls==2.0.0
 - flake8==3.8.1
