@@ -16,12 +16,13 @@ import copy
 import json
 from types import MappingProxyType
 from cbc_sdk.base import MutableBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
-from cbc_sdk.platform.policy_ruleconfigs import PolicyRuleConfig, CorePreventionRuleConfig
+from cbc_sdk.platform.policy_ruleconfigs import PolicyRuleConfig, CorePreventionRuleConfig, HostBasedFirewallRuleConfig
 from cbc_sdk.errors import ApiError, ServerError, InvalidObjectError
 
 
 SPECIFIC_RULECONFIGS = MappingProxyType({
-    "core_prevention": CorePreventionRuleConfig
+    "core_prevention": CorePreventionRuleConfig,
+    "host_based_firewall": HostBasedFirewallRuleConfig
 })
 
 
@@ -623,6 +624,24 @@ class Policy(MutableBaseModel):
         self._object_rule_configs_need_load = True
         return rc
 
+    def is_dirty(self):
+        """
+        Returns whether or not any fields of this object have been changed.
+
+        Returns:
+            bool: True if any fields of this object have been changed, False if not.
+        """
+        if super(Policy, self).is_dirty():
+            return True
+        # we need to check the rules and rule configs as well
+        if not self._object_rules_need_load:
+            if any(rule.is_dirty() for rule in self._object_rules.values()):
+                return True
+        if not self._object_rule_configs_need_load:
+            if any(rule_config.is_dirty() for rule_config in self._object_rule_configs.values()):
+                return True
+        return False
+
     @property
     def rules(self):
         """
@@ -694,6 +713,24 @@ class Policy(MutableBaseModel):
             list: A list of CorePreventionRuleConfig objects.
         """
         return [rconf for rconf in self.object_rule_configs.values() if isinstance(rconf, CorePreventionRuleConfig)]
+
+    @property
+    def host_based_firewall_rule_config(self):
+        """
+        Returns the host-based firewall rule configuration for this policy.
+
+        Returns:
+            HostBasedFirewallRuleConfig: The host-based firewall rule configuration, or None.
+
+        Raises:
+            InvalidObjectError: If there's more than one host-based firewall rule configuration (should not happen).
+        """
+        tmp = [rconf for rconf in self.object_rule_configs.values() if isinstance(rconf, HostBasedFirewallRuleConfig)]
+        if not tmp:
+            return None
+        if len(tmp) > 1:
+            raise InvalidObjectError("found multiple host-based firewall rule configurations")
+        return tmp[0]
 
     def valid_rule_configs(self):
         """

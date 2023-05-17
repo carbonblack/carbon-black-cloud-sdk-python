@@ -10,7 +10,7 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-"""Example script which sends control messages to devices."""
+"""Example script which lists and updates core prevention settings in a policy."""
 
 import sys
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
@@ -57,7 +57,7 @@ def set_core_prevention_status(policy, config_name, mode):
 
 
 def main():
-    """Main function for Device Actions script."""
+    """Main function for Core Prevention example script."""
     parser = build_cli_parser("View or set core prevention settings on a policy")
     parser.add_argument("-p", "--policy", type=int, required=True, help="The ID of the policy to be manipulated")
     subparsers = parser.add_subparsers(dest="command", required=True)
