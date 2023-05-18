@@ -16,6 +16,10 @@ testingpython310:
   build:
     dockerfile: ./docker/python3.10/Dockerfile
 
+testingpython311:
+  build:
+    dockerfile: ./docker/python3.11/Dockerfile
+
 testingrhel:
   build:
     dockerfile: ./docker/rhel/Dockerfile
