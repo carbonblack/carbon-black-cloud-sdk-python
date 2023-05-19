@@ -1020,3 +1020,80 @@ HBFW_REMOVE_RULE_GROUP_PUT_RESPONSE = {
     ],
     "failed": []
 }
+
+HBFW_COPY_RULES_PUT_REQUEST = {
+    "target_policy_ids": [601, 65536, 344],
+    "parameters": {
+        "rule_groups": [
+            {
+                "description": "Whatever",
+                "name": "Crapco_firewall",
+                "rules": [
+                    {
+                        "action": "ALLOW",
+                        "application_path": "*",
+                        "direction": "IN",
+                        "enabled": True,
+                        "local_ip_address": "1.2.3.4",
+                        "local_port_ranges": "1234",
+                        "name": "my_first_rule",
+                        "protocol": "TCP",
+                        "remote_ip_address": "5.6.7.8",
+                        "remote_port_ranges": "5678",
+                        "rule_access_check_guid": "935477b8-997a-4476-8160-9179840d9892",
+                        "rule_inbound_event_check_guid": "203d0685-04a6-49d8-bd9b-20ddda2c6c73",
+                        "rule_outbound_event_check_guid": "16b8a622-a6d0-4873-8197-2974295c0f47",
+                        "test_mode": False
+                    },
+                    {
+                        "action": "BLOCK",
+                        "application_path": "C:\\DOOM\\DOOM.EXE",
+                        "direction": "BOTH",
+                        "enabled": True,
+                        "local_ip_address": "10.29.99.1",
+                        "local_port_ranges": "*",
+                        "name": "DoomyDoomsOfDoom",
+                        "protocol": "TCP",
+                        "remote_ip_address": "199.201.128.1",
+                        "remote_port_ranges": "666",
+                        "rule_access_check_guid": "28acfcac-7891-423d-9e99-d887aa4662fc",
+                        "rule_inbound_event_check_guid": "01e26bc9-7729-4c0d-a550-f63a865b8c9f",
+                        "rule_outbound_event_check_guid": "b9b625eb-1599-4f7d-b852-0f12db6c5a19",
+                        "test_mode": False
+                    }
+                ],
+                "ruleset_id": "fa3f7254-6d50-4ebf-aca6-d617bcd644b9"
+            },
+            {
+                "description": "IRC is a sewer",
+                "name": "Isolate",
+                "rules": [
+                    {
+                        "action": "BLOCK_ALERT",
+                        "application_path": "*",
+                        "direction": "BOTH",
+                        "enabled": True,
+                        "local_ip_address": "10.29.99.1",
+                        "local_port_ranges": "*",
+                        "name": "BlockIRC",
+                        "protocol": "TCP",
+                        "remote_ip_address": "26.2.0.74",
+                        "remote_port_ranges": "6667",
+                        "rule_access_check_guid": "b1454c18-f08c-419a-9b57-186c25aa6c9d",
+                        "rule_inbound_event_check_guid": "b80e9216-5f9f-4e9a-9bcb-79a5af78d976",
+                        "rule_outbound_event_check_guid": "765cdf79-4ff9-419c-9775-abb18e6f6518",
+                        "test_mode": False
+                    }
+                ],
+                "ruleset_id": "cc7b30e8-b0e5-4253-96e9-93d345fbe642"
+            }
+        ]
+    }
+}
+
+HBFW_COPY_RULES_PUT_RESPONSE = {
+    "failed_policy_ids": [344],
+    "num_applied": 3,
+    "message": "This is a message",
+    "success": True
+}

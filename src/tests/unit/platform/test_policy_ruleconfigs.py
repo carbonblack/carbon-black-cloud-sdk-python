@@ -34,7 +34,9 @@ from tests.unit.fixtures.platform.mock_policy_ruleconfigs import (CORE_PREVENTIO
                                                                   HBFW_REMOVE_RULE_PUT_REQUEST,
                                                                   HBFW_REMOVE_RULE_PUT_RESPONSE,
                                                                   HBFW_REMOVE_RULE_GROUP_PUT_REQUEST,
-                                                                  HBFW_REMOVE_RULE_GROUP_PUT_RESPONSE)
+                                                                  HBFW_REMOVE_RULE_GROUP_PUT_RESPONSE,
+                                                                  HBFW_COPY_RULES_PUT_REQUEST,
+                                                                  HBFW_COPY_RULES_PUT_RESPONSE)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -601,3 +603,35 @@ def test_modify_remove_rule_group_from_host_based_firewall(cbcsdk_mock):
     result_groups = rule_config.rule_groups
     assert len(result_groups) == 1
     assert result_groups[0].name == "Crapco_firewall"
+
+
+def test_copy_hbfw_rules(cbcsdk_mock):
+    """Tests the copy_rules_to function."""
+    put_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal put_called
+        assert body == HBFW_COPY_RULES_PUT_REQUEST
+        put_called = True
+        return copy.deepcopy(HBFW_COPY_RULES_PUT_RESPONSE)
+
+    cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/1492/rule_configs/host_based_firewall/_copy',
+                             on_put)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 1492, copy.deepcopy(FULL_POLICY_5), False, True)
+    target_policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+    result = policy.host_based_firewall_rule_config.copy_rules_to(601, target_policy, "344")
+    assert put_called
+    assert result['success']
+    assert result['failed_policy_ids'] == [344]
+    assert result['num_applied'] == 3
+
+
+def test_copy_hbfw_rules_error_conditions(cb):
+    """Tests the error conditions in the copy_rules_to function."""
+    policy = Policy(cb, 1492, copy.deepcopy(FULL_POLICY_5), False, True)
+    hbfw = policy.host_based_firewall_rule_config
+    with pytest.raises(ApiError):
+        hbfw.copy_rules_to()
+    with pytest.raises(ApiError):
+        hbfw.copy_rules_to(16, "Bogus", 3)

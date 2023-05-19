@@ -559,3 +559,57 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             self._info['parameters']['rule_groups'] = [rule_group._info]
         self._mark_changed()
         return rule_group
+
+    def copy_rules_to(self, *args):
+        """
+        Copies the parameters for host-based firewall rule configurations to another policy or policies.
+
+        Required Permissions:
+            org.firewall.rules(UPDATE)
+
+        Args:
+            args (list[Any]): References to policies to copy to. May be Policy objects, integers, or other.
+
+        Returns:
+            dict: Result structure from copy operation.
+
+        Raises:
+            ApiError: If the parameters could not be converted to policy IDs.
+        """
+        from cbc_sdk.platform.policies import Policy
+        target_ids = []
+        for arg in args:
+            if isinstance(arg, Policy):
+                target_ids.append(arg.id)
+            elif isinstance(arg, int):
+                target_ids.append(arg)
+            else:
+                try:
+                    target_ids.append(int(str(arg)))
+                except ValueError:
+                    raise ApiError(f"invalid policy ID or reference: {arg}")
+        if not target_ids:
+            raise ApiError("at least one policy ID or reference must be specified")
+        url = self.urlobject_single.format(self._cb.credentials.org_key, self._parent._model_unique_id) + "/_copy"
+        body = {"target_policy_ids": target_ids, "parameters": {"rule_groups": self.get_parameter("rule_groups", [])}}
+        result = self._cb.put_object(url, body)
+        return result.json()
+
+    def export_rules(self, format="json"):
+        """
+        Exports the rules from this host-based firewall rule configuration.
+
+        Required Permissions:
+            org.firewall.rules(READ)
+
+        Args:
+            format (str): The format to return the rule data in. Valid values are "csv" and "json" (the default).
+
+        Returns:
+            str: The exported rule configuration data.
+        """
+        if format not in ("csv", "json"):
+            raise ApiError(f"Invalid format: {format}")
+        url = self.urlobject_single.format(self._cb.credentials.org_key, self._parent._model_unique_id)\
+            + "/rules/_export"
+        return self._cb.get_raw_data(url, {"format": format})
