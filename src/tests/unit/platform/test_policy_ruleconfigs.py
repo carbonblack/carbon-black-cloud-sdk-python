@@ -22,8 +22,19 @@ from cbc_sdk.errors import ApiError, InvalidObjectError, ServerError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_policies import (FULL_POLICY_1, BASIC_CONFIG_TEMPLATE_RETURN,
                                                         TEMPLATE_RETURN_BOGUS_TYPE, POLICY_CONFIG_PRESENTATION,
-                                                        REPLACE_RULECONFIG, CORE_PREVENTION_RETURNS,
-                                                        CORE_PREVENTION_UPDATE_1)
+                                                        REPLACE_RULECONFIG, FULL_POLICY_5)
+from tests.unit.fixtures.platform.mock_policy_ruleconfigs import (CORE_PREVENTION_RETURNS, CORE_PREVENTION_UPDATE_1,
+                                                                  HBFW_GET_RESULT, HBFW_MODIFY_PUT_REQUEST,
+                                                                  HBFW_MODIFY_PUT_RESPONSE, HBFW_ADD_RULE_PUT_REQUEST,
+                                                                  HBFW_ADD_RULE_PUT_RESPONSE,
+                                                                  HBFW_ADD_RULE_GROUP_PUT_REQUEST,
+                                                                  HBFW_ADD_RULE_GROUP_PUT_RESPONSE,
+                                                                  HBFW_ADD_RULE_GROUP_EMPTY_PUT_REQUEST,
+                                                                  HBFW_ADD_RULE_GROUP_EMPTY_PUT_RESPONSE,
+                                                                  HBFW_REMOVE_RULE_PUT_REQUEST,
+                                                                  HBFW_REMOVE_RULE_PUT_RESPONSE,
+                                                                  HBFW_REMOVE_RULE_GROUP_PUT_REQUEST,
+                                                                  HBFW_REMOVE_RULE_GROUP_PUT_RESPONSE)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -280,3 +291,313 @@ def test_core_prevention_delete(cbcsdk_mock, policy):
     assert rule_config.name == 'Carbon Black Threat Intel'
     rule_config.delete()
     assert delete_called
+
+
+def test_host_based_firewall_contents(policy):
+    """Tests the contents of the host-based firewall rule configuration, along with the refresh."""
+    rule_config = policy.host_based_firewall_rule_config
+    assert not rule_config.enabled
+    assert rule_config.default_action == "ALLOW"
+    groups = rule_config.rule_groups
+    assert len(groups) == 1
+    assert groups[0].name == "Argon_firewall"
+    rules = groups[0].rules_
+    assert len(rules) == 1
+    assert rules[0].action == "ALLOW"
+    assert rules[0].direction == "IN"
+    assert rules[0].local_ip_address == "1.2.3.4"
+    assert rules[0].name == "my_first_rule"
+    assert rules[0].remote_ip_address == "5.6.7.8"
+
+
+def test_host_based_firewall_refresh(cbcsdk_mock):
+    """Tests that refresh() restores values in the rule configuration."""
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/rule_configs/host_based_firewall',
+                             HBFW_GET_RESULT)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+    rule_config = policy.host_based_firewall_rule_config
+    rule_config.set_default_action("BLOCK")
+    groups = rule_config.rule_groups
+    assert len(groups) == 1
+    rules = groups[0].rules_
+    assert len(rules) == 1
+    rules[0].local_ip_address = "127.0.0.1"
+    rules[0].remote_ip_address = "10.29.99.1"
+    rule_config.refresh()
+    assert not rule_config.enabled
+    assert rule_config.default_action == "ALLOW"
+    groups = rule_config.rule_groups
+    assert len(groups) == 1
+    rules = groups[0].rules_
+    assert len(rules) == 1
+    assert rules[0].local_ip_address == "1.2.3.4"
+    assert rules[0].remote_ip_address == "5.6.7.8"
+
+
+def test_delete_host_based_firewall(cbcsdk_mock):
+    """Tests that delete resets the host-based firewall rule configuration."""
+    delete_called = False
+    get_called = 0
+
+    def on_delete(url, body):
+        nonlocal delete_called
+        delete_called = True
+        return CBCSDKMock.StubResponse(None, scode=204)
+
+    def on_get(url, params, default):
+        nonlocal delete_called, get_called
+        assert delete_called
+        get_called += 1
+        return HBFW_GET_RESULT
+
+    cbcsdk_mock.mock_request('DELETE', '/policyservice/v1/orgs/test/policies/65536/rule_configs/host_based_firewall'
+                                       '/df181779-f623-415d-879e-91c40246535d', on_delete)
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/rule_configs/host_based_firewall',
+                             on_get)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+    rule_config = policy.host_based_firewall_rule_config
+    rule_config.delete()
+    assert delete_called
+    assert get_called == 0
+    assert not rule_config.enabled
+    assert rule_config.default_action == "ALLOW"
+    assert get_called == 1
+
+
+def test_modify_host_based_firewall(cbcsdk_mock):
+    """Tests modifying a host-based firewall rule configuration's data."""
+    put_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal put_called
+        assert body == HBFW_MODIFY_PUT_REQUEST
+        put_called = True
+        return copy.deepcopy(HBFW_MODIFY_PUT_RESPONSE)
+
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/configs/presentation',
+                             POLICY_CONFIG_PRESENTATION)
+    cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/65536/rule_configs/host_based_firewall',
+                             on_put)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+    rule_config = policy.host_based_firewall_rule_config
+    rule_config.set_enabled(True)
+    rule_config.set_default_action("BLOCK")
+    groups = rule_config.rule_groups
+    groups[0].description = "Starship go BOOM"
+    rules = groups[0].rules_
+    rules[0].remote_ip_address = "199.201.128.1"
+    rules[0].direction = "BOTH"
+    rule_config.save()
+    assert put_called
+    assert rule_config.enabled
+    assert rule_config.default_action == "BLOCK"
+    groups = rule_config.rule_groups
+    assert groups[0].description == "Starship go BOOM"
+    rules = groups[0].rules_
+    assert rules[0].remote_ip_address == "199.201.128.1"
+    assert rules[0].direction == "BOTH"
+
+
+def test_host_based_firewall_parameter_errors(cb, policy):
+    """Tests bad values for host-based firewall parameters."""
+    rule_config = policy.host_based_firewall_rule_config
+    with pytest.raises(ApiError):
+        rule_config.set_default_action("NOTEXIST")
+
+
+def test_modify_add_rule_to_host_based_firewall(cbcsdk_mock):
+    """Tests modifying a host-based firewall rule configuration by adding a rule."""
+    put_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal put_called
+        assert body == HBFW_ADD_RULE_PUT_REQUEST
+        put_called = True
+        return copy.deepcopy(HBFW_ADD_RULE_PUT_RESPONSE)
+
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/configs/presentation',
+                             POLICY_CONFIG_PRESENTATION)
+    cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/65536/rule_configs/host_based_firewall',
+                             on_put)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+    assert not policy.is_dirty()
+    rule_config = policy.host_based_firewall_rule_config
+    groups = rule_config.rule_groups
+    groups[0].append_rule("DoomyDoomsOfDoom", "BLOCK", "BOTH", "TCP", "199.201.128.1", remote_port_ranges="666",
+                          local_ip_address="10.29.99.1", application_path="C:\\DOOM\\DOOM.EXE")
+    assert policy.is_dirty()
+    rule_config.save()
+    assert put_called
+    groups = rule_config.rule_groups
+    assert len(groups) == 1
+    rules = groups[0].rules_
+    assert len(rules) == 2
+    assert rules[0].name == "my_first_rule"
+    assert rules[1].name == "DoomyDoomsOfDoom"
+    assert rules[1].action == "BLOCK"
+    assert rules[1].application_path == "C:\\DOOM\\DOOM.EXE"
+    assert rules[1].direction == "BOTH"
+    assert rules[1].enabled
+    assert rules[1].local_ip_address == "10.29.99.1"
+    assert rules[1].local_port_ranges == "*"
+    assert rules[1].protocol == "TCP"
+    assert rules[1].remote_ip_address == "199.201.128.1"
+    assert rules[1].remote_port_ranges == "666"
+    assert not rules[1].test_mode
+
+
+def test_append_rule_parameter_errors(cb, policy):
+    """Tests the parameter check errors on the append_rule() method."""
+    rule_config = policy.host_based_firewall_rule_config
+    groups = rule_config.rule_groups
+    with pytest.raises(ApiError):
+        groups[0].append_rule("DoomyDoomsOfDoom", "NOTEXIST", "BOTH", "TCP", "199.201.128.1")
+    with pytest.raises(ApiError):
+        groups[0].append_rule("DoomyDoomsOfDoom", "BLOCK", "NOTEXIST", "TCP", "199.201.128.1")
+    with pytest.raises(ApiError):
+        groups[0].append_rule("DoomyDoomsOfDoom", "BLOCK", "BOTH", "NOTEXIST", "199.201.128.1")
+
+
+def test_modify_add_rule_group_to_host_based_firewall(cbcsdk_mock):
+    """Tests modifying a host-based firewall rule configuration by adding a rule group."""
+    put_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal put_called
+        assert body == HBFW_ADD_RULE_GROUP_PUT_REQUEST
+        put_called = True
+        return copy.deepcopy(HBFW_ADD_RULE_GROUP_PUT_RESPONSE)
+
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/configs/presentation',
+                             POLICY_CONFIG_PRESENTATION)
+    cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/65536/rule_configs/host_based_firewall',
+                             on_put)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+    assert not policy.is_dirty()
+    rule_config = policy.host_based_firewall_rule_config
+    new_group = rule_config.append_rule_group("DOOM_firewall", "No playing DOOM!")
+    new_group.append_rule("DoomyDoomsOfDoom", "BLOCK", "BOTH", "TCP", "199.201.128.1", remote_port_ranges="666",
+                          local_ip_address="10.29.99.1", application_path="C:\\DOOM\\DOOM.EXE")
+    assert policy.is_dirty()
+    rule_config.save()
+    assert put_called
+    groups = rule_config.rule_groups
+    assert len(groups) == 2
+    assert groups[0].name == "Argon_firewall"
+    assert groups[0].description == "Whatever"
+    rules = groups[0].rules_
+    assert len(rules) == 1
+    assert rules[0].name == "my_first_rule"
+    assert groups[1].name == "DOOM_firewall"
+    assert groups[1].description == "No playing DOOM!"
+    rules = groups[1].rules_
+    assert len(rules) == 1
+    assert rules[0].name == "DoomyDoomsOfDoom"
+
+
+def test_modify_add_rule_group_to_host_based_firewall_when_empty(cbcsdk_mock):
+    """Tests modifying an empty host-based firewall rule configuration by adding a rule group."""
+    put_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal put_called
+        assert body == HBFW_ADD_RULE_GROUP_EMPTY_PUT_REQUEST
+        put_called = True
+        return copy.deepcopy(HBFW_ADD_RULE_GROUP_EMPTY_PUT_RESPONSE)
+
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/configs/presentation',
+                             POLICY_CONFIG_PRESENTATION)
+    cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/65536/rule_configs/host_based_firewall',
+                             on_put)
+    api = cbcsdk_mock.api
+    # remove all rule groups from HBFW rule config
+    policy_data = copy.deepcopy(FULL_POLICY_1)
+    hbfw = [ruleconfig for ruleconfig in policy_data.get('rule_configs', [])
+            if ruleconfig['category'] == 'host_based_firewall']
+    assert len(hbfw) == 1
+    params = hbfw[0]['parameters']
+    if 'rule_groups' in params:
+        del params['rule_groups']
+    policy = Policy(api, 65536, policy_data, False, True)
+    assert not policy.is_dirty()
+    rule_config = policy.host_based_firewall_rule_config
+    new_group = rule_config.append_rule_group("DOOM_firewall", "No playing DOOM!")
+    new_group.append_rule("DoomyDoomsOfDoom", "BLOCK", "BOTH", "TCP", "199.201.128.1", remote_port_ranges="666",
+                          local_ip_address="10.29.99.1", application_path="C:\\DOOM\\DOOM.EXE")
+    assert policy.is_dirty()
+    rule_config.save()
+    assert put_called
+    groups = rule_config.rule_groups
+    assert len(groups) == 1
+    assert groups[0].name == "DOOM_firewall"
+    assert groups[0].description == "No playing DOOM!"
+    rules = groups[0].rules_
+    assert len(rules) == 1
+    assert rules[0].name == "DoomyDoomsOfDoom"
+
+
+def test_modify_remove_rule_from_host_based_firewall(cbcsdk_mock):
+    """Tests modifying a host-based firewall rule configuration by removing a rule."""
+    put_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal put_called
+        assert body == HBFW_REMOVE_RULE_PUT_REQUEST
+        put_called = True
+        return copy.deepcopy(HBFW_REMOVE_RULE_PUT_RESPONSE)
+
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/1492/configs/presentation',
+                             POLICY_CONFIG_PRESENTATION)
+    cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/1492/rule_configs/host_based_firewall',
+                             on_put)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 1492, copy.deepcopy(FULL_POLICY_5), False, True)
+    assert not policy.is_dirty()
+    rule_config = policy.host_based_firewall_rule_config
+    result_groups = [group for group in rule_config.rule_groups if group.name == "Crapco_firewall"]
+    assert len(result_groups) == 1
+    result_rules = [rule for rule in result_groups[0].rules_ if rule.name == "DoomyDoomsOfDoom"]
+    assert len(result_rules) == 1
+    result_rules[0].remove()
+    assert policy.is_dirty()
+    rule_config.save()
+    assert put_called
+    result_groups = [group for group in rule_config.rule_groups if group.name == "Crapco_firewall"]
+    assert len(result_groups) == 1
+    result_rules = result_groups[0].rules_
+    assert len(result_rules) == 1
+    assert result_rules[0].name == "my_first_rule"
+
+
+def test_modify_remove_rule_group_from_host_based_firewall(cbcsdk_mock):
+    """Tests modifying a host-based firewall rule configuration by removing a rule group."""
+    put_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal put_called
+        assert body == HBFW_REMOVE_RULE_GROUP_PUT_REQUEST
+        put_called = True
+        return copy.deepcopy(HBFW_REMOVE_RULE_GROUP_PUT_RESPONSE)
+
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/1492/configs/presentation',
+                             POLICY_CONFIG_PRESENTATION)
+    cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/1492/rule_configs/host_based_firewall',
+                             on_put)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 1492, copy.deepcopy(FULL_POLICY_5), False, True)
+    assert not policy.is_dirty()
+    rule_config = policy.host_based_firewall_rule_config
+    result_groups = [group for group in rule_config.rule_groups if group.name == "Isolate"]
+    assert len(result_groups) == 1
+    result_groups[0].remove()
+    assert policy.is_dirty()
+    rule_config.save()
+    assert put_called
+    result_groups = rule_config.rule_groups
+    assert len(result_groups) == 1
+    assert result_groups[0].name == "Crapco_firewall"

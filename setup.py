@@ -30,7 +30,7 @@ install_requires = [
 extras_require = {
     "test": [
         'pytest==7.2.1',
-        'pymox==0.7.8',
+        'pymox==1.0.0',
         'coverage==6.5.0',
         'coveralls==3.3.1',
         'flake8==5.0.4',
