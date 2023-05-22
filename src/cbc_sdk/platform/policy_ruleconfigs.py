@@ -612,4 +612,7 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             raise ApiError(f"Invalid format: {format}")
         url = self.urlobject_single.format(self._cb.credentials.org_key, self._parent._model_unique_id)\
             + "/rules/_export"
-        return self._cb.get_raw_data(url, {"format": format})
+        if format == "json":
+            return self._cb.get_object(url, {"format": format})
+        else:
+            return self._cb.get_raw_data(url, {"format": format})

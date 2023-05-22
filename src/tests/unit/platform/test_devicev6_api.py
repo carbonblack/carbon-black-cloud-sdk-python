@@ -265,7 +265,7 @@ def test_facet_generated_queries(cb, init_facet, desired_criteria):
 
 def test_query_device_download(cbcsdk_mock):
     """Test downloading the results of a device query as CSV."""
-    def on_download(url, query_params, **kwargs):
+    def on_download(url, query_params, default):
         assert query_params == {"status": "ALL", "ad_group_id": "14,25", "policy_id": "8675309",
                                 "target_priority": "HIGH", "query_string": "foobar", "sort_field": "name",
                                 "sort_order": "DESC"}

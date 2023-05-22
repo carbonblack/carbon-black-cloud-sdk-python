@@ -1097,3 +1097,80 @@ HBFW_COPY_RULES_PUT_RESPONSE = {
     "message": "This is a message",
     "success": True
 }
+
+HBFW_EXPORT_RULE_CONFIGS_RESPONSE = [
+    {
+        "policy_name": "Crapco",
+        "rule_group_name": "Crapco_firewall",
+        "rule_group_description": "Whatever",
+        "rule_group_rank": "1",
+        "rule_group_enabled": "true",
+        "rule_rank": "1",
+        "rule_enabled": True,
+        "action": "ALLOW",
+        "application_path": "*",
+        "direction": "IN",
+        "local_ip": "1.2.3.4",
+        "local_port": "1234",
+        "remote_ip": "5.6.7.8",
+        "remote_port": "5678",
+        "protocol": "TCP"
+    },
+    {
+        "policy_name": "Crapco",
+        "rule_group_name": "Crapco_firewall",
+        "rule_group_description": "Whatever",
+        "rule_group_rank": "1",
+        "rule_group_enabled": "true",
+        "rule_rank": "2",
+        "rule_enabled": True,
+        "action": "BLOCK",
+        "application_path": "C:\\DOOM\\DOOM.EXE",
+        "direction": "BOTH",
+        "local_ip": "10.29.99.1",
+        "local_port": "*",
+        "remote_ip": "199.201.128.1",
+        "remote_port": "666",
+        "protocol": "TCP"
+    },
+    {
+        "policy_name": "Crapco",
+        "rule_group_name": "Isolate",
+        "rule_group_description": "IRC is a sewer",
+        "rule_group_rank": "2",
+        "rule_group_enabled": "true",
+        "rule_rank": "1",
+        "rule_enabled": True,
+        "action": "BLOCK_ALERT",
+        "application_path": "*",
+        "direction": "BOTH",
+        "local_ip": "10.29.99.1",
+        "local_port": "*",
+        "remote_ip": "26.2.0.74",
+        "remote_port": "6667",
+        "protocol": "TCP"
+    },
+    {
+        "policy_name": "Crapco",
+        "rule_group_rank": "3",
+        "rule_group_enabled": "true",
+        "rule_rank": "1",
+        "rule_enabled": True,
+        "action": "ALLOW",
+        "application_path": "*",
+        "direction": "BOTH",
+        "local_ip": "*",
+        "local_port": "*",
+        "remote_ip": "*",
+        "remote_port": "*",
+        "protocol": "ANY"
+    }
+]
+
+HBFW_EXPORT_RULE_CONFIGS_RESPONSE_CSV = \
+"""Policy Name,Rule Group Name,Rule Group Description,Rule Group Rank,Rule Group Enabled,Rule Rank,Rule Enabled,...
+Crapco,Crapco_firewall,Whatever,1,true,1,true,ALLOW,*,IN,1.2.3.4,1234,5.6.7.8,5678,TCP
+Crapco,Crapco_firewall,Whatever,1,true,2,true,BLOCK,C:\\DOOM\\DOOM.EXE,BOTH,10.29.99.1,*,199.201.128.1,666,TCP
+Crapco,Isolate,IRC is a sewer,2,true,1,true,BLOCK_ALERT,*,BOTH,10.29.99.1,*,26.2.0.74,6667,TCP
+Crapco,,,3,true,1,true,ALLOW,*,BOTH,*,*,*,*,ANY
+"""

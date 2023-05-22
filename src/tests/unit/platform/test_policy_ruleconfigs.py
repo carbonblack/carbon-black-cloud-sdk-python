@@ -36,7 +36,9 @@ from tests.unit.fixtures.platform.mock_policy_ruleconfigs import (CORE_PREVENTIO
                                                                   HBFW_REMOVE_RULE_GROUP_PUT_REQUEST,
                                                                   HBFW_REMOVE_RULE_GROUP_PUT_RESPONSE,
                                                                   HBFW_COPY_RULES_PUT_REQUEST,
-                                                                  HBFW_COPY_RULES_PUT_RESPONSE)
+                                                                  HBFW_COPY_RULES_PUT_RESPONSE,
+                                                                  HBFW_EXPORT_RULE_CONFIGS_RESPONSE,
+                                                                  HBFW_EXPORT_RULE_CONFIGS_RESPONSE_CSV)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -635,3 +637,29 @@ def test_copy_hbfw_rules_error_conditions(cb):
         hbfw.copy_rules_to()
     with pytest.raises(ApiError):
         hbfw.copy_rules_to(16, "Bogus", 3)
+
+
+def test_export_hbfw_rules(cbcsdk_mock):
+    """Tests the export_rules function with JSON output."""
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/1492/rule_configs/host_based_firewall'
+                                    '/rules/_export?format=json', HBFW_EXPORT_RULE_CONFIGS_RESPONSE)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 1492, copy.deepcopy(FULL_POLICY_5), False, True)
+    output = policy.host_based_firewall_rule_config.export_rules('json')
+    assert len(output) == 4
+    assert all(rule['policy_name'] == 'Crapco' for rule in output)
+    assert all(rule['rule_enabled'] for rule in output)
+
+
+def test_export_hbfw_rules_as_csv(cbcsdk_mock):
+    """Tests the export_rules function with CSV output."""
+    def on_get(url, params, default):
+        assert params['format'] == 'csv'
+        return HBFW_EXPORT_RULE_CONFIGS_RESPONSE_CSV
+
+    cbcsdk_mock.mock_request('RAW_GET', '/policyservice/v1/orgs/test/policies/1492/rule_configs/host_based_firewall'
+                                        '/rules/_export', on_get)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 1492, copy.deepcopy(FULL_POLICY_5), False, True)
+    output = policy.host_based_firewall_rule_config.export_rules('csv')
+    assert output == HBFW_EXPORT_RULE_CONFIGS_RESPONSE_CSV
