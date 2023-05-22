@@ -663,3 +663,10 @@ def test_export_hbfw_rules_as_csv(cbcsdk_mock):
     policy = Policy(api, 1492, copy.deepcopy(FULL_POLICY_5), False, True)
     output = policy.host_based_firewall_rule_config.export_rules('csv')
     assert output == HBFW_EXPORT_RULE_CONFIGS_RESPONSE_CSV
+
+
+def test_export_hbfw_rules_bad_format(cb):
+    """Tests what happens when we give export_rules a bad format."""
+    policy = Policy(cb, 1492, copy.deepcopy(FULL_POLICY_5), False, True)
+    with pytest.raises(ApiError):
+        policy.host_based_firewall_rule_config.export_rules('mp3')

@@ -1167,8 +1167,7 @@ HBFW_EXPORT_RULE_CONFIGS_RESPONSE = [
     }
 ]
 
-HBFW_EXPORT_RULE_CONFIGS_RESPONSE_CSV = \
-"""Policy Name,Rule Group Name,Rule Group Description,Rule Group Rank,Rule Group Enabled,Rule Rank,Rule Enabled,...
+HBFW_EXPORT_RULE_CONFIGS_RESPONSE_CSV = """Policy Name,Rule Group Name,Rule Group Description,Rule Group Rank,...
 Crapco,Crapco_firewall,Whatever,1,true,1,true,ALLOW,*,IN,1.2.3.4,1234,5.6.7.8,5678,TCP
 Crapco,Crapco_firewall,Whatever,1,true,2,true,BLOCK,C:\\DOOM\\DOOM.EXE,BOTH,10.29.99.1,*,199.201.128.1,666,TCP
 Crapco,Isolate,IRC is a sewer,2,true,1,true,BLOCK_ALERT,*,BOTH,10.29.99.1,*,26.2.0.74,6667,TCP
