@@ -622,7 +622,7 @@ def test_copy_hbfw_rules(cbcsdk_mock):
     api = cbcsdk_mock.api
     policy = Policy(api, 1492, copy.deepcopy(FULL_POLICY_5), False, True)
     target_policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
-    result = policy.host_based_firewall_rule_config.copy_rules_to(601, target_policy, "344")
+    result = policy.host_based_firewall_rule_config.copy_rules(601, target_policy, "344")
     assert put_called
     assert result['success']
     assert result['failed_policy_ids'] == [344]
@@ -634,9 +634,9 @@ def test_copy_hbfw_rules_error_conditions(cb):
     policy = Policy(cb, 1492, copy.deepcopy(FULL_POLICY_5), False, True)
     hbfw = policy.host_based_firewall_rule_config
     with pytest.raises(ApiError):
-        hbfw.copy_rules_to()
+        hbfw.copy_rules()
     with pytest.raises(ApiError):
-        hbfw.copy_rules_to(16, "Bogus", 3)
+        hbfw.copy_rules(16, "Bogus", 3)
 
 
 def test_export_hbfw_rules(cbcsdk_mock):

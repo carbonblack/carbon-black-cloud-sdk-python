@@ -560,7 +560,7 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
         self._mark_changed()
         return rule_group
 
-    def copy_rules_to(self, *args):
+    def copy_rules(self, *args):
         """
         Copies the parameters for host-based firewall rule configurations to another policy or policies.
 
