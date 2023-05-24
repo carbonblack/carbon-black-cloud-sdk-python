@@ -282,6 +282,7 @@ class CorePreventionRuleConfig(PolicyRuleConfig):
 
 class HostBasedFirewallRuleConfig(PolicyRuleConfig):
     """Represents a host-based firewall rule configuration in the policy."""
+    urlobject = "/policyservice/v1/orgs/{0}/policies"
     urlobject_single = "/policyservice/v1/orgs/{0}/policies/{1}/rule_configs/host_based_firewall"
     swagger_meta_file = "platform/models/policy_ruleconfig.yaml"
 
@@ -591,9 +592,9 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
                     raise ApiError(f"invalid policy ID or reference: {arg}")
         if not target_ids:
             raise ApiError("at least one policy ID or reference must be specified")
-        url = self.urlobject_single.format(self._cb.credentials.org_key, self._parent._model_unique_id) + "/_copy"
+        url = self.urlobject.format(self._cb.credentials.org_key) + "/rule_configs/host_based_firewall/_copy"
         body = {"target_policy_ids": target_ids, "parameters": {"rule_groups": self.get_parameter("rule_groups", [])}}
-        result = self._cb.put_object(url, body)
+        result = self._cb.post_object(url, body)
         return result.json()
 
     def export_rules(self, format="json"):
