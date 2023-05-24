@@ -568,7 +568,8 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             org.firewall.rules(UPDATE)
 
         Args:
-            args (list[Any]): References to policies to copy to. May be Policy objects, integers, or other.
+            args (list[Any]): References to policies to copy to. May be Policy objects, integers, or
+                              string representations of integers.
 
         Returns:
             dict: Result structure from copy operation.
