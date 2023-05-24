@@ -188,7 +188,8 @@ class CBCloudAPI(BaseAPI):
         elif resp.status_code == 204:
             return None
         else:
-            raise ServerError(error_code=resp.status_code, message="Device action error: {0}".format(resp.content))
+            raise ServerError(error_code=resp.status_code, message="Device action error: {0}".format(resp.content),
+                              uri=url)
 
     def _device_action(self, device_ids, action_type, options=None):
         """

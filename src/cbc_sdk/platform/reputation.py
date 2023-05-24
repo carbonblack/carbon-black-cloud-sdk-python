@@ -86,7 +86,7 @@ class ReputationOverride(PlatformModel):
                 message = json.loads(resp.text)[0]
             except Exception:
                 message = resp.text
-            raise ServerError(resp.status_code, message, result="Did not delete {0:s}.".format(str(self)))
+            raise ServerError(resp.status_code, message, result="Did not delete {0:s}.".format(str(self)), uri=None)
         self._is_deleted = True
 
     @classmethod
@@ -132,13 +132,14 @@ class ReputationOverride(PlatformModel):
             ]
 
         """
-        resp = cb.post_object(cls.urlobject.format(cb.credentials.org_key) + "/_delete", overrides)
+        url = cls.urlobject.format(cb.credentials.org_key) + "/_delete"
+        resp = cb.post_object(url, overrides)
         if resp.status_code not in (200, 204):
             try:
                 message = json.loads(resp.text)[0]
             except Exception:
                 message = resp.text
-            raise ServerError(resp.status_code, message, result="Did not delete overrides.")
+            raise ServerError(resp.status_code, message, result="Did not delete overrides.", uri=url)
 
         return resp.json()
 

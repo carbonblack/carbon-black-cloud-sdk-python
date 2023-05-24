@@ -1232,15 +1232,17 @@ class PolicyRule(MutableBaseModel):
             new_object_info = copy.deepcopy(self._info)
             if "id" in new_object_info:
                 del new_object_info["id"]
-            ret = self._cb.post_object(self._parent._build_api_request_uri() + "/rules", new_object_info)
+            url = self._parent._build_api_request_uri() + "/rules"
+            ret = self._cb.post_object(url, new_object_info)
         else:
-            ret = self._cb.put_object(self._parent._build_api_request_uri() + f"/rules/{self.id}", self._info)
+            url = self._parent._build_api_request_uri() + f"/rules/{self.id}"
+            ret = self._cb.put_object(url, self._info)
         if ret.status_code not in range(200, 300):
             try:
                 message = json.loads(ret.text)[0]
             except Exception:
                 message = ret.text
-            raise ServerError(ret.status_code, message, result="Unable to update policy rule")
+            raise ServerError(ret.status_code, message, result="Unable to update policy rule", uri=url)
         self._info = json.loads(ret.text)
         self._full_init = True
         self._parent._on_updated_rule(self)

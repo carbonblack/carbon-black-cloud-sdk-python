@@ -910,7 +910,7 @@ class MutableBaseModel(NewBaseModel):
                 message = request_ret.text
 
             raise ServerError(request_ret.status_code, message,
-                              result="Did not update {} record.".format(self.__class__.__name__))
+                              result="Did not update {} record.".format(self.__class__.__name__), uri=None)
         else:
             try:
                 message = request_ret.json()
@@ -920,7 +920,8 @@ class MutableBaseModel(NewBaseModel):
 
                     if post_result and post_result != "success":
                         raise ServerError(request_ret.status_code, post_result,
-                                          result="Did not update {0:s} record.".format(self.__class__.__name__))
+                                          result="Did not update {0:s} record.".format(self.__class__.__name__),
+                                          uri=None)
                     else:
                         refresh_required = True
                 else:
