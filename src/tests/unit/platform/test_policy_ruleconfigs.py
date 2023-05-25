@@ -34,7 +34,11 @@ from tests.unit.fixtures.platform.mock_policy_ruleconfigs import (CORE_PREVENTIO
                                                                   HBFW_REMOVE_RULE_PUT_REQUEST,
                                                                   HBFW_REMOVE_RULE_PUT_RESPONSE,
                                                                   HBFW_REMOVE_RULE_GROUP_PUT_REQUEST,
-                                                                  HBFW_REMOVE_RULE_GROUP_PUT_RESPONSE)
+                                                                  HBFW_REMOVE_RULE_GROUP_PUT_RESPONSE,
+                                                                  HBFW_COPY_RULES_PUT_REQUEST,
+                                                                  HBFW_COPY_RULES_PUT_RESPONSE,
+                                                                  HBFW_EXPORT_RULE_CONFIGS_RESPONSE,
+                                                                  HBFW_EXPORT_RULE_CONFIGS_RESPONSE_CSV)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -601,3 +605,68 @@ def test_modify_remove_rule_group_from_host_based_firewall(cbcsdk_mock):
     result_groups = rule_config.rule_groups
     assert len(result_groups) == 1
     assert result_groups[0].name == "Crapco_firewall"
+
+
+def test_copy_hbfw_rules(cbcsdk_mock):
+    """Tests the copy_rules_to function."""
+    post_called = False
+
+    def on_post(url, body, **kwargs):
+        nonlocal post_called
+        assert body == HBFW_COPY_RULES_PUT_REQUEST
+        post_called = True
+        return copy.deepcopy(HBFW_COPY_RULES_PUT_RESPONSE)
+
+    cbcsdk_mock.mock_request('POST', '/policyservice/v1/orgs/test/policies/rule_configs/host_based_firewall/_copy',
+                             on_post)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 1492, copy.deepcopy(FULL_POLICY_5), False, True)
+    target_policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+    result = policy.host_based_firewall_rule_config.copy_rules(601, target_policy, "344")
+    assert post_called
+    assert result['success']
+    assert result['failed_policy_ids'] == [344]
+    assert result['num_applied'] == 3
+
+
+def test_copy_hbfw_rules_error_conditions(cb):
+    """Tests the error conditions in the copy_rules_to function."""
+    policy = Policy(cb, 1492, copy.deepcopy(FULL_POLICY_5), False, True)
+    hbfw = policy.host_based_firewall_rule_config
+    with pytest.raises(ApiError):
+        hbfw.copy_rules()
+    with pytest.raises(ApiError):
+        hbfw.copy_rules(16, "Bogus", 3)
+
+
+def test_export_hbfw_rules(cbcsdk_mock):
+    """Tests the export_rules function with JSON output."""
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/1492/rule_configs/host_based_firewall'
+                                    '/rules/_export?format=json', HBFW_EXPORT_RULE_CONFIGS_RESPONSE)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 1492, copy.deepcopy(FULL_POLICY_5), False, True)
+    output = policy.host_based_firewall_rule_config.export_rules('json')
+    assert len(output) == 4
+    assert all(rule['policy_name'] == 'Crapco' for rule in output)
+    assert all(rule['rule_enabled'] for rule in output)
+
+
+def test_export_hbfw_rules_as_csv(cbcsdk_mock):
+    """Tests the export_rules function with CSV output."""
+    def on_get(url, params, default):
+        assert params['format'] == 'csv'
+        return HBFW_EXPORT_RULE_CONFIGS_RESPONSE_CSV
+
+    cbcsdk_mock.mock_request('RAW_GET', '/policyservice/v1/orgs/test/policies/1492/rule_configs/host_based_firewall'
+                                        '/rules/_export', on_get)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 1492, copy.deepcopy(FULL_POLICY_5), False, True)
+    output = policy.host_based_firewall_rule_config.export_rules('csv')
+    assert output == HBFW_EXPORT_RULE_CONFIGS_RESPONSE_CSV
+
+
+def test_export_hbfw_rules_bad_format(cb):
+    """Tests what happens when we give export_rules a bad format."""
+    policy = Policy(cb, 1492, copy.deepcopy(FULL_POLICY_5), False, True)
+    with pytest.raises(ApiError):
+        policy.host_based_firewall_rule_config.export_rules('mp3')
