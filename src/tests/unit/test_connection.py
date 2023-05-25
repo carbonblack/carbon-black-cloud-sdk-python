@@ -143,6 +143,7 @@ def test_http_request_error_code_cases(mox, response, exception_caught, prefix):
     with pytest.raises(exception_caught) as excinfo:
         conn.http_request('get', '/path')
     assert excinfo.value.message.startswith(prefix)
+    assert excinfo.value.uri == 'https://example.com/path'
     mox.VerifyAll()
 
 
