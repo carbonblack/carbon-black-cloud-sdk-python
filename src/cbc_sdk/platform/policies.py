@@ -1239,10 +1239,10 @@ class PolicyRule(MutableBaseModel):
             ret = self._cb.put_object(url, self._info)
         if ret.status_code not in range(200, 300):
             try:
-                message = json.loads(ret.text)[0]
+                result = json.loads(ret.text)[0]
             except Exception:
-                message = ret.text
-            raise ServerError(ret.status_code, "Unable to update policy rule", result=message, uri=url)
+                result = ret.text
+            raise ServerError(ret.status_code, "Unable to update policy rule", result=result, uri=url)
         self._info = json.loads(ret.text)
         self._full_init = True
         self._parent._on_updated_rule(self)

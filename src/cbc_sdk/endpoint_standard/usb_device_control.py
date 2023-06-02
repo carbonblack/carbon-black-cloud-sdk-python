@@ -242,10 +242,10 @@ class USBDeviceBlock(NewBaseModel):
 
         if ret.status_code not in (200, 204):
             try:
-                message = json.loads(ret.text)[0]
+                result = json.loads(ret.text)[0]
             except Exception:
-                message = ret.text
-            raise ServerError(ret.status_code, f"Did not delete {str(self)}.", result=message,
+                result = ret.text
+            raise ServerError(ret.status_code, f"Did not delete {str(self)}.", result=result,
                               uri=self._build_api_request_uri())
 
     @classmethod
