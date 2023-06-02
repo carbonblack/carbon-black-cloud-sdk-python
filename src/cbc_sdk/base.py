@@ -909,8 +909,8 @@ class MutableBaseModel(NewBaseModel):
             except Exception:
                 message = request_ret.text
 
-            raise ServerError(request_ret.status_code, message,
-                              result="Did not update {} record.".format(self.__class__.__name__), uri=None)
+            raise ServerError(request_ret.status_code, f"Did not update {self.__class__.__name__} record.",
+                              result=message, uri=None)
         else:
             try:
                 message = request_ret.json()
@@ -919,9 +919,9 @@ class MutableBaseModel(NewBaseModel):
                     post_result = message.get("result", None)
 
                     if post_result and post_result != "success":
-                        raise ServerError(request_ret.status_code, post_result,
-                                          result="Did not update {0:s} record.".format(self.__class__.__name__),
-                                          uri=None)
+                        raise ServerError(request_ret.status_code,
+                                          f"Did not update {self.__class__.__name__} record.",
+                                          result=post_result, uri=None)
                     else:
                         refresh_required = True
                 else:
@@ -980,7 +980,7 @@ class MutableBaseModel(NewBaseModel):
                 message = json.loads(ret.text)[0]
             except Exception:
                 message = ret.text
-            raise ServerError(ret.status_code, message, result="Did not delete {0:s}.".format(str(self)))
+            raise ServerError(ret.status_code, f"Did not delete {str(self)}.", result=message, uri=None)
 
     def validate(self):
         """

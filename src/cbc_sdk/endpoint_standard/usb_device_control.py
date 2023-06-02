@@ -245,7 +245,7 @@ class USBDeviceBlock(NewBaseModel):
                 message = json.loads(ret.text)[0]
             except Exception:
                 message = ret.text
-            raise ServerError(ret.status_code, message, result="Did not delete {0:s}.".format(str(self)),
+            raise ServerError(ret.status_code, f"Did not delete {str(self)}.", result=message,
                               uri=self._build_api_request_uri())
 
     @classmethod

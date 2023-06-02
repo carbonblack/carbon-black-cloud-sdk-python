@@ -142,7 +142,9 @@ class ServerError(ApiError):
             msg += " (No further information provided)"
 
         if self.result:
-            msg += ". {}".format(self.result)
+            msg += f". {self.result}"
+        if self.uri:
+            msg += f" <{self.uri}>"
         return msg
 
 

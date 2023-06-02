@@ -86,7 +86,7 @@ class ReputationOverride(PlatformModel):
                 message = json.loads(resp.text)[0]
             except Exception:
                 message = resp.text
-            raise ServerError(resp.status_code, message, result="Did not delete {0:s}.".format(str(self)), uri=None)
+            raise ServerError(resp.status_code, f"Did not delete {str(self)}.", result=message, uri=None)
         self._is_deleted = True
 
     @classmethod
@@ -139,7 +139,7 @@ class ReputationOverride(PlatformModel):
                 message = json.loads(resp.text)[0]
             except Exception:
                 message = resp.text
-            raise ServerError(resp.status_code, message, result="Did not delete overrides.", uri=url)
+            raise ServerError(resp.status_code, "Did not delete overrides.", result=message, uri=url)
 
         return resp.json()
 
