@@ -152,3 +152,9 @@ how you could identify yourself:
   integration_name=MyScript/0.9.0
 
 See the :doc:`authentication` documentation for more information about credentials.
+
+Next Steps
+----------
+
+ - :doc:`concepts`: General information about retrieving data from your Carbon Black Cloud instance
+ - :doc:`guides`: Information and Examples related to specific actions you want to take on your Carbon Black Cloud data

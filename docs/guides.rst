@@ -1,5 +1,5 @@
-Guides and Resources
-====================
+Guides
+======
 
 Here we've listed a collection of tutorials, recorded demonstrations and other resources we think will be useful
 to get the most out of the Carbon Black Cloud Python SDK.
@@ -16,13 +16,6 @@ In general, and unless otherwise indicated, these guides are directed at those t
 Certain guides may be more geared towards audiences with more experience with the Carbon Black Cloud, such as
 administrators.
 
-Recordings
-----------
-
-Demonstrations are found on our `YouTube channel <https://www.youtube.com/channel/UCz0s1WuJAe7rt_dA1v-dN9g/featured>`_.
-
-A recent highlight shows how to schedule Audit and Remediation Tasks.
-
 Guides
 ------
 
@@ -38,9 +31,3 @@ Guides
 * :doc:`vulnerabilities` - View asset (Endpoint or Workload) vulnerabilities to increase security visibility.
 * :doc:`watchlists-feeds-reports` - Work with Enterprise EDR watchlists, feeds, reports, and Indicators of Compromise (IOCs).
 * :doc:`workload` - Advanced protection purpose-built for securing modern workloads to reduce the attack surface and strengthen security posture.
-
-Examples
---------
-
-The `GitHub repository <https://github.com/carbonblack/carbon-black-cloud-sdk-python/tree/develop/examples>`_ also has
-some example scripts which will help you get started using the SDK.
