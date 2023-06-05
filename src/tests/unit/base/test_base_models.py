@@ -352,7 +352,8 @@ def test_delete_mbm(cbcsdk_mock):
                              STUBOBJECT_GET_RESP_2)
     newStub = StubObject(api, 30243)
     delete_resp = cbcsdk_mock.StubResponse(contents={"success": False}, scode=403,
-                                           text="Failed to delete for some reason")
+                                           text="Failed to delete for some reason",
+                                           url="/testing_only/v1/stubobjects/30243")
     cbcsdk_mock.mock_request("DELETE", "/testing_only/v1/stubobjects/30243", delete_resp)
     with pytest.raises(ServerError):
         newStub.delete()
@@ -368,12 +369,13 @@ def test_refresh_if_needed_mbm(cbcsdk_mock):
     mutableBaseModelStub = StubObject(api, 30242)
 
     # 200 status code
-    refresh_resp_200 = cbcsdk_mock.StubResponse(STUBOBJECT_GET_RESP_1, 200)
+    refresh_resp_200 = cbcsdk_mock.StubResponse(STUBOBJECT_GET_RESP_1, 200, url="/testing_only/v1/stubobjects/30242")
     model_id = mutableBaseModelStub._refresh_if_needed(refresh_resp_200)
     assert model_id == 30242
 
     # 404 status code
-    refresh_resp_404 = cbcsdk_mock.StubResponse({}, 404, "Object not found text")
+    refresh_resp_404 = cbcsdk_mock.StubResponse({}, 404, "Object not found text",
+                                                url="/testing_only/v1/stubobjects/30242")
     with pytest.raises(ServerError):
         model_id = mutableBaseModelStub._refresh_if_needed(refresh_resp_404)
         assert model_id == 12345
