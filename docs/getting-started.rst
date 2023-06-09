@@ -156,5 +156,5 @@ See the :doc:`authentication` documentation for more information about credentia
 Next Steps
 ----------
 
- - :doc:`concepts`: General information about retrieving data from your Carbon Black Cloud instance
+ - :doc:`concepts`: General information about using the Carbon Black Cloud SDK
  - :doc:`guides`: Information and Examples related to specific actions you want to take on your Carbon Black Cloud data
