@@ -824,6 +824,13 @@ class MutableBaseModel(NewBaseModel):
             object.__setattr__(self, attrname, val)
 
     def _set(self, attrname, new_value):
+        """
+        Sets the value of an attribute on the object.
+
+        Args:
+            attrname (str): Name of the attribute.
+            new_value (Any): Value of the attribute.
+        """
         # ensure that we are operating on the full object first
         if not self._full_init and self._model_unique_id is not None:
             self.refresh()

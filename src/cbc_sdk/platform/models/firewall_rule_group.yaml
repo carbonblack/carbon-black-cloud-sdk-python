@@ -1,0 +1,12 @@
+type: object
+properties:
+  name:
+    type: string
+    description: Name of the rule group
+  description:
+    type: String
+    description: Description of the rule group
+  rules:
+    type: array
+    description: List of rules in the rule group
+    items: !include platform/models/firewall_rule.yaml

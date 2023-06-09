@@ -155,7 +155,7 @@ class CBCSDKMock:
             matched = self.match_key(self.get_mock_key("RAW_GET", url))
             if matched:
                 if callable(self.mocks[matched]):
-                    return self.mocks[matched](url, query_params, **kwargs)
+                    return self.mocks[matched](url, query_params, default)
                 elif isinstance(self.mocks[matched], Exception):
                     raise self.mocks[matched]
                 else:

@@ -1,0 +1,49 @@
+type: object
+required:
+  - action
+  - direction
+  - enabled
+  - protocol
+  - remote_ip_address
+properties:
+  action:
+    type: string
+    description: The action to take when rule is hit
+    enum:
+      - ALLOW
+      - BLOCK
+      - BLOCK_ALERT
+  application_path:
+    type: string
+    description: The application path to limit the rule
+  direction:
+    type: string
+    description: The direction the network request is being made from
+    enum:
+      - IN
+      - OUT
+      - BOTH
+  enabled:
+    type: boolean
+    description: Whether the rule is enabled
+  protocol:
+    type: string
+    description: The type of network request
+    enum:
+      - TCP
+      - UDP
+  local_ip_address:
+    type: string
+    description: IPv4 address of the local side of the network connection (stored as dotted decimal)
+  local_port_ranges:
+    type: string
+    description: TCP or UDP port used by the local side of the network connection
+  remote_ip_address:
+    type: string
+    description: IPv4 address of the remote side of the network connection (stored as dotted decimal)
+  remote_port_ranges:
+    type: string
+    description: TCP or UDP port used by the remote side of the network connection
+  test_mode:
+    type: boolean
+    description: Enables host-based firewall hits without blocking network traffic or generating alerts
