@@ -735,6 +735,18 @@ class Policy(MutableBaseModel):
         return tmp[0]
 
     @property
+    def data_collection_rule_configs(self):
+        """
+        Returns a dictionary of data collection rule configuration IDs and objects for this Policy.
+
+        Returns:
+            dict: A dictionary with data collection rule configuration IDs as keys and DataCollectionRuleConfig objects
+                  as values.
+        """
+        return {key: rconf for (key, rconf) in self.object_rule_configs.items()
+                if isinstance(rconf, DataCollectionRuleConfig)}
+
+    @property
     def data_collection_rule_configs_list(self):
         """
         Returns a list of data collection rule configuration objects for this Policy.

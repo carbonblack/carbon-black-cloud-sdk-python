@@ -40,7 +40,8 @@ from tests.unit.fixtures.platform.mock_policy_ruleconfigs import (CORE_PREVENTIO
                                                                   HBFW_COPY_RULES_PUT_RESPONSE,
                                                                   HBFW_EXPORT_RULE_CONFIGS_RESPONSE,
                                                                   HBFW_EXPORT_RULE_CONFIGS_RESPONSE_CSV,
-                                                                  DATA_COLLECTION_RETURNS)
+                                                                  DATA_COLLECTION_RETURNS, DATA_COLLECTION_UPDATE_1,
+                                                                  DATA_COLLECTION_UPDATE_RETURNS_1)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -683,8 +684,71 @@ def test_export_hbfw_rules_bad_format(cb):
 
 
 def test_data_collection_refresh(cbcsdk_mock, policy):
-    """Tests the refresh operation for a CorePreventionRuleConfig."""
+    """Tests the refresh operation for a DataCollectionRuleConfig."""
     cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/rule_configs/data_collection',
                              DATA_COLLECTION_RETURNS)
     for rule_config in policy.data_collection_rule_configs_list:
         rule_config.refresh()
+
+
+def test_data_collection_update_and_save(cbcsdk_mock, policy):
+    """Tests updating the data collection data and saving it."""
+    put_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal put_called
+        assert body == DATA_COLLECTION_UPDATE_1
+        put_called = True
+        return copy.deepcopy(DATA_COLLECTION_UPDATE_RETURNS_1)
+
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/configs/presentation',
+                             POLICY_CONFIG_PRESENTATION)
+    cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/65536/rule_configs/data_collection', on_put)
+    rule_config = policy.data_collection_rule_configs['91c919da-fb90-4e63-9eac-506255b0a0d0']
+    assert rule_config.name == 'Authentication Events'
+    assert rule_config.get_parameter('enable_auth_events') is True
+    rule_config.set_parameter('enable_auth_events', False)
+    rule_config.save()
+    assert put_called
+
+
+def test_data_collection_update_via_replace(cbcsdk_mock, policy):
+    """Tests updating the data collection data and saving it via replace_rule_config."""
+    put_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal put_called
+        assert body == DATA_COLLECTION_UPDATE_1
+        put_called = True
+        return copy.deepcopy(DATA_COLLECTION_UPDATE_RETURNS_1)
+
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/configs/presentation',
+                             POLICY_CONFIG_PRESENTATION)
+    cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/65536/rule_configs/data_collection', on_put)
+    rule_config = policy.data_collection_rule_configs['91c919da-fb90-4e63-9eac-506255b0a0d0']
+    assert rule_config.name == 'Authentication Events'
+    assert rule_config.get_parameter('enable_auth_events') is True
+    new_data = copy.deepcopy(rule_config._info)
+    new_data["parameters"]["enable_auth_events"] = False
+    policy.replace_rule_config('91c919da-fb90-4e63-9eac-506255b0a0d0', new_data)
+    assert put_called
+    assert rule_config.get_parameter('enable_auth_events') is False
+
+
+def test_data_collection_delete(cbcsdk_mock, policy):
+    """Tests delete of a data collection data item."""
+    delete_called = False
+
+    def on_delete(url, body):
+        nonlocal delete_called
+        delete_called = True
+        return CBCSDKMock.StubResponse(None, scode=204)
+
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/configs/presentation',
+                             POLICY_CONFIG_PRESENTATION)
+    cbcsdk_mock.mock_request('DELETE', '/policyservice/v1/orgs/test/policies/65536/rule_configs/data_collection'
+                                       '/91c919da-fb90-4e63-9eac-506255b0a0d0', on_delete)
+    rule_config = policy.data_collection_rule_configs['91c919da-fb90-4e63-9eac-506255b0a0d0']
+    assert rule_config.name == 'Authentication Events'
+    rule_config.delete()
+    assert delete_called

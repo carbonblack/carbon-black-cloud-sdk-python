@@ -1188,3 +1188,28 @@ DATA_COLLECTION_RETURNS = {
         }
     ]
 }
+
+DATA_COLLECTION_UPDATE_1 = [
+    {
+        "id": "91c919da-fb90-4e63-9eac-506255b0a0d0",
+        "parameters": {
+            "enable_auth_events": False
+        }
+    }
+]
+
+DATA_COLLECTION_UPDATE_RETURNS_1 = {
+    "successful": [
+        {
+            "id": "91c919da-fb90-4e63-9eac-506255b0a0d0",
+            "name": "Authentication Events",
+            "description": "Authentication Events",
+            "inherited_from": "",
+            "category": "data_collection",
+            "parameters": {
+                "enable_auth_events": False
+            }
+        }
+    ],
+    "failed": []
+}
