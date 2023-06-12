@@ -16,13 +16,15 @@ import copy
 import json
 from types import MappingProxyType
 from cbc_sdk.base import MutableBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
-from cbc_sdk.platform.policy_ruleconfigs import PolicyRuleConfig, CorePreventionRuleConfig, HostBasedFirewallRuleConfig
+from cbc_sdk.platform.policy_ruleconfigs import (PolicyRuleConfig, CorePreventionRuleConfig,
+                                                 HostBasedFirewallRuleConfig, DataCollectionRuleConfig)
 from cbc_sdk.errors import ApiError, ServerError, InvalidObjectError
 
 
 SPECIFIC_RULECONFIGS = MappingProxyType({
     "core_prevention": CorePreventionRuleConfig,
-    "host_based_firewall": HostBasedFirewallRuleConfig
+    "host_based_firewall": HostBasedFirewallRuleConfig,
+    "data_collection": DataCollectionRuleConfig
 })
 
 
@@ -731,6 +733,16 @@ class Policy(MutableBaseModel):
         if len(tmp) > 1:
             raise InvalidObjectError("found multiple host-based firewall rule configurations")
         return tmp[0]
+
+    @property
+    def data_collection_rule_configs_list(self):
+        """
+        Returns a list of data collection rule configuration objects for this Policy.
+
+        Returns:
+            list: A list of DataCollectionRuleConfig objects.
+        """
+        return [rconf for rconf in self.object_rule_configs.values() if isinstance(rconf, DataCollectionRuleConfig)]
 
     def valid_rule_configs(self):
         """
