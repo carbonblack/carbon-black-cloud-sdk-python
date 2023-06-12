@@ -20,8 +20,9 @@ Code modified and adapted for CBC SDK example script use by Amy Bowersox, Develo
 """
 
 # Imports from the article's code
+import json
 import sys
-from cbc_sdk.platform import ContainerRuntimeAlert
+from cbc_sdk.platform import ContainerRuntimeAlert, CBAnalyticsAlert, WatchlistAlert, DeviceControlAlert
 
 # Additional imports to use the "helper" functions to perform command-line parsing and build a CBCloudAPI object from
 # command-line arguments. Since we don't construct CBCloudAPI directly, we don't need to import it.
@@ -46,9 +47,8 @@ def main():
     cb = get_cb_cloud_object(args)
 
     # Get Container Runtime alerts from the last however-many weeks.
-    alerts = cb.select(ContainerRuntimeAlert).set_time_range('last_update_time', range=f"-{args.weeks}w")
-
-    print("something")
+    alerts = cb.select(CBAnalyticsAlert).set_time_range('last_update_time', range=f"-{args.weeks}w")
+    alert_types = {}
     # This duplicates the main for-loop in the article's example code.
     for alert in alerts:
         # This complicated if allows us to bypass checking the alert reason if "find" was not specified.
@@ -59,8 +59,20 @@ def main():
             elif args.ip:
                 print(alert.remote_ip)
             else:
-                print(alert)
-
+                print(alert.refresh())
+                type = alert.original_document["type"]
+#                if type in alert_types:
+#                    alert_types[type] = alert_types[type] + 1
+#                else:
+#                    alert_types[type] = 1
+#    print(json.dumps(alert_types, indent=4))
+#    print(alerts._total_results)
+#    alerts = cb.select(CBAnalyticsAlert).set_time_range('last_update_time', range=f"-{args.weeks}w")
+#    print(alerts._total_results)
+#    alerts = cb.select(WatchlistAlert).set_time_range('last_update_time', range=f"-{args.weeks}w")
+#    print(alerts._total_results)
+#    alerts = cb.select(DeviceControlAlert).set_time_range('last_update_time', range=f"-{args.weeks}w")
+#    print(alerts._total_results)
     return 0
 
 

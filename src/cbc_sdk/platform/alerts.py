@@ -33,8 +33,8 @@ MAX_RESULTS_LIMIT = 10000
 
 class BaseAlert(PlatformModel):
     """Represents a basic alert."""
-    urlobject = "/appservices/v6/orgs/{0}/alerts"
-    urlobject_single = "/appservices/v6/orgs/{0}/alerts/{1}"
+    urlobject = "/api/alerts/v7/orgs/{0}/alerts"
+    urlobject_single = "/api/alerts/v7/orgs/{0}/alerts/{1}"
     primary_key = "id"
     swagger_meta_file = "platform/models/base_alert.yaml"
 
@@ -54,8 +54,8 @@ class BaseAlert(PlatformModel):
 
     class Note(PlatformModel):
         """Represents a note within an alert."""
-        urlobject = "/appservices/v6/orgs/{0}/alerts/{1}/notes"
-        urlobject_single = "/appservices/v6/orgs/{0}/alerts/{1}/notes/{2}"
+        urlobject = "/api/alerts/v7/orgs/{0}/alerts/{1}/notes"
+        urlobject_single = "/api/alerts/v7/orgs/{0}/alerts/{1}/notes/{2}"
         primary_key = "id"
         swagger_meta_file = "platform/models/base_alert_note.yaml"
         _is_deleted = False
@@ -270,14 +270,15 @@ class BaseAlert(PlatformModel):
         if cb.__class__.__name__ != "CBCloudAPI":
             raise ApiError("cb argument should be instance of CBCloudAPI.")
         query_params = {"suggest.q": query}
-        url = "/appservices/v6/orgs/{0}/alerts/search_suggestions".format(cb.credentials.org_key)
+        url = "/api/alerts/v7/orgs/{0}/alerts/search_suggestions".format(cb.credentials.org_key)
         output = cb.get_object(url, query_params)
         return output["suggestions"]
 
 
 class WatchlistAlert(BaseAlert):
     """Represents watch list alerts."""
-    urlobject = "/appservices/v6/orgs/{0}/alerts/watchlist"
+    urlobject = "/api/alerts/v7/orgs/{0}/alerts"
+    type = ["WATCHLIST"]
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -327,7 +328,9 @@ class WatchlistAlert(BaseAlert):
 
 class CBAnalyticsAlert(BaseAlert):
     """Represents CB Analytics alerts."""
-    urlobject = "/appservices/v6/orgs/{0}/alerts/cbanalytics"
+    #urlobject = "/appservices/v6/orgs/{0}/alerts/cbanalytics"
+    urlobject = "/api/alerts/v7/orgs/{0}/alerts"
+    type = ["CB_ANALYTICS"]
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -428,7 +431,7 @@ class CBAnalyticsAlert(BaseAlert):
 
 class DeviceControlAlert(BaseAlert):
     """Represents Device Control alerts."""
-    urlobject = "/appservices/v6/orgs/{0}/alerts/devicecontrol"
+    urlobject = "/api/alerts/v7/orgs/{0}/alerts"
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -447,7 +450,9 @@ class DeviceControlAlert(BaseAlert):
 
 class ContainerRuntimeAlert(BaseAlert):
     """Represents Container Runtime alerts."""
-    urlobject = "/appservices/v6/orgs/{0}/alerts/containerruntime"
+    #urlobject = "/appservices/v6/orgs/{0}/alerts/containerruntime"
+    urlobject = "/api/alerts/v7/orgs/{0}/alerts"
+    type = ["CONTAINER_RUNTIME"]
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -1054,7 +1059,7 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
 
         url = self._build_url("/_search")
         request = self._build_request(0, -1)
-        resp = self._cb.post_object(url, body=request)
+        resp = self._cb.rpost_object(url, body=request)
         result = resp.json()
 
         self._total_results = result["num_found"]
@@ -1093,7 +1098,11 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
 
             results = result.get("results", [])
             for item in results:
-                yield self._doc_class(self._cb, item["id"], item)
+                self.results_compatibility_mapping(item)
+
+                test = self._doc_class(self._cb, item["id"], item)
+                test._info = self._doc_class.original_document
+                yield test
                 current += 1
                 numrows += 1
 
@@ -1106,6 +1115,23 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
                 still_querying = False
                 break
 
+    def results_compatibility_mapping(self, results):
+        v6_query = type(self)
+        if v6_query is CBAnalyticsAlertSearchQuery:
+            results["blah"] = results["id"]
+            self._doc_class.original_document = results
+            self._doc_class._info = {}
+        elif v6_query is ContainerRuntimeAlertSearchQuery:
+            results["blah"] = results["id"]
+            return results
+        elif v6_query is WatchlistAlertSearchQuery:
+            results["blah"] = results["id"]
+            return results
+        elif v6_query is DeviceControlAlertSearchQuery:
+            results["blah"] = results["id"]
+            return results
+        else:
+            return results
     def facets(self, fieldlist, max_rows=0):
         """
         Return information about the facets for this alert by search, using the defined criteria.
@@ -1180,6 +1206,7 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
 
 class WatchlistAlertSearchQuery(BaseAlertSearchQuery):
     """Represents a query that is used to locate WatchlistAlert objects."""
+    VALID_ALERT_TYPES = ["WATCHLIST"]
 
     def __init__(self, doc_class, cb):
         """
@@ -1190,6 +1217,7 @@ class WatchlistAlertSearchQuery(BaseAlertSearchQuery):
             cb (BaseAPI): Reference to API object used to communicate with the server.
         """
         super().__init__(doc_class, cb)
+        self._criteria["type"] = ["WATCHLIST"]
         self._bulkupdate_url = "/appservices/v6/orgs/{0}/alerts/watchlist/workflow/_criteria"
 
     def set_watchlist_ids(self, ids):
@@ -1225,6 +1253,7 @@ class WatchlistAlertSearchQuery(BaseAlertSearchQuery):
 
 class CBAnalyticsAlertSearchQuery(BaseAlertSearchQuery):
     """Represents a query that is used to locate CBAnalyticsAlert objects."""
+    VALID_ALERT_TYPES = ["CB_ANALYTICS"]
     VALID_THREAT_CATEGORIES = ["UNKNOWN", "NON_MALWARE", "NEW_MALWARE", "KNOWN_MALWARE", "RISKY_PROGRAM"]
     VALID_LOCATIONS = ["ONSITE", "OFFSITE", "UNKNOWN"]
     VALID_KILL_CHAIN_STATUSES = ["RECONNAISSANCE", "WEAPONIZE", "DELIVER_EXPLOIT", "INSTALL_RUN",
@@ -1244,6 +1273,7 @@ class CBAnalyticsAlertSearchQuery(BaseAlertSearchQuery):
             cb (BaseAPI): Reference to API object used to communicate with the server.
         """
         super().__init__(doc_class, cb)
+        self._criteria["type"] = ["CB_ANALYTICS"]
         self._bulkupdate_url = "/appservices/v6/orgs/{0}/alerts/cbanalytics/workflow/_criteria"
 
     def set_blocked_threat_categories(self, categories):
@@ -1397,9 +1427,23 @@ class CBAnalyticsAlertSearchQuery(BaseAlertSearchQuery):
         self._update_criteria("threat_cause_vector", vectors)
         return self
 
+    def _results_compatibility_mapping(self, results):
+        v6_query = type(self)
+        if v6_query is CBAnalyticsAlertSearchQuery:
+            results["blah"] = results.id
+        elif v6_query is ContainerRuntimeAlertSearchQuery:
+            results["blah"] = results.id
+        elif v6_query is WatchlistAlertSearchQuery:
+            results["blah"] = results.id
+        elif v6_query is DeviceControlAlertSearchQuery:
+            results["blah"] = results.id
+
+        else:
+            return results
 
 class DeviceControlAlertSearchQuery(BaseAlertSearchQuery):
     """Represents a query that is used to locate DeviceControlAlert objects."""
+    VALID_ALERT_TYPES = ["DEVICE_CONTROL"]
 
     def __init__(self, doc_class, cb):
         """
@@ -1410,6 +1454,7 @@ class DeviceControlAlertSearchQuery(BaseAlertSearchQuery):
             cb (BaseAPI): Reference to API object used to communicate with the server.
         """
         super().__init__(doc_class, cb)
+        self._criteria["type"] = ["DEVICE_CONTROL"]
         self._bulkupdate_url = "/appservices/v6/orgs/{0}/alerts/cbanalytics/devicecontrol/_criteria"
 
     def set_external_device_friendly_names(self, names):
@@ -1520,7 +1565,7 @@ class DeviceControlAlertSearchQuery(BaseAlertSearchQuery):
 
 class ContainerRuntimeAlertSearchQuery(BaseAlertSearchQuery):
     """Represents a query that is used to locate ContainerRuntimeAlert objects."""
-
+    VALID_ALERT_TYPES = ["CONTAINER_RUNTIME"]
     def __init__(self, doc_class, cb):
         """
         Initialize the ContainerRuntimeAlertSearchQuery.
@@ -1530,6 +1575,7 @@ class ContainerRuntimeAlertSearchQuery(BaseAlertSearchQuery):
             cb (BaseAPI): Reference to API object used to communicate with the server.
         """
         super().__init__(doc_class, cb)
+        self._criteria["type"] = ["CONTAINER_RUNTIME"]
         self._bulkupdate_url = "/appservices/v6/orgs/{0}/alerts/containerruntime/_criteria"
 
     def set_cluster_names(self, names):
