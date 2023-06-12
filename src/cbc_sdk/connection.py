@@ -743,6 +743,8 @@ class BaseAPI(object):
         if unique_id is not None:
             return select_instance(self, cls, unique_id, *args, **kwargs)
         else:
+            query_obj = self._perform_query(cls, **kwargs)
+
             return self._perform_query(cls, **kwargs)
 
     def create(self, cls, data=None):
