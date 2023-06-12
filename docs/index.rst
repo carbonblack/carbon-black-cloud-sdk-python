@@ -66,11 +66,28 @@ Get started with Carbon Black Cloud Python SDK here. For detailed information on
    authentication
    Getting Started <getting-started>
    concepts
-   guides-and-resources
+   resources
    porting-guide
-   logging
-   os_functional_testing
-   changelog
+
+Guides
+------
+
+.. toctree::
+   :caption: Guides
+   :maxdepth: 2
+
+   alerts
+   device-control
+   differential-analysis
+   live-query
+   live-response
+   recommendations
+   reputation-override
+   unified-binary-store
+   users-grants
+   vulnerabilities
+   watchlists-feeds-reports
+   workload`
 
 Full SDK Documentation
 ----------------------
@@ -89,6 +106,9 @@ See detailed information on the objects and methods exposed by the Carbon Black 
    cbc_sdk.platform
    cbc_sdk.workload
    cbc_sdk
+   logging
+   os_functional_testing
+   changelog
    exceptions
 
 Indices and tables

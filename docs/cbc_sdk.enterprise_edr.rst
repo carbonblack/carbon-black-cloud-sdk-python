@@ -1,5 +1,5 @@
-Enterprise EDR
-==============
+Enterprise EDR Package
+================================
 
 Submodules
 ----------
