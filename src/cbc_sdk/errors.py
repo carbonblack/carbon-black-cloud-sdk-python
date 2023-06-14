@@ -142,10 +142,7 @@ class ServerError(ApiError):
         if self.message:
             details += f" ({self.message})"
         if self.result:
-            fmt_result = str(self.result)
-            if len(fmt_result) > 100:
-                fmt_result = f"{fmt_result[0:100]} [...]"
-            details += f" ({fmt_result})"
+            details += f" ({self.result})"
         if not details:
             details = " (No further information provided)"
         return msg + details
