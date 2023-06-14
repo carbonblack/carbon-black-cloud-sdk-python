@@ -136,16 +136,19 @@ class ServerError(ApiError):
             str: String equivalent of the exception.
         """
         msg = "Received error code {0:d} from API".format(self.error_code)
-        if self.message:
-            msg += ": {0:s}".format(self.message)
-        else:
-            msg += " (No further information provided)"
-
-        if self.result:
-            msg += f". {self.result}"
         if self.uri:
             msg += f" <{self.uri}>"
-        return msg
+        details = ""
+        if self.message:
+            details += f" ({self.message})"
+        if self.result:
+            fmt_result = str(self.result)
+            if len(fmt_result) > 100:
+                fmt_result = f"{fmt_result[0:100]} [...]"
+            details += f" ({fmt_result})"
+        if not details:
+            details = " (No further information provided)"
+        return msg + details
 
 
 class ObjectNotFoundError(ApiError):
