@@ -48,12 +48,13 @@ class CBCSDKMock:
     class StubResponse(object):
         """Stubbed response to object to support json function similar to requests package"""
 
-        def __init__(self, contents, scode=200, text="", json_parsable=True):
+        def __init__(self, contents, scode=200, text="", json_parsable=True, url=None):
             """Init default properties"""
             if isinstance(contents, CBCSDKMock.StubResponse):
                 self.content = contents.content
                 self.status_code = contents.status_code
                 self.text = contents.text
+                self.url = contents.url
                 self._json_parsable = contents._json_parsable
             else:
                 self.content = contents
@@ -62,6 +63,7 @@ class CBCSDKMock:
                     self.text = json.dumps(contents)
                 else:
                     self.text = text
+                self.url = url
                 self._json_parsable = json_parsable
 
         def json(self):

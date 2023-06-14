@@ -188,7 +188,8 @@ class CBCloudAPI(BaseAPI):
         elif resp.status_code == 204:
             return None
         else:
-            raise ServerError(error_code=resp.status_code, message="Device action error: {0}".format(resp.content))
+            raise ServerError(error_code=resp.status_code, message="Device action error: {0}".format(resp.content),
+                              uri=url)
 
     def _device_action(self, device_ids, action_type, options=None):
         """
@@ -509,5 +510,5 @@ class CBCloudAPI(BaseAPI):
         url = f"/policyservice/v1/orgs/{self.credentials.org_key}/rule_configs/{ruleconfig_id}/parameters/schema"
         try:
             return self.get_object(url)
-        except ServerError:
-            raise InvalidObjectError(f"invalid rule config ID {ruleconfig_id}")
+        except ServerError as e:
+            raise InvalidObjectError(f"invalid rule config ID {ruleconfig_id}", original_exception=e)

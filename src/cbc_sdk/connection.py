@@ -321,7 +321,7 @@ class Connection(object):
                            original_exception=e)
         else:
             if r.status_code >= 500:
-                raise ServerError(error_code=r.status_code, message=r.text)
+                raise ServerError(error_code=r.status_code, message=r.text, uri=uri)
             elif r.status_code == 404:
                 raise ObjectNotFoundError(uri=uri, message=r.text)
             elif r.status_code == 401:
@@ -329,7 +329,7 @@ class Connection(object):
             elif r.status_code == 400 and try_json(r).get('reason') == 'query_malformed_syntax':
                 raise QuerySyntaxError(uri=uri, message=r.text)
             elif r.status_code >= 400:
-                raise ClientError(error_code=r.status_code, message=r.text)
+                raise ClientError(error_code=r.status_code, message=r.text, uri=uri)
             return r
 
     def get(self, url, **kwargs):
@@ -436,25 +436,6 @@ class BaseAPI(object):
                                   pool_maxsize=pool_maxsize,
                                   pool_block=pool_block)
 
-    def raise_unless_json(self, ret, expected):
-        """
-        Raise a ServerError unless we got back an HTTP 200 response with JSON containing all the expected values.
-
-        Args:
-            ret (object): Return value to be checked.
-            expected (dict): Expected keys and values that need to be found in the JSON response.
-
-        Raises:
-            ServerError: If the HTTP response is anything but 200, or if the expected values are not found.
-        """
-        if ret.status_code == 200:
-            message = ret.json()
-            for k, v in iter(expected.items()):
-                if k not in message or message[k] != v:
-                    raise ServerError(ret.status_code, message)
-        else:
-            raise ServerError(ret.status_code, "{0}".format(ret.content), )
-
     def get_object(self, uri, query_parameters=None, default=None):
         """
         Submit a GET request to the server and parse the result as JSON before returning.
@@ -472,12 +453,14 @@ class BaseAPI(object):
             try:
                 return result.json()
             except Exception:
-                raise ServerError(result.status_code, "Cannot parse response as JSON: {0:s}".format(result.content))
+                raise ServerError(result.status_code, "Cannot parse response as JSON: {0:s}".format(result.content),
+                                  uri=uri)
         elif result.status_code == 204:
             # empty response
             return default
         else:
-            raise ServerError(error_code=result.status_code, message="Unknown error: {0}".format(result.content))
+            raise ServerError(error_code=result.status_code, message="Unknown error: {0}".format(result.content),
+                              uri=uri)
 
     def get_raw_data(self, uri, query_parameters=None, default=None, **kwargs):
         """
@@ -500,7 +483,8 @@ class BaseAPI(object):
             # empty response
             return default
         else:
-            raise ServerError(error_code=result.status_code, message="Unknown error: {0}".format(result.content))
+            raise ServerError(error_code=result.status_code, message="Unknown error: {0}".format(result.content),
+                              uri=uri)
 
     def api_json_request(self, method, uri, **kwargs):
         """
@@ -536,7 +520,7 @@ class BaseAPI(object):
             return result
 
         if "errorMessage" in resp:
-            raise ServerError(error_code=result.status_code, message=resp["errorMessage"])
+            raise ServerError(error_code=result.status_code, message=resp["errorMessage"], uri=uri)
 
         return result
 

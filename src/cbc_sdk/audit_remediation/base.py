@@ -132,7 +132,8 @@ class Run(NewBaseModel):
                 self._last_refresh_time = time.time()
                 return True
             except Exception:
-                raise ServerError(result.status_code, "Cannot parse response as JSON: {0:s}".format(result.content))
+                raise ServerError(result.status_code, "Cannot parse response as JSON: {0:s}".format(result.content),
+                                  uri=url)
         return False
 
     def delete(self):
@@ -591,7 +592,8 @@ class Template(Run):
                 self._last_refresh_time = time.time()
                 return True
             except Exception:
-                raise ServerError(result.status_code, "Cannot parse response as JSON: {0:s}".format(result.content))
+                raise ServerError(result.status_code, "Cannot parse response as JSON: {0:s}".format(result.content),
+                                  uri=url)
         return False
 
     def query_runs(self):
