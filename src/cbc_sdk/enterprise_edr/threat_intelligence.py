@@ -1725,8 +1725,8 @@ class IOC_V2(FeedModel):
         """
         super(IOC_V2, self).validate()
 
-        if self.link and not validators.domain(self.link):
-            raise InvalidObjectError("link should be a valid domain URL (FQDN)")
+        if self.link and not (validators.url(self.link) or validators.domain(self.link)):
+            raise InvalidObjectError(f"link should be a valid URL or domain: {self.link}")
 
     @property
     def ignored(self):
