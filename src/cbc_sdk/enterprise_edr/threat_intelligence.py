@@ -1181,8 +1181,8 @@ class Report(FeedModel):
         """
         super(Report, self).validate()
 
-        if self.link and not validators.url(self.link):
-            raise InvalidObjectError("link should be a valid URL")
+        if self.link and not (validators.ipv4(self.link) or validators.url(self.link) or validators.domain(self.link)):
+            raise InvalidObjectError(f"link should be a valid URL or domain: {self.link}")
 
         if self.iocs_v2:
             [ioc.validate() for ioc in self._iocs_v2]
@@ -1725,7 +1725,7 @@ class IOC_V2(FeedModel):
         """
         super(IOC_V2, self).validate()
 
-        if self.link and not (validators.url(self.link) or validators.domain(self.link)):
+        if self.link and not (validators.ipv4(self.link) or validators.url(self.link) or validators.domain(self.link)):
             raise InvalidObjectError(f"link should be a valid URL or domain: {self.link}")
 
     @property

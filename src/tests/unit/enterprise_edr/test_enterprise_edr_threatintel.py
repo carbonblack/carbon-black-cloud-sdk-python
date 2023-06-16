@@ -425,7 +425,7 @@ def test_create_regex_ioc(cb):
     ('silcom. com', pytest.raises(InvalidObjectError)),
     ('bloom-beacon.mit.edu', does_not_raise()),
     ('bloom-beacon.mit.edu/', pytest.raises(InvalidObjectError)),
-    ('199.201.128.1', pytest.raises(InvalidObjectError)),
+    ('199.201.128.1', does_not_raise()),
     ('simplename', pytest.raises(InvalidObjectError)),
     ('erbosoft.com/git', pytest.raises(InvalidObjectError)),
     ('http://erbosoft.com/git', does_not_raise()),
