@@ -1173,3 +1173,43 @@ Crapco,Crapco_firewall,Whatever,1,true,2,true,BLOCK,C:\\DOOM\\DOOM.EXE,BOTH,10.2
 Crapco,Isolate,IRC is a sewer,2,true,1,true,BLOCK_ALERT,*,BOTH,10.29.99.1,*,26.2.0.74,6667,TCP
 Crapco,,,3,true,1,true,ALLOW,*,BOTH,*,*,*,*,ANY
 """
+
+DATA_COLLECTION_RETURNS = {
+    "results": [
+        {
+            "id": "91c919da-fb90-4e63-9eac-506255b0a0d0",
+            "name": "Authentication Events",
+            "description": "Authentication Events",
+            "inherited_from": "",
+            "category": "data_collection",
+            "parameters": {
+                "enable_auth_events": True
+            }
+        }
+    ]
+}
+
+DATA_COLLECTION_UPDATE_1 = [
+    {
+        "id": "91c919da-fb90-4e63-9eac-506255b0a0d0",
+        "parameters": {
+            "enable_auth_events": False
+        }
+    }
+]
+
+DATA_COLLECTION_UPDATE_RETURNS_1 = {
+    "successful": [
+        {
+            "id": "91c919da-fb90-4e63-9eac-506255b0a0d0",
+            "name": "Authentication Events",
+            "description": "Authentication Events",
+            "inherited_from": "",
+            "category": "data_collection",
+            "parameters": {
+                "enable_auth_events": False
+            }
+        }
+    ],
+    "failed": []
+}

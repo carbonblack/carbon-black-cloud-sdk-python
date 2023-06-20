@@ -191,6 +191,16 @@ FULL_POLICY_1 = {
     ],
     "rule_configs": [
         {
+            "id": "91c919da-fb90-4e63-9eac-506255b0a0d0",
+            "name": "Authentication Events",
+            "description": "Authentication Events",
+            "inherited_from": "",
+            "category": "data_collection",
+            "parameters": {
+                "enable_auth_events": True
+            }
+        },
+        {
             "id": "1f8a5e4b-34f2-4d31-9f8f-87c56facaec8",
             "name": "Advanced Scripting Prevention",
             "description": "Addresses malicious fileless and file-backed scripts that leverage native programs [...]",
@@ -1636,6 +1646,16 @@ NEW_POLICY_RETURN_1 = {
     },
     "rule_configs": [
         {
+            "id": "91c919da-fb90-4e63-9eac-506255b0a0d0",
+            "name": "Authentication Events",
+            "description": "Authentication Events",
+            "inherited_from": "",
+            "category": "data_collection",
+            "parameters": {
+                "enable_auth_events": True
+            }
+        },
+        {
             "id": "1f8a5e4b-34f2-4d31-9f8f-87c56facaec8",
             "name": "Advanced Scripting Prevention",
             "description": "Addresses malicious fileless and file-backed scripts that leverage native programs [...]",
@@ -1706,6 +1726,15 @@ TEMPLATE_RETURN_BOGUS_TYPE = {
 
 POLICY_CONFIG_PRESENTATION = {
     "configs": [
+        {
+            "id": "91c919da-fb90-4e63-9eac-506255b0a0d0",
+            "name": "Authentication Events",
+            "description": "Authentication Events",
+            "presentation": {
+                "category": "data_collection"
+            },
+            "parameters": []
+        },
         {
             "id": "1f8a5e4b-34f2-4d31-9f8f-87c56facaec8",
             "name": "Advanced Scripting Prevention",
@@ -2219,6 +2248,16 @@ FULL_POLICY_5 = {
         }
     ],
     "rule_configs": [
+        {
+            "id": "91c919da-fb90-4e63-9eac-506255b0a0d0",
+            "name": "Authentication Events",
+            "description": "Authentication Events",
+            "inherited_from": "",
+            "category": "data_collection",
+            "parameters": {
+                "enable_auth_events": True
+            }
+        },
         {
             "id": "ac67fa14-f6be-4df9-93f2-6de0dbd96061",
             "name": "Credential Theft",

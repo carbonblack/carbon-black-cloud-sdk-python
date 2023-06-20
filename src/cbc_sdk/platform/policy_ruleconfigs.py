@@ -124,6 +124,19 @@ class PolicyRuleConfig(MutableBaseModel):
         """
         return self._params_changed or super(PolicyRuleConfig, self).is_dirty()
 
+    @property
+    def parameter_names(self):
+        """
+        Returns a list of parameter names in this rule configuration.
+
+        Returns:
+            list[str]: A list of parameter names in this rule configuration.
+        """
+        if 'parameters' not in self._info:
+            self.refresh()
+        params = self._info['parameters']
+        return list(params.keys())
+
     def get_parameter(self, name, default_value=None):
         """
         Returns a parameter value from the rule configuration.
@@ -618,3 +631,68 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
             return self._cb.get_object(url, {"format": format})
         else:
             return self._cb.get_raw_data(url, {"format": format})
+
+
+class DataCollectionRuleConfig(PolicyRuleConfig):
+    """
+    Represents a data collection rule configuration in the policy.
+
+    Create one of these objects, associating it with a Policy, and set its properties, then call its save() method to
+    add the rule configuration to the policy. This requires the org.policies(UPDATE) permission.
+
+    To update a DataCollectionRuleConfig, change the values of its property fields, then call its save() method.  This
+    requires the org.policies(UPDATE) permission.
+
+    To delete an existing CorePreventionRuleConfig, call its delete() method. This requires the org.policies(DELETE)
+    permission.
+    """
+    urlobject_single = "/policyservice/v1/orgs/{0}/policies/{1}/rule_configs/data_collection"
+    swagger_meta_file = "platform/models/policy_ruleconfig.yaml"
+
+    def __init__(self, cb, parent, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
+        """
+        Initialize the CorePreventionRuleConfig object.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            parent (Policy): The "parent" policy of this rule configuration.
+            model_unique_id (str): ID of the rule configuration.
+            initial_data (dict): Initial data used to populate the rule configuration.
+            force_init (bool): If True, forces the object to be refreshed after constructing.  Default False.
+            full_doc (bool): If True, object is considered "fully" initialized. Default False.
+        """
+        super(DataCollectionRuleConfig, self).__init__(cb, parent, model_unique_id, initial_data, force_init, full_doc)
+
+    def _refresh(self):
+        """
+        Refreshes the rule configuration object from the server.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Returns:
+            bool: True if the refresh was successful.
+
+        Raises:
+            InvalidObjectError: If the object is unparented or its ID is invalid.
+        """
+        url = self.urlobject_single.format(self._cb.credentials.org_key, self._parent._model_unique_id)
+        return_data = self._cb.get_object(url)
+        ruleconfig_data = [d for d in return_data.get("results", []) if d.get("id", "") == self._model_unique_id]
+        if ruleconfig_data:
+            self._info = ruleconfig_data[0]
+            self._mark_changed(False)
+        else:
+            raise InvalidObjectError(f"invalid data collection ID: {self._model_unique_id}")
+        return True
+
+    def _update_ruleconfig(self):
+        """Perform the internal update of the rule configuration object."""
+        url = self.urlobject_single.format(self._cb.credentials.org_key, self._parent._model_unique_id)
+        body = [{"id": self.id, "parameters": self.parameters}]
+        self._cb.put_object(url, body)
+
+    def _delete_ruleconfig(self):
+        """Perform the internal delete of the rule configuration object."""
+        url = self.urlobject_single.format(self._cb.credentials.org_key, self._parent._model_unique_id) + f"/{self.id}"
+        self._cb.delete_object(url)
