@@ -1,68 +1,6 @@
 Concepts
 ================================
 
-Live Response with Platform Devices
----------------------------------------------
-As of version 1.3.0 Live Response has been changed to support CUSTOM type API Keys which enables
-the platform Device model and Live Response session to be used with a single API key. Ensure your
-API key has the ``Device READ`` permission along with the desired :doc:`live-response` permissions
-
-::
-
-  # Device information is accessible with Platform Devices
-  >>> from cbc_sdk import CBCloudAPI
-  >>> from cbc_sdk.platform import Device
-  >>> api = CBCloudAPI(profile='platform')
-  >>> platform_devices = api.select(Device).set_os(["WINDOWS", "LINUX"])
-  >>> for device in platform_devices:
-  ...   print(
-        f'''
-        Device ID: {device.id}
-        Device Name: {device.name}
-
-        ''')
-  Device ID: 1234
-  Device Name: Win10x64
-
-  Device ID: 5678
-  Device Name: UbuntuDev
-
-
-  # Live Response is accessible with Platform Devices
-  >>> from cbc_sdk import CBCloudAPI
-  >>> from cbc_sdk.platform import Device
-  >>> api = CBCloudAPI(profile='platform')
-  >>> platform_device = api.select(Device, 1234)
-  >>> platform_device.lr_session()
-  url: /appservices/v6/orgs/{org_key}/liveresponse/sessions/428:1234 -> status: PENDING
-  [...]
-
-For more examples on Live Response, check :doc:`live-response`
-
-USB Devices
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Note that ``USBDevice`` is distinct from either the Platform API ``Device`` or the Endpoint Standard ``Device``. Access
-to USB devices is through the Endpoint Standard package ``from cbc_sdk.endpoint_standard import USBDevice``.
-
-::
-
-  # USB device information is accessible with Endpoint Standard
-  >>> from cbc_sdk import CBCloudAPI
-  >>> from cbc_sdk.endpoint_standard import USBDevice
-  >>> api = CBCloudAPI(profile='endpoint_standard')
-  >>> usb_devices = api.select(USBDevice).set_statuses(['APPROVED'])
-  >>> for usb in usb_devices:
-  ...     print(f'''
-  ...         USB Device ID: {usb.id}
-  ...         USB Device: {usb.vendor_name} {usb.product_name}
-  ...         ''')
-  USB Device ID: 774
-  USB Device: SanDisk Ultra
-
-  USB Device ID: 778
-  USB Device: SanDisk Cruzer Mini
-
 Queries
 ----------------------------------------
 
@@ -514,6 +452,67 @@ Get details for all events per alert
   Type: NETWORK
   Alert Id: ['BE084638']
 
+Live Response with Platform Devices
+---------------------------------------------
+As of version 1.3.0 Live Response has been changed to support CUSTOM type API Keys which enables
+the platform Device model and Live Response session to be used with a single API key. Ensure your
+API key has the ``Device READ`` permission along with the desired :doc:`live-response` permissions
+
+::
+
+  # Device information is accessible with Platform Devices
+  >>> from cbc_sdk import CBCloudAPI
+  >>> from cbc_sdk.platform import Device
+  >>> api = CBCloudAPI(profile='platform')
+  >>> platform_devices = api.select(Device).set_os(["WINDOWS", "LINUX"])
+  >>> for device in platform_devices:
+  ...   print(
+        f'''
+        Device ID: {device.id}
+        Device Name: {device.name}
+
+        ''')
+  Device ID: 1234
+  Device Name: Win10x64
+
+  Device ID: 5678
+  Device Name: UbuntuDev
+
+
+  # Live Response is accessible with Platform Devices
+  >>> from cbc_sdk import CBCloudAPI
+  >>> from cbc_sdk.platform import Device
+  >>> api = CBCloudAPI(profile='platform')
+  >>> platform_device = api.select(Device, 1234)
+  >>> platform_device.lr_session()
+  url: /appservices/v6/orgs/{org_key}/liveresponse/sessions/428:1234 -> status: PENDING
+  [...]
+
+For more examples on Live Response, check :doc:`live-response`
+
+USB Devices
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Note that ``USBDevice`` is distinct from either the Platform API ``Device`` or the Endpoint Standard ``Device``. Access
+to USB devices is through the Endpoint Standard package ``from cbc_sdk.endpoint_standard import USBDevice``.
+
+::
+
+  # USB device information is accessible with Endpoint Standard
+  >>> from cbc_sdk import CBCloudAPI
+  >>> from cbc_sdk.endpoint_standard import USBDevice
+  >>> api = CBCloudAPI(profile='endpoint_standard')
+  >>> usb_devices = api.select(USBDevice).set_statuses(['APPROVED'])
+  >>> for usb in usb_devices:
+  ...     print(f'''
+  ...         USB Device ID: {usb.id}
+  ...         USB Device: {usb.vendor_name} {usb.product_name}
+  ...         ''')
+  USB Device ID: 774
+  USB Device: SanDisk Ultra
+
+  USB Device ID: 778
+  USB Device: SanDisk Cruzer Mini
 
 Static Methods
 --------------

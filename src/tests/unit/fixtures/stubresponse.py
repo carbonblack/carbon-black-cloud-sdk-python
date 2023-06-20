@@ -13,10 +13,11 @@ class StubElapsed(object):
 
 class StubResponse(object):
     """Stub for an HTTP response object."""
-    def __init__(self, contents, scode=200, text=None):
+    def __init__(self, contents, scode=200, text=None, url=None):
         """Initialize the StubResponse object."""
         self._contents = contents
         self.status_code = scode
+        self.url = url
         self.text = text or json.dumps(contents)
         self.content = self.text
         self.elapsed = StubElapsed()

@@ -1,5 +1,35 @@
 Changelog
 ================================
+CBC SDK 1.4.2 - Released March 22, 2023
+---------------------------------------
+
+New Features:
+
+* Policy Rule Configurations - allows users to make adjustments to Carbon Black-defined rules.
+* Core Prevention Rule Configurations - controls settings for core prevention rules as supplied by Carbon Black.
+* Observations - search through all the noteworthy, searchable activity that was reported by your organization’s
+  sensors.
+* Auth Events - visibility into authentication events on Windows endpoints.
+
+Updates:
+
+* Remove use of v1 status URL from process search, which now depends entirely on v2 operations.
+* Vulnerabilities can now be dismissed and undismissed, and have dismissals edited.
+
+Bug Fixes:
+
+* User creation: raise error if the API object is not passed as the first parameter to ``User.create()``.
+* Live Response: pass failed session exception back up to the ``WorkItem`` future objects.
+* Improved query string parameter handling in API calls.
+
+Documentation:
+
+* New example script showing how to retrieve container alerts.
+* New example script allows exporting users with grant and role information.
+* Bug fixed in ``policy_service_crud_operations.py`` example script affecting iteration over rules.
+* Update clarifying alert filtering by fields that take an empty list.
+* Sample script added for retrieving alerts for multiple organizations.
+
 CBC SDK 1.4.1 - Released October 21, 2022
 -----------------------------------------
 
