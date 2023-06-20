@@ -1,4 +1,4 @@
-Managing Vulnerabilities
+Vulnerabilities
 ========================
 
 The Vulnerability Assessment API allows users to view asset (Endpoint or Workload) vulnerabilities,
