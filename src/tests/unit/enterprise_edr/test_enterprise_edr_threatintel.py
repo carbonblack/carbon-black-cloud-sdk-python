@@ -533,6 +533,32 @@ def test_report_builder_save_watchlist(cbcsdk_mock):
     assert report._info['id'] == "AaBbCcDdEeFfGg"
 
 
+@pytest.mark.parametrize("linkvalue, expectation", [
+    ('', does_not_raise()),
+    ('silcom.com', does_not_raise()),
+    ('silcom.com.', pytest.raises(InvalidObjectError)),
+    ('silcom. com', pytest.raises(InvalidObjectError)),
+    ('bloom-beacon.mit.edu', does_not_raise()),
+    ('bloom-beacon.mit.edu/', pytest.raises(InvalidObjectError)),
+    ('199.201.128.1', does_not_raise()),
+    ('simplename', pytest.raises(InvalidObjectError)),
+    ('erbosoft.com/git', pytest.raises(InvalidObjectError)),
+    ('http://erbosoft.com/git', does_not_raise()),
+    ('https://erbosoft.com/git', does_not_raise()),
+    ('bogusschema://erbosoft.com', pytest.raises(InvalidObjectError)),
+    ('ftp://26.2.0.74', does_not_raise()),
+    ('https://midwinter.com/lurk/lurker.html', does_not_raise()),
+    ('//servername/share', pytest.raises(InvalidObjectError))
+])
+def test_report_link_validation(cb, linkvalue, expectation):
+    builder = Report.create(cb, "NotReal", "Not real description", 2)
+    builder.set_title("ReportTitle").set_description("The report description").set_timestamp(1234567890)
+    builder.set_severity(5).set_link(linkvalue).add_tag("Alpha").add_tag("Bravo")
+    report = builder.build()
+    with expectation:
+        report.validate()
+
+
 @pytest.mark.parametrize("init_data, feed, watchlist, do_request, url_id, expectation, result", [
     (REPORT_INIT, None, True, True, "69e2a8d0-bc36-4970-9834-8687efe1aff7", does_not_raise(), True),
     (REPORT_INIT, None, False, False, "", pytest.raises(InvalidObjectError), True),
