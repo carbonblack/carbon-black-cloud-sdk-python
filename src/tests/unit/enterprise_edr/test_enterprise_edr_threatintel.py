@@ -436,6 +436,7 @@ def test_create_regex_ioc(cb):
     ('//servername/share', pytest.raises(InvalidObjectError))
 ])
 def test_ioc_link_validation(cb, linkvalue, expectation):
+    """Tests validation of the link field in IOCs."""
     ioc = IOC_V2.create_equality(cb, None, "process_name", "Alpha")
     ioc.link = linkvalue
     with expectation:
@@ -551,6 +552,7 @@ def test_report_builder_save_watchlist(cbcsdk_mock):
     ('//servername/share', pytest.raises(InvalidObjectError))
 ])
 def test_report_link_validation(cb, linkvalue, expectation):
+    """Tests validation of the link field in reports."""
     builder = Report.create(cb, "NotReal", "Not real description", 2)
     builder.set_title("ReportTitle").set_description("The report description").set_timestamp(1234567890)
     builder.set_severity(5).set_link(linkvalue).add_tag("Alpha").add_tag("Bravo")
