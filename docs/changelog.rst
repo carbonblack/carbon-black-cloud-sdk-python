@@ -1,5 +1,36 @@
 Changelog
 ================================
+CBC SDK 1.4.3 - Released (TBD)
+---------------------------------------
+
+New Features:
+
+* Policy Rule Configurations - support for additional rule configuration types:
+
+  * Host-Based Firewall - addresses the protection of assets based on rules governing network and application behavior.
+  * Data Collection - control over what data is uploaded to the Carbon Black Cloud.  Specifically, can enable or
+    disable auth events collection.
+
+Updates:
+
+* Added an example script for manipulating core prevention rule configuration status on a policy.
+* Changed ``pymox`` dependency to the latest version, which eliminates warning messages on unit test and provides
+  compatibility with Python 3.11 and later.
+* Added specific testing support for Python 3.11.
+* Added additional UAT tests for authentication events.
+* Many exception classes now carry a ``uri`` field which holds the URI of the API being accessed that caused the
+  exception to be raised.
+
+Bug Fixes:
+
+* Fixed link validation for reports and IOCs to accept IPv4 addresses, domain names, or URIs.
+
+Documentation:
+
+* Documentation has been reorganized for ease of reference; guides have been added to the main menu, the menu has been
+  reordered, and various modules have been renamed.
+* Fixed typo in workload guide.
+
 CBC SDK 1.4.2 - Released March 22, 2023
 ---------------------------------------
 
