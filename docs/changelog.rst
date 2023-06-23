@@ -8,7 +8,8 @@ New Features:
 * Policy Rule Configurations - support for additional rule configuration types:
 
   * Host-Based Firewall - addresses the protection of assets based on rules governing network and application behavior.
-  * Data Collection - control over what data is uploaded to the Carbon Black Cloud.
+  * Data Collection - control over what data is uploaded to the Carbon Black Cloud.  Specifically, can enable or
+    disable auth events collection.
 
 Updates:
 
