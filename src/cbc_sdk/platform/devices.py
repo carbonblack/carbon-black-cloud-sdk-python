@@ -217,7 +217,8 @@ class Device(PlatformModel):
         elif resp.status_code == 204:
             return None
         else:
-            raise ServerError(error_code=resp.status_code, message="Device action error: {0}".format(resp.content))
+            raise ServerError(error_code=resp.status_code, message="Device action error: {0}".format(resp.content),
+                              uri=url)
 
     def get_vulnerability_summary(self, category=None):
         """

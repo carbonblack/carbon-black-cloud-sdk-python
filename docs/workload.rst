@@ -72,7 +72,7 @@ Example (vSphere workloads)::
   >>> cbc = CBCloudAPI()
   >>> query = cbc.select(VCenterComputeResource).set_os_type(['WINDOWS']).set_cluster_name(['example-cluster-name'])
   >>> for result in list(query):
-  ...     print(results)
+  ...     print(result)
 
 Example Output::
 
@@ -136,7 +136,7 @@ Example (AWS workloads)::
     >>> query = cbc.select(AWSComputeResource).set_region(['us-west-1'])
     >>> results = list(query)
     >>> for result in results:
-    ...     print(results)
+    ...     print(result)
 
 Example Output::
 
