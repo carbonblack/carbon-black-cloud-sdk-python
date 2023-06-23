@@ -1,6 +1,5 @@
-Policy - Core Prevention and Host-Based Firewall Examples
+Policy
 =========================================================
-
 
 A policy determines preventative behavior and establishes sensor settings. Each endpoint sensor or sensor group
 is assigned a policy.

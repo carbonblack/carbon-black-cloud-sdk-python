@@ -81,13 +81,14 @@ Guides
    differential-analysis
    live-query
    live-response
+   policy
    recommendations
    reputation-override
    unified-binary-store
    users-grants
    vulnerabilities
    watchlists-feeds-reports
-   workload`
+   workload
 
 Full SDK Documentation
 ----------------------

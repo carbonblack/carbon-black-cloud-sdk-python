@@ -1,4 +1,4 @@
-VM Workloads Search Guide and Examples
+Workloads
 ======================================
 
 These APIs allow you to visualize the inventory of compute resources available under either vSphere
