@@ -34,7 +34,7 @@ from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
 from cbc_sdk.platform import Policy
 
 
-def list_policy_summaries(cb, args):
+def list_policy_summaries(cb):
     """List all policies and their rules."""
     # the cb.select(Policy) with no parameters will get all the policies for the organization
     for p in cb.select(Policy):
@@ -55,10 +55,10 @@ def list_policy_summaries(cb, args):
         print("")
 
 
-def enable_auth_event_rule(cb):
+def set_auth_event_rule(cb, enable_auth_events):
     """Enable the rule to collect Auth Events from the sensor"""
     # prompt the user for a policy Id
-    user_input = input("Enter the policy Id on which to enable collection")
+    user_input = input("Enter the policy Id on which to change auth event collection setting")
     policy = cb.select(Policy, user_input)
     print("Using policy id: {0}.  name: {1}".format(policy.id, policy.name))
     # If the policy does not have a data collection section then fail
@@ -69,31 +69,12 @@ def enable_auth_event_rule(cb):
     auth_event_rule_config = None
     for dcrc in policy.data_collection_rule_configs_list:
         if dcrc.name == 'Authentication Events':
-            dcrc.set_parameter('enable_auth_events', True)
-            dcrc.save()
-            auth_event_rule_config = dcrc
-
-    if auth_event_rule_config is not None:
-        print(auth_event_rule_config)
-    else:
-        print("Auth Event Rule Config Element Not Found")
-
-
-def disable_auth_event_rule(cb):
-    """Disable the rule to collect Auth Events from the sensor"""
-    # prompt the user for a policy Id
-    user_input = input("Enter the policy Id on which to disable collection")
-    policy = cb.select(Policy, user_input)
-    print("Using policy id: {0}.  name: {1}".format(policy.id, policy.name))
-    # If the policy does not have a data collection section then fail
-    if len(policy.data_collection_rule_configs_list) == 0:
-        print("No data collection elements available to enable")
-        exit()
-
-    auth_event_rule_config = None
-    for dcrc in policy.data_collection_rule_configs_list:
-        if dcrc.name == 'Authentication Events':
-            dcrc.set_parameter('enable_auth_events', False)
+            if enable_auth_events:
+                dcrc.set_parameter('enable_auth_events', True)
+                print("Auth Event Collection Enabled")
+            else:
+                dcrc.set_parameter('enable_auth_events', False)
+                print("Auth Event Collection Disabled")
             dcrc.save()
             auth_event_rule_config = dcrc
 
@@ -118,11 +99,11 @@ def main():
     cb = get_cb_cloud_object(args)
 
     if args.command == "list_policies":
-        list_policy_summaries(cb, args)
+        list_policy_summaries(cb)
     elif args.command == "enable_auth_event_rule":
-        enable_auth_event_rule(cb)
+        set_auth_event_rule(cb, True)
     elif args.command == "disable_auth_event_rule":
-        disable_auth_event_rule(cb)
+        set_auth_event_rule(cb, False)
     else:
         raise NotImplementedError("Unknown command")
     return 0
