@@ -69,12 +69,8 @@ def set_auth_event_rule(cb, enable_auth_events):
     auth_event_rule_config = None
     for dcrc in policy.data_collection_rule_configs_list:
         if dcrc.name == 'Authentication Events':
-            if enable_auth_events:
-                dcrc.set_parameter('enable_auth_events', True)
-                print("Auth Event Collection Enabled")
-            else:
-                dcrc.set_parameter('enable_auth_events', False)
-                print("Auth Event Collection Disabled")
+            dcrc.set_parameter('enable_auth_events', enable_auth_events)
+            print(f"Auth Event Collection {'Enabled' if enable_auth_events else 'Disabled'}")
             dcrc.save()
             auth_event_rule_config = dcrc
 
