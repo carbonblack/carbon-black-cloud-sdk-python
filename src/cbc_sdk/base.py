@@ -824,6 +824,13 @@ class MutableBaseModel(NewBaseModel):
             object.__setattr__(self, attrname, val)
 
     def _set(self, attrname, new_value):
+        """
+        Sets the value of an attribute on the object.
+
+        Args:
+            attrname (str): Name of the attribute.
+            new_value (Any): Value of the attribute.
+        """
         # ensure that we are operating on the full object first
         if not self._full_init and self._model_unique_id is not None:
             self.refresh()
@@ -898,27 +905,28 @@ class MutableBaseModel(NewBaseModel):
 
         if request_ret.status_code not in range(200, 300):
             try:
-                message = json.loads(request_ret.text)[0]
+                result = json.loads(request_ret.text)[0]
             except Exception:
-                message = request_ret.text
+                result = request_ret.text
 
-            raise ServerError(request_ret.status_code, message,
-                              result="Did not update {} record.".format(self.__class__.__name__))
+            raise ServerError(request_ret.status_code, f"Did not update {self.__class__.__name__} record.",
+                              result=result, uri=request_ret.url)
         else:
             try:
-                message = request_ret.json()
-                log.debug("Received response: %s" % message)
-                if list(message.keys()) == ["result"]:
-                    post_result = message.get("result", None)
+                result = request_ret.json()
+                log.debug("Received response: %s" % result)
+                if list(result.keys()) == ["result"]:
+                    post_result = result.get("result", None)
 
                     if post_result and post_result != "success":
-                        raise ServerError(request_ret.status_code, post_result,
-                                          result="Did not update {0:s} record.".format(self.__class__.__name__))
+                        raise ServerError(request_ret.status_code,
+                                          f"Did not update {self.__class__.__name__} record.",
+                                          result=post_result, uri=request_ret.url)
                     else:
                         refresh_required = True
                 else:
                     self._info = json.loads(request_ret.text)
-                    if message.keys() == ["id"]:
+                    if result.keys() == ["id"]:
                         # if all we got back was an ID, try refreshing to get the entire record.
                         log.debug("Only received an ID back from the server, forcing a refresh")
                         refresh_required = True
@@ -969,10 +977,10 @@ class MutableBaseModel(NewBaseModel):
 
         if ret.status_code not in (200, 204):
             try:
-                message = json.loads(ret.text)[0]
+                result = json.loads(ret.text)[0]
             except Exception:
-                message = ret.text
-            raise ServerError(ret.status_code, message, result="Did not delete {0:s}.".format(str(self)))
+                result = ret.text
+            raise ServerError(ret.status_code, f"Did not delete {str(self)}.", result=result, uri=None)
 
     def validate(self):
         """

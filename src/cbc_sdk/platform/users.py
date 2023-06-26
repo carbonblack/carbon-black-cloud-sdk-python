@@ -209,7 +209,7 @@ class User(MutableBaseModel):
         resp = result.json()
         if resp['registration_status'] != 'SUCCESS':
             raise ServerError(500, f"registration return was unsuccessful: {resp['registration_status']} - "
-                                   f"{resp['message']}")
+                                   f"{resp['message']}", uri=url)
         # N.B.: new user is not "findable" until activated and initial password set
 
     def _refresh(self):

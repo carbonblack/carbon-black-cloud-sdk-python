@@ -1,6 +1,5 @@
 """Mock responses for Policy"""
 
-
 FULL_POLICY_1 = {
     "id": 65536,
     "name": "A Dummy Policy",
@@ -192,6 +191,16 @@ FULL_POLICY_1 = {
     ],
     "rule_configs": [
         {
+            "id": "91c919da-fb90-4e63-9eac-506255b0a0d0",
+            "name": "Authentication Events",
+            "description": "Authentication Events",
+            "inherited_from": "",
+            "category": "data_collection",
+            "parameters": {
+                "enable_auth_events": True
+            }
+        },
+        {
             "id": "1f8a5e4b-34f2-4d31-9f8f-87c56facaec8",
             "name": "Advanced Scripting Prevention",
             "description": "Addresses malicious fileless and file-backed scripts that leverage native programs [...]",
@@ -229,6 +238,72 @@ FULL_POLICY_1 = {
             "category": "core_prevention",
             "parameters": {
                 "WindowsAssignmentMode": "BLOCK"
+            }
+        },
+        {
+            "id": "df181779-f623-415d-879e-91c40246535d",
+            "name": "Host Based Firewall",
+            "description": "These are the Host based Firewall Rules which will be executed by the sensor. [...].",
+            "inherited_from": "",
+            "category": "host_based_firewall",
+            "parameters": {
+                "rulesets": [
+                    {
+                        "description": "Whatever",
+                        "name": "Argon_firewall",
+                        "rules": [
+                            {
+                                "action": "ALLOW",
+                                "application_path": "*",
+                                "direction": "IN",
+                                "enabled": True,
+                                "local_ip_address": "1.2.3.4",
+                                "local_port_ranges": "1234",
+                                "name": "my_first_rule",
+                                "protocol": "TCP",
+                                "remote_ip_address": "5.6.7.8",
+                                "remote_port_ranges": "5678",
+                                "rule_access_check_guid": "6d36954a-a944-4944-ae94-df6f94b877b8",
+                                "rule_inbound_event_check_guid": "8a39c00b-f907-4085-929f-f2e98e8b7b87",
+                                "rule_outbound_event_check_guid": "7e7a9761-4187-4065-8ae1-b5161fae75a2",
+                                "test_mode": False
+                            }
+                        ],
+                        "ruleset_id": "0c0ce332-6f81-43d9-ad9b-875e82eb53f9"
+                    }
+                ],
+                "rule_groups": [
+                    {
+                        "description": "Whatever",
+                        "name": "Argon_firewall",
+                        "rules": [
+                            {
+                                "action": "ALLOW",
+                                "application_path": "*",
+                                "direction": "IN",
+                                "enabled": True,
+                                "local_ip_address": "1.2.3.4",
+                                "local_port_ranges": "1234",
+                                "name": "my_first_rule",
+                                "protocol": "TCP",
+                                "remote_ip_address": "5.6.7.8",
+                                "remote_port_ranges": "5678",
+                                "rule_access_check_guid": "6d36954a-a944-4944-ae94-df6f94b877b8",
+                                "rule_inbound_event_check_guid": "8a39c00b-f907-4085-929f-f2e98e8b7b87",
+                                "rule_outbound_event_check_guid": "7e7a9761-4187-4065-8ae1-b5161fae75a2",
+                                "test_mode": False
+                            }
+                        ],
+                        "ruleset_id": "0c0ce332-6f81-43d9-ad9b-875e82eb53f9"
+                    }
+                ],
+                "default_rule": {
+                    "action": "ALLOW",
+                    "default_rule_access_check_guid": "08dc129b-ab72-4ed7-8282-8db7f62bc7e8",
+                    "default_rule_inbound_event_check_guid": "40dd836c-e676-4e3b-b98b-c870c4b6faa7",
+                    "default_rule_outbound_event_check_guid": "94283d79-c2d1-472c-b303-77a0fb387bcc"
+                },
+                "enable_host_based_firewall": False
             }
         }
     ]
@@ -1571,6 +1646,16 @@ NEW_POLICY_RETURN_1 = {
     },
     "rule_configs": [
         {
+            "id": "91c919da-fb90-4e63-9eac-506255b0a0d0",
+            "name": "Authentication Events",
+            "description": "Authentication Events",
+            "inherited_from": "",
+            "category": "data_collection",
+            "parameters": {
+                "enable_auth_events": True
+            }
+        },
+        {
             "id": "1f8a5e4b-34f2-4d31-9f8f-87c56facaec8",
             "name": "Advanced Scripting Prevention",
             "description": "Addresses malicious fileless and file-backed scripts that leverage native programs [...]",
@@ -1641,6 +1726,15 @@ TEMPLATE_RETURN_BOGUS_TYPE = {
 
 POLICY_CONFIG_PRESENTATION = {
     "configs": [
+        {
+            "id": "91c919da-fb90-4e63-9eac-506255b0a0d0",
+            "name": "Authentication Events",
+            "description": "Authentication Events",
+            "presentation": {
+                "category": "data_collection"
+            },
+            "parameters": []
+        },
         {
             "id": "1f8a5e4b-34f2-4d31-9f8f-87c56facaec8",
             "name": "Advanced Scripting Prevention",
@@ -1728,6 +1822,15 @@ POLICY_CONFIG_PRESENTATION = {
                     ]
                 }
             ]
+        },
+        {
+            "id": "df181779-f623-415d-879e-91c40246535d",
+            "name": "Host Based Firewall",
+            "description": "These are the Host based Firewall Rules which will be executed by the sensor. [...].",
+            "presentation": {
+                "category": "hbfw"
+            },
+            "parameters": []
         },
         {
             "id": "c4ed61b3-d5aa-41a9-814f-0f277451532b",
@@ -1841,22 +1944,324 @@ BUILD_RULECONFIG_1 = {
     }
 }
 
-CORE_PREVENTION_RETURNS = {
-    "results": [
+FULL_POLICY_5 = {
+    "id": 1492,
+    "name": "Crapco",
+    "org_key": "test",
+    "priority_level": "MEDIUM",
+    "position": -1,
+    "is_system": False,
+    "description": "If you buy this, you'll buy ANYTHING!",
+    "auto_deregister_inactive_vdi_interval_ms": 0,
+    "auto_deregister_inactive_vm_workloads_interval_ms": 0,
+    "update_time": 1682625002305,
+    "av_settings": {
+        "avira_protection_cloud": {
+            "enabled": True,
+            "max_exe_delay": 45,
+            "max_file_size": 4,
+            "risk_level": 4
+        },
+        "on_access_scan": {
+            "enabled": True,
+            "mode": "NORMAL"
+        },
+        "on_demand_scan": {
+            "enabled": True,
+            "profile": "NORMAL",
+            "schedule": {
+                "start_hour": 0,
+                "range_hours": 0,
+                "recovery_scan_if_missed": True
+            },
+            "scan_usb": "AUTOSCAN",
+            "scan_cd_dvd": "AUTOSCAN"
+        },
+        "signature_update": {
+            "enabled": True,
+            "schedule": {
+                "full_interval_hours": 0,
+                "initial_random_delay_hours": 4,
+                "interval_hours": 4
+            }
+        },
+        "update_servers": {
+            "servers_override": [],
+            "servers_for_onsite_devices": [
+                {
+                    "server": "http://updates2.cdc.carbonblack.io/update2",
+                    "preferred": False
+                }
+            ],
+            "servers_for_offsite_devices": [
+                "http://updates2.cdc.carbonblack.io/update2"
+            ]
+        }
+    },
+    "rules": [
         {
-            "id": "1f8a5e4b-34f2-4d31-9f8f-87c56facaec8",
-            "name": "Advanced Scripting Prevention",
-            "description": "Addresses malicious fileless and file-backed scripts that leverage native programs [...]",
-            "inherited_from": "psc:region",
-            "category": "core_prevention",
+            "id": 15,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "KNOWN_MALWARE"
+            },
+            "operation": "RUN"
+        },
+        {
+            "id": 16,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "COMPANY_BLACK_LIST"
+            },
+            "operation": "RUN"
+        },
+        {
+            "id": 17,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "SUSPECT_MALWARE"
+            },
+            "operation": "RUN"
+        },
+        {
+            "id": 18,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "PUP"
+            },
+            "operation": "RUN"
+        },
+        {
+            "id": 19,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "RESOLVING"
+            },
+            "operation": "MEMORY_SCRAPE"
+        },
+        {
+            "id": 20,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "RESOLVING"
+            },
+            "operation": "RANSOM"
+        },
+        {
+            "id": 21,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "ADAPTIVE_WHITE_LIST"
+            },
+            "operation": "MEMORY_SCRAPE"
+        },
+        {
+            "id": 22,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "REPUTATION",
+                "value": "ADAPTIVE_WHITE_LIST"
+            },
+            "operation": "RANSOM"
+        },
+        {
+            "id": 23,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**\\powershell*.exe"
+            },
+            "operation": "MEMORY_SCRAPE"
+        },
+        {
+            "id": 24,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**/python"
+            },
+            "operation": "MEMORY_SCRAPE"
+        },
+        {
+            "id": 25,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**\\wscript.exe"
+            },
+            "operation": "MEMORY_SCRAPE"
+        },
+        {
+            "id": 26,
+            "required": False,
+            "action": "TERMINATE",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**\\cscript.exe"
+            },
+            "operation": "MEMORY_SCRAPE"
+        },
+        {
+            "id": 27,
+            "required": False,
+            "action": "DENY",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**\\wscript.exe"
+            },
+            "operation": "CODE_INJECTION"
+        },
+        {
+            "id": 28,
+            "required": False,
+            "action": "DENY",
+            "application": {
+                "type": "NAME_PATH",
+                "value": "**\\cscript.exe"
+            },
+            "operation": "CODE_INJECTION"
+        }
+    ],
+    "directory_action_rules": [],
+    "sensor_settings": [
+        {
+            "name": "ALLOW_UNINSTALL",
+            "value": "true"
+        },
+        {
+            "name": "SHOW_UI",
+            "value": "true"
+        },
+        {
+            "name": "ENABLE_THREAT_SHARING",
+            "value": "true"
+        },
+        {
+            "name": "QUARANTINE_DEVICE",
+            "value": "false"
+        },
+        {
+            "name": "LOGGING_LEVEL",
+            "value": "false"
+        },
+        {
+            "name": "QUARANTINE_DEVICE_MESSAGE",
+            "value": "Device has been quarantined by your computer administrator."
+        },
+        {
+            "name": "SET_SENSOR_MODE",
+            "value": "0"
+        },
+        {
+            "name": "SENSOR_RESET",
+            "value": "0"
+        },
+        {
+            "name": "BACKGROUND_SCAN",
+            "value": "true"
+        },
+        {
+            "name": "POLICY_ACTION_OVERRIDE",
+            "value": "true"
+        },
+        {
+            "name": "HELP_MESSAGE",
+            "value": ""
+        },
+        {
+            "name": "PRESERVE_SYSTEM_MEMORY_SCAN",
+            "value": "false"
+        },
+        {
+            "name": "HASH_MD5",
+            "value": "false"
+        },
+        {
+            "name": "SCAN_LARGE_FILE_READ",
+            "value": "false"
+        },
+        {
+            "name": "SCAN_EXECUTE_ON_NETWORK_DRIVE",
+            "value": "true"
+        },
+        {
+            "name": "DELAY_EXECUTE",
+            "value": "true"
+        },
+        {
+            "name": "SCAN_NETWORK_DRIVE",
+            "value": "false"
+        },
+        {
+            "name": "BYPASS_AFTER_LOGIN_MINS",
+            "value": "0"
+        },
+        {
+            "name": "BYPASS_AFTER_RESTART_MINS",
+            "value": "0"
+        },
+        {
+            "name": "SHOW_FULL_UI",
+            "value": "false"
+        },
+        {
+            "name": "SECURITY_CENTER_OPT",
+            "value": "true"
+        },
+        {
+            "name": "CB_LIVE_RESPONSE",
+            "value": "false"
+        },
+        {
+            "name": "ALLOW_INLINE_BLOCKING",
+            "value": "true"
+        },
+        {
+            "name": "UNINSTALL_CODE",
+            "value": "false"
+        },
+        {
+            "name": "DEFENSE_OPT_OUT",
+            "value": "false"
+        },
+        {
+            "name": "UBS_OPT_IN",
+            "value": "false"
+        }
+    ],
+    "rule_configs": [
+        {
+            "id": "91c919da-fb90-4e63-9eac-506255b0a0d0",
+            "name": "Authentication Events",
+            "description": "Authentication Events",
+            "inherited_from": "",
+            "category": "data_collection",
             "parameters": {
-                "WindowsAssignmentMode": "BLOCK"
+                "enable_auth_events": True
             }
         },
         {
             "id": "ac67fa14-f6be-4df9-93f2-6de0dbd96061",
             "name": "Credential Theft",
-            "description": "Addresses threat actors obtaining credentials and relies on detecting the malicious [...]",
+            "description": "Addresses threat actors obtaining credentials and relies on detecting the malicious [...].",
             "inherited_from": "psc:region",
             "category": "core_prevention",
             "parameters": {
@@ -1866,7 +2271,7 @@ CORE_PREVENTION_RETURNS = {
         {
             "id": "c4ed61b3-d5aa-41a9-814f-0f277451532b",
             "name": "Carbon Black Threat Intel",
-            "description": "Addresses common and pervasive TTPs used for malicious activity as well as [...]",
+            "description": "Addresses common and pervasive TTPs used for malicious activity as well as [...].",
             "inherited_from": "psc:region",
             "category": "core_prevention",
             "parameters": {
@@ -1874,23 +2279,189 @@ CORE_PREVENTION_RETURNS = {
             }
         },
         {
+            "id": "df181779-f623-415d-879e-91c40246535d",
+            "name": "Host Based Firewall",
+            "description": "These are the Host based Firewall Rules which will be executed by the sensor. [...]",
+            "inherited_from": "",
+            "category": "host_based_firewall",
+            "parameters": {
+                "rulesets": [
+                    {
+                        "description": "Whatever",
+                        "name": "Crapco_firewall",
+                        "rules": [
+                            {
+                                "action": "ALLOW",
+                                "application_path": "*",
+                                "direction": "IN",
+                                "enabled": True,
+                                "local_ip_address": "1.2.3.4",
+                                "local_port_ranges": "1234",
+                                "name": "my_first_rule",
+                                "protocol": "TCP",
+                                "remote_ip_address": "5.6.7.8",
+                                "remote_port_ranges": "5678",
+                                "rule_access_check_guid": "935477b8-997a-4476-8160-9179840d9892",
+                                "rule_inbound_event_check_guid": "203d0685-04a6-49d8-bd9b-20ddda2c6c73",
+                                "rule_outbound_event_check_guid": "16b8a622-a6d0-4873-8197-2974295c0f47",
+                                "test_mode": True
+                            },
+                            {
+                                "action": "BLOCK",
+                                "application_path": "C:\\DOOM\\DOOM.EXE",
+                                "direction": "BOTH",
+                                "enabled": True,
+                                "local_ip_address": "10.29.99.1",
+                                "local_port_ranges": "*",
+                                "name": "DoomyDoomsofDoom",
+                                "protocol": "TCP",
+                                "remote_ip_address": "199.201.128.1",
+                                "remote_port_ranges": "666",
+                                "rule_access_check_guid": "28acfcac-7891-423d-9e99-d887aa4662fc",
+                                "rule_inbound_event_check_guid": "01e26bc9-7729-4c0d-a550-f63a865b8c9f",
+                                "rule_outbound_event_check_guid": "b9b625eb-1599-4f7d-b852-0f12db6c5a19",
+                                "test_mode": False
+                            }
+                        ],
+                        "ruleset_id": "fa3f7254-6d50-4ebf-aca6-d617bcd644b9"
+                    },
+                    {
+                        "description": "IRC is a sewer",
+                        "name": "Isolate",
+                        "rules": [
+                            {
+                                "action": "BLOCK_ALERT",
+                                "application_path": "*",
+                                "direction": "BOTH",
+                                "enabled": True,
+                                "local_ip_address": "10.29.99.1",
+                                "local_port_ranges": "*",
+                                "name": "BlockIRC",
+                                "protocol": "TCP",
+                                "remote_ip_address": "26.2.0.74",
+                                "remote_port_ranges": "6667",
+                                "rule_access_check_guid": "b1454c18-f08c-419a-9b57-186c25aa6c9d",
+                                "rule_inbound_event_check_guid": "b80e9216-5f9f-4e9a-9bcb-79a5af78d976",
+                                "rule_outbound_event_check_guid": "765cdf79-4ff9-419c-9775-abb18e6f6518",
+                                "test_mode": False
+                            }
+                        ],
+                        "ruleset_id": "cc7b30e8-b0e5-4253-96e9-93d345fbe642"
+                    }
+                ],
+                "rule_groups": [
+                    {
+                        "description": "Whatever",
+                        "name": "Crapco_firewall",
+                        "rules": [
+                            {
+                                "action": "ALLOW",
+                                "application_path": "*",
+                                "direction": "IN",
+                                "enabled": True,
+                                "local_ip_address": "1.2.3.4",
+                                "local_port_ranges": "1234",
+                                "name": "my_first_rule",
+                                "protocol": "TCP",
+                                "remote_ip_address": "5.6.7.8",
+                                "remote_port_ranges": "5678",
+                                "rule_access_check_guid": "935477b8-997a-4476-8160-9179840d9892",
+                                "rule_inbound_event_check_guid": "203d0685-04a6-49d8-bd9b-20ddda2c6c73",
+                                "rule_outbound_event_check_guid": "16b8a622-a6d0-4873-8197-2974295c0f47",
+                                "test_mode": False
+                            },
+                            {
+                                "action": "BLOCK",
+                                "application_path": "C:\\DOOM\\DOOM.EXE",
+                                "direction": "BOTH",
+                                "enabled": True,
+                                "local_ip_address": "10.29.99.1",
+                                "local_port_ranges": "*",
+                                "name": "DoomyDoomsOfDoom",
+                                "protocol": "TCP",
+                                "remote_ip_address": "199.201.128.1",
+                                "remote_port_ranges": "666",
+                                "rule_access_check_guid": "28acfcac-7891-423d-9e99-d887aa4662fc",
+                                "rule_inbound_event_check_guid": "01e26bc9-7729-4c0d-a550-f63a865b8c9f",
+                                "rule_outbound_event_check_guid": "b9b625eb-1599-4f7d-b852-0f12db6c5a19",
+                                "test_mode": False
+                            }
+                        ],
+                        "ruleset_id": "fa3f7254-6d50-4ebf-aca6-d617bcd644b9"
+                    },
+                    {
+                        "description": "IRC is a sewer",
+                        "name": "Isolate",
+                        "rules": [
+                            {
+                                "action": "BLOCK_ALERT",
+                                "application_path": "*",
+                                "direction": "BOTH",
+                                "enabled": True,
+                                "local_ip_address": "10.29.99.1",
+                                "local_port_ranges": "*",
+                                "name": "BlockIRC",
+                                "protocol": "TCP",
+                                "remote_ip_address": "26.2.0.74",
+                                "remote_port_ranges": "6667",
+                                "rule_access_check_guid": "b1454c18-f08c-419a-9b57-186c25aa6c9d",
+                                "rule_inbound_event_check_guid": "b80e9216-5f9f-4e9a-9bcb-79a5af78d976",
+                                "rule_outbound_event_check_guid": "765cdf79-4ff9-419c-9775-abb18e6f6518",
+                                "test_mode": False
+                            }
+                        ],
+                        "ruleset_id": "cc7b30e8-b0e5-4253-96e9-93d345fbe642"
+                    }
+                ],
+                "default_rule": {
+                    "action": "ALLOW",
+                    "default_rule_access_check_guid": "e6da6ec1-2e04-4fe7-a864-c4db940510c3",
+                    "default_rule_inbound_event_check_guid": "6d38dce5-d2b2-4572-b61c-3d0bbefddbdb",
+                    "default_rule_outbound_event_check_guid": "26257374-2e78-46ea-b252-1e9916a885d4"
+                },
+                "enable_host_based_firewall": False
+            }
+        },
+        {
+            "id": "1f8a5e4b-34f2-4d31-9f8f-87c56facaec8",
+            "name": "Advanced Scripting Prevention",
+            "description": "Addresses malicious fileless and file-backed scripts that leverage native programs [...].",
+            "inherited_from": "psc:region",
+            "category": "core_prevention",
+            "parameters": {
+                "WindowsAssignmentMode": "BLOCK"
+            }
+        },
+        {
             "id": "88b19232-7ebb-48ef-a198-2a75a282de5d",
             "name": "Privilege Escalation",
-            "description": "Addresses behaviors that indicate a threat actor has gained elevated access via [...]",
+            "description": "Addresses behaviors that indicate a threat actor has gained elevated access via [...].",
+            "inherited_from": "psc:region",
+            "category": "core_prevention",
+            "parameters": {
+                "WindowsAssignmentMode": "BLOCK"
+            }
+        },
+        {
+            "id": "97a03cc2-5796-4864-b16d-790d06bea20d",
+            "name": "Defense Evasion",
+            "description": "Addresses common TTPs/behaviors that threat actors use to avoid detection such as [...].",
+            "inherited_from": "psc:region",
+            "category": "core_prevention",
+            "parameters": {
+                "WindowsAssignmentMode": "REPORT"
+            }
+        },
+        {
+            "id": "8a16234c-9848-473a-a803-f0f0ffaf5f29",
+            "name": "Persistence",
+            "description": "Addresses common TTPs/behaviors that threat actors use to retain access to systems [...].",
             "inherited_from": "psc:region",
             "category": "core_prevention",
             "parameters": {
                 "WindowsAssignmentMode": "BLOCK"
             }
         }
-    ]
+    ],
+    "sensor_configs": []
 }
-
-CORE_PREVENTION_UPDATE_1 = [
-    {
-        "id": "c4ed61b3-d5aa-41a9-814f-0f277451532b",
-        "parameters": {
-            "WindowsAssignmentMode": "BLOCK"
-        }
-    }
-]

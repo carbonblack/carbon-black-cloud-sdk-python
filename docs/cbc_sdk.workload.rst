@@ -1,11 +1,11 @@
-Workload
+Workload Package
 =========================
 
 Submodules
 ----------
 
 cbc\_sdk.workload.nsx\_remediation module
-------------------------------------------
+-----------------------------------------
 
 .. automodule:: cbc_sdk.workload.nsx_remediation
    :members:

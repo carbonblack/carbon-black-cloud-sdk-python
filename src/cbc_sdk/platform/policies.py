@@ -16,12 +16,15 @@ import copy
 import json
 from types import MappingProxyType
 from cbc_sdk.base import MutableBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
-from cbc_sdk.platform.policy_ruleconfigs import PolicyRuleConfig, CorePreventionRuleConfig
+from cbc_sdk.platform.policy_ruleconfigs import (PolicyRuleConfig, CorePreventionRuleConfig,
+                                                 HostBasedFirewallRuleConfig, DataCollectionRuleConfig)
 from cbc_sdk.errors import ApiError, ServerError, InvalidObjectError
 
 
 SPECIFIC_RULECONFIGS = MappingProxyType({
-    "core_prevention": CorePreventionRuleConfig
+    "core_prevention": CorePreventionRuleConfig,
+    "host_based_firewall": HostBasedFirewallRuleConfig,
+    "data_collection": DataCollectionRuleConfig
 })
 
 
@@ -623,6 +626,24 @@ class Policy(MutableBaseModel):
         self._object_rule_configs_need_load = True
         return rc
 
+    def is_dirty(self):
+        """
+        Returns whether or not any fields of this object have been changed.
+
+        Returns:
+            bool: True if any fields of this object have been changed, False if not.
+        """
+        if super(Policy, self).is_dirty():
+            return True
+        # we need to check the rules and rule configs as well
+        if not self._object_rules_need_load:
+            if any(rule.is_dirty() for rule in self._object_rules.values()):
+                return True
+        if not self._object_rule_configs_need_load:
+            if any(rule_config.is_dirty() for rule_config in self._object_rule_configs.values()):
+                return True
+        return False
+
     @property
     def rules(self):
         """
@@ -694,6 +715,46 @@ class Policy(MutableBaseModel):
             list: A list of CorePreventionRuleConfig objects.
         """
         return [rconf for rconf in self.object_rule_configs.values() if isinstance(rconf, CorePreventionRuleConfig)]
+
+    @property
+    def host_based_firewall_rule_config(self):
+        """
+        Returns the host-based firewall rule configuration for this policy.
+
+        Returns:
+            HostBasedFirewallRuleConfig: The host-based firewall rule configuration, or None.
+
+        Raises:
+            InvalidObjectError: If there's more than one host-based firewall rule configuration (should not happen).
+        """
+        tmp = [rconf for rconf in self.object_rule_configs.values() if isinstance(rconf, HostBasedFirewallRuleConfig)]
+        if not tmp:
+            return None
+        if len(tmp) > 1:
+            raise InvalidObjectError("found multiple host-based firewall rule configurations")
+        return tmp[0]
+
+    @property
+    def data_collection_rule_configs(self):
+        """
+        Returns a dictionary of data collection rule configuration IDs and objects for this Policy.
+
+        Returns:
+            dict: A dictionary with data collection rule configuration IDs as keys and DataCollectionRuleConfig objects
+                  as values.
+        """
+        return {key: rconf for (key, rconf) in self.object_rule_configs.items()
+                if isinstance(rconf, DataCollectionRuleConfig)}
+
+    @property
+    def data_collection_rule_configs_list(self):
+        """
+        Returns a list of data collection rule configuration objects for this Policy.
+
+        Returns:
+            list: A list of DataCollectionRuleConfig objects.
+        """
+        return [rconf for rconf in self.object_rule_configs.values() if isinstance(rconf, DataCollectionRuleConfig)]
 
     def valid_rule_configs(self):
         """
@@ -1195,15 +1256,17 @@ class PolicyRule(MutableBaseModel):
             new_object_info = copy.deepcopy(self._info)
             if "id" in new_object_info:
                 del new_object_info["id"]
-            ret = self._cb.post_object(self._parent._build_api_request_uri() + "/rules", new_object_info)
+            url = self._parent._build_api_request_uri() + "/rules"
+            ret = self._cb.post_object(url, new_object_info)
         else:
-            ret = self._cb.put_object(self._parent._build_api_request_uri() + f"/rules/{self.id}", self._info)
+            url = self._parent._build_api_request_uri() + f"/rules/{self.id}"
+            ret = self._cb.put_object(url, self._info)
         if ret.status_code not in range(200, 300):
             try:
-                message = json.loads(ret.text)[0]
+                result = json.loads(ret.text)[0]
             except Exception:
-                message = ret.text
-            raise ServerError(ret.status_code, message, result="Unable to update policy rule")
+                result = ret.text
+            raise ServerError(ret.status_code, "Unable to update policy rule", result=result, uri=url)
         self._info = json.loads(ret.text)
         self._full_init = True
         self._parent._on_updated_rule(self)

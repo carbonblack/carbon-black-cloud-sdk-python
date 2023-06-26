@@ -170,19 +170,6 @@ def test_BaseAPI_generate_user_agent(integration, expected_line):
     assert sut.session.token_header['User-Agent'] == expected_line
 
 
-@pytest.mark.parametrize("response, expected, scode", [
-    (StubResponse({'color': 'green'}, 400), {}, 400),
-    (StubResponse({'color': 'green'}), {'color': 'blue'}, 200),
-    (StubResponse({'color': 'green'}), {'color': 'green', 'mode': 3}, 200)
-])
-def test_BaseAPI_raise_unless_json_raises(response, expected, scode):
-    """Test the "raise" cases of raise_unless_json."""
-    sut = BaseAPI(url='https://example.com', token='ABCDEFGH', org_key='A1B2C3D4')
-    with pytest.raises(ServerError) as excinfo:
-        sut.raise_unless_json(response, expected)
-    assert excinfo.value.error_code == scode
-
-
 @pytest.mark.parametrize("expath, response, params, default, expected", [
     ('/path', StubResponse({'a': 1, 'b': 2}), None, {'a': 8, 'b': 9}, {'a': 1, 'b': 2}),
     ('/path', StubResponse({'a': 1, 'b': 2}), [('x', 1), ('y', 2)], {'a': 8, 'b': 9}, {'a': 1, 'b': 2}),
