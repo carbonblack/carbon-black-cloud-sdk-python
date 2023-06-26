@@ -13,7 +13,7 @@ New Features:
 
 Updates:
 
-* Added an example script for manipulating core prevention rule configuration status on a policy.
+* Added an example script for manipulating core prevention rule configuration and data collection status on a policy.
 * Changed ``pymox`` dependency to the latest version, which eliminates warning messages on unit test and provides
   compatibility with Python 3.11 and later.
 * Added specific testing support for Python 3.11.
