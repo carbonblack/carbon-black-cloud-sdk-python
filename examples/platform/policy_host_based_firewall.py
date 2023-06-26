@@ -181,7 +181,7 @@ def add_hbfw_rule(cb):
 
     # There is a known issue in Carbon Black Cloud that requires the rule_configs to be saved explicitly.
     # There is no adverse impact to performing this call but in the future will be un-necessary
-    rc.save()
+    # rc.save()
     # save the policy and all child elements.
     policy.save()
     print(rc)
