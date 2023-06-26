@@ -21,3 +21,9 @@ Example scripts are available in the GitHub repository in examples/platform that
 * Host-Based Firewall policy rule operations
 
   * policy_host_based_firewall.py
+
+* Data Collection policy rule operations
+
+  * Demonstrates how to enable and disable Auth Event collection.
+
+  * policy_data_collection.py
