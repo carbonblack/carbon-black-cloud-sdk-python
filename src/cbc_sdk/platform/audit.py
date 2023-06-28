@@ -21,7 +21,7 @@ class AuditLog(UnrefreshableModel):
 
     def __init__(self, cb, model_unique_id, initial_data=None):
         """Creation of AuditLog objects is not yet implemented."""
-        raise NotImplemented("AuditLog creation will be in a future implementation")
+        raise NotImplementedError("AuditLog creation will be in a future implementation")
 
     @staticmethod
     def get_auditlogs(cb):
