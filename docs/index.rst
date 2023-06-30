@@ -77,6 +77,7 @@ Guides
    :maxdepth: 2
 
    alerts
+   audit-log
    device-control
    differential-analysis
    live-query

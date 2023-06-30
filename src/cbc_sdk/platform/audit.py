@@ -28,8 +28,8 @@ class AuditLog(UnrefreshableModel):
         """
         Retrieve queued audit logs from the Carbon Black Cloud server.
 
-        Notes:
-            This can only be used with a 'API' key generated in the CBC console.
+        Required Permissions:
+            org.audits (READ)
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.

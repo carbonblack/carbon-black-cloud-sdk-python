@@ -1,4 +1,4 @@
-Platform Package
+cbc\_sdk.platform package
 =========================
 
 Submodules
@@ -8,6 +8,14 @@ cbc\_sdk.platform.alerts module
 -------------------------------
 
 .. automodule:: cbc_sdk.platform.alerts
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+cbc\_sdk.platform.audit module
+------------------------------
+
+.. automodule:: cbc_sdk.platform.audit
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,4 +1,4 @@
-Audit and Remediation Package
+cbc\_sdk.audit\_remediation package
 ===================================
 
 Submodules
