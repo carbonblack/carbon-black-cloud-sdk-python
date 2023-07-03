@@ -77,6 +77,7 @@ Guides
    :maxdepth: 2
 
    alerts
+   developing-credential-providers
    device-control
    differential-analysis
    live-query
@@ -101,7 +102,6 @@ See detailed information on the objects and methods exposed by the Carbon Black 
 
    cbc_sdk.audit_remediation
    cbc_sdk.credential_providers
-   developing-credential-providers
    cbc_sdk.endpoint_standard
    cbc_sdk.enterprise_edr
    cbc_sdk.platform

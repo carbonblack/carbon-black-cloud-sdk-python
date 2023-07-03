@@ -1,10 +1,7 @@
 Workload Package
-=========================
+*****************
 
-Submodules
-----------
-
-cbc\_sdk.workload.nsx\_remediation module
+NSX Remediation Module
 -----------------------------------------
 
 .. automodule:: cbc_sdk.workload.nsx_remediation
@@ -12,7 +9,7 @@ cbc\_sdk.workload.nsx\_remediation module
    :undoc-members:
    :show-inheritance:
 
-cbc\_sdk.workload.sensor\_lifecycle module
+Sensor Lifecycle Module
 ------------------------------------------
 
 .. automodule:: cbc_sdk.workload.sensor_lifecycle
@@ -20,18 +17,10 @@ cbc\_sdk.workload.sensor\_lifecycle module
    :undoc-members:
    :show-inheritance:
 
-cbc\_sdk.workload.vm\_workloads\_search module
+VM Workloads Search Module
 ----------------------------------------------
 
 .. automodule:: cbc_sdk.workload.vm_workloads_search
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: cbc_sdk.workload
    :members:
    :undoc-members:
    :show-inheritance:

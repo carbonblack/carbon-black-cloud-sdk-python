@@ -1,21 +1,10 @@
 Cache Package
-======================
+*************
 
-Submodules
-----------
-
-cbc\_sdk.cache.lru module
+LRU Module
 -------------------------
 
 .. automodule:: cbc_sdk.cache.lru
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: cbc_sdk.cache
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,8 +1,8 @@
 CBC SDK Package
-================
+***************
 
 Subpackages
------------
+===========
 
 .. toctree::
    :maxdepth: 4
@@ -16,9 +16,9 @@ Subpackages
    cbc_sdk.workload
 
 Submodules
-----------
+==========
 
-cbc\_sdk.base module
+Base Module
 --------------------
 
 .. automodule:: cbc_sdk.base
@@ -26,7 +26,7 @@ cbc\_sdk.base module
    :undoc-members:
    :show-inheritance:
 
-cbc\_sdk.connection module
+Connection Module
 --------------------------
 
 .. automodule:: cbc_sdk.connection
@@ -34,7 +34,7 @@ cbc\_sdk.connection module
    :undoc-members:
    :show-inheritance:
 
-cbc\_sdk.credentials module
+Credentials Module
 ---------------------------
 
 .. automodule:: cbc_sdk.credentials
@@ -42,7 +42,7 @@ cbc\_sdk.credentials module
    :undoc-members:
    :show-inheritance:
 
-cbc\_sdk.errors module
+Errors Module
 ----------------------
 
 .. automodule:: cbc_sdk.errors
@@ -50,7 +50,7 @@ cbc\_sdk.errors module
    :undoc-members:
    :show-inheritance:
 
-cbc\_sdk.helpers module
+Helpers Module
 -----------------------
 
 .. automodule:: cbc_sdk.helpers
@@ -58,7 +58,7 @@ cbc\_sdk.helpers module
    :undoc-members:
    :show-inheritance:
 
-cbc\_sdk.live\_response\_api module
+Live Response API Module
 -----------------------------------
 
 .. automodule:: cbc_sdk.live_response_api
@@ -66,7 +66,7 @@ cbc\_sdk.live\_response\_api module
    :undoc-members:
    :show-inheritance:
 
-cbc\_sdk.rest\_api module
+REST API Module
 -------------------------
 
 .. automodule:: cbc_sdk.rest_api
@@ -74,7 +74,7 @@ cbc\_sdk.rest\_api module
    :undoc-members:
    :show-inheritance:
 
-cbc\_sdk.utils module
+Utils Module
 ---------------------
 
 .. automodule:: cbc_sdk.utils
@@ -82,18 +82,10 @@ cbc\_sdk.utils module
    :undoc-members:
    :show-inheritance:
 
-cbc\_sdk.winerror module
+WinError Module
 ------------------------
 
 .. automodule:: cbc_sdk.winerror
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: cbc_sdk
    :members:
    :undoc-members:
    :show-inheritance:
