@@ -17,6 +17,7 @@ from cbc_sdk.connection import BaseAPI
 from cbc_sdk.errors import ApiError, CredentialError, ServerError, InvalidObjectError
 from cbc_sdk.live_response_api import LiveResponseSessionManager
 from cbc_sdk.audit_remediation import Run, RunHistory
+from cbc_sdk.platform.audit import AuditLog
 from cbc_sdk.enterprise_edr.threat_intelligence import ReportSeverity
 import logging
 import time
@@ -159,12 +160,17 @@ class CBCloudAPI(BaseAPI):
         """
         Retrieve queued audit logs from the Carbon Black Cloud Endpoint Standard server.
 
-        Note that this can only be used with a 'API' key generated in the CBC console.
+        Notes:
+            This can only be used with a 'API' key generated in the CBC console.
 
-        :returns: list of dictionary objects representing the audit logs, or an empty list if none available.
+        Deprecated:
+            Use AuditLog.getAuditLogs (from cbc_sdk.platform) instead.
+
+        Returns:
+            list[dict]: List of dictionary objects representing the audit logs, or an empty list if none available.
         """
-        res = self.get_object("/integrationServices/v3/auditlogs")
-        return res.get("notifications", [])
+        log.warning("CBCloudAPI.get_auditlogs is deprecated, use AuditLog.get_auditlogs instead")
+        return AuditLog.get_auditlogs(self)
 
     # ---- Device API
 
