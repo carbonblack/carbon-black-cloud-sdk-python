@@ -1,24 +1,24 @@
-Audit Log Notifications
-=======================
+Audit Log Events
+================
 
-In the Carbon Black Cloud, *audit log notifications* are notifications of various organization-wide events, such as:
+In the Carbon Black Cloud, *audit logs* are records of various organization-wide events, such as:
 
 * Log in attempts by users
 * Updates to connectors
 * Creation of connectors
 * LiveResponse events
 
-The Audit Log API allows these notifications to be retrieved in JSON format, sorted by time in ascending order
-(oldest notifications come first). The API call returns only *new* audit log notifications that have been added since
-the last time the call was made using the same API Key ID. Once notifications have been returned, they are *cleared*
+The Audit Log API allows these records to be retrieved in JSON format, sorted by time in ascending order
+(oldest records come first). The API call returns only *new* audit log records that have been added since
+the last time the call was made using the same API Key ID. Once records have been returned, they are *cleared*
 and will not be included in future responses.
 
-When reading audit log notifications using a *new* API key, the queue for reading audit logs will begin three days
-earlier. This may lead to duplicate data if audit log notifications were previously read with a different API key.
+When reading audit log records using a *new* API key, the queue for reading audit logs will begin three days
+earlier. This may lead to duplicate data if audit log records were previously read with a different API key.
 
 .. note::
     Future versions of the Carbon Black Cloud and this SDK will support a more flexible API for finding and retrieving
-    audit log notifications.  This Guide will be rewritten to cover this when it is incorporated into the SDK.
+    audit log records.  This Guide will be rewritten to cover this when it is incorporated into the SDK.
 
 API Permissions
 ---------------

@@ -1,5 +1,5 @@
-cbc\_sdk.credential\_providers package
-======================================
+Credential Providers Package
+============================
 
 Submodules
 ----------
