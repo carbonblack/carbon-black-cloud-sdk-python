@@ -650,7 +650,11 @@ class AsyncProcessQuery(Query):
             raise ApiError("Query already submitted: token {0}".format(self._query_token))
 
         args = self._get_query_parameters()
-        self._validate(args)
+
+        # Ensure query parameter is set
+        args.update(query=args["query"] or "*:*")
+
+        self._validate({"q": args["query"]})
 
         # Ensure search creation uses max due to event aggregation
         args["rows"] = 10000
