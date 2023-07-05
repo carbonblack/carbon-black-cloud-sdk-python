@@ -47,3 +47,6 @@ Example of API Usage
         # omitted: decide whether running should be set to False
         if running:
             time.sleep(5)
+
+
+Check out the example script ``audit_log.py`` in the examples/platform directory on `GitHub <https://github.com/carbonblack/carbon-black-cloud-sdk-python>`_.
