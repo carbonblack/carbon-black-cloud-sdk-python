@@ -17,6 +17,7 @@ from cbc_sdk.base import (NewBaseModel, MutableBaseModel, BaseQuery, QueryBuilde
                           CriteriaBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
 from cbc_sdk.errors import ApiError, ServerError
 from cbc_sdk.platform.devices import DeviceSearchQuery
+from cbc_sdk.platform.jobs import Job
 import logging
 import time
 import json
@@ -629,6 +630,7 @@ class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupport
     """Represents a query that is used to locate USBDevice objects."""
     VALID_STATUSES = ["APPROVED", "UNAPPROVED"]
     VALID_FACET_FIELDS = ["vendor_name", "product_name", "endpoint.endpoint_name", "status"]
+    VALID_EXPORT_FORMATS = ('CSV', 'JSON')
 
     def __init__(self, doc_class, cb):
         """
@@ -894,3 +896,24 @@ class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupport
         resp = self._cb.post_object(url, body=request)
         result = resp.json()
         return result.get("terms", [])
+
+    def export(self, export_format):
+        """
+        Starts the process of exporting USB device data from the organization in a specified format.
+
+        Args:
+            export_format (str): The format to export USB device data in. Must be either "CSV" or "JSON".
+
+        Returns:
+            Job: The asynchronous job that will provide the export output when the server has prepared it.
+        """
+        if export_format not in USBDeviceQuery.VALID_EXPORT_FORMATS:
+            raise ApiError(f"invalid export format `{export_format}`")
+        request = self._build_request(0, -1)
+        request['format'] = export_format
+        url = self._build_url("/_export")
+        resp = self._cb.post_object(url, body=request)
+        result = resp.json()
+        if 'job_id' not in result:
+            raise ApiError("no job ID returned from server")
+        return Job(self._cb, result['job_id'])
