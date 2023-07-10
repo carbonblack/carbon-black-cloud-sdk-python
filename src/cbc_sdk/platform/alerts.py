@@ -29,6 +29,65 @@ from cbc_sdk.platform.processes import AsyncProcessQuery, Process
 """Alert Models"""
 
 MAX_RESULTS_LIMIT = 10000
+REMAPPED_ALERTS_V6 = {
+    "alert_classification.classification": "ml_classification_final_verdict",
+    "alert_classification.global_prevalence": "ml_classification_global_prevalence",
+    "alert_classification.org_prevalence": "ml_classification_org_prevalence",
+    "alert_classification.user_feedback": "determination_value",
+    "cluster_name": "k8s_cluster",
+    "create_time": "backend_timestamp",
+    "create_time": "detection_timestamp",
+    "first_event_time": "first_event_timestamp",
+    "last_event_time": "last_event_timestamp",
+    "last_update_time": "backend_update_timestamp",
+    "last_update_time": "user_update_timestamp",
+    "namespace": "k8s_namespace",
+    "notes_present": "alert_notes_present",
+    "policy_id": "device_policy_id",
+    "policy_name": "device_policy",
+    "port": "netconn_local_port",
+    "port": "netconn_remote_port",
+    "protocol": "netconn_protocol",
+    "remote_domain": "netconn_remote_domain",
+    "remote_ip": "netconn_remote_ip",
+    "remote_namespace": "remote_k8s_namespace",
+    "remote_replica_id": "remote_k8s_pod_name",
+    "remote_workload_kind": "remote_k8s_kind",
+    "remote_workload_name": "remote_k8s_workload_name",
+    "replica_id": "k8s_pod_name",
+    "rule_id": "rule_id ",
+    "run_state": "run_state",
+    "target_value": "device_target_value",
+    "threat_cause_actor_certificate_authority": "process_issuer",
+    "threat_cause_actor_name": "process_name",
+    "threat_cause_actor_publisher": "process_publisher",
+    "threat_cause_actor_sha256": "process_sha256",
+    "threat_cause_event_id": "primary_event_id",
+    "threat_cause_md5": "process_md5",
+    "threat_cause_parent_guid": "parent_guid",
+    "threat_cause_reputation": "process_reputation",
+    "threat_indicators": "ttps",
+    "watchlists": "watchlists.id",
+    "watchlists": "watchlists.name",
+    "workflow.last_update_time": "workflow.change_timestamp",
+    "workflow.comment": "workflow.note",
+    "workflow.remediation": "workflow.closure_reason",
+    "workflow.state": "workflow.status",
+    "workload_kind": "k8s_kind",
+    "workload_name": "k8s_workload_name"
+}
+
+REMAPPED_WORKFLOWS_V6 = {
+    "workflow.last_update_time": "workflow.change_timestamp",
+    "workflow.comment": "workflow.note",
+    "workflow.remediation": "workflow.closure_reason",
+    "workflow.state": "workflow.status",
+}
+
+REMAPPED_NOTES_V6 = {
+    "last_update_time": "",
+
+}
 
 
 class BaseAlert(PlatformModel):
@@ -48,6 +107,7 @@ class BaseAlert(PlatformModel):
             initial_data (dict): Initial data used to populate the alert.
         """
         super(BaseAlert, self).__init__(cb, model_unique_id, initial_data)
+        self._info = self.to_json()
         self._workflow = Workflow(cb, initial_data.get("workflow", None) if initial_data else None)
         if model_unique_id is not None and initial_data is None:
             self._refresh()
@@ -119,6 +179,46 @@ class BaseAlert(PlatformModel):
             self._cb.delete_object(url)
             self._is_deleted = True
 
+        def __getitem__(self, item):
+            """
+                    Return an attribute of this object.
+
+                    Args:
+                        item (str): Name of the attribute to be returned.
+
+                    Returns:
+                        Any: The returned attribute value.
+
+                    Raises:
+                        AttributeError: If the object has no such attribute.
+                    """
+            try:
+                return super(BaseAlert, self).__getattribute__(REMAPPED_NOTES_V6.get(item, item))
+            except AttributeError:
+                raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
+                                                                                  item))  # fall through to the rest of the logic...
+
+        def __getattr__(self, item):
+            """
+            Return an attribute of this object.
+
+            Args:
+                item (str): Name of the attribute to be returned.
+
+            Returns:
+                Any: The returned attribute value.
+
+            Raises:
+                AttributeError: If the object has no such attribute.
+            """
+
+            try:
+                item = REMAPPED_NOTES_V6.get(item, item)
+                return super(BaseAlert, self).__getattr__(item)
+            except AttributeError:
+                raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
+                                                                                  item))  # fall through to the rest of the logic...
+
     def notes_(self):
         """Retrieves all notes for an alert."""
         url = BaseAlert.Note.urlobject.format(self._cb.credentials.org_key, self._info[self.primary_key])
@@ -182,7 +282,7 @@ class BaseAlert(PlatformModel):
             remediation (str): The remediation status to set for the alert.
             comment (str): The comment to set for the alert.
         """
-        request = {"state": state}
+        request = {"status": state}
         if remediation:
             request["remediation_state"] = remediation
         if comment:
@@ -201,7 +301,7 @@ class BaseAlert(PlatformModel):
             remediation (str): The remediation status to set for the alert.
             comment (str): The comment to set for the alert.
         """
-        self._update_workflow_status("DISMISSED", remediation, comment)
+        self._update_workflow_status("CLOSED", remediation, comment)
 
     def update(self, remediation=None, comment=None):
         """
@@ -274,6 +374,59 @@ class BaseAlert(PlatformModel):
         output = cb.get_object(url, query_params)
         return output["suggestions"]
 
+    def __getitem__(self, item):
+        """
+                Return an attribute of this object.
+
+                Args:
+                    item (str): Name of the attribute to be returned.
+
+                Returns:
+                    Any: The returned attribute value.
+
+                Raises:
+                    AttributeError: If the object has no such attribute.
+                """
+        try:
+            return super(BaseAlert, self).__getattribute__(REMAPPED_ALERTS_V6.get(item, item))
+        except AttributeError:
+            raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
+                                                                              item))  # fall through to the rest of the logic...
+
+    def __getattr__(self, item):
+        """
+        Return an attribute of this object.
+
+        Args:
+            item (str): Name of the attribute to be returned.
+
+        Returns:
+            Any: The returned attribute value.
+
+        Raises:
+            AttributeError: If the object has no such attribute.
+        """
+
+        try:
+            item = REMAPPED_ALERTS_V6.get(item, item)
+            return super(BaseAlert, self).__getattr__(item)
+        except AttributeError:
+            raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
+                                                                              item))  # fall through to the rest of the logic...
+
+
+    def to_json(self, version="v7"):
+        if version == "v6":
+            modified_json = {}
+            #for item in self._info:
+            #    self._info.get()
+
+            #mapper function fields to v6 data schema
+
+            return modified_json
+
+        else:
+            return self._info
 
 class WatchlistAlert(BaseAlert):
     """Represents watch list alerts."""
@@ -328,7 +481,7 @@ class WatchlistAlert(BaseAlert):
 
 class CBAnalyticsAlert(BaseAlert):
     """Represents CB Analytics alerts."""
-    #urlobject = "/appservices/v6/orgs/{0}/alerts/cbanalytics"
+    # urlobject = "/appservices/v6/orgs/{0}/alerts/cbanalytics"
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
     type = ["CB_ANALYTICS"]
 
@@ -450,7 +603,7 @@ class DeviceControlAlert(BaseAlert):
 
 class ContainerRuntimeAlert(BaseAlert):
     """Represents Container Runtime alerts."""
-    #urlobject = "/appservices/v6/orgs/{0}/alerts/containerruntime"
+    # urlobject = "/appservices/v6/orgs/{0}/alerts/containerruntime"
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
     type = ["CONTAINER_RUNTIME"]
 
@@ -482,6 +635,47 @@ class Workflow(UnrefreshableModel):
             initial_data (dict): Initial data used to populate the workflow.
         """
         super(Workflow, self).__init__(cb, model_unique_id=None, initial_data=initial_data)
+
+    def __getitem__(self, item):
+        """
+                Return an attribute of this object.
+
+                Args:
+                    item (str): Name of the attribute to be returned.
+
+                Returns:
+                    Any: The returned attribute value.
+
+                Raises:
+                    AttributeError: If the object has no such attribute.
+                """
+        try:
+            return super(BaseAlert, self).__getattribute__(REMAPPED_WORKFLOWS_V6.get(item, item))
+        except AttributeError:
+            raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
+                                                                              item))  # fall through to the rest of the logic...
+
+    def __getattr__(self, item):
+        """
+        Return an attribute of this object.
+
+        Args:
+            item (str): Name of the attribute to be returned.
+
+        Returns:
+            Any: The returned attribute value.
+
+        Raises:
+            AttributeError: If the object has no such attribute.
+        """
+
+        try:
+            item = REMAPPED_WORKFLOWS_V6.get(item, item)
+            return super(BaseAlert, self).__getattr__(item)
+        except AttributeError:
+            raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
+                                                                              item))  # fall through to the rest of the logic...
+
 
 
 class WorkflowStatus(PlatformModel):
@@ -1098,11 +1292,13 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
 
             results = result.get("results", [])
             for item in results:
-                self.results_compatibility_mapping(item)
-
-                test = self._doc_class(self._cb, item["id"], item)
-                test._info = self._doc_class.original_document
-                yield test
+                #self.results_compatibility_mapping(item)
+                # self.
+                #grr = super(BaseALert, self._doc_class).__getattr__( "original_document")
+                #test = self._doc_class(self._cb, item["id"], item)
+                #grr = test.__getattr__("sensor_action")
+                #item.mapper
+                yield self._doc_class(self._cb, item["id"], item)
                 current += 1
                 numrows += 1
 
@@ -1132,6 +1328,7 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
             return results
         else:
             return results
+
     def facets(self, fieldlist, max_rows=0):
         """
         Return information about the facets for this alert by search, using the defined criteria.
@@ -1441,6 +1638,7 @@ class CBAnalyticsAlertSearchQuery(BaseAlertSearchQuery):
         else:
             return results
 
+
 class DeviceControlAlertSearchQuery(BaseAlertSearchQuery):
     """Represents a query that is used to locate DeviceControlAlert objects."""
     VALID_ALERT_TYPES = ["DEVICE_CONTROL"]
@@ -1566,6 +1764,7 @@ class DeviceControlAlertSearchQuery(BaseAlertSearchQuery):
 class ContainerRuntimeAlertSearchQuery(BaseAlertSearchQuery):
     """Represents a query that is used to locate ContainerRuntimeAlert objects."""
     VALID_ALERT_TYPES = ["CONTAINER_RUNTIME"]
+
     def __init__(self, doc_class, cb):
         """
         Initialize the ContainerRuntimeAlertSearchQuery.
