@@ -10,7 +10,7 @@ properties:
     - MINOR
     - SERIOUS
     - CRITICAL
-  create_time:
+  detection_timestamp:
     type: string
     format: date-time
     description: Time the alert was created
@@ -40,7 +40,7 @@ properties:
     description: Logged on user during the alert. This is filled on a best-effort
       approach. If the user is not available it may be populated with the device
       owner (empty for Container Runtime alerts)
-  first_event_time:
+  first_event_timestamp:
     type: string
     format: date-time
     description: Time of the first event in an alert
@@ -59,11 +59,11 @@ properties:
   id:
     type: string
     description: Unique ID for this alert
-  last_event_time:
+  last_event_timestamp:
     type: string
     format: date-time
     description: Time of the last event in an alert
-  last_update_time:
+  user_update_timestamp:
     type: string
     format: date-time
     description: Time the alert was last updated
@@ -78,11 +78,11 @@ properties:
     type: string
     example: ABCD1234
     description: Unique identifier for the organization to which the alert belongs
-  policy_id:
+  device_policy_id:
     type: integer
     format: int64
     description: ID of the policy the device was in at the time of the alert
-  policy_name:
+  device_policy:
     type: string
     description: Name of the policy the device was in at the time of the alert
   severity:
@@ -94,7 +94,7 @@ properties:
     description: Tags for the alert
     items:
       type: string
-  target_value:
+  device_target_value:
     type: string
     description: Device priority as assigned via the policy
     enum:
@@ -121,20 +121,22 @@ properties:
       changed_by:
         type: string
         description: Username of the user who changed the workflow
-      comment:
-        type: string
-        description: Comment when updating the workflow
-      last_update_time:
+      change_timestamp:
         type: string
         format: date-time
         description: When the workflow was last updated
-      remediation:
+      closure_reason:
         type: string
         description: Alert remediation code. Indicates the result of the investigation
           into the alert
-      state:
+      note:
+        type: string
+        description: Comment when updating the workflow
+      status:
         type: string
         description: State of the workflow
         enum:
         - OPEN
+        - IN_PROGRESS
         - DISMISSED
+        - CLOSED
