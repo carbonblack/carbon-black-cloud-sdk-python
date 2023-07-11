@@ -20,6 +20,7 @@ Guides
 ------
 
 * :doc:`alerts` - Work and manage different types of alerts such as CB Analytics Alert, Watchlist Alerts and Device Control Alerts.
+* :doc:`audit-log` - Retrieve audit log events indicating various "system" events.
 * :doc:`device-control` - Control the blocking of USB devices on endpoints.
 * :doc:`differential-analysis` - Provides the ability to compare and understand the changes between two Live Query runs
 * :doc:`live-query` - Live Query allows operators to ask questions of endpoints

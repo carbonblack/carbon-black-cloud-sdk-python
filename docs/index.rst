@@ -78,6 +78,7 @@ Guides
 
    alerts
    developing-credential-providers
+   audit-log
    device-control
    differential-analysis
    live-query

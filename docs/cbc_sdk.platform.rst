@@ -16,6 +16,14 @@ Alerts Module
    :members:
    :undoc-members:
    :show-inheritance:
+   
+Audit Module
+------------------------------
+
+.. automodule:: cbc_sdk.platform.audit
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Devices Module
 --------------------------------
