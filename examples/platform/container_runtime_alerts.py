@@ -48,6 +48,7 @@ def main():
     # Get Container Runtime alerts from the last however-many weeks.
     alerts = cb.select(ContainerRuntimeAlert).set_time_range('last_update_time', range=f"-{args.weeks}w")
 
+    print("something")
     # This duplicates the main for-loop in the article's example code.
     for alert in alerts:
         # This complicated if allows us to bypass checking the alert reason if "find" was not specified.
