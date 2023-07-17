@@ -221,22 +221,22 @@ def test_BaseAlert_dismiss(monkeypatch):
 
     def _do_dismiss(url, body, **kwargs):
         nonlocal _was_called
-        assert url == "/api/alerts/v7/orgs/Z100/alerts/ESD14U2C/workflow"
-        assert body == {"status": "CLOSED", "remediation_state": "Fixed", "comment": "Yessir"}
+        assert url == "/appservices/v6/orgs/Z100/alerts/ESD14U2C/workflow"
+        assert body == {"state": "DISMISSED", "remediation_state": "Fixed", "comment": "Yessir"}
         _was_called = True
-        return StubResponse({"status": "CLOSED", "closure_reason": "Fixed", "comment": "Yessir",
-                             "changed_by": "Robocop", "change_timestamp": "2019-10-31T16:03:13.951Z"})
+        return StubResponse({"state": "DISMISSED", "remediation": "Fixed", "comment": "Yessir",
+                             "changed_by": "Robocop", "last_update_time": "2019-10-31T16:03:13.951Z"})
 
     api = CBCloudAPI(url="https://example.com", token="ABCD/1234", org_key="Z100", ssl_verify=True)
     patch_cbc_sdk_api(monkeypatch, api, POST=_do_dismiss)
-    alert = BaseAlert(api, "ESD14U2C", {"id": "ESD14U2C", "workflow": {"status": "OPEN"}})
+    alert = BaseAlert(api, "ESD14U2C", {"id": "ESD14U2C", "workflow": {"state": "OPEN"}})
     alert.dismiss("Fixed", "Yessir")
     assert _was_called
     assert alert.workflow_.changed_by == "Robocop"
-    assert alert.workflow_.status == "CLOSED"
-    assert alert.workflow_.closure_reason == "Fixed"
+    assert alert.workflow_.state == "DISMISSED"
+    assert alert.workflow_.remediation == "Fixed"
     assert alert.workflow_.comment == "Yessir"
-    assert alert.workflow_.change_timestamp == "2019-10-31T16:03:13.951Z"
+    assert alert.workflow_.last_update_time == "2019-10-31T16:03:13.951Z"
 
 
 def test_BaseAlert_undismiss(monkeypatch):
