@@ -1253,7 +1253,7 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
 
         url = self._build_url("/_search")
         request = self._build_request(0, -1)
-        resp = self._cb.rpost_object(url, body=request)
+        resp = self._cb.post_object(url, body=request)
         result = resp.json()
 
         self._total_results = result["num_found"]
@@ -1292,12 +1292,6 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
 
             results = result.get("results", [])
             for item in results:
-                #self.results_compatibility_mapping(item)
-                # self.
-                #grr = super(BaseALert, self._doc_class).__getattr__( "original_document")
-                #test = self._doc_class(self._cb, item["id"], item)
-                #grr = test.__getattr__("sensor_action")
-                #item.mapper
                 yield self._doc_class(self._cb, item["id"], item)
                 current += 1
                 numrows += 1
@@ -1311,23 +1305,6 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
                 still_querying = False
                 break
 
-    def results_compatibility_mapping(self, results):
-        v6_query = type(self)
-        if v6_query is CBAnalyticsAlertSearchQuery:
-            results["blah"] = results["id"]
-            self._doc_class.original_document = results
-            self._doc_class._info = {}
-        elif v6_query is ContainerRuntimeAlertSearchQuery:
-            results["blah"] = results["id"]
-            return results
-        elif v6_query is WatchlistAlertSearchQuery:
-            results["blah"] = results["id"]
-            return results
-        elif v6_query is DeviceControlAlertSearchQuery:
-            results["blah"] = results["id"]
-            return results
-        else:
-            return results
 
     def facets(self, fieldlist, max_rows=0):
         """
