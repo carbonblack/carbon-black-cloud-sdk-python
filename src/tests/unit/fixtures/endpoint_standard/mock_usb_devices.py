@@ -543,3 +543,36 @@ USBDEVICE_MULTIPLE_QUERY_RESP = {
         }
     ]
 }
+
+USBDEVICE_EXPORT_RESP = {
+    "job_id": 9941708
+}
+
+USBDEVICE_EXPORT_JOB_RESP = {
+    "id": 9941708,
+    "type": "usbdevice_export",
+    "job_parameters": {
+        "job_parameters": {
+            "query": {
+                "query": "*",
+                "criteria": {
+                    "status": [
+                        "APPROVED"
+                    ]
+                }
+            }
+        },
+        "api_resource": "USBDEVICE",
+        "version": "v3"
+    },
+    "connector_id": "1234",
+    "org_key": "test",
+    "status": "COMPLETED",
+    "progress": {
+        "num_total": 6,
+        "num_completed": 6,
+        "message": "FINISHED"
+    },
+    "create_time": "2023-07-21T18:08:46.490Z",
+    "last_update_time": "2023-07-21T18:08:46.490Z"
+}
