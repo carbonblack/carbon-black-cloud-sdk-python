@@ -12,6 +12,7 @@
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
 """Model and Query Classes for Platform Alerts and Workflows"""
+import json
 import time
 
 from cbc_sdk.errors import ApiError, TimeoutError, ObjectNotFoundError, NonQueryableModel
@@ -36,17 +37,14 @@ REMAPPED_ALERTS_V6 = {
     "alert_classification.user_feedback": "determination_value",
     "cluster_name": "k8s_cluster",
     "create_time": "backend_timestamp",
-    "create_time": "detection_timestamp",
     "first_event_time": "first_event_timestamp",
     "last_event_time": "last_event_timestamp",
     "last_update_time": "backend_update_timestamp",
-    "last_update_time": "user_update_timestamp",
     "namespace": "k8s_namespace",
     "notes_present": "alert_notes_present",
     "policy_id": "device_policy_id",
     "policy_name": "device_policy",
     "port": "netconn_local_port",
-    "port": "netconn_remote_port",
     "protocol": "netconn_protocol",
     "remote_domain": "netconn_remote_domain",
     "remote_ip": "netconn_remote_ip",
@@ -68,7 +66,6 @@ REMAPPED_ALERTS_V6 = {
     "threat_cause_reputation": "process_reputation",
     "threat_indicators": "ttps",
     "watchlists": "watchlists.id",
-    "watchlists": "watchlists.name",
     "workflow.last_update_time": "workflow.change_timestamp",
     "workflow.comment": "workflow.note",
     "workflow.remediation": "workflow.closure_reason",
@@ -85,6 +82,62 @@ REMAPPED_WORKFLOWS_V6 = {
 }
 
 REMAPPED_NOTES_V6 = {
+    "last_update_time": "",
+
+}
+
+ALERTS_V6_MAPPINGS = {
+    "ml_classification_final_verdict": "alert_classification.classification",
+    "ml_classification_global_prevalence": "alert_classification.global_prevalence",
+    "ml_classification_org_prevalence": "alert_classification.org_prevalence",
+    "determination_value": "alert_classification.user_feedback",
+    "k8s_cluster": "cluster_name",
+    "backend_timestamp": "create_time",
+    "first_event_timestamp": "first_event_time",
+    "last_event_timestamp": "last_event_time",
+    "backend_update_timestamp": "last_update_time",
+    "k8s_namespace": "namespace",
+    "alert_notes_present": "notes_present",
+    "device_policy_id": "policy_id",
+    "device_policy": "policy_name",
+    "netconn_local_port": "port",
+    "netconn_protocol": "protocol",
+    "netconn_remote_domain": "remote_domain",
+    "netconn_remote_ip": "remote_ip",
+    "remote_k8s_namespace": "remote_namespace",
+    "remote_k8s_pod_name": "remote_replica_id",
+    "remote_k8s_kind": "remote_workload_kind",
+    "remote_k8s_workload_name": "remote_workload_name",
+    "k8s_pod_name": "replica_id",
+    "rule_id ": "rule_id",
+    "run_state": "run_state",
+    "device_target_value": "target_value",
+    "process_issuer": "threat_cause_actor_certificate_authority",
+    "process_name": "threat_cause_actor_name",
+    "process_publisher": "threat_cause_actor_publisher",
+    "process_sha256": "threat_cause_actor_sha256",
+    "primary_event_id": "threat_cause_cause_event_id",
+    "process_md5": "threat_cause_md5",
+    "parent_guid": "threat_cause_parent_guid",
+    "process_reputation": "threat_cause_reputation",
+    "ttps": "threat_indicators",
+    "watchlists.id": "watchlists",
+    "workflow.change_timestamp": "workflow.last_update_time",
+    "workflow.note": "workflow.comment",
+    "workflow.closure_reason": "workflow.remediation",
+    "workflow.status": "workflow.state",
+    "k8s_kind": "workload_kind",
+    "k8s_workload_name": "workload_name"
+}
+
+REMAPPED_WORKFLOWS_V7_TO_V6 = {
+    "change_timestamp": "last_update_time",
+    "note": "comment",
+    "closure_reason": "remediation",
+    "status": "state"
+}
+
+REMAPPED_NOTES_V7_TO_V6 = {
     "last_update_time": "",
 
 }
@@ -414,19 +467,33 @@ class BaseAlert(PlatformModel):
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
                                                                               item))  # fall through to the rest of the logic...
 
-
     def to_json(self, version="v7"):
         if version == "v6":
             modified_json = {}
-            #for item in self._info:
-            #    self._info.get()
 
-            #mapper function fields to v6 data schema
-
-            return modified_json
-
+            for key, value in self._info.items():
+                modified_json[ALERTS_V6_MAPPINGS.get(key, key)] = value
+                if key == "id":
+                    modified_json["legacy_alert_id"] = value
+                if key == "process_name":
+                    modified_json["process_name"] = value
+                if key == "threat_cause_event_id":
+                    modified_json["created_by_event_id"] = value
+                if key == "ttps":
+                    ti = {}
+                    ti["process_name"] = self._info.get("process_name")
+                    ti["sha256"] = self._info.get("process_sha256")
+                    ti["ttps"] = value
+                    modified_json["threat_indicators"] = [ti]
+                if key == "workflow":
+                    wf = {}
+                    for wf_key, wf_value in value.items():
+                        wf[REMAPPED_WORKFLOWS_V7_TO_V6.get(wf_key, wf_key)] = wf_value
+                    modified_json[key] = wf
+            return json.dumps(modified_json)
         else:
             return self._info
+
 
 class WatchlistAlert(BaseAlert):
     """Represents watch list alerts."""
@@ -675,7 +742,6 @@ class Workflow(UnrefreshableModel):
         except AttributeError:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
                                                                               item))  # fall through to the rest of the logic...
-
 
 
 class WorkflowStatus(PlatformModel):
@@ -1304,7 +1370,6 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
             if current >= self._total_results:
                 still_querying = False
                 break
-
 
     def facets(self, fieldlist, max_rows=0):
         """
