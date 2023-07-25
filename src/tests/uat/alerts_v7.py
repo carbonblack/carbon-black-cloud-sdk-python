@@ -20,7 +20,7 @@ import sys
 # from datetime import datetime, timedelta, timezone
 from cbc_sdk import CBCloudAPI
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
-from cbc_sdk.platform import BaseAlert
+from cbc_sdk.platform import BaseAlert, CBAnalyticsAlert, ContainerRuntimeAlert, DeviceControlAlert, WatchlistAlert
 
 
 def search_alert_no_criteria(cb, print_detail):
@@ -47,7 +47,7 @@ def get_alert_by_id(cb, alert, print_detail):
             print(a)
 
 
-def verify_v6_v7_field_mappings(alert):
+def verify_v6_v7_field_mappings_base_alert(alert):
 
     try:
         # category is deprecated and should throw an exception
@@ -157,10 +157,33 @@ def verify_v6_v7_field_mappings(alert):
     print("type: {}".format(alert.type))
     print("workflow: {}".format(alert.workflow))
 
+def verify_v6_v7_field_mappings_cb_analytics_alert(cb):
+    """No additional fields.  get_events() method and check the type can be selected"""
+    alert = cb.select(CBAnalyticsAlert).first()
+    print(alert)
+    # TO DO - behaviour of this under discussion
+    alert.get_events()
 
+def verify_v6_v7_field_mappings_container_runtime_alert(cb):
+    """No additional fields or methods, just check the type can be selected"""
+    alert = cb.select(CBAnalyticsAlert).first()
+    print(alert)
+
+def verify_v6_v7_field_mappings_device_control_alert(cb):
+    """No additional fields or methods, just check the type can be selected"""
+    alert = cb.select(DeviceControlAlert).first()
+    print(alert)
+
+def verify_v6_v7_field_mappings_watchlist_alert(cb):
+    """No additional fields.  Test get_process methods and that the type can be selected"""
+    alert = cb.select(WatchlistAlert).first()
+    print(alert)
 
 def main():
     """Main function for Alerts - Demonstrate UAE features script."""
+
+    cast(-1062731672) to unsigned
+
     parser = build_cli_parser("Test Alert Functions")
     #subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -172,13 +195,14 @@ def main():
     args = parser.parse_args()
     cb = get_cb_cloud_object(args)
     alert = search_alert_no_criteria(cb, False)
-    get_alert_by_id(cb, alert, False)
-    verify_v6_v7_field_mappings(alert)
+    #get_alert_by_id(cb, alert, False)
+    #verify_v6_v7_field_mappings(alert)
+    verify_v6_v7_field_mappings_cb_analytics_alert(alert)
+    verify_v6_v7_field_mappings_container_runtime_alert(cb)
+    verify_v6_v7_field_mappings_device_control_alert(cb)
+    verify_v6_v7_field_mappings_watchlist_alert(cb)
 
-    #if args.command == "poll":
-    #    poll_for_alerts(cb, args)
-    #else:
-    #    raise NotImplementedError("Unknown command")
+
     return 0
 
 
