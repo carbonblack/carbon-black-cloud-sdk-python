@@ -978,7 +978,7 @@ class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupport
         Returns:
             Job: The asynchronous job that will provide the export output when the server has prepared it.
         """
-        if export_format not in USBDeviceQuery.VALID_EXPORT_FORMATS:
+        if not (export_format and export_format.upper() in USBDeviceQuery.VALID_EXPORT_FORMATS):
             raise ApiError(f"invalid export format `{export_format}`")
         request = self._build_request(0, -1)
         request['format'] = export_format
