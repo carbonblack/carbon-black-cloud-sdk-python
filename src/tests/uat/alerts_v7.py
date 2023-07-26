@@ -22,7 +22,6 @@ from cbc_sdk import CBCloudAPI
 from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
 from cbc_sdk.platform import BaseAlert, CBAnalyticsAlert, ContainerRuntimeAlert, DeviceControlAlert, WatchlistAlert
 
-
 def search_alert_no_criteria(cb, print_detail):
     """get a list of alerts, no criteria"""
     alert_list = cb.select(BaseAlert)
@@ -48,7 +47,7 @@ def get_alert_by_id(cb, alert, print_detail):
 
 
 def verify_v6_v7_field_mappings_base_alert(alert):
-
+    """Check that fields from v6 Alert that have a different name in v7 are mapped correctly"""
     try:
         # category is deprecated and should throw an exception
         print("Print alert category: should throw an exception: {}".format(alert.category))
@@ -156,51 +155,74 @@ def verify_v6_v7_field_mappings_base_alert(alert):
     print("threat_id: {}".format(alert.threat_id))
     print("type: {}".format(alert.type))
     print("workflow: {}".format(alert.workflow))
+    return alert
+
 
 def verify_v6_v7_field_mappings_cb_analytics_alert(cb):
     """No additional fields.  get_events() method and check the type can be selected"""
-    alert = cb.select(CBAnalyticsAlert).first()
+    alert_list = cb.select(CBAnalyticsAlert)
+    alert = alert_list.first()
     print(alert)
     # TO DO - behaviour of this under discussion
     alert.get_events()
+    if alert.type != "CB_ANALYTICS":
+        print("Nooooooooooo! Wrong type in verify_v6_v7_field_mappings_cb_analytics_alert")
+
+    return alert
 
 def verify_v6_v7_field_mappings_container_runtime_alert(cb):
     """No additional fields or methods, just check the type can be selected"""
-    alert = cb.select(CBAnalyticsAlert).first()
+    alert = cb.select(ContainerRuntimeAlert).first()
     print(alert)
+    if alert.type != "CONTAINER_RUNTIME":
+        print("Nooooooooooo! Wrong type in verify_v6_v7_field_mappings_container_runtime_alert")
+
+    return alert
 
 def verify_v6_v7_field_mappings_device_control_alert(cb):
     """No additional fields or methods, just check the type can be selected"""
-    alert = cb.select(DeviceControlAlert).first()
+    "TO DO - waiting on timerange to work"
+    alert_list = cb.select(DeviceControlAlert).set_backend_timestamp(range="-20d")
+    alert = alert_list.first()
     print(alert)
+    if alert.type != "DEVICE_CONTROL":
+        print("Nooooooooooo! Wrong type in verify_v6_v7_field_mappings_device_control_alert")
+
+    return alert
 
 def verify_v6_v7_field_mappings_watchlist_alert(cb):
     """No additional fields.  Test get_process methods and that the type can be selected"""
     alert = cb.select(WatchlistAlert).first()
+    if alert.type != "WATCHLIST":
+        print("Nooooooooooo! Wrong type in verify_v6_v7_field_mappings_watchlist_alert")
     print(alert)
+    return alert
+
+def verify_tojson(alert):
+    """Check to json for each alert type, v6 and v7"""
+    print("v7 Alert to Json:")
+    print(alert.to_json())
+    print("\n\n\n v6 Alert to Json: \n\n\n")
+    print(alert.to_json("v6"))
+
+
 
 def main():
     """Main function for Alerts - Demonstrate UAE features script."""
 
-    cast(-1062731672) to unsigned
-
     parser = build_cli_parser("Test Alert Functions")
-    #subparsers = parser.add_subparsers(dest="command", required=True)
-
-    #alert_poll = subparsers.add_parser("poll", help="Poll for new alerts periodically")
-    #alert_poll.add_argument('-r', '--run_period', type=int, default=180, help="Time in seconds to continue polling for")
-    # For production use, a longer poll interval of at least one minute should be used
-    #alert_poll.add_argument('-p', '--poll_interval', type=int, default=30, help="Time in seconds between calling the api")
 
     args = parser.parse_args()
     cb = get_cb_cloud_object(args)
+    cb_container = CBCloudAPI(profile="CONTAINER_RUNTIME")
     alert = search_alert_no_criteria(cb, False)
     #get_alert_by_id(cb, alert, False)
-    #verify_v6_v7_field_mappings(alert)
-    verify_v6_v7_field_mappings_cb_analytics_alert(alert)
-    verify_v6_v7_field_mappings_container_runtime_alert(cb)
-    verify_v6_v7_field_mappings_device_control_alert(cb)
-    verify_v6_v7_field_mappings_watchlist_alert(cb)
+    base_alert = verify_v6_v7_field_mappings_base_alert(alert)
+    #cb_analytics_alert = verify_v6_v7_field_mappings_cb_analytics_alert(alert)
+    container_runtime_alert = verify_v6_v7_field_mappings_container_runtime_alert(cb_container)
+    #device_control_alert = verify_v6_v7_field_mappings_device_control_alert(cb)
+    watchlist_alert = verify_v6_v7_field_mappings_watchlist_alert(cb)
+    verify_tojson(base_alert)
 
 
     return 0
