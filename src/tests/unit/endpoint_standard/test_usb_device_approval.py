@@ -18,13 +18,15 @@ import logging
 from cbc_sdk.endpoint_standard import USBDeviceApproval, USBDevice
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError
+from cbc_sdk.platform import Job
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.endpoint_standard.mock_usb_devices import (USBDEVICE_APPROVAL_GET_RESP,
                                                                     USBDEVICE_APPROVAL_PUT_RESP,
                                                                     USBDEVICE_APPROVAL_QUERY_RESP,
                                                                     USBDEVICE_APPROVAL_BULK_CREATE_REQ,
                                                                     USBDEVICE_APPROVAL_BULK_CREATE_RESP,
-                                                                    USBDEVICE_GET_RESP)
+                                                                    USBDEVICE_GET_RESP, USBDEVICE_EXPORT_RESP,
+                                                                    USBDEVICE_EXPORT_JOB_RESP)
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -234,3 +236,39 @@ def test_approval_bulk_create_csv(cbcsdk_mock):
     assert approval.product_id == "0x6969"
     assert approval.product_name == "Happy Hard Drive"
     assert approval.approval_name == "Example Approval2"
+
+
+def test_approval_export(cbcsdk_mock):
+    """Test the export functionality of the USB device query."""
+    def post_validate(url, body, **kwargs):
+        assert body['query'] == '*'
+        crits = body['criteria']
+        assert crits['product_name'] == ['Foonly']
+        assert body['format'] == 'JSON'
+        return USBDEVICE_EXPORT_RESP
+
+    cbcsdk_mock.mock_request("POST", "/device_control/v3/orgs/test/approvals/_export", post_validate)
+    cbcsdk_mock.mock_request("GET", "/jobs/v1/orgs/test/jobs/9941708", USBDEVICE_EXPORT_JOB_RESP)
+    api = cbcsdk_mock.api
+    query = api.select(USBDeviceApproval).where('*').set_product_names(['Foonly'])
+    job = query.export('JSON')
+    assert job
+    assert isinstance(job, Job)
+    assert job.id == 9941708
+
+
+def test_approval_export_badformat(cbcsdk_mock):
+    """Tests the error thrown when a bad format is supplied to the export function."""
+    api = cbcsdk_mock.api
+    query = api.select(USBDeviceApproval).where('*').set_product_names(['Foonly'])
+    with pytest.raises(ApiError):
+        query.export('XLSX')
+
+
+def test_approval_export_nojob(cbcsdk_mock):
+    """Tests the situation in which the export function does not return a job ID."""
+    cbcsdk_mock.mock_request("POST", "/device_control/v3/orgs/test/approvals/_export", {})
+    api = cbcsdk_mock.api
+    query = api.select(USBDeviceApproval).where('*').set_product_names(['Foonly'])
+    with pytest.raises(ApiError):
+        query.export('CSV')

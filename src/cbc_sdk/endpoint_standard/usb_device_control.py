@@ -421,6 +421,7 @@ class USBDevice(NewBaseModel):
 class USBDeviceApprovalQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
                              IterableQueryMixin, AsyncQueryMixin):
     """Represents a query that is used to locate USBDeviceApproval objects."""
+    VALID_EXPORT_FORMATS = ('CSV', 'JSON')
 
     def __init__(self, doc_class, cb):
         """
@@ -598,6 +599,30 @@ class USBDeviceApprovalQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilde
         self._count_valid = True
         results = result.get("results", [])
         return [self._doc_class(self._cb, item["id"], item) for item in results]
+
+    def export(self, export_format):
+        """
+        Starts the process of exporting USB device approval data from the organization in a specified format.
+
+        Required Permissions:
+            external-device.manage (READ)
+
+        Args:
+            export_format (str): The format to export USB device approval data in. Must be either "CSV" or "JSON".
+
+        Returns:
+            Job: The asynchronous job that will provide the export output when the server has prepared it.
+        """
+        if not (export_format and export_format.upper() in USBDeviceApprovalQuery.VALID_EXPORT_FORMATS):
+            raise ApiError(f"invalid export format `{export_format}`")
+        request = self._build_request(0, -1)
+        request['format'] = export_format
+        url = self._build_url("/_export")
+        resp = self._cb.post_object(url, body=request)
+        result = resp.json()
+        if 'job_id' not in result:
+            raise ApiError("no job ID returned from server")
+        return Job(self._cb, result['job_id'])
 
 
 class USBDeviceBlockQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
