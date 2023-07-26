@@ -27,6 +27,18 @@ organization.
 Note that individual USB devices may be ``APPROVED`` or ``UNAPPROVED``. USB devices which are ``UNAPPROVED`` cannot
 be read on any endpoint with a policy that blocks unknown USB devices.
 
+A USB device query can also be exported to either CSV or JSON format, for use by other software systems.
+
+::
+
+    >>> from cbc_sdk import CBCloudAPI
+    >>> api = CBCloudAPI(profile='sample')
+    >>> from cbc_sdk.endpoint_standard import USBDevice
+    >>> query = api.select(USBDevice).where('1')
+    >>> job = query.export('CSV')
+    >>> csv_report = job.get_output_as_string()
+    >>> # can also get the output as a file or as enumerated lines of text
+
 Approving A Specific Device
 ---------------------------
 
@@ -82,6 +94,33 @@ Device approvals may be removed via the API as well. Starting from the end of th
 
 The ``delete()`` method is what causes the approval to be removed.  We then use ``refresh()`` on the actual
 ``USBDevice`` object to allow its ``status`` to be updated.
+
+Retrieving the List of Approvals
+--------------------------------
+
+USB device approvals can also be enumerated directly.
+
+::
+
+    >>> from cbc_sdk import CBCloudAPI
+    >>> api = CBCloudAPI(profile='sample')
+    >>> from cbc_sdk.endpoint_standard import USBDeviceApproval
+    >>> query = api.select(USBDeviceApproval)
+    >>> for approval in query:
+    ...     print(f"{approval.id} {approval.approval_name} {approval.serial_number}")
+    ...
+
+They can also be exported in a similar manner to USB devices.
+
+::
+
+    >>> from cbc_sdk import CBCloudAPI
+    >>> api = CBCloudAPI(profile='sample')
+    >>> from cbc_sdk.endpoint_standard import USBDeviceApproval
+    >>> query = api.select(USBDeviceApproval)
+    >>> job = query.export('CSV')
+    >>> csv_report = job.get_output_as_string()
+    >>> # can also get the output as a file or as enumerated lines of text
 
 Device Control Alerts
 ---------------------
