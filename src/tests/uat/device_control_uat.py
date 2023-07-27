@@ -57,6 +57,7 @@ USB_DEVICE_APPROVAL = '{}device_control/v3/orgs/{}/approvals'
 USB_DEVICE_BLOCKS = '{}device_control/v3/orgs/{}/blocks'
 USB_DEVICES = '{}device_control/v3/orgs/{}/devices'
 USB_DEVICES_FACETS = '{}device_control/v3/orgs/{}/devices/_facet'
+JOB_OUTPUT = '{}/jobs/v1/orgs/{}/jobs/{}/download'
 HEADERS = {'X-Auth-Token': '', 'Content-Type': 'application/json'}
 ORG_KEY = ''
 HOSTNAME = ''
@@ -96,6 +97,11 @@ def search_usb_device_approval():
     return requests.post(usb_url, json={}, headers=HEADERS)
 
 
+def export_usb_device_approval():
+    """Export USB Device Approval"""
+    ...
+
+
 def get_usb_device_block_by_id_api(block_id):
     """Get Block by ID"""
     url = USB_DEVICE_BLOCKS.format(HOSTNAME, ORG_KEY)
@@ -114,6 +120,15 @@ def search_usb_devices():
     usb_url = USB_DEVICES.format(HOSTNAME, ORG_KEY)
     usb_url += '/_search'
     return requests.post(usb_url, json={}, headers=HEADERS)
+
+
+def export_usb_devices():
+    """Export USB Devices"""
+    usb_url = USB_DEVICES.format(HOSTNAME, ORG_KEY)
+    usb_url += '/_export'
+    job_ref = requests.post(usb_url, json={"format": "CSV"}, headers=HEADERS).json()
+    job_url = JOB_OUTPUT.format(HOSTNAME, ORG_KEY, job_ref['job_id'])
+    return requests.get(job_url, headers=HEADERS)
 
 
 def search_usb_devices_facets():
@@ -173,10 +188,12 @@ def main():
         'Actual: {}'.format(api_search, sdk_results)
     print('Search Test...................................OK')
 
+    # export device approvals
+    # TODO
+
     # update the object
     sdk_created_obj.approval_name = 'Changed Approval'
     sdk_created_obj._update_object()
-    sdk_created_new = None
     query = cb.select(USBDeviceApproval)
     sdk_created_new = query[0]
     assert sdk_created_new.approval_name == 'Changed Approval', 'Update Test '\
@@ -234,6 +251,7 @@ def main():
     print('USB Devices')
     print(SYMBOLS * DELIMITER)
 
+    # Search USB Devices
     query = cb.select(USBDevice)
     sdk_results = []
     for device in query:
@@ -245,6 +263,9 @@ def main():
     assert sdk_results == api_search['results'], 'Device Search Test Failed -'\
         'Expected: {}, Actual: {}'.format(api_search['results'], sdk_results)
     print('Device Search.................................OK')
+
+    # Export USB Devices
+    # TODO
 
     # Facet USB Devices
     query = cb.select(USBDevice).facets(["status"])
@@ -263,6 +284,8 @@ def main():
     assert api_results == sdk_result, 'Get USB Device Vendors and Products '\
         'Failed - Expected: {}, Actual: {}'.format(api_results, sdk_result)
     print('Get USB Device Vendors and Products Seen......OK')
+
+    return 0
 
 
 if __name__ == "__main__":
