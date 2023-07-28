@@ -6,7 +6,7 @@ Base Module
 
 .. automodule:: cbc_sdk.platform.base
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 Alerts Module
@@ -14,15 +14,15 @@ Alerts Module
 
 .. automodule:: cbc_sdk.platform.alerts
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
-   
+
 Audit Module
 ------------------------------
 
 .. automodule:: cbc_sdk.platform.audit
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 Devices Module
@@ -30,7 +30,7 @@ Devices Module
 
 .. automodule:: cbc_sdk.platform.devices
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 Events Module
@@ -38,7 +38,7 @@ Events Module
 
 .. automodule:: cbc_sdk.platform.events
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 Grants Module
@@ -46,7 +46,7 @@ Grants Module
 
 .. automodule:: cbc_sdk.platform.grants
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 Jobs Module
@@ -54,7 +54,7 @@ Jobs Module
 
 .. automodule:: cbc_sdk.platform.jobs
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 Network Threat Metadata Module
@@ -62,7 +62,7 @@ Network Threat Metadata Module
 
 .. automodule:: cbc_sdk.platform.network_threat_metadata
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 Observations Module
@@ -70,7 +70,7 @@ Observations Module
 
 .. automodule:: cbc_sdk.platform.observations
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 Policies Module
@@ -78,7 +78,7 @@ Policies Module
 
 .. automodule:: cbc_sdk.platform.policies
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 RuleConfigs Module
@@ -86,7 +86,7 @@ RuleConfigs Module
 
 .. automodule:: cbc_sdk.platform.policy_ruleconfigs
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 Processes Module
@@ -94,7 +94,7 @@ Processes Module
 
 .. automodule:: cbc_sdk.platform.processes
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 Reputation Module
@@ -102,7 +102,7 @@ Reputation Module
 
 .. automodule:: cbc_sdk.platform.reputation
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 Users Module
@@ -110,7 +110,7 @@ Users Module
 
 .. automodule:: cbc_sdk.platform.users
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 Vulnerability Assessment Module
@@ -118,5 +118,5 @@ Vulnerability Assessment Module
 
 .. automodule:: cbc_sdk.platform.vulnerability_assessment
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
