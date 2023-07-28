@@ -99,7 +99,7 @@ See detailed information on the objects and methods exposed by the Carbon Black 
 
 .. toctree::
    :caption: SDK Documentation
-   :maxdepth: 2
+   :maxdepth: 4
 
    cbc_sdk.audit_remediation
    cbc_sdk.credential_providers
