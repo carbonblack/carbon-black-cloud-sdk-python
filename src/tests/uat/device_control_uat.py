@@ -97,9 +97,13 @@ def search_usb_device_approval():
     return requests.post(usb_url, json={}, headers=HEADERS)
 
 
-def export_usb_device_approval():
-    """Export USB Device Approval"""
-    ...
+def export_usb_device_approvals():
+    """Export USB Device Approvals"""
+    usb_url = USB_DEVICE_APPROVAL.format(HOSTNAME, ORG_KEY)
+    usb_url += '/_export'
+    job_ref = requests.post(usb_url, json={"format": "CSV"}, headers=HEADERS).json()
+    job_url = JOB_OUTPUT.format(HOSTNAME, ORG_KEY, job_ref['job_id'])
+    return requests.get(job_url, headers=HEADERS)
 
 
 def get_usb_device_block_by_id_api(block_id):
@@ -153,6 +157,10 @@ def main():
     HEADERS['X-Auth-Token'] = cb.credentials.token
     ORG_KEY = cb.credentials.org_key
     HOSTNAME = cb.credentials.url
+    if not HOSTNAME.endswith('/'):
+        HOSTNAME += '/'
+    if print_detail:
+        print(f"{HOSTNAME=} {ORG_KEY=}")
 
     # USB Device Approvals
     """USB Device Control Approval"""
@@ -184,12 +192,18 @@ def main():
             print('Bulk Create Test..............................OK')
         sdk_results.append(approval._info)
     api_search = search_usb_device_approval().json()['results']
-    assert sdk_results == api_search, 'Search Test Failed Expected: {}, ' \
+    assert sdk_results == api_search, 'Search Test Failed\nExpected: {}\n' \
         'Actual: {}'.format(api_search, sdk_results)
     print('Search Test...................................OK')
 
     # export device approvals
-    # TODO
+    query = cb.select(USBDeviceApproval)
+    job = query.export('CSV')
+    sdk_results = job.get_output_as_string()
+    api_results = export_usb_device_approvals()
+    assert sdk_results == api_results, 'Export Test Failed\nExpected: {}\n' \
+        'Actual: {}'.format(api_results, sdk_results)
+    print('Export Test...................................OK')
 
     # update the object
     sdk_created_obj.approval_name = 'Changed Approval'
@@ -265,7 +279,13 @@ def main():
     print('Device Search.................................OK')
 
     # Export USB Devices
-    # TODO
+    query = cb.select(USBDevice)
+    job = query.export('CSV')
+    sdk_results = job.get_output_as_string()
+    api_results = export_usb_devices()
+    assert sdk_results == api_results, 'Export Test Failed\nExpected: {}\n' \
+                                       'Actual: {}'.format(api_results, sdk_results)
+    print('Export Test...................................OK')
 
     # Facet USB Devices
     query = cb.select(USBDevice).facets(["status"])
