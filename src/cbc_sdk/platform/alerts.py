@@ -160,7 +160,6 @@ class BaseAlert(PlatformModel):
             initial_data (dict): Initial data used to populate the alert.
         """
         super(BaseAlert, self).__init__(cb, model_unique_id, initial_data)
-        self._info = self.to_json()
         self._workflow = Workflow(cb, initial_data.get("workflow", None) if initial_data else None)
         if model_unique_id is not None and initial_data is None:
             self._refresh()
@@ -490,7 +489,7 @@ class BaseAlert(PlatformModel):
                     for wf_key, wf_value in value.items():
                         wf[REMAPPED_WORKFLOWS_V7_TO_V6.get(wf_key, wf_key)] = wf_value
                     modified_json[key] = wf
-            return json.dumps(modified_json)
+            return modified_json
         else:
             return self._info
 
