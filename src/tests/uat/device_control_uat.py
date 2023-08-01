@@ -107,6 +107,7 @@ def export_usb_device_approvals():
     resp = requests.get(job_url, headers=HEADERS)
     return resp.text
 
+
 def get_usb_device_block_by_id_api(block_id):
     """Get Block by ID"""
     url = USB_DEVICE_BLOCKS.format(HOSTNAME, ORG_KEY)
