@@ -67,7 +67,7 @@ Get started with Carbon Black Cloud Python SDK here. For detailed information on
    Getting Started <getting-started>
    concepts
    resources
-   porting-guide
+   guides
 
 Guides
 ------
@@ -76,13 +76,15 @@ Guides
    :caption: Guides
    :maxdepth: 2
 
+   porting-guide
    alerts
-   developing-credential-providers
    audit-log
+   developing-credential-providers
    device-control
    differential-analysis
    live-query
    live-response
+   live-response-v6-migration
    policy
    recommendations
    reputation-override
