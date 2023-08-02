@@ -1649,7 +1649,8 @@ class QueryBuilderSupportMixin:
 
 
 class CriteriaBuilderSupportMixin:
-    """A mixin that supplies wrapper methods to access the _crtieria."""
+    """A mixin that supplies wrapper methods to access the criteria."""
+    VALID_DIRECTIONS = ("ASC", "DESC")
 
     def add_criteria(self, key, newlist):
         """Add to the criteria on this query with a custom criteria key.
