@@ -6,7 +6,7 @@ NSX Remediation Module
 
 .. automodule:: cbc_sdk.workload.nsx_remediation
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 Sensor Lifecycle Module
@@ -14,7 +14,7 @@ Sensor Lifecycle Module
 
 .. automodule:: cbc_sdk.workload.sensor_lifecycle
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 VM Workloads Search Module
@@ -22,5 +22,5 @@ VM Workloads Search Module
 
 .. automodule:: cbc_sdk.workload.vm_workloads_search
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:

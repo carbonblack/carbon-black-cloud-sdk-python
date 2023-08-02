@@ -6,7 +6,7 @@ Base Module
 
 .. automodule:: cbc_sdk.audit_remediation.base
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 Differential Module
@@ -14,5 +14,5 @@ Differential Module
 
 .. automodule:: cbc_sdk.audit_remediation.differential
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:

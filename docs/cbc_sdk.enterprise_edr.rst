@@ -6,7 +6,7 @@ Auth Events Module
 
 .. automodule:: cbc_sdk.enterprise_edr.auth_events
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 Threat Intelligence Module
@@ -14,7 +14,7 @@ Threat Intelligence Module
 
 .. automodule:: cbc_sdk.enterprise_edr.threat_intelligence
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 UBS Module
@@ -22,5 +22,5 @@ UBS Module
 
 .. automodule:: cbc_sdk.enterprise_edr.ubs
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
