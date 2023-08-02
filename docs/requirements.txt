@@ -1,4 +1,5 @@
 # Defining the exact version will make sure things don't break
+sphinx==6.2.1
 sphinxcontrib-apidoc
 sphinx-copybutton==0.4.0
 pygments
