@@ -6,7 +6,7 @@ Base Module
 
 .. automodule:: cbc_sdk.endpoint_standard.base
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 Standard Recommendation Module
@@ -14,7 +14,7 @@ Standard Recommendation Module
 
 .. automodule:: cbc_sdk.endpoint_standard.recommendation
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 USB Device Control Module
@@ -22,6 +22,5 @@ USB Device Control Module
 
 .. automodule:: cbc_sdk.endpoint_standard.usb_device_control
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
-

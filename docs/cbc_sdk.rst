@@ -23,7 +23,7 @@ Base Module
 
 .. automodule:: cbc_sdk.base
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 Connection Module
@@ -31,7 +31,7 @@ Connection Module
 
 .. automodule:: cbc_sdk.connection
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 Credentials Module
@@ -39,7 +39,7 @@ Credentials Module
 
 .. automodule:: cbc_sdk.credentials
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 Errors Module
@@ -47,7 +47,7 @@ Errors Module
 
 .. automodule:: cbc_sdk.errors
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 Helpers Module
@@ -55,7 +55,7 @@ Helpers Module
 
 .. automodule:: cbc_sdk.helpers
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 Live Response API Module
@@ -63,7 +63,7 @@ Live Response API Module
 
 .. automodule:: cbc_sdk.live_response_api
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 REST API Module
@@ -71,7 +71,7 @@ REST API Module
 
 .. automodule:: cbc_sdk.rest_api
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 Utils Module
@@ -79,7 +79,7 @@ Utils Module
 
 .. automodule:: cbc_sdk.utils
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 WinError Module
@@ -87,5 +87,5 @@ WinError Module
 
 .. automodule:: cbc_sdk.winerror
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
