@@ -915,6 +915,19 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         self._bulkupdate_url = "/appservices/v6/orgs/{0}/alerts/workflow/_criteria"
         self._count_valid = False
         self._total_results = 0
+        self._batch_size = 100
+
+    def set_rows(self, rows):
+        """
+        Sets the 'rows' query body parameter, determining how many rows of results to request.
+
+        Args:
+            rows (int): How many rows to request.
+        """
+        if not isinstance(rows, int):
+            raise ApiError(f"Rows must be an integer. {rows} is a {type(rows)}.")
+        self._batch_size = rows
+        return self
 
     def _build_criteria(self):
         """
@@ -961,8 +974,8 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         """
         request = {"criteria": self._build_criteria()}
         request["query"] = self._query_builder._collapse()
-        # Fetch 100 rows per page (instead of 10 by default) for better performance
-        request["rows"] = 100
+
+        request["rows"] = self._batch_size
         if from_row > 0:
             request["start"] = from_row
         if max_rows >= 0:
@@ -995,7 +1008,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             return self._total_results
 
         url = self._build_url("/_search")
-        request = self._build_request(0, -1)
+        request = self._build_request(1, -1)
         resp = self._cb.post_object(url, body=request)
         result = resp.json()
 
