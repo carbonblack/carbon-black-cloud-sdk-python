@@ -1,5 +1,31 @@
-from cbc_sdk.errors import ApiError, TimeoutError, ObjectNotFoundError, NonQueryableModel
-class LegacyAlertSearchQueryCriterian():
+import time
+from cbc_sdk.errors import ApiError
+from cbc_sdk.platform.devices import DeviceSearchQuery
+from cbc_sdk.base import CriteriaBuilderSupportMixin
+
+ALERT_VALID_CATEGORIES = ["THREAT", "MONITORED"]
+ALERT_VALID_REPUTATIONS = ["KNOWN_MALWARE", "SUSPECT_MALWARE", "PUP", "NOT_LISTED", "ADAPTIVE_WHITE_LIST",
+                           "COMMON_WHITE_LIST", "TRUSTED_WHITE_LIST", "COMPANY_BLACK_LIST"]
+ALERT_VALID_ALERT_TYPES = ["CB_ANALYTICS", "DEVICE_CONTROL", "WATCHLIST", "CONTAINER_RUNTIME"]
+ALERT_VALID_WORKFLOW_VALS = ["OPEN", "DISMISSED"]
+ALERT_VALID_FACET_FIELDS = ["ALERT_TYPE", "CATEGORY", "REPUTATION", "WORKFLOW", "TAG", "POLICY_ID",
+                            "POLICY_NAME", "DEVICE_ID", "DEVICE_NAME", "APPLICATION_HASH",
+                            "APPLICATION_NAME", "STATUS", "RUN_STATE", "POLICY_APPLIED_STATE",
+                            "POLICY_APPLIED", "SENSOR_ACTION"]
+CB_ANALYTICS_VALID_ALERT_TYPES = ["CB_ANALYTICS"]
+CB_ANALYTICS_VALID_THREAT_CATEGORIES = ["UNKNOWN", "NON_MALWARE", "NEW_MALWARE", "KNOWN_MALWARE", "RISKY_PROGRAM"]
+CB_ANALYTICS_VALID_LOCATIONS = ["ONSITE", "OFFSITE", "UNKNOWN"]
+CB_ANALYTICS_VALID_KILL_CHAIN_STATUSES = ["RECONNAISSANCE", "WEAPONIZE", "DELIVER_EXPLOIT", "INSTALL_RUN",
+                                          "COMMAND_AND_CONTROL", "EXECUTE_GOAL", "BREACH"]
+CB_ANALYTICS_VALID_POLICY_APPLIED = ["APPLIED", "NOT_APPLIED"]
+CB_ANALYTICS_VALID_RUN_STATES = ["DID_NOT_RUN", "RAN", "UNKNOWN"]
+CB_ANALYTICS_VALID_SENSOR_ACTIONS = ["POLICY_NOT_APPLIED", "ALLOW", "ALLOW_AND_LOG", "TERMINATE", "DENY"]
+CB_ANALYTICS_VALID_THREAT_CAUSE_VECTORS = ["EMAIL", "WEB", "GENERIC_SERVER", "GENERIC_CLIENT", "REMOTE_DRIVE",
+                                           "REMOVABLE_MEDIA", "UNKNOWN", "APP_STORE", "THIRD_PARTY"]
+
+
+class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
+
     def set_categories(self, categories):
         """
         Restricts the alerts that this query is performed on to the specified categories.
@@ -11,7 +37,7 @@ class LegacyAlertSearchQueryCriterian():
         Returns:
             AlertSearchQuery: This instance.
         """
-        if not all((c in AlertSearchQuery.VALID_CATEGORIES) for c in categories):
+        if not all((c in ALERT_VALID_CATEGORIES) for c in categories):
             raise ApiError("One or more invalid category values")
         self._update_criteria("category", categories)
         return self
@@ -251,7 +277,7 @@ class LegacyAlertSearchQueryCriterian():
         Returns:
             AlertSearchQuery: This instance.
         """
-        if not all((r in AlertSearchQuery.VALID_REPUTATIONS) for r in reps):
+        if not all((r in ALERT_VALID_REPUTATIONS) for r in reps):
             raise ApiError("One or more invalid reputation values")
         self._update_criteria("reputation", reps)
         return self
@@ -350,7 +376,7 @@ class LegacyAlertSearchQueryCriterian():
         Note: - When filtering by fields that take a list parameter, an empty list will be treated as a wildcard and
         match everything.
         """
-        if not all((t in AlertSearchQuery.VALID_ALERT_TYPES) for t in alerttypes):
+        if not all((t in ALERT_VALID_ALERT_TYPES) for t in alerttypes):
             raise ApiError("One or more invalid alert type values")
         self._update_criteria("type", alerttypes)
         return self
@@ -365,7 +391,7 @@ class LegacyAlertSearchQueryCriterian():
         Returns:
             AlertSearchQuery: This instance.
         """
-        if not all((t in AlertSearchQuery.VALID_WORKFLOW_VALS) for t in workflow_vals):
+        if not all((t in ALERT_VALID_WORKFLOW_VALS) for t in workflow_vals):
             raise ApiError("One or more invalid workflow status values")
         self._update_criteria("workflow", workflow_vals)
         return self
@@ -594,6 +620,7 @@ class LegacyAlertSearchQueryCriterian():
             raise ApiError("One or more invalid rule name values")
         self._update_criteria("rule_name", names)
         return self
+
     def set_watchlist_ids(self, ids):
         """
         Restricts the alerts that this query is performed on to the specified watchlist ID values.
@@ -623,6 +650,7 @@ class LegacyAlertSearchQueryCriterian():
             raise ApiError("One or more invalid watchlist names")
         self._update_criteria("watchlist_name", names)
         return self
+
     def set_blocked_threat_categories(self, categories):
         """
         Restricts the alerts that this query is performed on to the specified threat categories that were blocked.
@@ -634,7 +662,7 @@ class LegacyAlertSearchQueryCriterian():
         Returns:
             CBAnalyticsAlertSearchQuery: This instance.
         """
-        if not all((category in CBAnalyticsAlertSearchQuery.VALID_THREAT_CATEGORIES)
+        if not all((category in CB_ANALYTICS_VALID_THREAT_CATEGORIES)
                    for category in categories):
             raise ApiError("One or more invalid threat categories")
         self._update_criteria("blocked_threat_category", categories)
@@ -651,7 +679,7 @@ class LegacyAlertSearchQueryCriterian():
         Returns:
             CBAnalyticsAlertSearchQuery: This instance.
         """
-        if not all((location in CBAnalyticsAlertSearchQuery.VALID_LOCATIONS)
+        if not all((location in CB_ANALYTICS_VALID_LOCATIONS)
                    for location in locations):
             raise ApiError("One or more invalid device locations")
         self._update_criteria("device_location", locations)
@@ -669,7 +697,7 @@ class LegacyAlertSearchQueryCriterian():
         Returns:
             CBAnalyticsAlertSearchQuery: This instance.
         """
-        if not all((status in CBAnalyticsAlertSearchQuery.VALID_KILL_CHAIN_STATUSES)
+        if not all((status in CB_ANALYTICS_VALID_KILL_CHAIN_STATUSES)
                    for status in statuses):
             raise ApiError("One or more invalid kill chain status values")
         self._update_criteria("kill_chain_status", statuses)
@@ -686,7 +714,7 @@ class LegacyAlertSearchQueryCriterian():
         Returns:
             CBAnalyticsAlertSearchQuery: This instance.
         """
-        if not all((category in CBAnalyticsAlertSearchQuery.VALID_THREAT_CATEGORIES)
+        if not all((category in CB_ANALYTICS_VALID_THREAT_CATEGORIES)
                    for category in categories):
             raise ApiError("One or more invalid threat categories")
         self._update_criteria("not_blocked_threat_category", categories)
@@ -702,7 +730,7 @@ class LegacyAlertSearchQueryCriterian():
         Returns:
             CBAnalyticsAlertSearchQuery: This instance.
         """
-        if not all((s in CBAnalyticsAlertSearchQuery.VALID_POLICY_APPLIED)
+        if not all((s in CB_ANALYTICS_VALID_POLICY_APPLIED)
                    for s in applied_statuses):
             raise ApiError("One or more invalid policy-applied values")
         self._update_criteria("policy_applied", applied_statuses)
@@ -733,7 +761,7 @@ class LegacyAlertSearchQueryCriterian():
         Returns:
             CBAnalyticsAlertSearchQuery: This instance.
         """
-        if not all((s in CBAnalyticsAlertSearchQuery.VALID_RUN_STATES)
+        if not all((s in CB_ANALYTICS_VALID_RUN_STATES)
                    for s in states):
             raise ApiError("One or more invalid run states")
         self._update_criteria("run_state", states)
@@ -750,7 +778,7 @@ class LegacyAlertSearchQueryCriterian():
         Returns:
             CBAnalyticsAlertSearchQuery: This instance.
         """
-        if not all((action in CBAnalyticsAlertSearchQuery.VALID_SENSOR_ACTIONS)
+        if not all((action in CB_ANALYTICS_VALID_SENSOR_ACTIONS)
                    for action in actions):
             raise ApiError("One or more invalid sensor actions")
         self._update_criteria("sensor_action", actions)
@@ -768,11 +796,12 @@ class LegacyAlertSearchQueryCriterian():
         Returns:
             CBAnalyticsAlertSearchQuery: This instance.
         """
-        if not all((vector in CBAnalyticsAlertSearchQuery.VALID_THREAT_CAUSE_VECTORS)
+        if not all((vector in CB_ANALYTICS_VALID_THREAT_CAUSE_VECTORS)
                    for vector in vectors):
             raise ApiError("One or more invalid threat cause vectors")
         self._update_criteria("threat_cause_vector", vectors)
         return self
+
     def set_external_device_friendly_names(self, names):
         """
         Restricts the alerts that this query is performed on to the specified external device friendly names.
