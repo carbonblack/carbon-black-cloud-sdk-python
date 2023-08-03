@@ -16,7 +16,6 @@
 from cbc_sdk.base import (NewBaseModel, MutableBaseModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
                           CriteriaBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
 from cbc_sdk.errors import ApiError, ServerError
-from cbc_sdk.platform.devices import DeviceSearchQuery
 from cbc_sdk.platform.jobs import Job
 import logging
 import time
