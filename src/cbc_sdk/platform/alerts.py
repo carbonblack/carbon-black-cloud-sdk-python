@@ -26,7 +26,7 @@ from cbc_sdk.base import (BaseQuery,
 from cbc_sdk.endpoint_standard.base import EnrichedEvent
 from cbc_sdk.platform.devices import DeviceSearchQuery
 from cbc_sdk.platform.processes import AsyncProcessQuery, Process
-from cbc_sdk.platform.legacy_alerts import LegacyAlertSearchQueryCriterian
+from cbc_sdk.platform.legacy_alerts import LegacyAlertSearchQueryCriterionMixin
 
 """Alert Models"""
 
@@ -880,8 +880,7 @@ class WorkflowStatus(PlatformModel):
 """Alert Queries"""
 
 
-class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin,
-                       LegacyAlertSearchQueryCriterian):
+class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, LegacyAlertSearchQueryCriterionMixin, CriteriaBuilderSupportMixin):
     """Represents a query that is used to locate Alert objects."""
     VALID_CATEGORIES = ["THREAT", "MONITORED"]
     VALID_REPUTATIONS = ["KNOWN_MALWARE", "SUSPECT_MALWARE", "PUP", "NOT_LISTED", "ADAPTIVE_WHITE_LIST",
