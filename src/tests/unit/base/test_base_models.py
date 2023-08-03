@@ -110,7 +110,7 @@ def test_model_attributes_nbm(cbcsdk_mock):
 def test_new_object_nbm(cbcsdk_mock):
     """Test new_object class method of NewBaseModel via a Policy object"""
     api = cbcsdk_mock.api
-    nbm_object = Policy.new_object(api, {'id': 6681, 'otherData': 'test'})
+    nbm_object = Policy._new_object(api, {'id': 6681, 'otherData': 'test'})
     assert nbm_object._model_unique_id == 6681
 
 
@@ -188,18 +188,6 @@ def test_parse_nbm(cbcsdk_mock):
     # _parse returns whatever is passed into it as a parameter
     assert nbm._parse(nbm._cb) == cbcsdk_mock.api
     assert nbm._parse(nbm._last_refresh_time) == 0
-
-
-def test_original_document_nbm(cbcsdk_mock):
-    """Test original_document method/property of NewBaseModel"""
-    api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/testing_only/v1/stubobjects/30241", STUBOBJECT_GET_RESP)
-    stub = api.select(StubObject, 30241)
-    # original_document refreshes (if _full_init == False), then returns self._info
-    assert stub._full_init is False
-    assert stub.original_document == stub._info
-    assert stub._full_init is True
-    assert stub.original_document['id'] == 30241
 
 
 def test_set_attr_mbm(cbcsdk_mock):
