@@ -561,6 +561,28 @@ def test_query_containeralert_invalid_criteria_values(cb, method, arg):
         meth(arg)
 
 
+def test_query_set_rows(cbcsdk_mock):
+    """Test alert query with set rows."""
+
+    def on_post(url, body, **kwargs):
+        assert body == {"query": "Blort",
+                        "criteria": {},
+                        "rows": 10000,
+                        "start": 1,
+                        "sort": [{"field": "name", "order": "DESC"}]}
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
+    query = api.select(BaseAlert).where("Blort").sort_by("name", "DESC").set_rows(10000)
+    for a in query:
+        assert a.id == "S0L0"
+        assert a.org_key == "test"
+        assert a.threat_id == "B0RG"
+
+
 def test_alerts_bulk_dismiss(cbcsdk_mock):
     """Test dismissing a batch of alerts."""
 
