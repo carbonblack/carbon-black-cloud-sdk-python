@@ -431,7 +431,7 @@ class WatchlistAlert(Alert):
             **kwargs (dict): Not used, retained for compatibility.
 
         Returns:
-            WatchlistAlertSearchQuery: The query object for this alert type.
+            AlertSearchQuery: The query object for this alert type.
         """
         return AlertSearchQuery(cls, cb).add_criteria("type", ["WATCHLIST"])
 
@@ -483,7 +483,7 @@ class CBAnalyticsAlert(Alert):
             **kwargs (dict): Not used, retained for compatibility.
 
         Returns:
-            CBAnalyticsAlertSearchQuery: The query object for this alert type.
+            AlertSearchQuery: The query object for this alert type.
         """
         return AlertSearchQuery(cls, cb).add_criteria("type", ["CB_ANALYTICS"])
 
@@ -585,7 +585,7 @@ class DeviceControlAlert(Alert):
             **kwargs (dict): Not used, retained for compatibility.
 
         Returns:
-            DeviceControlAlertSearchQuery: The query object for this alert type.
+            AlertSearchQuery: The query object for this alert type.
         """
         return AlertSearchQuery(cls, cb).add_criteria("type", ["DEVICE_CONTROL"])
 
@@ -606,7 +606,7 @@ class ContainerRuntimeAlert(Alert):
             **kwargs (dict): Not used, retained for compatibility.
 
         Returns:
-            ContainerRuntimeAlertSearchQuery: The query object for this alert type.
+            AlertSearchQuery: The query object for this alert type.
         """
         return AlertSearchQuery(cls, cb).add_criteria("type", ["CONTAINER_RUNTIME"])
 
@@ -648,7 +648,7 @@ class IntrusionDetectionSystemAlert(Alert):
             **kwargs (dict): Not used, retained for compatibility.
 
         Returns:
-            ContainerRuntimeAlertSearchQuery: The query object for this alert type.
+            AlertSearchQuery: The query object for this alert type.
         """
         return AlertSearchQuery(cls, cb).add_criteria("type", ["INTRUSION_DETECTION_SYSTEM"])
 
