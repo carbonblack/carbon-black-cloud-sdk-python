@@ -2,8 +2,11 @@ from __future__ import absolute_import
 
 from cbc_sdk.platform.base import PlatformModel
 
-from cbc_sdk.platform.alerts import (BaseAlert, WatchlistAlert, CBAnalyticsAlert, DeviceControlAlert,
-                                     ContainerRuntimeAlert, Workflow, WorkflowStatus)
+from cbc_sdk.platform.alerts import (Alert, WatchlistAlert, CBAnalyticsAlert, DeviceControlAlert,
+                                     ContainerRuntimeAlert, HostBasedFirewallAlert, IntrusionDetectionSystemAlert,
+                                     Workflow, WorkflowStatus)
+
+from cbc_sdk.platform.alerts import Alert as BaseAlert
 
 from cbc_sdk.platform.devices import Device, DeviceFacet, DeviceSearchQuery
 
