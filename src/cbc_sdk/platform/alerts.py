@@ -31,121 +31,136 @@ from cbc_sdk.platform.legacy_alerts import LegacyAlertSearchQueryCriterionMixin
 """Alert Models"""
 
 MAX_RESULTS_LIMIT = 10000
-REMAPPED_ALERTS_V6 = {
-    "alert_classification.classification": "ml_classification_final_verdict",
-    "alert_classification.global_prevalence": "ml_classification_global_prevalence",
-    "alert_classification.org_prevalence": "ml_classification_org_prevalence",
-    "alert_classification.user_feedback": "determination_value",
-    "cluster_name": "k8s_cluster",
-    "create_time": "backend_timestamp",
-    "first_event_time": "first_event_timestamp",
-    "last_event_time": "last_event_timestamp",
-    "last_update_time": "backend_update_timestamp",
-    "namespace": "k8s_namespace",
-    "notes_present": "alert_notes_present",
-    "policy_id": "device_policy_id",
-    "policy_name": "device_policy",
-    "port": "netconn_local_port",
-    "protocol": "netconn_protocol",
-    "remote_domain": "netconn_remote_domain",
-    "remote_ip": "netconn_remote_ip",
-    "remote_namespace": "remote_k8s_namespace",
-    "remote_replica_id": "remote_k8s_pod_name",
-    "remote_workload_kind": "remote_k8s_kind",
-    "remote_workload_name": "remote_k8s_workload_name",
-    "replica_id": "k8s_pod_name",
-    "rule_id": "rule_id ",
-    "run_state": "run_state",
-    "target_value": "device_target_value",
-    "threat_cause_actor_certificate_authority": "process_issuer",
-    "threat_cause_actor_name": "process_name",
-    "threat_cause_actor_publisher": "process_publisher",
-    "threat_cause_actor_sha256": "process_sha256",
-    "threat_cause_event_id": "primary_event_id",
-    "threat_cause_md5": "process_md5",
-    "threat_cause_parent_guid": "parent_guid",
-    "threat_cause_reputation": "process_reputation",
-    "threat_indicators": "ttps",
-    "watchlists": "watchlists.id",
-    "workflow.last_update_time": "workflow.change_timestamp",
-    "workflow.comment": "workflow.note",
-    "workflow.remediation": "workflow.closure_reason",
-    "workflow.state": "workflow.status",
-    "workload_kind": "k8s_kind",
-    "workload_name": "k8s_workload_name"
-}
 
-REMAPPED_WORKFLOWS_V6 = {
-    "workflow.last_update_time": "workflow.change_timestamp",
-    "workflow.comment": "workflow.note",
-    "workflow.remediation": "workflow.closure_reason",
-    "workflow.state": "workflow.status",
-}
 
-REMAPPED_NOTES_V6 = {
-    "last_update_time": "",
 
-}
-
-ALERTS_V6_MAPPINGS = {
-    "ml_classification_final_verdict": "alert_classification.classification",
-    "ml_classification_global_prevalence": "alert_classification.global_prevalence",
-    "ml_classification_org_prevalence": "alert_classification.org_prevalence",
-    "determination_value": "alert_classification.user_feedback",
-    "k8s_cluster": "cluster_name",
-    "backend_timestamp": "create_time",
-    "first_event_timestamp": "first_event_time",
-    "last_event_timestamp": "last_event_time",
-    "backend_update_timestamp": "last_update_time",
-    "k8s_namespace": "namespace",
-    "alert_notes_present": "notes_present",
-    "device_policy_id": "policy_id",
-    "device_policy": "policy_name",
-    "netconn_local_port": "port",
-    "netconn_protocol": "protocol",
-    "netconn_remote_domain": "remote_domain",
-    "netconn_remote_ip": "remote_ip",
-    "remote_k8s_namespace": "remote_namespace",
-    "remote_k8s_pod_name": "remote_replica_id",
-    "remote_k8s_kind": "remote_workload_kind",
-    "remote_k8s_workload_name": "remote_workload_name",
-    "k8s_pod_name": "replica_id",
-    "rule_id ": "rule_id",
-    "run_state": "run_state",
-    "device_target_value": "target_value",
-    "process_issuer": "threat_cause_actor_certificate_authority",
-    "process_name": "threat_cause_actor_name",
-    "process_publisher": "threat_cause_actor_publisher",
-    "process_sha256": "threat_cause_actor_sha256",
-    "primary_event_id": "threat_cause_cause_event_id",
-    "process_md5": "threat_cause_md5",
-    "parent_guid": "threat_cause_parent_guid",
-    "process_reputation": "threat_cause_reputation",
-    "ttps": "threat_indicators",
-    "watchlists.id": "watchlists",
-    "workflow.change_timestamp": "workflow.last_update_time",
-    "workflow.note": "workflow.comment",
-    "workflow.closure_reason": "workflow.remediation",
-    "workflow.status": "workflow.state",
-    "k8s_kind": "workload_kind",
-    "k8s_workload_name": "workload_name"
-}
-
-REMAPPED_WORKFLOWS_V7_TO_V6 = {
-    "change_timestamp": "last_update_time",
-    "note": "comment",
-    "closure_reason": "remediation",
-    "status": "state"
-}
-
-REMAPPED_NOTES_V7_TO_V6 = {
-    "last_update_time": "",
-
-}
 
 
 class Alert(PlatformModel):
     """Represents a basic alert."""
+    REMAPPED_ALERTS_V6 = {
+        "alert_classification.classification": "ml_classification_final_verdict",
+        "alert_classification.global_prevalence": "ml_classification_global_prevalence",
+        "alert_classification.org_prevalence": "ml_classification_org_prevalence",
+        "alert_classification.user_feedback": "determination_value",
+        "cluster_name": "k8s_cluster",
+        "create_time": "backend_timestamp",
+        "created_by_event_id": "primary_event_id",
+        "first_event_time": "first_event_timestamp",
+        "last_event_time": "last_event_timestamp",
+        "last_update_time": "backend_update_timestamp",
+        "legacy_alert_id": "id",
+        "namespace": "k8s_namespace",
+        "notes_present": "alert_notes_present",
+        "policy_id": "device_policy_id",
+        "policy_name": "device_policy",
+        "port": "netconn_local_port",
+        "protocol": "netconn_protocol",
+        "remote_domain": "netconn_remote_domain",
+        "remote_ip": "netconn_remote_ip",
+        "remote_namespace": "remote_k8s_namespace",
+        "remote_replica_id": "remote_k8s_pod_name",
+        "remote_workload_kind": "remote_k8s_kind",
+        "remote_workload_name": "remote_k8s_workload_name",
+        "replica_id": "k8s_pod_name",
+        "rule_id": "rule_id ",
+        "run_state": "run_state",
+        "target_value": "device_target_value",
+        "threat_cause_actor_certificate_authority": "process_issuer",
+        "threat_cause_actor_md5": "process_md5", #might need to look again for watchlist
+        "threat_cause_actor_name": "process_name",
+        "threat_cause_actor_process_pid": "process_pid",
+        "threat_cause_actor_publisher": "process_publisher",
+        "threat_cause_actor_sha256": "process_sha256",
+        "threat_cause_event_id": "primary_event_id",
+        "threat_cause_md5": "process_md5",
+        "threat_cause_parent_guid": "parent_guid",
+        "threat_cause_process_guid": "process_guid",
+        "threat_cause_threat_category": "threat_category",
+        "threat_cause_reputation": "process_reputation",
+        "threat_indicators": "ttps",
+        "watchlists": "watchlists.id",
+        "workflow.last_update_time": "workflow.change_timestamp",
+        "workflow.comment": "workflow.note",
+        "workflow.remediation": "workflow.closure_reason",
+        "workflow.state": "workflow.status",
+        "workload_kind": "k8s_kind",
+        "workload_name": "k8s_workload_name"
+    }
+
+    REMAPPED_WORKFLOWS_V6 = {
+        "workflow.last_update_time": "workflow.change_timestamp",
+        "workflow.comment": "workflow.note",
+        "workflow.remediation": "workflow.closure_reason",
+        "workflow.state": "workflow.status",
+    }
+
+    REMAPPED_NOTES_V6 = {
+        "last_update_time": "",
+
+    }
+
+    ALERTS_V6_MAPPINGS = {
+        "ml_classification_final_verdict": "alert_classification.classification",
+        "ml_classification_global_prevalence": "alert_classification.global_prevalence",
+        "ml_classification_org_prevalence": "alert_classification.org_prevalence",
+        "determination_value": "alert_classification.user_feedback",
+        "k8s_cluster": "cluster_name",
+        "backend_timestamp": "create_time",
+        "first_event_timestamp": "first_event_time",
+        "last_event_timestamp": "last_event_time",
+        "backend_update_timestamp": "last_update_time",
+        "k8s_namespace": "namespace",
+        "alert_notes_present": "notes_present",
+        "device_policy_id": "policy_id",
+        "device_policy": "policy_name",
+        "netconn_local_port": "port",
+        "netconn_protocol": "protocol",
+        "netconn_remote_domain": "remote_domain",
+        "netconn_remote_ip": "remote_ip",
+        "remote_k8s_namespace": "remote_namespace",
+        "remote_k8s_pod_name": "remote_replica_id",
+        "remote_k8s_kind": "remote_workload_kind",
+        "remote_k8s_workload_name": "remote_workload_name",
+        "k8s_pod_name": "replica_id",
+        "rule_id ": "rule_id",
+        "run_state": "run_state",
+        "device_target_value": "target_value",
+        "process_issuer": "threat_cause_actor_certificate_authority",
+        "process_name": "threat_cause_actor_name",
+        "process_publisher": "threat_cause_actor_publisher",
+        "process_sha256": "threat_cause_actor_sha256",
+        "primary_event_id": "threat_cause_cause_event_id",
+        "process_md5": "threat_cause_md5",
+        "process_pid": "threat_cause_actor_process_pid",
+        "process_guid": "threat_cause_process_guid",
+        "parent_guid": "threat_cause_parent_guid",
+        "process_md5": "threat_cause_actor_md5", #check later
+        "process_reputation": "threat_cause_reputation",
+        "threat_category": "threat_cause_threat_category",
+        "ttps": "threat_indicators",
+        "watchlists.id": "watchlists",
+        "workflow.change_timestamp": "workflow.last_update_time",
+        "workflow.note": "workflow.comment",
+        "workflow.closure_reason": "workflow.remediation",
+        "workflow.status": "workflow.state",
+        "k8s_kind": "workload_kind",
+        "k8s_workload_name": "workload_name",
+        "legacy_alert_id": "id"
+    }
+
+    REMAPPED_WORKFLOWS_V7_TO_V6 = {
+        "change_timestamp": "last_update_time",
+        "note": "comment",
+        "closure_reason": "remediation",
+        "status": "state"
+    }
+
+    REMAPPED_NOTES_V7_TO_V6 = {
+        "last_update_time": "",
+
+    }
+
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
     urlobject_single = "/api/alerts/v7/orgs/{0}/alerts/{1}"
     primary_key = "id"
@@ -441,7 +456,7 @@ class Alert(PlatformModel):
                     AttributeError: If the object has no such attribute.
                 """
         try:
-            return super(Alert, self).__getattribute__(REMAPPED_ALERTS_V6.get(item, item))
+            return super(Alert, self).__getattribute__(self.REMAPPED_ALERTS_V6.get(item, item))
         except AttributeError:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
                                                                               item))  # fall through to the rest of the logic...
@@ -461,7 +476,7 @@ class Alert(PlatformModel):
         """
 
         try:
-            item = REMAPPED_ALERTS_V6.get(item, item)
+            item = self.REMAPPED_ALERTS_V6.get(item, item)
             return super(Alert, self).__getattr__(item)
         except AttributeError:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
@@ -472,7 +487,7 @@ class Alert(PlatformModel):
             modified_json = {}
 
             for key, value in self._info.items():
-                modified_json[ALERTS_V6_MAPPINGS.get(key, key)] = value
+                modified_json[self.ALERTS_V6_MAPPINGS.get(key, key)] = value
                 if key == "id":
                     modified_json["legacy_alert_id"] = value
                 if key == "process_name":
@@ -488,7 +503,7 @@ class Alert(PlatformModel):
                 if key == "workflow":
                     wf = {}
                     for wf_key, wf_value in value.items():
-                        wf[REMAPPED_WORKFLOWS_V7_TO_V6.get(wf_key, wf_key)] = wf_value
+                        wf[self.REMAPPED_WORKFLOWS_V7_TO_V6.get(wf_key, wf_key)] = wf_value
                     modified_json[key] = wf
             return modified_json
         else:
