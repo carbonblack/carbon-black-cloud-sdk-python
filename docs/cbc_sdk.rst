@@ -7,6 +7,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   cbc_sdk.cbcloudapi
    cbc_sdk.audit_remediation
    cbc_sdk.cache
    cbc_sdk.credential_providers
@@ -62,14 +63,6 @@ Live Response API Module
 -----------------------------------
 
 .. automodule:: cbc_sdk.live_response_api
-   :members:
-   :inherited-members:
-   :show-inheritance:
-
-REST API Module
--------------------------
-
-.. automodule:: cbc_sdk.rest_api
    :members:
    :inherited-members:
    :show-inheritance:

@@ -103,6 +103,7 @@ See detailed information on the objects and methods exposed by the Carbon Black 
    :caption: SDK Documentation
    :maxdepth: 4
 
+   cbc_sdk.cbcloudapi
    cbc_sdk.audit_remediation
    cbc_sdk.credential_providers
    cbc_sdk.endpoint_standard
