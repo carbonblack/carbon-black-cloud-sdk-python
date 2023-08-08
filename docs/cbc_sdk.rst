@@ -7,7 +7,6 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
-   cbc_sdk.cbcloudapi
    cbc_sdk.audit_remediation
    cbc_sdk.cache
    cbc_sdk.credential_providers
