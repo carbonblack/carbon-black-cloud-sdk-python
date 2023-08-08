@@ -25,6 +25,7 @@ Authenticate to the Carbon Black Cloud server with directly-supplied parameters:
     from cbc_sdk import CBCloudAPI
     api = CBCloudAPI(url='https://defense.conferdeploy.net', token='ABCDEFGHIJKLMNOPQRSTUVWX/YZ12345678',
                      org_key='ABCD1234')
+
     # as an example, get the list of all policies
     from cbc_sdk.platform import Policy
     query = api.select(Policy)
@@ -36,6 +37,7 @@ Authenticate to the Carbon Black Cloud server using a profile with the default c
 
     from cbc_sdk import CBCloudAPI
     api = CBCloudAPI(profile='my_profile')
+
     # as an example, get the list of all policies
     from cbc_sdk.platform import Policy
     query = api.select(Policy)
@@ -49,6 +51,7 @@ Authenticate to the Carbon Black Cloud server using a profile supplied by a diff
     from cbc_sdk.credentials import KeychainCredentialProvider
     creds = KeychainCredentialProvider('keychain-to-use', 'my-username')
     api = CBCloudAPI(profile='my_profile', credential_provider=creds)
+
     # as an example, get the list of all policies
     from cbc_sdk.platform import Policy
     query = api.select(Policy)
