@@ -26,10 +26,10 @@ Authenticate to the Carbon Black Cloud server with directly-supplied parameters:
     api = CBCloudAPI(url='https://defense.conferdeploy.net', token='ABCDEFGHIJKLMNOPQRSTUVWX/YZ12345678',
                      org_key='ABCD1234')
 
-    # as an example, get the list of all policies
-    from cbc_sdk.platform import Policy
-    query = api.select(Policy)
-    policy_list = list(query)
+    # as an example, get the list of all watchlist alerts
+    from cbc_sdk.platform import WatchlistAlert
+    query = api.select(WatchlistAlert)
+    alerts_list = list(query)
 
 Authenticate to the Carbon Black Cloud server using a profile with the default credential provider:
 
@@ -38,10 +38,10 @@ Authenticate to the Carbon Black Cloud server using a profile with the default c
     from cbc_sdk import CBCloudAPI
     api = CBCloudAPI(profile='my_profile')
 
-    # as an example, get the list of all policies
-    from cbc_sdk.platform import Policy
-    query = api.select(Policy)
-    policy_list = list(query)
+    # as an example, get the list of all watchlist alerts
+    from cbc_sdk.platform import WatchlistAlert
+    query = api.select(WatchlistAlert)
+    alerts_list = list(query)
 
 Authenticate to the Carbon Black Cloud server using a profile supplied by a different credential provider:
 
@@ -52,10 +52,10 @@ Authenticate to the Carbon Black Cloud server using a profile supplied by a diff
     creds = KeychainCredentialProvider('keychain-to-use', 'my-username')
     api = CBCloudAPI(profile='my_profile', credential_provider=creds)
 
-    # as an example, get the list of all policies
-    from cbc_sdk.platform import Policy
-    query = api.select(Policy)
-    policy_list = list(query)
+    # as an example, get the list of all watchlist alerts
+    from cbc_sdk.platform import WatchlistAlert
+    query = api.select(WatchlistAlert)
+    alerts_list = list(query)
 
 Class Documentation
 ===================
