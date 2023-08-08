@@ -66,6 +66,7 @@ def test_cb_analytic(cbcsdk_mock):
 def alert_json_compare(alert_v6, alert_v6_from_v7):
     """Compare the alert_v6 to alert_v6_from_v7."""
     if alert_v6 == alert_v6_from_v7:
+        # force linter
         assert alert_v6 == alert_v6_from_v7, "{} type alerts were identical".format(alert_v6.get("type"))
     else:
         # Objects were not the same - checking one field at a time
