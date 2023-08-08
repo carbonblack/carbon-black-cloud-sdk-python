@@ -342,7 +342,8 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         Returns:
             AlertSearchQuery: This instance.
         """
-        if key not in ["create_time", "first_event_time", "last_event_time", "last_update_time"]:
+        key = self._doc_class.REMAPPED_ALERTS_V6.get(key,key)
+        if key not in ["create_time", "first_event_time", "last_event_time", "last_update_time", "backend_update_timestamp"]:
             raise ApiError("key must be one of create_time, first_event_time, last_event_time, or last_update_time")
         if kwargs.get("start", None) and kwargs.get("end", None):
             if kwargs.get("range", None):
