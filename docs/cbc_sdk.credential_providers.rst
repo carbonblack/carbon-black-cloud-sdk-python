@@ -1,3 +1,5 @@
+.. _cbc_sdk.credential_providers:
+
 Credential Providers Package
 ****************************
 

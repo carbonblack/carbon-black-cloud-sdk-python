@@ -66,14 +66,6 @@ Live Response API Module
    :inherited-members:
    :show-inheritance:
 
-REST API Module
--------------------------
-
-.. automodule:: cbc_sdk.rest_api
-   :members:
-   :inherited-members:
-   :show-inheritance:
-
 Utils Module
 ---------------------
 

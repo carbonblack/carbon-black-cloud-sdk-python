@@ -1,3 +1,5 @@
+.. _live-response:
+
 Live Response
 ==============
 
