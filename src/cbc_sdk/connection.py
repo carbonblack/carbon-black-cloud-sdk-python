@@ -386,15 +386,41 @@ class Connection(object):
 
 
 class BaseAPI(object):
-    """The base API object used by all CBC SDK objects to communicate with the server."""
+    """The base API object used by all CBC SDK objects to communicate with the server.
+
+    This class is not used directly, but most commonly via the ``CBCloudAPI`` class.
+    """
 
     def __init__(self, *args, **kwargs):
         """
         Initialize the base API information.
 
         Args:
-            *args: Unused.
-            **kwargs: Additional arguments.
+            *args (list): Unused.
+            **kwargs (dict): Additional arguments.
+
+        Keyword Args:
+            credential_file (str): The name of a credential file to be used by the default credential provider.
+            credential_provider (cbc_sdk.credentials.CredentialProvider): An alternate credential provider to use to
+                find the credentials to be used when accessing the Carbon Black Cloud.
+            csp_api_token (str): The CSP API Token for Carbon Black Cloud.
+            csp_oauth_app_id (str): The CSP OAuth App ID for Carbon Black Cloud.
+            csp_oauth_app_secret (str): The CSP OAuth App Secret for Carbon Black Cloud.
+            integration_name (str): The name of the integration using this connection.  This should be specified as
+                a string in the format 'name/version'
+            max_retries (int): The maximum number of times to retry failing API calls. Default is 5.
+            org_key (str): The organization key value to use when accessing the Carbon Black Cloud.
+            pool_block (bool): ``True`` if the connection pool should block when no free connections are available.
+                Default is ``False``.
+            pool_connections (int): Number of HTTP connections to be pooled for this instance. Default is 1.
+            pool_maxsize (int): Maximum size of the connection pool.  Default is 10.
+            profile (str): Use the credentials in the named profile when connecting to the Carbon Black Cloud server.
+                Uses the profile named 'default' when not specified.
+            proxy_session (requests.session.Session): Proxy session to be used for cookie persistence, connection
+                pooling, and configuration.  Default is ``None`` (use the standard session).
+            timeout (float): The timeout to use for for API requests.  Default is ``None`` (no timeout).
+            token (str): The API token to use when accessing the Carbon Black Cloud.
+            url (str): The URL of the Carbon Black Cloud provider to use.
         """
         integration_name = kwargs.pop("integration_name", None)
         self.credential_provider = kwargs.pop("credential_provider", None)
@@ -437,16 +463,18 @@ class BaseAPI(object):
                                   pool_block=pool_block)
 
     def get_object(self, uri, query_parameters=None, default=None):
-        """
-        Submit a GET request to the server and parse the result as JSON before returning.
+        """Submit a ``GET`` request to the server and parse the result as JSON before returning.
+
+        Normally only used by other SDK objects; used from user code only to submit a request to the server that is
+        not currently implemented in the SDK.
 
         Args:
-            uri (str): The URI to send the GET request to.
-            query_parameters (object): Parameters for the query.
+            uri (str): The URI to send the ``GET`` request to.
+            query_parameters (dict): Parameters for the query.
             default (object): What gets returned in the event of an empty response.
 
         Returns:
-            object: Result of the GET request.
+            object: Result of the GET request, as JSON.
         """
         result = self.api_json_request("GET", uri, params=query_parameters)
         if result.status_code == 200:
@@ -463,14 +491,19 @@ class BaseAPI(object):
                               uri=uri)
 
     def get_raw_data(self, uri, query_parameters=None, default=None, **kwargs):
-        """
-        Submit a GET request to the server and return the result without parsing it.
+        """Submit a ``GET`` request to the server and return the result without parsing it.
+
+        Normally only used by other SDK objects; used from user code only to submit a request to the server that is
+        not currently implemented in the SDK.
 
         Args:
-            uri (str): The URI to send the GET request to.
-            query_parameters (object): Parameters for the query.
+            uri (str): The URI to send the ``GET`` request to.
+            query_parameters (dict): Parameters for the query.
             default (object): What gets returned in the event of an empty response.
-            **kwargs:
+            **kwargs (dict): Additional arguments.
+
+        Keyword Args:
+            headers (dict): Header names and values to pass to the ``GET`` request.
 
         Returns:
             object: Result of the GET request.
@@ -487,16 +520,22 @@ class BaseAPI(object):
                               uri=uri)
 
     def api_json_request(self, method, uri, **kwargs):
-        """
-        Submit a request to the server.
+        """Submit a request to the server.
+
+        Normally only used by other SDK objects; used from user code only to submit a request to the server that is
+        not currently implemented in the SDK.
 
         Args:
             method (str): HTTP method to use.
             uri (str): URI to submit the request to.
             **kwargs (dict): Additional arguments.
 
+        Keyword Args:
+            data (object): Body data to be passed to the request, formatted as JSON.
+            headers (dict): Header names and values to pass to the request.
+
         Returns:
-            object: Result of the operation.
+            object: Result of the operation, as JSON
 
         Raises:
              ServerError: If there's an error output from the server.
@@ -525,14 +564,20 @@ class BaseAPI(object):
         return result
 
     def api_request_stream(self, method, uri, stream_output, **kwargs):
-        """
-        Submit a request to the specified URI and stream the results back into the given stream object.
+        """Submit a request to the specified URI and stream the results back into the given stream object.
+
+        Normally only used by other SDK objects; used from user code only to submit a request to the server that is
+        not currently implemented in the SDK.
 
         Args:
             method (str): HTTP method to use.
             uri (str): The URI to send the request to.
             stream_output (RawIOBase): The output stream to write the data to.
             **kwargs (dict): Additional arguments for the request.
+
+        Keyword Args:
+            data (object): Body data to be passed to the request, formatted as JSON.
+            headers (dict): Header names and values to pass to the request.
 
         Returns:
             object: The return data from the request.
@@ -554,19 +599,24 @@ class BaseAPI(object):
         return resp
 
     def api_request_iterate(self, method, uri, **kwargs):
-        """
-        Submit a request to the specified URI and iterate over the response as lines of text.
+        """Submit a request to the specified URI and iterate over the response as lines of text.
 
         Should only be used for requests that can be expressed as large amounts of text that can be broken into lines.
-        Since this is an iterator, call it with the 'yield from' syntax.
+
+        Normally only used by other SDK objects; used from user code only to submit a request to the server that is
+        not currently implemented in the SDK.
 
         Args:
             method (str): HTTP method to use.
             uri (str): The URI to send the request to.
             **kwargs (dict): Additional arguments for the request.
 
-        Returns:
-            iterable: An iterable that can be used to get each line of text in turn as a string.
+        Keyword Args:
+            data (object): Body data to be passed to the request, formatted as JSON.
+            headers (dict): Header names and values to pass to the request.
+
+        Yields:
+            str: Each line of text in the returned data.
         """
         headers = kwargs.pop("headers", {})
         raw_data = None
@@ -584,23 +634,27 @@ class BaseAPI(object):
                 yield line
 
     def post_object(self, uri, body, **kwargs):
-        """
-        Send a POST request to the specified URI.
+        """Send a ``POST`` request to the specified URI.
+
+        Normally only used by other SDK objects; used from user code only to submit a request to the server that is
+        not currently implemented in the SDK.
 
         Args:
-            uri (str): The URI to send the POST request to.
-            body (object): The data to be sent in the body of the POST request.
-            **kwargs (dict): Additional arguments for the HTTP POST.
+            uri (str): The URI to send the ``POST`` request to.
+            body (object): The data to be sent in the body of the ``POST`` request, as JSON.
+            **kwargs (dict): Additional arguments for the HTTP ``POST``.
+
+        Keyword Args:
+            headers (dict): Header names and values to pass to the request.
 
         Returns:
-            object: The return data from the POST request.
+            object: The return data from the ``POST`` request, as JSON.
         """
         return self.api_json_request("POST", uri, data=body, **kwargs)
 
     @classmethod
     def _map_multipart_param(cls, table_entry, value):
-        """
-        Set up the tuple for a multipart request parameter.
+        """Set up the tuple for a multipart request parameter.
 
         Args:
             table_entry (dict): Entry from the parameter table for the multipart method call.
@@ -612,19 +666,23 @@ class BaseAPI(object):
         return table_entry.get('filename', None), value, table_entry.get('type', None)
 
     def post_multipart(self, uri, param_table, **kwargs):
-        """
-        Send a POST request to the specified URI, with parameters sent as multipart form data.
+        """Send a ``POST`` request to the specified URI, with parameters sent as ``multipart/form-data``.
+
+        Normally only used by other SDK objects; used from user code only to submit a request to the server that is
+        not currently implemented in the SDK.
 
         Args:
-            uri (str): The URI to send the POST request to.
+            uri (str): The URI to send the ``POST`` request to.
             param_table (dict): A dict of known parameters to the underlying method, each element of which is a
                                 parameter name mapped to a dict, which contains elements 'filename' and 'type'
                                 representing the pseudo-filename to be used for the data and the MIME type of the data.
             **kwargs (dict): Arguments to pass to the API. Except for "headers," these will all be added as parameters
                              to the form data sent.
+        Keyword Args:
+            headers (dict): Header names and values to pass to the request.
 
         Returns:
-            object: The return data from the POST request.
+            object: The return data from the ``POST`` request.
         """
         headers = kwargs.pop("headers", {})
         headers['Content-Type'] = 'multipart/form-data'
@@ -633,43 +691,52 @@ class BaseAPI(object):
         return self.api_json_request("POST", uri, headers=headers, files=files_body)
 
     def put_object(self, uri, body, **kwargs):
-        """
-        Send a PUT request to the specified URI.
+        """Send a ``PUT`` request to the specified URI.
+
+        Normally only used by other SDK objects; used from user code only to submit a request to the server that is
+        not currently implemented in the SDK.
 
         Args:
-            uri (str): The URI to send the PUT request to.
-            body (object): The data to be sent in the body of the PUT request.
-            **kwargs:
+            uri (str): The URI to send the ``PUT`` request to.
+            body (object): The data to be sent in the body of the ``PUT`` request.
+            **kwargs (dict): Additional arguments for the HTTP ``PUT``.
+
+        Keyword Args:
+            headers (dict): Header names and values to pass to the request.
 
         Returns:
-            object: The return data from the PUT request.
+            object: The return data from the ``PUT`` request, as JSON.
         """
         return self.api_json_request("PUT", uri, data=body, **kwargs)
 
     def delete_object(self, uri):
-        """
-        Send a DELETE request to the specified URI.
+        """Send a ``DELETE`` request to the specified URI.
+
+        Normally only used by other SDK objects; used from user code only to submit a request to the server that is
+        not currently implemented in the SDK.
 
         Args:
-            uri (str): The URI to send the DELETE request to.
+            uri (str): The URI to send the ``DELETE`` request to.
 
         Returns:
-            object: The return data from the DELETE request.
+            object: The return data from the ``DELETE`` request, as JSON.
         """
         return self.api_json_request("DELETE", uri)
 
     def select(self, cls, unique_id=None, *args, **kwargs):
-        """
-        Prepare a query against the Carbon Black data store.
+        """Prepare a query against the Carbon Black data store.
+
+        Most objects returned by the SDK are returned via queries created using this method.
 
         Args:
             cls (class | str): The Model class (for example, Computer, Process, Binary, FileInstance) to query
-            unique_id (optional): The unique id of the object to retrieve, to retrieve a single object by ID
-            *args:
-            **kwargs:
+            unique_id (Any): The unique id of the object to retrieve, to retrieve a single object by ID. Default
+                is ``None`` (create a standard query).
+            *args (list): Additional arguments to pass to a created object.
+            **kwargs (dict): Additional arguments to pass to a created object or query.
 
         Returns:
-            object: An instance of the Model class if a unique_id is provided, otherwise a Query object
+            object: An instance of the ``Model`` class if a ``unique_id`` is provided, otherwise a ``Query`` object.
         """
         if isinstance(cls, str):
             cls = select_class_instance(cls)
@@ -679,18 +746,17 @@ class BaseAPI(object):
             return self._perform_query(cls, **kwargs)
 
     def create(self, cls, data=None):
-        """
-        Create a new object.
+        """Create a new object of a ``Model`` class.
 
         Args:
-            cls (class): The Model class (only some models can be created, for example, Feed, Notification, ...)
-            data (object): The data used to initialize the new object
+            cls (class): The ``Model`` class (only some models can be created, for example, Feed, Notification, ...)
+            data (object): The data used to initialize the new object.
 
         Returns:
             Model: An empty instance of the model class.
 
         Raises:
-            ApiError: If the Model cannot be created.
+            ApiError: If the ``Model`` cannot be created.
         """
         if issubclass(cls, CreatableModelMixin):
             n = cls(self)
@@ -706,12 +772,7 @@ class BaseAPI(object):
 
     @property
     def url(self):
-        """
-        Return the connection URL.
-
-        Returns:
-            str: The connection URL.
-        """
+        """The connection URL."""
         return self.session.server
 
 
@@ -719,8 +780,7 @@ class BaseAPI(object):
 # TODO: how does this interfere with mutable objects?
 @lru_cache_function(max_size=1024, expiration=1 * 60)
 def select_instance(api, cls, unique_id, *args, **kwargs):
-    """
-    Return a new instance of the specified class, given the unique id to fetch the data.
+    """Return a new instance of the specified class, given the unique id to fetch the data.
 
     Args:
         api (CBCloudAPI): Instance of the CBCloudAPI object.
@@ -736,14 +796,16 @@ def select_instance(api, cls, unique_id, *args, **kwargs):
 
 
 def select_class_instance(cls: str):
-    """
-    Selecting the appropriate class based on the passed string.
+    """Given a string class name of a model class, returns the corresponding Carbon Black Cloud SDK class.
 
     Args:
-        cls: The class name represented in a string.
+        cls (str): The class name represented in a string.
 
     Returns:
-        Object[]:
+        class: The class specified by ``cls``.
+
+    Raises:
+        ModelNotFound: The specified class could not be found.
     """
     # Walk through all the packages contained in the `cbc_sdk`, ensures the loading
     # of all the needed packages.
