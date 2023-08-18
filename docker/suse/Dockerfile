@@ -8,4 +8,4 @@ RUN zypper --non-interactive install python3-devel
 RUN zypper --non-interactive install python3-pip
 RUN zypper --non-interactive install gcc
 RUN pip3 install --break-system-packages -r requirements.txt
-RUN pip3 install .
+RUN pip3 install --break-system-packages .
