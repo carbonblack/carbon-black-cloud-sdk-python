@@ -657,13 +657,13 @@ properties:
         type: string
         format: date-time
         description: When the last status change occurred
-      workflow_changed_by:
+      changed_by:
         type: string
         description: Who (or what) made the last status change
       workflow_changed_by_rule_id:
         type: string
         description:
-      workflow_changed_by_type:
+      changed_by_type:
         type: string
         enum:
         - SYSTEM
@@ -671,10 +671,10 @@ properties:
         - API
         - AUTOMATION
         description:
-      workflow_closure_reason:
+      closure_reason:
         type: string  `NO_REASON`, `RESOLVED`, `RESOLVED_BENIGN_KNOWN_GOOD`, `DUPLICATE_CLEANUP`, `OTHER`
         description: A more detailed description of why the alert was resolved
-      workflow_status:
+      status:
         type: string
         enum:
         - OPEN
