@@ -160,7 +160,6 @@ class Alert(PlatformModel):
             model_unique_id (str): ID of the alert represented.
             initial_data (dict): Initial data used to populate the alert.
         """
-
         super(Alert, self).__init__(cb, model_unique_id, initial_data)
         self._workflow = Workflow(cb, initial_data.get("workflow", None) if initial_data else None)
         if model_unique_id is not None and initial_data is None:
@@ -461,6 +460,7 @@ class Alert(PlatformModel):
 
         try:
             item = REMAPPED_ALERTS_V6_TO_V7.get(item, item)
+
             return super(Alert, self).__getattr__(item)
         except AttributeError:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
@@ -492,8 +492,6 @@ class Alert(PlatformModel):
             return modified_json
         else:
             return self._info
-
-
 
 class WatchlistAlert(Alert):
     """Represents watch list alerts."""
@@ -762,6 +760,7 @@ class Workflow(UnrefreshableModel):
                 """
         try:
             return super(Workflow, self).__getattribute__(REMAPPED_WORKFLOWS_V6_TO_V7.get(item, item))
+
         except AttributeError:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
                                                                               item))  # fall through to the rest of the logic...
@@ -783,11 +782,10 @@ class Workflow(UnrefreshableModel):
         try:
             item = REMAPPED_WORKFLOWS_V6_TO_V7.get(item, item)
             return super(Workflow, self).__getattr__(item)
+
         except AttributeError:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
                                                                               item))  # fall through to the rest of the logic...
-
-
 class WorkflowStatus(PlatformModel):
     """Represents the current workflow status of a request."""
     urlobject_single = "/jobs/v1/orgs/{0}/jobs/{1}"
@@ -881,6 +879,7 @@ class WorkflowStatus(PlatformModel):
 
 
 class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, LegacyAlertSearchQueryCriterionMixin, CriteriaBuilderSupportMixin):
+
     """Represents a query that is used to locate Alert objects."""
     VALID_CATEGORIES = ["THREAT", "MONITORED"]
     VALID_REPUTATIONS = ["KNOWN_MALWARE", "SUSPECT_MALWARE", "PUP", "NOT_LISTED", "ADAPTIVE_WHITE_LIST",
@@ -947,7 +946,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         Sets the sorting behavior on a query's results.
 
         Example:
-         cb.select(Alert).sort_by("name")
+            >>> cb.select(Alert).sort_by("name")
 
         Args:
             key (str): The key in the schema to sort by.
@@ -1150,3 +1149,4 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             str: The request ID, which may be used to select a WorkflowStatus object.
         """
         return self._update_status("DISMISSED", remediation, comment)
+
