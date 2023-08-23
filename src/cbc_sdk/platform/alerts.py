@@ -31,7 +31,10 @@ from cbc_sdk.platform.legacy_alerts import LegacyAlertSearchQueryCriterionMixin
 """Alert Models"""
 
 MAX_RESULTS_LIMIT = 10000
-REMAPPED_ALERTS_V6_TO_V7 = {
+
+class Alert(PlatformModel):
+    """Represents a basic alert."""
+    REMAPPED_ALERTS_V6_TO_V7 = {
     "alert_classification.classification": "ml_classification_final_verdict",
     "alert_classification.global_prevalence": "ml_classification_global_prevalence",
     "alert_classification.org_prevalence": "ml_classification_org_prevalence",
@@ -143,9 +146,6 @@ REMAPPED_NOTES_V7_TO_V6 = {
 
 }
 
-
-class Alert(PlatformModel):
-    """Represents a basic alert."""
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
     urlobject_single = "/api/alerts/v7/orgs/{0}/alerts/{1}"
     primary_key = "id"
@@ -460,7 +460,6 @@ class Alert(PlatformModel):
 
         try:
             item = REMAPPED_ALERTS_V6_TO_V7.get(item, item)
-
             return super(Alert, self).__getattr__(item)
         except AttributeError:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
@@ -487,7 +486,7 @@ class Alert(PlatformModel):
                 if key == "workflow":
                     wf = {}
                     for wf_key, wf_value in value.items():
-                        wf[REMAPPED_WORKFLOWS_V7_TO_V6.get(wf_key, wf_key)] = wf_value
+                        wf[self.REMAPPED_WORKFLOWS_V7_TO_V6.get(wf_key, wf_key)] = wf_value
                     modified_json[key] = wf
             return modified_json
         else:
