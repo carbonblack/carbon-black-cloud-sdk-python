@@ -8,6 +8,8 @@ from cbc_sdk.platform.alerts import (Alert, WatchlistAlert, CBAnalyticsAlert, De
 
 from cbc_sdk.platform.alerts import Alert as BaseAlert
 
+from cbc_sdk.platform.alerts import Alert as BaseAlert
+
 from cbc_sdk.platform.devices import Device, DeviceFacet, DeviceSearchQuery
 
 from cbc_sdk.platform.events import Event, EventFacet

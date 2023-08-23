@@ -32,134 +32,119 @@ from cbc_sdk.platform.legacy_alerts import LegacyAlertSearchQueryCriterionMixin
 
 MAX_RESULTS_LIMIT = 10000
 
-
-
-
-
 class Alert(PlatformModel):
     """Represents a basic alert."""
-    REMAPPED_ALERTS_V6 = {
-        "alert_classification.classification": "ml_classification_final_verdict",
-        "alert_classification.global_prevalence": "ml_classification_global_prevalence",
-        "alert_classification.org_prevalence": "ml_classification_org_prevalence",
-        "alert_classification.user_feedback": "determination_value",
-        "cluster_name": "k8s_cluster",
-        "create_time": "backend_timestamp",
-        "created_by_event_id": "primary_event_id",
-        "first_event_time": "first_event_timestamp",
-        "last_event_time": "last_event_timestamp",
-        "last_update_time": "backend_update_timestamp",
-        "legacy_alert_id": "id",
-        "namespace": "k8s_namespace",
-        "notes_present": "alert_notes_present",
-        "policy_id": "device_policy_id",
-        "policy_name": "device_policy",
-        "port": "netconn_local_port",
-        "protocol": "netconn_protocol",
-        "remote_domain": "netconn_remote_domain",
-        "remote_ip": "netconn_remote_ip",
-        "remote_namespace": "remote_k8s_namespace",
-        "remote_replica_id": "remote_k8s_pod_name",
-        "remote_workload_kind": "remote_k8s_kind",
-        "remote_workload_name": "remote_k8s_workload_name",
-        "replica_id": "k8s_pod_name",
-        "rule_id": "rule_id ",
-        "run_state": "run_state",
-        "target_value": "device_target_value",
-        "threat_cause_actor_certificate_authority": "process_issuer",
-        "threat_cause_actor_md5": "process_md5", #might need to look again for watchlist
-        "threat_cause_actor_name": "process_name",
-        "threat_cause_actor_process_pid": "process_pid",
-        "threat_cause_actor_publisher": "process_publisher",
-        "threat_cause_actor_sha256": "process_sha256",
-        "threat_cause_event_id": "primary_event_id",
-        "threat_cause_md5": "process_md5",
-        "threat_cause_parent_guid": "parent_guid",
-        "threat_cause_process_guid": "process_guid",
-        "threat_cause_threat_category": "threat_category",
-        "threat_cause_reputation": "process_reputation",
-        "threat_indicators": "ttps",
-        "watchlists": "watchlists.id",
-        "workflow.last_update_time": "workflow.change_timestamp",
-        "workflow.comment": "workflow.note",
-        "workflow.remediation": "workflow.closure_reason",
-        "workflow.state": "workflow.status",
-        "workload_kind": "k8s_kind",
-        "workload_name": "k8s_workload_name"
-    }
+    REMAPPED_ALERTS_V6_TO_V7 = {
+    "alert_classification.classification": "ml_classification_final_verdict",
+    "alert_classification.global_prevalence": "ml_classification_global_prevalence",
+    "alert_classification.org_prevalence": "ml_classification_org_prevalence",
+    "alert_classification.user_feedback": "determination_value",
+    "cluster_name": "k8s_cluster",
+    "create_time": "backend_timestamp",
+    "first_event_time": "first_event_timestamp",
+    "last_event_time": "last_event_timestamp",
+    "last_update_time": "backend_update_timestamp",
+    "namespace": "k8s_namespace",
+    "notes_present": "alert_notes_present",
+    "policy_id": "device_policy_id",
+    "policy_name": "device_policy",
+    "port": "netconn_local_port",
+    "protocol": "netconn_protocol",
+    "remote_domain": "netconn_remote_domain",
+    "remote_ip": "netconn_remote_ip",
+    "remote_namespace": "remote_k8s_namespace",
+    "remote_replica_id": "remote_k8s_pod_name",
+    "remote_workload_kind": "remote_k8s_kind",
+    "remote_workload_name": "remote_k8s_workload_name",
+    "replica_id": "k8s_pod_name",
+    "rule_id": "rule_id ",
+    "run_state": "run_state",
+    "target_value": "device_target_value",
+    "threat_cause_actor_certificate_authority": "process_issuer",
+    "threat_cause_actor_name": "process_name",
+    "threat_cause_actor_publisher": "process_publisher",
+    "threat_cause_actor_sha256": "process_sha256",
+    "threat_cause_event_id": "primary_event_id",
+    "threat_cause_md5": "process_md5",
+    "threat_cause_parent_guid": "parent_guid",
+    "threat_cause_reputation": "process_reputation",
+    "threat_indicators": "ttps",
+    "watchlists": "watchlists.id",
+    "workflow.last_update_time": "workflow.change_timestamp",
+    "workflow.comment": "workflow.note",
+    "workflow.remediation": "workflow.closure_reason",
+    "workflow.state": "workflow.status",
+    "workload_kind": "k8s_kind",
+    "workload_name": "k8s_workload_name"
+}
 
-    REMAPPED_WORKFLOWS_V6 = {
-        "workflow.last_update_time": "workflow.change_timestamp",
-        "workflow.comment": "workflow.note",
-        "workflow.remediation": "workflow.closure_reason",
-        "workflow.state": "workflow.status",
-    }
+REMAPPED_WORKFLOWS_V6_TO_V7 = {
+    "workflow.last_update_time": "workflow.change_timestamp",
+    "workflow.comment": "workflow.note",
+    "workflow.remediation": "workflow.closure_reason",
+    "workflow.state": "workflow.status",
+}
 
-    REMAPPED_NOTES_V6 = {
-        "last_update_time": "",
+REMAPPED_NOTES_V6_TO_V7 = {
+    "last_update_time": "",
 
-    }
+}
 
-    ALERTS_V6_MAPPINGS = {
-        "ml_classification_final_verdict": "alert_classification.classification",
-        "ml_classification_global_prevalence": "alert_classification.global_prevalence",
-        "ml_classification_org_prevalence": "alert_classification.org_prevalence",
-        "determination_value": "alert_classification.user_feedback",
-        "k8s_cluster": "cluster_name",
-        "backend_timestamp": "create_time",
-        "first_event_timestamp": "first_event_time",
-        "last_event_timestamp": "last_event_time",
-        "backend_update_timestamp": "last_update_time",
-        "k8s_namespace": "namespace",
-        "alert_notes_present": "notes_present",
-        "device_policy_id": "policy_id",
-        "device_policy": "policy_name",
-        "netconn_local_port": "port",
-        "netconn_protocol": "protocol",
-        "netconn_remote_domain": "remote_domain",
-        "netconn_remote_ip": "remote_ip",
-        "remote_k8s_namespace": "remote_namespace",
-        "remote_k8s_pod_name": "remote_replica_id",
-        "remote_k8s_kind": "remote_workload_kind",
-        "remote_k8s_workload_name": "remote_workload_name",
-        "k8s_pod_name": "replica_id",
-        "rule_id ": "rule_id",
-        "run_state": "run_state",
-        "device_target_value": "target_value",
-        "process_issuer": "threat_cause_actor_certificate_authority",
-        "process_name": "threat_cause_actor_name",
-        "process_publisher": "threat_cause_actor_publisher",
-        "process_sha256": "threat_cause_actor_sha256",
-        "primary_event_id": "threat_cause_cause_event_id",
-        "process_md5": "threat_cause_md5",
-        "process_pid": "threat_cause_actor_process_pid",
-        "process_guid": "threat_cause_process_guid",
-        "parent_guid": "threat_cause_parent_guid",
-        "process_md5": "threat_cause_actor_md5", #check later
-        "process_reputation": "threat_cause_reputation",
-        "threat_category": "threat_cause_threat_category",
-        "ttps": "threat_indicators",
-        "watchlists.id": "watchlists",
-        "workflow.change_timestamp": "workflow.last_update_time",
-        "workflow.note": "workflow.comment",
-        "workflow.closure_reason": "workflow.remediation",
-        "workflow.status": "workflow.state",
-        "k8s_kind": "workload_kind",
-        "k8s_workload_name": "workload_name",
-        "legacy_alert_id": "id"
-    }
+REMAPPED_ALERTS_V7_TO_V6 = {
+    "ml_classification_final_verdict": "alert_classification.classification",
+    "ml_classification_global_prevalence": "alert_classification.global_prevalence",
+    "ml_classification_org_prevalence": "alert_classification.org_prevalence",
+    "determination_value": "alert_classification.user_feedback",
+    "k8s_cluster": "cluster_name",
+    "backend_timestamp": "create_time",
+    "first_event_timestamp": "first_event_time",
+    "last_event_timestamp": "last_event_time",
+    "backend_update_timestamp": "last_update_time",
+    "k8s_namespace": "namespace",
+    "alert_notes_present": "notes_present",
+    "device_policy_id": "policy_id",
+    "device_policy": "policy_name",
+    "netconn_local_port": "port",
+    "netconn_protocol": "protocol",
+    "netconn_remote_domain": "remote_domain",
+    "netconn_remote_ip": "remote_ip",
+    "remote_k8s_namespace": "remote_namespace",
+    "remote_k8s_pod_name": "remote_replica_id",
+    "remote_k8s_kind": "remote_workload_kind",
+    "remote_k8s_workload_name": "remote_workload_name",
+    "k8s_pod_name": "replica_id",
+    "rule_id ": "rule_id",
+    "run_state": "run_state",
+    "device_target_value": "target_value",
+    "process_issuer": "threat_cause_actor_certificate_authority",
+    "process_name": "threat_cause_actor_name",
+    "process_publisher": "threat_cause_actor_publisher",
+    "process_sha256": "threat_cause_actor_sha256",
+    "primary_event_id": "threat_cause_cause_event_id",
+    "process_md5": "threat_cause_md5",
+    "parent_guid": "threat_cause_parent_guid",
+    "process_reputation": "threat_cause_reputation",
+    "ttps": "threat_indicators",
+    "watchlists.id": "watchlists",
+    "workflow.change_timestamp": "workflow.last_update_time",
+    "workflow.note": "workflow.comment",
+    "workflow.closure_reason": "workflow.remediation",
+    "workflow.status": "workflow.state",
+    "k8s_kind": "workload_kind",
+    "k8s_workload_name": "workload_name"
+}
 
-    REMAPPED_WORKFLOWS_V7_TO_V6 = {
-        "change_timestamp": "last_update_time",
-        "note": "comment",
-        "closure_reason": "remediation",
-        "status": "state"
-    }
+REMAPPED_WORKFLOWS_V7_TO_V6 = {
+    "change_timestamp": "last_update_time",
+    "note": "comment",
+    "closure_reason": "remediation",
+    "status": "state"
+}
 
-    REMAPPED_NOTES_V7_TO_V6 = {
-        "last_update_time": "",
+REMAPPED_NOTES_V7_TO_V6 = {
+    "last_update_time": "",
 
-    }
+}
 
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
     urlobject_single = "/api/alerts/v7/orgs/{0}/alerts/{1}"
@@ -175,7 +160,6 @@ class Alert(PlatformModel):
             model_unique_id (str): ID of the alert represented.
             initial_data (dict): Initial data used to populate the alert.
         """
-
         super(Alert, self).__init__(cb, model_unique_id, initial_data)
         self._workflow = Workflow(cb, initial_data.get("workflow", None) if initial_data else None)
         if model_unique_id is not None and initial_data is None:
@@ -262,7 +246,7 @@ class Alert(PlatformModel):
                         AttributeError: If the object has no such attribute.
                     """
             try:
-                return super(Alert, self).__getattribute__(REMAPPED_NOTES_V6.get(item, item))
+                return super(Alert, self).__getattribute__(REMAPPED_NOTES_V6_TO_V7.get(item, item))
             except AttributeError:
                 raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
                                                                                   item))  # fall through to the rest of the logic...
@@ -282,7 +266,7 @@ class Alert(PlatformModel):
             """
 
             try:
-                item = REMAPPED_NOTES_V6.get(item, item)
+                item = REMAPPED_NOTES_V6_TO_V7.get(item, item)
                 return super(Alert, self).__getattr__(item)
             except AttributeError:
                 raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
@@ -356,8 +340,7 @@ class Alert(PlatformModel):
             request["remediation_state"] = remediation
         if comment:
             request["comment"] = comment
-        url = self.urlobject_single.format(self._cb.credentials.org_key,
-                                           self._model_unique_id) + "/workflow"
+        url = self.urlobject.format(self._cb.credentials.org_key) + "/workflow"
         resp = self._cb.post_object(url, request)
         self._workflow = Workflow(self._cb, resp.json())
         self._last_refresh_time = time.time()
@@ -396,8 +379,7 @@ class Alert(PlatformModel):
             request["remediation_state"] = remediation
         if comment:
             request["comment"] = comment
-        url = "/appservices/v6/orgs/{0}/threat/{1}/workflow".format(self._cb.credentials.org_key,
-                                                                    self.threat_id)
+        url = "/api/alerts/v7/orgs/{0}/alerts/workflow".format(self._cb.credentials.org_key)
         resp = self._cb.post_object(url, request)
         return Workflow(self._cb, resp.json())
 
@@ -457,7 +439,7 @@ class Alert(PlatformModel):
                     AttributeError: If the object has no such attribute.
                 """
         try:
-            return super(Alert, self).__getattribute__(self.REMAPPED_ALERTS_V6.get(item, item))
+            return super(Alert, self).__getattribute__(REMAPPED_ALERTS_V6_TO_V7.get(item, item))
         except AttributeError:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
                                                                               item))  # fall through to the rest of the logic...
@@ -477,7 +459,7 @@ class Alert(PlatformModel):
         """
 
         try:
-            item = self.REMAPPED_ALERTS_V6.get(item, item)
+            item = REMAPPED_ALERTS_V6_TO_V7.get(item, item)
             return super(Alert, self).__getattr__(item)
         except AttributeError:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
@@ -488,7 +470,7 @@ class Alert(PlatformModel):
             modified_json = {}
 
             for key, value in self._info.items():
-                modified_json[self.ALERTS_V6_MAPPINGS.get(key, key)] = value
+                modified_json[REMAPPED_ALERTS_V7_TO_V6.get(key, key)] = value
                 if key == "id":
                     modified_json["legacy_alert_id"] = value
                 if key == "process_name":
@@ -509,8 +491,6 @@ class Alert(PlatformModel):
             return modified_json
         else:
             return self._info
-
-
 
 class WatchlistAlert(Alert):
     """Represents watch list alerts."""
@@ -778,7 +758,8 @@ class Workflow(UnrefreshableModel):
                     AttributeError: If the object has no such attribute.
                 """
         try:
-            return super(Alert, self).__getattribute__(REMAPPED_WORKFLOWS_V6.get(item, item))
+            return super(Workflow, self).__getattribute__(REMAPPED_WORKFLOWS_V6_TO_V7.get(item, item))
+
         except AttributeError:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
                                                                               item))  # fall through to the rest of the logic...
@@ -798,18 +779,17 @@ class Workflow(UnrefreshableModel):
         """
 
         try:
-            item = REMAPPED_WORKFLOWS_V6.get(item, item)
-            return super(Alert, self).__getattr__(item)
+            item = REMAPPED_WORKFLOWS_V6_TO_V7.get(item, item)
+            return super(Workflow, self).__getattr__(item)
+
         except AttributeError:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
                                                                               item))  # fall through to the rest of the logic...
-
-
 class WorkflowStatus(PlatformModel):
     """Represents the current workflow status of a request."""
-    urlobject_single = "/appservices/v6/orgs/{0}/workflow/status/{1}"
+    urlobject_single = "/jobs/v1/orgs/{0}/jobs/{1}"
     primary_key = "id"
-    swagger_meta_file = "platform/models/workflow_status.yaml"
+    swagger_meta_file = "platform/models/job.yaml"
 
     def __init__(self, cb, model_unique_id, initial_data=None):
         """
@@ -898,13 +878,17 @@ class WorkflowStatus(PlatformModel):
 
 
 class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, LegacyAlertSearchQueryCriterionMixin, CriteriaBuilderSupportMixin):
+
     """Represents a query that is used to locate Alert objects."""
     VALID_CATEGORIES = ["THREAT", "MONITORED"]
     VALID_REPUTATIONS = ["KNOWN_MALWARE", "SUSPECT_MALWARE", "PUP", "NOT_LISTED", "ADAPTIVE_WHITE_LIST",
                          "COMMON_WHITE_LIST", "TRUSTED_WHITE_LIST", "COMPANY_BLACK_LIST"]
     VALID_ALERT_TYPES = ["CB_ANALYTICS", "DEVICE_CONTROL", "WATCHLIST", "CONTAINER_RUNTIME", "HOST_BASED_FIREWALL",
                          "INTRUSION_DETECTION_SYSTEM"]
+    # TODO verify and update if needed
     VALID_WORKFLOW_VALS = ["OPEN", "DISMISSED"]
+
+    # TODO verify and update if needed
     VALID_FACET_FIELDS = ["ALERT_TYPE", "CATEGORY", "REPUTATION", "WORKFLOW", "TAG", "POLICY_ID",
                           "POLICY_NAME", "DEVICE_ID", "DEVICE_NAME", "APPLICATION_HASH",
                           "APPLICATION_NAME", "STATUS", "RUN_STATE", "POLICY_APPLIED_STATE",
@@ -927,9 +911,22 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         self._criteria = {}
         self._time_filters = {}
         self._sortcriteria = {}
-        self._bulkupdate_url = "/appservices/v6/orgs/{0}/alerts/workflow/_criteria"
+        self._bulkupdate_url = "/api/alerts/v7/orgs/{0}/alerts/workflow"
         self._count_valid = False
         self._total_results = 0
+        self._batch_size = 100
+
+    def set_rows(self, rows):
+        """
+        Sets the 'rows' query body parameter, determining how many rows of results to request.
+
+        Args:
+            rows (int): How many rows to request.
+        """
+        if not isinstance(rows, int):
+            raise ApiError(f"Rows must be an integer. {rows} is a {type(rows)}.")
+        self._batch_size = rows
+        return self
 
     def _build_criteria(self):
         """
@@ -976,8 +973,8 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         """
         request = {"criteria": self._build_criteria()}
         request["query"] = self._query_builder._collapse()
-        # Fetch 100 rows per page (instead of 10 by default) for better performance
-        request["rows"] = 100
+
+        request["rows"] = self._batch_size
         if from_row > 0:
             request["start"] = from_row
         if max_rows >= 0:
@@ -1010,7 +1007,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             return self._total_results
 
         url = self._build_url("/_search")
-        request = self._build_request(0, -1)
+        request = self._build_request(1, -1)
         resp = self._cb.post_object(url, body=request)
         result = resp.json()
 
@@ -1051,20 +1048,23 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             results = result.get("results", [])
             for item in results:
                 alert = self._doc_class(self._cb, item["id"], item)
-                if item["type"] == "CB_ANALYTICS":
-                    alert.__class__ = CBAnalyticsAlert
-                elif item["type"] == "WATCHLIST":
-                    alert.__class__ = WatchlistAlert
-                elif item["type"] == "INTRUSION_DETECTION_SYSTEM":
-                    alert.__class__ = IntrusionDetectionSystemAlert
-                elif item["type"] == "DEVICE_CONTROL":
-                    alert.__class__ = DeviceControlAlert
-                elif item["type"] == "HOST_BASED_FIREWALL":
-                    alert.__class__ = HostBasedFirewallAlert
-                elif item["type"] == "CONTAINER_RUNTIME":
-                    alert.__class__ = ContainerRuntimeAlert
+                if "type" in item:
+                    if item["type"] == "CB_ANALYTICS":
+                        alert.__class__ = CBAnalyticsAlert
+                    elif item["type"] == "WATCHLIST":
+                        alert.__class__ = WatchlistAlert
+                    elif item["type"] == "INTRUSION_DETECTION_SYSTEM":
+                        alert.__class__ = IntrusionDetectionSystemAlert
+                    elif item["type"] == "DEVICE_CONTROL":
+                        alert.__class__ = DeviceControlAlert
+                    elif item["type"] == "HOST_BASED_FIREWALL":
+                        alert.__class__ = HostBasedFirewallAlert
+                    elif item["type"] == "CONTAINER_RUNTIME":
+                        alert.__class__ = ContainerRuntimeAlert
+                    else:
+                        pass
                 else:
-                    pass
+                    alert.__class__ = Alert
                 yield alert
                 current += 1
                 numrows += 1
@@ -1148,3 +1148,4 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             str: The request ID, which may be used to select a WorkflowStatus object.
         """
         return self._update_status("DISMISSED", remediation, comment)
+
