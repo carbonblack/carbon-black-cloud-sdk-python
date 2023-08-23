@@ -12,7 +12,6 @@
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
 """Model and Query Classes for Platform Alerts and Workflows"""
-import json
 import time
 
 from cbc_sdk.errors import ApiError, TimeoutError, ObjectNotFoundError, NonQueryableModel
@@ -32,119 +31,106 @@ from cbc_sdk.platform.legacy_alerts import LegacyAlertSearchQueryCriterionMixin
 
 MAX_RESULTS_LIMIT = 10000
 
+
 class Alert(PlatformModel):
     """Represents a basic alert."""
     REMAPPED_ALERTS_V6_TO_V7 = {
-    "alert_classification.classification": "ml_classification_final_verdict",
-    "alert_classification.global_prevalence": "ml_classification_global_prevalence",
-    "alert_classification.org_prevalence": "ml_classification_org_prevalence",
-    "alert_classification.user_feedback": "determination_value",
-    "cluster_name": "k8s_cluster",
-    "create_time": "backend_timestamp",
-    "first_event_time": "first_event_timestamp",
-    "last_event_time": "last_event_timestamp",
-    "last_update_time": "backend_update_timestamp",
-    "namespace": "k8s_namespace",
-    "notes_present": "alert_notes_present",
-    "policy_id": "device_policy_id",
-    "policy_name": "device_policy",
-    "port": "netconn_local_port",
-    "protocol": "netconn_protocol",
-    "remote_domain": "netconn_remote_domain",
-    "remote_ip": "netconn_remote_ip",
-    "remote_namespace": "remote_k8s_namespace",
-    "remote_replica_id": "remote_k8s_pod_name",
-    "remote_workload_kind": "remote_k8s_kind",
-    "remote_workload_name": "remote_k8s_workload_name",
-    "replica_id": "k8s_pod_name",
-    "rule_id": "rule_id ",
-    "run_state": "run_state",
-    "target_value": "device_target_value",
-    "threat_cause_actor_certificate_authority": "process_issuer",
-    "threat_cause_actor_name": "process_name",
-    "threat_cause_actor_publisher": "process_publisher",
-    "threat_cause_actor_sha256": "process_sha256",
-    "threat_cause_event_id": "primary_event_id",
-    "threat_cause_md5": "process_md5",
-    "threat_cause_parent_guid": "parent_guid",
-    "threat_cause_reputation": "process_reputation",
-    "threat_indicators": "ttps",
-    "watchlists": "watchlists.id",
-    "workflow.last_update_time": "workflow.change_timestamp",
-    "workflow.comment": "workflow.note",
-    "workflow.remediation": "workflow.closure_reason",
-    "workflow.state": "workflow.status",
-    "workload_kind": "k8s_kind",
-    "workload_name": "k8s_workload_name"
-}
+        "alert_classification.classification": "ml_classification_final_verdict",
+        "alert_classification.global_prevalence": "ml_classification_global_prevalence",
+        "alert_classification.org_prevalence": "ml_classification_org_prevalence",
+        "alert_classification.user_feedback": "determination_value",
+        "cluster_name": "k8s_cluster",
+        "create_time": "backend_timestamp",
+        "first_event_time": "first_event_timestamp",
+        "last_event_time": "last_event_timestamp",
+        "last_update_time": "backend_update_timestamp",
+        "namespace": "k8s_namespace",
+        "notes_present": "alert_notes_present",
+        "policy_id": "device_policy_id",
+        "policy_name": "device_policy",
+        "port": "netconn_local_port",
+        "protocol": "netconn_protocol",
+        "remote_domain": "netconn_remote_domain",
+        "remote_ip": "netconn_remote_ip",
+        "remote_namespace": "remote_k8s_namespace",
+        "remote_replica_id": "remote_k8s_pod_name",
+        "remote_workload_kind": "remote_k8s_kind",
+        "remote_workload_name": "remote_k8s_workload_name",
+        "replica_id": "k8s_pod_name",
+        "rule_id": "rule_id ",
+        "run_state": "run_state",
+        "target_value": "device_target_value",
+        "threat_cause_actor_certificate_authority": "process_issuer",
+        "threat_cause_actor_name": "process_name",
+        "threat_cause_actor_publisher": "process_publisher",
+        "threat_cause_actor_sha256": "process_sha256",
+        "threat_cause_event_id": "primary_event_id",
+        "threat_cause_md5": "process_md5",
+        "threat_cause_parent_guid": "parent_guid",
+        "threat_cause_reputation": "process_reputation",
+        "threat_indicators": "ttps",
+        "watchlists": "watchlists.id",
+        "workflow.last_update_time": "workflow.change_timestamp",
+        "workflow.comment": "workflow.note",
+        "workflow.remediation": "workflow.closure_reason",
+        "workflow.state": "workflow.status",
+        "workload_kind": "k8s_kind",
+        "workload_name": "k8s_workload_name"
+    }
 
-REMAPPED_WORKFLOWS_V6_TO_V7 = {
-    "workflow.last_update_time": "workflow.change_timestamp",
-    "workflow.comment": "workflow.note",
-    "workflow.remediation": "workflow.closure_reason",
-    "workflow.state": "workflow.status",
-}
+    REMAPPED_NOTES_V6_TO_V7 = {
+        "last_update_time": "",
 
-REMAPPED_NOTES_V6_TO_V7 = {
-    "last_update_time": "",
+    }
 
-}
+    REMAPPED_ALERTS_V7_TO_V6 = {
+        "ml_classification_final_verdict": "alert_classification.classification",
+        "ml_classification_global_prevalence": "alert_classification.global_prevalence",
+        "ml_classification_org_prevalence": "alert_classification.org_prevalence",
+        "determination_value": "alert_classification.user_feedback",
+        "k8s_cluster": "cluster_name",
+        "backend_timestamp": "create_time",
+        "first_event_timestamp": "first_event_time",
+        "last_event_timestamp": "last_event_time",
+        "backend_update_timestamp": "last_update_time",
+        "k8s_namespace": "namespace",
+        "alert_notes_present": "notes_present",
+        "device_policy_id": "policy_id",
+        "device_policy": "policy_name",
+        "netconn_local_port": "port",
+        "netconn_protocol": "protocol",
+        "netconn_remote_domain": "remote_domain",
+        "netconn_remote_ip": "remote_ip",
+        "remote_k8s_namespace": "remote_namespace",
+        "remote_k8s_pod_name": "remote_replica_id",
+        "remote_k8s_kind": "remote_workload_kind",
+        "remote_k8s_workload_name": "remote_workload_name",
+        "k8s_pod_name": "replica_id",
+        "rule_id ": "rule_id",
+        "run_state": "run_state",
+        "device_target_value": "target_value",
+        "process_issuer": "threat_cause_actor_certificate_authority",
+        "process_name": "threat_cause_actor_name",
+        "process_publisher": "threat_cause_actor_publisher",
+        "process_sha256": "threat_cause_actor_sha256",
+        "primary_event_id": "threat_cause_cause_event_id",
+        "process_md5": "threat_cause_md5",
+        "parent_guid": "threat_cause_parent_guid",
+        "process_reputation": "threat_cause_reputation",
+        "ttps": "threat_indicators",
+        "watchlists.id": "watchlists",
+        "workflow.change_timestamp": "workflow.last_update_time",
+        "workflow.note": "workflow.comment",
+        "workflow.closure_reason": "workflow.remediation",
+        "workflow.status": "workflow.state",
+        "k8s_kind": "workload_kind",
+        "k8s_workload_name": "workload_name"
+    }
 
-REMAPPED_ALERTS_V7_TO_V6 = {
-    "ml_classification_final_verdict": "alert_classification.classification",
-    "ml_classification_global_prevalence": "alert_classification.global_prevalence",
-    "ml_classification_org_prevalence": "alert_classification.org_prevalence",
-    "determination_value": "alert_classification.user_feedback",
-    "k8s_cluster": "cluster_name",
-    "backend_timestamp": "create_time",
-    "first_event_timestamp": "first_event_time",
-    "last_event_timestamp": "last_event_time",
-    "backend_update_timestamp": "last_update_time",
-    "k8s_namespace": "namespace",
-    "alert_notes_present": "notes_present",
-    "device_policy_id": "policy_id",
-    "device_policy": "policy_name",
-    "netconn_local_port": "port",
-    "netconn_protocol": "protocol",
-    "netconn_remote_domain": "remote_domain",
-    "netconn_remote_ip": "remote_ip",
-    "remote_k8s_namespace": "remote_namespace",
-    "remote_k8s_pod_name": "remote_replica_id",
-    "remote_k8s_kind": "remote_workload_kind",
-    "remote_k8s_workload_name": "remote_workload_name",
-    "k8s_pod_name": "replica_id",
-    "rule_id ": "rule_id",
-    "run_state": "run_state",
-    "device_target_value": "target_value",
-    "process_issuer": "threat_cause_actor_certificate_authority",
-    "process_name": "threat_cause_actor_name",
-    "process_publisher": "threat_cause_actor_publisher",
-    "process_sha256": "threat_cause_actor_sha256",
-    "primary_event_id": "threat_cause_cause_event_id",
-    "process_md5": "threat_cause_md5",
-    "parent_guid": "threat_cause_parent_guid",
-    "process_reputation": "threat_cause_reputation",
-    "ttps": "threat_indicators",
-    "watchlists.id": "watchlists",
-    "workflow.change_timestamp": "workflow.last_update_time",
-    "workflow.note": "workflow.comment",
-    "workflow.closure_reason": "workflow.remediation",
-    "workflow.status": "workflow.state",
-    "k8s_kind": "workload_kind",
-    "k8s_workload_name": "workload_name"
-}
+    REMAPPED_NOTES_V7_TO_V6 = {
+        "last_update_time": "",
 
-REMAPPED_WORKFLOWS_V7_TO_V6 = {
-    "change_timestamp": "last_update_time",
-    "note": "comment",
-    "closure_reason": "remediation",
-    "status": "state"
-}
-
-REMAPPED_NOTES_V7_TO_V6 = {
-    "last_update_time": "",
-
-}
+    }
 
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
     urlobject_single = "/api/alerts/v7/orgs/{0}/alerts/{1}"
@@ -234,22 +220,23 @@ REMAPPED_NOTES_V7_TO_V6 = {
 
         def __getitem__(self, item):
             """
-                    Return an attribute of this object.
+            Return an attribute of this object.
 
-                    Args:
-                        item (str): Name of the attribute to be returned.
+            Args:
+                item (str): Name of the attribute to be returned.
 
-                    Returns:
-                        Any: The returned attribute value.
+            Returns:
+                Any: The returned attribute value.
 
-                    Raises:
-                        AttributeError: If the object has no such attribute.
-                    """
+            Raises:
+                AttributeError: If the object has no such attribute.
+            """
             try:
-                return super(Alert, self).__getattribute__(REMAPPED_NOTES_V6_TO_V7.get(item, item))
+                return super(Alert, self).__getattribute__(Alert.REMAPPED_NOTES_V6_TO_V7.get(item, item))
             except AttributeError:
                 raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
-                                                                                  item))  # fall through to the rest of the logic...
+                                                                                  item))
+                # fall through to the rest of the logic...
 
         def __getattr__(self, item):
             """
@@ -264,13 +251,13 @@ REMAPPED_NOTES_V7_TO_V6 = {
             Raises:
                 AttributeError: If the object has no such attribute.
             """
-
             try:
-                item = REMAPPED_NOTES_V6_TO_V7.get(item, item)
+                item = Alert.REMAPPED_NOTES_V6_TO_V7.get(item, item)
                 return super(Alert, self).__getattr__(item)
             except AttributeError:
                 raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
-                                                                                  item))  # fall through to the rest of the logic...
+                                                                                  item))
+                # fall through to the rest of the logic...
 
     def notes_(self):
         """Retrieves all notes for an alert."""
@@ -427,22 +414,23 @@ REMAPPED_NOTES_V7_TO_V6 = {
 
     def __getitem__(self, item):
         """
-                Return an attribute of this object.
+        Return an attribute of this object.
 
-                Args:
-                    item (str): Name of the attribute to be returned.
+        Args:
+            item (str): Name of the attribute to be returned.
 
-                Returns:
-                    Any: The returned attribute value.
+        Returns:
+            Any: The returned attribute value.
 
-                Raises:
-                    AttributeError: If the object has no such attribute.
-                """
+        Raises:
+            AttributeError: If the object has no such attribute.
+        """
         try:
-            return super(Alert, self).__getattribute__(REMAPPED_ALERTS_V6_TO_V7.get(item, item))
+            return super(Alert, self).__getattribute__(Alert.REMAPPED_ALERTS_V6_TO_V7.get(item, item))
         except AttributeError:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
-                                                                              item))  # fall through to the rest of the logic...
+                                                                              item))
+            # fall through to the rest of the logic...
 
     def __getattr__(self, item):
         """
@@ -457,20 +445,28 @@ REMAPPED_NOTES_V7_TO_V6 = {
         Raises:
             AttributeError: If the object has no such attribute.
         """
-
         try:
-            item = REMAPPED_ALERTS_V6_TO_V7.get(item, item)
+            item = Alert.REMAPPED_ALERTS_V6_TO_V7.get(item, item)
             return super(Alert, self).__getattr__(item)
         except AttributeError:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
-                                                                              item))  # fall through to the rest of the logic...
+                                                                              item))
+            # fall through to the rest of the logic...
 
     def to_json(self, version="v7"):
+        """
+        Return an a json object of the response.
+
+        Args:
+            version (str): version of json to return. Either v6 or v7. DEFAULT v7
+
+        Returns:
+            Any: The returned attribute value.
+        """
         if version == "v6":
             modified_json = {}
-
             for key, value in self._info.items():
-                modified_json[REMAPPED_ALERTS_V7_TO_V6.get(key, key)] = value
+                modified_json[Alert.REMAPPED_ALERTS_V7_TO_V6.get(key, key)] = value
                 if key == "id":
                     modified_json["legacy_alert_id"] = value
                 if key == "process_name":
@@ -478,10 +474,8 @@ REMAPPED_NOTES_V7_TO_V6 = {
                 if key == "threat_cause_event_id":
                     modified_json["created_by_event_id"] = value
                 if key == "ttps":
-                    ti = {}
-                    ti["process_name"] = self._info.get("process_name")
-                    ti["sha256"] = self._info.get("process_sha256")
-                    ti["ttps"] = value
+                    ti = {"process_name": self._info.get("process_name"), "sha256": self._info.get("process_sha256"),
+                          "ttps": value}
                     modified_json["threat_indicators"] = [ti]
                 if key == "workflow":
                     wf = {}
@@ -491,6 +485,7 @@ REMAPPED_NOTES_V7_TO_V6 = {
             return modified_json
         else:
             return self._info
+
 
 class WatchlistAlert(Alert):
     """Represents watch list alerts."""
@@ -732,6 +727,18 @@ class IntrusionDetectionSystemAlert(Alert):
 
 class Workflow(UnrefreshableModel):
     """Represents the workflow associated with alerts."""
+    REMAPPED_WORKFLOWS_V6_TO_V7 = {
+        "workflow.last_update_time": "workflow.change_timestamp",
+        "workflow.comment": "workflow.note",
+        "workflow.remediation": "workflow.closure_reason",
+        "workflow.state": "workflow.status",
+    }
+    REMAPPED_WORKFLOWS_V7_TO_V6 = {
+        "change_timestamp": "last_update_time",
+        "note": "comment",
+        "closure_reason": "remediation",
+        "status": "state"
+    }
     swagger_meta_file = "platform/models/workflow.yaml"
 
     def __init__(self, cb, initial_data=None):
@@ -739,30 +746,31 @@ class Workflow(UnrefreshableModel):
         Initialize the Workflow object.
 
         Args:
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-            initial_data (dict): Initial data used to populate the workflow.
+        cb (BaseAPI): Reference to API object used to communicate with the server.
+        initial_data (dict): Initial data used to populate the workflow.
         """
         super(Workflow, self).__init__(cb, model_unique_id=None, initial_data=initial_data)
 
     def __getitem__(self, item):
         """
-                Return an attribute of this object.
+        Return an attribute of this object.
 
-                Args:
-                    item (str): Name of the attribute to be returned.
+        Args:
+            item (str): Name of the attribute to be returned.
 
-                Returns:
-                    Any: The returned attribute value.
+        Returns:
+            Any: The returned attribute value.
 
-                Raises:
-                    AttributeError: If the object has no such attribute.
-                """
+        Raises:
+            AttributeError: If the object has no such attribute.
+        """
         try:
-            return super(Workflow, self).__getattribute__(REMAPPED_WORKFLOWS_V6_TO_V7.get(item, item))
+            return super(Workflow, self).__getattribute__(Workflow.REMAPPED_WORKFLOWS_V6_TO_V7.get(item, item))
 
         except AttributeError:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
-                                                                              item))  # fall through to the rest of the logic...
+                                                                              item))
+            # fall through to the rest of the logic...
 
     def __getattr__(self, item):
         """
@@ -777,14 +785,16 @@ class Workflow(UnrefreshableModel):
         Raises:
             AttributeError: If the object has no such attribute.
         """
-
         try:
-            item = REMAPPED_WORKFLOWS_V6_TO_V7.get(item, item)
+            item = Workflow.REMAPPED_WORKFLOWS_V6_TO_V7.get(item, item)
             return super(Workflow, self).__getattr__(item)
 
         except AttributeError:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
-                                                                              item))  # fall through to the rest of the logic...
+                                                                              item))
+            # fall through to the rest of the logic...
+
+
 class WorkflowStatus(PlatformModel):
     """Represents the current workflow status of a request."""
     urlobject_single = "/jobs/v1/orgs/{0}/jobs/{1}"
@@ -877,8 +887,8 @@ class WorkflowStatus(PlatformModel):
 """Alert Queries"""
 
 
-class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, LegacyAlertSearchQueryCriterionMixin, CriteriaBuilderSupportMixin):
-
+class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, LegacyAlertSearchQueryCriterionMixin,
+                       CriteriaBuilderSupportMixin):
     """Represents a query that is used to locate Alert objects."""
     VALID_CATEGORIES = ["THREAT", "MONITORED"]
     VALID_REPUTATIONS = ["KNOWN_MALWARE", "SUSPECT_MALWARE", "PUP", "NOT_LISTED", "ADAPTIVE_WHITE_LIST",
@@ -1148,4 +1158,3 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             str: The request ID, which may be used to select a WorkflowStatus object.
         """
         return self._update_status("DISMISSED", remediation, comment)
-
