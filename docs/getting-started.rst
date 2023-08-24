@@ -2,13 +2,16 @@
 
 Getting Started with the Carbon Black Cloud Python SDK - "Hello CBC"
 ====================================================================
+
 This document will help you get started with the Carbon Black Cloud Python SDK by installing it, configuring
 authentication for it, and executing a simple example program that makes one API call.
 
 Installation
 ------------
-Make sure you are using Python 3.  Use the command ``pip install carbon-black-cloud-sdk`` to install the SDK and all its dependencies.
-(In some environments, the correct command will be ``pip3 install carbon-black-cloud-sdk`` to use Python 3.)
+
+Make sure you are using Python 3.  Use the command ``pip install carbon-black-cloud-sdk`` to install the SDK and all
+its dependencies. (In some environments, the correct command will be ``pip3 install carbon-black-cloud-sdk`` to
+use Python 3.)
 
 You can also access the SDK in development mode by cloning the GitHub repository, and then executing
 ``python setup.py develop`` (in some environments, ``python3 setup.py develop``) from the top-level directory.
@@ -19,10 +22,12 @@ See also the :doc:`installation` section of this documentation for more informat
 
 Authentication
 --------------
+
 To make use of APIs, you will need an *API token,* in case you are using Carbon Black Cloud to manage your
-identity and authentication, or if you are using VMware Cloud Services Platform, an *OAuth App with Bearer* or a *Personal API Token*.
-For our example, we will use a custom CBC-managed key with the ability to list devices.
-To learn more about the different authentication methods, click `here <https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/>`_.
+identity and authentication, or if you are using VMware Cloud Services Platform, an *OAuth App with Bearer* or
+a *Personal API Token*.  For our example, we will use a custom CBC-managed key with the ability to list devices.
+To learn more about the different authentication methods, click
+`here <https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/>`_.
 
 Log into the Carbon Black Cloud UI and go to ``Settings > API Access``.  Start by selecting ``Access Levels`` at the
 top of the screen and press ``Add Access Level``.  Fill in a name and description for your sample access level, keep
@@ -75,71 +80,10 @@ For further information, please see the :doc:`authentication` section of the doc
 `Authentication Guide <https://developer.carbonblack.com/reference/carbon-black-cloud/authentication/>`_ on the
 Carbon Black Cloud Developer Network.
 
-Running the Example
--------------------
-The example we will be running is ``list_devices.py``, located in the ``examples/platform`` subdirectory of the GitHub
-repository.  If you cloned the repository, change directory to ``[sdk]/examples/platform``, where ``[sdk]`` is the
-top-level directory of the SDK.  (On Windows, use ``[sdk]\examples\platform``.)  Alternately, you may view the current
-version of that script in "raw" mode in GitHub, and use your browser's ``Save As`` function to save the script locally.
-In that case, change directory to whichever directory you saved the script to.
-
-Execute the script by using the command ``python list_devices.py -q '1'`` (in some environments,
-``python3 list_devices.py -q '1'``).  If all is well, you will see a list of devices (endpoints) registered in your
-organization, showing their numeric ID, host name, IP address, and last checkin time.
-
-You can change what devices are shown by modifying the query value supplied to the ``-q`` parameter, and also by using
-additional parameters to modify the search criteria.  Execute the command ``python list_devices.py --help`` (in some
-environments, ``python3 list_devices.py --help``) for a list of all possible command line parameters.
-
-Inside the Example Script
--------------------------
-Once the command-line arguments are parsed, we create a Carbon Black Cloud API object with a call to the helper
-function ``get_cb_cloud_object()``.  The standard ``select()`` method is used to create a query object that queries for
-devices; the query string is passed to that object via the ``where()`` method, and other criteria are added using
-specific setters.
-
-The query is an iterable object, and calling upon its iterator methods invokes the query, which, in this case, is the
-`Search Devices <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/devices-api/#search-devices>`_
-API.  The example script turns those results into an in-memory list, then iterates on that list, printing only certain
-properties of each retrieved Device object.
-
-Calling the SDK Directly
-------------------------
-Now we'll repeat this example, but using the Python command line directly without a script.
-
-Access your Python interpreter with the ``python`` command (or ``python3`` if required) and type:
-
->>> from cbc_sdk.rest_api import CBCloudAPI
->>> from cbc_sdk.platform import Device
->>> cb = CBCloudAPI(profile='default')
-
-This imports the necessary classes and creates an instance of the base ``CBCloudAPI`` object.  By default, the file
-credentials provider is used. We set it to use the ``default`` profile in your ``credentials.cbc`` file, which you
-set up earlier.
-
-**N.B.:** On Windows, a security warning message will be generated about file access to CBC SDK credentials being
-inherently insecure.
-
->>> query = cb.select(Device).where('1')
-
-This creates a query object that searches for all devices (the '1' causes all devices to be matched, as in SQL).
-
->>> devices = list(query)
-
-For convenience, we load the entirety of the query results into an in-memory list.
-
->>> for device in devices:
-...     print(device.id, device.name, device.last_internal_ip_address, device.last_contact_time)
-...
-
-Using a simple ``for`` loop, we print out the ID, host name, internal IP address, and last contact time from each
-returned device.  Note that the contents of the list are ``Device`` objects, not dictionaries, so we access individual
-properties with the ``object.property_name`` syntax, rather than ``object['property_name']``.
-
 Setting the User-Agent
 ----------------------
 
-The SDK supports custom User-Agent's, which allow you to identify yourself when using the SDK to make API calls.
+The SDK supports custom ``User-Agent``s, which allow you to identify yourself when using the SDK to make API calls.
 The credential parameter ``integration_name`` is used for this. If you use a file to authenticate the SDK, this is
 how you could identify yourself:
 
@@ -152,6 +96,70 @@ how you could identify yourself:
   integration_name=MyScript/0.9.0
 
 See the :doc:`authentication` documentation for more information about credentials.
+
+Running the Example
+-------------------
+
+The example we will be running is ``list_devices.py``, located in the ``examples/platform`` subdirectory of the GitHub
+repository.  If you cloned the repository, change directory to ``[sdk]/examples/platform``, where ``[sdk]`` is the
+top-level directory of the SDK.  (On Windows, use ``[sdk]\examples\platform``.)  Alternately, you may view the current
+version of that script in "raw" mode in GitHub, and use your browser's ``Save As`` function to save the script locally.
+In that case, change directory to whichever directory you saved the script to.
+
+Execute the script by using the command ``python list_devices.py`` (in some environments,
+``python3 list_devices.py``).  If all is well, you will see a list of devices (endpoints) registered in your
+organization, showing their numeric ID, host name, IP address, and last checkin time.
+
+You can change what devices are shown by adding a query value with the ``-q`` parameter, and also by using
+additional parameters to modify the search criteria.  Execute the command ``python list_devices.py --help`` (in some
+environments, ``python3 list_devices.py --help``) for a list of all possible command line parameters.
+
+Inside the Example Script
+-------------------------
+
+Once the command-line arguments are parsed, we create a Carbon Black Cloud API object with a call to the helper
+function ``get_cb_cloud_object()``.  The standard ``select()`` method is used to create a query object that queries for
+devices; the query string is passed to that object via the ``where()`` method, and other criteria are added using
+specific setters.
+
+The query is an iterable object, and calling upon its iterator methods invokes the query, which, in this case, is the
+`Search Devices <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/devices-api/#search-devices>`_
+API.  The example script turns those results into an in-memory list, then iterates on that list, printing only certain
+properties of each retrieved Device object.
+
+Calling the SDK Directly
+------------------------
+
+Now we'll repeat this example, but using the Python command line directly without a script.
+
+Access your Python interpreter with the ``python`` command (or ``python3`` if required) and type::
+
+    >>> from cbc_sdk.rest_api import CBCloudAPI
+    >>> from cbc_sdk.platform import Device
+    >>> cb = CBCloudAPI(profile='default')
+
+This imports the necessary classes and creates an instance of the base ``CBCloudAPI`` object.  By default, the file
+credentials provider is used. We set it to use the ``default`` profile in your ``credentials.cbc`` file, which you
+set up earlier.
+
+.. note:: On Windows, a security warning message will be generated about file access to CBC SDK credentials being
+inherently insecure.
+
+>>> query = cb.select(Device)
+
+This creates a query object that searches for all devices.
+
+>>> devices = list(query)
+
+For convenience, we load the entirety of the query results into an in-memory list.
+
+>>> for device in devices:
+...     print(device.id, device.name, device.last_internal_ip_address, device.last_contact_time)
+...
+
+Using a simple ``for`` loop, we print out the ID, host name, internal IP address, and last contact time from each
+returned device.  Note that the contents of the list are ``Device`` objects, not dictionaries, so we access individual
+properties with the ``object.property_name`` syntax, rather than ``object['property_name']``.
 
 Next Steps
 ----------
