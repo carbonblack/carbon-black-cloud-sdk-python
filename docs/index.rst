@@ -69,8 +69,27 @@ Get started with Carbon Black Cloud Python SDK here. For detailed information on
    resources
    guides
 
-Guides
-------
+Full SDK Documentation
+----------------------
+
+See detailed information on the objects and methods exposed by the Carbon Black Cloud Python SDK here.
+
+.. toctree::
+   :caption: SDK Documentation
+   :maxdepth: 4
+
+   cbc_sdk.cbcloudapi
+   cbc_sdk.audit_remediation
+   cbc_sdk.credential_providers
+   cbc_sdk.endpoint_standard
+   cbc_sdk.enterprise_edr
+   cbc_sdk.platform
+   cbc_sdk.workload
+   cbc_sdk
+   logging
+   os_functional_testing
+   changelog
+   exceptions
 
 .. toctree::
    :caption: Guides
@@ -93,28 +112,6 @@ Guides
    vulnerabilities
    watchlists-feeds-reports
    workload
-
-Full SDK Documentation
-----------------------
-
-See detailed information on the objects and methods exposed by the Carbon Black Cloud Python SDK here.
-
-.. toctree::
-   :caption: SDK Documentation
-   :maxdepth: 4
-
-   cbc_sdk.cbcloudapi
-   cbc_sdk.audit_remediation
-   cbc_sdk.credential_providers
-   cbc_sdk.endpoint_standard
-   cbc_sdk.enterprise_edr
-   cbc_sdk.platform
-   cbc_sdk.workload
-   cbc_sdk
-   logging
-   os_functional_testing
-   changelog
-   exceptions
 
 Indices and tables
 ==================
