@@ -16,6 +16,7 @@ import pytest
 from cbc_sdk.errors import ApiError, TimeoutError, NonQueryableModel
 from cbc_sdk.platform import (
     Alert,
+    CBAnalyticsAlert, WatchlistAlert, IntrusionDetectionSystemAlert, ContainerRuntimeAlert, DeviceControlAlert,
     WorkflowStatus,
     Process,
 )
@@ -284,36 +285,38 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
                         "rows": 2,
-                        "criteria": {"category": ["THREAT", "MONITORED"], "device_id": [6023], "device_name": ["HAL"],
+                        "criteria": {"device_id": ["6023"], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
-                                     "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
-                                     "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
-                                     "policy_name": ["Strict"], "process_name": ["IEXPLORE.EXE"],
+                                     "device_username": ["JRN"], "id": ["S0L0"],
+                                     "severity": ['6'], "device_policy_id": ["8675309"],
+                                     "device_policy": ["Strict"], "process_name": ["IEXPLORE.EXE"],
                                      "process_sha256": ["0123456789ABCDEF0123456789ABCDEF"],
-                                     "reputation": ["SUSPECT_MALWARE"], "tag": ["Frood"], "target_value": ["HIGH"],
-                                     "threat_id": ["B0RG"], "type": ["CB_ANALYTICS"], "workflow": ["OPEN"],
-                                     "blocked_threat_category": ["RISKY_PROGRAM"], "device_location": ["ONSITE"],
-                                     "kill_chain_status": ["EXECUTE_GOAL"],
-                                     "not_blocked_threat_category": ["NEW_MALWARE"], "policy_applied": ["APPLIED"],
-                                     "reason_code": ["ATTACK_VECTOR"], "run_state": ["RAN"], "sensor_action": ["DENY"],
-                                     "threat_cause_vector": ["WEB"]}, "sort": [{"field": "name", "order": "DESC"}]}
+                                     "process_reputation": ["SUSPECT_MALWARE"], "device_target_value": ["HIGH"],
+                                     "threat_id": ["B0RG"], "type": ["CB_ANALYTICS"], "workflow_status": ["OPEN"],
+                                     "device_location": ["ONSITE"],
+                                     "policy_applied": ["APPLIED"],
+                                     "reason_code": ["ATTACK_VECTOR"], "run_state": ["RAN"], "sensor_action": ["DENY"]},
+                                     "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"state": "OPEN"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(CBAnalyticsAlert).where("Blort").set_categories(["THREAT", "MONITORED"]) \
-        .set_device_ids([6023]).set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
-        .set_device_username(["JRN"]).set_group_results(True).set_alert_ids(["S0L0"]).set_legacy_alert_ids(["S0L0_1"]) \
-        .set_minimum_severity(6).set_policy_ids([8675309]).set_policy_names(["Strict"]) \
-        .set_process_names(["IEXPLORE.EXE"]).set_process_sha256(["0123456789ABCDEF0123456789ABCDEF"]) \
-        .set_reputations(["SUSPECT_MALWARE"]).set_tags(["Frood"]).set_target_priorities(["HIGH"]) \
-        .set_threat_ids(["B0RG"]).set_workflows(["OPEN"]) \
-        .set_blocked_threat_categories(["RISKY_PROGRAM"]).set_device_locations(["ONSITE"]) \
-        .set_kill_chain_statuses(["EXECUTE_GOAL"]).set_not_blocked_threat_categories(["NEW_MALWARE"]) \
-        .set_policy_applied(["APPLIED"]).set_reason_code(["ATTACK_VECTOR"]).set_run_states(["RAN"]) \
-        .set_sensor_actions(["DENY"]).set_threat_cause_vectors(["WEB"]).sort_by("name", "DESC")
+    query = api.select(Alert).where("Blort").add_criteria("device_id", ["6023"]) \
+        .add_criteria("device_name", ["HAL"]).add_criteria("device_os", ["LINUX"]) \
+        .add_criteria("device_os_version", ["0.1.2"]) \
+        .add_criteria("device_username", ["JRN"]).add_criteria("id", ["S0L0"]) \
+        .add_criteria("severity", "6").add_criteria("device_policy_id", ["8675309"]) \
+        .add_criteria("device_policy", ["Strict"]).add_criteria("process_name", ["IEXPLORE.EXE"]) \
+        .add_criteria("process_sha256", ["0123456789ABCDEF0123456789ABCDEF"]) \
+        .add_criteria("process_reputation", ["SUSPECT_MALWARE"]) \
+        .add_criteria("device_target_value", ["HIGH"]).add_criteria("threat_id", ["B0RG"]) \
+        .add_criteria("workflow_status", ["OPEN"]).add_criteria("type", ["CB_ANALYTICS"]) \
+        .add_criteria("device_location", ["ONSITE"]) \
+        .add_criteria("policy_applied", ["APPLIED"]).add_criteria("reason_code", ["ATTACK_VECTOR"]).add_criteria("run_state", ["RAN"]) \
+        .add_criteria("sensor_action", ["DENY"]).sort_by("name", "DESC")
+
     a = query.one()
     assert a.id == "S0L0"
     assert a.org_key == "test"
@@ -325,7 +328,7 @@ def test_query_cbanalyticsalert_facets(cbcsdk_mock):
     """Test a CB Analytics alert facet query."""
 
     def on_post(url, body, **kwargs):
-        assert body == {"query": "Blort", "criteria": {'type': ['CB_ANALYTICS'], "workflow": ["OPEN"]},
+        assert body == {"query": "Blort", "criteria": {'type': ['CB_ANALYTICS'], "workflow_status": ["OPEN"]},
                         "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]}}
         return {"results": [{"field": {},
                              "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
@@ -335,7 +338,7 @@ def test_query_cbanalyticsalert_facets(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_facet", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(CBAnalyticsAlert).where("Blort").set_workflows(["OPEN"])
+    query = api.select(Alert).where("Blort").add_criteria("type", ["CB_ANALYTICS"]).add_criteria("workflow_status", ["OPEN"])
     f = query.facets(["REPUTATION", "STATUS"])
     assert f == [{"field": {}, "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
                  {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
@@ -354,7 +357,7 @@ def test_query_cbanalyticsalert_facets(cbcsdk_mock):
 ])
 def test_query_cbanalyticsalert_invalid_criteria_values(cb, method, arg):
     """Test invalid values being supplied to CB Analytics alert queries."""
-    query = cb.select(CBAnalyticsAlert)
+    query = cb.select(Alert).add_criteria("type", ["CB_ANALYTICS"])
     meth = getattr(query, method, None)
     with pytest.raises(ApiError):
         meth(arg)
@@ -366,15 +369,15 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
                         "rows": 2,
-                        "criteria": {"category": ["MONITORED", "THREAT"], "device_id": [6023], "device_name": ["HAL"],
+                        "criteria": {"device_id": ["6023"], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
-                                     "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
-                                     "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
-                                     "policy_name": ["Strict"], "process_name": ["IEXPLORE.EXE"],
+                                     "device_username": ["JRN"], "id": ["S0L0"],
+                                     "severity": ["6"], "device_policy_id": ["8675309"],
+                                     "device_policy": ["Strict"], "process_name": ["IEXPLORE.EXE"],
                                      "process_sha256": ["0123456789ABCDEF0123456789ABCDEF"],
-                                     "reputation": ["SUSPECT_MALWARE"], "tag": ["Frood"], "target_value": ["HIGH"],
-                                     "threat_id": ["B0RG"], "type": ["DEVICE_CONTROL"], "workflow": ["OPEN"],
-                                     "external_device_friendly_name": ["/dev/ice"], "external_device_id": ["626"],
+                                     "process_reputation": ["SUSPECT_MALWARE"], "device_target_value": ["HIGH"],
+                                     "threat_id": ["B0RG"], "type": ["DEVICE_CONTROL"], "workflow_status": ["OPEN"],
+                                     "device_id": ["626"], "external_device_friendly_name": ["/dev/ice"],
                                      "product_id": ["0x5581"], "product_name": ["Ultra"],
                                      "serial_number": ["4C531001331122115172"], "vendor_id": ["0x0781"],
                                      "vendor_name": ["SanDisk"]},
@@ -385,16 +388,21 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(DeviceControlAlert).where("Blort").set_categories(["MONITORED", "THREAT"]) \
-        .set_device_ids([6023]).set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
-        .set_device_username(["JRN"]).set_group_results(True).set_alert_ids(["S0L0"]) \
-        .set_legacy_alert_ids(["S0L0_1"]).set_minimum_severity(6).set_policy_ids([8675309]) \
-        .set_policy_names(["Strict"]).set_process_names(["IEXPLORE.EXE"]) \
-        .set_process_sha256(["0123456789ABCDEF0123456789ABCDEF"]).set_reputations(["SUSPECT_MALWARE"]) \
-        .set_tags(["Frood"]).set_target_priorities(["HIGH"]).set_threat_ids(["B0RG"]) \
-        .set_workflows(["OPEN"]).set_external_device_friendly_names(["/dev/ice"]).set_external_device_ids(["626"]) \
-        .set_product_ids(["0x5581"]).set_product_names(["Ultra"]).set_serial_numbers(["4C531001331122115172"]) \
-        .set_vendor_ids(["0x0781"]).set_vendor_names(["SanDisk"]).sort_by("name", "DESC")
+    query = api.select(Alert).where("Blort").add_criteria("device_id", ["6023"]) \
+        .add_criteria("device_name", ["HAL"]).add_criteria("device_os", ["LINUX"]) \
+        .add_criteria("device_os_version", ["0.1.2"]) \
+        .add_criteria("device_username", ["JRN"]).add_criteria("id", ["S0L0"]) \
+        .add_criteria("severity", "6").add_criteria("type", ["DEVICE_CONTROL"]).add_criteria("device_policy_id", ["8675309"]) \
+        .add_criteria("device_policy", ["Strict"]).add_criteria("process_name", ["IEXPLORE.EXE"]) \
+        .add_criteria("process_sha256", ["0123456789ABCDEF0123456789ABCDEF"]) \
+        .add_criteria("process_reputation", ["SUSPECT_MALWARE"]) \
+        .add_criteria("external_device_friendly_name", ["/dev/ice"]).add_criteria("product_id", ["0x5581"])\
+        .add_criteria("product_name", ["Ultra"]).add_criteria("serial_number", ["4C531001331122115172"]) \
+        .add_criteria("vendor_id", ["0x0781"]).add_criteria("vendor_name", ["SanDisk"])    \
+        .add_criteria("device_target_value", ["HIGH"]).add_criteria("threat_id", ["B0RG"]) \
+        .add_criteria("workflow_status", ["OPEN"]).sort_by("name", "DESC") \
+        .add_criteria("device_id", ["626"]) \
+        .sort_by("name", "DESC")
     a = query.one()
     assert a.id == "S0L0"
     assert a.org_key == "test"
@@ -406,7 +414,7 @@ def test_query_devicecontrolalert_facets(cbcsdk_mock):
     """Test a Device Control alert facet query."""
 
     def on_post(url, body, **kwargs):
-        assert body == {"query": "Blort", "criteria": {'type': ['DEVICE_CONTROL'], "workflow": ["OPEN"]},
+        assert body == {"query": "Blort", "criteria": {'type': ['DEVICE_CONTROL'], "workflow_status": ["OPEN"]},
                         "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]}}
         return {"results": [{"field": {},
                              "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
@@ -416,7 +424,7 @@ def test_query_devicecontrolalert_facets(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_facet", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(DeviceControlAlert).where("Blort").set_workflows(["OPEN"])
+    query = api.select(Alert).where("Blort").add_criteria("type", ["DEVICE_CONTROL"]).add_criteria("workflow_status", ["OPEN"])
     f = query.facets(["REPUTATION", "STATUS"])
     assert f == [{"field": {}, "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
                  {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
@@ -433,7 +441,7 @@ def test_query_devicecontrolalert_facets(cbcsdk_mock):
 ])
 def test_query_devicecontrolalert_invalid_criteria_values(cb, method, arg):
     """Test invalid values being supplied to DeviceControl alert queries."""
-    query = cb.select(DeviceControlAlert)
+    query = cb.select(Alert).add_criteria("type", ["DEVICE_CONTROL"])
     meth = getattr(query, method, None)
     with pytest.raises(ApiError):
         meth(arg)
@@ -445,42 +453,44 @@ def test_query_watchlistalert_with_all_bells_and_whistles(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
                         "rows": 2,
-                        "criteria": {"category": ["THREAT", "MONITORED"], "device_id": [6023], "device_name": ["HAL"],
+                        "criteria": {"device_id": ["6023"], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
-                                     "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
-                                     "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
-                                     "policy_name": ["Strict"], "process_name": ["IEXPLORE.EXE"],
+                                     "device_username": ["JRN"], "id": ["S0L0"],
+                                     "severity": ["6"], "device_policy_id": ["8675309"],
+                                     "device_policy": ["Strict"], "process_name": ["IEXPLORE.EXE"],
                                      "process_sha256": ["0123456789ABCDEF0123456789ABCDEF"],
-                                     "reputation": ["SUSPECT_MALWARE"], "tag": ["Frood"], "target_value": ["HIGH"],
-                                     "threat_id": ["B0RG"], "type": ["WATCHLIST"], "workflow": ["OPEN"],
-                                     "watchlist_id": ["100"], "watchlist_name": ["Gandalf"]},
+                                     "process_reputation": ["SUSPECT_MALWARE"], "device_target_value": ["HIGH"],
+                                     "threat_id": ["B0RG"], "type": ["WATCHLIST"], "workflow_status": ["OPEN"],
+                                     "watchlists_id": ["100"], "watchlists_name": ["Gandalf"]},
                         "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
-                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(WatchlistAlert).where("Blort").set_categories(["THREAT", "MONITORED"]).set_device_ids([6023]) \
-        .set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
-        .set_device_username(["JRN"]).set_group_results(True).set_alert_ids(["S0L0"]) \
-        .set_legacy_alert_ids(["S0L0_1"]).set_minimum_severity(6).set_policy_ids([8675309]) \
-        .set_policy_names(["Strict"]).set_process_names(["IEXPLORE.EXE"]) \
-        .set_process_sha256(["0123456789ABCDEF0123456789ABCDEF"]).set_reputations(["SUSPECT_MALWARE"]) \
-        .set_tags(["Frood"]).set_target_priorities(["HIGH"]).set_threat_ids(["B0RG"]) \
-        .set_workflows(["OPEN"]).set_watchlist_ids(["100"]).set_watchlist_names(["Gandalf"]).sort_by("name", "DESC")
+    query = api.select(Alert).where("Blort").add_criteria("type", ["WATCHLIST"]).add_criteria("device_id", ["6023"]) \
+        .add_criteria("device_name", ["HAL"]).add_criteria("device_os", ["LINUX"]) \
+        .add_criteria("device_os_version", ["0.1.2"]) \
+        .add_criteria("device_username", ["JRN"]).add_criteria("id", ["S0L0"]) \
+        .add_criteria("severity", "6").add_criteria("device_policy_id", ["8675309"]) \
+        .add_criteria("device_policy", ["Strict"]).add_criteria("process_name", ["IEXPLORE.EXE"]) \
+        .add_criteria("process_sha256", ["0123456789ABCDEF0123456789ABCDEF"]) \
+        .add_criteria("process_reputation", ["SUSPECT_MALWARE"]) \
+        .add_criteria("device_target_value", ["HIGH"]).add_criteria("threat_id", ["B0RG"]) \
+        .add_criteria("workflow_status", ["OPEN"]).add_criteria("watchlists_id", ["100"]).add_criteria("watchlists_name", ["Gandalf"]).sort_by("name", "DESC")
     a = query.one()
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.state == "OPEN"
+    assert a.workflow_.status == "OPEN"
 
 
 def test_query_watchlistalert_facets(cbcsdk_mock):
     """Test a watchlist alert facet query."""
 
     def on_post(url, body, **kwargs):
-        assert body == {"query": "Blort", "criteria": {'type': ['WATCHLIST'], "workflow": ["OPEN"]},
+        assert body == {"query": "Blort", "criteria": {'type': ['WATCHLIST'], "workflow_status": ["OPEN"]},
                         "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]}}
         return {"results": [{"field": {},
                              "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
@@ -490,7 +500,7 @@ def test_query_watchlistalert_facets(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_facet", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(WatchlistAlert).where("Blort").set_workflows(["OPEN"])
+    query = api.select(Alert).where("Blort").add_criteria("type", ["WATCHLIST"]).add_criteria("workflow_status", ["OPEN"])
     f = query.facets(["REPUTATION", "STATUS"])
     assert f == [{"field": {}, "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
                  {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
@@ -499,9 +509,9 @@ def test_query_watchlistalert_facets(cbcsdk_mock):
 def test_query_watchlistalert_invalid_criteria_values(cb):
     """Test error messages for invalid watchlist alert criteria values."""
     with pytest.raises(ApiError):
-        cb.select(WatchlistAlert).set_watchlist_ids([888])
+        cb.select(Alert).add_criteria("type", ["WATCHLIST"]).set_watchlist_ids([888])
     with pytest.raises(ApiError):
-        cb.select(WatchlistAlert).set_watchlist_names([69])
+        cb.select(Alert).add_criteria("type", ["WATCHLIST"]).set_watchlist_names([69])
 
 
 def test_query_containeralert_with_all_bells_and_whistles(cbcsdk_mock):
@@ -553,7 +563,7 @@ def test_query_containeralert_with_all_bells_and_whistles(cbcsdk_mock):
 ])
 def test_query_containeralert_invalid_criteria_values(cb, method, arg):
     """Test invalid values being supplied to DeviceControl alert queries."""
-    query = cb.select(ContainerRuntimeAlert)
+    query = cb.select(Alert).add_criteria("type", ["CONTAINER_ALERT"])
     meth = getattr(query, method, None)
     with pytest.raises(ApiError):
         meth(arg)
@@ -624,7 +634,7 @@ def test_alerts_bulk_dismiss_watchlist(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
     api = cbcsdk_mock.api
 
-    q = api.select(WatchlistAlert).where("Blort").set_device_names(["HAL9000"])
+    q = api.select(Alert).where("Blort").add_criteria("type", ["WATCHLIST"]).add_criteria("device_name", ["HAL9000"])
     reqid = q.dismiss("Fixed", "Yessir")
     assert reqid == "497ABX"
 
@@ -640,7 +650,7 @@ def test_alerts_bulk_dismiss_cbanalytics(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
     api = cbcsdk_mock.api
 
-    q = api.select(CBAnalyticsAlert).where("Blort").set_device_names(["HAL9000"])
+    q = api.select(Alert).where("Blort").add_criteria("type", ["CB_ANALYTICS"]).add_criteria("device_name", ["HAL9000"])
     reqid = q.dismiss("Fixed", "Yessir")
     assert reqid == "497ABX"
 
@@ -975,7 +985,7 @@ def test_query_alert_with_time_range_errors(cbcsdk_mock):
     api = cbcsdk_mock.api
     with pytest.raises(ApiError) as ex:
         api.select(Alert).where("Blort").set_time_range("invalid", range="whatever")
-    assert "key must be one of create_time, first_event_time, last_event_time, backend_timestamp or last_update_time" in str(ex.value)
+    assert "key must be one of create_time, first_event_time, last_event_time, backend_timestamp, backend_update_timestamp, or last_update_time" in str(ex.value)
 
     with pytest.raises(ApiError) as ex:
         api.select(Alert).where("Blort").set_time_range("backend_timestamp",
