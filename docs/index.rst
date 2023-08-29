@@ -91,28 +91,6 @@ See detailed information on the objects and methods exposed by the Carbon Black 
    changelog
    exceptions
 
-.. toctree::
-   :caption: Guides
-   :maxdepth: 2
-
-   porting-guide
-   alerts
-   audit-log
-   developing-credential-providers
-   device-control
-   differential-analysis
-   live-query
-   live-response
-   live-response-v6-migration
-   policy
-   recommendations
-   reputation-override
-   unified-binary-store
-   users-grants
-   vulnerabilities
-   watchlists-feeds-reports
-   workload
-
 Indices and tables
 ==================
 
