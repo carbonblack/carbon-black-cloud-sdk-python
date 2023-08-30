@@ -4,6 +4,11 @@ Device Control
 Using the Carbon Black Cloud SDK, you can retrieve information about USB devices used in your organization, and manage
 the blocking of such devices from access by your endpoints.
 
+.. note::
+
+    ``USBDevice`` is distinct from either the Platform API ``Device`` or the Endpoint Standard ``Device``. Access
+    to USB devices is through the Endpoint Standard package ``from cbc_sdk.endpoint_standard import USBDevice``.
+
 Retrieving the List of Known USB Devices
 ----------------------------------------
 

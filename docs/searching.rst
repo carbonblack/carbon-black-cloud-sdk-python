@@ -174,3 +174,175 @@ to return.  Here's how we execute the device query from the last example asynchr
 The ``execute_async()`` method returns a standard ``concurrent.futures.Future`` object, and that ``Future``'s
 ``result()`` method will return a list with the results of the query.
 
+Faceting
+--------
+
+Facet search queries return statistical information indicating the relative weighting of the requested values as per
+the specified criteria.  Only certain query types support faceting.
+
+Simple Faceting
+***************
+
+Simple faceting is built into certain queries, allowing you to generate a summary on certain fields of all objects that
+match the query. To perform this, create and refine a query object as you would normally, then call the ``facets()``
+method on the query, passing it the names of the fields you want to facet on.
+
+Here is an example for USB devices::
+
+    >>> from cbc_sdk.endpoint_standard import USBDevice
+    >>> usb_devices = api.select(USBDevice).set_statuses(['APPROVED'])
+    >>> facet_data = usb_devices.facets(['vendor_name', 'product_name'])
+
+This facet query might produce data that looks like this:
+
+.. code-block:: json
+
+    [
+        {
+            "field": "vendor_name",
+            "values": [
+                {
+                    "id": "Generic",
+                    "name": "Generic",
+                    "total": 2
+                },
+                {
+                    "id": "Kingston",
+                    "name": "Kingston",
+                    "total": 2
+                }
+            ]
+        },
+        {
+            "field": "product_name",
+            "values": [
+                {
+                    "id": "DataTraveler 3.0",
+                    "name": "DataTraveler 3.0",
+                    "total": 2
+                },
+                {
+                    "id": "Mass Storage",
+                    "name": "Mass Storage",
+                    "total": 2
+                }
+            ]
+        }
+    ]
+
+Facet Queries
+*************
+
+More complex facet queries are performed by creating a query *on* a facet type, then refining it as usual, then getting
+the results from the query::
+
+    >>> from cbc_sdk.endpoint_standard import EnrichedEventFacet
+    >>> query = api.select(EnrichedEventFacet).where(process_pid=1000)
+
+Facet queries have two types of special criteria that may be set. One is the ``range`` type which is used to specify
+discrete values (integers or timestamps - specified both as seconds since epoch and also as ISO 8601 strings).
+The results are then grouped by occurrence within the specified range::
+
+    >>> from cbc_sdk.endpoint_standard import EnrichedEventFacet
+    >>> range = {
+    ...                 "bucket_size": "+1DAY",
+    ...                 "start": "2020-10-16T00:00:00Z",
+    ...                 "end": "2020-11-16T00:00:00Z",
+    ...                 "field": "device_timestamp"
+    ...         }
+    >>> query = api.select(EnrichedEventFacet).where(process_pid=1000).add_range(range)
+
+The range settings are as follows:
+
+* ``field`` - the field to return the range for, should be a discrete one (integer or ISO 8601 timestamp)
+* ``start`` - the value to begin grouping at
+* ``end`` - the value to end grouping at
+* ``bucket_size``- how large of a bucket to group results in. If grouping an ISO 8601 property, use a string
+  like ``'-3DAYS'``.
+
+Multiple ranges can be configured per query by passing a list of range dictionaries.
+
+The other special criterion that may be set is the ``term`` type, which allows for one or more fields to use as a
+criteria on which to return weighted results. Terms may be added using the ``add_facet_field()`` method, specifying
+the name of the field to be summarized::
+
+    >>> from cbc_sdk.endpoint_standard import EnrichedEventFacet
+    >>> query = api.select(EnrichedEventFacet).where(process_pid=1000).add_facet_field("process_name")
+
+Once the facet query has been fully refined, it is executed by examining its ``results`` property::
+
+    >>> from cbc_sdk.platform import EventFacet
+    >>> event_facet_query = api.select(EventFacet).add_facet_field("event_type")
+    >>> event_facet_query.where(process_guid="WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb")
+    >>> range = {
+    ...                 "bucket_size": "+1DAY",
+    ...                 "start": "2020-10-16T00:00:00Z",
+    ...                 "end": "2020-11-16T00:00:00Z",
+    ...                 "field": "device_timestamp"
+    ...         }
+    >>> event_facet_query.add_range(range)
+    >>> synchronous_results = event_facet_query.results
+    >>> print(synchronous_results)
+    EventFacet object, bound to https://defense-eap01.conferdeploy.net.
+    -------------------------------------------------------------------------------
+               num_found: 16
+      processed_segments: 1
+                  ranges: [{'start': '2020-10-16T00:00:00Z', 'end': '2020...
+                   terms: [{'values': [{'total': 14, 'id': 'modload', 'na...
+          total_segments: 1
+
+Facet queries may also be executed asynchronously, as with other asynchronous queries, by calling their
+``execute_async()`` method and then calling the ``result()`` method on the returned ``Future`` object::
+
+    >>> from cbc_sdk.platform import EventFacet
+    >>> event_facet_query = api.select(EventFacet).add_facet_field("event_type")
+    >>> event_facet_query.where(process_guid="WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb")
+    >>> range = {
+    ...                 "bucket_size": "+1DAY",
+    ...                 "start": "2020-10-16T00:00:00Z",
+    ...                 "end": "2020-11-16T00:00:00Z",
+    ...                 "field": "device_timestamp"
+    ...         }
+    >>> event_facet_query.add_range(range)
+    >>> asynchronous_future = event_facet_query.execute_async()
+    >>> asynchronous_result = asynchronous_future.result()
+    >>> print(asynchronous_result)
+    EventFacet object, bound to https://defense-eap01.conferdeploy.net.
+    -------------------------------------------------------------------------------
+               num_found: 16
+      processed_segments: 1
+                  ranges: [{'start': '2020-10-16T00:00:00Z', 'end': '2020...
+                   terms: [{'values': [{'total': 14, 'id': 'modload', 'na...
+          total_segments: 1
+
+The result for facet queries is a single object with two properties, ``terms`` and ``ranges``, that contain the facet
+search result weighted as per the criteria provided::
+
+    >>> print(synchronous_result.terms)
+    [{'values': [{'total': 14, 'id': 'modload', 'name': 'modload'}, {'total': 2, 'id': 'crossproc', 'name': 'crossproc'}], 'field': 'event_type'}]
+    >>> print(synchronous_result.ranges)
+    [{'start': '2020-10-16T00:00:00Z', 'end': '2020-11-16T00:00:00Z', 'bucket_size': '+1DAY', 'field': 'device_timestamp', 'values': None}]
+
+Search Suggestions
+------------------
+
+Some classes offer the ability to provide "suggestions" as to search terms that may be employed, via a static method on
+the class.  Here is an example for ``Observation``::
+
+    >>> from cbc_sdk.platform import Observation
+    >>> suggestions = Observation.search_suggestions(api, query="device_id", count=2)
+    >>> for suggestion in suggestions:
+    ...     print(suggestion["term"], suggestion["required_skus_all"], suggestion["required_skus_some"])
+    device_id [] ['threathunter', 'defense']
+    netconn_remote_device_id ['xdr'] []
+
+And here is an example for ``BaseAlert``::
+
+    >>> from cbc_sdk.platform import BaseAlert
+    >>> suggestions = BaseAlert.search_suggestions(api, query="device_id")
+    >>> for suggestion in suggestions:
+    ...     print(suggestion["term"], suggestion["required_skus_some"])
+    device_id ['defense', 'threathunter', 'deviceControl']
+    device_os ['defense', 'threathunter', 'deviceControl']
+    [...additional entries elided...]
+    workload_name ['kubernetesSecurityRuntimeProtection']
