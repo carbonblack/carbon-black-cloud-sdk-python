@@ -65,7 +65,6 @@ Get started with Carbon Black Cloud Python SDK here. For detailed information on
    installation
    authentication
    Getting Started <getting-started>
-   concepts
    resources
    guides
 

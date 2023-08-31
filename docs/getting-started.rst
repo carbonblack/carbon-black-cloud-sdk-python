@@ -85,15 +85,13 @@ Setting the User-Agent
 
 The SDK supports custom ``User-Agent``s, which allow you to identify yourself when using the SDK to make API calls.
 The credential parameter ``integration_name`` is used for this. If you use a file to authenticate the SDK, this is
-how you could identify yourself:
+how you could identify yourself::
 
-::
-
-  [default]
-  url=http://example.com
-  token=ABCDEFGHIJKLMNOPQRSTUVWX/12345678
-  org_key=A1B2C3D4
-  integration_name=MyScript/0.9.0
+    [default]
+    url=http://example.com
+    token=ABCDEFGHIJKLMNOPQRSTUVWX/12345678
+    org_key=A1B2C3D4
+    integration_name=MyScript/0.9.0
 
 See the :doc:`authentication` documentation for more information about credentials.
 
@@ -145,24 +143,23 @@ set up earlier.
 .. note:: On Windows, a security warning message will be generated about file access to CBC SDK credentials being
 inherently insecure.
 
->>> query = cb.select(Device)
+This creates a query object that searches for all devices::
 
-This creates a query object that searches for all devices.
+    >>> query = cb.select(Device)
 
->>> devices = list(query)
+For convenience, we load the entirety of the query results into an in-memory list::
 
-For convenience, we load the entirety of the query results into an in-memory list.
-
->>> for device in devices:
-...     print(device.id, device.name, device.last_internal_ip_address, device.last_contact_time)
-...
+    >>> devices = list(query)
 
 Using a simple ``for`` loop, we print out the ID, host name, internal IP address, and last contact time from each
 returned device.  Note that the contents of the list are ``Device`` objects, not dictionaries, so we access individual
-properties with the ``object.property_name`` syntax, rather than ``object['property_name']``.
+properties with the ``object.property_name`` syntax, rather than ``object['property_name']``::
+
+    >>> for device in devices:
+    ...     print(device.id, device.name, device.last_internal_ip_address, device.last_contact_time)
+    ...
 
 Next Steps
 ----------
 
- - :doc:`concepts`: General information about using the Carbon Black Cloud SDK
  - :doc:`guides`: Information and Examples related to specific actions you want to take on your Carbon Black Cloud data
