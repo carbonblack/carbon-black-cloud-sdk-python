@@ -31,15 +31,7 @@ from tests.unit.fixtures.platform.mock_process import (
     GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT,
 )
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.endpoint_standard.mock_enriched_events import (
-    POST_ENRICHED_EVENTS_SEARCH_JOB_RESP,
-    GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING,
-    GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ZERO_COMP,
-    GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_ZERO,
-    GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP,
-    GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ALERTS,
-)
-from tests.unit.fixtures.platform.mock_alerts import (
+from tests.unit.fixtures.platform.mock_alerts_v7 import (
     GET_ALERT_RESP,
     GET_ALERT_RESP_INVALID_ALERT_ID,
     GET_ALERT_TYPE_WATCHLIST,
@@ -288,14 +280,33 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
                         "criteria": {"device_id": ["6023"], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
                                      "device_username": ["JRN"], "id": ["S0L0"],
-                                     "severity": ['6'], "device_policy_id": ["8675309"],
+                                     "severity": ["6"], "device_policy_id": ["8675309"],
                                      "device_policy": ["Strict"], "process_name": ["IEXPLORE.EXE"],
                                      "process_sha256": ["0123456789ABCDEF0123456789ABCDEF"],
                                      "process_reputation": ["SUSPECT_MALWARE"], "device_target_value": ["HIGH"],
                                      "threat_id": ["B0RG"], "type": ["CB_ANALYTICS"], "workflow_status": ["OPEN"],
                                      "device_location": ["ONSITE"],
                                      "policy_applied": ["APPLIED"],
-                                     "reason_code": ["ATTACK_VECTOR"], "run_state": ["RAN"], "sensor_action": ["DENY"]},
+                                     "reason_code": ["ATTACK_VECTOR"], "run_state": ["RAN"], "sensor_action": ["DENY"],
+                                     "alert_notes_present": ["True"], "attack_tactic": ["tactic"], "attack_technique": ["technique"],
+                                     "blocked_effective_reputation": ["NOT_LISTED"], "blocked_md5": ["md5_hash"], "blocked_name": ["tim"],
+                                     "blocked_sha256": ["sha256_hash"],
+                                     "netconn_remote_ip": ["10.29.99.1"], "netconn_remote_domain": ["example.com"],
+                                     "netconn_protocol": ["TCP"], "netconn_remote_port": ["54321"],
+                                     "netconn_local_port": ["12345"],
+                                     "childproc_cmdline": ["/usr/bin/python"],
+                                     "childproc_effective_reputation": ["PUP"],
+                                     "childproc_guid": ["12345678"], "childproc_name": ["python"],
+                                     "childproc_sha256": ["sha256_child"], "childproc_username": ["steven"],
+                                     "parent_cmdline": ["/usr/bin/python"],
+                                     "parent_effective_reputation": ["PUP"],
+                                     "parent_guid": ["12345678"], "parent_name": ["python"],
+                                     "parent_sha256": ["sha256_parent"], "parent_username": ["steven"],
+                                     "process_cmdline": ["/usr/bin/python"],
+                                     "process_effective_reputation": ["PUP"],
+                                     "process_guid": ["12345678"], "process_username": ["steven"],
+                                     "process_issuer": ["Microsoft"], "process_publisher": ["Microsoft"]
+                                     },
                                      "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"state": "OPEN"}}], "num_found": 1}
@@ -313,8 +324,23 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
         .add_criteria("process_reputation", ["SUSPECT_MALWARE"]) \
         .add_criteria("device_target_value", ["HIGH"]).add_criteria("threat_id", ["B0RG"]) \
         .add_criteria("workflow_status", ["OPEN"]).add_criteria("type", ["CB_ANALYTICS"]) \
+        .add_criteria("netconn_remote_ip", ['10.29.99.1']).add_criteria("netconn_remote_domain", ['example.com']) \
+        .add_criteria("netconn_protocol", ['TCP']).add_criteria("netconn_local_port", ["12345"]) \
+        .add_criteria("netconn_remote_port", ["54321"]) \
         .add_criteria("device_location", ["ONSITE"]) \
         .add_criteria("policy_applied", ["APPLIED"]).add_criteria("reason_code", ["ATTACK_VECTOR"]).add_criteria("run_state", ["RAN"]) \
+        .add_criteria("alert_notes_present", "True").add_criteria("attack_tactic", ["tactic"]).add_criteria("attack_technique", ["technique"]) \
+        .add_criteria("blocked_effective_reputation", ["NOT_LISTED"]).add_criteria("blocked_md5", ["md5_hash"]).add_criteria("blocked_name", ["tim"]) \
+        .add_criteria("blocked_sha256", ["sha256_hash"]) \
+        .add_criteria("childproc_cmdline", ["/usr/bin/python"]).add_criteria("childproc_effective_reputation", ["PUP"]) \
+        .add_criteria("childproc_guid", ["12345678"]).add_criteria("childproc_name", ["python"]).add_criteria("childproc_sha256", ["sha256_child"]) \
+        .add_criteria("childproc_username", ["steven"]) \
+        .add_criteria("parent_cmdline", ["/usr/bin/python"]).add_criteria("parent_effective_reputation", ["PUP"]) \
+        .add_criteria("parent_guid", ["12345678"]).add_criteria("parent_name", ["python"]).add_criteria("parent_sha256", ["sha256_parent"]) \
+        .add_criteria("parent_username", ["steven"]) \
+        .add_criteria("process_cmdline", ["/usr/bin/python"]).add_criteria("process_effective_reputation", ["PUP"]) \
+        .add_criteria("process_guid", ["12345678"]).add_criteria("process_issuer", ["Microsoft"]).add_criteria("process_publisher", ["Microsoft"]) \
+        .add_criteria("process_username", ["steven"]) \
         .add_criteria("sensor_action", ["DENY"]).sort_by("name", "DESC")
 
     a = query.one()
@@ -457,11 +483,28 @@ def test_query_watchlistalert_with_all_bells_and_whistles(cbcsdk_mock):
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
                                      "device_username": ["JRN"], "id": ["S0L0"],
                                      "severity": ["6"], "device_policy_id": ["8675309"],
-                                     "device_policy": ["Strict"], "process_name": ["IEXPLORE.EXE"],
-                                     "process_sha256": ["0123456789ABCDEF0123456789ABCDEF"],
-                                     "process_reputation": ["SUSPECT_MALWARE"], "device_target_value": ["HIGH"],
+                                     "device_policy": ["Strict"],
+                                     "device_target_value": ["HIGH"],
                                      "threat_id": ["B0RG"], "type": ["WATCHLIST"], "workflow_status": ["OPEN"],
-                                     "watchlists_id": ["100"], "watchlists_name": ["Gandalf"]},
+                                     "watchlists_id": ["100"], "watchlists_name": ["Gandalf"], 
+                                     "netconn_remote_ip": ["10.29.99.1"], "netconn_remote_domain": ["example.com"], 
+                                     "netconn_protocol": ["TCP"], "netconn_remote_port": ["54321"], 
+                                     "netconn_local_port": ["12345"],
+                                     "childproc_cmdline": ["/usr/bin/python"],
+                                     "childproc_effective_reputation": ["PUP"],
+                                     "childproc_guid": ["12345678"], "childproc_name": ["python"],
+                                     "childproc_sha256": ["sha256_child"], "childproc_username": ["steven"],
+                                     "parent_cmdline": ["/usr/bin/python"],
+                                     "parent_effective_reputation": ["PUP"],
+                                     "parent_guid": ["12345678"], "parent_name": ["python"],
+                                     "parent_sha256": ["sha256_parent"], "parent_username": ["steven"],
+                                     "process_cmdline": ["/usr/bin/python"],
+                                     "process_effective_reputation": ["PUP"],
+                                     "process_guid": ["12345678"], "process_name": ["IEXPLORE.EXE"],
+                                     "process_sha256": ["0123456789ABCDEF0123456789ABCDEF"], "process_username": ["steven"],
+                                     "process_reputation": ["SUSPECT_MALWARE"],
+                                     "process_issuer": ["Microsoft"], "process_publisher": ["Microsoft"], "reason_code": ["XDF"],
+                                     "report_id": [""], "report_link": [""], "report_name": ["FinalReport"]},
                         "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -477,8 +520,22 @@ def test_query_watchlistalert_with_all_bells_and_whistles(cbcsdk_mock):
         .add_criteria("device_policy", ["Strict"]).add_criteria("process_name", ["IEXPLORE.EXE"]) \
         .add_criteria("process_sha256", ["0123456789ABCDEF0123456789ABCDEF"]) \
         .add_criteria("process_reputation", ["SUSPECT_MALWARE"]) \
+        .add_criteria("netconn_remote_ip", ['10.29.99.1']).add_criteria("netconn_remote_domain", ['example.com']) \
+        .add_criteria("netconn_protocol", ['TCP']).add_criteria("netconn_local_port", ["12345"]) \
+        .add_criteria("netconn_remote_port", ["54321"]) \
         .add_criteria("device_target_value", ["HIGH"]).add_criteria("threat_id", ["B0RG"]) \
-        .add_criteria("workflow_status", ["OPEN"]).add_criteria("watchlists_id", ["100"]).add_criteria("watchlists_name", ["Gandalf"]).sort_by("name", "DESC")
+        .add_criteria("workflow_status", ["OPEN"]).add_criteria("watchlists_id", ["100"]).add_criteria("watchlists_name", ["Gandalf"]) \
+        .add_criteria("childproc_cmdline", ["/usr/bin/python"]).add_criteria("childproc_effective_reputation", ["PUP"]) \
+        .add_criteria("childproc_guid", ["12345678"]).add_criteria("childproc_name", ["python"]).add_criteria("childproc_sha256", ["sha256_child"]) \
+        .add_criteria("childproc_username", ["steven"]) \
+        .add_criteria("parent_cmdline", ["/usr/bin/python"]).add_criteria("parent_effective_reputation", ["PUP"]) \
+        .add_criteria("parent_guid", ["12345678"]).add_criteria("parent_name", ["python"]).add_criteria("parent_sha256", ["sha256_parent"]) \
+        .add_criteria("parent_username", ["steven"]) \
+        .add_criteria("process_cmdline", ["/usr/bin/python"]).add_criteria("process_effective_reputation", ["PUP"]) \
+        .add_criteria("process_guid", ["12345678"]).add_criteria("process_issuer", ["Microsoft"]).add_criteria("process_publisher", ["Microsoft"]) \
+        .add_criteria("reason_code", ["XDF"]).add_criteria("report_id", [""]).add_criteria("report_link", [""]).add_criteria("report_name", ["FinalReport"]) \
+        .add_criteria("process_username", ["steven"]) \
+        .sort_by("name", "DESC")
     a = query.one()
     assert a.id == "S0L0"
     assert a.org_key == "test"
@@ -509,9 +566,9 @@ def test_query_watchlistalert_facets(cbcsdk_mock):
 def test_query_watchlistalert_invalid_criteria_values(cb):
     """Test error messages for invalid watchlist alert criteria values."""
     with pytest.raises(ApiError):
-        cb.select(Alert).add_criteria("type", ["WATCHLIST"]).set_watchlist_ids([888])
+        cb.select(Alert).add_criteria("type", ["WATCHLIST"]).add_criteria("watchlist_id", [888])
     with pytest.raises(ApiError):
-        cb.select(Alert).add_criteria("type", ["WATCHLIST"]).set_watchlist_names([69])
+        cb.select(Alert).add_criteria("type", ["WATCHLIST"]).add_criteria("watchlist_name", [69])
 
 
 def test_query_containeralert_with_all_bells_and_whistles(cbcsdk_mock):
@@ -520,28 +577,37 @@ def test_query_containeralert_with_all_bells_and_whistles(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
                         "rows": 2,
-                        "criteria": {"cluster_name": ["TURTLE"], 'type': ['CONTAINER_RUNTIME'], "namespace": ["RG"], "workload_kind": ["Job"],
-                                     "workload_id": ["1234"], "workload_name": ["BUNNY"], "replica_id": ["FAKE"],
-                                     "remote_ip": ["10.29.99.1"], "remote_domain": ["example.com"], "protocol": ["TCP"],
-                                     "port": [12345], "egress_group_id": ["5150"], "egress_group_name": ["EGRET"],
-                                     "ip_reputation": [75], "rule_id": ["66"], "rule_name": ["KITTEH"]},
+                        "criteria": {"k8s_cluster": ["TURTLE"], 'type': ['CONTAINER_RUNTIME'], "k8s_namespace": ["RG"],
+                                     "k8s_workload_kind": ["Job"], "k8s_policy": [""], "k8s_policy_id": [""],
+                                     "k8s_workload_name": ["BUNNY"], "k8s_pod_name": ["FAKE"],
+                                     "netconn_remote_ip": ["10.29.99.1"], "netconn_remote_domain": ["example.com"], "netconn_protocol": ["TCP"],
+                                     "netconn_remote_port": ["54321"], "netconn_local_port": ["12345"], "egress_group_id": ["5150"], "egress_group_name": ["EGRET"],
+                                     "ip_reputation": ["75"], "k8s_rule_id": ["66"], "k8s_rule": ["KITTEH"],
+                                     "remote_k8s_kind": [""], "remote_k8s_namespace": [""], "remote_k8s_pod_name": [""],
+                                     "remote_k8s_workload_name": [""]},
                         "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
-                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(ContainerRuntimeAlert).where("Blort").set_cluster_names(['TURTLE']).set_namespaces(['RG']) \
-        .set_workload_kinds(['Job']).set_workload_ids(['1234']).set_workload_names(['BUNNY']) \
-        .set_replica_ids(['FAKE']).set_remote_ips(['10.29.99.1']).set_remote_domains(['example.com']) \
-        .set_protocols(['TCP']).set_ports([12345]).set_egress_group_ids(['5150']).set_egress_group_names(['EGRET']) \
-        .set_ip_reputations([75]).set_rule_ids(['66']).set_rule_names(['KITTEH']).sort_by("name", "DESC")
+    query = api.select(ContainerRuntimeAlert).where("Blort").add_criteria("k8s_cluster", ['TURTLE'])\
+        .add_criteria("k8s_namespace", ['RG']).add_criteria("k8s_rule_id", ['66']).add_criteria("k8s_rule", ['KITTEH']) \
+        .add_criteria("k8s_policy_id", ['']).add_criteria("k8s_policy", ['']).add_criteria("k8s_pod_name", ['FAKE']) \
+        .add_criteria("k8s_workload_kind", ['Job']).add_criteria("k8s_workload_name", ['BUNNY']) \
+        .add_criteria("netconn_remote_ip", ['10.29.99.1']).add_criteria("netconn_remote_domain", ['example.com']) \
+        .add_criteria("netconn_protocol", ['TCP']).add_criteria("netconn_local_port", ["12345"]).add_criteria("netconn_remote_port", ["54321"]) \
+        .add_criteria("remote_k8s_namespace", [""]).add_criteria("remote_k8s_pod_name", [""]).add_criteria("remote_k8s_kind", [""]) \
+        .add_criteria("remote_k8s_workload_name", [""]) \
+        .add_criteria("egress_group_id", ['5150']).add_criteria("egress_group_name", ['EGRET']) \
+        .add_criteria("ip_reputation", ["75"]).sort_by("name", "DESC")
+
     a = query.one()
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.state == "OPEN"
+    assert a.workflow_.status == "OPEN"
 
 
 @pytest.mark.parametrize("method, arg", [
@@ -590,105 +656,7 @@ def test_query_set_rows(cbcsdk_mock):
         assert a.org_key == "test"
         assert a.threat_id == "B0RG"
 
-
-def test_alerts_bulk_dismiss(cbcsdk_mock):
-    """Test dismissing a batch of alerts."""
-
-    def on_post(url, body, **kwargs):
-        assert body == {"query": "Blort", "state": "DISMISSED", "remediation_state": "Fixed", "comment": "Yessir",
-                        "criteria": {"device_name": ["HAL9000"]}}
-        return {"request_id": "497ABX"}
-
-    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
-    api = cbcsdk_mock.api
-
-    q = api.select(Alert).where("Blort").set_device_names(["HAL9000"])
-    reqid = q.dismiss("Fixed", "Yessir")
-    assert reqid == "497ABX"
-
-
-def test_alerts_bulk_undismiss(cbcsdk_mock):
-    """Test undismissing a batch of alerts."""
-
-    def on_post(url, body, **kwargs):
-        assert body == {"query": "Blort", "state": "OPEN", "remediation_state": "Fixed", "comment": "NoSir",
-                        "criteria": {"device_name": ["HAL9000"]}}
-        return {"request_id": "497ABX"}
-
-    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
-    api = cbcsdk_mock.api
-
-    q = api.select(Alert).where("Blort").set_device_names(["HAL9000"])
-    reqid = q.update("Fixed", "NoSir")
-    assert reqid == "497ABX"
-
-
-def test_alerts_bulk_dismiss_watchlist(cbcsdk_mock):
-    """Test dismissing a batch of watchlist alerts."""
-
-    def on_post(url, body, **kwargs):
-        assert body == {"query": "Blort", "state": "DISMISSED", "remediation_state": "Fixed", "comment": "Yessir",
-                        "criteria": {"device_name": ["HAL9000"], 'type': ['WATCHLIST']}}
-        return {"request_id": "497ABX"}
-
-    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
-    api = cbcsdk_mock.api
-
-    q = api.select(Alert).where("Blort").add_criteria("type", ["WATCHLIST"]).add_criteria("device_name", ["HAL9000"])
-    reqid = q.dismiss("Fixed", "Yessir")
-    assert reqid == "497ABX"
-
-
-def test_alerts_bulk_dismiss_cbanalytics(cbcsdk_mock):
-    """Test dismissing a batch of CB Analytics alerts."""
-
-    def on_post(url, body, **kwargs):
-        assert body == {"query": "Blort", "state": "DISMISSED", "remediation_state": "Fixed", "comment": "Yessir",
-                        "criteria": {"device_name": ["HAL9000"], 'type': ['CB_ANALYTICS']}}
-        return {"request_id": "497ABX"}
-
-    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
-    api = cbcsdk_mock.api
-
-    q = api.select(Alert).where("Blort").add_criteria("type", ["CB_ANALYTICS"]).add_criteria("device_name", ["HAL9000"])
-    reqid = q.dismiss("Fixed", "Yessir")
-    assert reqid == "497ABX"
-
-
-def test_alerts_bulk_dismiss_threat(cbcsdk_mock):
-    """Test dismissing a batch of threat alerts."""
-
-    def on_post(url, body, **kwargs):
-        assert body == {"threat_id": ["B0RG", "F3R3NG1"], "state": "DISMISSED", "remediation_state": "Fixed",
-                        "comment": "Yessir"}
-        return {"request_id": "497ABX"}
-
-    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
-    api = cbcsdk_mock.api
-
-    reqid = api.bulk_threat_dismiss(["B0RG", "F3R3NG1"], "Fixed", "Yessir")
-    assert reqid == "497ABX"
-
-
-def test_alerts_bulk_undismiss_threat(cbcsdk_mock):
-    """Test undismissing a batch of threat alerts."""
-
-    def on_post(url, body, **kwargs):
-        assert body == {"threat_id": ["B0RG", "F3R3NG1"], "state": "OPEN", "remediation_state": "Fixed",
-                        "comment": "NoSir"}
-        return {"request_id": "497ABX"}
-
-    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
-    api = cbcsdk_mock.api
-
-    reqid = api.bulk_threat_update(["B0RG", "F3R3NG1"], "Fixed", "NoSir")
-    assert reqid == "497ABX"
-
-
-def test_alerts_bulk_threat_error(cb):
-    """Test error raise from bulk threat update status"""
-    with pytest.raises(ApiError):
-        cb.bulk_threat_dismiss([123], "Fixed", "Yessir")
+# TODO Alerts bulk workflow actions to be replaced
 
 
 def test_load_workflow(cbcsdk_mock):
@@ -836,148 +804,7 @@ def test_get_process_async(cbcsdk_mock):
     assert process.process_guid == "WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00"
 
 
-def test_get_events(cbcsdk_mock):
-    """Test get_events method"""
-    cbcsdk_mock.mock_request("GET",
-                             "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
-                             GET_ALERT_RESP)
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
-                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b/results",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ALERTS)
-
-    api = cbcsdk_mock.api
-    alert = api.select(CBAnalyticsAlert, '86123310980efd0b38111eba4bfa5e98aa30b19')
-    events = alert.get_events()
-    assert len(events) == 2
-    for event in events:
-        assert event.alert_id == ['62802DCE']
-
-
-def test_get_events_zero_found(cbcsdk_mock):
-    """Test get_events method - zero enriched events found"""
-    cbcsdk_mock.mock_request("GET",
-                             "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
-                             GET_ALERT_RESP)
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
-                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b/results",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_ZERO)
-
-    api = cbcsdk_mock.api
-    alert = api.select(CBAnalyticsAlert, '86123310980efd0b38111eba4bfa5e98aa30b19')
-    events = alert.get_events()
-    assert len(events) == 0
-
-
-def test_get_events_timeout(cbcsdk_mock):
-    """Test that get_events() throws a timeout appropriately."""
-    cbcsdk_mock.mock_request("GET",
-                             "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
-                             GET_ALERT_RESP)
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
-                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING)
-
-    api = cbcsdk_mock.api
-    alert = api.select(CBAnalyticsAlert, '86123310980efd0b38111eba4bfa5e98aa30b19')
-    with pytest.raises(TimeoutError):
-        alert.get_events(timeout=1)
-
-
-def test_get_events_detail_jobs_resp_handling(cbcsdk_mock):
-    """Test get_events method - different resps from details jobs request"""
-    called = 0
-
-    def get_validate(*args):
-        nonlocal called
-        called += 1
-        if called == 1:
-            return GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING
-        if called == 2:
-            return GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ZERO_COMP
-        return GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP
-
-    cbcsdk_mock.mock_request("GET",
-                             "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
-                             GET_ALERT_RESP)
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
-                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b",
-                             # noqa: E501
-                             get_validate)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b/results",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ALERTS)
-
-    api = cbcsdk_mock.api
-    alert = api.select(CBAnalyticsAlert, '86123310980efd0b38111eba4bfa5e98aa30b19')
-    events = alert.get_events()
-    assert len(events) == 2
-    for event in events:
-        assert event.alert_id == ['62802DCE']
-
-
-def test_get_events_invalid_alert_id(cbcsdk_mock):
-    """Test get_events method with invalid alert_id"""
-    cbcsdk_mock.mock_request("GET",
-                             "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
-                             GET_ALERT_RESP_INVALID_ALERT_ID)
-
-    api = cbcsdk_mock.api
-    alert = api.select(CBAnalyticsAlert, '86123310980efd0b38111eba4bfa5e98aa30b19')
-    with pytest.raises(ApiError):
-        alert.get_events()
-
-
-def test_get_events_async(cbcsdk_mock):
-    """Test async get_events method"""
-    cbcsdk_mock.mock_request("GET",
-                             "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
-                             GET_ALERT_RESP)
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
-                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b/results",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ALERTS)
-
-    api = cbcsdk_mock.api
-    alert = api.select(CBAnalyticsAlert, '86123310980efd0b38111eba4bfa5e98aa30b19')
-    events = alert.get_events(async_mode=True).result()
-    assert len(events) == 2
-    for event in events:
-        assert event.alert_id == ['62802DCE']
+# TODO  enriched_event tests to be replaced with observations tests
 
 
 def test_query_alert_with_time_range_errors(cbcsdk_mock):
@@ -1038,9 +865,11 @@ def test_get_notes_for_alert(cbcsdk_mock):
     notes = alert.notes_()
     assert len(notes) == 2
     assert notes[0].author == "Grogu"
-    assert notes[0].id == "1"
-    assert notes[0].backend_timestamp == "2021-05-13T00:20:46.474Z"
-    assert notes[0].note == "I am a note"
+    assert notes[0].id == "3gsgsfds"
+    assert notes[0].create_timestamp == "2023-04-18T03:25:44.397Z"
+    assert notes[0].last_update_timestamp == "2023-04-18T03:25:44.397Z"
+    assert notes[0].note == "I am Grogu"
+    assert notes[0].source == "CUSTOMER"
 
 
 def test_base_alert_create_note(cbcsdk_mock):
@@ -1074,7 +903,7 @@ def test_base_alert_delete_note(cbcsdk_mock):
                              GET_ALERT_NOTES)
 
     cbcsdk_mock.mock_request('DELETE',
-                             "/api/alerts/v7/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35/notes/1",
+                             "/api/alerts/v7/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35/notes/3gsgsfds",
                              None)
 
     api = cbcsdk_mock.api
