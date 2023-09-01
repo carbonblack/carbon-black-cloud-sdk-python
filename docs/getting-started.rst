@@ -50,6 +50,7 @@ credentials.  Copy the following template to this new file::
     token=
     org_key=
     ssl_verify=True
+    integrationName=CustomSDKScript/1.0
 
 Following the ``url=`` keyword, add the top-level URL you use to access the Carbon Black Cloud, including the
 ``https://`` prefix and the domain name, but without any of the path information following it.

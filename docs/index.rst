@@ -68,11 +68,6 @@ Get started with Carbon Black Cloud Python SDK here. For detailed information on
    resources
    guides
 
-Full SDK Documentation
-----------------------
-
-See detailed information on the objects and methods exposed by the Carbon Black Cloud Python SDK here.
-
 .. toctree::
    :caption: SDK Documentation
    :maxdepth: 4
