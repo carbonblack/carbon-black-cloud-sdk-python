@@ -56,8 +56,11 @@ Import statements will need to change::
     from cbapi.psc.defense import Device, Event, Policy
 
     # CBC SDK
+    from cbc_sdk.platform import Device, Policy
     # note that the original "Event" has been decommissioned
-    from cbc_sdk.endpoint_standard import Device, EnrichedEvent, Policy
+    from cbc_sdk.endpoint_standard import EnrichedEvent
+    # also, consider using Observations instead of EnrichedEvents
+    # from cbc_sdk.platform import Observation
 
 
     # Audit and Remediation (LiveQuery)
@@ -76,6 +79,13 @@ Import statements will need to change::
 
     # CBC SDK
     from cbc_sdk.enterprise_edr import Feed, Report, Watchlist
+
+.. note::
+
+    If you are presently using ``Event`` or ``EnrichedEvent`` as detailed above, ``Observation`` may offer some benefit
+    over either of those.  See
+    `this blog post <https://developer.carbonblack.com/2023/07/how-to-take-advantage-of-the-new-observations-api/>`_
+    for details.
 
 Moved Packages and Models
 ^^^^^^^^^^^^^^^^^^^^^^^^^
