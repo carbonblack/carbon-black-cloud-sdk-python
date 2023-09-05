@@ -214,6 +214,7 @@ You can retrieve the event(s) behind a ``CBAnalyticsAlert`` easily with its ``ge
     >>> query = cb.select(CBAnalyticsAlert).set_create_time(range="-4w")
     >>> # get the first alert returned by the query
     >>> alert = query[0]
+    >>> # get the events associated with that alert
     >>> for event in alert.get_events():
     ...     print(
     ...         f'''
