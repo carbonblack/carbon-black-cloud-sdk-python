@@ -18,7 +18,7 @@ In this example, we create a query to search for all devices with antivirus acti
 
     # assume the CBCloudAPI object is in the variable "api"
     >>> from cbc_sdk.platform import Device
-    >>> device_query = api.select(Device).where('avStatus:AV_ACTIVE')
+    >>> device_query = api.select(Device).where('status:AV_ACTIVE')
 
     # The device query has been created but not yet executed
     >>> type(device_query)
@@ -75,14 +75,14 @@ Parameters may either be supplied as text strings or as keyword assignments::
 
     >>> from cbc_sdk.platform import Device
     # the following two queries are equivalent
-    >>> string_query = api.select(Device).where("avStatus:AV_ACTIVE")
-    >>> keyword_query = api.select(Device).where(avStatus="AV_ACTIVE")
+    >>> string_query = api.select(Device).where("status:AV_ACTIVE")
+    >>> keyword_query = api.select(Device).where(status="AV_ACTIVE")
 
 However, mixing the two types in a single query is not allowed::
 
     # this is not allowed
     >>> from cbc_sdk.platform import Device
-    >>> bogus_query = api.select(Device).where(avStatus="AV_ACTIVE").and_("virtualMachine:true")
+    >>> bogus_query = api.select(Device).where(status="AV_ACTIVE").and_("virtualMachine:true")
     cbc_sdk.errors.ApiError: Cannot modify a structured query with a raw parameter
 
 Criteria Support
@@ -116,12 +116,12 @@ In newer queries, the various specific methods for setting each individual crite
 method::
 
     # Refine the query with criteria (new style)
-    >>> alert_query.set_criteria("device_os", ["MAC"]).set_criteria("device_os_version", ["10.14.6"])
+    >>> alert_query.add_criteria("device_os", ["MAC"]).add_criteria("device_os_version", ["10.14.6"])
 
 .. note::
 
-    The ``set_criteria()`` method is supported with Alerts v7, and will be supported in more classes over time.
-    As it becomes supported in existing classes, the existing "specific" methods for setting criteria will be
+    The ``add_criteria()`` method is explicitly supported with Alerts v7, as well as other query classes that make use
+    of ``CriteriaBuilderSupportMixin``. Over time, the existing "specific" methods for setting criteria will be
     deprecated.
 
 Executing a Query
@@ -133,7 +133,7 @@ example shows how a device query may be executed::
 
     # create and refine a device query
     >>> from cbc_sdk.platform import Device
-    >>> device_query = api.select(Device).where('avStatus:AV_ACTIVE').set_os(["WINDOWS"])
+    >>> device_query = api.select(Device).where('status:AV_ACTIVE').set_os(["WINDOWS"])
 
     # easiest way to execute it is to turn it into a list
     >>> matching_devices = list(device_query)
@@ -154,6 +154,9 @@ example shows how a device query may be executed::
     >>> print(len(device_query))
     2
 
+The ``first()`` or ``one()`` methods on a query always return the first object matched by that query. The difference
+between those is that, if there is more than one result for that query, the ``one()`` method will raise an error.
+
 Asynchronous Queries
 ********************
 
@@ -163,7 +166,7 @@ to return.  Here's how we execute the device query from the last example asynchr
 
     # create and refine a device query
     >>> from cbc_sdk.platform import Device
-    >>> device_query = api.select(Device).where('avStatus:AV_ACTIVE').set_os(["WINDOWS"])
+    >>> device_query = api.select(Device).where('status:AV_ACTIVE').set_os(["WINDOWS"])
 
     # now execute it
     future = device_query.execute_async()

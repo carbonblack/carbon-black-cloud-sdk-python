@@ -160,6 +160,9 @@ properties with the ``object.property_name`` syntax, rather than ``object['prope
     ...     print(device.id, device.name, device.last_internal_ip_address, device.last_contact_time)
     ...
 
+Searching is an important operation in the SDK, as that is how objects are generally retrieved for other operations.
+The :doc:`Guide to Searching <searching>` contains more information about searching.
+
 Next Steps
 ----------
 
