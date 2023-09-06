@@ -61,12 +61,12 @@ in which the program ``googleupdate.exe`` accesses the system registry on a devi
 address, and owner::
 
     # assume the CBCloudAPI object is in the variable "api"
-    from cbc_sdk.endpoint_standard import Event
-    >>> event_query = api.select(Event).where(hostName='Win10').and_(ipAddress='10.0.0.1')
+    >>> from cbc_sdk.platform import Observation
+    >>> obs_query = api.select(Observation).where(process_name='svchost.exe').and_(observation_type='CONTEXTUAL_ACTIVITY')
 
     # further refine the query
-    >>> event_query.and_(applicationName='googleupdate.exe').and_(eventType='REGISTRY_ACCESS')
-    >>> event_query.and_(ownerNameExact='DevRel')
+    >>> obs_query.and_(event_type='netconn')
+    >>> obs_query.and_(netconn_protocol='PROTO_TCP').and_(netconn_port=80)
 
 The ``where()`` method supplies the initial query parameters, while ``and_()`` and ``or_()`` add additional query
 parameters. As with other languages, ``and_()`` gets grouped together before ``or_()``.
@@ -123,6 +123,24 @@ method::
     The ``add_criteria()`` method is explicitly supported with Alerts v7, as well as other query classes that make use
     of ``CriteriaBuilderSupportMixin``. Over time, the existing "specific" methods for setting criteria will be
     deprecated.
+
+Certain queries accept a *time range* criterion, set with the ``set_time_range()`` method.  This allows a range of
+times to be specified which returned objects must fall within.  Parameters for ``set_time_range()`` are as follows:
+
+- ``start``: Specifies the starting time of the range, in ISO 8601 format.
+- ``end``: Specifies the ending time of the range, in ISO 8601 format.
+- ``range``: Specifies the scope of the request in units of time.
+
+A ``range`` parameter begins with a minus sign, marking an interval backwards from the current time. This is followed
+by an integer number of units, followed by a letter specifying whether the interval is years ('y'), weeks ('w'),
+days ('d'), hours ('h'), minutes ('m'), or seconds ('s').
+
+.. note::
+
+    For ``Process`` search, the ``range`` parameter is called ``window``.
+
+When setting a time range, either ``start`` and ``end`` must *both* be specified, or ``range`` must be specified.
+``range`` takes precedence if it is specified alongside ``start`` and/or ``end``.
 
 Executing a Query
 -----------------
@@ -239,21 +257,21 @@ Facet Queries
 More complex facet queries are performed by creating a query *on* a facet type, then refining it as usual, then getting
 the results from the query::
 
-    >>> from cbc_sdk.endpoint_standard import EnrichedEventFacet
-    >>> query = api.select(EnrichedEventFacet).where(process_pid=1000)
+    >>> from cbc_sdk.platform import ObservationFacet
+    >>> query = api.select(ObservationFacet).where(process_pid=1000)
 
 Facet queries have two types of special criteria that may be set. One is the ``range`` type which is used to specify
 discrete values (integers or timestamps - specified both as seconds since epoch and also as ISO 8601 strings).
 The results are then grouped by occurrence within the specified range::
 
-    >>> from cbc_sdk.endpoint_standard import EnrichedEventFacet
+    >>> from cbc_sdk.platform import ObservationFacet
     >>> range = {
     ...                 "bucket_size": "+1DAY",
     ...                 "start": "2020-10-16T00:00:00Z",
     ...                 "end": "2020-11-16T00:00:00Z",
     ...                 "field": "device_timestamp"
     ...         }
-    >>> query = api.select(EnrichedEventFacet).where(process_pid=1000).add_range(range)
+    >>> query = api.select(ObservationFacet).where(process_pid=1000).add_range(range)
 
 The range settings are as follows:
 
@@ -269,8 +287,8 @@ The other special criterion that may be set is the ``term`` type, which allows f
 criteria on which to return weighted results. Terms may be added using the ``add_facet_field()`` method, specifying
 the name of the field to be summarized::
 
-    >>> from cbc_sdk.endpoint_standard import EnrichedEventFacet
-    >>> query = api.select(EnrichedEventFacet).where(process_pid=1000).add_facet_field("process_name")
+    >>> from cbc_sdk.platform import ObservationFacet
+    >>> query = api.select(ObservationFacet).where(process_pid=1000).add_facet_field("process_name")
 
 Once the facet query has been fully refined, it is executed by examining its ``results`` property::
 
