@@ -172,6 +172,78 @@ GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT = {
     "completed": 45
 }
 
+GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT_V7 = {
+    "results": [
+        {
+            "backend_timestamp": "2020-09-11T19:35:02.972Z",
+            "childproc_count": 0,
+            "crossproc_count": 787,
+            "device_external_ip": "192.168.0.1",
+            "device_group_id": 0,
+            "device_id": 1234567,
+            "device_internal_ip": "192.168.0.2",
+            "device_name": "Windows10Device",
+            "device_os": "WINDOWS",
+            "device_policy_id": 12345,
+            "device_timestamp": "2020-09-11T19:32:12.821Z",
+            "enriched": True,
+            "enriched_event_type": [
+                "INJECT_CODE",
+                "SYSTEM_API_CALL"
+            ],
+            "event_type": [
+                "crossproc"
+            ],
+            "filemod_count": 0,
+            "ingress_time": 1599852859660,
+            "legacy": True,
+            "modload_count": 1,
+            "netconn_count": 0,
+            "org_id": "ABC1234",
+            "parent_guid": "ABC1234-0034d5f2-00000284-00000000-1d687097e9cf7b5",
+            "parent_hash": [
+                "9090e0e44e14709fb09b23b98572e0e61c810189e2de8f7156021bc81c3b1bb6",
+                "bccc12eb2ef644e662a63a023fb83f9b"
+            ],
+            "parent_name": "c:\\windows\\system32\\services.exe",
+            "parent_pid": 644,
+            "process_cmdline": [
+                "\"C:\\Program Files\\VMware\\VMware Tools\\vmtoolsd.exe\""
+            ],
+            "process_effective_reputation": "TRUSTED_WHITE_LIST",
+            "process_guid": "ABC12345-0002b226-000015bd-00000000-1d6225bbba74c00",
+            "process_hash": [
+                "f2c7d894abe8ac0b4c2a597caa6b3efe7ad2bdb4226845798d954c5ab9c9bf15",
+                "12384336325dc8eadfb1e8ff876921c4"
+            ],
+            "process_name": "c:\\program files\\vmware\\vmware tools\\vmtoolsd.exe",
+            "process_pid": [
+                3909
+            ],
+            "process_reputation": "TRUSTED_WHITE_LIST",
+            "process_username": [
+                "Username"
+            ],
+            "regmod_count": 1,
+            "scriptload_count": 0,
+            "ttp": [
+                "ENUMERATE_PROCESSES",
+                "INJECT_CODE",
+                "MITRE_T1003_CREDENTIAL_DUMP",
+                "MITRE_T1005_DATA_FROM_LOCAL_SYS",
+                "MITRE_T1055_PROCESS_INJECT",
+                "MITRE_T1057_PROCESS_DISCOVERY",
+                "RAM_SCRAPING",
+                "READ_SECURITY_DATA"
+            ]
+        }
+    ],
+    "num_found": 6168,
+    "num_available": 1,
+    "contacted": 45,
+    "completed": 45
+}
+
 GET_PROCESS_SEARCH_JOB_RESULTS_RESP_ZERO = {
     "results": [],
     "num_found": 616,
