@@ -49,10 +49,9 @@ def cbcsdk_mock(monkeypatch, cb):
 # When all bugs are fixed, SKIP_FIELDS should be empty and all tests should pass
 SKIP_FIELDS = {
     "comment",  # cbapi-4969, TO DO DEFECT FOR CLASSIFICATION
-    "created_by_event_id",  # CBAPI-4915, should be mapped from "primary_event_id"
-    "threat_cause_process_guid",  # CBAPI-4915, should be mapped to process_guid
-    "threat_cause_actor_md5",  # CBAPI-4915, should be mapped to process_md5
-    "alert_classification",  # will be removed. CBAPI-4971
+    # "created_by_event_id",  # CBAPI-4915, should be mapped from "primary_event_id"
+    # "threat_cause_process_guid",  # CBAPI-4915, should be mapped to process_guid
+    # "threat_cause_actor_md5",  # CBAPI-4915, should be mapped to process_md5
     # comment out the policy and rules to test these fields for other alert types. Expect container test to then fail
     # until the container alert bug is fixed
     "policy_name", "policy_id", "rule_id", "rule_name"  # CONTAINER_RUNTIME alerts only, CBAPI-4914.
@@ -156,6 +155,9 @@ def check_dict(alert_v6, alert_v6_from_v7, key, alert_type):
 
     Key should be the label, and each of alert_v6 and alert_v6_from_v7 should be dicts
     """
+    # This method is expecting a dict input parameter. Verify.
+    assert(isinstance(alert_v6, dict)), "Function check_dict called with incorrect argument types"
+
     if key in SKIP_FIELDS:
         print("Handling known bug.  Field {}".format(key))
         return
@@ -164,44 +166,47 @@ def check_dict(alert_v6, alert_v6_from_v7, key, alert_type):
         return
     # Fields that are deprecated will be in v6 and should not be in v7
     assert not (
-        key in BASE_FIELDS_V6 and key in alert_v6_from_v7
+        key in BASE_FIELDS_V6 and alert_v6_from_v7 is not None and key in alert_v6_from_v7
     ), ("ERROR: Field is deprecated and does not exist in v7. Expected: Not in to_json(v6). Actual: was incorrectly "
         "included. Source: BASE_FIELDS_V6. Key: {}").format(key)
 
     # fields from cb analytics that are not in v7. No mapping available
     assert not (
-        alert_type == "CB_ANALYTICS" and key in CB_ANALYTICS_FIELDS_V6 and key in alert_v6_from_v7
+        alert_type == "CB_ANALYTICS" and key in CB_ANALYTICS_FIELDS_V6 and alert_v6_from_v7 is not None
+        and key in alert_v6_from_v7
     ), ("ERROR: Field is deprecated and does not exist in v7. Expected: Not in to_json(v6). Actual: was incorrectly "
         "included. Source: CB_ANALYTICS_FIELDS_V6. Key: {}").format(key)
 
     # fields from container runtime that are not in v7. No mapping available
-    assert not (alert_type == "CONTAINER_RUNTIME" and key in CONTAINER_RUNTIME_FIELDS_V6 and key in alert_v6_from_v7), (
+    assert not (alert_type == "CONTAINER_RUNTIME" and key in CONTAINER_RUNTIME_FIELDS_V6
+                and alert_v6_from_v7 is not None and key in alert_v6_from_v7), (
         ("ERROR: Field is deprecated and does not exist in v7. Expected: Not in to_json(v6). Actual: was incorrectly "
          "included. Source: CONTAINER_RUNTIME_FIELDS_V6. Key: {}").format(key))
 
     # no fields removed in v7 for host based firewall alerts
     # fields from device control that are not in v7. No mapping available
     assert not (
-        alert_type == "DEVICE_CONTROL" and key in DEVICE_CONTROL_FIELDS_V6 and key in alert_v6_from_v7
+        alert_type == "DEVICE_CONTROL" and key in DEVICE_CONTROL_FIELDS_V6 and alert_v6_from_v7 is not None
+        and key in alert_v6_from_v7
     ), ("ERROR: Field is deprecated and does not exist in v7. Expected: Not in to_json(v6). Actual: was incorrectly "
         "included. Source: DEVICE_CONTROL_FIELDS_V6. Key: {}").format(
         key)
 
     # fields from watchlist alert that are not in v7. No mapping available
     assert not (
-        alert_type == "WATCHLIST" and key in WATCHLIST_FIELDS_V6 and key in alert_v6_from_v7
+        alert_type == "WATCHLIST" and key in WATCHLIST_FIELDS_V6 and alert_v6_from_v7 is not None
+        and key in alert_v6_from_v7
     ), ("ERROR: Field is deprecated and does not exist in v7. Expected: Not in to_json(v6). Actual: was incorrectly "
         "included. Source: WATCHLIST_FIELDS_V6. Key: {}").format(key)
 
-    # check dict recursively
-    # defensively coded.  This method should only be called with dicts, but avoid crashing
-    assert(isinstance(alert_v6, dict)), "Function check_dict called with incorrect argument types"
-
-    for inner_key in alert_v6:
-        if isinstance(alert_v6.get(inner_key), dict):
-            check_dict(alert_v6.get(inner_key), alert_v6_from_v7.get(inner_key), inner_key, alert_type)
-        else:
-            check_field(alert_v6, alert_v6_from_v7, inner_key, alert_type)
+    # If the key is in v6 and correctly not in v7 the earlier asserts will have passed
+    # Do not inspect the inner dict
+    if key not in ALL_FIELDS_V6:
+        for inner_key in alert_v6:
+            if isinstance(alert_v6.get(inner_key), dict):
+                check_dict(alert_v6.get(inner_key), alert_v6_from_v7.get(inner_key), inner_key, alert_type)
+            else:
+                check_field(alert_v6, alert_v6_from_v7, inner_key, alert_type)
 
 
 def check_field(alert_v6, alert_v6_from_v7, key, alert_type):
