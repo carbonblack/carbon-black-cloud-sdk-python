@@ -512,11 +512,12 @@ def test_query_containeralert_with_all_bells_and_whistles(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
                         "rows": 2,
-                        "criteria": {"cluster_name": ["TURTLE"], 'type': ['CONTAINER_RUNTIME'], "namespace": ["RG"], "workload_kind": ["Job"],
+                        "criteria": {"cluster_name": ["TURTLE"], 'type': ['CONTAINER_RUNTIME'], "namespace": ["RG"],
                                      "workload_id": ["1234"], "workload_name": ["BUNNY"], "replica_id": ["FAKE"],
                                      "remote_ip": ["10.29.99.1"], "remote_domain": ["example.com"], "protocol": ["TCP"],
                                      "port": [12345], "egress_group_id": ["5150"], "egress_group_name": ["EGRET"],
-                                     "ip_reputation": [75], "rule_id": ["66"], "rule_name": ["KITTEH"]},
+                                     "ip_reputation": [75], "rule_id": ["66"], "rule_name": ["KITTEH"],
+                                     "workload_kind": ["Job"]},
                         "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"state": "OPEN"}}], "num_found": 1}
@@ -961,7 +962,8 @@ def test_query_basealert_with_time_range_errors(cbcsdk_mock):
     api = cbcsdk_mock.api
     with pytest.raises(ApiError) as ex:
         api.select(BaseAlert).where("Blort").set_time_range("invalid", range="whatever")
-    assert "key must be one of create_time, first_event_time, last_event_time, backend_timestamp or last_update_time" in str(ex.value)
+    assert "key must be one of create_time, first_event_time, last_event_time, backend_timestamp or last_update_time" \
+           in str(ex.value)
 
     with pytest.raises(ApiError) as ex:
         api.select(BaseAlert).where("Blort").set_time_range("create_time",
