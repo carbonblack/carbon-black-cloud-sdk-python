@@ -141,8 +141,10 @@ This imports the necessary classes and creates an instance of the base ``CBCloud
 credentials provider is used. We set it to use the ``default`` profile in your ``credentials.cbc`` file, which you
 set up earlier.
 
-.. note:: On Windows, a security warning message will be generated about file access to CBC SDK credentials being
-inherently insecure.
+.. note::
+
+    On Windows, a security warning message will be generated about file access to CBC SDK credentials being
+    inherently insecure.
 
 This creates a query object that searches for all devices::
 
