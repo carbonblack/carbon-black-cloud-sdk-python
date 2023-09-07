@@ -83,6 +83,12 @@ The below table explains what permissions are needed for each of the SDK command
 
 To send commands to an endpoint, first establish a "session" with a device.
 
+.. note::
+
+    As of version 1.3.0, Live Response has been changed to support ``CUSTOM`` type API Keys which enables the platform
+    Device model and Live Response session to be used with a single API key. Ensure your API key has the
+    ``Device READ`` permission along with the desired Live Response permissions.
+
 Establish A Session With A Device
 ---------------------------------
 Connect to a device by querying the ``Device`` object.

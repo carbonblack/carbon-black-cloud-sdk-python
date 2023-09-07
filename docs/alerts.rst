@@ -203,6 +203,32 @@ The full list of all the attributes can be found in the
                      ttp: ['PORTSCAN', 'MITRE_T1046_NETWORK_SERVICE_SCANN...
     ...
 
+Event Details
+^^^^^^^^^^^^^
+
+You can retrieve the event(s) behind a ``CBAnalyticsAlert`` easily with its ``get_events()`` method::
+
+    >>> from cbc_sdk import CBCloudAPI
+    >>> from cbc_sdk.platform import CBAnalyticsAlert
+    >>> api = CBCloudAPI(profile='platform')
+    >>> query = cb.select(CBAnalyticsAlert).set_create_time(range="-4w")
+    >>> # get the first alert returned by the query
+    >>> alert = query[0]
+    >>> # get the events associated with that alert
+    >>> for event in alert.get_events():
+    ...     print(
+    ...         f'''
+    ...         Category: {event.alert_category}
+    ...         Type: {event.enriched_event_type}
+    ...         Alert Id: {event.alert_id}
+    ...         ''')
+    Category: ['OBSERVED']
+    Type: SYSTEM_API_CALL
+    Alert Id: ['BE084638']
+
+    Category: ['OBSERVED']
+    Type: NETWORK
+    Alert Id: ['BE084638']
 
 Watchlist Alerts
 ----------------
