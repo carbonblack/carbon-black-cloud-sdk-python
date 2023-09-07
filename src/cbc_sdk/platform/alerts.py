@@ -80,8 +80,6 @@ class Alert(PlatformModel):
         "workload_name": "k8s_workload_name"
     }
 
-
-
     REMAPPED_ALERTS_V7_TO_V6 = {
         "alert_notes_present": "notes_present",
         "backend_timestamp": "create_time",
