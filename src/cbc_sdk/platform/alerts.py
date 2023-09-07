@@ -64,7 +64,7 @@ class Alert(PlatformModel):
         "threat_cause_actor_name": "process_name",
         "threat_cause_actor_publisher": "process_publisher",
         "threat_cause_actor_sha256": "process_sha256",
-        "threat_cause_event_id": "primary_event_id",
+        "threat_cause_cause_event_id": "primary_event_id",
         "threat_cause_md5": "process_md5",
         "threat_cause_parent_guid": "parent_guid",
         "threat_cause_reputation": "process_reputation",
@@ -456,7 +456,7 @@ class Alert(PlatformModel):
 
     def to_json(self, version="v7"):
         """
-        Return an a json object of the response.
+        Return a json object of the response.
 
         Args:
             version (str): version of json to return. Either v6 or v7. DEFAULT v7
@@ -472,8 +472,15 @@ class Alert(PlatformModel):
                     modified_json["legacy_alert_id"] = value
                 if key == "process_name":
                     modified_json["process_name"] = value
-                if key == "threat_cause_event_id":
+                if key == "primary_event_id":
                     modified_json["created_by_event_id"] = value
+                    if self.type == "CB_ANALYTICS":
+                        modified_json["threat_cause_cause_event_id"] = value
+                if key == "process_guid":
+                    if self.type == "WATCHLIST":
+                        modified_json["process_guid"] = value
+                    if self.type == "CB_ANALYTICS":
+                        modified_json["threat_cause_process_guid"] = value
                 if key == "ttps":
                     ti = {"process_name": self._info.get("process_name"), "sha256": self._info.get("process_sha256"),
                           "ttps": value}
