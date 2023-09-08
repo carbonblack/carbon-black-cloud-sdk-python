@@ -49,30 +49,27 @@ def cbcsdk_mock(monkeypatch, cb):
 # When all bugs are fixed, SKIP_FIELDS should be empty and all tests should pass
 SKIP_FIELDS = {
     "comment",  # cbapi-4969, TO DO DEFECT FOR CLASSIFICATION
-    # "created_by_event_id",  # CBAPI-4915, should be mapped from "primary_event_id"
-    # "threat_cause_process_guid",  # CBAPI-4915, should be mapped to process_guid
-    # "threat_cause_actor_md5",  # CBAPI-4915, should be mapped to process_md5
-    # comment out the policy and rules to test these fields for other alert types. Expect container test to then fail
-    # until the container alert bug is fixed
-    "policy_name", "policy_id", "rule_id", "rule_name"  # CONTAINER_RUNTIME alerts only, CBAPI-4914.
+    "remediation"  # CBAPI-4969, workflow mapping
 }
 
 # Fields that are special - consider extending tests later
 # remediation can be empty string in v6, has "NO_REASON" in v7
 COMPLEX_MAPPING_V6 = {
-    "remediation",
+
     "threat_cause_actor_name",  # on CB Analytics, the record is truncated on v6 so will not match
     "process_name"  # just the file name on v6, full path on v7
 }
 
 # Fields on the v6 base or common alert object that do not have an equivalent in v7
 BASE_FIELDS_V6 = {
-    "group_details",
+    "alert_classification",
     "category",
+    "group_details",
+    "remediation",
     "threat_activity_c2",
     "threat_cause_threat_category",
-    "alert_classification",
-    "threat_cause_actor_process_pid"
+    "threat_cause_actor_process_pid",
+    "remediation"
 }
 
 # Fields on the v6 CB Analytics alert object that do not have an equivalent in v7
@@ -87,12 +84,16 @@ CB_ANALYTICS_FIELDS_V6 = {
 }
 
 # Fields on the v6 Device Control alert object that do not have an equivalent in v7
-DEVICE_CONTROL_FIELDS_V6 = {"threat_cause_vector"}
+DEVICE_CONTROL_FIELDS_V6 = {
+    "threat_cause_vector"
+}
 
 # Fields on the v6 Container Runtime alert object that do not have an equivalent in v7
 CONTAINER_RUNTIME_FIELDS_V6 = {
     "workload_id",
-    "target_value"
+    "target_value",
+    # The following four fields are pending CBAPI-4914
+    "policy_id", "policy_name", "rule_id", "rule_name"
 }
 
 # Fields on the v6 Watchlist alert object that do not have an equivalent in v7
@@ -131,7 +132,7 @@ def test_v7_generate_v6_json(cbcsdk_mock, url, v7_api_response, v6_sdk_response)
     cbcsdk_mock.mock_request("GET", url, v7_api_response)
     api = cbcsdk_mock.api
     alert = api.select(BaseAlert, v6_sdk_response.get("id"))
-    print("\n\nStarting comparison of {} type alerts".format(alert.get("type")))
+    # print("\n\nStarting comparison of {} type alerts".format(alert.get("type")))
     # generate the json output from the v7 API response in the v6 format
     alert_v6_from_v7 = alert.to_json("v6")
 
@@ -159,10 +160,10 @@ def check_dict(alert_v6, alert_v6_from_v7, key, alert_type):
     assert(isinstance(alert_v6, dict)), "Function check_dict called with incorrect argument types"
 
     if key in SKIP_FIELDS:
-        print("Handling known bug.  Field {}".format(key))
+        # print("Handling known bug.  Field {}".format(key))
         return
     if key in COMPLEX_MAPPING_V6:
-        print("Complex mapping, ignore.  Field {}".format(key))
+        # print("Complex mapping, ignore.  Field {}".format(key))
         return
     # Fields that are deprecated will be in v6 and should not be in v7
     assert not (
@@ -217,10 +218,10 @@ def check_field(alert_v6, alert_v6_from_v7, key, alert_type):
     End with a value comparison
     """
     if key in SKIP_FIELDS:
-        print("Handling known bug.  Field {}".format(key))
+        # print("Handling known bug.  Field {}".format(key))
         return
     if key in COMPLEX_MAPPING_V6:
-        print("Complex mapping, ignore.  Field {}".format(key))
+        # print("Complex mapping, ignore.  Field {}".format(key))
         return
     # Fields that are deprecated will be in v6 and should not be in v7
     assert not (
