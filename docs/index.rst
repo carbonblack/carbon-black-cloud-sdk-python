@@ -65,39 +65,8 @@ Get started with Carbon Black Cloud Python SDK here. For detailed information on
    installation
    authentication
    Getting Started <getting-started>
-   concepts
    resources
    guides
-
-Guides
-------
-
-.. toctree::
-   :caption: Guides
-   :maxdepth: 2
-
-   porting-guide
-   alerts
-   audit-log
-   developing-credential-providers
-   device-control
-   differential-analysis
-   live-query
-   live-response
-   live-response-v6-migration
-   policy
-   recommendations
-   reputation-override
-   unified-binary-store
-   users-grants
-   vulnerabilities
-   watchlists-feeds-reports
-   workload
-
-Full SDK Documentation
-----------------------
-
-See detailed information on the objects and methods exposed by the Carbon Black Cloud Python SDK here.
 
 .. toctree::
    :caption: SDK Documentation

@@ -1,20 +1,28 @@
 Porting Applications from CBAPI to Carbon Black Cloud SDK
 =========================================================
+
 This guide will help you migrate from CBAPI to the Carbon Black Cloud Python SDK.
 
-Note: CBAPI applications using Carbon Black EDR (Response) or Carbon Black App Control (Protection) cannot be ported, as support for on-premise products is not present in
-the CBC SDK. Continue to use CBAPI for these applications.
+.. note::
+
+    CBAPI applications using Carbon Black EDR (Response) or Carbon Black App Control (Protection) cannot be ported,
+    as support for on-premise products is not present in the CBC SDK. Continue to use CBAPI for these applications.
 
 Overview
 --------
-CBC SDK has changes to package names, folder structure, and functions. Import statements will need to change for the packages, modules, and functions listed in this guide.
+
+CBC SDK has changes to package names, folder structure, and functions. Import statements will need to change for the
+packages, modules, and functions listed in this guide.
 
 Package Name Changes
 --------------------
-A number of packages have new name equivalents in the CBC SDK. Endpoint Standard and Enterprise EDR have had parts replaced to use the most current API routes.
+
+A number of packages have new name equivalents in the CBC SDK. Endpoint Standard and Enterprise EDR have had parts
+replaced to use the most current API routes.
 
 Top-level Package Name Change
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 The top-level package name has changed from CBAPI to CBC SDK.
 
 +-----------------+--------------------+
@@ -25,6 +33,7 @@ The top-level package name has changed from CBAPI to CBC SDK.
 
 Product Name Changes
 ^^^^^^^^^^^^^^^^^^^^
+
 Carbon Black Cloud product names have been updated in the SDK.
 
 +----------------------------+-------------------------------+
@@ -39,9 +48,7 @@ Carbon Black Cloud product names have been updated in the SDK.
 | ``cbapi.psc``              | ``cbc_sdk.platform``          |
 +----------------------------+-------------------------------+
 
-Import statements will need to change:
-
-::
+Import statements will need to change::
 
     # Endpoint Standard (Defense)
 
@@ -49,10 +56,12 @@ Import statements will need to change:
     from cbapi.psc.defense import Device, Event, Policy
 
     # CBC SDK
+    from cbc_sdk.platform import Device, Policy
     # note that the original "Event" has been decommissioned
-    from cbc_sdk.endpoint_standard import Device, EnrichedEvent, Policy
+    from cbc_sdk.endpoint_standard import EnrichedEvent
+    # also, consider using Observations instead of EnrichedEvents
+    # from cbc_sdk.platform import Observation
 
-::
 
     # Audit and Remediation (LiveQuery)
 
@@ -62,7 +71,6 @@ Import statements will need to change:
     # CBC SDK
     from cbc_sdk.audit_remediation import Run, RunHistory, Result, DeviceSummary
 
-::
 
     # Enterprise EDR (ThreatHunter)
 
@@ -72,8 +80,16 @@ Import statements will need to change:
     # CBC SDK
     from cbc_sdk.enterprise_edr import Feed, Report, Watchlist
 
+.. note::
+
+    If you are presently using ``Event`` or ``EnrichedEvent`` as detailed above, ``Observation`` may offer some benefit
+    over either of those.  See
+    `this blog post <https://developer.carbonblack.com/2023/07/how-to-take-advantage-of-the-new-observations-api/>`_
+    for details.
+
 Moved Packages and Models
 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Some modules have been moved to a more appropriate location.
 
 +-----------------------------+------------------------------+
@@ -86,9 +102,7 @@ Some modules have been moved to a more appropriate location.
 | ``cbapi.psc.devices_query`` | ``cbc_sdk.platform``         |
 +-----------------------------+------------------------------+
 
-Import statements will need to change:
-
-::
+Import statements will need to change::
 
     # Example Helpers
 
@@ -98,8 +112,6 @@ Import statements will need to change:
     # CBC SDK
     from cbc_sdk.helpers import build_cli_parser
 
-::
-
     # Alerts
 
     # CBAPI
@@ -107,8 +119,6 @@ Import statements will need to change:
 
     # CBC SDK
     from cbc_sdk.platform import *
-
-::
 
     # Devices
 
@@ -121,8 +131,9 @@ Import statements will need to change:
 Replaced Modules
 ^^^^^^^^^^^^^^^^
 
-With the new Unified Platform Experience, Carbon Black Cloud APIs have been updated to provide a more consistent search experience.
-Platform search is replacing Endpoint Standard Event searching, and Enterprise EDR Process and Event searching.
+With the new Unified Platform Experience, Carbon Black Cloud APIs have been updated to provide a more consistent search
+experience.  Platform search is replacing Endpoint Standard Event searching, and Enterprise EDR Process and Event
+searching.
 
 For help beyond import statement changes, check out these resources:
 
@@ -136,10 +147,9 @@ For help beyond import statement changes, check out these resources:
 
 Endpoint Standard
 """""""""""""""""
-Endpoint Standard Events have been replaced with Enriched Events and the old event functionality has been
-decommissioned.
 
-::
+Endpoint Standard Events have been replaced with Enriched Events and the old event functionality has been
+decommissioned::
 
     # Endpoint Standard Enriched Events
 
@@ -154,9 +164,8 @@ decommissioned.
 
 Enterprise EDR
 """"""""""""""
-Enterprise EDR Processes and Events have been removed and replaced with Platform Processes and Events.
 
-::
+Enterprise EDR Processes and Events have been removed and replaced with Platform Processes and Events::
 
     # Enterprise EDR Process and Event
 
@@ -168,6 +177,7 @@ Enterprise EDR Processes and Events have been removed and replaced with Platform
 
 Folder Structure Changes
 ------------------------
+
 The directory structure for the SDK has been refined compared to CBAPI.
 
 * Addition of the Platform folder
@@ -182,10 +192,7 @@ Directory Tree Changes
 
 In general, each module's ``models.py`` and ``query.py`` files were combined into their respective ``base.py`` files.
 
-CBAPI had the following abbreviated folder structure:
-
-::
-
+CBAPI had the following abbreviated folder structure::
 
     src
     └── cbapi
@@ -225,9 +232,7 @@ CBAPI had the following abbreviated folder structure:
 
 Each product had a ``models.py`` and ``rest_api.py`` file.
 
-CBC SDK has the following abbreviated folder structure:
-
-::
+CBC SDK has the following abbreviated folder structure::
 
     src
     └── cbc_sdk
@@ -275,8 +280,9 @@ CBC SDK has the following abbreviated folder structure:
         └── rest_api.py
             └── CBCloudAPI.py
 
-Now, each product has either a ``base.py`` file with all of its objects, or categorized files like ``platform.alerts.py`` and ``platform.devices.py``.
-The package level ``rest_api.py`` replaced each product-specific ``rest_api.py`` file.
+Now, each product has either a ``base.py`` file with all of its objects, or categorized files like
+``platform.alerts.py`` and ``platform.devices.py``.  The package level ``rest_api.py`` replaced each product-specific
+``rest_api.py`` file.
 
 Function Changes
 ----------------

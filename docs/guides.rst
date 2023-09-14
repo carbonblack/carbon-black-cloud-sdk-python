@@ -18,7 +18,29 @@ administrators.
 
 Guides
 ------
+.. toctree::
+   :maxdepth: 2
 
+   porting-guide
+   searching
+   alerts
+   audit-log
+   developing-credential-providers
+   device-control
+   differential-analysis
+   live-query
+   live-response
+   live-response-v6-migration
+   policy
+   recommendations
+   reputation-override
+   unified-binary-store
+   users-grants
+   vulnerabilities
+   watchlists-feeds-reports
+   workload
+
+* :doc:`searching` - Most operations in the SDK will require you to search for objects.
 * :doc:`alerts` - Work and manage different types of alerts such as CB Analytics Alert, Watchlist Alerts and Device Control Alerts.
 * :doc:`audit-log` - Retrieve audit log events indicating various "system" events.
 * :doc:`device-control` - Control the blocking of USB devices on endpoints.
@@ -33,3 +55,4 @@ Guides
 * :doc:`vulnerabilities` - View asset (Endpoint or Workload) vulnerabilities to increase security visibility.
 * :doc:`watchlists-feeds-reports` - Work with Enterprise EDR watchlists, feeds, reports, and Indicators of Compromise (IOCs).
 * :doc:`workload` - Advanced protection purpose-built for securing modern workloads to reduce the attack surface and strengthen security posture.
+
