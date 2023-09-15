@@ -1157,12 +1157,12 @@ class SimpleQuery(BaseQuery, IterableQueryMixin):
 
     def _match_query(self, i):
         for k, v in iter(self._query.items()):
-            if isinstance(v, str):
-                v = v.lower()
             target = getattr(i, k, None)
-            if target is None:
-                return False
-            if str(target).lower() != v:
+            if isinstance(v, str) and isinstance(target, str):
+                mismatch = (v.casefold() != target.casefold())
+            else:
+                mismatch = (v != target)
+            if mismatch:
                 return False
         return True
 
