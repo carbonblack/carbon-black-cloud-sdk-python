@@ -1,5 +1,5 @@
-from amazonlinux:latest
-MAINTAINER cb-developer-network@vmware.com
+FROM amazonlinux:latest
+LABEL org.opencontainers.image.authors="cb-developer-network@vmware.com"
 
 COPY . /app
 WORKDIR /app
