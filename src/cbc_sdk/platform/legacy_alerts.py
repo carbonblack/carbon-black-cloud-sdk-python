@@ -1,5 +1,5 @@
 import time
-from cbc_sdk.errors import ApiError
+from cbc_sdk.errors import ApiError, FunctionalityDecommissioned
 from cbc_sdk.platform.devices import DeviceSearchQuery
 from cbc_sdk.base import CriteriaBuilderSupportMixin
 
@@ -28,19 +28,22 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
 
     def set_categories(self, categories):
         """
-        Restricts the alerts that this query is performed on to the specified categories.
+        The field `categories` was deprecated and not included in v7.  This method has been removed.
+
+        In Alerts v7, only records with the type THREAT are returned.
+        Records that in v6 had the category MONITORED (Observed) are now Observations
+        See [Developer Network Alerts v6 Migration](https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/alerts-migration/)
+        for more details.
 
         Args:
             categories (list): List of categories to be restricted to. Valid categories are
                                "THREAT", "MONITORED", "INFO", "MINOR", "SERIOUS", and "CRITICAL."
 
         Returns:
-            AlertSearchQuery: This instance.
+            Throws FunctionalityDecommissioned
         """
-        if not all((c in ALERT_VALID_CATEGORIES) for c in categories):
-            raise ApiError("One or more invalid category values")
-        self._update_criteria("category", categories)
-        return self
+        raise FunctionalityDecommissioned("Starting with SDK v1.5.0 Category is not a valid field on Alert.")
+
 
     def set_create_time(self, *args, **kwargs):
         """
