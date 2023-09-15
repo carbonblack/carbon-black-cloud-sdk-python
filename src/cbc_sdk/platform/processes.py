@@ -651,9 +651,6 @@ class AsyncProcessQuery(Query):
 
         args = self._get_query_parameters()
 
-        # Ensure query parameter is set
-        args.update(query=args["query"] or "*:*")
-
         self._validate({"q": args["query"]})
 
         # Ensure search creation uses max due to event aggregation

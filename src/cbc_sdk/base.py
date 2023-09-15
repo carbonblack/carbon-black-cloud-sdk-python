@@ -1918,7 +1918,7 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
             args["exclusions"] = self._exclusions
         if self._time_range:
             args["time_range"] = self._time_range
-        args['query'] = self._query_builder._collapse()
+        args['query'] = self._query_builder._collapse() or "*:*"
         if self._query_builder._process_guid is not None:
             args["process_guid"] = self._query_builder._process_guid
         if 'process_guid:' in args['query']:
