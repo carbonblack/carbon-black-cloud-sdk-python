@@ -19,15 +19,11 @@ from cbc_sdk.platform import (
     WatchlistAlert,
     DeviceControlAlert,
     ContainerRuntimeAlert,
-    HostBasedFirewallAlert,
-    WorkflowStatus,
-    Process,
+    HostBasedFirewallAlert
 )
 from cbc_sdk.rest_api import CBCloudAPI
 
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from cbc_sdk.platform import BaseAlert
-from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.platform.mock_alert_v6_v7_compatibility import (
     GET_ALERT_v7_CB_ANALYTICS_RESPONSE,
     GET_ALERT_v7_WATCHLIST_RESPONSE,
@@ -44,28 +40,51 @@ ALERT_TYPES = [
     "DeviceControlAlert",
     "ContainerRuntimeAlert",
     "HostBasedFirewallAlert"
-    ]
+]
 
 DEPRECATED_FIELDS_CB_ANALYTICS = [
     "blocked_threat_category",
-    "kill_chain_status"
+    "kill_chain_status",
     "not_blocked_threat_category",
     "threat_activity_dlp",
     "threat_activity_phish",
-    "threat_cause_vector"
+    "threat_cause_vector",
+    # "category", TO DO - open question on category because it's handled differently in the SDK
+    "group_details",
+    "threat_cause_threat_category"
 ]
 
 DEPRECATED_FIELDS_WATCHLISTS = [
-    ]
+    # "category", TO DO - open question on category because it's handled differently in the SDK
+    "group_details",
+    "threat_cause_threat_category",
+    "threat_cause_vector",
+    "count",
+    "document_guid",
+    "threat_indicators"
+]
 
-DEPRECATED_FIELDS_DEVICECONTROL = [
-    ]
+DEPRECATED_FIELDS_DEVICE_CONTROL = [
+    # "category", TO DO - open question on category because it's handled differently in the SDK
+    "group_details",
+    "threat_cause_threat_category",
+    "threat_cause_vector"
+]
 
-DEPRECATED_FIELDS_CONTAINER_ = [
-    ]
+DEPRECATED_FIELDS_CONTAINER_RUNTIME = [
+    "target_value",
+    # "category", TO DO - open question on category because it's handled differently in the SDK
+    "group_details",
+    "workload_id",
+    "threat_cause_threat_category"
+]
 
-DEPRECATED_FIELDS_CB_ANALYTICS = [
-    ]
+DEPRECATED_FIELDS_HBFW = [
+    # "category", TO DO - open question on category because it's handled differently in the SDK
+    "group_details",
+    "threat_cause_threat_category"
+]
+
 
 @pytest.fixture(scope="function")
 def cb():
@@ -86,82 +105,149 @@ def cbcsdk_mock(monkeypatch, cb):
 
 def test_set_categories(cb):
     """Test the set_categories method on each legacy alert class."""
-
-    with pytest.raises(FunctionalityDecommissioned) as e_info:
+    with pytest.raises(FunctionalityDecommissioned):
         cb.select(BaseAlert).set_categories(["MONITORED"])
 
     for a_type in ALERT_TYPES:
-        with pytest.raises(FunctionalityDecommissioned) as e_info:
+        with pytest.raises(FunctionalityDecommissioned):
             cb.select(a_type).set_categories(["MONITORED"])
 
 
 def test_set_group_results(cb):
     """Test the set_categories method on each legacy alert class."""
-
-    with pytest.raises(FunctionalityDecommissioned) as e_info:
+    with pytest.raises(FunctionalityDecommissioned):
         cb.select(BaseAlert).set_group_results(False)
 
     for a_type in ALERT_TYPES:
-        with pytest.raises(FunctionalityDecommissioned) as e_info:
+        with pytest.raises(FunctionalityDecommissioned):
             cb.select(BaseAlert).set_group_results(False)
+
 
 def test_set_kill_chain_statuses(cb):
     """Test the set_kill_chain_statuses method on each legacy alert class."""
-
-    with pytest.raises(FunctionalityDecommissioned) as e_info:
+    with pytest.raises(FunctionalityDecommissioned):
         cb.select(BaseAlert).set_kill_chain_statuses(["WEAPONIZE"])
 
     for a_type in ALERT_TYPES:
-        with pytest.raises(FunctionalityDecommissioned) as e_info:
+        with pytest.raises(FunctionalityDecommissioned):
             cb.select(a_type).set_kill_chain_statuses(["WEAPONIZE"])
 
 
 def test_set_not_blocked_threat_categories(cb):
     """Test the set_kill_chain_statuses method on base and CBAnalytics legacy alert class."""
-
-    with pytest.raises(FunctionalityDecommissioned) as e_info:
+    with pytest.raises(FunctionalityDecommissioned):
         cb.select(BaseAlert).set_not_blocked_threat_categories(["UNKNOWN"])
 
-    with pytest.raises(FunctionalityDecommissioned) as e_info:
+    with pytest.raises(FunctionalityDecommissioned):
         cb.select(CBAnalyticsAlert).set_not_blocked_threat_categories(["UNKNOWN"])
 
 
 def test_set_threat_cause_vectors(cb):
     """Test the set_kill_chain_statuses method on base and CBAnalytics legacy alert class."""
-
-    with pytest.raises(FunctionalityDecommissioned) as e_info:
+    with pytest.raises(FunctionalityDecommissioned):
         cb.select(BaseAlert).set_threat_cause_vectors(["EMAIL"])
 
-    with pytest.raises(FunctionalityDecommissioned) as e_info:
+    with pytest.raises(FunctionalityDecommissioned):
         cb.select(CBAnalyticsAlert).set_threat_cause_vectors(["EMAIL"])
 
+    with pytest.raises(FunctionalityDecommissioned):
+        cb.select(DeviceControlAlert).set_threat_cause_vectors(["EMAIL"])
+
+    with pytest.raises(FunctionalityDecommissioned):
+        cb.select(WatchlistAlert).set_threat_cause_vectors(["EMAIL"])
 
 
 def test_get_attr_cb_analytics_alert(cbcsdk_mock):
-    """Test the __get_attr_ method on each legacy alert class for each attribute that applies to them all."""
-
+    """Test the __get_attr_ method for each attribute that applies to cb_analytics alerts."""
     cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
                              GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
     cb = cbcsdk_mock.api
     alert = cb.select(BaseAlert, GET_ALERT_v7_CB_ANALYTICS_RESPONSE.get("id"))
 
     for f in DEPRECATED_FIELDS_CB_ANALYTICS:
-        with (pytest.raises(FunctionalityDecommissioned) as e_info):
+        with (pytest.raises(FunctionalityDecommissioned)):
+            # TO DO - why does this sometimes go to base.py - get(), and other times goes to alerts.__getatt__()
             alert.get(f)
 
     # test again with CBAnalyticsAlert class
     alert = cb.select(CBAnalyticsAlert, GET_ALERT_v7_CB_ANALYTICS_RESPONSE.get("id"))
 
     for f in DEPRECATED_FIELDS_CB_ANALYTICS:
-        with (pytest.raises(FunctionalityDecommissioned) as e_info):
+        with (pytest.raises(FunctionalityDecommissioned)):
             alert.get(f)
 
-# @pytest.mark.parametrize("url, v7_api_response, alert_type", [
-##    ("/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333", GET_ALERT_v7_CB_ANALYTICS_RESPONSE, "CBAnalyticsAlert"),
-#    ("/api/alerts/v7/orgs/test/alerts/f6af290d-6a7f-461c-a8af-cf0d24311105", GET_ALERT_v7_WATCHLIST_RESPONSE, "WatchlistAlert"),
-#    ("/api/alerts/v7/orgs/test/alerts/46b419c8-3d67-ead8-dbf1-9d8417610fac", GET_ALERT_v7_CONTAINER_RUNTIME_RESPONSE, "ContainerRuntimeAlert"),
-#    ("/api/alerts/v7/orgs/test/alerts/2be0652f-20bc-3311-9ded-8b873e28d830", GET_ALERT_v7_HBFW_RESPONSE, "HostBasedFirewallAlert"),
-#    ("/api/alerts/v7/orgs/test/alerts/b6a7e48b-1d14-11ee-a9e0-888888888788", GET_ALERT_v7_DEVICE_CONTROL_RESPONSE, "DeviceControlAlert")
+
+def test_get_attr_container_runtime_alert(cbcsdk_mock):
+    """Test the __get_attr_ method for each attribute that applies to container runtime alerts."""
+    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/46b419c8-3d67-ead8-dbf1-9d8417610fac",
+                             GET_ALERT_v7_CONTAINER_RUNTIME_RESPONSE)
+    cb = cbcsdk_mock.api
+    alert = cb.select(BaseAlert, GET_ALERT_v7_CONTAINER_RUNTIME_RESPONSE.get("id"))
+
+    for f in DEPRECATED_FIELDS_CONTAINER_RUNTIME:
+        with (pytest.raises(FunctionalityDecommissioned)):
+            alert.get(f)
+
+    # test again with Container Runtime class
+    alert = cb.select(ContainerRuntimeAlert, GET_ALERT_v7_CONTAINER_RUNTIME_RESPONSE.get("id"))
+
+    for f in DEPRECATED_FIELDS_CONTAINER_RUNTIME:
+        with (pytest.raises(FunctionalityDecommissioned)):
+            alert.get(f)
 
 
+def test_get_attr_device_control_alert(cbcsdk_mock):
+    """Test the __get_attr_ method for each attribute that applies to device control alerts."""
+    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/b6a7e48b-1d14-11ee-a9e0-888888888788",
+                             GET_ALERT_v7_DEVICE_CONTROL_RESPONSE)
+    cb = cbcsdk_mock.api
+    alert = cb.select(BaseAlert, GET_ALERT_v7_DEVICE_CONTROL_RESPONSE.get("id"))
 
+    for f in DEPRECATED_FIELDS_DEVICE_CONTROL:
+        with (pytest.raises(FunctionalityDecommissioned)):
+            alert.get(f)
+
+    # test again with Device Control class
+    alert = cb.select(DeviceControlAlert, GET_ALERT_v7_DEVICE_CONTROL_RESPONSE.get("id"))
+
+    for f in DEPRECATED_FIELDS_DEVICE_CONTROL:
+        with (pytest.raises(FunctionalityDecommissioned)):
+            alert.get(f)
+
+
+def test_get_attr_hbfw_alert(cbcsdk_mock):
+    """Test the __get_attr_ method for each attribute that applies to host based firewall alerts."""
+    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/2be0652f-20bc-3311-9ded-8b873e28d830",
+                             GET_ALERT_v7_HBFW_RESPONSE)
+    cb = cbcsdk_mock.api
+    alert = cb.select(BaseAlert, GET_ALERT_v7_HBFW_RESPONSE.get("id"))
+
+    for f in DEPRECATED_FIELDS_HBFW:
+        with (pytest.raises(FunctionalityDecommissioned)):
+            alert.get(f)
+
+    # test again with Host Based Firewall class
+    alert = cb.select(HostBasedFirewallAlert, GET_ALERT_v7_HBFW_RESPONSE.get("id"))
+
+    for f in DEPRECATED_FIELDS_HBFW:
+        with (pytest.raises(FunctionalityDecommissioned)):
+            alert.get(f)
+
+
+def test_get_attr_watchlists_alert(cbcsdk_mock):
+    """Test the __get_attr_ method for each attribute that applies to watchlist alerts."""
+    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/f6af290d-6a7f-461c-a8af-cf0d24311105",
+                             GET_ALERT_v7_WATCHLIST_RESPONSE)
+    cb = cbcsdk_mock.api
+    alert = cb.select(BaseAlert, GET_ALERT_v7_WATCHLIST_RESPONSE.get("id"))
+
+    for f in DEPRECATED_FIELDS_WATCHLISTS:
+        with (pytest.raises(FunctionalityDecommissioned)):
+            alert.get(f)
+
+    # test again with Watchlist class
+    alert = cb.select(WatchlistAlert, GET_ALERT_v7_WATCHLIST_RESPONSE.get("id"))
+
+    for f in DEPRECATED_FIELDS_WATCHLISTS:
+        with (pytest.raises(FunctionalityDecommissioned)):
+            alert.get(f)

@@ -141,18 +141,21 @@ class Alert(PlatformModel):
         "threat_activity_c2",
         "threat_activity_dlp",
         "threat_activity_phish",
-        # CB Analytics and Host Based Firewall and Device Control and Watchlists
+        # CB Analytics and Host Based Firewall and Device Control and Watchlist
         "threat_cause_threat_category",
-        # CB Analytics and Host Based Firewall
+        # CB Analytics and Device Control and Watchlist
         "threat_cause_vector",
         # Container Runtime Fields
-        "target_value",
         "workload_id",
         # Watchlists Fields
         "count",
         "document_guid",
-        "threat_cause_vector",
         "threat_indicators"
+    ]
+
+    # these fields are deprecated from container runtime but mapped to a new field for other alert types
+    DEPRECATED_FIELDS_NOT_IN_V7_CONTAINER_ONLY = [
+        "target_value"
     ]
 
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
@@ -473,8 +476,14 @@ class Alert(PlatformModel):
                 raise FunctionalityDecommissioned(
                     "Attribute '{0}' does not exist in object '{1}' because it was deprecated in "
                     "Alerts v7. In SDK 1.5.0 the".format(item, self.__class__.__name__))
+            if item in Alert.DEPRECATED_FIELDS_NOT_IN_V7_CONTAINER_ONLY and self.type == "CONTAINER_RUNTIME":
+                raise FunctionalityDecommissioned(
+                    "Attribute '{0}' does not exist in object '{1}' because it was deprecated in "
+                    "Alerts v7. In SDK 1.5.0 the".format(item, self.__class__.__name__))
             item = Alert.REMAPPED_ALERTS_V6_TO_V7.get(item, item)
             return super(Alert, self).__getattr__(item)
+        except FunctionalityDecommissioned as fd:
+            raise FunctionalityDecommissioned(fd)
         except AttributeError:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
                                                                               item))
