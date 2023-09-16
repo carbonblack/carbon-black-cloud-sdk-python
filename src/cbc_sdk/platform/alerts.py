@@ -14,7 +14,7 @@
 """Model and Query Classes for Platform Alerts and Workflows"""
 import time
 
-from cbc_sdk.errors import ApiError, TimeoutError, ObjectNotFoundError, NonQueryableModel
+from cbc_sdk.errors import ApiError, TimeoutError, ObjectNotFoundError, NonQueryableModel, FunctionalityDecommissioned
 from cbc_sdk.platform import PlatformModel
 from cbc_sdk.base import (BaseQuery,
                           UnrefreshableModel,
@@ -128,9 +128,32 @@ class Alert(PlatformModel):
     }
 
     REMAPPED_NOTES_V7_TO_V6 = {
-        "last_update_time": "",
-
+        "last_update_time": ""
     }
+
+    DEPRECATED_FIELDS_NOT_IN_V7 = [
+        "category",
+        "group_details",
+        # CB Analytics Fields
+        "blocked_threat_category",
+        "kill_chain_status",
+        "not_blocked_threat_category",
+        "threat_activity_c2",
+        "threat_activity_dlp",
+        "threat_activity_phish",
+        # CB Analytics and Host Based Firewall and Device Control and Watchlists
+        "threat_cause_threat_category",
+        # CB Analytics and Host Based Firewall
+        "threat_cause_vector",
+        # Container Runtime Fields
+        "target_value",
+        "workload_id",
+        # Watchlists Fields
+        "count",
+        "document_guid",
+        "threat_cause_vector",
+        "threat_indicators"
+    ]
 
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
     urlobject_single = "/api/alerts/v7/orgs/{0}/alerts/{1}"
@@ -446,6 +469,10 @@ class Alert(PlatformModel):
             AttributeError: If the object has no such attribute.
         """
         try:
+            if item in Alert.DEPRECATED_FIELDS_NOT_IN_V7:
+                raise FunctionalityDecommissioned(
+                    "Attribute '{0}' does not exist in object '{1}' because it was deprecated in "
+                    "Alerts v7. In SDK 1.5.0 the".format(item, self.__class__.__name__))
             item = Alert.REMAPPED_ALERTS_V6_TO_V7.get(item, item)
             return super(Alert, self).__getattr__(item)
         except AttributeError:
