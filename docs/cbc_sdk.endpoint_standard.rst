@@ -1,4 +1,4 @@
-Endpoint Standard Package
+cbc\_sdk.endpoint\_standard package
 ===================================
 
 Submodules

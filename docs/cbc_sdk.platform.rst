@@ -1,4 +1,4 @@
-Platform Package
+cbc\_sdk.platform package
 =========================
 
 Submodules
@@ -48,6 +48,14 @@ cbc\_sdk.platform.jobs module
 -----------------------------
 
 .. automodule:: cbc_sdk.platform.jobs
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+cbc\_sdk.platform.legacy\_alerts module
+---------------------------------------
+
+.. automodule:: cbc_sdk.platform.legacy_alerts
    :members:
    :undoc-members:
    :show-inheritance:

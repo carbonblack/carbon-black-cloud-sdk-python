@@ -5,7 +5,7 @@ Use alerts to get notifications about important App Control-monitored activities
 appearance or spread of risky files on your endpoints. The Carbon Black Cloud Python SDK provides
 all of the functionalities you might need to use them efficiently.
 You can use all of the operations shown in the API such as retrieving, filtering, dismissing, creating and updating.
-The full list of operations and attributes can be found in the :py:mod:`BaseAlert() <cbc_sdk.platform.alerts.BaseAlert>` class.
+The full list of operations and attributes can be found in the :py:mod:`Alert() <cbc_sdk.platform.alerts.Alert>` class.
 
 For more information see
 `the developer documentation <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alerts-api/>`_
@@ -18,9 +18,9 @@ With the example below, you can retrieve the last 5 ``[:5]`` alerts with the min
 .. code-block:: python
 
     >>> from cbc_sdk import CBCloudAPI
-    >>> from cbc_sdk.platform import BaseAlert
+    >>> from cbc_sdk.platform import Alert
     >>> api = CBCloudAPI(profile='sample')
-    >>> alerts = api.select(BaseAlert).set_minimum_severity(7)[:5]
+    >>> alerts = api.select(Alert).set_minimum_severity(7)[:5]
     >>> print(alerts[0].id, alerts[0].device_os, alerts[0].device_name, alerts[0].category)
     d689e626-5d6a-<truncated> WINDOWS Alert-WinTest THREAT
 
@@ -37,9 +37,9 @@ for more complex searches. The example below will search with a solr query searc
 .. code-block:: python
 
     >>> from cbc_sdk import CBCloudAPI
-    >>> from cbc_sdk.platform import BaseAlert
+    >>> from cbc_sdk.platform import Alert
     >>> api = CBCloudAPI(profile='sample')
-    >>> alerts = api.select(BaseAlert).where("category:THREAT or category:MONITORED")[:5]
+    >>> alerts = api.select(Alert).where("category:THREAT or category:MONITORED")[:5]
     >>> for alert in alerts:
     ...     print(alert.id, alert.device_os, alert.device_name, alert.category)
     e45330ae-<truncated> WINDOWS WINDOWS-TEST THREAT
@@ -55,7 +55,7 @@ Ex: Returns all types
 
 .. code-block:: python
 
-    >>> alerts = list(cb.select(BaseAlert).set_types([]))
+    >>> alerts = list(cb.select(Alert).set_types([]))
 
 .. tip::
     More information about the ``solrq`` can be found in the
@@ -66,9 +66,9 @@ You can also filter on different kind of **TTPs** (*Tools Techniques Procedures*
 .. code-block:: python
 
     >>> from cbc_sdk import CBCloudAPI
-    >>> from cbc_sdk.platform import BaseAlert
+    >>> from cbc_sdk.platform import Alert
     >>> api = CBCloudAPI(profile='sample')
-    >>> alerts = api.select(BaseAlert).where(ttp='UNKNOWN_APP', sensor_action='TERMINATE', policy_name='Standard')[:5]
+    >>> alerts = api.select(Alert).where(ttp='UNKNOWN_APP', sensor_action='TERMINATE', policy_name='Standard')[:5]
     >>> for alert in alerts:
     ...     print(alert.original_document['threat_indicators'])
     [{'process_name': 'notepad.exe', 'sha256': '<truncated>', 'ttps': ['POLICY_TERMINATE', 'UNKNOWN_APP']}]
@@ -85,12 +85,12 @@ With the example below, you can retrieve alerts for multiple organizations.
 .. code-block:: python
 
     >>> from cbc_sdk import CBCloudAPI
-    >>> from cbc_sdk.platform import BaseAlert
+    >>> from cbc_sdk.platform import Alert
     >>> org_list = ["org1", "org2"]
     >>> for org in org_list:
     ...     org = ''.join(org)
     ...     api = CBCloudAPI(profile=org)
-    ...     alerts = api.select(BaseAlert).set_minimum_severity(7)[:5]
+    ...     alerts = api.select(Alert).set_minimum_severity(7)[:5]
     ...     print('Results for Org {}'.format(org))
     >>> for alert in alerts:
     ...     print(alert.id, alert.device_os, alert.device_name, alert.category)
@@ -101,7 +101,7 @@ With the example below, you can retrieve alerts for multiple organizations.
 You can also read from a csv file with values that match the profile names in your credentials.cbc file.
 
     >>> from cbc_sdk import CBCloudAPI
-    >>> from cbc_sdk.platform import BaseAlert
+    >>> from cbc_sdk.platform import Alert
     >>> import csv
     >>> file = open ("data.csv", "r", encoding='utf-8-sig')
     >>> org_list = list(csv.reader(file, delimiter=","))
@@ -109,7 +109,7 @@ You can also read from a csv file with values that match the profile names in yo
     >>> for org in org_list:
     ...     org = ''.join(org)
     ...     api = CBCloudAPI(profile=org)
-    ...     alerts = api.select(BaseAlert).set_minimum_severity(7)[:5]
+    ...     alerts = api.select(Alert).set_minimum_severity(7)[:5]
     ...     print('Results for Org {}'.format(org))
     >>> for alert in alerts:
     ...     print(alert.id, alert.device_os, alert.device_name, alert.category)
@@ -284,10 +284,10 @@ Those settings shown in the screenshot can be replicated with the following code
 .. code-block:: python
 
     >>> from cbc_sdk import CBCloudAPI
-    >>> from cbc_sdk.platform import BaseAlert
+    >>> from cbc_sdk.platform import Alert
     >>> from solrq import Q
     >>> api = CBCloudAPI(profile='sample')
-    >>> alerts = api.select(BaseAlert).where("category:MONITORED or category:THREAT and policy_name:Standard").set_minimum_severity(7)[:5]
+    >>> alerts = api.select(Alert).where("category:MONITORED or category:THREAT and policy_name:Standard").set_minimum_severity(7)[:5]
 
 
 Advanced usage of alerts
