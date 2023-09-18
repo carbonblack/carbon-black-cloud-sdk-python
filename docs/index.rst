@@ -65,42 +65,16 @@ Get started with Carbon Black Cloud Python SDK here. For detailed information on
    installation
    authentication
    Getting Started <getting-started>
-   concepts
    resources
-   porting-guide
-
-Guides
-------
-
-.. toctree::
-   :caption: Guides
-   :maxdepth: 2
-
-   alerts
-   device-control
-   differential-analysis
-   live-query
-   live-response
-   recommendations
-   reputation-override
-   unified-binary-store
-   users-grants
-   vulnerabilities
-   watchlists-feeds-reports
-   workload`
-
-Full SDK Documentation
-----------------------
-
-See detailed information on the objects and methods exposed by the Carbon Black Cloud Python SDK here.
+   guides
 
 .. toctree::
    :caption: SDK Documentation
-   :maxdepth: 2
+   :maxdepth: 4
 
+   cbc_sdk.cbcloudapi
    cbc_sdk.audit_remediation
    cbc_sdk.credential_providers
-   developing-credential-providers
    cbc_sdk.endpoint_standard
    cbc_sdk.enterprise_edr
    cbc_sdk.platform

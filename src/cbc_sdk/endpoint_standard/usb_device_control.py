@@ -16,7 +16,7 @@
 from cbc_sdk.base import (NewBaseModel, MutableBaseModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
                           CriteriaBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
 from cbc_sdk.errors import ApiError, ServerError
-from cbc_sdk.platform.devices import DeviceSearchQuery
+from cbc_sdk.platform.jobs import Job
 import logging
 import time
 import json
@@ -65,6 +65,9 @@ class USBDeviceApproval(MutableBaseModel):
         """
         Build the unique URL used to make requests for this object.
 
+        Required Permissions:
+            external-device.manage (READ)
+
         Args:
             http_method (str): Not used; retained for compatibility.
 
@@ -88,6 +91,9 @@ class USBDeviceApproval(MutableBaseModel):
     def _update_object(self):
         """
         Updates the object data on the server.
+
+        Required Permissions:
+            external-device.manage (CREATE)
 
         Returns:
             str: The unique ID of this object.
@@ -125,6 +131,9 @@ class USBDeviceApproval(MutableBaseModel):
         """
         Creates multiple approvals and returns the USBDeviceApproval objects.  Data is supplied as a list of dicts.
 
+        Required Permissions:
+            external-device.manage (CREATE)
+
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
             approvals (list): List of dicts containing approval data to be created, formatted as shown below.
@@ -153,6 +162,9 @@ class USBDeviceApproval(MutableBaseModel):
     def bulk_create_csv(cls, cb, approval_data):
         """
         Creates multiple approvals and returns the USBDeviceApproval objects.  Data is supplied as text in CSV format.
+
+        Required Permissions:
+            external-device.manage (CREATE)
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
@@ -225,6 +237,9 @@ class USBDeviceBlock(NewBaseModel):
         """
         Rereads the object data from the server.
 
+        Required Permissions:
+            org.policies (READ)
+
         Returns:
             bool: True if refresh was successful, False if not.
         """
@@ -234,7 +249,12 @@ class USBDeviceBlock(NewBaseModel):
         return True
 
     def delete(self):
-        """Delete this object."""
+        """
+        Delete this object.
+
+        Required Permissions:
+            org.policies (DELETE), external-device.enforce (UPDATE)
+        """
         if self._model_unique_id:
             ret = self._cb.delete_object(self._build_api_request_uri())
         else:
@@ -242,15 +262,19 @@ class USBDeviceBlock(NewBaseModel):
 
         if ret.status_code not in (200, 204):
             try:
-                message = json.loads(ret.text)[0]
+                result = json.loads(ret.text)[0]
             except Exception:
-                message = ret.text
-            raise ServerError(ret.status_code, message, result="Did not delete {0:s}.".format(str(self)))
+                result = ret.text
+            raise ServerError(ret.status_code, f"Did not delete {str(self)}.", result=result,
+                              uri=self._build_api_request_uri())
 
     @classmethod
     def create(cls, cb, policy_id):
         """
         Creates a USBDeviceBlock for a given policy ID.
+
+        Required Permissions:
+            org.policies (UPDATE), external-device.enforce (UPDATE)
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
@@ -266,6 +290,9 @@ class USBDeviceBlock(NewBaseModel):
     def bulk_create(cls, cb, policy_ids):
         """
         Creates multiple blocks and returns the USBDeviceBlocks that were created.
+
+        Required Permissions:
+            org.policies (UPDATE), external-device.enforce (UPDATE)
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
@@ -307,6 +334,9 @@ class USBDevice(NewBaseModel):
         """
         Creates and saves an approval for this USB device, allowing it to be treated as approved from now on.
 
+        Required Permissions:
+            external-device.manage (CREATE)
+
         Args:
             approval_name (str): The name for this new approval.
             notes (str): Notes to be added to this approval.
@@ -339,6 +369,9 @@ class USBDevice(NewBaseModel):
         """
         Rereads the object data from the server.
 
+        Required Permissions:
+            external-device.manage (READ)
+
         Returns:
             bool: True if refresh was successful, False if not.
         """
@@ -352,6 +385,9 @@ class USBDevice(NewBaseModel):
         """
         Returns the information about endpoints associated with this USB device.
 
+        Required Permissions:
+            external-device.manage (READ)
+
         Returns:
             list: List of information about USB endpoints, each item specified as a dict.
         """
@@ -363,6 +399,9 @@ class USBDevice(NewBaseModel):
     def get_vendors_and_products_seen(cls, cb):
         """
         Returns all vendors and products that have been seen for the organization.
+
+        Required Permissions:
+            external-device.manage (READ)
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
@@ -381,6 +420,7 @@ class USBDevice(NewBaseModel):
 class USBDeviceApprovalQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
                              IterableQueryMixin, AsyncQueryMixin):
     """Represents a query that is used to locate USBDeviceApproval objects."""
+    VALID_EXPORT_FORMATS = ('CSV', 'JSON')
 
     def __init__(self, doc_class, cb):
         """
@@ -479,6 +519,9 @@ class USBDeviceApprovalQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilde
         """
         Returns the number of results from the run of this query.
 
+        Required Permissions:
+            external-device.manage (READ)
+
         Returns:
             int: The number of results from the run of this query.
         """
@@ -498,6 +541,9 @@ class USBDeviceApprovalQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilde
     def _perform_query(self, from_row=0, max_rows=-1):
         """
         Performs the query and returns the results of the query in an iterable fashion.
+
+        Required Permissions:
+            external-device.manage (READ)
 
         Args:
             from_row (int): The row to start the query at (default 0).
@@ -535,6 +581,9 @@ class USBDeviceApprovalQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilde
         """
         Executed in the background to run an asynchronous query.
 
+        Required Permissions:
+            external-device.manage (READ)
+
         Args:
             context (object): Not used, always None.
 
@@ -549,6 +598,30 @@ class USBDeviceApprovalQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilde
         self._count_valid = True
         results = result.get("results", [])
         return [self._doc_class(self._cb, item["id"], item) for item in results]
+
+    def export(self, export_format):
+        """
+        Starts the process of exporting USB device approval data from the organization in a specified format.
+
+        Required Permissions:
+            external-device.manage (READ)
+
+        Args:
+            export_format (str): The format to export USB device approval data in. Must be either "CSV" or "JSON".
+
+        Returns:
+            Job: The asynchronous job that will provide the export output when the server has prepared it.
+        """
+        if not (export_format and export_format.upper() in USBDeviceApprovalQuery.VALID_EXPORT_FORMATS):
+            raise ApiError(f"invalid export format `{export_format}`")
+        request = self._build_request(0, -1)
+        request['format'] = export_format
+        url = self._build_url("/_export")
+        resp = self._cb.post_object(url, body=request)
+        result = resp.json()
+        if 'job_id' not in result:
+            raise ApiError("no job ID returned from server")
+        return Job(self._cb, result['job_id'])
 
 
 class USBDeviceBlockQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
@@ -572,6 +645,9 @@ class USBDeviceBlockQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
         """
         Returns the number of results from the run of this query.
 
+        Required Permissions:
+            org.policies (READ)
+
         Returns:
             int: The number of results from the run of this query.
         """
@@ -589,6 +665,9 @@ class USBDeviceBlockQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
     def _perform_query(self, from_row=0, max_rows=-1):
         """
         Performs the query and returns the results of the query in an iterable fashion.
+
+        Required Permissions:
+            org.policies (READ)
 
         Args:
             from_row (int): The row to start the query at (ignored).
@@ -610,6 +689,9 @@ class USBDeviceBlockQuery(BaseQuery, IterableQueryMixin, AsyncQueryMixin):
         """
         Executed in the background to run an asynchronous query.
 
+        Required Permissions:
+            org.policies (READ)
+
         Args:
             context (object): Not used, always None.
 
@@ -628,6 +710,7 @@ class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupport
     """Represents a query that is used to locate USBDevice objects."""
     VALID_STATUSES = ["APPROVED", "UNAPPROVED"]
     VALID_FACET_FIELDS = ["vendor_name", "product_name", "endpoint.endpoint_name", "status"]
+    VALID_EXPORT_FORMATS = ('CSV', 'JSON')
 
     def __init__(self, doc_class, cb):
         """
@@ -754,7 +837,7 @@ class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupport
         Returns:
             USBDeviceQuery: This instance.
         """
-        if direction not in DeviceSearchQuery.VALID_DIRECTIONS:
+        if direction not in CriteriaBuilderSupportMixin.VALID_DIRECTIONS:
             raise ApiError("invalid sort direction specified")
         self._sortcriteria = {"field": key, "order": direction}
         return self
@@ -801,6 +884,9 @@ class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupport
         """
         Returns the number of results from the run of this query.
 
+        Required Permissions:
+            external-device.manage (READ)
+
         Returns:
             int: The number of results from the run of this query.
         """
@@ -820,6 +906,9 @@ class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupport
     def _perform_query(self, from_row=0, max_rows=-1):
         """
         Performs the query and returns the results of the query in an iterable fashion.
+
+        Required Permissions:
+            external-device.manage (READ)
 
         Args:
             from_row (int): The row to start the query at (default 0).
@@ -857,6 +946,9 @@ class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupport
         """
         Executed in the background to run an asynchronous query.
 
+        Required Permissions:
+            external-device.manage (READ)
+
         Args:
             context (object): Not used, always None.
 
@@ -876,6 +968,9 @@ class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupport
         """
         Return information about the facets for all known USB devices, using the defined criteria.
 
+        Required Permissions:
+            external-device.manage (READ)
+
         Args:
             fieldlist (list): List of facet field names. Valid names are "vendor_name", "product_name",
                               "endpoint.endpoint_name", and "status".
@@ -893,3 +988,27 @@ class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupport
         resp = self._cb.post_object(url, body=request)
         result = resp.json()
         return result.get("terms", [])
+
+    def export(self, export_format):
+        """
+        Starts the process of exporting USB device data from the organization in a specified format.
+
+        Required Permissions:
+            external-device.manage (READ)
+
+        Args:
+            export_format (str): The format to export USB device data in. Must be either "CSV" or "JSON".
+
+        Returns:
+            Job: The asynchronous job that will provide the export output when the server has prepared it.
+        """
+        if not (export_format and export_format.upper() in USBDeviceQuery.VALID_EXPORT_FORMATS):
+            raise ApiError(f"invalid export format `{export_format}`")
+        request = self._build_request(0, -1)
+        request['format'] = export_format
+        url = self._build_url("/_export")
+        resp = self._cb.post_object(url, body=request)
+        result = resp.json()
+        if 'job_id' not in result:
+            raise ApiError("no job ID returned from server")
+        return Job(self._cb, result['job_id'])

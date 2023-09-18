@@ -1,5 +1,5 @@
-from python:3.7
-MAINTAINER cb-developer-network@vmware.com
+FROM python:3.7
+LABEL org.opencontainers.image.authors="cb-developer-network@vmware.com"
 
 COPY . /app
 WORKDIR /app

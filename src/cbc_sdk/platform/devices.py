@@ -217,7 +217,8 @@ class Device(PlatformModel):
         elif resp.status_code == 204:
             return None
         else:
-            raise ServerError(error_code=resp.status_code, message="Device action error: {0}".format(resp.content))
+            raise ServerError(error_code=resp.status_code, message="Device action error: {0}".format(resp.content),
+                              uri=url)
 
     def get_vulnerability_summary(self, category=None):
         """
@@ -412,7 +413,6 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
                       "BYPASS", "QUARANTINE", "SENSOR_OUTOFDATE",
                       "DELETED", "LIVE"]
     VALID_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "MISSION_CRITICAL"]
-    VALID_DIRECTIONS = ["ASC", "DESC"]
     VALID_DEPLOYMENT_TYPES = ["ENDPOINT", "WORKLOAD"]
     VALID_FACET_FIELDS = ["policy_id", "status", "os", "ad_group_id", "cloud_provider_account_id",
                           "auto_scaling_group_name", "virtual_private_cloud_id"]
@@ -670,7 +670,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         Raises:
             ApiError: If an invalid direction value is passed.
         """
-        if direction not in DeviceSearchQuery.VALID_DIRECTIONS:
+        if direction not in CriteriaBuilderSupportMixin.VALID_DIRECTIONS:
             raise ApiError("invalid sort direction specified")
         self._sortcriteria = {"field": key, "order": direction}
         return self

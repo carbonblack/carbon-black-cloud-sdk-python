@@ -17,7 +17,6 @@ from cbc_sdk.base import (NewBaseModel, UnrefreshableModel, BaseQuery, CriteriaB
                           AsyncQueryMixin)
 from cbc_sdk.errors import ApiError, NonQueryableModel
 from cbc_sdk.platform.reputation import ReputationOverride
-from cbc_sdk.platform.devices import DeviceSearchQuery
 import logging
 
 
@@ -421,7 +420,7 @@ class RecommendationQuery(BaseQuery, CriteriaBuilderSupportMixin, IterableQueryM
         Returns:
             USBDeviceQuery: This instance.
         """
-        if direction not in DeviceSearchQuery.VALID_DIRECTIONS:
+        if direction not in CriteriaBuilderSupportMixin.VALID_DIRECTIONS:
             raise ApiError("invalid sort direction specified")
         self._sortcriteria = {"field": key, "order": direction}
         return self
