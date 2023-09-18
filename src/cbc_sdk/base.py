@@ -432,7 +432,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         return self._info.get(self.__class__.primary_key, None)
 
     @classmethod
-    def new_object(cls, cb, item, **kwargs):
+    def _new_object(cls, cb, item, **kwargs):
         """
         Create a new object of a model class.
 
@@ -571,19 +571,6 @@ class NewBaseModel(object, metaclass=CbMetaModel):
 
     def _parse(self, obj):
         return obj
-
-    @property
-    def original_document(self):
-        """
-        Returns the original meta-information about the object.
-
-        Returns:
-            object: The original meta-information about the object.
-        """
-        if not self._full_init:
-            self.refresh()
-
-        return self._info
 
     def __repr__(self):
         """
@@ -905,27 +892,28 @@ class MutableBaseModel(NewBaseModel):
 
         if request_ret.status_code not in range(200, 300):
             try:
-                message = json.loads(request_ret.text)[0]
+                result = json.loads(request_ret.text)[0]
             except Exception:
-                message = request_ret.text
+                result = request_ret.text
 
-            raise ServerError(request_ret.status_code, message,
-                              result="Did not update {} record.".format(self.__class__.__name__))
+            raise ServerError(request_ret.status_code, f"Did not update {self.__class__.__name__} record.",
+                              result=result, uri=request_ret.url)
         else:
             try:
-                message = request_ret.json()
-                log.debug("Received response: %s" % message)
-                if list(message.keys()) == ["result"]:
-                    post_result = message.get("result", None)
+                result = request_ret.json()
+                log.debug("Received response: %s" % result)
+                if list(result.keys()) == ["result"]:
+                    post_result = result.get("result", None)
 
                     if post_result and post_result != "success":
-                        raise ServerError(request_ret.status_code, post_result,
-                                          result="Did not update {0:s} record.".format(self.__class__.__name__))
+                        raise ServerError(request_ret.status_code,
+                                          f"Did not update {self.__class__.__name__} record.",
+                                          result=post_result, uri=request_ret.url)
                     else:
                         refresh_required = True
                 else:
                     self._info = json.loads(request_ret.text)
-                    if message.keys() == ["id"]:
+                    if result.keys() == ["id"]:
                         # if all we got back was an ID, try refreshing to get the entire record.
                         log.debug("Only received an ID back from the server, forcing a refresh")
                         refresh_required = True
@@ -976,10 +964,10 @@ class MutableBaseModel(NewBaseModel):
 
         if ret.status_code not in (200, 204):
             try:
-                message = json.loads(ret.text)[0]
+                result = json.loads(ret.text)[0]
             except Exception:
-                message = ret.text
-            raise ServerError(ret.status_code, message, result="Did not delete {0:s}.".format(str(self)))
+                result = ret.text
+            raise ServerError(ret.status_code, f"Did not delete {str(self)}.", result=result, uri=None)
 
     def validate(self):
         """
@@ -1194,7 +1182,7 @@ class SimpleQuery(BaseQuery, IterableQueryMixin):
         if not self._full_init:
             self._results = []
             for item in self._cb.get_object(self._urlobject, default=[]):
-                t = self._doc_class.new_object(self._cb, item, full_doc=self._returns_full_doc)
+                t = self._doc_class._new_object(self._cb, item, full_doc=self._returns_full_doc)
                 if self._match_query(t):
                     self._results.append(t)
             self._results = self._sort(self._results)
@@ -1374,7 +1362,7 @@ class PaginatedQuery(BaseQuery, IterableQueryMixin):
 
     def _perform_query(self, start=0, numrows=0):
         for item in self._search(start=start, rows=numrows):
-            yield self._doc_class.new_object(self._cb, item)
+            yield self._doc_class._new_object(self._cb, item)
 
     def batch_size(self, new_batch_size):
         """
@@ -1648,7 +1636,8 @@ class QueryBuilderSupportMixin:
 
 
 class CriteriaBuilderSupportMixin:
-    """A mixin that supplies wrapper methods to access the _crtieria."""
+    """A mixin that supplies wrapper methods to access the criteria."""
+    VALID_DIRECTIONS = ("ASC", "DESC")
 
     def add_criteria(self, key, newlist):
         """Add to the criteria on this query with a custom criteria key.

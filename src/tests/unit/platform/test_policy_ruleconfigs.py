@@ -17,7 +17,8 @@ import logging
 from contextlib import ExitStack as does_not_raise
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.platform import Policy, PolicyRuleConfig
-from cbc_sdk.platform.policy_ruleconfigs import CorePreventionRuleConfig
+from cbc_sdk.platform.policy_ruleconfigs import (CorePreventionRuleConfig, HostBasedFirewallRuleConfig,
+                                                 DataCollectionRuleConfig)
 from cbc_sdk.errors import ApiError, InvalidObjectError, ServerError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_policies import (FULL_POLICY_1, BASIC_CONFIG_TEMPLATE_RETURN,
@@ -38,7 +39,9 @@ from tests.unit.fixtures.platform.mock_policy_ruleconfigs import (CORE_PREVENTIO
                                                                   HBFW_COPY_RULES_PUT_REQUEST,
                                                                   HBFW_COPY_RULES_PUT_RESPONSE,
                                                                   HBFW_EXPORT_RULE_CONFIGS_RESPONSE,
-                                                                  HBFW_EXPORT_RULE_CONFIGS_RESPONSE_CSV)
+                                                                  HBFW_EXPORT_RULE_CONFIGS_RESPONSE_CSV,
+                                                                  DATA_COLLECTION_RETURNS, DATA_COLLECTION_UPDATE_1,
+                                                                  DATA_COLLECTION_UPDATE_RETURNS_1)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -104,6 +107,7 @@ def test_rule_config_validate(cbcsdk_mock, initial_data, param_schema_return, ha
     rule_config = Policy._create_rule_config(api, None, initial_data)
     with handler as h:
         rule_config.validate()
+        assert rule_config.parameter_names == list(initial_data['parameters'].keys())
     if message is not None:
         assert h.value.args[0] == message
 
@@ -157,6 +161,7 @@ def test_rule_config_refresh(cbcsdk_mock, policy):
         assert rule_config.name == old_name
         assert rule_config.category == old_category
         assert rule_config.parameters == old_parameters
+        assert rule_config.parameter_names == list(old_parameters.keys())
 
 
 def test_rule_config_add_base_not_implemented(cbcsdk_mock):
@@ -209,8 +214,14 @@ def test_rule_config_initialization_matches_categories(policy):
     for cfg in policy.object_rule_configs.values():
         if cfg.category == "core_prevention":
             assert isinstance(cfg, CorePreventionRuleConfig)
+        elif cfg.category == "host_based_firewall":
+            assert isinstance(cfg, HostBasedFirewallRuleConfig)
+        elif cfg.category == "data_collection":
+            assert isinstance(cfg, DataCollectionRuleConfig)
         else:
             assert not isinstance(cfg, CorePreventionRuleConfig)
+            assert not isinstance(cfg, HostBasedFirewallRuleConfig)
+            assert not isinstance(cfg, DataCollectionRuleConfig)
 
 
 def test_core_prevention_refresh(cbcsdk_mock, policy):
@@ -670,3 +681,74 @@ def test_export_hbfw_rules_bad_format(cb):
     policy = Policy(cb, 1492, copy.deepcopy(FULL_POLICY_5), False, True)
     with pytest.raises(ApiError):
         policy.host_based_firewall_rule_config.export_rules('mp3')
+
+
+def test_data_collection_refresh(cbcsdk_mock, policy):
+    """Tests the refresh operation for a DataCollectionRuleConfig."""
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/rule_configs/data_collection',
+                             DATA_COLLECTION_RETURNS)
+    for rule_config in policy.data_collection_rule_configs_list:
+        rule_config.refresh()
+
+
+def test_data_collection_update_and_save(cbcsdk_mock, policy):
+    """Tests updating the data collection data and saving it."""
+    put_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal put_called
+        assert body == DATA_COLLECTION_UPDATE_1
+        put_called = True
+        return copy.deepcopy(DATA_COLLECTION_UPDATE_RETURNS_1)
+
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/configs/presentation',
+                             POLICY_CONFIG_PRESENTATION)
+    cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/65536/rule_configs/data_collection', on_put)
+    rule_config = policy.data_collection_rule_configs['91c919da-fb90-4e63-9eac-506255b0a0d0']
+    assert rule_config.name == 'Authentication Events'
+    assert rule_config.get_parameter('enable_auth_events') is True
+    rule_config.set_parameter('enable_auth_events', False)
+    rule_config.save()
+    assert put_called
+
+
+def test_data_collection_update_via_replace(cbcsdk_mock, policy):
+    """Tests updating the data collection data and saving it via replace_rule_config."""
+    put_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal put_called
+        assert body == DATA_COLLECTION_UPDATE_1
+        put_called = True
+        return copy.deepcopy(DATA_COLLECTION_UPDATE_RETURNS_1)
+
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/configs/presentation',
+                             POLICY_CONFIG_PRESENTATION)
+    cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/65536/rule_configs/data_collection', on_put)
+    rule_config = policy.data_collection_rule_configs['91c919da-fb90-4e63-9eac-506255b0a0d0']
+    assert rule_config.name == 'Authentication Events'
+    assert rule_config.get_parameter('enable_auth_events') is True
+    new_data = copy.deepcopy(rule_config._info)
+    new_data["parameters"]["enable_auth_events"] = False
+    policy.replace_rule_config('91c919da-fb90-4e63-9eac-506255b0a0d0', new_data)
+    assert put_called
+    assert rule_config.get_parameter('enable_auth_events') is False
+
+
+def test_data_collection_delete(cbcsdk_mock, policy):
+    """Tests delete of a data collection data item."""
+    delete_called = False
+
+    def on_delete(url, body):
+        nonlocal delete_called
+        delete_called = True
+        return CBCSDKMock.StubResponse(None, scode=204)
+
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/configs/presentation',
+                             POLICY_CONFIG_PRESENTATION)
+    cbcsdk_mock.mock_request('DELETE', '/policyservice/v1/orgs/test/policies/65536/rule_configs/data_collection'
+                                       '/91c919da-fb90-4e63-9eac-506255b0a0d0', on_delete)
+    rule_config = policy.data_collection_rule_configs['91c919da-fb90-4e63-9eac-506255b0a0d0']
+    assert rule_config.name == 'Authentication Events'
+    rule_config.delete()
+    assert delete_called

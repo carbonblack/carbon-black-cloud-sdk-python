@@ -1,8 +1,9 @@
-cbc\_sdk package
-================
+CBC SDK Package
+***************
+
 
 Subpackages
------------
+===========
 
 .. toctree::
    :maxdepth: 4
@@ -16,84 +17,68 @@ Subpackages
    cbc_sdk.workload
 
 Submodules
-----------
+==========
 
-cbc\_sdk.base module
+Base Module
 --------------------
 
 .. automodule:: cbc_sdk.base
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
-cbc\_sdk.connection module
+Connection Module
 --------------------------
 
 .. automodule:: cbc_sdk.connection
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
-cbc\_sdk.credentials module
+Credentials Module
 ---------------------------
 
 .. automodule:: cbc_sdk.credentials
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
-cbc\_sdk.errors module
+Errors Module
 ----------------------
 
 .. automodule:: cbc_sdk.errors
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
-cbc\_sdk.helpers module
+Helpers Module
 -----------------------
 
 .. automodule:: cbc_sdk.helpers
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
-cbc\_sdk.live\_response\_api module
+Live Response API Module
 -----------------------------------
 
 .. automodule:: cbc_sdk.live_response_api
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
-cbc\_sdk.rest\_api module
--------------------------
-
-.. automodule:: cbc_sdk.rest_api
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-cbc\_sdk.utils module
+Utils Module
 ---------------------
 
 .. automodule:: cbc_sdk.utils
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
-cbc\_sdk.winerror module
+WinError Module
 ------------------------
 
 .. automodule:: cbc_sdk.winerror
    :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: cbc_sdk
-   :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:

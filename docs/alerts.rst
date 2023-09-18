@@ -70,7 +70,7 @@ You can also filter on different kind of **TTPs** (*Tools Techniques Procedures*
     >>> api = CBCloudAPI(profile='sample')
     >>> alerts = api.select(Alert).where(ttp='UNKNOWN_APP', sensor_action='TERMINATE', policy_name='Standard')[:5]
     >>> for alert in alerts:
-    ...     print(alert.original_document['threat_indicators'])
+    ...     print(alert.threat_indicators)
     [{'process_name': 'notepad.exe', 'sha256': '<truncated>', 'ttps': ['POLICY_TERMINATE', 'UNKNOWN_APP']}]
     [{'process_name': 'test_file.exe', 'sha256': '<truncated>', 'ttps': ['POLICY_DENY', 'POLICY_TERMINATE', 'UNKNOWN_APP']}]
     [{'process_name': 'notepad.exe', 'sha256': '<truncated>', 'ttps': ['POLICY_TERMINATE', 'UNKNOWN_APP']}]
@@ -203,6 +203,32 @@ The full list of all the attributes can be found in the
                      ttp: ['PORTSCAN', 'MITRE_T1046_NETWORK_SERVICE_SCANN...
     ...
 
+Event Details
+^^^^^^^^^^^^^
+
+You can retrieve the event(s) behind a ``CBAnalyticsAlert`` easily with its ``get_events()`` method::
+
+    >>> from cbc_sdk import CBCloudAPI
+    >>> from cbc_sdk.platform import CBAnalyticsAlert
+    >>> api = CBCloudAPI(profile='platform')
+    >>> query = cb.select(CBAnalyticsAlert).set_create_time(range="-4w")
+    >>> # get the first alert returned by the query
+    >>> alert = query[0]
+    >>> # get the events associated with that alert
+    >>> for event in alert.get_events():
+    ...     print(
+    ...         f'''
+    ...         Category: {event.alert_category}
+    ...         Type: {event.enriched_event_type}
+    ...         Alert Id: {event.alert_id}
+    ...         ''')
+    Category: ['OBSERVED']
+    Type: SYSTEM_API_CALL
+    Alert Id: ['BE084638']
+
+    Category: ['OBSERVED']
+    Type: NETWORK
+    Alert Id: ['BE084638']
 
 Watchlist Alerts
 ----------------
@@ -222,7 +248,7 @@ The full list of attributes and methods can be seen in the :py:mod:`Process() <c
     >>> api = CBCloudAPI(profile='sample')
     >>> alerts = api.select(WatchlistAlert)[:10]
     >>> for alert in alerts:
-    ...     process = api.select(Process).where(process_guid=alert.original_document['process_guid']).first()
+    ...     process = api.select(Process).where(process_guid=alert.process_guid).first()
     ...     print(process.get_details())
     {'alert_category': ['OBSERVED', 'THREAT'], 'alert_id': ['06eca427-1e64-424<truncated>..}
     {'alert_category': ['OBSERVED', 'THREAT'], 'alert_id': ['2307bf6e-fd39-4b6<truncated>..}
@@ -244,9 +270,9 @@ We could also fetch every event which corresponds with our Process, we can do so
     >>> from cbc_sdk.platform import WatchlistAlert, Process
     >>> api = CBCloudAPI(profile='sample')
     >>> alert = api.select(WatchlistAlert).first()
-    >>> process = api.select(Process).where(process_guid=alert.original_document['process_guid']).first()
+    >>> process = api.select(Process).where(process_guid=alert.process_guid).first()
     >>> events = process.events()[:10]
-    >>> print(events[0].original_document['event_description']) # Note that I've striped the `<share>` and `<link>` tags which are also available in the response.
+    >>> print(events[0].event_description) # Note that I've striped the `<share>` and `<link>` tags which are also available in the response.
     'The application c:\\program files (x86)\\google\\chrome\\application\\chrome.exe attempted to modify the memory of "c:\\program files (x86)\\google\\chrome\\application\\chrome.exe", by calling the function "NtWriteVirtualMemory". The operation was successful.'
     ...
 

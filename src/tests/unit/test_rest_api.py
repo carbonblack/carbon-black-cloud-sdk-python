@@ -16,7 +16,6 @@ from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.mock_rest_api import (
     NOTIFICATIONS_RESP,
-    AUDITLOGS_RESP,
     ALERT_SEARCH_SUGGESTIONS_RESP,
     PROCESS_SEARCH_VALIDATIONS_RESP,
     CUSTOM_SEVERITY_RESP,
@@ -24,6 +23,7 @@ from tests.unit.fixtures.mock_rest_api import (
     FETCH_PROCESS_QUERY_RESP,
     CONVERT_FEED_QUERY_RESP,
 )
+from tests.unit.fixtures.platform.mock_audit import AUDITLOGS_RESP
 
 
 @pytest.fixture(scope="function")
