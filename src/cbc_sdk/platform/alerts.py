@@ -23,7 +23,6 @@ from cbc_sdk.base import (BaseQuery,
                           IterableQueryMixin,
                           CriteriaBuilderSupportMixin)
 from cbc_sdk.endpoint_standard.base import EnrichedEvent
-from cbc_sdk.platform.devices import DeviceSearchQuery
 from cbc_sdk.platform.processes import AsyncProcessQuery, Process
 from cbc_sdk.platform.legacy_alerts import LegacyAlertSearchQueryCriterionMixin
 
@@ -1194,3 +1193,42 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             str: The request ID, which may be used to select a WorkflowStatus object.
         """
         return self._update_status("DISMISSED", remediation, comment)
+
+    def set_minimum_severity(self, severity):
+        """
+        Restricts the alerts that this query is performed on to the specified minimum severity level.
+
+        Args:
+            severity (int): The minimum severity level for alerts.
+
+        Returns:
+            AlertSearchQuery: This instance.
+        """
+        self._criteria["minimum_severity"] = severity
+        return self
+
+    def set_threat_notes_present(self, is_present):
+        """
+        Restricts the alerts that this query is performed on to those with or without threat_notes.
+
+        Args:
+            is_present (bool): If true, returns alerts that have a note attached to the threat_id
+
+        Returns:
+            AlertSearchQuery: This instance.
+        """
+        self._criteria["threat_notes_present"] = is_present
+        return self
+
+    def set_alert_notes_present(self, is_present):
+        """
+        Restricts the alerts that this query is performed on to those with or without notes.
+
+        Args:
+            is_present (bool): If true, returns alerts that have a note attached
+
+        Returns:
+            AlertSearchQuery: This instance.
+        """
+        self._criteria["alert_notes_present"] = is_present
+        return self
