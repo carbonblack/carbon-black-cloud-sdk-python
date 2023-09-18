@@ -115,7 +115,7 @@ class Observation(NewBaseModel):
             >>> observation = api.select(Observation, observation_id)
             >>> observation.get_details()
 
-            >>> observations = api.select(Observation.where(process_pid=2000)
+            >>> observations = api.select(Observation).where(process_pid=2000)
             >>> observations[0].get_details()
         """
         self._details_timeout = timeout

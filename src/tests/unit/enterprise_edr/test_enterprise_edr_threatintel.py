@@ -418,6 +418,31 @@ def test_create_regex_ioc(cb):
     assert re.fullmatch(GUID_PATTERN, ioc._info['id'])
 
 
+@pytest.mark.parametrize("linkvalue, expectation", [
+    ('', does_not_raise()),
+    ('silcom.com', does_not_raise()),
+    ('silcom.com.', pytest.raises(InvalidObjectError)),
+    ('silcom. com', pytest.raises(InvalidObjectError)),
+    ('bloom-beacon.mit.edu', does_not_raise()),
+    ('bloom-beacon.mit.edu/', pytest.raises(InvalidObjectError)),
+    ('199.201.128.1', does_not_raise()),
+    ('simplename', pytest.raises(InvalidObjectError)),
+    ('erbosoft.com/git', pytest.raises(InvalidObjectError)),
+    ('http://erbosoft.com/git', does_not_raise()),
+    ('https://erbosoft.com/git', does_not_raise()),
+    ('bogusschema://erbosoft.com', pytest.raises(InvalidObjectError)),
+    ('ftp://26.2.0.74', does_not_raise()),
+    ('https://midwinter.com/lurk/lurker.html', does_not_raise()),
+    ('//servername/share', pytest.raises(InvalidObjectError))
+])
+def test_ioc_link_validation(cb, linkvalue, expectation):
+    """Tests validation of the link field in IOCs."""
+    ioc = IOC_V2.create_equality(cb, None, "process_name", "Alpha")
+    ioc.link = linkvalue
+    with expectation:
+        ioc.validate()
+
+
 def test_ioc_read_ignored(cbcsdk_mock):
     """Tests reading the ignore status of an IOC."""
     cbcsdk_mock.mock_request("GET", "/threathunter/watchlistmgr/v3/orgs/test/reports/a1b2/iocs/foo/ignore",
@@ -507,6 +532,33 @@ def test_report_builder_save_watchlist(cbcsdk_mock):
     report.save_watchlist()
     assert report._from_watchlist
     assert report._info['id'] == "AaBbCcDdEeFfGg"
+
+
+@pytest.mark.parametrize("linkvalue, expectation", [
+    ('', does_not_raise()),
+    ('silcom.com', does_not_raise()),
+    ('silcom.com.', pytest.raises(InvalidObjectError)),
+    ('silcom. com', pytest.raises(InvalidObjectError)),
+    ('bloom-beacon.mit.edu', does_not_raise()),
+    ('bloom-beacon.mit.edu/', pytest.raises(InvalidObjectError)),
+    ('199.201.128.1', does_not_raise()),
+    ('simplename', pytest.raises(InvalidObjectError)),
+    ('erbosoft.com/git', pytest.raises(InvalidObjectError)),
+    ('http://erbosoft.com/git', does_not_raise()),
+    ('https://erbosoft.com/git', does_not_raise()),
+    ('bogusschema://erbosoft.com', pytest.raises(InvalidObjectError)),
+    ('ftp://26.2.0.74', does_not_raise()),
+    ('https://midwinter.com/lurk/lurker.html', does_not_raise()),
+    ('//servername/share', pytest.raises(InvalidObjectError))
+])
+def test_report_link_validation(cb, linkvalue, expectation):
+    """Tests validation of the link field in reports."""
+    builder = Report.create(cb, "NotReal", "Not real description", 2)
+    builder.set_title("ReportTitle").set_description("The report description").set_timestamp(1234567890)
+    builder.set_severity(5).set_link(linkvalue).add_tag("Alpha").add_tag("Bravo")
+    report = builder.build()
+    with expectation:
+        report.validate()
 
 
 @pytest.mark.parametrize("init_data, feed, watchlist, do_request, url_id, expectation, result", [

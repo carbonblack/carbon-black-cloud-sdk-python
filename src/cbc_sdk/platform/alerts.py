@@ -1000,7 +1000,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         Returns:
             AlertSearchQuery: This instance.
         """
-        if direction not in DeviceSearchQuery.VALID_DIRECTIONS:
+        if direction not in CriteriaBuilderSupportMixin.VALID_DIRECTIONS:
             raise ApiError("invalid sort direction specified")
         self._sortcriteria = {"field": key, "order": direction}
         return self

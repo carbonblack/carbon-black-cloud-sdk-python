@@ -473,7 +473,6 @@ class ComputeResourceFacet(UnrefreshableModel):
 class BaseComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
                                IterableQueryMixin, AsyncQueryMixin):
     """Base class for compute resource queries, not intended for direct use."""
-    VALID_DIRECTIONS = ("ASC", "DESC")
     VALID_DEPLOYMENT_TYPE = ("WORKLOAD", "AWS")
     VALID_DOWNLOAD_FORMATS = ("JSON", "CSV")
     DEFAULT_FACET_ROWS = 20
@@ -523,7 +522,7 @@ class BaseComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuil
         Returns:
             BaseComputeResourceQuery: This instance.
         """
-        if direction not in BaseComputeResourceQuery.VALID_DIRECTIONS:
+        if direction not in CriteriaBuilderSupportMixin.VALID_DIRECTIONS:
             raise ApiError("invalid sort direction specified")
         self._sortcriteria = {"field": key, "order": direction}
         return self

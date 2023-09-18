@@ -31,4 +31,4 @@
     command: pytest
   - name: testing suse
     service: testingsuse
-    command: pytest
+    command: env/bin/python3 -m pytest
