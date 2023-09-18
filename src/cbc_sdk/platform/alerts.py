@@ -23,7 +23,6 @@ from cbc_sdk.base import (BaseQuery,
                           IterableQueryMixin,
                           CriteriaBuilderSupportMixin)
 from cbc_sdk.endpoint_standard.base import EnrichedEvent
-from cbc_sdk.platform.devices import DeviceSearchQuery
 from cbc_sdk.platform.processes import AsyncProcessQuery, Process
 from cbc_sdk.platform.legacy_alerts import LegacyAlertSearchQueryCriterionMixin
 
@@ -482,8 +481,6 @@ class Alert(PlatformModel):
                     "Alerts v7. In SDK 1.5.0 the".format(item, self.__class__.__name__))
             item = Alert.REMAPPED_ALERTS_V6_TO_V7.get(item, item)
             return super(Alert, self).__getattr__(item)
-        except FunctionalityDecommissioned as fd:
-            raise FunctionalityDecommissioned(fd)
         except AttributeError:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
                                                                               item))
