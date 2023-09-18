@@ -1,37 +1,26 @@
 Enterprise EDR Package
-================================
+**********************
 
-Submodules
-----------
-
-cbc\_sdk.enterprise\_edr.auth\_events module
+Auth Events Module
 --------------------------------------------
 
 .. automodule:: cbc_sdk.enterprise_edr.auth_events
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
-cbc\_sdk.enterprise\_edr.threat\_intelligence module
+Threat Intelligence Module
 ----------------------------------------------------
 
 .. automodule:: cbc_sdk.enterprise_edr.threat_intelligence
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
-cbc\_sdk.enterprise\_edr.ubs module
+UBS Module
 -----------------------------------
 
 .. automodule:: cbc_sdk.enterprise_edr.ubs
    :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: cbc_sdk.enterprise_edr
-   :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:

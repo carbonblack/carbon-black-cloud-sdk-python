@@ -437,7 +437,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         return self._info.get(self.primary_key, None)
 
     @classmethod
-    def new_object(cls, cb, item, **kwargs):
+    def _new_object(cls, cb, item, **kwargs):
         """
         Create a new object of a model class.
 
@@ -559,19 +559,6 @@ class NewBaseModel(object, metaclass=CbMetaModel):
 
     def _parse(self, obj):
         return obj
-
-    @property
-    def original_document(self):
-        """
-        Returns the original meta-information about the object.
-
-        Returns:
-            object: The original meta-information about the object.
-        """
-        if not self._full_init:
-            self.refresh()
-
-        return self._info
 
     def __repr__(self):
         """
@@ -802,7 +789,7 @@ class MutableBaseModel(NewBaseModel):
         if isinstance(propobj, property) and propobj.fset:
             return propobj.fset(self, val)
 
-        if attrname.startswith("_") or attrname in self.__class__._valid_fields:
+        if attrname.startswith("_") or attrname in self._valid_fields:
             object.__setattr__(self, attrname, val)
         else:
             log.warning("Changing field not included in Swagger definition: {0:s}".format(attrname))
@@ -1192,7 +1179,7 @@ class SimpleQuery(BaseQuery, IterableQueryMixin):
         if not self._full_init:
             self._results = []
             for item in self._get_object_results():
-                t = self._doc_class.new_object(self._cb, item, full_doc=self._returns_full_doc)
+                t = self._doc_class._new_object(self._cb, item, full_doc=self._returns_full_doc)
                 if self._match_query(t):
                     self._results.append(t)
             self._results = self._sort(self._results)
@@ -1372,7 +1359,7 @@ class PaginatedQuery(BaseQuery, IterableQueryMixin):
 
     def _perform_query(self, start=0, numrows=0):
         for item in self._search(start=start, rows=numrows):
-            yield self._doc_class.new_object(self._cb, item)
+            yield self._doc_class._new_object(self._cb, item)
 
     def batch_size(self, new_batch_size):
         """
@@ -1646,7 +1633,8 @@ class QueryBuilderSupportMixin:
 
 
 class CriteriaBuilderSupportMixin:
-    """A mixin that supplies wrapper methods to access the _crtieria."""
+    """A mixin that supplies wrapper methods to access the criteria."""
+    VALID_DIRECTIONS = ("ASC", "DESC")
 
     def add_criteria(self, key, newlist):
         """Add to the criteria on this query with a custom criteria key.

@@ -4,13 +4,16 @@ Device Control
 Using the Carbon Black Cloud SDK, you can retrieve information about USB devices used in your organization, and manage
 the blocking of such devices from access by your endpoints.
 
+.. note::
+
+    ``USBDevice`` is distinct from either the Platform API ``Device`` or the Endpoint Standard ``Device``. Access
+    to USB devices is through the Endpoint Standard package ``from cbc_sdk.endpoint_standard import USBDevice``.
+
 Retrieving the List of Known USB Devices
 ----------------------------------------
 
 Using a query of the ``USBDevice`` object, you can see which USB devices have been used on any endpoint in your
-organization.
-
-::
+organization::
 
     >>> from cbc_sdk import CBCloudAPI
     >>> api = CBCloudAPI(profile='sample')
@@ -27,13 +30,21 @@ organization.
 Note that individual USB devices may be ``APPROVED`` or ``UNAPPROVED``. USB devices which are ``UNAPPROVED`` cannot
 be read on any endpoint with a policy that blocks unknown USB devices.
 
+A USB device query can also be exported to either CSV or JSON format, for use by other software systems::
+
+    >>> from cbc_sdk import CBCloudAPI
+    >>> api = CBCloudAPI(profile='sample')
+    >>> from cbc_sdk.endpoint_standard import USBDevice
+    >>> query = api.select(USBDevice).where('1')
+    >>> job = query.export('CSV')
+    >>> csv_report = job.get_output_as_string()
+    >>> # can also get the output as a file or as enumerated lines of text
+
 Approving A Specific Device
 ---------------------------
 
 We can create an approval for a USB device by using the device's ``approve()`` method.  First, we'll get a list of all
-unapproved USB devices.
-
-::
+unapproved USB devices::
 
     >>> from cbc_sdk import CBCloudAPI
     >>> api = CBCloudAPI(profile='sample')
@@ -47,9 +58,7 @@ unapproved USB devices.
     SanDisk Cruzer Dial 4C530000110722114075
     PNY USB 2.0 FD 07189613DD84E242
 
-Now we'll select one of these devices and approve it.
-
-::
+Now we'll select one of these devices and approve it::
 
     >>> usb = usb_list[1]
     >>> print(usb.status)
@@ -72,7 +81,7 @@ also reloads the ``USBDevice`` so its ``status`` reflects the fact that it's bee
 Removing A Device's Approval
 ----------------------------
 
-Device approvals may be removed via the API as well. Starting from the end of the previous example:
+Device approvals may be removed via the API as well. Starting from the end of the previous example::
 
     >>> approval.delete()
     >>> usb.refresh()
@@ -82,6 +91,29 @@ Device approvals may be removed via the API as well. Starting from the end of th
 
 The ``delete()`` method is what causes the approval to be removed.  We then use ``refresh()`` on the actual
 ``USBDevice`` object to allow its ``status`` to be updated.
+
+Retrieving the List of Approvals
+--------------------------------
+
+USB device approvals can also be enumerated directly::
+
+    >>> from cbc_sdk import CBCloudAPI
+    >>> api = CBCloudAPI(profile='sample')
+    >>> from cbc_sdk.endpoint_standard import USBDeviceApproval
+    >>> query = api.select(USBDeviceApproval)
+    >>> for approval in query:
+    ...     print(f"{approval.id} {approval.approval_name} {approval.serial_number}")
+    ...
+
+They can also be exported in a similar manner to USB devices::
+
+    >>> from cbc_sdk import CBCloudAPI
+    >>> api = CBCloudAPI(profile='sample')
+    >>> from cbc_sdk.endpoint_standard import USBDeviceApproval
+    >>> query = api.select(USBDeviceApproval)
+    >>> job = query.export('CSV')
+    >>> csv_report = job.get_output_as_string()
+    >>> # can also get the output as a file or as enumerated lines of text
 
 Device Control Alerts
 ---------------------
