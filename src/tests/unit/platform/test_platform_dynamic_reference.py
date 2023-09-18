@@ -58,18 +58,18 @@ def test_raise_ModelNotFound(cbcsdk_mock):
 class TestReferenceAlerts:
     """Testing all types of `Alerts`"""
 
-    def test_BaseAlert_select(self, monkeypatch, cbcsdk_mock):
-        """Test the dynamic reference for the `BaseAlert` class."""
+    def test_Alert_select(self, monkeypatch, cbcsdk_mock):
+        """Test the dynamic reference for the `Alert` class."""
         stub = StubResponse({"num_found": 1, "results": [{"id": "1"}]})
         patch_cbc_sdk_api(
             monkeypatch, cbcsdk_mock.api, POST=lambda *args, **kwargs: stub
         )
-        query = cbcsdk_mock.api.select("BaseAlert").one()
-        assert type(query).__qualname__ == "BaseAlert"
+        query = cbcsdk_mock.api.select("Alert").one()
+        assert type(query).__qualname__ == "Alert"
 
     def test_CBAnalyticsAlert_select(self, monkeypatch, cbcsdk_mock):
         """Test the dynamic reference for the `CBAnalyticsAlert` class."""
-        stub = StubResponse({"num_found": 1, "results": [{"id": "1"}]})
+        stub = StubResponse({"num_found": 1, "results": [{"id": "1", "type": "CBAnalyticsAlert"}]})
         patch_cbc_sdk_api(
             monkeypatch, cbcsdk_mock.api, POST=lambda *args, **kwargs: stub
         )
@@ -77,9 +77,19 @@ class TestReferenceAlerts:
         a = query.one()
         assert type(a).__qualname__ == "CBAnalyticsAlert"
 
+    def test_ContainerRuntimeAlert_select(self, monkeypatch, cbcsdk_mock):
+        """Test the dynamic reference for the `ContainerRuntimeAlert` class."""
+        stub = StubResponse({"num_found": 1, "results": [{"id": "1", "type": "ContainerRuntimeAlert"}]})
+        patch_cbc_sdk_api(
+            monkeypatch, cbcsdk_mock.api, POST=lambda *args, **kwargs: stub
+        )
+        query = cbcsdk_mock.api.select("ContainerRuntimeAlert").where("Blort")
+        a = query.one()
+        assert type(a).__qualname__ == "ContainerRuntimeAlert"
+
     def test_DeviceControlAlert_select(self, monkeypatch, cbcsdk_mock):
         """Test the dynamic reference for the `DeviceControlAlert` class."""
-        stub = StubResponse({"num_found": 1, "results": [{"id": "1"}]})
+        stub = StubResponse({"num_found": 1, "results": [{"id": "1", "type": "DeviceControlAlert"}]})
         patch_cbc_sdk_api(
             monkeypatch, cbcsdk_mock.api, POST=lambda *args, **kwargs: stub
         )
@@ -88,7 +98,7 @@ class TestReferenceAlerts:
 
     def test_WatchlistAlert_select(self, monkeypatch, cbcsdk_mock):
         """Test the dynamic reference for the `WatchlistAlert` class."""
-        stub = StubResponse({"num_found": 1, "results": [{"id": "1"}]})
+        stub = StubResponse({"num_found": 1, "results": [{"id": "1", "type": "WatchlistAlert"}]})
         patch_cbc_sdk_api(
             monkeypatch, cbcsdk_mock.api, POST=lambda *args, **kwargs: stub
         )

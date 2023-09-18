@@ -255,8 +255,8 @@ class Alert(PlatformModel):
                 AttributeError: If the object has no such attribute.
             """
             try:
-                item = Alert.REMAPPED_NOTES_V6_TO_V7.get(item, item)
-                return super(Alert.Note, self).__getattr__(item)
+                item = Alert.Note.REMAPPED_NOTES_V6_TO_V7.get(item, item)
+                return super(Alert.Note, self).__getattr__(Alert.Note.REMAPPED_NOTES_V6_TO_V7.get(item, item))
             except AttributeError:
                 raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
                                                                                   item))

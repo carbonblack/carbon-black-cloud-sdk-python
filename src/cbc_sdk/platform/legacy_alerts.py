@@ -40,6 +40,7 @@ CB_ANALYTICS_VALID_THREAT_CAUSE_VECTORS = ["EMAIL", "WEB", "GENERIC_SERVER", "GE
 
 class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     """Legacy setter methods for v6 alert search criteria. To be deprecated in the future."""
+
     def set_categories(self, categories):
         """
         Restricts the alerts that this query is performed on to the specified categories.
@@ -358,8 +359,8 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         if key not in ["create_time", "first_event_time", "last_event_time", "last_update_time", "backend_timestamp",
                        "backend_update_timestamp"]:
-            raise ApiError("key must be one of create_time, first_event_time, last_event_time, backend_timestamp, \
-            backend_update_timestamp, or last_update_time")
+            raise ApiError("key must be one of create_time, first_event_time, last_event_time, backend_timestamp,"
+                           " backend_update_timestamp, or last_update_time")
         if kwargs.get("start", None) and kwargs.get("end", None):
             if kwargs.get("range", None):
                 raise ApiError("cannot specify range= in addition to start= and end=")
