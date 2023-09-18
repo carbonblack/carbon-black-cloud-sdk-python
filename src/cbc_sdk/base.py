@@ -489,9 +489,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
             value = self._info[item]
         # or load the object, if we haven't done so already.
         else:
-            if not self._full_init:
-                self._refresh()
-            value = self._info[item]
+            value = self.original_document[item]
 
         # presume change for mutable object value
         if item not in self._dirty_attributes and hasattr(value, "copy"):
@@ -561,6 +559,19 @@ class NewBaseModel(object, metaclass=CbMetaModel):
 
     def _parse(self, obj):
         return obj
+
+    @property
+    def original_document(self):
+        """
+        Returns the original meta-information about the object.
+
+        Returns:
+            object: The original meta-information about the object.
+        """
+        if not self._full_init:
+            self.refresh()
+
+        return self._info
 
     def __repr__(self):
         """
