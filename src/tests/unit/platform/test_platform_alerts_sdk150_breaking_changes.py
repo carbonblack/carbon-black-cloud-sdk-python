@@ -120,7 +120,7 @@ def test_set_group_results(cb):
 
     for a_type in ALERT_TYPES:
         with pytest.raises(FunctionalityDecommissioned):
-            cb.select(BaseAlert).set_group_results(False)
+            cb.select(a_type).set_group_results(False)
 
 
 def test_set_kill_chain_statuses(cb):
@@ -131,6 +131,15 @@ def test_set_kill_chain_statuses(cb):
     for a_type in ALERT_TYPES:
         with pytest.raises(FunctionalityDecommissioned):
             cb.select(a_type).set_kill_chain_statuses(["WEAPONIZE"])
+
+
+def test_set_blocked_threat_categories(cb):
+    """Test the set_kill_chain_statuses method on base and CBAnalytics legacy alert class."""
+    with pytest.raises(FunctionalityDecommissioned):
+        cb.select(BaseAlert).set_blocked_threat_categories(["UNKNOWN"])
+
+    with pytest.raises(FunctionalityDecommissioned):
+        cb.select(CBAnalyticsAlert).set_blocked_threat_categories(["UNKNOWN"])
 
 
 def test_set_not_blocked_threat_categories(cb):
