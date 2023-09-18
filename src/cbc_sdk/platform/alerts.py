@@ -23,7 +23,6 @@ from cbc_sdk.base import (BaseQuery,
                           IterableQueryMixin,
                           CriteriaBuilderSupportMixin)
 from cbc_sdk.endpoint_standard.base import EnrichedEvent
-from cbc_sdk.platform.devices import DeviceSearchQuery
 from cbc_sdk.platform.processes import AsyncProcessQuery, Process
 from cbc_sdk.platform.legacy_alerts import LegacyAlertSearchQueryCriterionMixin
 
