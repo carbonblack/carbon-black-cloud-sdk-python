@@ -487,9 +487,11 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         # try looking up via self._info, if we already have it
         if item in self._info:
             value = self._info[item]
-        # or load the object if we haven't done so already.
+        # or load the object, if we haven't done so already.
         else:
-            value = self.original_document[item]
+            if not self._full_init:
+                self._refresh()
+            value = self._info[item]
 
         # presume change for mutable object value
         if item not in self._dirty_attributes and hasattr(value, "copy"):
