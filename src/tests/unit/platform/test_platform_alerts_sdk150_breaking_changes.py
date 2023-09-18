@@ -14,6 +14,7 @@ import pytest
 
 from cbc_sdk.errors import FunctionalityDecommissioned
 from cbc_sdk.platform import (
+    Alert,
     BaseAlert,
     CBAnalyticsAlert,
     WatchlistAlert,
@@ -49,13 +50,13 @@ DEPRECATED_FIELDS_CB_ANALYTICS = [
     "threat_activity_dlp",
     "threat_activity_phish",
     "threat_cause_vector",
-    # "category", TO DO - open question on category because it's handled differently in the SDK
+    "category",
     "group_details",
     "threat_cause_threat_category"
 ]
 
 DEPRECATED_FIELDS_WATCHLISTS = [
-    # "category", TO DO - open question on category because it's handled differently in the SDK
+    "category",
     "group_details",
     "threat_cause_threat_category",
     "threat_cause_vector",
@@ -65,7 +66,7 @@ DEPRECATED_FIELDS_WATCHLISTS = [
 ]
 
 DEPRECATED_FIELDS_DEVICE_CONTROL = [
-    # "category", TO DO - open question on category because it's handled differently in the SDK
+    "category",
     "group_details",
     "threat_cause_threat_category",
     "threat_cause_vector"
@@ -73,14 +74,14 @@ DEPRECATED_FIELDS_DEVICE_CONTROL = [
 
 DEPRECATED_FIELDS_CONTAINER_RUNTIME = [
     "target_value",
-    # "category", TO DO - open question on category because it's handled differently in the SDK
+    "category",
     "group_details",
     "workload_id",
     "threat_cause_threat_category"
 ]
 
 DEPRECATED_FIELDS_HBFW = [
-    # "category", TO DO - open question on category because it's handled differently in the SDK
+    "category",
     "group_details",
     "threat_cause_threat_category"
 ]
@@ -175,7 +176,6 @@ def test_get_attr_cb_analytics_alert(cbcsdk_mock):
 
     for f in DEPRECATED_FIELDS_CB_ANALYTICS:
         with (pytest.raises(FunctionalityDecommissioned)):
-            # TO DO - why does this sometimes go to base.py - get(), and other times goes to alerts.__getatt__()
             alert.get(f)
 
     # test again with CBAnalyticsAlert class
@@ -184,6 +184,39 @@ def test_get_attr_cb_analytics_alert(cbcsdk_mock):
     for f in DEPRECATED_FIELDS_CB_ANALYTICS:
         with (pytest.raises(FunctionalityDecommissioned)):
             alert.get(f)
+
+
+def test_get_on_basealert_class(cbcsdk_mock):
+    """Test the get() method for one valid v7 attribute for the BaseAlert.get() method that overrides base.py."""
+    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+    cb = cbcsdk_mock.api
+    alert = cb.select(BaseAlert, GET_ALERT_v7_CB_ANALYTICS_RESPONSE.get("id"))
+
+    val = alert.get("reason_code")
+    assert "T_REP_VIRUS" == val
+
+
+def test_get_on_alert_class(cbcsdk_mock):
+    """Test the get() method for one valid v7 attribute for the new Alert.get() method that overrides base.py."""
+    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+    cb = cbcsdk_mock.api
+    alert = cb.select(Alert, GET_ALERT_v7_CB_ANALYTICS_RESPONSE.get("id"))
+
+    val = alert.get("reason_code")
+    assert "T_REP_VIRUS" == val
+
+
+def test_get_on_cbanalytics_alert_class(cbcsdk_mock):
+    """Test the get() method for one valid v7 attribute for the CBAnalyticsAlert.get() method that overrides base.py."""
+    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+    cb = cbcsdk_mock.api
+    alert = cb.select(CBAnalyticsAlert, GET_ALERT_v7_CB_ANALYTICS_RESPONSE.get("id"))
+
+    val = alert.get("reason_code")
+    assert "T_REP_VIRUS" == val
 
 
 def test_get_attr_container_runtime_alert(cbcsdk_mock):

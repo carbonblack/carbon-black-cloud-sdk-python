@@ -469,6 +469,7 @@ class Alert(PlatformModel):
 
         Raises:
             AttributeError: If the object has no such attribute.
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
         try:
             if item in Alert.DEPRECATED_FIELDS_NOT_IN_V7:
@@ -518,6 +519,26 @@ class Alert(PlatformModel):
             return modified_json
         else:
             return self._info
+
+    def get(self, item, default_val=None):
+        """
+        Return an attribute of this object.
+
+        Args:
+            item (str): Name of the attribute to be returned.
+            default_val (Any): Default value to be used if the attribute is not set.
+
+        Raises:
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
+
+        Returns:
+            Any: The returned attribute value, which may be defaulted.
+        """
+        if item in Alert.DEPRECATED_FIELDS_NOT_IN_V7:
+            raise FunctionalityDecommissioned(
+                "Attribute '{0}' does not exist in object '{1}' because it was deprecated in "
+                "Alerts v7. In SDK 1.5.0 the".format(item, self.__class__.__name__))
+        return super(Alert, self).get(item, default_val)
 
 
 class WatchlistAlert(Alert):
