@@ -16,6 +16,9 @@ In general, and unless otherwise indicated, these guides are directed at those t
 Certain guides may be more geared towards audiences with more experience with the Carbon Black Cloud, such as
 administrators.
 
+Information about updating to new versions of the SDK to take advantage of new features in Carbon Black Cloud are
+in `Migration Guides`_.
+
 Feature Guides
 --------------
 .. toctree::
