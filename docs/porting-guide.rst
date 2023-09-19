@@ -67,8 +67,7 @@ For a complete list of APIs that are deprecated and the associated migration inf
 Developer Network.  This is important if you have integrations with Carbon Black Cloud that do not use the
 Carbon Black Cloud Python SDK (this).
 
-.. list-table:: Title
-   :widths: 20 20 50
+.. list-table:: Deprecated Modules and their replacements
    :header-rows: 1
    :class: longtable
 
