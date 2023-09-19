@@ -3,6 +3,10 @@ Porting Applications from CBAPI to Carbon Black Cloud SDK
 
 This guide will help you migrate from CBAPI to the Carbon Black Cloud Python SDK.
 
+This is necessary to take advantage of new functionality in Carbon Black Cloud and also to ensure
+that functionality is not lost from your integrations when APIs are deactivated in July 2024.  Read more
+about the new features in the `Developer Network Blogs <https://developer.carbonblack.com/blog/>`_.
+
 .. note::
 
     CBAPI applications using Carbon Black EDR (Response) or Carbon Black App Control (Protection) cannot be ported,
@@ -48,17 +52,46 @@ Carbon Black Cloud product names have been updated in the SDK.
 | ``cbapi.psc``              | ``cbc_sdk.platform``          |
 +----------------------------+-------------------------------+
 
+Features for new products such as Container Security and Workload Security have also been added in the appropriate
+namespace.
+
+APIs have been deprecated or deactivated
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Some modules made use of APIs that have been deactivated and are either no longer included in the Carbon Black Cloud,
+or are planned for deprecation in the second half of 2024.  The following table shows
+the original module, the replacement module, and where to find more information.
+
++-------------------------------+-------------------------------+----------------------------------------------+
+|  Deprecated or Deactivated    |           Replacement         |              More Information                |
+|        CBAPI module           |         CBC SDK Module        |                                              |
++===============================+===============================+==============================================+
+| ``cbapi.psc.defense Event``   |            N/A                | This was deactivated in January 2021         |
++-------------------------------+----------------------------------+-------------------------------------------+
+| ``cbapi.psc.defense Policy``  |  ``cbc_sdk.platform Policy``  | `IntegrationServices Policy v3 API Migration <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/policy-migration/>`_ |
++-------------------------------+-------------------------------+----------------------------------------------+
+| ``cbc_sdk.endpoint_standard`` |      ``cbc_sdk.platform``     | `Enriched Events API Migration <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/observations-migration/>`_ |
+|       ``EnrichedEvent``       |        ``Observations``       |                                              |
++-------------------------------+----------------------------------+-------------------------------------------+
+
+
+
+Modules that have been moved and need new import statements
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Import statements will need to change::
 
     # Endpoint Standard (Defense)
 
     # CBAPI
-    from cbapi.psc.defense import Device, Event, Policy
+    from cbapi.psc.defense import Device
 
     # CBC SDK
     from cbc_sdk.platform import Device, Policy
-    # note that the original "Event" has been decommissioned
+    # note that Enriched Events have been deprecated and will be deactivated on July 31st, 2024
+    # This import statement will work:
     from cbc_sdk.endpoint_standard import EnrichedEvent
+    # However before July 31st, 2024, you will need to update to Observations
     # also, consider using Observations instead of EnrichedEvents
     # from cbc_sdk.platform import Observation
 
