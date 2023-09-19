@@ -116,9 +116,15 @@ pip install sphinxcontrib-apidoc sphinx_rtd_theme sphinx-copybutton
 Then, build the docs locally with the following commands:
 
 ```
-sphinx-apidoc -f -o docs src/cbc_sdk
 cd docs
 make html
+```
+
+Note that the module rst files such as ```docs/cbc_sdk.platform.rst ``` are handcrafted to control layout.
+* This command will generate new version, but it is not necessary and changes should not be added to the repository.
+* All pull requests will trigger a build of the documentation which can be viewed from Read The Docs --> Builds.
+```
+sphinx-apidoc -f -o docs src/cbc_sdk
 ```
 
 The documentation is built in `docs/_build/html`.

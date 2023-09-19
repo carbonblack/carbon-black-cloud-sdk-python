@@ -55,16 +55,20 @@ Carbon Black Cloud product names have been updated in the SDK.
 Features for new products such as Container Security and Workload Security have also been added in the appropriate
 namespace.
 
-APIs have been deprecated or deactivated
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+APIs that have been deprecated or deactivated
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Some modules made use of APIs that have been deactivated and are either no longer included in the Carbon Black Cloud,
 or are planned for deprecation in the second half of 2024.  The following table shows
 the original module, the replacement module, and where to find more information.
 
+For a complete list of APIs that are deprecated and the associated migration information, see the
+`Migration Guide <https://developer.carbonblack.com/reference/carbon-black-cloud/api-migration/>`_ on the
+Developer Network.  This is important if you have integrations with Carbon Black Cloud that do not use the
+Carbon Black Cloud Python SDK (this).
 
 .. list-table:: Title
-   :widths: 25 25 50
+   :widths: 20 20 50
    :header-rows: 1
    :class: longtable
 
@@ -73,7 +77,7 @@ the original module, the replacement module, and where to find more information.
      - More Information
    * - cbapi.psc.defense Event
      - cbc_sdk.platform Observation
-     - This was deactivated in January 2021. Review the Carbon Black Cloud User Guide to learn more about `<Observations https://docs.vmware.com/en/VMware-Carbon-Black-Cloud/services/carbon-black-cloud-user-guide/GUID-5EAF4BA6-601C-46AD-BA8E-D0BD05681ADF.html/>`_
+     - This was deactivated in January 2021. Review the Carbon Black Cloud User Guide to learn more about `Observations <https://docs.vmware.com/en/VMware-Carbon-Black-Cloud/services/carbon-black-cloud-user-guide/GUID-5EAF4BA6-601C-46AD-BA8E-D0BD05681ADF.html/>`_
    * - cbapi.psc.defense Policy
      - cbc_sdk.platform Policy
      - `IntegrationServices Policy v3 API Migration <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/policy-migration/>`_
@@ -82,9 +86,10 @@ the original module, the replacement module, and where to find more information.
      - Enriched Events will remain available until July 2024. `Enriched Events API Migration <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/observations-migration/>`_
    * - cbc_sdk.platform Alert
      - Module path is unchanged. Attributes and methods will change
-     - In SDK 1.5.0 the Alert module will be updated to use the new Alert v7 API.  With that release a migration guide will be released. Planned for October 2023.
-
-
+     - In SDK 1.5.0 the Alert module will be updated to use the new Alert v7 API.  A migration guide will be included with that release. Planned for October 2023.
+   * - SIEM Notifications - cbc_sdk.rest_api CBCloudAPI get_notifications()
+     - cbc_sdk.platform Alert or Alert Data Forwarder
+     - `Notification Migration <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/notification-migration/>`_
 
 Modules that have been moved and need new import statements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
