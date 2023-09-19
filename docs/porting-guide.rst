@@ -66,43 +66,23 @@ the original module, the replacement module, and where to find more information.
 .. list-table:: Title
    :widths: 25 25 50
    :header-rows: 1
+   :class: longtable
 
    * - Deprecated or Deactivated CBAPI module
      - Replacement CBC SDK Module
      - More Information
-   * -  ``cbapi.psc.defense Event``
-     -  N/A
-     -  This was deactivated in January 2021
-   * -  ``cbapi.psc.defense Policy``
-     -  ``cbc_sdk.platform Policy``
-     -  `IntegrationServices Policy v3 API Migration <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/policy-migration/>`_
-   * -  ``cbc_sdk.endpoint_standard EnrichedEvent``
-     -  ``cbc_sdk.platform Observations``
-     -  Enriched Events will remain available until July 2024. `Enriched Events API Migration <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/observations-migration/>`_
-   * -  ``cbc_sdk.platform Alert``
-     -  Module path is unchanged. Attributes and methods will change
+   * - cbapi.psc.defense Event
+     - cbc_sdk.platform Observation
+     - This was deactivated in January 2021. Review the Carbon Black Cloud User Guide to learn more about `<Observations https://docs.vmware.com/en/VMware-Carbon-Black-Cloud/services/carbon-black-cloud-user-guide/GUID-5EAF4BA6-601C-46AD-BA8E-D0BD05681ADF.html/>`_
+   * - cbapi.psc.defense Policy
+     - cbc_sdk.platform Policy
+     - `IntegrationServices Policy v3 API Migration <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/policy-migration/>`_
+   * - cbc_sdk.endpoint_standard EnrichedEvent
+     - cbc_sdk.platform Observation
+     - Enriched Events will remain available until July 2024. `Enriched Events API Migration <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/observations-migration/>`_
+   * - cbc_sdk.platform Alert
+     - Module path is unchanged. Attributes and methods will change
      - In SDK 1.5.0 the Alert module will be updated to use the new Alert v7 API.  With that release a migration guide will be released. Planned for October 2023.
-
-
-
-
-+-------------------------------+-------------------------------+----------------------------------------------+
-|  Deprecated or Deactivated    |           Replacement         |              More Information                |
-|        CBAPI module           |         CBC SDK Module        |                                              |
-+===============================+===============================+==============================================+
-| ``cbapi.psc.defense Event``   |            N/A                | This was deactivated in January 2021         |
-+-------------------------------+----------------------------------+-------------------------------------------+
-| ``cbapi.psc.defense Policy``  |  ``cbc_sdk.platform Policy``  | `IntegrationServices Policy v3 API Migration <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/policy-migration/>`_ |
-+-------------------------------+-------------------------------+----------------------------------------------+
-| ``cbc_sdk.endpoint_standard`` |      ``cbc_sdk.platform``     | Enriched Events will remain available until July 2024 |
-|       ``EnrichedEvent``       |        ``Observations``       | `Enriched Events API Migration <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/observations-migration/>`_ |
-+-------------------------------+----------------------------------+---------------------------------------------+
-|     ``cbc_sdk.platform``      | * Module is unchanged        | In SDK 1.5.0 the Alert module will be updated   |
-|           ``Alert``           | * Attributes and Methods     | to use the new Alert v7 API.  With that release |
-|                               |     will change              | a migration guide will be released. Planned for |
-|                               |                              | October 2023                                    |
-+-------------------------------+----------------------------------+-------------------------------------------+
-
 
 
 
@@ -136,13 +116,6 @@ Import statements will need to change::
 
     # CBC SDK
     from cbc_sdk.enterprise_edr import Feed, Report, Watchlist
-
-.. note::
-
-    If you are presently using ``Event`` or ``EnrichedEvent`` as detailed above, ``Observation`` may offer some benefit
-    over either of those.  See
-    `this blog post <https://developer.carbonblack.com/2023/07/how-to-take-advantage-of-the-new-observations-api/>`_
-    for details.
 
 Moved Packages and Models
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -188,8 +161,8 @@ Import statements will need to change::
 Replaced Modules
 ^^^^^^^^^^^^^^^^
 
-With the new Unified Platform Experience, Carbon Black Cloud APIs have been updated to provide a more consistent search
-experience.  Platform search is replacing Endpoint Standard Event searching, and Enterprise EDR Process and Event
+In 2020, Carbon Black Cloud APIs were updated to provide a more consistent search
+experience.  Platform search replaced Endpoint Standard Event searching, and Enterprise EDR Process and Event
 searching.
 
 For help beyond import statement changes, check out these resources:
@@ -205,7 +178,7 @@ For help beyond import statement changes, check out these resources:
 Endpoint Standard
 """""""""""""""""
 
-Endpoint Standard Events have been replaced with Enriched Events and the old event functionality has been
+Endpoint Standard Events have been replaced with Platform Observations and the old event functionality has been
 decommissioned::
 
     # Endpoint Standard Enriched Events
@@ -213,11 +186,14 @@ decommissioned::
     # CBAPI
     from cbapi.psc.defense import Event
 
-    # CBC SDK (decommissioned--do not use)
+    # CBC SDK - decommissioned--do not use
     from cbc_sdk.endpoint_standard import Event
 
-    # CBC SDK
+    # CBC SDK - deprecated--stop using before July 31st 2024
     from cbc_sdk.endpoint_standard import EnrichedEvent
+
+    # CBC SDK - Observations.  Use this!
+    from cbc_sdk.platform import Observation
 
 Enterprise EDR
 """"""""""""""
