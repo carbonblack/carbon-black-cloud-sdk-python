@@ -68,10 +68,11 @@ Developer Network.  This is important if you have integrations with Carbon Black
 Carbon Black Cloud Python SDK (this).
 
 .. list-table:: Deprecated Modules and their replacements
+   :widths: 25, 25, 50
    :header-rows: 1
    :class: longtable
 
-   * - Deprecated or Deactivated CBAPI module
+   * - CBAPI module
      - Replacement CBC SDK Module
      - More Information
    * - cbapi.psc.defense Event
