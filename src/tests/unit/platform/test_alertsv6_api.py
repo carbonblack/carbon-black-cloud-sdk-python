@@ -76,9 +76,9 @@ def test_query_basealert_with_all_bells_and_whistles(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
                         "rows": 2,
-                        "criteria": {"category": ["MONITORED", "THREAT"], "device_id": [6023], "device_name": ["HAL"],
+                        "criteria": {"device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
-                                     "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
+                                     "device_username": ["JRN"], "id": ["S0L0"],
                                      "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
                                      "policy_name": ["Strict"], "process_name": ["IEXPLORE.EXE"],
                                      "process_sha256": ["0123456789ABCDEF0123456789ABCDEF"],
@@ -91,9 +91,9 @@ def test_query_basealert_with_all_bells_and_whistles(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(BaseAlert).where("Blort").set_categories(["MONITORED", "THREAT"]).set_device_ids([6023]) \
+    query = api.select(BaseAlert).where("Blort").set_device_ids([6023]) \
         .set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
-        .set_device_username(["JRN"]).set_group_results(True).set_alert_ids(["S0L0"]) \
+        .set_device_username(["JRN"]).set_alert_ids(["S0L0"]) \
         .set_legacy_alert_ids(["S0L0_1"]).set_minimum_severity(6).set_policy_ids([8675309]) \
         .set_policy_names(["Strict"]).set_process_names(["IEXPLORE.EXE"]) \
         .set_process_sha256(["0123456789ABCDEF0123456789ABCDEF"]).set_reputations(["SUSPECT_MALWARE"]) \
@@ -252,7 +252,6 @@ def test_query_basealert_invalid_create_time_combinations(cb):
 
 
 @pytest.mark.parametrize("method, arg", [
-    ("set_categories", ["SERIOUS", "CRITICAL"]),
     ("set_device_ids", ["Bogus"]),
     ("set_device_names", [42]),
     ("set_device_os", ["TI994A"]),
@@ -285,36 +284,32 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
                         "rows": 2,
-                        "criteria": {"category": ["THREAT", "MONITORED"], "device_id": [6023], "device_name": ["HAL"],
+                        "criteria": {"device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
-                                     "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
+                                     "device_username": ["JRN"], "id": ["S0L0"],
                                      "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
                                      "policy_name": ["Strict"], "process_name": ["IEXPLORE.EXE"],
                                      "process_sha256": ["0123456789ABCDEF0123456789ABCDEF"],
                                      "reputation": ["SUSPECT_MALWARE"], "tag": ["Frood"], "target_value": ["HIGH"],
                                      "threat_id": ["B0RG"], "type": ["CB_ANALYTICS"], "workflow": ["OPEN"],
-                                     "blocked_threat_category": ["RISKY_PROGRAM"], "device_location": ["ONSITE"],
-                                     "kill_chain_status": ["EXECUTE_GOAL"],
-                                     "not_blocked_threat_category": ["NEW_MALWARE"], "policy_applied": ["APPLIED"],
-                                     "reason_code": ["ATTACK_VECTOR"], "run_state": ["RAN"], "sensor_action": ["DENY"],
-                                     "threat_cause_vector": ["WEB"]}, "sort": [{"field": "name", "order": "DESC"}]}
+                                     "device_location": ["ONSITE"], "policy_applied": ["APPLIED"],
+                                     "reason_code": ["ATTACK_VECTOR"], "run_state": ["RAN"], "sensor_action": ["DENY"]},
+                        "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"state": "OPEN"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(CBAnalyticsAlert).where("Blort").set_categories(["THREAT", "MONITORED"]) \
+    query = api.select(CBAnalyticsAlert).where("Blort") \
         .set_device_ids([6023]).set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
-        .set_device_username(["JRN"]).set_group_results(True).set_alert_ids(["S0L0"]).set_legacy_alert_ids(["S0L0_1"]) \
+        .set_device_username(["JRN"]).set_alert_ids(["S0L0"]).set_legacy_alert_ids(["S0L0_1"]) \
         .set_minimum_severity(6).set_policy_ids([8675309]).set_policy_names(["Strict"]) \
         .set_process_names(["IEXPLORE.EXE"]).set_process_sha256(["0123456789ABCDEF0123456789ABCDEF"]) \
         .set_reputations(["SUSPECT_MALWARE"]).set_tags(["Frood"]).set_target_priorities(["HIGH"]) \
-        .set_threat_ids(["B0RG"]).set_workflows(["OPEN"]) \
-        .set_blocked_threat_categories(["RISKY_PROGRAM"]).set_device_locations(["ONSITE"]) \
-        .set_kill_chain_statuses(["EXECUTE_GOAL"]).set_not_blocked_threat_categories(["NEW_MALWARE"]) \
+        .set_threat_ids(["B0RG"]).set_workflows(["OPEN"]).set_device_locations(["ONSITE"]) \
         .set_policy_applied(["APPLIED"]).set_reason_code(["ATTACK_VECTOR"]).set_run_states(["RAN"]) \
-        .set_sensor_actions(["DENY"]).set_threat_cause_vectors(["WEB"]).sort_by("name", "DESC")
+        .set_sensor_actions(["DENY"]).sort_by("name", "DESC")
     a = query.one()
     assert a.id == "S0L0"
     assert a.org_key == "test"
@@ -343,15 +338,11 @@ def test_query_cbanalyticsalert_facets(cbcsdk_mock):
 
 
 @pytest.mark.parametrize("method, arg", [
-    ("set_blocked_threat_categories", ["MINOR"]),
     ("set_device_locations", ["NARNIA"]),
-    ("set_kill_chain_statuses", ["SPAWN_COPIES"]),
-    ("set_not_blocked_threat_categories", ["MINOR"]),
     ("set_policy_applied", ["MAYBE"]),
     ("set_reason_code", [55]),
     ("set_run_states", ["MIGHT_HAVE"]),
-    ("set_sensor_actions", ["FLIP_A_COIN"]),
-    ("set_threat_cause_vectors", ["NETWORK"])
+    ("set_sensor_actions", ["FLIP_A_COIN"])
 ])
 def test_query_cbanalyticsalert_invalid_criteria_values(cb, method, arg):
     """Test invalid values being supplied to CB Analytics alert queries."""
@@ -367,9 +358,9 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
                         "rows": 2,
-                        "criteria": {"category": ["MONITORED", "THREAT"], "device_id": [6023], "device_name": ["HAL"],
+                        "criteria": {"device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
-                                     "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
+                                     "device_username": ["JRN"], "id": ["S0L0"],
                                      "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
                                      "policy_name": ["Strict"], "process_name": ["IEXPLORE.EXE"],
                                      "process_sha256": ["0123456789ABCDEF0123456789ABCDEF"],
@@ -386,9 +377,9 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(DeviceControlAlert).where("Blort").set_categories(["MONITORED", "THREAT"]) \
+    query = api.select(DeviceControlAlert).where("Blort") \
         .set_device_ids([6023]).set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
-        .set_device_username(["JRN"]).set_group_results(True).set_alert_ids(["S0L0"]) \
+        .set_device_username(["JRN"]).set_alert_ids(["S0L0"]) \
         .set_legacy_alert_ids(["S0L0_1"]).set_minimum_severity(6).set_policy_ids([8675309]) \
         .set_policy_names(["Strict"]).set_process_names(["IEXPLORE.EXE"]) \
         .set_process_sha256(["0123456789ABCDEF0123456789ABCDEF"]).set_reputations(["SUSPECT_MALWARE"]) \
@@ -446,9 +437,9 @@ def test_query_watchlistalert_with_all_bells_and_whistles(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
                         "rows": 2,
-                        "criteria": {"category": ["THREAT", "MONITORED"], "device_id": [6023], "device_name": ["HAL"],
+                        "criteria": {"device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
-                                     "device_username": ["JRN"], "group_results": True, "id": ["S0L0"],
+                                     "device_username": ["JRN"], "id": ["S0L0"],
                                      "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
                                      "policy_name": ["Strict"], "process_name": ["IEXPLORE.EXE"],
                                      "process_sha256": ["0123456789ABCDEF0123456789ABCDEF"],
@@ -462,9 +453,9 @@ def test_query_watchlistalert_with_all_bells_and_whistles(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(WatchlistAlert).where("Blort").set_categories(["THREAT", "MONITORED"]).set_device_ids([6023]) \
+    query = api.select(WatchlistAlert).where("Blort").set_device_ids([6023]) \
         .set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
-        .set_device_username(["JRN"]).set_group_results(True).set_alert_ids(["S0L0"]) \
+        .set_device_username(["JRN"]).set_alert_ids(["S0L0"]) \
         .set_legacy_alert_ids(["S0L0_1"]).set_minimum_severity(6).set_policy_ids([8675309]) \
         .set_policy_names(["Strict"]).set_process_names(["IEXPLORE.EXE"]) \
         .set_process_sha256(["0123456789ABCDEF0123456789ABCDEF"]).set_reputations(["SUSPECT_MALWARE"]) \
