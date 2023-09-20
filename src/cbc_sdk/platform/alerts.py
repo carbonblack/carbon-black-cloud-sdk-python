@@ -72,7 +72,6 @@ class Alert(PlatformModel):
         "threat_indicators": "ttps",
         "watchlists": "watchlists.id",
         "workflow.last_update_time": "workflow.change_timestamp",
-        "workflow.comment": "workflow.note",
         "workflow.state": "workflow.status",
         "workload_kind": "k8s_kind",
         "workload_name": "k8s_workload_name"
@@ -118,7 +117,6 @@ class Alert(PlatformModel):
         "ttps": "threat_indicators",
         "watchlists.id": "watchlists",
         "workflow.change_timestamp": "workflow.last_update_time",
-        "workflow.note": "workflow.comment",
         "workflow.status": "workflow.state"
     }
 
@@ -141,7 +139,8 @@ class Alert(PlatformModel):
         # Watchlists Fields
         "count",
         "document_guid",
-        "threat_indicators"
+        "threat_indicators",
+        "workflow.comment"
     ]
 
     # these fields are deprecated from container runtime but mapped to a new field for other alert types
@@ -792,11 +791,17 @@ class Workflow(UnrefreshableModel):
     REMAPPED_WORKFLOWS_V6_TO_V7 = {
         "workflow.last_update_time": "workflow.change_timestamp",
         "workflow.comment": "workflow.note",
+        # TO DO: values of state and status are different but able to be mapped.  CBAPI-4969
+        # v6 value - v7 value
+        # OPEN  -  OPEN
+        # DISMISSED - CLOSED
+        # OPEN - IN_PROGRESS --> only when mapping v7 to v6, not for v6 to v7
         "workflow.state": "workflow.status",
     }
     REMAPPED_WORKFLOWS_V7_TO_V6 = {
         "change_timestamp": "last_update_time",
         "note": "comment",
+        # TO DO: values of state and status are different but able to be mapped
         "status": "state"
     }
     swagger_meta_file = "platform/models/workflow.yaml"
