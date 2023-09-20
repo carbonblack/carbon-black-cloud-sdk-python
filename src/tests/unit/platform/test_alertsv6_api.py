@@ -119,8 +119,8 @@ def test_query_basealert_with_create_time_as_start_end(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(BaseAlert).where("Blort").set_create_time(start="2019-09-30T12:34:56",
-                                                                 end="2019-10-01T12:00:12")
+    query = api.select("BaseAlert").where("Blort").set_create_time(start="2019-09-30T12:34:56",
+                                                                   end="2019-10-01T12:00:12")
     a = query.one()
     assert a.id == "S0L0"
     assert a.org_key == "test"

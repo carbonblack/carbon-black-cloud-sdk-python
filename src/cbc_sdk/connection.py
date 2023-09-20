@@ -823,6 +823,9 @@ def select_class_instance(cls: str):
 
     # https://www.python.org/dev/peps/pep-3155/#rationale
     lookup_dict = {klass.__qualname__: klass for klass in subclasses}
+
+    lookup_dict["BaseAlert"] = cbc_sdk.platform.alerts.Alert
+
     if cls in lookup_dict.keys():
         return lookup_dict[cls]
     raise ModelNotFound()
