@@ -48,14 +48,12 @@ def cbcsdk_mock(monkeypatch, cb):
 # Fields that are not tested for mappings while bugs are fixed.
 # When all bugs are fixed, SKIP_FIELDS should be empty and all tests should pass
 SKIP_FIELDS = {
-    "comment",  # cbapi-4969, TO DO DEFECT FOR CLASSIFICATION
-    "remediation"  # CBAPI-4969, workflow mapping
+    "comment"  # cbapi-4969, TO DO DEFECT FOR CLASSIFICATION
 }
 
 # Fields that are special - consider extending tests later
 # remediation can be empty string in v6, has "NO_REASON" in v7
 COMPLEX_MAPPING_V6 = {
-
     "threat_cause_actor_name",  # on CB Analytics, the record is truncated on v6 so will not match
     "process_name"  # just the file name on v6, full path on v7
 }

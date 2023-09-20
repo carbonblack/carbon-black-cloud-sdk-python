@@ -792,13 +792,11 @@ class Workflow(UnrefreshableModel):
     REMAPPED_WORKFLOWS_V6_TO_V7 = {
         "workflow.last_update_time": "workflow.change_timestamp",
         "workflow.comment": "workflow.note",
-        "workflow.remediation": "workflow.closure_reason",
         "workflow.state": "workflow.status",
     }
     REMAPPED_WORKFLOWS_V7_TO_V6 = {
         "change_timestamp": "last_update_time",
         "note": "comment",
-        "closure_reason": "remediation",
         "status": "state"
     }
     swagger_meta_file = "platform/models/workflow.yaml"
