@@ -1,37 +1,26 @@
 Endpoint Standard Package
-===================================
+*************************
 
-Submodules
-----------
-
-cbc\_sdk.endpoint\_standard.base module
+Base Module
 ---------------------------------------
 
 .. automodule:: cbc_sdk.endpoint_standard.base
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
-cbc\_sdk.endpoint\_standard.recommendation module
+Standard Recommendation Module
 -------------------------------------------------
 
 .. automodule:: cbc_sdk.endpoint_standard.recommendation
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
-cbc\_sdk.endpoint\_standard.usb\_device\_control module
+USB Device Control Module
 -------------------------------------------------------
 
 .. automodule:: cbc_sdk.endpoint_standard.usb_device_control
    :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: cbc_sdk.endpoint_standard
-   :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:

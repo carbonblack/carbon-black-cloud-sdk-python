@@ -23,7 +23,6 @@ from cbc_sdk.base import (BaseQuery,
                           IterableQueryMixin,
                           CriteriaBuilderSupportMixin)
 from cbc_sdk.endpoint_standard.base import EnrichedEvent
-from cbc_sdk.platform.devices import DeviceSearchQuery
 from cbc_sdk.platform.processes import AsyncProcessQuery, Process
 from cbc_sdk.platform.legacy_alerts import LegacyAlertSearchQueryCriterionMixin
 
@@ -78,11 +77,6 @@ class Alert(PlatformModel):
         "workload_name": "k8s_workload_name"
     }
 
-    REMAPPED_NOTES_V6_TO_V7 = {
-        "last_update_time": "",
-
-    }
-
     REMAPPED_ALERTS_V7_TO_V6 = {
         "alert_notes_present": "notes_present",
         "backend_timestamp": "create_time",
@@ -128,11 +122,6 @@ class Alert(PlatformModel):
         "workflow.status": "workflow.state"
     }
 
-    REMAPPED_NOTES_V7_TO_V6 = {
-        "last_update_time": "",
-
-    }
-
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
     urlobject_single = "/api/alerts/v7/orgs/{0}/alerts/{1}"
     primary_key = "id"
@@ -154,6 +143,16 @@ class Alert(PlatformModel):
 
     class Note(PlatformModel):
         """Represents a note within an alert."""
+        REMAPPED_NOTES_V6_TO_V7 = {
+            "create_time": "create_timestamp",
+
+        }
+
+        REMAPPED_NOTES_V7_TO_V6 = {
+            "create_timestamp": "create_time",
+
+        }
+
         urlobject = "/api/alerts/v7/orgs/{0}/alerts/{1}/notes"
         urlobject_single = "/api/alerts/v7/orgs/{0}/alerts/{1}/notes/{2}"
         primary_key = "id"
@@ -233,7 +232,7 @@ class Alert(PlatformModel):
                 AttributeError: If the object has no such attribute.
             """
             try:
-                return super(Alert, self).__getattribute__(Alert.REMAPPED_NOTES_V6_TO_V7.get(item, item))
+                return super(Alert.Note, self).__getattribute__(Alert.Note.REMAPPED_NOTES_V6_TO_V7.get(item, item))
             except AttributeError:
                 raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
                                                                                   item))
@@ -253,8 +252,8 @@ class Alert(PlatformModel):
                 AttributeError: If the object has no such attribute.
             """
             try:
-                item = Alert.REMAPPED_NOTES_V6_TO_V7.get(item, item)
-                return super(Alert, self).__getattr__(item)
+                item = Alert.Note.REMAPPED_NOTES_V6_TO_V7.get(item, item)
+                return super(Alert.Note, self).__getattr__(Alert.Note.REMAPPED_NOTES_V6_TO_V7.get(item, item))
             except AttributeError:
                 raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
                                                                                   item))
@@ -325,9 +324,9 @@ class Alert(PlatformModel):
         """
         request = {"status": state}
         if remediation:
-            request["remediation_state"] = remediation
+            request["closure_reason"] = remediation
         if comment:
-            request["comment"] = comment
+            request["note"] = comment
         url = self.urlobject.format(self._cb.credentials.org_key) + "/workflow"
         resp = self._cb.post_object(url, request)
         self._workflow = Workflow(self._cb, resp.json())
@@ -972,7 +971,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         Returns:
             AlertSearchQuery: This instance.
         """
-        if direction not in DeviceSearchQuery.VALID_DIRECTIONS:
+        if direction not in CriteriaBuilderSupportMixin.VALID_DIRECTIONS:
             raise ApiError("invalid sort direction specified")
         self._sortcriteria = {"field": key, "order": direction}
         return self
@@ -1132,11 +1131,11 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         Returns:
             str: The request ID, which may be used to select a WorkflowStatus object.
         """
-        request = {"state": status, "criteria": self._build_criteria(), "query": self._query_builder._collapse()}
+        request = {"status": status, "criteria": self._build_criteria(), "query": self._query_builder._collapse()}
         if remediation is not None:
-            request["remediation_state"] = remediation
+            request["closure_reason"] = remediation
         if comment is not None:
-            request["comment"] = comment
+            request["note"] = comment
         resp = self._cb.post_object(self._bulkupdate_url.format(self._cb.credentials.org_key), body=request)
         output = resp.json()
         return output["request_id"]
@@ -1165,4 +1164,4 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         Returns:
             str: The request ID, which may be used to select a WorkflowStatus object.
         """
-        return self._update_status("DISMISSED", remediation, comment)
+        return self._update_status("CLOSED", remediation, comment)

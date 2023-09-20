@@ -1,4 +1,18 @@
-import time
+#!/usr/bin/env python3
+
+# *******************************************************
+# Copyright (c) VMware, Inc. 2020-2023. All Rights Reserved.
+# SPDX-License-Identifier: MIT
+# *******************************************************
+# *
+# * DISCLAIMER. THIS PROGRAM IS PROVIDED TO YOU "AS IS" WITHOUT
+# * WARRANTIES OR CONDITIONS OF ANY KIND, WHETHER ORAL OR WRITTEN,
+# * EXPRESS OR IMPLIED. THE AUTHOR SPECIFICALLY DISCLAIMS ANY IMPLIED
+# * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
+# * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
+
+"""Legacy setters for alert v6 api search criteria"""
+
 from cbc_sdk.errors import ApiError
 from cbc_sdk.platform.devices import DeviceSearchQuery
 from cbc_sdk.base import CriteriaBuilderSupportMixin
@@ -25,6 +39,7 @@ CB_ANALYTICS_VALID_THREAT_CAUSE_VECTORS = ["EMAIL", "WEB", "GENERIC_SERVER", "GE
 
 
 class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
+    """Legacy setter methods for v6 alert search criteria. To be deprecated in the future."""
 
     def set_categories(self, categories):
         """
@@ -342,8 +357,10 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         Returns:
             AlertSearchQuery: This instance.
         """
-        if key not in ["create_time", "first_event_time", "last_event_time", "last_update_time", "backend_timestamp", "backend_update_timestamp"]:
-            raise ApiError("key must be one of create_time, first_event_time, last_event_time, backend_timestamp, backend_update_timestamp, or last_update_time")
+        if key not in ["create_time", "first_event_time", "last_event_time", "last_update_time", "backend_timestamp",
+                       "backend_update_timestamp"]:
+            raise ApiError("key must be one of create_time, first_event_time, last_event_time, backend_timestamp,"
+                           " backend_update_timestamp, or last_update_time")
         if kwargs.get("start", None) and kwargs.get("end", None):
             if kwargs.get("range", None):
                 raise ApiError("cannot specify range= in addition to start= and end=")

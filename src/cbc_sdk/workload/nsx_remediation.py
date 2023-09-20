@@ -74,7 +74,7 @@ class NSXRemediationJob:
         response = cb.post_object(url, body=request_body)
         if response.status_code != 201:
             raise ServerError(response.status_code,
-                              f"could not start remediation request, error code {response.status_code}")
+                              f"could not start remediation request, error code {response.status_code}", uri=url)
         job_ids = response.json().get('job_ids', [])
         if job_ids:
             return NSXRemediationJob(cb, job_ids)

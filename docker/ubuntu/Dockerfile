@@ -1,5 +1,5 @@
-from ubuntu:20.04
-MAINTAINER cb-developer-network@vmware.com
+FROM ubuntu:20.04
+LABEL org.opencontainers.image.authors="cb-developer-network@vmware.com"
 
 COPY . /app
 WORKDIR /app

@@ -1,5 +1,5 @@
-from registry.access.redhat.com/ubi8/ubi:latest
-MAINTAINER cb-developer-network@vmware.com
+FROM registry.access.redhat.com/ubi8/ubi:latest
+LABEL org.opencontainers.image.authors="cb-developer-network@vmware.com"
 
 COPY . /app
 WORKDIR /app

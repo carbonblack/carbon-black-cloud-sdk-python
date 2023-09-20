@@ -1,125 +1,130 @@
 Platform Package
-=========================
+****************
 
-Submodules
-----------
-
-cbc\_sdk.platform.alerts module
--------------------------------
-
-.. automodule:: cbc_sdk.platform.alerts
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-cbc\_sdk.platform.base module
+Base Module
 -----------------------------
 
 .. automodule:: cbc_sdk.platform.base
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
-cbc\_sdk.platform.devices module
+Alerts Module
+-------------------------------
+
+.. automodule:: cbc_sdk.platform.alerts
+   :members:
+   :inherited-members:
+   :show-inheritance:
+
+Audit Module
+------------------------------
+
+.. automodule:: cbc_sdk.platform.audit
+   :members:
+   :inherited-members:
+   :show-inheritance:
+
+Devices Module
 --------------------------------
 
 .. automodule:: cbc_sdk.platform.devices
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
-cbc\_sdk.platform.events module
+Events Module
 -------------------------------
 
 .. automodule:: cbc_sdk.platform.events
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
-cbc\_sdk.platform.grants module
+Grants Module
 -------------------------------
 
 .. automodule:: cbc_sdk.platform.grants
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
-cbc\_sdk.platform.jobs module
+Jobs Module
 -----------------------------
 
 .. automodule:: cbc_sdk.platform.jobs
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
-cbc\_sdk.platform.network\_threat\_metadata module
---------------------------------------------------
+Legacy Alerts module
+---------------------------------------
 
-.. automodule:: cbc_sdk.platform.network_threat_metadata
+.. automodule:: cbc_sdk.platform.legacy_alerts
    :members:
    :undoc-members:
    :show-inheritance:
 
-cbc\_sdk.platform.observations module
+Network Threat Metadata Module
+---------------------------------------
+
+.. automodule:: cbc_sdk.platform.network_threat_metadata
+   :members:
+   :inherited-members:
+   :show-inheritance:
+
+Observations Module
 -------------------------------------
 
 .. automodule:: cbc_sdk.platform.observations
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
-cbc\_sdk.platform.policies module
+Policies Module
 ---------------------------------
 
 .. automodule:: cbc_sdk.platform.policies
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
-cbc\_sdk.platform.policy\_ruleconfigs module
+RuleConfigs Module
 --------------------------------------------
 
 .. automodule:: cbc_sdk.platform.policy_ruleconfigs
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
-cbc\_sdk.platform.processes module
+Processes Module
 ----------------------------------
 
 .. automodule:: cbc_sdk.platform.processes
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
-cbc\_sdk.platform.reputation module
+Reputation Module
 -----------------------------------
 
 .. automodule:: cbc_sdk.platform.reputation
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
-cbc\_sdk.platform.users module
+Users Module
 ------------------------------
 
 .. automodule:: cbc_sdk.platform.users
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
-cbc\_sdk.platform.vulnerability\_assessment module
+Vulnerability Assessment Module
 --------------------------------------------------
 
 .. automodule:: cbc_sdk.platform.vulnerability_assessment
    :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: cbc_sdk.platform
-   :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:

@@ -44,20 +44,22 @@ class ApiError(Exception):
 class ClientError(ApiError):
     """A ClientError is raised when an HTTP 4xx error code is returned from the Carbon Black server."""
 
-    def __init__(self, error_code, message, result=None, original_exception=None):
+    def __init__(self, error_code, message, **kwargs):
         """
         Initialize the ClientError.
 
         Args:
             error_code (int): The error code that was received from the server.
             message (str): The actual error message.
-            result (object): The result of the operation from the server.
-            original_exception (Exception): The exception that caused this one to be raised.
+            kwargs (dict): Additional arguments, which may include 'result' (server operation result),
+                'original_exception' (exception causing this one to be raised), and 'uri' (URI being accessed
+                when this error was raised).
         """
-        super(ClientError, self).__init__(message=message, original_exception=original_exception)
+        super(ClientError, self).__init__(message=message, original_exception=kwargs.get('original_exception', None))
 
         self.error_code = error_code
-        self.result = result
+        self.result = kwargs.get('result', None)
+        self.uri = kwargs.get('uri', None)
 
     def __str__(self):
         """
@@ -109,20 +111,22 @@ class QuerySyntaxError(ApiError):
 class ServerError(ApiError):
     """A ServerError is raised when an HTTP 5xx error code is returned from the Carbon Black server."""
 
-    def __init__(self, error_code, message, result=None, original_exception=None):
+    def __init__(self, error_code, message, **kwargs):
         """
         Initialize the ServerError.
 
         Args:
             error_code (int): The error code that was received from the server.
             message (str): The actual error message.
-            result (object): The result of the operation from the server.
-            original_exception (Exception): The exception that caused this one to be raised.
+            kwargs (dict): Additional arguments, which may include 'result' (server operation result),
+                'original_exception' (exception causing this one to be raised), and 'uri' (URI being accessed
+                when this error was raised).
         """
-        super(ServerError, self).__init__(message=message, original_exception=original_exception)
+        super(ServerError, self).__init__(message=message, original_exception=kwargs.get('original_exception', None))
 
         self.error_code = error_code
-        self.result = result
+        self.result = kwargs.get('result', None)
+        self.uri = kwargs.get('uri', None)
 
     def __str__(self):
         """
@@ -132,14 +136,16 @@ class ServerError(ApiError):
             str: String equivalent of the exception.
         """
         msg = "Received error code {0:d} from API".format(self.error_code)
+        if self.uri:
+            msg += f" <{self.uri}>"
+        details = ""
         if self.message:
-            msg += ": {0:s}".format(self.message)
-        else:
-            msg += " (No further information provided)"
-
+            details += f" ({self.message})"
         if self.result:
-            msg += ". {}".format(self.result)
-        return msg
+            details += f" ({self.result})"
+        if not details:
+            details = " (No further information provided)"
+        return msg + details
 
 
 class ObjectNotFoundError(ApiError):
