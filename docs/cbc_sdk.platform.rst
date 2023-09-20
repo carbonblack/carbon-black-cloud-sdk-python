@@ -57,8 +57,16 @@ Jobs Module
    :inherited-members:
    :show-inheritance:
 
+Legacy Alerts module
+---------------------------------------
+
+.. automodule:: cbc_sdk.platform.legacy_alerts
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Network Threat Metadata Module
---------------------------------------------------
+---------------------------------------
 
 .. automodule:: cbc_sdk.platform.network_threat_metadata
    :members:

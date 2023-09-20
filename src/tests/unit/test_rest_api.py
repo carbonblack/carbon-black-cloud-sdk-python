@@ -72,7 +72,7 @@ def test_alert_search_suggestions(cbcsdk_mock):
     api = cbcsdk_mock.api
     cbcsdk_mock.mock_request(
         "GET",
-        "/appservices/v6/orgs/test/alerts/search_suggestions?suggest.q=",
+        "/api/alerts/v7/orgs/test/alerts/search_suggestions?suggest.q=",
         ALERT_SEARCH_SUGGESTIONS_RESP,
     )
     result = api.alert_search_suggestions("")

@@ -39,6 +39,7 @@ CB_ANALYTICS_VALID_THREAT_CAUSE_VECTORS = ["EMAIL", "WEB", "GENERIC_SERVER", "GE
 
 class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     """Represents a legacy alert, based on Alert API v6 or SDK 1.4.3 or earlier."""
+
     def set_categories(self, categories):
         """
         The field `categories` was deprecated and not included in v7.  This method has been removed.

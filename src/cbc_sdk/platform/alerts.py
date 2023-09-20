@@ -63,7 +63,7 @@ class Alert(PlatformModel):
         "threat_cause_actor_name": "process_name",
         "threat_cause_actor_publisher": "process_publisher",
         "threat_cause_actor_sha256": "process_sha256",
-        "threat_cause_event_id": "primary_event_id",
+        "threat_cause_cause_event_id": "primary_event_id",
         "threat_cause_md5": "process_md5",
         "threat_cause_parent_guid": "parent_guid",
         "threat_cause_reputation": "process_reputation",
@@ -71,63 +71,53 @@ class Alert(PlatformModel):
         "watchlists": "watchlists.id",
         "workflow.last_update_time": "workflow.change_timestamp",
         "workflow.comment": "workflow.note",
-        "workflow.remediation": "workflow.closure_reason",
         "workflow.state": "workflow.status",
         "workload_kind": "k8s_kind",
         "workload_name": "k8s_workload_name"
     }
 
-    REMAPPED_NOTES_V6_TO_V7 = {
-        "last_update_time": "",
-
-    }
-
     REMAPPED_ALERTS_V7_TO_V6 = {
+        "alert_notes_present": "notes_present",
+        "backend_timestamp": "create_time",
+        "backend_update_timestamp": "last_update_time",
+        "determination_value": "alert_classification.user_feedback",
+        "device_policy": "policy_name",
+        "device_policy_id": "policy_id",
+        "device_target_value": "target_value",
+        "first_event_timestamp": "first_event_time",
+        "k8s_cluster": "cluster_name",
+        "k8s_kind": "workload_kind",
+        "k8s_namespace": "namespace",
+        "k8s_pod_name": "replica_id",
+        "k8s_workload_name": "workload_name",
+        "last_event_timestamp": "last_event_time",
         "ml_classification_final_verdict": "alert_classification.classification",
         "ml_classification_global_prevalence": "alert_classification.global_prevalence",
         "ml_classification_org_prevalence": "alert_classification.org_prevalence",
-        "determination_value": "alert_classification.user_feedback",
-        "k8s_cluster": "cluster_name",
-        "backend_timestamp": "create_time",
-        "first_event_timestamp": "first_event_time",
-        "last_event_timestamp": "last_event_time",
-        "backend_update_timestamp": "last_update_time",
-        "k8s_namespace": "namespace",
-        "alert_notes_present": "notes_present",
-        "device_policy_id": "policy_id",
-        "device_policy": "policy_name",
         "netconn_local_port": "port",
         "netconn_protocol": "protocol",
         "netconn_remote_domain": "remote_domain",
         "netconn_remote_ip": "remote_ip",
-        "remote_k8s_namespace": "remote_namespace",
-        "remote_k8s_pod_name": "remote_replica_id",
-        "remote_k8s_kind": "remote_workload_kind",
-        "remote_k8s_workload_name": "remote_workload_name",
-        "k8s_pod_name": "replica_id",
-        "rule_id ": "rule_id",
-        "run_state": "run_state",
-        "device_target_value": "target_value",
+        "parent_guid": "threat_cause_parent_guid",
+        "primary_event_id": "threat_cause_cause_event_id",
+        "process_guid": "threat_cause_process_guid",
         "process_issuer": "threat_cause_actor_certificate_authority",
+        "process_md5": "threat_cause_actor_md5",
         "process_name": "threat_cause_actor_name",
         "process_publisher": "threat_cause_actor_publisher",
-        "process_sha256": "threat_cause_actor_sha256",
-        "primary_event_id": "threat_cause_cause_event_id",
-        "process_md5": "threat_cause_md5",
-        "parent_guid": "threat_cause_parent_guid",
         "process_reputation": "threat_cause_reputation",
+        "process_sha256": "threat_cause_actor_sha256",
+        "remote_k8s_kind": "remote_workload_kind",
+        "remote_k8s_namespace": "remote_namespace",
+        "remote_k8s_pod_name": "remote_replica_id",
+        "remote_k8s_workload_name": "remote_workload_name",
+        "rule_id ": "rule_id",
+        "run_state": "run_state",
         "ttps": "threat_indicators",
         "watchlists.id": "watchlists",
         "workflow.change_timestamp": "workflow.last_update_time",
         "workflow.note": "workflow.comment",
-        "workflow.closure_reason": "workflow.remediation",
-        "workflow.status": "workflow.state",
-        "k8s_kind": "workload_kind",
-        "k8s_workload_name": "workload_name"
-    }
-
-    REMAPPED_NOTES_V7_TO_V6 = {
-        "last_update_time": ""
+        "workflow.status": "workflow.state"
     }
 
     DEPRECATED_FIELDS_NOT_IN_V7 = [
@@ -178,6 +168,16 @@ class Alert(PlatformModel):
 
     class Note(PlatformModel):
         """Represents a note within an alert."""
+        REMAPPED_NOTES_V6_TO_V7 = {
+            "create_time": "create_timestamp",
+
+        }
+
+        REMAPPED_NOTES_V7_TO_V6 = {
+            "create_timestamp": "create_time",
+
+        }
+
         urlobject = "/api/alerts/v7/orgs/{0}/alerts/{1}/notes"
         urlobject_single = "/api/alerts/v7/orgs/{0}/alerts/{1}/notes/{2}"
         primary_key = "id"
@@ -257,7 +257,7 @@ class Alert(PlatformModel):
                 AttributeError: If the object has no such attribute.
             """
             try:
-                return super(Alert, self).__getattribute__(Alert.REMAPPED_NOTES_V6_TO_V7.get(item, item))
+                return super(Alert.Note, self).__getattribute__(Alert.Note.REMAPPED_NOTES_V6_TO_V7.get(item, item))
             except AttributeError:
                 raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
                                                                                   item))
@@ -277,8 +277,8 @@ class Alert(PlatformModel):
                 AttributeError: If the object has no such attribute.
             """
             try:
-                item = Alert.REMAPPED_NOTES_V6_TO_V7.get(item, item)
-                return super(Alert, self).__getattr__(item)
+                item = Alert.Note.REMAPPED_NOTES_V6_TO_V7.get(item, item)
+                return super(Alert.Note, self).__getattr__(Alert.Note.REMAPPED_NOTES_V6_TO_V7.get(item, item))
             except AttributeError:
                 raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
                                                                                   item))
@@ -349,9 +349,9 @@ class Alert(PlatformModel):
         """
         request = {"status": state}
         if remediation:
-            request["remediation_state"] = remediation
+            request["closure_reason"] = remediation
         if comment:
-            request["comment"] = comment
+            request["note"] = comment
         url = self.urlobject.format(self._cb.credentials.org_key) + "/workflow"
         resp = self._cb.post_object(url, request)
         self._workflow = Workflow(self._cb, resp.json())
@@ -489,7 +489,7 @@ class Alert(PlatformModel):
 
     def to_json(self, version="v7"):
         """
-        Return an a json object of the response.
+        Return a json object of the response.
 
         Args:
             version (str): version of json to return. Either v6 or v7. DEFAULT v7
@@ -505,8 +505,14 @@ class Alert(PlatformModel):
                     modified_json["legacy_alert_id"] = value
                 if key == "process_name":
                     modified_json["process_name"] = value
-                if key == "threat_cause_event_id":
-                    modified_json["created_by_event_id"] = value
+                if key == "primary_event_id":
+                    if self.type == "CB_ANALYTICS":
+                        modified_json["created_by_event_id"] = value
+                if key == "process_guid":
+                    if self.type == "WATCHLIST":
+                        modified_json["process_guid"] = value
+                    if self.type == "CB_ANALYTICS":
+                        modified_json["threat_cause_process_guid"] = value
                 if key == "ttps":
                     ti = {"process_name": self._info.get("process_name"), "sha256": self._info.get("process_sha256"),
                           "ttps": value}
@@ -514,7 +520,7 @@ class Alert(PlatformModel):
                 if key == "workflow":
                     wf = {}
                     for wf_key, wf_value in value.items():
-                        wf[self.REMAPPED_WORKFLOWS_V7_TO_V6.get(wf_key, wf_key)] = wf_value
+                        wf[Workflow.REMAPPED_WORKFLOWS_V7_TO_V6.get(wf_key, wf_key)] = wf_value
                     modified_json[key] = wf
             return modified_json
         else:
@@ -1177,11 +1183,11 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         Returns:
             str: The request ID, which may be used to select a WorkflowStatus object.
         """
-        request = {"state": status, "criteria": self._build_criteria(), "query": self._query_builder._collapse()}
+        request = {"status": status, "criteria": self._build_criteria(), "query": self._query_builder._collapse()}
         if remediation is not None:
-            request["remediation_state"] = remediation
+            request["closure_reason"] = remediation
         if comment is not None:
-            request["comment"] = comment
+            request["note"] = comment
         resp = self._cb.post_object(self._bulkupdate_url.format(self._cb.credentials.org_key), body=request)
         output = resp.json()
         return output["request_id"]
@@ -1210,4 +1216,4 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         Returns:
             str: The request ID, which may be used to select a WorkflowStatus object.
         """
-        return self._update_status("DISMISSED", remediation, comment)
+        return self._update_status("CLOSED", remediation, comment)

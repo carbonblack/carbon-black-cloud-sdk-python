@@ -296,13 +296,13 @@ GET_ALERT_NOTES = {
     "results": [
         {
             "author": "Grogu",
-            "create_time": "2021-05-13T00:20:46.474Z",
+            "create_timestamp": "2021-05-13T00:20:46.474Z",
             "id": "1",
             "note": "I am a note"
         },
         {
             "author": "Mando",
-            "create_time": "2021-05-13T00:20:46.474Z",
+            "create_timestamp": "2021-05-13T00:20:46.474Z",
             "id": "2",
             "note": "I am a note too"
         }
@@ -311,7 +311,7 @@ GET_ALERT_NOTES = {
 
 CREATE_ALERT_NOTE = {
     "author": "Grogu",
-    "create_time": "2021-05-13T00:20:46.474Z",
+    "create_timestamp": "2021-05-13T00:20:46.474Z",
     "id": "3gsgsfds",
     "note": "I am Grogu"
 }
