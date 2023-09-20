@@ -14,7 +14,7 @@
 """Model and Query Classes for Platform Alerts and Workflows"""
 import time
 
-from cbc_sdk.errors import ApiError, TimeoutError, ObjectNotFoundError, NonQueryableModel
+from cbc_sdk.errors import ApiError, TimeoutError, ObjectNotFoundError, NonQueryableModel, FunctionalityDecommissioned
 from cbc_sdk.platform import PlatformModel
 from cbc_sdk.base import (BaseQuery,
                           UnrefreshableModel,
@@ -119,6 +119,33 @@ class Alert(PlatformModel):
         "workflow.note": "workflow.comment",
         "workflow.status": "workflow.state"
     }
+
+    DEPRECATED_FIELDS_NOT_IN_V7 = [
+        "category",
+        "group_details",
+        # CB Analytics Fields
+        "blocked_threat_category",
+        "kill_chain_status",
+        "not_blocked_threat_category",
+        "threat_activity_c2",
+        "threat_activity_dlp",
+        "threat_activity_phish",
+        # CB Analytics and Host Based Firewall and Device Control and Watchlist
+        "threat_cause_threat_category",
+        # CB Analytics and Device Control and Watchlist
+        "threat_cause_vector",
+        # Container Runtime Fields
+        "workload_id",
+        # Watchlists Fields
+        "count",
+        "document_guid",
+        "threat_indicators"
+    ]
+
+    # these fields are deprecated from container runtime but mapped to a new field for other alert types
+    DEPRECATED_FIELDS_NOT_IN_V7_CONTAINER_ONLY = [
+        "target_value"
+    ]
 
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
     urlobject_single = "/api/alerts/v7/orgs/{0}/alerts/{1}"
@@ -442,8 +469,17 @@ class Alert(PlatformModel):
 
         Raises:
             AttributeError: If the object has no such attribute.
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
         try:
+            if item in Alert.DEPRECATED_FIELDS_NOT_IN_V7:
+                raise FunctionalityDecommissioned(
+                    "Attribute '{0}' does not exist in object '{1}' because it was deprecated in "
+                    "Alerts v7. In SDK 1.5.0 the".format(item, self.__class__.__name__))
+            if item in Alert.DEPRECATED_FIELDS_NOT_IN_V7_CONTAINER_ONLY and self.type == "CONTAINER_RUNTIME":
+                raise FunctionalityDecommissioned(
+                    "Attribute '{0}' does not exist in object '{1}' because it was deprecated in "
+                    "Alerts v7. In SDK 1.5.0 the".format(item, self.__class__.__name__))
             item = Alert.REMAPPED_ALERTS_V6_TO_V7.get(item, item)
             return super(Alert, self).__getattr__(item)
         except AttributeError:
@@ -489,6 +525,26 @@ class Alert(PlatformModel):
             return modified_json
         else:
             return self._info
+
+    def get(self, item, default_val=None):
+        """
+        Return an attribute of this object.
+
+        Args:
+            item (str): Name of the attribute to be returned.
+            default_val (Any): Default value to be used if the attribute is not set.
+
+        Raises:
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
+
+        Returns:
+            Any: The returned attribute value, which may be defaulted.
+        """
+        if item in Alert.DEPRECATED_FIELDS_NOT_IN_V7:
+            raise FunctionalityDecommissioned(
+                "Attribute '{0}' does not exist in object '{1}' because it was deprecated in "
+                "Alerts v7. In SDK 1.5.0 the".format(item, self.__class__.__name__))
+        return super(Alert, self).get(item, default_val)
 
 
 class WatchlistAlert(Alert):
@@ -894,7 +950,6 @@ class WorkflowStatus(PlatformModel):
 class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, LegacyAlertSearchQueryCriterionMixin,
                        CriteriaBuilderSupportMixin):
     """Represents a query that is used to locate Alert objects."""
-    VALID_CATEGORIES = ["THREAT", "MONITORED"]
     VALID_REPUTATIONS = ["KNOWN_MALWARE", "SUSPECT_MALWARE", "PUP", "NOT_LISTED", "ADAPTIVE_WHITE_LIST",
                          "COMMON_WHITE_LIST", "TRUSTED_WHITE_LIST", "COMPANY_BLACK_LIST"]
     VALID_ALERT_TYPES = ["CB_ANALYTICS", "DEVICE_CONTROL", "WATCHLIST", "CONTAINER_RUNTIME", "HOST_BASED_FIREWALL",
