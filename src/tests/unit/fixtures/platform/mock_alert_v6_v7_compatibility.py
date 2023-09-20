@@ -27,7 +27,7 @@ ALERT_V6_INFO_CB_ANALYTICS_SDK_1_4_3 = {
         "comment": "Testing v6 with v7 live",
         "changed_by": "ABCD1234"
     },
-    "notes_present": False,
+    "notes_present": True,
     "tags": "",
     "policy_id": 876543,
     "reason": "A known virus (HackTool: Powerpuff) was detected running.",
@@ -342,8 +342,8 @@ GET_ALERT_v7_CB_ANALYTICS_RESPONSE = {
         "changed_by": ""
     },
     "tags": "",
-    "alert_notes_present": False,
-    "threat_notes_present": False,
+    "alert_notes_present": True,
+    "threat_notes_present": True,
     "is_updated": True,
     "device_id": 12345678,
     "device_name": "DEMO-Device-Name",
