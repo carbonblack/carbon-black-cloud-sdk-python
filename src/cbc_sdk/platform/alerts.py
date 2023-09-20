@@ -73,7 +73,6 @@ class Alert(PlatformModel):
         "watchlists": "watchlists.id",
         "workflow.last_update_time": "workflow.change_timestamp",
         "workflow.comment": "workflow.note",
-        "workflow.remediation": "workflow.closure_reason",
         "workflow.state": "workflow.status",
         "workload_kind": "k8s_kind",
         "workload_name": "k8s_workload_name"
@@ -102,7 +101,7 @@ class Alert(PlatformModel):
         "netconn_remote_domain": "remote_domain",
         "netconn_remote_ip": "remote_ip",
         "parent_guid": "threat_cause_parent_guid",
-        "primary_event_id": "created_by_event_id",
+        "primary_event_id": "threat_cause_cause_event_id",
         "process_guid": "threat_cause_process_guid",
         "process_issuer": "threat_cause_actor_certificate_authority",
         "process_md5": "threat_cause_actor_md5",
@@ -119,7 +118,6 @@ class Alert(PlatformModel):
         "ttps": "threat_indicators",
         "watchlists.id": "watchlists",
         "workflow.change_timestamp": "workflow.last_update_time",
-        "workflow.closure_reason": "workflow.remediation",
         "workflow.note": "workflow.comment",
         "workflow.status": "workflow.state"
     }
@@ -474,9 +472,8 @@ class Alert(PlatformModel):
                 if key == "process_name":
                     modified_json["process_name"] = value
                 if key == "primary_event_id":
-                    modified_json["created_by_event_id"] = value
                     if self.type == "CB_ANALYTICS":
-                        modified_json["threat_cause_cause_event_id"] = value
+                        modified_json["created_by_event_id"] = value
                 if key == "process_guid":
                     if self.type == "WATCHLIST":
                         modified_json["process_guid"] = value
@@ -489,7 +486,7 @@ class Alert(PlatformModel):
                 if key == "workflow":
                     wf = {}
                     for wf_key, wf_value in value.items():
-                        wf[self.REMAPPED_WORKFLOWS_V7_TO_V6.get(wf_key, wf_key)] = wf_value
+                        wf[Workflow.REMAPPED_WORKFLOWS_V7_TO_V6.get(wf_key, wf_key)] = wf_value
                     modified_json[key] = wf
             return modified_json
         else:
