@@ -44,13 +44,6 @@ def cbcsdk_mock(monkeypatch, cb):
 
 
 # ==================================== UNIT TESTS BELOW ====================================
-
-# Fields that are not tested for mappings while bugs are fixed.
-# When all bugs are fixed, SKIP_FIELDS should be empty and all tests should pass
-SKIP_FIELDS = {
-    "comment"  # cbapi-4969, TO DO DEFECT FOR CLASSIFICATION
-}
-
 # Fields that are special - consider extending tests later
 # remediation can be empty string in v6, has "NO_REASON" in v7
 COMPLEX_MAPPING_V6 = {
@@ -62,12 +55,12 @@ COMPLEX_MAPPING_V6 = {
 BASE_FIELDS_V6 = {
     "alert_classification",
     "category",
+    "comment",
     "group_details",
     "remediation",
     "threat_activity_c2",
     "threat_cause_threat_category",
-    "threat_cause_actor_process_pid",
-    "remediation"
+    "threat_cause_actor_process_pid"
 }
 
 # Fields on the v6 CB Analytics alert object that do not have an equivalent in v7
@@ -104,7 +97,7 @@ WATCHLIST_FIELDS_V6 = {
 
 # Aggregate all the alert type fields
 ALL_FIELDS_V6 = (CB_ANALYTICS_FIELDS_V6 | BASE_FIELDS_V6 | DEVICE_CONTROL_FIELDS_V6 | WATCHLIST_FIELDS_V6
-                 | CONTAINER_RUNTIME_FIELDS_V6 | SKIP_FIELDS)
+                 | CONTAINER_RUNTIME_FIELDS_V6)
 
 
 @pytest.mark.parametrize("url, v7_api_response, v6_sdk_response", [
@@ -157,9 +150,6 @@ def check_dict(alert_v6, alert_v6_from_v7, key, alert_type):
     # This method is expecting a dict input parameter. Verify.
     assert(isinstance(alert_v6, dict)), "Function check_dict called with incorrect argument types"
 
-    if key in SKIP_FIELDS:
-        # print("Handling known bug.  Field {}".format(key))
-        return
     if key in COMPLEX_MAPPING_V6:
         # print("Complex mapping, ignore.  Field {}".format(key))
         return
@@ -215,9 +205,6 @@ def check_field(alert_v6, alert_v6_from_v7, key, alert_type):
     Orgs are dictionaries, key is the field being evaluated.
     End with a value comparison
     """
-    if key in SKIP_FIELDS:
-        # print("Handling known bug.  Field {}".format(key))
-        return
     if key in COMPLEX_MAPPING_V6:
         # print("Complex mapping, ignore.  Field {}".format(key))
         return
