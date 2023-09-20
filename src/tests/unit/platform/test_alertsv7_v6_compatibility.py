@@ -123,7 +123,6 @@ def test_v7_generate_v6_json(cbcsdk_mock, url, v7_api_response, v6_sdk_response)
     cbcsdk_mock.mock_request("GET", url, v7_api_response)
     api = cbcsdk_mock.api
     alert = api.select(BaseAlert, v6_sdk_response.get("id"))
-    # print("\n\nStarting comparison of {} type alerts".format(alert.get("type")))
     # generate the json output from the v7 API response in the v6 format
     alert_v6_from_v7 = alert.to_json("v6")
 
@@ -132,7 +131,6 @@ def test_v7_generate_v6_json(cbcsdk_mock, url, v7_api_response, v6_sdk_response)
     # The v7 fixtures were generated with v7 API calls
     # That the output of the current to_json("v6") method equals the v6 fixture is what is being tested
     for key in v6_sdk_response:
-        # print("key = {}".format(key)) # helpful for troubleshooting
         """Check inner dictionaries"""
         if isinstance(v6_sdk_response.get(key), dict):
             check_dict(v6_sdk_response.get(key), alert_v6_from_v7.get(key), key, v6_sdk_response.get("type"))
@@ -151,7 +149,6 @@ def check_dict(alert_v6, alert_v6_from_v7, key, alert_type):
     assert(isinstance(alert_v6, dict)), "Function check_dict called with incorrect argument types"
 
     if key in COMPLEX_MAPPING_V6:
-        # print("Complex mapping, ignore.  Field {}".format(key))
         return
     # Fields that are deprecated will be in v6 and should not be in v7
     assert not (
@@ -206,7 +203,6 @@ def check_field(alert_v6, alert_v6_from_v7, key, alert_type):
     End with a value comparison
     """
     if key in COMPLEX_MAPPING_V6:
-        # print("Complex mapping, ignore.  Field {}".format(key))
         return
     # Fields that are deprecated will be in v6 and should not be in v7
     assert not (
