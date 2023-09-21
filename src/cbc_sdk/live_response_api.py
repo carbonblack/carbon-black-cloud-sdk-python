@@ -722,9 +722,9 @@ class CbLRSessionBase(object):
         """
         real_value = value
         if value_type is None:
-            if type(value) == int:
+            if isinstance(value, int):
                 value_type = "REG_DWORD"
-            elif type(value) == list:
+            elif isinstance(value, list):
                 value_type = "REG_MULTI_SZ"
                 real_value = [str(item) for item in list(value)]
             else:
