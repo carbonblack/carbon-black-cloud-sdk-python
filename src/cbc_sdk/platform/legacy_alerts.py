@@ -55,7 +55,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
                                "THREAT", "MONITORED", "INFO", "MINOR", "SERIOUS", and "CRITICAL."
 
         Raises:
-            FunctionalityDecommissioned
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
         raise FunctionalityDecommissioned("Starting with SDK v1.5.0 Category is not a valid field on Alert.")
 
@@ -182,7 +182,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
             do_group (bool): True to group the results, False to not do so.
 
         Raises:
-            FunctionalityDecommissioned
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
         raise FunctionalityDecommissioned("Starting with SDK v1.5.0 group_results is not a valid field on Alert.")
 
@@ -677,7 +677,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
                            "NON_MALWARE", "NEW_MALWARE", "KNOWN_MALWARE", and "RISKY_PROGRAM".
 
         Raises:
-            FunctionalityDecommissioned
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
         raise FunctionalityDecommissioned(
             "Starting with SDK v1.5.0 blocked_threat_category is not a valid field on Alert.")
@@ -713,7 +713,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
                          and "BREACH".
 
         Raises:
-            FunctionalityDecommissioned
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
         raise FunctionalityDecommissioned("Starting with SDK v1.5.0 Category is not a valid field on Alert.")
 
@@ -730,7 +730,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
                            "NON_MALWARE", "NEW_MALWARE", "KNOWN_MALWARE", and "RISKY_PROGRAM".
 
         Raises:
-            FunctionalityDecommissioned
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
         raise FunctionalityDecommissioned("Starting with SDK v1.5.0 kill_chain_status is not a valid field on Alert.")
 
@@ -812,7 +812,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
                             "APP_STORE", and "THIRD_PARTY".
 
         Raises:
-            FunctionalityDecommissioned
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
         raise FunctionalityDecommissioned("Starting with SDK v1.5.0 threat_cause_vector is not a valid field on Alert.")
 
