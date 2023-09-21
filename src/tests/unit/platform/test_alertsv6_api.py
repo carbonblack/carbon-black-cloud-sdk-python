@@ -90,7 +90,6 @@ def test_query_basealert_with_all_bells_and_whistles(cbcsdk_mock):
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
-
     query = api.select(BaseAlert).where("Blort").set_device_ids([6023]) \
         .set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
         .set_device_username(["JRN"]).set_alert_ids(["S0L0"]) \
