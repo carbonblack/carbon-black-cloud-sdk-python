@@ -140,7 +140,7 @@ class CBCSDKMock:
             matched = self.match_key(self.get_mock_key("GET", url))
             if matched:
                 if (isinstance(self.mocks[matched], Exception)
-                        or getattr(self.mocks[matched], '__module__', None) == cbc_sdk.errors.__name__):  # noqa: W503
+                        or getattr(self.mocks[matched], '__module__', None) == cbc_sdk.errors.__name__):
                     raise self.mocks[matched]
                 elif callable(self.mocks[matched]):
                     return self.mocks[matched](url, query_parameters, default)
