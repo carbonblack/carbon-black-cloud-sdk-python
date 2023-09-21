@@ -46,8 +46,8 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
 
         In Alerts v7, only records with the type THREAT are returned.
         Records that in v6 had the category MONITORED (Observed) are now Observations
-        See [Developer Network Alerts v6 Migration]
-        (https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/alerts-migration/)
+        See `Developer Network Alerts v6 Migration
+        <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/alerts-migration/>`_
         for more details.
 
         Args:
@@ -171,11 +171,11 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         The field `group_results` was deprecated and not included in v7.  This method has been removed.
 
         It previously specified whether to group the results of the query.
-        Use the [Grouped Alerts Operations]
-        (https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alerts-api/
+        Use the `Grouped Alerts Operations
+        <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alerts-api/>`_
         #grouped-alerts-operations) instead.
-        See [Developer Network Alerts v6 Migration]
-        (https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/alerts-migration/)
+        See `Developer Network Alerts v6 Migration
+        <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/alerts-migration/>`_
         for more details.
 
         Args:
@@ -668,8 +668,8 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         The field `blocked_threat_category` was deprecated and not included in v7.  This method has been removed.
 
-        See [Developer Network Alerts v6 Migration]
-        (https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/alerts-migration/)
+        See `Developer Network Alerts v6 Migration
+        <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/alerts-migration/>`_
         for more details.
 
         Args:
@@ -703,8 +703,8 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         The field `kill_chain_status` was deprecated and not included in v7.  This method has been removed.
 
-        See [Developer Network Alerts v6 Migration]
-        (https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/alerts-migration/)
+        See `Developer Network Alerts v6 Migration
+        <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/alerts-migration/>`_
         for more details.
 
         Args:
@@ -721,8 +721,8 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         The field `not_blocked_threat_category` was deprecated and not included in v7.  This method has been removed.
 
-        See [Developer Network Alerts v6 Migration]
-        (https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/alerts-migration/)
+        See `Developer Network Alerts v6 Migration
+        <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/alerts-migration/>`_
         for more details.
 
         Args:
@@ -802,8 +802,8 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         The field `threat_cause_vector` was deprecated and not included in v7.  This method has been removed.
 
-        See [Developer Network Alerts v6 Migration]
-        (https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/alerts-migration/)
+        See `Developer Network Alerts v6 Migration
+        <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/alerts-migration/>`_
         for more details.
 
         Args:
