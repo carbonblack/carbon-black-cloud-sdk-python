@@ -308,7 +308,7 @@ def convert_query_params(qd):
     """
     o = []
     for k, v in iter(qd.items()):
-        if type(v) == list:
+        if isinstance(v, list):
             for item in v:
                 o.append((k, item))
         else:

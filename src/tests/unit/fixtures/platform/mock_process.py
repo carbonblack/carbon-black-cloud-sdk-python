@@ -1947,17 +1947,17 @@ GET_PROCESS_TREE_STR = {
                 ],
                 "parent_name": "c:\\windows\\system32\\services.exe",
                 "parent_pid": 708,
-                "process_cmdline":[
+                "process_cmdline": [
                     "C:\\WINDOWS\\system32\\msiexec.exe /V"
                 ],
                 "process_effective_reputation": "TRUSTED_WHITE_LIST",
                 "process_guid": "WNEXFKQ7-000309c2-00000454-00000000-1d6a2b6252ba18e",
-                "process_hash":[
+                "process_hash": [
                     "f9a3eee1c3a4067702bc9a59bc894285",
                     "8e2aa014d7729cbfee95671717646ee480561f22e2147dae87a75c18d7369d99"
                 ],
                 "process_name": "c:\\windows\\system32\\msiexec.exe",
-                "process_pid":[
+                "process_pid": [
                     1108
                 ],
                 "process_reputation": "TRUSTED_WHITE_LIST",
@@ -1965,7 +1965,7 @@ GET_PROCESS_TREE_STR = {
                 "process_username": [
                     "NT AUTHORITY\\SYSTEM"
                 ],
-                "ttp":[
+                "ttp": [
                     "ENUMERATE_PROCESSES",
                     "MITRE_T1057_PROCESS_DISCOVERY"
                 ]
@@ -2171,29 +2171,29 @@ GET_PROCESS_SUMMARY_STR = {
                 ],
                 "parent_name": "c:\\windows\\system32\\svchost.exe",
                 "parent_pid": 1144,
-                "process_cmdline":[
+                "process_cmdline": [
                     "C:\\WINDOWS\\system32\\wermgr.exe -upload"
                 ],
                 "process_effective_reputation": "TRUSTED_WHITE_LIST",
                 "process_guid": "WNEXFKQ7-000309c2-000004f8-00000000-1d6a88e80c541a3",
-                "process_hash":[
+                "process_hash": [
                     "2ae75e810f4dd1fb36607f66e7e1d80b",
                     "db703055ec0641e7e96e22a62bf075547b480c51ea9e163d94e33452894b885c"
                 ],
                 "process_name": "c:\\windows\\system32\\wermgr.exe",
-                "process_pid":[
+                "process_pid": [
                     1272
                 ],
                 "process_reputation": "TRUSTED_WHITE_LIST",
                 "process_start_time": "2020-10-22T16:15:05.324Z",
-                "process_username":[
+                "process_username": [
                     "NT AUTHORITY\\SYSTEM"
                 ],
-                "sensor_action":[
+                "sensor_action": [
                     "DENY",
                     "BLOCK"
                 ],
-                "ttp":[
+                "ttp": [
                     "POLICY_DENY"
                 ]
             }
