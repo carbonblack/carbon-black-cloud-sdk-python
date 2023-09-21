@@ -870,3 +870,72 @@ def test_alert_search_suggestions_api_error():
     """Tests getting alert search suggestions - no CBCloudAPI arg"""
     with pytest.raises(ApiError):
         Alert.search_suggestions("", "")
+
+
+def test_query_set_minimum_severity(cbcsdk_mock):
+    """Test a search setting minimum severity."""
+
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "minimum_severity": 3
+            },
+            "query": "",
+            "rows": 1,
+            "start": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
+    query = api.select(Alert).set_minimum_severity(3).set_rows(1)
+    len(query)
+    # no assertions, the check is that the post request is formed correctly.
+
+
+def test_query_set_threat_notes_present(cbcsdk_mock):
+    """Test a search setting whether threat notes are present or not."""
+
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "threat_notes_present": False
+            },
+            "query": "",
+            "rows": 1,
+            "start": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
+    query = api.select(Alert).set_threat_notes_present(False).set_rows(1)
+    len(query)
+    # no assertions, the check is that the post request is formed correctly.
+
+
+def test_query_set_alert_notes_present(cbcsdk_mock):
+    """Test a search setting whether alert notes are present or not."""
+
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "alert_notes_present": False
+            },
+            "query": "",
+            "rows": 1,
+            "start": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
+    query = api.select(Alert).set_alert_notes_present(False).set_rows(1)
+    len(query)
+    # no assertions, the check is that the post request is formed correctly.

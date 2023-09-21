@@ -216,19 +216,6 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         self._update_criteria("legacy_alert_id", alert_ids)
         return self
 
-    def set_minimum_severity(self, severity):
-        """
-        Restricts the alerts that this query is performed on to the specified minimum severity level.
-
-        Args:
-            severity (int): The minimum severity level for alerts.
-
-        Returns:
-            AlertSearchQuery: This instance.
-        """
-        self._criteria["minimum_severity"] = severity
-        return self
-
     def set_policy_ids(self, policy_ids):
         """
         Restricts the alerts that this query is performed on to the specified policy IDs.
