@@ -146,7 +146,7 @@ def check_dict(alert_v6, alert_v6_from_v7, key, alert_type):
     Key should be the label, and each of alert_v6 and alert_v6_from_v7 should be dicts
     """
     # This method is expecting a dict input parameter. Verify.
-    assert(isinstance(alert_v6, dict)), "Function check_dict called with incorrect argument types"
+    assert (isinstance(alert_v6, dict)), "Function check_dict called with incorrect argument types"
 
     if key in COMPLEX_MAPPING_V6:
         return
