@@ -24,6 +24,7 @@ Guides
    porting-guide
    searching
    alerts
+   alerts-migration
    audit-log
    developing-credential-providers
    device-control
@@ -42,6 +43,7 @@ Guides
 
 * :doc:`searching` - Most operations in the SDK will require you to search for objects.
 * :doc:`alerts` - Work and manage different types of alerts such as CB Analytics Alert, Watchlist Alerts and Device Control Alerts.
+* :doc:`alerts-migration` - Update from SDK 1.4.3 or earlier to SDK 1.5.0 or later to get the benefits of the Alerts v7 API.
 * :doc:`audit-log` - Retrieve audit log events indicating various "system" events.
 * :doc:`device-control` - Control the blocking of USB devices on endpoints.
 * :doc:`differential-analysis` - Provides the ability to compare and understand the changes between two Live Query runs
@@ -55,4 +57,3 @@ Guides
 * :doc:`vulnerabilities` - View asset (Endpoint or Workload) vulnerabilities to increase security visibility.
 * :doc:`watchlists-feeds-reports` - Work with Enterprise EDR watchlists, feeds, reports, and Indicators of Compromise (IOCs).
 * :doc:`workload` - Advanced protection purpose-built for securing modern workloads to reduce the attack surface and strengthen security posture.
-
