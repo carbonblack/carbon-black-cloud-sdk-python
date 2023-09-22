@@ -1,9 +1,22 @@
-import time
-from cbc_sdk.errors import ApiError
+#!/usr/bin/env python3
+
+# *******************************************************
+# Copyright (c) VMware, Inc. 2020-2023. All Rights Reserved.
+# SPDX-License-Identifier: MIT
+# *******************************************************
+# *
+# * DISCLAIMER. THIS PROGRAM IS PROVIDED TO YOU "AS IS" WITHOUT
+# * WARRANTIES OR CONDITIONS OF ANY KIND, WHETHER ORAL OR WRITTEN,
+# * EXPRESS OR IMPLIED. THE AUTHOR SPECIFICALLY DISCLAIMS ANY IMPLIED
+# * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
+# * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
+
+"""Model and Query Classes for Legacy Alerts and Workflows used Alert API v6 and SDK 1.4.3 or earlier"""
+
+from cbc_sdk.errors import ApiError, FunctionalityDecommissioned
 from cbc_sdk.platform.devices import DeviceSearchQuery
 from cbc_sdk.base import CriteriaBuilderSupportMixin
 
-ALERT_VALID_CATEGORIES = ["THREAT", "MONITORED"]
 ALERT_VALID_REPUTATIONS = ["KNOWN_MALWARE", "SUSPECT_MALWARE", "PUP", "NOT_LISTED", "ADAPTIVE_WHITE_LIST",
                            "COMMON_WHITE_LIST", "TRUSTED_WHITE_LIST", "COMPANY_BLACK_LIST"]
 ALERT_VALID_ALERT_TYPES = ["CB_ANALYTICS", "DEVICE_CONTROL", "WATCHLIST", "CONTAINER_RUNTIME"]
@@ -25,22 +38,26 @@ CB_ANALYTICS_VALID_THREAT_CAUSE_VECTORS = ["EMAIL", "WEB", "GENERIC_SERVER", "GE
 
 
 class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
+    """Represents a legacy alert, based on Alert API v6 or SDK 1.4.3 or earlier."""
 
     def set_categories(self, categories):
         """
-        Restricts the alerts that this query is performed on to the specified categories.
+        The field `categories` was deprecated and not included in v7.  This method has been removed.
+
+        In Alerts v7, only records with the type THREAT are returned.
+        Records that in v6 had the category MONITORED (Observed) are now Observations
+        See `Developer Network Alerts v6 Migration
+        <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/alerts-migration/>`_
+        for more details.
 
         Args:
             categories (list): List of categories to be restricted to. Valid categories are
                                "THREAT", "MONITORED", "INFO", "MINOR", "SERIOUS", and "CRITICAL."
 
-        Returns:
-            AlertSearchQuery: This instance.
+        Raises:
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
-        if not all((c in ALERT_VALID_CATEGORIES) for c in categories):
-            raise ApiError("One or more invalid category values")
-        self._update_criteria("category", categories)
-        return self
+        raise FunctionalityDecommissioned("Starting with SDK v1.5.0 Category is not a valid field on Alert.")
 
     def set_create_time(self, *args, **kwargs):
         """
@@ -151,16 +168,23 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
 
     def set_group_results(self, do_group):
         """
-        Specifies whether or not to group the results of the query.
+        The field `group_results` was deprecated and not included in v7.  This method has been removed.
+
+        It previously specified whether to group the results of the query.
+        Use the `Grouped Alerts Operations
+        <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alerts-api/>`_
+        #grouped-alerts-operations) instead.
+        See `Developer Network Alerts v6 Migration
+        <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/alerts-migration/>`_
+        for more details.
 
         Args:
             do_group (bool): True to group the results, False to not do so.
 
-        Returns:
-            AlertSearchQuery: This instance.
+        Raises:
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
-        self._criteria["group_results"] = True if do_group else False
-        return self
+        raise FunctionalityDecommissioned("Starting with SDK v1.5.0 group_results is not a valid field on Alert.")
 
     def set_alert_ids(self, alert_ids):
         """
@@ -190,19 +214,6 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         if not all(isinstance(v, str) for v in alert_ids):
             raise ApiError("One or more invalid alert ID values")
         self._update_criteria("legacy_alert_id", alert_ids)
-        return self
-
-    def set_minimum_severity(self, severity):
-        """
-        Restricts the alerts that this query is performed on to the specified minimum severity level.
-
-        Args:
-            severity (int): The minimum severity level for alerts.
-
-        Returns:
-            AlertSearchQuery: This instance.
-        """
-        self._criteria["minimum_severity"] = severity
         return self
 
     def set_policy_ids(self, policy_ids):
@@ -342,8 +353,10 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         Returns:
             AlertSearchQuery: This instance.
         """
-        if key not in ["create_time", "first_event_time", "last_event_time", "last_update_time", "backend_timestamp", "backend_update_timestamp"]:
-            raise ApiError("key must be one of create_time, first_event_time, last_event_time, backend_timestamp, backend_update_timestamp, or last_update_time")
+        if key not in ["create_time", "first_event_time", "last_event_time", "last_update_time", "backend_timestamp",
+                       "backend_update_timestamp"]:
+            raise ApiError("key must be one of create_time, first_event_time, last_event_time, backend_timestamp, "
+                           "backend_update_timestamp, or last_update_time")
         if kwargs.get("start", None) and kwargs.get("end", None):
             if kwargs.get("range", None):
                 raise ApiError("cannot specify range= in addition to start= and end=")
@@ -653,20 +666,21 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
 
     def set_blocked_threat_categories(self, categories):
         """
-        Restricts the alerts that this query is performed on to the specified threat categories that were blocked.
+        The field `blocked_threat_category` was deprecated and not included in v7.  This method has been removed.
+
+        See `Developer Network Alerts v6 Migration
+        <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/alerts-migration/>`_
+        for more details.
 
         Args:
-            categories (list): List of threat categories to look for.  Valid values are "UNKNOWN",
-                               "NON_MALWARE", "NEW_MALWARE", "KNOWN_MALWARE", and "RISKY_PROGRAM".
+        categories (list): List of threat categories to look for.  Valid values are "UNKNOWN",
+                           "NON_MALWARE", "NEW_MALWARE", "KNOWN_MALWARE", and "RISKY_PROGRAM".
 
-        Returns:
-            CBAnalyticsAlertSearchQuery: This instance.
+        Raises:
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
-        if not all((category in CB_ANALYTICS_VALID_THREAT_CATEGORIES)
-                   for category in categories):
-            raise ApiError("One or more invalid threat categories")
-        self._update_criteria("blocked_threat_category", categories)
-        return self
+        raise FunctionalityDecommissioned(
+            "Starting with SDK v1.5.0 blocked_threat_category is not a valid field on Alert.")
 
     def set_device_locations(self, locations):
         """
@@ -687,38 +701,38 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
 
     def set_kill_chain_statuses(self, statuses):
         """
-        Restricts the alerts that this query is performed on to the specified kill chain statuses.
+        The field `kill_chain_status` was deprecated and not included in v7.  This method has been removed.
+
+        See `Developer Network Alerts v6 Migration
+        <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/alerts-migration/>`_
+        for more details.
 
         Args:
-            statuses (list): List of kill chain statuses to look for. Valid values are "RECONNAISSANCE",
-                             "WEAPONIZE", "DELIVER_EXPLOIT", "INSTALL_RUN","COMMAND_AND_CONTROL", "EXECUTE_GOAL",
-                             and "BREACH".
+        statuses (list): List of kill chain statuses to look for. Valid values are "RECONNAISSANCE",
+                         "WEAPONIZE", "DELIVER_EXPLOIT", "INSTALL_RUN","COMMAND_AND_CONTROL", "EXECUTE_GOAL",
+                         and "BREACH".
 
-        Returns:
-            CBAnalyticsAlertSearchQuery: This instance.
+        Raises:
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
-        if not all((status in CB_ANALYTICS_VALID_KILL_CHAIN_STATUSES)
-                   for status in statuses):
-            raise ApiError("One or more invalid kill chain status values")
-        self._update_criteria("kill_chain_status", statuses)
-        return self
+        raise FunctionalityDecommissioned("Starting with SDK v1.5.0 Category is not a valid field on Alert.")
 
     def set_not_blocked_threat_categories(self, categories):
         """
-        Restricts the alerts that this query is performed on to the specified threat categories that were NOT blocked.
+        The field `not_blocked_threat_category` was deprecated and not included in v7.  This method has been removed.
+
+        See `Developer Network Alerts v6 Migration
+        <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/alerts-migration/>`_
+        for more details.
 
         Args:
-            categories (list): List of threat categories to look for.  Valid values are "UNKNOWN",
-                               "NON_MALWARE", "NEW_MALWARE", "KNOWN_MALWARE", and "RISKY_PROGRAM".
+        categories (list): List of threat categories to look for.  Valid values are "UNKNOWN",
+                           "NON_MALWARE", "NEW_MALWARE", "KNOWN_MALWARE", and "RISKY_PROGRAM".
 
-        Returns:
-            CBAnalyticsAlertSearchQuery: This instance.
+        Raises:
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
-        if not all((category in CB_ANALYTICS_VALID_THREAT_CATEGORIES)
-                   for category in categories):
-            raise ApiError("One or more invalid threat categories")
-        self._update_criteria("not_blocked_threat_category", categories)
-        return self
+        raise FunctionalityDecommissioned("Starting with SDK v1.5.0 kill_chain_status is not a valid field on Alert.")
 
     def set_policy_applied(self, applied_statuses):
         """
@@ -786,21 +800,21 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
 
     def set_threat_cause_vectors(self, vectors):
         """
-        Restricts the alerts that this query is performed on to the specified threat cause vectors.
+        The field `threat_cause_vector` was deprecated and not included in v7.  This method has been removed.
+
+        See `Developer Network Alerts v6 Migration
+        <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/alerts-migration/>`_
+        for more details.
 
         Args:
             vectors (list): List of threat cause vectors to look for.  Valid values are "EMAIL", "WEB",
                             "GENERIC_SERVER", "GENERIC_CLIENT", "REMOTE_DRIVE", "REMOVABLE_MEDIA", "UNKNOWN",
                             "APP_STORE", and "THIRD_PARTY".
 
-        Returns:
-            CBAnalyticsAlertSearchQuery: This instance.
+        Raises:
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
-        if not all((vector in CB_ANALYTICS_VALID_THREAT_CAUSE_VECTORS)
-                   for vector in vectors):
-            raise ApiError("One or more invalid threat cause vectors")
-        self._update_criteria("threat_cause_vector", vectors)
-        return self
+        raise FunctionalityDecommissioned("Starting with SDK v1.5.0 threat_cause_vector is not a valid field on Alert.")
 
     def set_external_device_friendly_names(self, names):
         """

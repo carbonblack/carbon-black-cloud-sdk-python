@@ -215,16 +215,16 @@ def cybox_parse_observable(observable, indicator, timestamp, score):
     # ID must be unique. Collisions cause 500 error on Carbon Black backend
     id = str(uuid.uuid4())
 
-    if type(props) == DomainName:
+    if isinstance(props, DomainName):
         reports = parse_domain_name(props, id, description, title, timestamp, link, score)
 
-    elif type(props) == Address:
+    elif isinstance(props, Address):
         reports = parse_address(props, id, description, title, timestamp, link, score)
 
-    elif type(props) == File:
+    elif isinstance(props, File):
         reports = parse_file(props, id, description, title, timestamp, link, score)
 
-    elif type(props) == URI:
+    elif isinstance(props, URI):
         reports = parse_uri(props, id, description, title, timestamp, link, score)
 
     else:

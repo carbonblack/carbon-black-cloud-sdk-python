@@ -722,9 +722,9 @@ class CbLRSessionBase(object):
         """
         real_value = value
         if value_type is None:
-            if type(value) == int:
+            if isinstance(value, int):
                 value_type = "REG_DWORD"
-            elif type(value) == list:
+            elif isinstance(value, list):
                 value_type = "REG_MULTI_SZ"
                 real_value = [str(item) for item in list(value)]
             else:
@@ -1175,7 +1175,7 @@ class LiveResponseJobScheduler(threading.Thread):
         dformat = '%Y-%m-%dT%H:%M:%S.%fZ'
         devices = [s for s in self._cb.select(Device)
                    if s.id in self._unscheduled_jobs and s.id not in self._job_workers
-                   and now - datetime.strptime(s.last_contact_time, dformat) < delta]  # noqa: W503
+                   and now - datetime.strptime(s.last_contact_time, dformat) < delta]
 
         log.debug("Spawning new workers to handle these devices: {0}".format(devices))
         for device in devices:
