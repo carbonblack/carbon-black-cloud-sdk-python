@@ -1,5 +1,5 @@
-Alert Migration: API v6 to v7, SDK v1.4.3 to v1.5.0
-===================================================
+Alert Migration
+===============
 
 TO DO items:
 * Add links to RTD sections
@@ -31,46 +31,83 @@ The following fields have a new name in Alert v7 and the new field name contains
 Backwards compatibility has been built in such that calling legacy `set_<v6 field name>()` methods on the query object
 and `get(<v6 field name>)` will return the expected results.
 
-+----------------------+--------------------+
-| Alert v6 API         | Alert v7 API       |
-| SDK 1.4.3 or earlier | SDK 1.5.0 or later |
-+======================+====================+
-| cluster_name | k8s_cluster |
-| create_time | backend_timestamp |
-| first_event_time | first_event_timestamp |
-| last_event_time | last_event_timestamp |
-| last_update_time | backend_update_timestamp |
-| namespace | k8s_namespace |
-| notes_present | alert_notes_present |
-| policy_id | device_policy_id |
-| policy_name | device_policy |
-| port | netconn_local_port |
-| protocol | netconn_protocol |
-| remote_domain | netconn_remote_domain |
-| remote_ip | netconn_remote_ip |
-| remote_namespace | remote_k8s_namespace |
-| remote_replica_id | remote_k8s_pod_name |
-| remote_workload_kind | remote_k8s_kind |
-| remote_workload_name | remote_k8s_workload_name |
-| replica_id | k8s_pod_name |
-| rule_id | rule_id  |
-| run_state | run_state |
-| target_value | device_target_value |
-| threat_cause_actor_certificate_authority | process_issuer |
-| threat_cause_actor_name | process_name |
-|| Note that `threat_cause_actor_name` was only the name of the executable.  `process_name` contains the full path. |
-| threat_cause_actor_publisher | process_publisher |
-| threat_cause_actor_sha256 | process_sha256 |
-| threat_cause_cause_event_id | primary_event_id |
-| threat_cause_md5 | process_md5 |
-| threat_cause_parent_guid | parent_guid |
-| threat_cause_reputation | process_reputation |
-| threat_indicators | ttps |
-| watchlists | watchlists.id |
-| workflow.last_update_time | workflow.change_timestamp |
-| workload_kind | k8s_kind |
-| workload_name | k8s_workload_name" |
-+----------------------+--------------------+
+
+.. list-table:: Field mappings where the field has been renamed
+   :widths: 50, 50
+   :header-rows: 1
+   :class: longtable
+
+   * - Alert v6 API - SDK 1.4.3 or earlier
+     - Alert v7 API - SDK 1.5.0 or later
+   * - cluster_name
+     - k8s_cluster
+   * - create_time
+     - backend_timestamp
+   * - first_event_time
+     - first_event_timestamp
+   * - last_event_time
+     - last_event_timestamp
+   * - last_update_time
+     - backend_update_timestamp
+   * - namespace
+     - k8s_namespace
+   * - notes_present
+     - alert_notes_present
+   * - policy_id
+     - device_policy_id
+   * - policy_name
+     - device_policy
+   * - port
+     - netconn_local_port
+   * - protocol
+     - netconn_protocol
+   * - remote_domain
+     - netconn_remote_domain
+   * - remote_ip
+     - netconn_remote_ip
+   * - remote_namespace
+     - remote_k8s_namespace
+   * - remote_replica_id
+     - remote_k8s_pod_name
+   * - remote_workload_kind
+     - remote_k8s_kind
+   * - remote_workload_name
+     - remote_k8s_workload_name
+   * - replica_id
+     - k8s_pod_name
+   * - rule_id
+     - rule_id
+   * - run_state
+     - run_state
+   * - target_value
+     - device_target_value
+   * - threat_cause_actor_certificate_authority
+     - process_issuer
+   * - threat_cause_actor_name
+     - process_name. Note that `threat_cause_actor_name` was only the name of the executable.  `process_name` contains the full path.
+   * - threat_cause_actor_publisher
+     - process_publisher
+   * - threat_cause_actor_sha256
+     - process_sha256
+   * - threat_cause_cause_event_id
+     - primary_event_id
+   * - threat_cause_md5
+     - process_md5
+   * - threat_cause_parent_guid
+     - parent_guid
+   * - threat_cause_reputation
+     - process_reputation
+   * - threat_indicators
+     - ttps
+   * - watchlists
+     - watchlists.id
+   * - workflow.last_update_time
+     - workflow.change_timestamp
+   * - workload_kind
+     - k8s_kind
+   * - workload_name
+     - k8s_workload_name"
+
 
 Attributes that have been removed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -122,12 +159,17 @@ Workflow has changed significantly
 
 The workflow feature for bulk closure of Alerts has changed significantly. The workflow fields do not have
 backwards compatibility built in.  The new workflow is:
-1. Submit a job to update the status of Alerts.
-    * The request body is a search request and all alerts matching the request will be updated
-    * The status can be `OPEN`, `IN PROGRESS` or `CLOSED` (previously `DISMISSED`)
-    * A Closure Reason may be included
-2. The immediate API response confirms the job was successfully submiteed
-3. Use the Alert Search to see updated status of an alert
+
+#. Submit a job to update the status of Alerts.
+
+* The request body is a search request and all alerts matching the request will be updated
+* The status can be `OPEN`, `IN PROGRESS` or `CLOSED` (previously `DISMISSED`)
+* A Closure Reason may be included
+
+#. The immediate API response confirms the job was successfully submited
+
+#. Use the Alert Search to see updated status of an alert
+
 The job is submitted. Bulk returns Success-the job was submitted, search Alerts to see results.
 
 
