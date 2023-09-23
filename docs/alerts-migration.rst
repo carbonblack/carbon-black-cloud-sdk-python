@@ -117,6 +117,7 @@ legacy set_`<v6 field name>()` methods on the query object or `get(<v6 field nam
 `FunctionalityDecommissioned` exception will be raised.
 
 Fields on CB Analytics Alerts:
+
 * blocked_threat_category
 * category
 * group_details
@@ -128,6 +129,7 @@ Fields on CB Analytics Alerts:
 * threat_cause_vector
 
 Fields on Watchlist Alerts
+
 * category
 * count
 * document_guid
@@ -137,12 +139,14 @@ Fields on Watchlist Alerts
 * threat_indicators
 
 Fields on Device Control Alerts
+
 * category
 * group_details
 * threat_cause_threat_category
 * threat_cause_vector
 
 Fields on Container Runtime Alerts
+
 * category
 * group_details
 * target_value
@@ -150,6 +154,7 @@ Fields on Container Runtime Alerts
 * workload_id
 
 Fields on Host Based Firewall Alerts
+
 * category
 * group_details
 * threat_cause_threat_category
@@ -162,29 +167,30 @@ backwards compatibility built in.  The new workflow is:
 
 #. Submit a job to update the status of Alerts.
 
-* The request body is a search request and all alerts matching the request will be updated
-* The status can be `OPEN`, `IN PROGRESS` or `CLOSED` (previously `DISMISSED`)
-* A Closure Reason may be included
+    The request body is a search request and all alerts matching the request will be updated
 
-#. The immediate API response confirms the job was successfully submited
+    The status can be `OPEN`, `IN PROGRESS` or `CLOSED` (previously `DISMISSED`)
+
+#. A Closure Reason may be included
+
+#. The immediate API response confirms the job was successfully submitted
 
 #. Use the Alert Search to see updated status of an alert
-
-The job is submitted. Bulk returns Success-the job was submitted, search Alerts to see results.
-
 
 Helper Functions that have been removed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 CBAnalytics get_events() has been removed
-* Because: the Enriched Events that this method returns have been deprecated
-* Replaced with: Observations
-* More information: Developer Network Blog, `How to Take Advantage of the New Observations API <https://developer.carbonblack.com/2023/07/how-to-take-advantage-of-the-new-observations-api/>`_
+
+* The Enriched Events that this method returns have been deprecated
+* Instead, use `Observations <https://developer.carbonblack.com/2023/07/how-to-take-advantage-of-the-new-observations-api/>`_
+* More information is on the Developer Network Blog, `How to Take Advantage of the New Observations API <https://developer.carbonblack.com/2023/07/how-to-take-advantage-of-the-new-observations-api/>`_
 
 New Helper Functions
 ^^^^^^^^^^^^^^^^^^^^
 
 to_json(version)
+
 * Should be used instead of accessing `_info` directly
 * This is a new method that returns the json representation of the alert
 * It defaults to the current API version, v7.
