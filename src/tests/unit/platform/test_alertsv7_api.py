@@ -947,7 +947,7 @@ def test_query_set_remote_is_private(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         assert body == {
             "criteria": {
-                "remote_is_private": False
+                "remote_is_private": True
             },
             "query": "",
             "rows": 1,
@@ -959,6 +959,6 @@ def test_query_set_remote_is_private(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(Alert).set_remote_is_private(False).set_rows(1)
+    query = api.select(Alert).set_remote_is_private(True).set_rows(1)
     len(query)
     # no assertions, the check is that the post request is formed correctly.
