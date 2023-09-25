@@ -16,22 +16,22 @@ In general, and unless otherwise indicated, these guides are directed at those t
 Certain guides may be more geared towards audiences with more experience with the Carbon Black Cloud, such as
 administrators.
 
-Guides
-------
+Information about updating to new versions of the SDK to take advantage of new features in Carbon Black Cloud are
+in `Migration Guides`_.
+
+Feature Guides
+--------------
 .. toctree::
    :maxdepth: 2
 
-   porting-guide
    searching
    alerts
-   alerts-migration
    audit-log
    developing-credential-providers
    device-control
    differential-analysis
    live-query
    live-response
-   live-response-v6-migration
    policy
    recommendations
    reputation-override
@@ -57,3 +57,12 @@ Guides
 * :doc:`vulnerabilities` - View asset (Endpoint or Workload) vulnerabilities to increase security visibility.
 * :doc:`watchlists-feeds-reports` - Work with Enterprise EDR watchlists, feeds, reports, and Indicators of Compromise (IOCs).
 * :doc:`workload` - Advanced protection purpose-built for securing modern workloads to reduce the attack surface and strengthen security posture.
+
+Migration Guides
+----------------
+.. toctree::
+   :maxdepth: 2
+
+   alerts-migration
+   porting-guide
+   live-response-v6-migration

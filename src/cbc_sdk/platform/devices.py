@@ -413,7 +413,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
                       "BYPASS", "QUARANTINE", "SENSOR_OUTOFDATE",
                       "DELETED", "LIVE"]
     VALID_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "MISSION_CRITICAL"]
-    VALID_DEPLOYMENT_TYPES = ["ENDPOINT", "WORKLOAD"]
+    VALID_DEPLOYMENT_TYPES = ["ENDPOINT", "WORKLOAD", "VDI", "AWS", "AZURE", "GCP"]
     VALID_FACET_FIELDS = ["policy_id", "status", "os", "ad_group_id", "cloud_provider_account_id",
                           "auto_scaling_group_name", "virtual_private_cloud_id"]
 

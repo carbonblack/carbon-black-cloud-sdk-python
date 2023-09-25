@@ -7,6 +7,9 @@ Overview
 Most of the changes from v3 to v6 are on the routes. Thе updated API (v6) includes a more granular approach to roles-based access
 control (RBAC).
 
+This change was implemented in CBC SDK 1.3.0, Released June 8, 2021.  If you are on a more recent version of this SDK,
+you are already using the new version.
+
 Access Permissions
 ------------------
 A key wth a Custom Access Level with appropriate permissions needs to be created for the Live Response. The following
@@ -98,3 +101,4 @@ Additional Information
 
 * `(CBC) Live Response API releasing v6: now with granular RBAC! <https://community.carbonblack.com/t5/Developer-Relations/CBC-Live-Response-API-releasing-v6-now-with-granular-RBAC/m-p/102358/thread-id/2595>`_
 * `Live Response Documentation <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/live-response-api/>`_
+* `Live Response API Migration Guide <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/live-response-migration/>`_
