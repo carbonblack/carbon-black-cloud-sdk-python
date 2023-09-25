@@ -1259,3 +1259,18 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         """
         self._criteria["alert_notes_present"] = is_present
         return self
+
+    def set_remote_is_private(self, is_private):
+        """
+        Restricts the alerts that this query is performed on based on matching the remote_is_private field.
+
+        This field is only present on CONTAINER_RUNTIME alerts and so filtering will be ingored on other alert types.
+
+        Args:
+            is_private (boolean): Whether the remote information is private: true or false
+
+        Returns:
+            AlertSearchQuery: This instance.
+        """
+        self._criteria["remote_is_private"] = is_private
+        return self
