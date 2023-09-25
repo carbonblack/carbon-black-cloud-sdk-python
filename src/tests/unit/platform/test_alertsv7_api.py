@@ -939,3 +939,26 @@ def test_query_set_alert_notes_present(cbcsdk_mock):
     query = api.select(Alert).set_alert_notes_present(False).set_rows(1)
     len(query)
     # no assertions, the check is that the post request is formed correctly.
+
+
+def test_query_set_remote_is_private(cbcsdk_mock):
+    """Test a search setting whether remote_is_private is true or false."""
+
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "remote_is_private": False
+            },
+            "query": "",
+            "rows": 1,
+            "start": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
+    query = api.select(Alert).set_remote_is_private(False).set_rows(1)
+    len(query)
+    # no assertions, the check is that the post request is formed correctly.
