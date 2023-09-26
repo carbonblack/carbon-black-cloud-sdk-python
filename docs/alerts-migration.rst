@@ -113,10 +113,45 @@ Attributes that have been removed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following attributes do not have an equivalent in Alert v7 API. If they are accessed using the
-legacy set_`<v6 field name>()` methods on the query object or `get(<v6 field name>)` a
+legacy *set_<v6 field name>()* methods on the query object or *get(<v6 field name>)* a
 `FunctionalityDecommissioned` exception will be raised.
 
-Fields on CB Analytics Alerts:
+This code block which calls the decommissioned method set_blocked_threat_categories:
+.. code-block:: python
+
+    >>> from cbc_sdk import CBCloudAPI
+    >>> from cbc_sdk.platform import BaseAlert
+    >>> api = CBCloudAPI(profile='sample')
+    >>> alert_list = api.select(BaseAlert).set_blocked_threat_categories(["NON_MALWARE"])
+
+
+Will generate the following exception:
+.. code-block:: python
+
+    cbc_sdk.errors.FunctionalityDecommissioned: The set_kill_chain_statuses method does not exist in in SDK v1.5.0
+    because kill_chain_status is not a valid field on Alert v7 API.  The functionality has been decommissioned.
+
+
+Similarly this code block which calls the get attribute function with the decommissioned attribute, blocked_threat_categories:
+.. code-block:: python
+
+    >>> from cbc_sdk import CBCloudAPI
+    >>> from cbc_sdk.platform import BaseAlert
+    >>> api = CBCloudAPI(profile='sample')
+    >>> alert_list = api.select(BaseAlert)
+    >>> alert = alert_list.first()
+    >>> alert.get("blocked_threat_category")
+
+
+Will generate the following exception:
+.. code-block:: python
+
+    cbc_sdk.errors.FunctionalityDecommissioned:
+    The Attribute 'blocked_threat_category' does not exist in object 'WatchlistAlert' because it was
+    deprecated in Alerts v7. In SDK 1.5.0 the functionality has been decommissioned.
+
+
+Deprecated Fields on CB Analytics Alerts:
 
 * blocked_threat_category
 * category
@@ -128,7 +163,7 @@ Fields on CB Analytics Alerts:
 * threat_cause_threat_category
 * threat_cause_vector
 
-Fields on Watchlist Alerts
+Deprecated Fields on Watchlist Alerts
 
 * category
 * count
@@ -138,14 +173,14 @@ Fields on Watchlist Alerts
 * threat_cause_vector
 * threat_indicators
 
-Fields on Device Control Alerts
+Deprecated Fields on Device Control Alerts
 
 * category
 * group_details
 * threat_cause_threat_category
 * threat_cause_vector
 
-Fields on Container Runtime Alerts
+Deprecated Fields on Container Runtime Alerts
 
 * category
 * group_details
@@ -153,7 +188,7 @@ Fields on Container Runtime Alerts
 * threat_cause_threat_category
 * workload_id
 
-Fields on Host Based Firewall Alerts
+Deprecated Fields on Host Based Firewall Alerts
 
 * category
 * group_details
@@ -164,6 +199,8 @@ Workflow has changed significantly
 
 The workflow feature for bulk closure of Alerts has changed significantly. The workflow fields do not have
 backwards compatibility built in.  The new workflow is:
+
+TO DO ADD EXAMPLE AFTER CHANGE IS IMPLEMENTED
 
 #. Submit a job to update the status of Alerts.
 
@@ -186,6 +223,25 @@ CBAnalytics get_events() has been removed
 * Instead, use `Observations <https://developer.carbonblack.com/2023/07/how-to-take-advantage-of-the-new-observations-api/>`_
 * More information is on the Developer Network Blog, `How to Take Advantage of the New Observations API <https://developer.carbonblack.com/2023/07/how-to-take-advantage-of-the-new-observations-api/>`_
 
+Instead of:
+.. code-block:: python
+
+    >>> cb = get_cb_cloud_object(args)
+    >>> alert_list = cb.select(CBAnalyticsAlert)
+    >>> alert = alert_list.first()
+    >>> alert.get_events()
+
+Use: TO DO VERIFY THIS IS ACCURATE AFTER get_observations is implemented.
+.. code-block:: python
+
+    >>> cb = get_cb_cloud_object(args)
+    >>> alert_list = cb.select(Alert)
+    >>> alert = alert_list.first()
+    >>> alert.get_observations()
+
+
+Also note that Observations can be retrieved for any type of Alert. It is not limited to CB Analytics Alerts.
+
 New Helper Functions
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -196,3 +252,16 @@ to_json(version)
 * It defaults to the current API version, v7.
 * "v6" can be passed as a parameter and the attribute names will be translated to the Alert v6 names
 * It is intended to ease the update path if the `_info` attribute was being used.
+
+.. code-block:: python
+
+    >>> cb = get_cb_cloud_object(args)
+    >>> alert_list = cb.select(Alert)
+    >>> alert = alert_list.first()
+    >>> v7_dict = alert.to_json()
+    >>> v6_dict = alert.to_json("v6")
+
+The returned object v7_dict will have a dictionary representation of the alert using v7 attribute names and structure.
+
+The returned object v6_dict will have a dictionary representation of the alert using v6 attribute names and structure.
+If the field does not exist in v7, then the field will also be missing from the json representation.

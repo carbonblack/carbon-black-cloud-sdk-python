@@ -57,7 +57,8 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         Raises:
             FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
-        raise FunctionalityDecommissioned("Starting with SDK v1.5.0 Category is not a valid field on Alert.")
+        raise FunctionalityDecommissioned("set_categories method does not exist in in SDK v1.5.0 "
+                                          "because category is not a valid field on Alert v7 API.  The")
 
     def set_create_time(self, *args, **kwargs):
         """
@@ -184,7 +185,8 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         Raises:
             FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
-        raise FunctionalityDecommissioned("Starting with SDK v1.5.0 group_results is not a valid field on Alert.")
+        raise FunctionalityDecommissioned("set_group_results method does not exist in in SDK v1.5.0 "
+                                          "because group_result is not a valid field on Alert v7 API.  The")
 
     def set_alert_ids(self, alert_ids):
         """
@@ -679,8 +681,8 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         Raises:
             FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
-        raise FunctionalityDecommissioned(
-            "Starting with SDK v1.5.0 blocked_threat_category is not a valid field on Alert.")
+        raise FunctionalityDecommissioned("set_blocked_threat_categories method does not exist in in SDK v1.5.0 "
+                                          "because blocked_threat_category is not a valid field on Alert v7 API.  The")
 
     def set_device_locations(self, locations):
         """
@@ -715,7 +717,8 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         Raises:
             FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
-        raise FunctionalityDecommissioned("Starting with SDK v1.5.0 Category is not a valid field on Alert.")
+        raise FunctionalityDecommissioned("set_kill_chain_statuses method does not exist in in SDK v1.5.0 because "
+                                          "kill_chain_status is not a valid field on Alert v7 API.  The")
 
     def set_not_blocked_threat_categories(self, categories):
         """
@@ -732,7 +735,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         Raises:
             FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
-        raise FunctionalityDecommissioned("Starting with SDK v1.5.0 kill_chain_status is not a valid field on Alert.")
+        raise FunctionalityDecommissioned("set_not_blocked_threat_categories method does not exist in in SDK v1.5.0 "
+                                          "because not_blocked_threat_category is not a valid field on Alert v7 API."
+                                          " The")
 
     def set_policy_applied(self, applied_statuses):
         """
@@ -814,7 +819,8 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         Raises:
             FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
-        raise FunctionalityDecommissioned("Starting with SDK v1.5.0 threat_cause_vector is not a valid field on Alert.")
+        raise FunctionalityDecommissioned("set_threat_cause_vectors method does not exist in in SDK v1.5.0 "
+                                          "because threat_cause_vector is not a valid field on Alert v7 API.  The")
 
     def set_external_device_friendly_names(self, names):
         """
