@@ -117,6 +117,7 @@ legacy *set_<v6 field name>()* methods on the query object or *get(<v6 field nam
 `FunctionalityDecommissioned` exception will be raised.
 
 This code block which calls the decommissioned method set_blocked_threat_categories:
+
 .. code-block:: python
 
     >>> from cbc_sdk import CBCloudAPI
@@ -126,6 +127,7 @@ This code block which calls the decommissioned method set_blocked_threat_categor
 
 
 Will generate the following exception:
+
 .. code-block:: python
 
     cbc_sdk.errors.FunctionalityDecommissioned: The set_kill_chain_statuses method does not exist in in SDK v1.5.0
@@ -133,6 +135,7 @@ Will generate the following exception:
 
 
 Similarly this code block which calls the get attribute function with the decommissioned attribute, blocked_threat_categories:
+
 .. code-block:: python
 
     >>> from cbc_sdk import CBCloudAPI
@@ -144,6 +147,7 @@ Similarly this code block which calls the get attribute function with the decomm
 
 
 Will generate the following exception:
+
 .. code-block:: python
 
     cbc_sdk.errors.FunctionalityDecommissioned:
@@ -224,6 +228,7 @@ CBAnalytics get_events() has been removed
 * More information is on the Developer Network Blog, `How to Take Advantage of the New Observations API <https://developer.carbonblack.com/2023/07/how-to-take-advantage-of-the-new-observations-api/>`_
 
 Instead of:
+
 .. code-block:: python
 
     >>> cb = get_cb_cloud_object(args)
@@ -232,6 +237,7 @@ Instead of:
     >>> alert.get_events()
 
 Use: TO DO VERIFY THIS IS ACCURATE AFTER get_observations is implemented.
+
 .. code-block:: python
 
     >>> cb = get_cb_cloud_object(args)
