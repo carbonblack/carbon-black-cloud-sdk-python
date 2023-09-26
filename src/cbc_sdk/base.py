@@ -1967,6 +1967,8 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
     def _validate(self, args):
         if not hasattr(self._doc_class, "validation_url"):
             return
+        if not args.get('query'):
+            return
 
         url = self._doc_class.validation_url.format(self._cb.credentials.org_key)
         method = self._doc_class.validation_method if hasattr(self._doc_class, "validation_method") else "GET"
@@ -2272,7 +2274,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
             args["time_range"] = self._time_range
         query = self._query_builder._collapse()
         if query:
-            args['query'] = query
+            args["query"] = query
         return args
 
     def _submit(self):
@@ -2330,6 +2332,9 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
 
     def _validate(self, args):
         if not hasattr(self._doc_class, "validation_url"):
+            return
+
+        if not args.get('query'):
             return
 
         url = self._doc_class.validation_url.format(self._cb.credentials.org_key)

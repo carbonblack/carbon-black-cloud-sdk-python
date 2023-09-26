@@ -880,7 +880,6 @@ def test_query_set_minimum_severity(cbcsdk_mock):
             "criteria": {
                 "minimum_severity": 3
             },
-            "query": "",
             "rows": 1,
             "start": 1
         }
@@ -903,7 +902,6 @@ def test_query_set_threat_notes_present(cbcsdk_mock):
             "criteria": {
                 "threat_notes_present": False
             },
-            "query": "",
             "rows": 1,
             "start": 1
         }
@@ -926,7 +924,6 @@ def test_query_set_alert_notes_present(cbcsdk_mock):
             "criteria": {
                 "alert_notes_present": False
             },
-            "query": "",
             "rows": 1,
             "start": 1
         }
@@ -949,7 +946,6 @@ def test_query_set_remote_is_private(cbcsdk_mock):
             "criteria": {
                 "remote_is_private": True
             },
-            "query": "",
             "rows": 1,
             "start": 1
         }
