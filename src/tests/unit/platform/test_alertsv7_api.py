@@ -101,8 +101,8 @@ def test_query_alert_with_backend_timestamp_as_start_end(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
                         "rows": 2,
-                        "criteria": {"backend_timestamp": {"start": "2019-09-30T12:34:56",
-                                                           "end": "2019-10-01T12:00:12"}}}
+                        "criteria": {"backend_timestamp": {"start": "2019-09-30T12:34:56.000000Z",
+                                                           "end": "2019-10-01T12:00:12.000000Z"}}}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
 
@@ -126,8 +126,8 @@ def test_query_alert_with_backend_timestamp_as_start_end_as_objs(cbcsdk_mock):
         nonlocal _timestamp
         assert body == {"query": "Blort",
                         "rows": 2,
-                        "criteria": {"backend_timestamp": {"start": _timestamp.isoformat(),
-                                                           "end": _timestamp.isoformat()}}}
+                        "criteria": {"backend_timestamp": {"start": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                                                           "end": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ")}}}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
 
@@ -168,9 +168,10 @@ def test_query_alert_with_backend_update_timestamp_as_start_end(cbcsdk_mock):
 
     def on_post(url, body, **kwargs):
         nonlocal _timestamp
-        assert body == {"query": "Blort", "criteria": {"backend_update_timestamp": {"start": _timestamp.isoformat(),
-                                                                                    "end": _timestamp.isoformat()}},
-                        "rows": 2}
+        assert body == {"query": "Blort", "criteria": {"backend_update_timestamp": {
+            "start": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            "end": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ")}},
+            "rows": 2}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
 
@@ -306,8 +307,8 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
         .add_criteria("blocked_effective_reputation", ["NOT_LISTED"]).add_criteria("blocked_md5",
                                                                                    ["md5_hash"]).add_criteria(
         "blocked_name", ["tim"]) \
-        .add_criteria("blocked_sha256", ["sha256_hash"]) \
-        .add_criteria("childproc_cmdline", ["/usr/bin/python"]).add_criteria("childproc_effective_reputation", ["PUP"])\
+        .add_criteria("blocked_sha256", ["sha256_hash"]).add_criteria("childproc_cmdline", ["/usr/bin/python"]) \
+        .add_criteria("childproc_effective_reputation", ["PUP"]) \
         .add_criteria("childproc_guid", ["12345678"]).add_criteria("childproc_name", ["python"]).add_criteria(
         "childproc_sha256", ["sha256_child"]) \
         .add_criteria("childproc_username", ["steven"]) \
@@ -726,8 +727,9 @@ def test_query_alert_with_time_range_errors(cbcsdk_mock):
     api = cbcsdk_mock.api
     with pytest.raises(ApiError) as ex:
         api.select(Alert).where("Blort").add_time_criteria("invalid", range="whatever")
-    assert "key must be one of create_time, first_event_time, last_event_time, backend_timestamp," \
-           " backend_update_timestamp, or last_update_time" in str(ex.value)
+    assert "key must be one of backend_timestamp, backend_update_timestamp, detection_timestamp, " \
+           "first_event_timestamp, last_event_timestamp, mdr_determination_change_timestamp, " \
+           "mdr_workflow_change_timestamp, user_update_timestamp, or workflow_change_timestamp" in str(ex.value)
 
     with pytest.raises(ApiError) as ex:
         api.select(Alert).where("Blort").add_time_criteria("backend_timestamp",
