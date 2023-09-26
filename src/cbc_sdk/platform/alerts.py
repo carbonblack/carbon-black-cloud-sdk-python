@@ -975,6 +975,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         self._doc_class = doc_class
         self._cb = cb
         self._count_valid = False
+        self._valid_criteria = False
         super(AlertSearchQuery, self).__init__()
 
         self._query_builder = QueryBuilder()
@@ -1040,17 +1041,17 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         time_filter = self._create_valid_time_filter(kwargs)
         if args_count > 0:
             key = args[0]
-            if self._is_valid_time_criteria_key(key):
+            self._valid_criteria = self._is_valid_time_criteria_key_v6(key)
+            if self._valid_criteria:
                 self.add_time_criteria(key, **kwargs)
                 if key in ["create_time", "backend_timestamp"]:
                     self._time_range = time_filter
-                return self
         else:
             # everything before this is only for backwards compatibility, once v6 deprecates all the other
             # checks can be removed
             self._time_range = {}
             self._time_range = time_filter
-            return self
+        return self
 
     def add_time_criteria(self, key, **kwargs):
         """
@@ -1066,11 +1067,34 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         Returns:
             AlertSearchQuery: This instance.
         """
-        if self._is_valid_time_criteria_key(key):
+        # this first if statement will be removed after v6 is deprecated
+        if not self._valid_criteria:
+            self._valid_criteria = self._is_valid_time_criteria_key(key)
+
+        if self._valid_criteria:
             self._time_filters[key] = self._create_valid_time_filter(kwargs)
         return self
 
     def _is_valid_time_criteria_key(self, key):
+        """
+        Verifies that an alert criteria key has the timerange functionality
+
+        Args:
+            args (str): The key to use for criteria one of create_time, first_event_time, last_event_time,
+             backend_timestamp, backend_update_timestamp, or last_update_time
+
+        Returns:
+            boolean true
+        """
+        if key not in ["backend_timestamp", "backend_update_timestamp", "detection_timestamp", "first_event_timestamp",
+                       "last_event_timestamp", "mdr_determination_change_timestamp", "mdr_workflow_change_timestamp",
+                       "user_update_timestamp", "workflow_change_timestamp"]:
+            raise ApiError("key must be one of backend_timestamp, backend_update_timestamp, detection_timestamp, "
+                           "first_event_timestamp, last_event_timestamp, mdr_determination_change_timestamp, "
+                           "mdr_workflow_change_timestamp, user_update_timestamp, or workflow_change_timestamp")
+        return True
+
+    def _is_valid_time_criteria_key_v6(self, key):
         """
         Verifies that an alert criteria key has the timerange functionality
 
@@ -1112,7 +1136,8 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
                 if isinstance(etime, str):
                     etime = datetime.datetime.fromisoformat(etime)
                 if isinstance(stime, datetime.datetime) and isinstance(etime, datetime.datetime):
-                    time_filter = {"start": stime.isoformat(), "end": etime.isoformat()}
+                    time_filter = {"start": stime.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                                   "end": etime.strftime("%Y-%m-%dT%H:%M:%S.%fZ")}
             except:
                 raise ApiError(f"Start and end time must be a string in ISO 8601 format or an object of datetime. "
                                f"Start time {stime} is a {type(stime)}. End time {etime} is a {type(etime)}.")

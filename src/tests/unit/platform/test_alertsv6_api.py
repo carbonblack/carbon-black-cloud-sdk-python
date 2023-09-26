@@ -175,9 +175,10 @@ def test_query_basealert_with_time_range(cbcsdk_mock):
 
     def on_post(url, body, **kwargs):
         nonlocal _timestamp
-        assert body == {"query": "Blort", "criteria": {"last_update_time": {"start": _timestamp.isoformat(),
-                                                                            "end": _timestamp.isoformat()}},
-                        "rows": 2}
+        assert body == {"query": "Blort", "criteria": {"last_update_time": {
+            "start": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            "end": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ")}},
+            "rows": 2}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"state": "OPEN"}}], "num_found": 1}
 
@@ -571,6 +572,7 @@ def test_query_set_rows(cbcsdk_mock):
         assert a.id == "S0L0"
         assert a.org_key == "test"
         assert a.threat_id == "B0RG"
+
 
 # TODO replace bulk tests
 # def test_alerts_bulk_dismiss(cbcsdk_mock):
@@ -967,7 +969,7 @@ def test_query_basealert_with_time_range_errors(cbcsdk_mock):
     api = cbcsdk_mock.api
     with pytest.raises(ApiError) as ex:
         api.select(BaseAlert).where("Blort").set_time_range("invalid", range="whatever")
-    assert "key must be one of create_time, first_event_time, last_event_time, backend_timestamp, "\
+    assert "key must be one of create_time, first_event_time, last_event_time, backend_timestamp, " \
            "backend_update_timestamp, or last_update_time" in str(ex.value)
 
     with pytest.raises(ApiError) as ex:
@@ -1028,6 +1030,7 @@ def test_get_notes_for_alert(cbcsdk_mock):
 
 def test_base_alert_create_note(cbcsdk_mock):
     """Test creating a new note on an alert"""
+
     def on_post(url, body, **kwargs):
         body == {"note": "I am Grogu"}
         return CREATE_ALERT_NOTE
