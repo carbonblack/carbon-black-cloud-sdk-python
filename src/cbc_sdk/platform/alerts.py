@@ -1044,7 +1044,9 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             dict: The complete request body.
         """
         request = {"criteria": self._build_criteria()}
-        request["query"] = self._query_builder._collapse()
+        query = self._query_builder._collapse()
+        if query:
+            request["query"] = query
 
         request["rows"] = self._batch_size
         if from_row > 0:
