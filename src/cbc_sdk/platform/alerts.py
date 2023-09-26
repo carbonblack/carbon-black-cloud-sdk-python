@@ -13,6 +13,7 @@
 
 """Model and Query Classes for Platform Alerts and Workflows"""
 import time
+import datetime
 
 from cbc_sdk.errors import ApiError, TimeoutError, ObjectNotFoundError, NonQueryableModel, FunctionalityDecommissioned
 from cbc_sdk.platform import PlatformModel
@@ -999,89 +1000,129 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
 
     def set_time_range(self, *args, **kwargs):
         """
-        Sets the 'time_range' query body parameter, determining a time window based on 'device_timestamp'.
+        For v7 Alerts:
+
+        Sets the 'time_range' query body parameter, determining a time range based on 'backend_timestamp'.
 
         Args:
-            start (str in ISO 8601 timestamp): When to start the result search.
-            end (str in ISO 8601 timestamp): When to end the result search.
-            range (str): Time range to execute the result search, ending on the current time.
-                Should be in the form "-2w", where y=year, w=week, d=day, h=hour, m=minute, s=second.
+            *args: not used
+            **kwargs (dict): Used to specify start= for start time, end= for end time, and range= for range. Values are
+            either timestamp ISO 8601 strings or datetime objects for start and end time. For range the time range to
+            execute the result search, ending on the current time. Should be in the form "-2w",
+            where y=year, w=week, d=day, h=hour, m=minute, s=second.
 
-        Note:
-            - `range` will take precendent over `start` and `end` if provided.
+        For v6 Alerts (backwards compatibility):
+
+        Restricts the alerts that this query is performed on to the specified time range for a given key. Will also set
+        the 'time_range' as in the v7 usage if key is create_time or backend_timestamp. Will be deprecated with v6 alert
+        api
+
+        Args:
+            key (str): The key to use for criteria one of create_time, first_event_time, last_event_time,
+             backend_timestamp, backend_update_timestamp, or last_update_time
+            **kwargs (dict): Used to specify start= for start time, end= for end time, and range= for range. Values are
+            either timestamp ISO 8601 strings or datetime objects for start and end time. For range the time range to
+            execute the result search, ending on the current time. Should be in the form "-2w",
+            where y=year, w=week, d=day, h=hour, m=minute, s=second.
+
+
+        Returns:
+            AlertSearchQuery: This instance.
 
         Examples:
-            >>> query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z")
-            >>> second_query = api.select(Event).
+            >>> query = api.select(Alert).set_time_range(start="2020-10-20T20:34:07Z")
+            >>> second_query = api.select(Alert).
             ...     set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
-            >>> third_query = api.select(Event).set_time_range(range='-3d')
+            >>> third_query = api.select(Alert).set_time_range(range='-3d')
+
         """
         args_count = args.__len__()
-        start = kwargs.get("start")
-        end = kwargs.get("end")
-        range = kwargs.get("range")
-
+        time_filter = self._create_valid_time_filter(kwargs)
         if args_count > 0:
             key = args[0]
-            if key not in ["create_time", "first_event_time", "last_event_time", "last_update_time",
-                           "backend_timestamp", "backend_update_timestamp"]:
-                raise ApiError("key must be one of create_time, first_event_time, last_event_time, backend_timestamp,"
-                               " backend_update_timestamp, or last_update_time")
-            else:
-                return self.set_time_criterion_filter(*args, **kwargs)
+            if self._is_valid_time_criteria_key(key):
+                self.add_time_criteria(key, **kwargs)
+                if key in ["create_time", "backend_timestamp"]:
+                    self._time_range = time_filter
+                return self
         else:
-            # everything before this is only for backwards compatibuility, once v6 deprecates all thes other
+            # everything before this is only for backwards compatibility, once v6 deprecates all the other
             # checks can be removed
             self._time_range = {}
-            if start:
-                if not isinstance(start, str):
-                    raise ApiError(f"Start time must be a string in ISO 8601 format. {start} is a {type(start)}.")
-                self._time_range["start"] = start
-            if end:
-                if not isinstance(end, str):
-                    raise ApiError(f"End time must be a string in ISO 8601 format. {end} is a {type(end)}.")
-                self._time_range["end"] = end
-            if range:
-                if not isinstance(range, str):
-                    raise ApiError(f"Range must be a string. {range} is a {type(range)}.")
-                self._time_range["range"] = range
+            self._time_range = time_filter
             return self
 
-    def set_time_criterion_filter(self, key, **kwargs):
+    def add_time_criteria(self, key, **kwargs):
         """
-        Restricts the alerts that this query is performed on to the specified time range.
+        Restricts the alerts that this query is performed on to the specified time range for a given key.
 
         The time may either be specified as a start and end point or as a range.
 
         Args:
-            key (str): The key to use for criteria one of create_time,
-                       first_event_time, last_event_time, or last_update_time
+            key (str): The key to use for criteria one of create_time, first_event_time, last_event_time,
+             backend_timestamp, backend_update_timestamp, or last_update_time
             **kwargs (dict): Used to specify start= for start time, end= for end time, and range= for range.
 
         Returns:
             AlertSearchQuery: This instance.
         """
+        if self._is_valid_time_criteria_key(key):
+            self._time_filters[key] = self._create_valid_time_filter(kwargs)
+        return self
+
+    def _is_valid_time_criteria_key(self, key):
+        """
+        Verifies that an alert criteria key has the timerange functionality
+
+        Args:
+            args (str): The key to use for criteria one of create_time, first_event_time, last_event_time,
+             backend_timestamp, backend_update_timestamp, or last_update_time
+
+        Returns:
+            boolean true
+        """
         if key not in ["create_time", "first_event_time", "last_event_time", "last_update_time", "backend_timestamp",
                        "backend_update_timestamp"]:
             raise ApiError("key must be one of create_time, first_event_time, last_event_time, backend_timestamp,"
                            " backend_update_timestamp, or last_update_time")
+        return True
+
+    def _create_valid_time_filter(self, kwargs):
+        """
+        Verifies that an alert criteria key has the timerange functionality
+
+        Args:
+            kwargs (dict): Used to specify start= for start time, end= for end time, and range= for range. Values are
+            either timestamp ISO 8601 strings or datetime objects for start and end time. For range the time range to
+            execute the result search, ending on the current time. Should be in the form "-2w",
+            where y=year, w=week, d=day, h=hour, m=minute, s=second.
+
+        Returns:
+            filter object to be applied to the global time range or a specific field
+        """
+        time_filter = {}
         if kwargs.get("start", None) and kwargs.get("end", None):
             if kwargs.get("range", None):
                 raise ApiError("cannot specify range= in addition to start= and end=")
             stime = kwargs["start"]
-            if not isinstance(stime, str):
-                stime = stime.isoformat()
             etime = kwargs["end"]
-            if not isinstance(etime, str):
-                etime = etime.isoformat()
-            self._time_filters[key] = {"start": stime, "end": etime}
+            try:
+                if isinstance(stime, str):
+                    stime = datetime.datetime.fromisoformat(stime)
+                if isinstance(etime, str):
+                    etime = datetime.datetime.fromisoformat(etime)
+                if isinstance(stime, datetime.datetime) and isinstance(etime, datetime.datetime):
+                    time_filter = {"start": stime.isoformat(), "end": etime.isoformat()}
+            except:
+                raise ApiError(f"Start and end time must be a string in ISO 8601 format or an object of datetime. "
+                               f"Start time {stime} is a {type(stime)}. End time {etime} is a {type(etime)}.")
         elif kwargs.get("range", None):
             if kwargs.get("start", None) or kwargs.get("end", None):
                 raise ApiError("cannot specify start= or end= in addition to range=")
-            self._time_filters[key] = {"range": kwargs["range"]}
+            time_filter = {"range": kwargs["range"]}
         else:
             raise ApiError("must specify either start= and end= or range=")
-        return self
+        return time_filter
 
     def _build_criteria(self):
         """

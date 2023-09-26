@@ -109,8 +109,8 @@ def test_query_alert_with_backend_timestamp_as_start_end(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(Alert).where("Blort").set_time_criterion_filter("backend_timestamp", start="2019-09-30T12:34:56",
-                                                                       end="2019-10-01T12:00:12")
+    query = api.select(Alert).where("Blort").add_time_criteria("backend_timestamp", start="2019-09-30T12:34:56",
+                                                               end="2019-10-01T12:00:12")
     a = query.one()
     assert a.id == "S0L0"
     assert a.org_key == "test"
@@ -134,8 +134,8 @@ def test_query_alert_with_backend_timestamp_as_start_end_as_objs(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(Alert).where("Blort").set_time_criterion_filter("backend_timestamp", start=_timestamp,
-                                                                       end=_timestamp)
+    query = api.select(Alert).where("Blort").add_time_criteria("backend_timestamp", start=_timestamp,
+                                                               end=_timestamp)
     a = query.one()
     assert a.id == "S0L0"
     assert a.org_key == "test"
@@ -154,7 +154,7 @@ def test_query_alert_with_backend_timestamp_as_range(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(Alert).where("Blort").set_time_criterion_filter("backend_timestamp", range="-3w")
+    query = api.select(Alert).where("Blort").add_time_criteria("backend_timestamp", range="-3w")
     a = query.one()
     assert a.id == "S0L0"
     assert a.org_key == "test"
@@ -177,8 +177,8 @@ def test_query_alert_with_backend_update_timestamp_as_start_end(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(Alert).where("Blort").set_time_criterion_filter("backend_update_timestamp", start=_timestamp,
-                                                                       end=_timestamp)
+    query = api.select(Alert).where("Blort").add_time_criteria("backend_update_timestamp", start=_timestamp,
+                                                               end=_timestamp)
     a = query.one()
     assert a.id == "S0L0"
     assert a.org_key == "test"
@@ -196,8 +196,7 @@ def test_query_alert_with_backend_update_timestamp_as_range(cbcsdk_mock):
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
-
-    query = api.select(Alert).where("Blort").set_time_criterion_filter("backend_update_timestamp", range="-3w")
+    query = api.select(Alert).where("Blort").add_time_criteria("backend_update_timestamp", range="-3w")
     a = query.one()
     assert a.id == "S0L0"
     assert a.org_key == "test"
@@ -232,14 +231,14 @@ def test_query_alert_facets(cbcsdk_mock):
 def test_query_alert_invalid_backend_timestamp_combinations(cb):
     """Test invalid backend_timestamp combinations being supplied to alert queries."""
     with pytest.raises(ApiError):
-        cb.select(Alert).set_time_criterion_filter("backend_timestamp")
+        cb.select(Alert).add_time_criteria("backend_timestamp")
     with pytest.raises(ApiError):
-        cb.select(Alert).set_time_criterion_filter("backend_timestamp", start="2019-09-30T12:34:56",
-                                                   end="2019-10-01T12:00:12", range="-3w")
+        cb.select(Alert).add_time_criteria("backend_timestamp", start="2019-09-30T12:34:56",
+                                           end="2019-10-01T12:00:12", range="-3w")
     with pytest.raises(ApiError):
-        cb.select(Alert).set_time_criterion_filter("backend_timestamp", start="2019-09-30T12:34:56", range="-3w")
+        cb.select(Alert).add_time_criteria("backend_timestamp", start="2019-09-30T12:34:56", range="-3w")
     with pytest.raises(ApiError):
-        cb.select(Alert).set_time_criterion_filter("backend_timestamp", end="2019-10-01T12:00:12", range="-3w")
+        cb.select(Alert).add_time_criteria("backend_timestamp", end="2019-10-01T12:00:12", range="-3w")
 
 
 def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
@@ -286,7 +285,6 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
-
     query = api.select(Alert).where("Blort").add_criteria("device_id", ["6023"]) \
         .add_criteria("device_name", ["HAL"]).add_criteria("device_os", ["LINUX"]) \
         .add_criteria("device_os_version", ["0.1.2"]) \
@@ -728,25 +726,25 @@ def test_query_alert_with_time_range_errors(cbcsdk_mock):
     """Test exceptions in alert query"""
     api = cbcsdk_mock.api
     with pytest.raises(ApiError) as ex:
-        api.select(Alert).where("Blort").set_time_criterion_filter("invalid", range="whatever")
+        api.select(Alert).where("Blort").add_time_criteria("invalid", range="whatever")
     assert "key must be one of create_time, first_event_time, last_event_time, backend_timestamp," \
            " backend_update_timestamp, or last_update_time" in str(ex.value)
 
     with pytest.raises(ApiError) as ex:
-        api.select(Alert).where("Blort").set_time_criterion_filter("backend_timestamp",
-                                                                   start="2019-09-30T12:34:56",
-                                                                   end="2019-10-01T12:00:12",
-                                                                   range="-3w")
+        api.select(Alert).where("Blort").add_time_criteria("backend_timestamp",
+                                                           start="2019-09-30T12:34:56",
+                                                           end="2019-10-01T12:00:12",
+                                                           range="-3w")
     assert "cannot specify range= in addition to start= and end=" in str(ex.value)
 
     with pytest.raises(ApiError) as ex:
-        api.select(Alert).where("Blort").set_time_criterion_filter("backend_timestamp",
-                                                                   end="2019-10-01T12:00:12",
-                                                                   range="-3w")
+        api.select(Alert).where("Blort").add_time_criteria("backend_timestamp",
+                                                           end="2019-10-01T12:00:12",
+                                                           range="-3w")
     assert "cannot specify start= or end= in addition to range=" in str(ex.value)
 
     with pytest.raises(ApiError) as ex:
-        api.select(Alert).where("Blort").set_time_criterion_filter("backend_timestamp")
+        api.select(Alert).where("Blort").add_time_criteria("backend_timestamp")
 
     assert "must specify either start= and end= or range=" in str(ex.value)
 
