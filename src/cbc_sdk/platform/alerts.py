@@ -35,9 +35,6 @@ MAX_RESULTS_LIMIT = 10000
 class Alert(PlatformModel):
     """Represents a basic alert."""
     REMAPPED_ALERTS_V6_TO_V7 = {
-        "alert_classification.classification": "ml_classification_final_verdict",
-        "alert_classification.global_prevalence": "ml_classification_global_prevalence",
-        "alert_classification.org_prevalence": "ml_classification_org_prevalence",
         "alert_classification.user_feedback": "determination_value",
         "cluster_name": "k8s_cluster",
         "create_time": "backend_timestamp",
@@ -91,9 +88,6 @@ class Alert(PlatformModel):
         "k8s_pod_name": "replica_id",
         "k8s_workload_name": "workload_name",
         "last_event_timestamp": "last_event_time",
-        "ml_classification_final_verdict": "alert_classification.classification",
-        "ml_classification_global_prevalence": "alert_classification.global_prevalence",
-        "ml_classification_org_prevalence": "alert_classification.org_prevalence",
         "netconn_local_port": "port",
         "netconn_protocol": "protocol",
         "netconn_remote_domain": "remote_domain",
@@ -122,6 +116,9 @@ class Alert(PlatformModel):
     DEPRECATED_FIELDS_NOT_IN_V7 = [
         "category",
         "group_details",
+        "alert_classification.classification",
+        "alert_classification.global_prevalence",
+        "alert_classification.org_prevalence",
         # CB Analytics Fields
         "blocked_threat_category",
         "kill_chain_status",
@@ -141,6 +138,20 @@ class Alert(PlatformModel):
         "threat_indicators",
         "workflow.comment"
     ]
+
+    REMAPPED_CONTAINER_ALERTS_V7_TO_V6 = {
+        "k8s_policy_id": "policy_id",
+        "k8s_policy": "policy_name",
+        "k8s_rule_id": "rule_id",
+        "k8s_rule": "rule_name"
+    }
+
+    REMAPPED_CONTAINER_ALERTS_V6_TO_V7 = {
+        "policy_id": "k8s_policy_id",
+        "policy_name": "k8s_policy",
+        "rule_id": "k8s_rule_id",
+        "rule_name": "k8s_rule"
+    }
 
     # these fields are deprecated from container runtime but mapped to a new field for other alert types
     DEPRECATED_FIELDS_NOT_IN_V7_CONTAINER_ONLY = [
@@ -491,6 +502,7 @@ class Alert(PlatformModel):
             FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
         try:
+            original_item = item
             if item in Alert.DEPRECATED_FIELDS_NOT_IN_V7:
                 raise FunctionalityDecommissioned(
                     "Attribute '{0}' does not exist in object '{1}' because it was deprecated in "
@@ -499,7 +511,10 @@ class Alert(PlatformModel):
                 raise FunctionalityDecommissioned(
                     "Attribute '{0}' does not exist in object '{1}' because it was deprecated in "
                     "Alerts v7. In SDK 1.5.0 the".format(item, self.__class__.__name__))
+
             item = Alert.REMAPPED_ALERTS_V6_TO_V7.get(item, item)
+            if Alert.get("type") == "CONTAINER_RUNTIME":
+                item = Alert.REMAPPED_CONTAINER_ALERTS_V6_TO_V7.get(original_item, item)
             return super(Alert, self).__getattr__(item)
         except AttributeError:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
@@ -519,6 +534,8 @@ class Alert(PlatformModel):
         if version == "v6":
             modified_json = {}
             for key, value in self._info.items():
+                if self.type == "CONTAINER_RUNTIME":
+                    key = Alert.REMAPPED_CONTAINER_ALERTS_V7_TO_V6.get(key, key)
                 modified_json[Alert.REMAPPED_ALERTS_V7_TO_V6.get(key, key)] = value
                 if key == "id":
                     modified_json["legacy_alert_id"] = value
