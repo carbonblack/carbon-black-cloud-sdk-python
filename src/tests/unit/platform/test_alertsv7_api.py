@@ -14,7 +14,7 @@ from datetime import datetime
 
 import pytest
 
-from cbc_sdk.errors import ApiError, NonQueryableModel
+from cbc_sdk.errors import ApiError, TimeoutError, NonQueryableModel
 from cbc_sdk.platform import (
     Alert,
     WatchlistAlert, ContainerRuntimeAlert, Process,
@@ -41,7 +41,8 @@ from tests.unit.fixtures.platform.mock_process import (
 )
 from tests.unit.fixtures.platform.mock_observations import (
     POST_OBSERVATIONS_SEARCH_JOB_RESP,
-    GET_OBSERVATIONS_DETAIL_JOB_RESULTS_RESP
+    GET_OBSERVATIONS_DETAIL_JOB_RESULTS_RESP,
+    GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING
 )
 
 
@@ -986,3 +987,26 @@ def test_get_observations(cbcsdk_mock):
     alert = api.select(Alert, '12ab345cd6-e2d1-4118-8a8d-04f521ae66aa')
     obs = alert.get_observations()
     assert len(obs) == 1
+
+
+def test_get_observations_with_timeout(cbcsdk_mock):
+    """Test tget_observations method."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
+                             GET_ALERT_RESP)
+    cbcsdk_mock.mock_request(
+        "POST",
+        "/api/investigate/v2/orgs/test/observations/detail_jobs",
+        POST_OBSERVATIONS_SEARCH_JOB_RESP,
+    )
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",
+        GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING
+    )
+
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, '86123310980efd0b38111eba4bfa5e98aa30b19')
+    with pytest.raises(TimeoutError):
+        alert.get_observations(timeout=1)
+        print("the end")

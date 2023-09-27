@@ -165,8 +165,10 @@ class Alert(PlatformModel):
         if model_unique_id is not None and initial_data is None:
             self._refresh()
 
-    def get_observations(self):
+    def get_observations(self, timeout=0):
         """Requests observations that are associated with the Alert.
+
+         Uses Observations bulk get details.
 
         Returns:
             list: Observations associated with the alert
@@ -179,9 +181,7 @@ class Alert(PlatformModel):
         if not alert_id:
             raise ApiError("Trying to get observations on an invalid alert_id {}".format(alert_id))
 
-        obs = Observation.bulk_get_details(
-            self._cb, alert_id=alert_id
-        )
+        obs = Observation.bulk_get_details(self._cb, alert_id=alert_id, timeout=timeout)
         return obs
 
     class Note(PlatformModel):
