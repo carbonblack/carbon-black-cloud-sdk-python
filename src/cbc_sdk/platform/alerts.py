@@ -1035,6 +1035,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             >>> second_query = api.select(Alert).
             ...     set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
             >>> third_query = api.select(Alert).set_time_range(range='-3d')
+            >>> fourth_query = api.select(Alert).set_time_range("create_time", range='-3d')
 
         """
         args_count = args.__len__()
@@ -1066,6 +1067,13 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
 
         Returns:
             AlertSearchQuery: This instance.
+
+        Examples:
+            >>> query = api.select(Alert).
+            ...     add_time_criteria("backend_timestamp", start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
+            >>> second_query = api.select(Alert).add_time_criteria("backend_timestamp", range='-3d')
+            >>> third_query = api.select(Alert).set_time_range("create_time", range='-3d')
+
         """
         # this first if statement will be removed after v6 is deprecated
         if not self._valid_criteria:
@@ -1080,8 +1088,9 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         Verifies that an alert criteria key has the timerange functionality
 
         Args:
-            args (str): The key to use for criteria one of create_time, first_event_time, last_event_time,
-             backend_timestamp, backend_update_timestamp, or last_update_time
+            args (str): The key to use for criteria one of one of backend_timestamp, backend_update_timestamp,
+            detection_timestamp, first_event_timestamp, last_event_timestamp, mdr_determination_change_timestamp,
+            mdr_workflow_change_timestamp, user_update_timestamp, or workflow_change_timestamp
 
         Returns:
             boolean true
@@ -1096,7 +1105,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
 
     def _is_valid_time_criteria_key_v6(self, key):
         """
-        Verifies that an alert criteria key has the timerange functionality
+        Verifies that an alert criteria key has the timerange functionality for v6 sdk calls
 
         Args:
             args (str): The key to use for criteria one of create_time, first_event_time, last_event_time,

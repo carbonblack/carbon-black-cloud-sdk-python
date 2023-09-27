@@ -214,6 +214,26 @@ def test_query_basealert_with_time_range_start_end(cbcsdk_mock):
     assert a.workflow_.state == "OPEN"
 
 
+def test_query_basealert_with_time_range_create_time_as_start_end(cbcsdk_mock):
+    """Test an alert query with the create_time specified as a range which should also set the global time_range."""
+
+    def on_post(url, body, **kwargs):
+        assert body == {"query": "Blort", "criteria": {"create_time": {"range": "-3w"}}, "rows": 2,
+                        'time_range': {'range': '-3w'}}
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
+    query = api.select(BaseAlert).where("Blort").set_time_range("create_time", range="-3w")
+    a = query.one()
+    assert a.id == "S0L0"
+    assert a.org_key == "test"
+    assert a.threat_id == "B0RG"
+    assert a.workflow_.state == "OPEN"
+
+
 def test_query_basealert_facets(cbcsdk_mock):
     """Test an alert facet query."""
 
