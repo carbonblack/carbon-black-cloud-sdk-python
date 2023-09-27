@@ -205,6 +205,49 @@ def test_query_alert_with_backend_update_timestamp_as_range(cbcsdk_mock):
     assert a.workflow_.status == "OPEN"
 
 
+def test_query_alert_with_time_range_as_start_end(cbcsdk_mock):
+    """Test an alert query with the time_range specified as a start and end time."""
+    _timestamp = datetime.now()
+
+    def on_post(url, body, **kwargs):
+        nonlocal _timestamp
+        assert body == {"query": "Blort",
+                        "rows": 2,
+                        "time_range": {"start": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                                       "end": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ")},
+                        "criteria": {}}
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
+    query = api.select(Alert).where("Blort").set_time_range(start=_timestamp, end=_timestamp)
+    a = query.one()
+    assert a.id == "S0L0"
+    assert a.org_key == "test"
+    assert a.threat_id == "B0RG"
+    assert a.workflow_.status == "OPEN"
+
+
+def test_query_alert_with_time_range_as_range(cbcsdk_mock):
+    """Test an alert query with the time_range specified as a range."""
+
+    def on_post(url, body, **kwargs):
+        assert body == {"query": "Blort", "criteria": {}, "time_range": {"range": "-3w"}, "rows": 2}
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+    query = api.select(Alert).where("Blort").set_time_range(range="-3w")
+    a = query.one()
+    assert a.id == "S0L0"
+    assert a.org_key == "test"
+    assert a.threat_id == "B0RG"
+    assert a.workflow_.status == "OPEN"
+
+
 def test_query_alert_facets(cbcsdk_mock):
     """Test an alert facet query."""
 
