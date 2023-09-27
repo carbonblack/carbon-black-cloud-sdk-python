@@ -28,6 +28,7 @@ from tests.unit.fixtures.platform.mock_alerts_v7 import (
     GET_ALERT_RESP_WITH_NOTES,
     GET_ALERT_NOTES,
     CREATE_ALERT_NOTE_RESP,
+    GET_ALERT_RESP
 )
 from tests.unit.fixtures.platform.mock_process import (
     GET_PROCESS_VALIDATION_RESP,
@@ -37,6 +38,10 @@ from tests.unit.fixtures.platform.mock_process import (
     GET_PROCESS_SUMMARY_STR,
     GET_PROCESS_NOT_FOUND,
     GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT_V7,
+)
+from tests.unit.fixtures.platform.mock_observations import (
+    POST_OBSERVATIONS_SEARCH_JOB_RESP,
+    GET_OBSERVATIONS_DETAIL_JOB_RESULTS_RESP
 )
 
 
@@ -996,3 +1001,27 @@ def test_query_set_remote_is_private(cbcsdk_mock):
     query = api.select(Alert).set_remote_is_private(True).set_rows(1)
     len(query)
     # no assertions, the check is that the post request is formed correctly.
+
+
+def test_get_observations(cbcsdk_mock):
+    """Test tget_observations method."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/12ab345cd6-e2d1-4118-8a8d-04f521ae66aa",
+                             GET_ALERT_RESP)
+    cbcsdk_mock.mock_request(
+        "POST",
+        "/api/investigate/v2/orgs/test/observations/detail_jobs",
+        POST_OBSERVATIONS_SEARCH_JOB_RESP,
+    )
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",
+        # noqa: E501
+        GET_OBSERVATIONS_DETAIL_JOB_RESULTS_RESP,
+    )
+
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, '12ab345cd6-e2d1-4118-8a8d-04f521ae66aa')
+    obs = alert.get_observations()
+    assert len(obs) == 1
+    print(obs)
