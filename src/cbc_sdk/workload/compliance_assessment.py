@@ -25,6 +25,7 @@ log = logging.getLogger(__name__)
 
 class ComplianceBenchmark(NewBaseModel):
     """
+    Class representing Compliance Benchmarks.
     """
     urlobject = '/compliance/assessment/api/v1/orgs/{}/benchmark_sets/'
     swagger_meta_file = "workload/models/compliance.yaml"
@@ -32,6 +33,15 @@ class ComplianceBenchmark(NewBaseModel):
 
     def __init__(self, cb, initial_data, model_unique_id=None):
         """
+        Initialize a ComplianceBenchmark instance.
+
+        Args:
+            cb (CBCloudAPI): Instance of CBCloudAPI.
+            initial_data (dict): Initial data for the instance.
+            model_unique_id (str): Unique identifier for the model.
+
+        Returns:
+            ComplianceBenchmark: An instance of ComplianceBenchmark.
         """
         super(ComplianceBenchmark, self).__init__(cb, model_unique_id, initial_data)
 
@@ -41,7 +51,10 @@ class ComplianceBenchmark(NewBaseModel):
 
     def _refresh(self):
         """
-        CHANGES: Refresh should make a get to get the benchmark
+        Refresh the ComplianceBenchmark instance by making a GET request to get the benchmark.
+
+        Returns:
+            bool: True if the refresh is successful, else False.
         """
         url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id)
         resp = self._cb.get_object(url)
@@ -52,6 +65,13 @@ class ComplianceBenchmark(NewBaseModel):
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
         """
+        Get the query implementation for ComplianceBenchmark.
+
+        Args:
+            cb (CBCloudAPI): Instance of CBCloudAPI.
+
+        Returns:
+            ComplianceBenchmarkQuery: Query implementation for ComplianceBenchmark.
         """
         return ComplianceBenchmarkQuery(cls, cb)
 
@@ -127,7 +147,7 @@ class ComplianceBenchmark(NewBaseModel):
             rule_id (str, optional): The rule ID to fetch a specific rule. Defaults to None.
 
         Yields:
-            ComplianceBenchmark: A ComplianceBenchmark object representing a compliance rule.
+            ComplianceBenchmark: A Compliance object representing a compliance rule.
 
         Example:
             >>> cb = CBCloudAPI(profile="example_profile")
@@ -173,7 +193,7 @@ class ComplianceBenchmark(NewBaseModel):
         Get Sections of the Benchmark Set.
 
         Returns:
-            generator of ComplianceBenchmark: A generator yielding ComplianceBenchmark instances
+            generator of ComplianceBenchmark: A generator yielding Compliance instances
                                            for each section in the benchmark set.
 
         Example:
@@ -189,7 +209,8 @@ class ComplianceBenchmark(NewBaseModel):
 
     def execute_action(self, action, device_ids=None):
         """
-        Execute a specified action on devices within a Benchmark Set.
+        Execute a specified action on devices within on a Benchmark Set, or specific devives
+        within a Benchmark Set only.
 
         Args:
             action (str): The action to be executed. Available:
@@ -209,16 +230,15 @@ class ComplianceBenchmark(NewBaseModel):
 
         Example:
             To reassess an object:
-            ```
             benchmark_sets = cb.select(ComplianceBenchmark)
             benchmark_sets[0].execute_action('REASSESS')
         """
         ACTIONS = ('ENABLE', 'DISABLE', 'REASSESS')
 
-        if action.upper() not in self.ACTIONS:
+        if action.upper() not in ACTIONS:
             message = (
                 f"\nAction type is required."
-                f"\nAvailable action types: {', '.join(self.ACTIONS)}"
+                f"\nAvailable action types: {', '.join(ACTIONS)}"
                 f"\nExample:\nbenchmark_sets = cb.select(ComplianceBenchmark)"
                 f"\nbenchmark_sets[0].execute_action('REASSESS')"
             )
@@ -236,10 +256,10 @@ class ComplianceBenchmark(NewBaseModel):
         Fetches the compliance summary for the current benchmark set.
 
         This method constructs the URL for the compliance summary of the benchmark set associated with the current instance,
-        fetches the summary data using the Carbon Black API, and yields ComplianceBenchmark objects for each item in the summary.
+        fetches the summary data using the Carbon Black API, and yields Compliance objects for each item in the summary.
 
         Returns:
-            generator of ComplianceBenchmark: A generator yielding ComplianceBenchmark objects, each representing a summary item.
+            generator of ComplianceBenchmark: A generator yielding Compliance objects, each representing a summary item.
         """
         url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/compliance/summary"
         results = self._cb.get_object(url)
@@ -250,10 +270,19 @@ class ComplianceBenchmark(NewBaseModel):
 class ComplianceBenchmarkQuery(BaseQuery, CriteriaBuilderSupportMixin,
                                IterableQueryMixin, AsyncQueryMixin):
     """
+    A class representing a query for Compliance Benchmark.
     """
 
     def __init__(self, doc_class, cb):
         """
+        Initialize a ComplianceBenchmarkQuery instance.
+
+        Args:
+            doc_class (class): The document class for this query.
+            cb (CBCloudAPI): An instance of CBCloudAPI.
+
+        Returns:
+            ComplianceBenchmarkQuery: An instance of ComplianceBenchmarkQuery.
         """
         self._doc_class = doc_class
         self._cb = cb
@@ -270,19 +299,39 @@ class ComplianceBenchmarkQuery(BaseQuery, CriteriaBuilderSupportMixin,
 
     def add_criteria(self, key, value, operator='EQUALS'):
         """
+        Add a criteria to the query.
+
+        Args:
+            key (str): The key for the criteria.
+            value: The value for the criteria.
+            operator (str, optional): The operator for the criteria. Defaults to 'EQUALS'.
+
+        Returns:
+            ComplianceBenchmarkQuery: The current instance with the updated criteria.
         """
         self._update_criteria(key, value, operator)
         return self
 
     def _update_criteria(self, key, value, operator, overwrite=False):
         """
+        Update the criteria for the query.
+
+        Args:
+            key (str): The key for the criteria.
+            value: The value for the criteria.
+            operator (str): The operator for the criteria.
+            overwrite (bool, optional): Whether to overwrite existing criteria with the same key.
+                                        Defaults to False.
+
+        Returns:
+            None
         """
         if self._criteria.get(key, None) is None or overwrite:
             self._criteria[key] = dict(value=value, operator=operator)
 
     def _build_request(self, from_row, max_rows, add_sort=True):
         """
-       Build the request dictionary for the API query.
+        Build the request dictionary for the API query.
 
         Args:
             from_row (int): The starting row for the query.
