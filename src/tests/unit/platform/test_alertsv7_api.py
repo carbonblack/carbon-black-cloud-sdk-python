@@ -1024,4 +1024,3 @@ def test_get_observations(cbcsdk_mock):
     alert = api.select(Alert, '12ab345cd6-e2d1-4118-8a8d-04f521ae66aa')
     obs = alert.get_observations()
     assert len(obs) == 1
-    print(obs)
