@@ -14,7 +14,7 @@
 """Model and Query Classes for Platform Alerts and Workflows"""
 import time
 
-from cbc_sdk.errors import ApiError, TimeoutError, ObjectNotFoundError, NonQueryableModel, FunctionalityDecommissioned
+from cbc_sdk.errors import ApiError, ObjectNotFoundError, NonQueryableModel, FunctionalityDecommissioned
 from cbc_sdk.platform import PlatformModel
 from cbc_sdk.base import (BaseQuery,
                           UnrefreshableModel,
@@ -22,7 +22,7 @@ from cbc_sdk.base import (BaseQuery,
                           QueryBuilderSupportMixin,
                           IterableQueryMixin,
                           CriteriaBuilderSupportMixin)
-from cbc_sdk.endpoint_standard.base import EnrichedEvent
+from cbc_sdk.platform.observations import Observation
 from cbc_sdk.platform.processes import AsyncProcessQuery, Process
 from cbc_sdk.platform.legacy_alerts import LegacyAlertSearchQueryCriterionMixin
 
@@ -164,6 +164,25 @@ class Alert(PlatformModel):
         self._workflow = Workflow(cb, initial_data.get("workflow", None) if initial_data else None)
         if model_unique_id is not None and initial_data is None:
             self._refresh()
+
+    def get_observations(self):
+        """Requests observations that are associated with the Alert.
+
+        Returns:
+            list: Observations associated with the alert
+
+        Note:
+            - When using asynchronous mode, this method returns a python future.
+              You can call result() on the future object to wait for completion and get the results.
+        """
+        alert_id = self.get("id")
+        if not alert_id:
+            raise ApiError("Trying to get observations on an invalid alert_id {}".format(alert_id))
+
+        obs = Observation.bulk_get_details(
+            self._cb, alert_id=alert_id
+        )
+        return obs
 
     class Note(PlatformModel):
         """Represents a note within an alert."""
@@ -619,7 +638,12 @@ class CBAnalyticsAlert(Alert):
         return AlertSearchQuery(cls, cb).add_criteria("type", ["CB_ANALYTICS"])
 
     def get_events(self, timeout=0, async_mode=False):
-        """Requests enriched events detailed results.
+        """Removed in CBC SDK 1.5.0 because Enriched Events are deprecated.
+
+        Previously requested enriched events detailed results.  Update to use get_observations() instead.
+        See `Developer Network Observations Migration
+        <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/observations-migration>`_
+        for more details.
 
         Args:
             timeout (int): Event details request timeout in milliseconds.
@@ -631,74 +655,12 @@ class CBAnalyticsAlert(Alert):
         Note:
             - When using asynchronous mode, this method returns a python future.
               You can call result() on the future object to wait for completion and get the results.
+
+        Raises:
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
-        self._details_timeout = timeout
-        alert_id = self._info.get("legacy_alert_id")
-        if not alert_id:
-            raise ApiError("Trying to get event details on an invalid alert_id {}".format(alert_id))
-        if async_mode:
-            return self._cb._async_submit(self._get_events_detailed_results)
-        return self._get_events_detailed_results()
-
-    def _get_events_detailed_results(self, *args, **kwargs):
-        """
-        Actual search details implementation.
-
-        Returns:
-            list[EnrichedEvent]: List of enriched events.
-
-        Flow:
-            1. Start the job by providing alert_id
-            2. Check the status of the job - wait until contacted and complete are equal
-            3. Retrieve the results - it is possible for num_found to be 0, because enriched events are
-            kept for specific period, so return empty list in that case.
-        """
-        url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs".format(self._cb.credentials.org_key)
-        query_start = self._cb.post_object(url, body={"alert_id": self._info.get("legacy_alert_id")})
-        job_id = query_start.json().get("job_id")
-        timed_out = False
-        submit_time = time.time() * 1000
-
-        while True:
-            status_url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs/{}".format(
-                self._cb.credentials.org_key,
-                job_id,
-            )
-            result = self._cb.get_object(status_url)
-            searchers_contacted = result.get("contacted", 0)
-            searchers_completed = result.get("completed", 0)
-            if searchers_completed == searchers_contacted:
-                break
-            if searchers_contacted == 0:
-                time.sleep(.5)
-                continue
-            if searchers_completed < searchers_contacted:
-                if self._details_timeout != 0 and (time.time() * 1000) - submit_time > self._details_timeout:
-                    timed_out = True
-                    break
-
-            time.sleep(.5)
-
-        if timed_out:
-            raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
-
-        still_fetching = True
-        result_url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs/{}/results".format(
-            self._cb.credentials.org_key,
-            job_id
-        )
-
-        query_parameters = {}
-        while still_fetching:
-            result = self._cb.get_object(result_url, query_parameters=query_parameters)
-            available_results = result.get('num_available', 0)
-            found_results = result.get('num_found', 0)
-            # if found is 0, then no enriched events
-            if found_results == 0:
-                return []
-            if available_results != 0:
-                results = result.get('results', [])
-                return [EnrichedEvent(self._cb, initial_data=item) for item in results]
+        raise FunctionalityDecommissioned("get_events method does not exist in in SDK v1.5.0 "
+                                          "because Enriched Events have been deprecated.  The")
 
 
 class DeviceControlAlert(Alert):
