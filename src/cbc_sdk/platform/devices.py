@@ -419,9 +419,7 @@ class DeviceFacet(UnrefreshableModel):
 
     @property
     def values_(self):
-        """
-        Returns the list of facet values for this facet.
-        """
+        """Returns the list of facet values for this facet."""
         return self._values
 
 
@@ -434,7 +432,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
     Query object that is used to locate ``Device`` objects.
 
     The ``DeviceSearchQuery`` is constructed via SDK functions like the ``select()`` method on ``CBCloudAPI``.
-    The user would then add a query and criteria to it before iterating over the results.
+    The user would then add a query and/or criteria to it before iterating over the results.
     """
     VALID_OS = ["WINDOWS", "ANDROID", "MAC", "IOS", "LINUX", "OTHER"]
     VALID_STATUSES = ["PENDING", "REGISTERED", "UNINSTALLED", "DEREGISTERED",
