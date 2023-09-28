@@ -270,10 +270,12 @@ class EventFacetQuery(FacetQuery):
             args["exclusions"] = self._exclusions
         if self._time_range:
             args["time_range"] = self._time_range
-        args['query'] = self._query_builder._collapse()
+        query = self._query_builder._collapse()
+        if query:
+            args['query'] = query
         if self._query_builder._process_guid is not None:
             args["process_guid"] = self._query_builder._process_guid
-        if 'process_guid:' in args['query']:
+        if 'process_guid:' in args.get('query', ""):
             q = args['query'].split('process_guid:', 1)[1].split(' ', 1)[0]
             args["process_guid"] = q
         return args

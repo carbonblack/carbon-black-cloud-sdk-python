@@ -165,7 +165,7 @@ def test_query_device_with_last_contact_time_as_start_end(cbcsdk_mock):
         assert body == {"query": "foobar",
                         "rows": 2,
                         "criteria": {"last_contact_time": {"start": "2019-09-30T12:34:56",
-                                                           "end": "2019-10-01T12:00:12"}}, "exclusions": {}}
+                                                           "end": "2019-10-01T12:00:12"}}}
         return {"results": [{"id": 6023, "organization_name": "thistestworks"}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/devices/_search", on_query)
@@ -183,8 +183,7 @@ def test_query_device_with_last_contact_time_as_range(cbcsdk_mock):
         assert body == {
             "query": "foobar",
             "rows": 2,
-            "criteria": {"last_contact_time": {"range": "-3w"}},
-            "exclusions": {}
+            "criteria": {"last_contact_time": {"range": "-3w"}}
         }
         return {"results": [{"id": 6023, "organization_name": "thistestworks"}], "num_found": 1}
 
@@ -282,7 +281,7 @@ def test_query_device_do_background_scan(cbcsdk_mock):
     """Test setting the background scan status on devices matched by a query."""
     def on_bgscan(url, body, **kwargs):
         assert body == {"action_type": "BACKGROUND_SCAN",
-                        "search": {"query": "foobar", "criteria": {}, "exclusions": {}}, "options": {"toggle": "ON"}}
+                        "search": {"query": "foobar"}, "options": {"toggle": "ON"}}
         return CBCSDKMock.StubResponse(None, scode=204)
 
     cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/device_actions", on_bgscan)
@@ -294,7 +293,7 @@ def test_query_device_do_bypass(cbcsdk_mock):
     """Test setting the bypass status on devices matched by a query."""
     def on_bypass(url, body, **kwargs):
         assert body == {"action_type": "BYPASS",
-                        "search": {"query": "foobar", "criteria": {}, "exclusions": {}}, "options": {"toggle": "OFF"}}
+                        "search": {"query": "foobar"}, "options": {"toggle": "OFF"}}
         return CBCSDKMock.StubResponse(None, scode=204)
 
     cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/device_actions", on_bypass)
@@ -306,7 +305,7 @@ def test_query_device_do_delete_sensor(cbcsdk_mock):
     """Test deleting the sensor on devices matched by a query."""
     def on_delete(url, body, **kwargs):
         assert body == {"action_type": "DELETE_SENSOR",
-                        "search": {"query": "foobar", "criteria": {}, "exclusions": {}}}
+                        "search": {"query": "foobar"}}
         return CBCSDKMock.StubResponse(None, scode=204)
 
     cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/device_actions", on_delete)
@@ -318,7 +317,7 @@ def test_query_device_do_uninstall_sensor(cbcsdk_mock):
     """Test uninstalling the sensor on devices matched by a query."""
     def on_uninstall(url, body, **kwargs):
         assert body == {"action_type": "UNINSTALL_SENSOR",
-                        "search": {"query": "foobar", "criteria": {}, "exclusions": {}}}
+                        "search": {"query": "foobar"}}
         return CBCSDKMock.StubResponse(None, scode=204)
 
     cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/device_actions", on_uninstall)
@@ -330,7 +329,7 @@ def test_query_device_do_quarantine(cbcsdk_mock):
     """Test setting the quarantine status on devices matched by a query."""
     def on_quarantine(url, body, **kwargs):
         assert body == {"action_type": "QUARANTINE",
-                        "search": {"query": "foobar", "criteria": {}, "exclusions": {}}, "options": {"toggle": "ON"}}
+                        "search": {"query": "foobar"}, "options": {"toggle": "ON"}}
         return CBCSDKMock.StubResponse(None, scode=204)
 
     cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/device_actions", on_quarantine)
@@ -342,7 +341,7 @@ def test_query_device_do_update_policy(cbcsdk_mock):
     """Test updating the policy on devices matched by a query."""
     def on_update(url, body, **kwargs):
         assert body == {"action_type": "UPDATE_POLICY",
-                        "search": {"query": "foobar", "criteria": {}, "exclusions": {}},
+                        "search": {"query": "foobar"},
                         "options": {"policy_id": 8675309}}
         return CBCSDKMock.StubResponse(None, scode=204)
 
@@ -355,7 +354,7 @@ def test_query_device_do_update_sensor_version(cbcsdk_mock):
     """Test updating the sensor version on devices matched by a query."""
     def on_update(url, body, **kwargs):
         assert body == {"action_type": "UPDATE_SENSOR_VERSION",
-                        "search": {"query": "foobar", "criteria": {}, "exclusions": {}},
+                        "search": {"query": "foobar"},
                         "options": {"sensor_version": {"RHEL": "2.3.4.5"}}}
         return CBCSDKMock.StubResponse(None, scode=204)
 
@@ -367,10 +366,8 @@ def test_query_device_do_update_sensor_version(cbcsdk_mock):
 def test_query_deployment_type(cbcsdk_mock):
     """Test deployment type query with correct and incorrect params."""
     def on_query(url, body, **kwargs):
-        assert body == {"query": "",
-                        "rows": 2,
-                        "criteria": {"deployment_type": ["ENDPOINT"]},
-                        "exclusions": {}}
+        assert body == {"rows": 2,
+                        "criteria": {"deployment_type": ["ENDPOINT"]}}
         return {"results": [{"id": 6023, "deployment_type": ["ENDPOINT"]}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/devices/_search", on_query)
