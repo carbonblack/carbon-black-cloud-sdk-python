@@ -322,6 +322,12 @@ class DeviceFacet(UnrefreshableModel):
 
     *Faceting* is a search technique that categorizes search results according to common attributes. This allows
     users to explore and discover information within a dataset, in this case, the set of devices.
+
+    Example:
+        >>> facets = api.select(Device).facets(['policy_id'])
+        >>> for value in facets[0].values_:
+        ...     count = len(value.query_devices())
+        ...     print(f"Policy ID {value.id}: {count} device(s)")
     """
     urlobject = "/appservices/v6/orgs/{0}/devices/_facet"
     primary_key = "id"
