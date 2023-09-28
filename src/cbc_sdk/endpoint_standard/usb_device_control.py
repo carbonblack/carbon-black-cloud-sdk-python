@@ -494,7 +494,13 @@ class USBDeviceApprovalQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilde
         Returns:
             dict: The complete request body.
         """
-        request = {"criteria": self._criteria, "query": self._query_builder._collapse(), "rows": 100}
+        request = {"rows": 100}
+        query = self._query_builder._collapse()
+        if self._criteria:
+            request["criteria"] = self._criteria
+        if query:
+            request["query"] = query
+
         # Fetch 100 rows per page (instead of 10 by default) for better performance
         if from_row > 0:
             request["start"] = from_row
@@ -854,7 +860,12 @@ class USBDeviceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupport
         Returns:
             dict: The complete request body.
         """
-        request = {"criteria": self._criteria, "query": self._query_builder._collapse(), "rows": 100}
+        request = {"rows": 100}
+        query = self._query_builder._collapse()
+        if self._criteria:
+            request["criteria"] = self._criteria
+        if query:
+            request["query"] = query
         # Fetch 100 rows per page (instead of 10 by default) for better performance
         if from_row > 0:
             request["start"] = from_row

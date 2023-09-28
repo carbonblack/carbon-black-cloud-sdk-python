@@ -568,7 +568,6 @@ def test_query_set_rows(cbcsdk_mock):
 
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
-                        "criteria": {},
                         "rows": 10000,
                         "start": 1,
                         "sort": [{"field": "name", "order": "DESC"}]}

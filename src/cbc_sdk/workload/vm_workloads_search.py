@@ -539,7 +539,12 @@ class BaseComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuil
         Returns:
             dict: The complete request body.
         """
-        request = {"criteria": self._criteria, "query": self._query_builder._collapse(), "rows": 100}
+        request = {"rows": 100}
+        query = self._query_builder._collapse()
+        if self._criteria:
+            request["criteria"] = self._criteria
+        if query:
+            request["query"] = query
         if self._exclusions != {}:
             request["exclusions"] = self._exclusions
         # Fetch 100 rows per page (instead of 10 by default) for better performance
