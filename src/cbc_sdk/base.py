@@ -1991,6 +1991,8 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
 
         # Re-add sort
         args["sort"] = sort
+        # remove duplicate q
+        args.pop("q")
 
         if not validated.get("valid"):
             raise ApiError("Invalid query: {}: {}".format(args, validated["invalid_message"]))
@@ -2345,6 +2347,8 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
 
         # v2 search sort key does not work with v1 validation
         args.pop('sort', None)
+        # remove duplicate q
+        args.pop("q")
 
         if method == "POST":
             result = self._cb.post_object(url, {'query': args['q']})

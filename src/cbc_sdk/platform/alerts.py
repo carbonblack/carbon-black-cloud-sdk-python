@@ -1045,8 +1045,11 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         Returns:
             dict: The complete request body.
         """
-        request = {"criteria": self._build_criteria()}
+        request = {}
+        criteria = self._build_criteria()
         query = self._query_builder._collapse()
+        if criteria:
+            request["criteria"] = criteria
         if query:
             request["query"] = query
 
@@ -1190,7 +1193,13 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         Returns:
             str: The request ID, which may be used to select a WorkflowStatus object.
         """
-        request = {"status": status, "criteria": self._build_criteria(), "query": self._query_builder._collapse()}
+        criteria = self._build_criteria()
+        query = self._query_builder._collapse()
+        request = {"status": status}
+        if criteria:
+            request["criteria"] = criteria
+        if query:
+            request["query"] = query
         if remediation is not None:
             request["closure_reason"] = remediation
         if comment is not None:
