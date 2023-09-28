@@ -1044,6 +1044,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             key = args[0]
             self._valid_criteria = self._is_valid_time_criteria_key_v6(key)
             if self._valid_criteria:
+                key = Alert.REMAPPED_ALERTS_V6_TO_V7.get(key, key)
                 self.add_time_criteria(key, **kwargs)
                 if key in ["create_time", "backend_timestamp"]:
                     self._time_range = time_filter
