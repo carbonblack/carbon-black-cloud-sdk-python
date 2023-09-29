@@ -326,8 +326,7 @@ class DeviceFacet(UnrefreshableModel):
     Example:
         >>> facets = api.select(Device).facets(['policy_id'])
         >>> for value in facets[0].values_:
-        ...     count = len(value.query_devices())
-        ...     print(f"Policy ID {value.id}: {count} device(s)")
+        ...     print(f"Policy ID {value.id}: {value.total} device(s)")
     """
     urlobject = "/appservices/v6/orgs/{0}/devices/_facet"
     primary_key = "id"
