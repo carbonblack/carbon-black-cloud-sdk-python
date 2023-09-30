@@ -82,9 +82,7 @@ DEVICE_CONTROL_FIELDS_V6 = {
 # Fields on the v6 Container Runtime alert object that do not have an equivalent in v7
 CONTAINER_RUNTIME_FIELDS_V6 = {
     "workload_id",
-    "target_value",
-    # The following four fields are pending CBAPI-4914
-    "policy_id", "policy_name", "rule_id", "rule_name"
+    "target_value"
 }
 
 # Fields on the v6 Watchlist alert object that do not have an equivalent in v7
