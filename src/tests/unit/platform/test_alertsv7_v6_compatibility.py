@@ -242,3 +242,300 @@ def check_field(alert_v6, alert_v6_from_v7, key, alert_type):
                 or (alert_v6.get(key) == 0 and alert_v6_from_v7.get(key) is None)  # device info on CONTAINER_RUNTIME
                 ), "ERROR: Values do not match {} - v6: {} v7: {}".format(key, alert_v6.get(key),
                                                                           alert_v6_from_v7.get(key))
+
+
+def test_set_alert_ids(cbcsdk_mock):
+    """Test legacy set_alert_ids method"""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "id": [
+                    "123"
+                ]
+            },
+            "rows": 1,
+            "start": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+    # no assertions, the check is that the post request is formed correctly.
+    query = api.select(BaseAlert).set_alert_ids(["123"]).set_rows(1)
+    len(query)
+
+    # def test_set_create_time(cbcsdk_mock):
+    #    """Test legacy template method"""
+    # def on_post(url, body, **kwargs):
+    #    assert body == {
+    # }
+    # return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+    #                     "workflow": {"status": "OPEN"}}], "num_found": 1}
+    # cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    # api = cbcsdk_mock.api
+    # no assertions, the check is that the post request is formed correctly.
+    # query = api.select(BaseAlert).set_create_time(start="2023-09-19T21:00:00.000",end="2023-09-20T01:00:00.000")\
+    #    .set_rows(1)
+    # len(query)
+
+
+def test_set_device_ids(cbcsdk_mock):
+    """Test legacy set_device_ids method"""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "device_id": [
+                    123
+                ]
+            },
+            "rows": 1,
+            "start": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+    # no assertions, the check is that the post request is formed correctly.
+    query = api.select(BaseAlert).set_device_ids([123]).set_rows(1)
+    len(query)
+
+    def test_template(cbcsdk_mock):
+        """Test legacy template method"""
+
+        def on_post(url, body, **kwargs):
+            assert body == {
+
+            }
+            return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                                 "workflow": {"status": "OPEN"}}], "num_found": 1}
+
+        cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+        api = cbcsdk_mock.api
+        # no assertions, the check is that the post request is formed correctly.
+        query = api.select(BaseAlert).set_template(["123"]).set_rows(1)
+        len(query)
+
+
+def test_set_device_names(cbcsdk_mock):
+    """Test legacy template method"""
+
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "device_name": [
+                    "123"
+                ]
+            },
+            "rows": 1,
+            "start": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+    # no assertions, the check is that the post request is formed correctly.
+    query = api.select(BaseAlert).set_device_names(["123"]).set_rows(1)
+    len(query)
+
+
+def test_set_device_os(cbcsdk_mock):
+    """Test legacy set_device_os method"""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "device_os": [
+                    "LINUX"
+                ]
+            },
+            "rows": 1,
+            "start": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+    # no assertions, the check is that the post request is formed correctly.
+    query = api.select(BaseAlert).set_device_os(["LINUX"]).set_rows(1)
+    len(query)
+
+
+def test_set_device_os_versions(cbcsdk_mock):
+    """Test legacy set_device_os_versions method"""
+
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "device_os_version": [
+                    "123"
+                ]
+            },
+            "rows": 1,
+            "start": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+    # no assertions, the check is that the post request is formed correctly.
+    query = api.select(BaseAlert).set_device_os_versions(["123"]).set_rows(1)
+    len(query)
+
+
+def test_set_device_username(cbcsdk_mock):
+    """Test legacy set_device_username method"""
+
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "device_username": [
+                    "123"
+                ]
+            },
+            "rows": 1,
+            "start": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+    # no assertions, the check is that the post request is formed correctly.
+    query = api.select(BaseAlert).set_device_username(["123"]).set_rows(1)
+    len(query)
+
+
+def test_set_legacy_alert_ids(cbcsdk_mock):
+    """Test legacy set_legacy_alert_ids method"""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "id": [
+                    "123"
+                ]
+            },
+            "rows": 1,
+            "start": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+    # no assertions, the check is that the post request is formed correctly.
+    query = api.select(BaseAlert).set_legacy_alert_ids(["123"]).set_rows(1)
+    len(query)
+
+
+def test_set_policy_ids(cbcsdk_mock):
+    """Test legacy set_policy_ids method"""
+
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "device_policy_id": [
+                    123
+                ]
+            },
+            "rows": 1,
+            "start": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+    # no assertions, the check is that the post request is formed correctly.
+    query = api.select(BaseAlert).set_policy_ids([123]).set_rows(1)
+    len(query)
+
+
+def test_set_policy_names(cbcsdk_mock):
+    """Test legacy policy_names method"""
+
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "device_policy": [
+                    "policy name"
+                ]
+            },
+            "rows": 1,
+            "start": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+    # no assertions, the check is that the post request is formed correctly.
+    query = api.select(BaseAlert).set_policy_names(["policy name"]).set_rows(1)
+    len(query)
+
+
+def test_set_process_names(cbcsdk_mock):
+    """Test legacy set_process_names method"""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "process_name": [
+                    "123"
+                ]
+            },
+            "rows": 1,
+            "start": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+    # no assertions, the check is that the post request is formed correctly.
+    query = api.select(BaseAlert).set_process_names(["123"]).set_rows(1)
+    len(query)
+
+
+def test_set_process_sha256(cbcsdk_mock):
+    """Test legacy set_process_sha256 method"""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "process_sha256": [
+                    "123"
+                ]
+            },
+            "rows": 1,
+            "start": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+    # no assertions, the check is that the post request is formed correctly.
+    query = api.select(BaseAlert).set_process_sha256(["123"]).set_rows(1)
+    len(query)
+
+
+def test_set_reputations(cbcsdk_mock):
+    """Test legacy template method"""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "process_reputation": [
+                    "PUP"
+                ]
+            },
+            "rows": 1,
+            "start": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+    # no assertions, the check is that the post request is formed correctly.
+    query = api.select(BaseAlert).set_reputations(["PUP"]).set_rows(1)
+    len(query)
