@@ -213,7 +213,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         if not all(isinstance(v, str) for v in alert_ids):
             raise ApiError("One or more invalid alert ID values")
-        self._update_criteria("legacy_alert_id", alert_ids)
+        self._update_criteria("id", alert_ids)
         return self
 
     def set_policy_ids(self, policy_ids):
@@ -228,7 +228,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         if not all(isinstance(policy_id, int) for policy_id in policy_ids):
             raise ApiError("One or more invalid policy IDs")
-        self._update_criteria("policy_id", policy_ids)
+        self._update_criteria("device_policy_id", policy_ids)
         return self
 
     def set_policy_names(self, policy_names):
@@ -243,7 +243,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         if not all(isinstance(n, str) for n in policy_names):
             raise ApiError("One or more invalid policy names")
-        self._update_criteria("policy_name", policy_names)
+        self._update_criteria("device_policy", policy_names)
         return self
 
     def set_process_names(self, process_names):
@@ -290,7 +290,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         if not all((r in ALERT_VALID_REPUTATIONS) for r in reps):
             raise ApiError("One or more invalid reputation values")
-        self._update_criteria("reputation", reps)
+        self._update_criteria("process_reputation", reps)
         return self
 
     def set_tags(self, tags):
