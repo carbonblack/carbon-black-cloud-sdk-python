@@ -305,7 +305,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         if not all(isinstance(tag, str) for tag in tags):
             raise ApiError("One or more invalid tags")
-        self._update_criteria("tag", tags)
+        self._update_criteria("tags", tags)
         return self
 
     def set_target_priorities(self, priorities):
@@ -321,7 +321,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         if not all((prio in DeviceSearchQuery.VALID_PRIORITIES) for prio in priorities):
             raise ApiError("One or more invalid priority values")
-        self._update_criteria("target_value", priorities)
+        self._update_criteria("device_target_value", priorities)
         return self
 
     def set_threat_ids(self, threats):
@@ -421,7 +421,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         if not all(isinstance(n, str) for n in names):
             raise ApiError("One or more invalid cluster name values")
-        self._update_criteria("cluster_name", names)
+        self._update_criteria("k8s_cluster", names)
         return self
 
     def set_namespaces(self, namespaces):
@@ -436,7 +436,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         if not all(isinstance(n, str) for n in namespaces):
             raise ApiError("One or more invalid namespace values")
-        self._update_criteria("namespace", namespaces)
+        self._update_criteria("k8s_namespace", namespaces)
         return self
 
     def set_workload_kinds(self, kinds):
@@ -451,23 +451,25 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         if not all(isinstance(n, str) for n in kinds):
             raise ApiError("One or more invalid workload kind values")
-        self._update_criteria("workload_kind", kinds)
+        self._update_criteria("k8s_kind", kinds)
         return self
 
     def set_workload_ids(self, ids):
         """
-        Restricts the alerts that this query is performed on to the specified workload IDs.
+        The field `workload_id` was deprecated and not included in v7.  This method has been removed.
+
+        Use workload_name instead. See `Developer Network Alerts v6 Migration
+        <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/alerts-migration/>`_
+        for more details.
 
         Args:
             ids (list): List of workload IDs to look for.
 
-        Returns:
-            ContainerRuntimeAlertSearchQuery: This instance.
+        Raises:
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
-        if not all(isinstance(n, str) for n in ids):
-            raise ApiError("One or more invalid workload ID values")
-        self._update_criteria("workload_id", ids)
-        return self
+        raise FunctionalityDecommissioned(
+            "Starting with SDK v1.5.0 workload_id is not a valid field on Alert.")
 
     def set_workload_names(self, names):
         """
@@ -481,7 +483,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         if not all(isinstance(n, str) for n in names):
             raise ApiError("One or more invalid workload name values")
-        self._update_criteria("workload_name", names)
+        self._update_criteria("k8s_workload_name", names)
         return self
 
     def set_replica_ids(self, ids):
@@ -496,7 +498,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         if not all(isinstance(n, str) for n in ids):
             raise ApiError("One or more invalid replica ID values")
-        self._update_criteria("replica_id", ids)
+        self._update_criteria("k8s_pod_name", ids)
         return self
 
     def set_remote_ips(self, addrs):
@@ -511,7 +513,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         if not all(isinstance(n, str) for n in addrs):
             raise ApiError("One or more invalid remote IP values")
-        self._update_criteria("remote_ip", addrs)
+        self._update_criteria("netconn_remote_ip", addrs)
         return self
 
     def set_remote_domains(self, domains):
@@ -526,7 +528,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         if not all(isinstance(n, str) for n in domains):
             raise ApiError("One or more invalid remote domain values")
-        self._update_criteria("remote_domain", domains)
+        self._update_criteria("netconn_remote_domain", domains)
         return self
 
     def set_protocols(self, protocols):
@@ -541,22 +543,26 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         if not all(isinstance(n, str) for n in protocols):
             raise ApiError("One or more invalid protocol values")
-        self._update_criteria("protocol", protocols)
+        self._update_criteria("netconn_protocol", protocols)
         return self
 
     def set_ports(self, ports):
         """
-        Restricts the alerts that this query is performed on to the specified listening ports.
+        Restricts the alerts that this query is performed on to the specified netconn_local_ports.
+
+        Note that in SDK 1.5.0, to align with Alerts API v7, the search field was updated from
+        `port` to `netconn_local_port`.  It is possible to search on either `netconn_local_port`
+        or `netconn_remote_port` using the `add_criteria(fieldname, [field values]) method.
 
         Args:
-            ports (list): List of listening ports to look for.
+            ports (list): List of netconn_local_ports to look for.
 
         Returns:
             ContainerRuntimeAlertSearchQuery: This instance.
         """
         if not all(isinstance(n, int) for n in ports):
             raise ApiError("One or more invalid port values")
-        self._update_criteria("port", ports)
+        self._update_criteria("netconn_local_port", ports)
         return self
 
     def set_egress_group_ids(self, ids):
@@ -631,7 +637,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         if not all(isinstance(n, str) for n in names):
             raise ApiError("One or more invalid rule name values")
-        self._update_criteria("rule_name", names)
+        self._update_criteria("k8s_rule", names)
         return self
 
     def set_watchlist_ids(self, ids):
@@ -843,7 +849,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         if not all(isinstance(n, str) for n in ids):
             raise ApiError("One or more invalid device ID values")
-        self._update_criteria("external_device_id", ids)
+        self._update_criteria("device_id", ids)
         return self
 
     def set_product_ids(self, ids):
