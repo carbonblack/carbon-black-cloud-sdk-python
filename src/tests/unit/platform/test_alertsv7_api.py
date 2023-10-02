@@ -612,7 +612,6 @@ def test_query_set_rows(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
                         "rows": 10000,
-                        "start": 1,
                         "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"state": "OPEN"}}], "num_found": 1}
@@ -923,8 +922,7 @@ def test_query_set_minimum_severity(cbcsdk_mock):
             "criteria": {
                 "minimum_severity": 3
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -945,8 +943,7 @@ def test_query_set_threat_notes_present(cbcsdk_mock):
             "criteria": {
                 "threat_notes_present": False
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -967,8 +964,7 @@ def test_query_set_alert_notes_present(cbcsdk_mock):
             "criteria": {
                 "alert_notes_present": False
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -989,8 +985,7 @@ def test_query_set_remote_is_private(cbcsdk_mock):
             "criteria": {
                 "remote_is_private": True
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
