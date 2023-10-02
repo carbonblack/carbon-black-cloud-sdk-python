@@ -528,7 +528,7 @@ def test_query_containeralert_with_all_bells_and_whistles(cbcsdk_mock):
                                      "netconn_remote_ip": ["10.29.99.1"], "netconn_remote_domain": ["example.com"],
                                      "netconn_protocol": ["TCP"], "netconn_local_port": [12345],
                                      "egress_group_id": ["5150"], "egress_group_name": ["EGRET"],
-                                     "ip_reputation": [75], "rule_id": ["66"], "k8s_rule": ["KITTEH"],
+                                     "ip_reputation": [75], "k8s_rule_id": ["66"], "k8s_rule": ["KITTEH"],
                                      "k8s_kind": ["Job"]},
                         "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",

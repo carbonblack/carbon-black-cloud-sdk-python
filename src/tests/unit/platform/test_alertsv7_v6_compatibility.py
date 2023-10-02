@@ -745,6 +745,32 @@ def test_set_replica_ids(cbcsdk_mock):
     len(query)
 
 
+def test_set_rule_ids(cbcsdk_mock):
+    """Test legacy set_rule_ids method
+
+    In SDK prior to 1.5.0 this was only supported for Container Runtime Alerts so will
+    convert to k8s_rule_id.  For the post SDK 1.5.0 / Alert v7 API version, add_criteria()
+    should be used for both k8s_rule_id and for other alert types, rule_id.
+    """
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "k8s_rule_id": [
+                    "123"
+                ]
+            },
+            "rows": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+    # no assertions, the check is that the post request is formed correctly.
+    query = api.select(BaseAlert).set_rule_ids(["123"]).set_rows(1)
+    len(query)
+
+
 def test_set_rule_names(cbcsdk_mock):
     """Test legacy set_rule_names method"""
     def on_post(url, body, **kwargs):
