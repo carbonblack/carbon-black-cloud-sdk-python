@@ -90,7 +90,6 @@ def test_query_basealert_with_all_bells_and_whistles(cbcsdk_mock):
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
-
     query = api.select(BaseAlert).where("Blort").set_device_ids([6023]) \
         .set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
         .set_device_username(["JRN"]).set_alert_ids(["S0L0"]) \
@@ -176,9 +175,10 @@ def test_query_basealert_with_time_range(cbcsdk_mock):
 
     def on_post(url, body, **kwargs):
         nonlocal _timestamp
-        assert body == {"query": "Blort", "criteria": {"last_update_time": {"start": _timestamp.isoformat(),
-                                                                            "end": _timestamp.isoformat()}},
-                        "rows": 2}
+        assert body == {"query": "Blort", "criteria": {"backend_update_timestamp": {
+            "start": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            "end": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ")}},
+            "rows": 2}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"state": "OPEN"}}], "num_found": 1}
 
@@ -199,7 +199,7 @@ def test_query_basealert_with_time_range_start_end(cbcsdk_mock):
     """Test an alert query with the last_update_time specified as a range."""
 
     def on_post(url, body, **kwargs):
-        assert body == {"query": "Blort", "criteria": {"last_update_time": {"range": "-3w"}}, "rows": 2}
+        assert body == {"query": "Blort", "criteria": {"backend_update_timestamp": {"range": "-3w"}}, "rows": 2}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"state": "OPEN"}}], "num_found": 1}
 
@@ -207,6 +207,26 @@ def test_query_basealert_with_time_range_start_end(cbcsdk_mock):
     api = cbcsdk_mock.api
 
     query = api.select(BaseAlert).where("Blort").set_time_range("last_update_time", range="-3w")
+    a = query.one()
+    assert a.id == "S0L0"
+    assert a.org_key == "test"
+    assert a.threat_id == "B0RG"
+    assert a.workflow_.state == "OPEN"
+
+
+def test_query_basealert_with_time_range_create_time_as_start_end(cbcsdk_mock):
+    """Test an alert query with the create_time specified as a range which should also set the global time_range."""
+
+    def on_post(url, body, **kwargs):
+        assert body == {"query": "Blort", "criteria": {"backend_timestamp": {"range": "-3w"}}, "rows": 2,
+                        'time_range': {'range': '-3w'}}
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
+    query = api.select(BaseAlert).where("Blort").set_time_range("create_time", range="-3w")
     a = query.one()
     assert a.id == "S0L0"
     assert a.org_key == "test"
@@ -571,6 +591,7 @@ def test_query_set_rows(cbcsdk_mock):
         assert a.id == "S0L0"
         assert a.org_key == "test"
         assert a.threat_id == "B0RG"
+
 
 # TODO replace bulk tests
 # def test_alerts_bulk_dismiss(cbcsdk_mock):
@@ -967,7 +988,7 @@ def test_query_basealert_with_time_range_errors(cbcsdk_mock):
     api = cbcsdk_mock.api
     with pytest.raises(ApiError) as ex:
         api.select(BaseAlert).where("Blort").set_time_range("invalid", range="whatever")
-    assert "key must be one of create_time, first_event_time, last_event_time, backend_timestamp, "\
+    assert "key must be one of create_time, first_event_time, last_event_time, backend_timestamp, " \
            "backend_update_timestamp, or last_update_time" in str(ex.value)
 
     with pytest.raises(ApiError) as ex:
@@ -1028,6 +1049,7 @@ def test_get_notes_for_alert(cbcsdk_mock):
 
 def test_base_alert_create_note(cbcsdk_mock):
     """Test creating a new note on an alert"""
+
     def on_post(url, body, **kwargs):
         body == {"note": "I am Grogu"}
         return CREATE_ALERT_NOTE
