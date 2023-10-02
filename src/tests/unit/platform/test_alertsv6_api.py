@@ -102,17 +102,19 @@ def test_query_basealert_with_create_time_as_start_end(cbcsdk_mock):
 
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
-                        "rows": 2,
-                        "criteria": {"create_time": {"start": "2019-09-30T12:34:56", "end": "2019-10-01T12:00:12"}}}
+                        "time_range": {"start": "2023-09-19T12:34:56.000000Z",
+                                       "end": "2023-09-20T12:00:12.000000Z"},
+                        "rows": 1
+                        }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"state": "OPEN"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select("BaseAlert").where("Blort").set_create_time(start="2019-09-30T12:34:56",
-                                                                   end="2019-10-01T12:00:12")
-    a = query.one()
+    query = api.select("BaseAlert").where("Blort").set_create_time(start="2023-09-19T12:34:56",
+                                                                   end="2023-09-20T12:00:12").set_rows(1)
+    a = query.first()
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
@@ -126,16 +128,18 @@ def test_query_basealert_with_create_time_as_start_end_as_objs(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         nonlocal _timestamp
         assert body == {"query": "Blort",
-                        "rows": 2,
-                        "criteria": {"create_time": {"start": _timestamp.isoformat(), "end": _timestamp.isoformat()}}}
+                        "rows": 1,
+                        "time_range": {"start": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                                       "end": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ")}}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"state": "OPEN"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(BaseAlert).where("Blort").set_create_time(start=_timestamp, end=_timestamp)
-    a = query.one()
+    query = api.select(BaseAlert).where("Blort").set_create_time(start=_timestamp.isoformat(),
+                                                                 end=_timestamp.isoformat()).set_rows(1)
+    a = query.first()
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
@@ -146,7 +150,7 @@ def test_query_basealert_with_create_time_as_range(cbcsdk_mock):
     """Test an alert query with the creation time specified as a range."""
 
     def on_post(url, body, **kwargs):
-        assert body == {"query": "Blort", "criteria": {"create_time": {"range": "-3w"}}, "rows": 2}
+        assert body == {"query": "Blort", "time_range": {"range": "-3w"}, "rows": 2}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"state": "OPEN"}}], "num_found": 1}
 
