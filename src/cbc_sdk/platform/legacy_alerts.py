@@ -579,6 +579,10 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified Kubernetes policy rule IDs.
 
+        In SDK prior to 1.5.0 this was only supported for Container Runtime Alerts so will
+        convert to k8s_rule_id in criteria.  In SDK 1.5.0 and later, aligned to Alert v7 API, use add_criteria()
+        should be used for both k8s_rule_id and for other alert types, rule_id.
+
         Args:
             ids (list): List of Kubernetes policy rule IDs to look for.
 
@@ -587,7 +591,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         if not all(isinstance(n, str) for n in ids):
             raise ApiError("One or more invalid rule ID values")
-        self._update_criteria("rule_id", ids)
+        self._update_criteria("k8s_rule_id", ids)
         return self
 
     def set_rule_names(self, names):
