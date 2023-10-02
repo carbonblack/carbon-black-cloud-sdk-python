@@ -69,11 +69,12 @@ def test_query_basealert_with_all_bells_and_whistles(cbcsdk_mock):
                         "rows": 2,
                         "criteria": {"device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
-                                     "device_username": ["JRN"], "id": ["S0L0"],
-                                     "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
-                                     "policy_name": ["Strict"], "process_name": ["IEXPLORE.EXE"],
+                                     "device_username": ["JRN"], "id": ["S0L0", "S0L0_1"],
+                                     "minimum_severity": 6, "device_policy_id": [8675309],
+                                     "device_policy": ["Strict"], "process_name": ["IEXPLORE.EXE"],
                                      "process_sha256": ["0123456789ABCDEF0123456789ABCDEF"],
-                                     "reputation": ["SUSPECT_MALWARE"], "tag": ["Frood"], "target_value": ["HIGH"],
+                                     "process_reputation": ["SUSPECT_MALWARE"], "tags": ["Frood"],
+                                     "device_target_value": ["HIGH"],
                                      "threat_id": ["B0RG"], "workflow": ["OPEN"]},
                         "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG", "type": "WATCHLIST",
@@ -297,11 +298,12 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
                         "rows": 2,
                         "criteria": {"device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
-                                     "device_username": ["JRN"], "id": ["S0L0"],
-                                     "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
-                                     "policy_name": ["Strict"], "process_name": ["IEXPLORE.EXE"],
+                                     "device_username": ["JRN"], "id": ["S0L0", "S0L0_1"],
+                                     "minimum_severity": 6, "device_policy_id": [8675309],
+                                     "device_policy": ["Strict"], "process_name": ["IEXPLORE.EXE"],
                                      "process_sha256": ["0123456789ABCDEF0123456789ABCDEF"],
-                                     "reputation": ["SUSPECT_MALWARE"], "tag": ["Frood"], "target_value": ["HIGH"],
+                                     "process_reputation": ["SUSPECT_MALWARE"], "tags": ["Frood"],
+                                     "device_target_value": ["HIGH"],
                                      "threat_id": ["B0RG"], "type": ["CB_ANALYTICS"], "workflow": ["OPEN"],
                                      "device_location": ["ONSITE"], "policy_applied": ["APPLIED"],
                                      "reason_code": ["ATTACK_VECTOR"], "run_state": ["RAN"], "sensor_action": ["DENY"]},
@@ -314,7 +316,7 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
 
     query = api.select(CBAnalyticsAlert).where("Blort") \
         .set_device_ids([6023]).set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
-        .set_device_username(["JRN"]).set_alert_ids(["S0L0"]).set_legacy_alert_ids(["S0L0_1"]) \
+        .set_device_username(["JRN"]).set_alert_ids(["S0L0", "S0L0_1"])\
         .set_minimum_severity(6).set_policy_ids([8675309]).set_policy_names(["Strict"]) \
         .set_process_names(["IEXPLORE.EXE"]).set_process_sha256(["0123456789ABCDEF0123456789ABCDEF"]) \
         .set_reputations(["SUSPECT_MALWARE"]).set_tags(["Frood"]).set_target_priorities(["HIGH"]) \
@@ -369,15 +371,16 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
                         "rows": 2,
-                        "criteria": {"device_id": [6023], "device_name": ["HAL"],
+                        "criteria": {"device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
-                                     "device_username": ["JRN"], "id": ["S0L0"],
-                                     "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
-                                     "policy_name": ["Strict"], "process_name": ["IEXPLORE.EXE"],
+                                     "device_username": ["JRN"], "id": ["S0L0", "S0L0_1"],
+                                     "minimum_severity": 6, "device_policy_id": [8675309],
+                                     "device_policy": ["Strict"], "process_name": ["IEXPLORE.EXE"],
                                      "process_sha256": ["0123456789ABCDEF0123456789ABCDEF"],
-                                     "reputation": ["SUSPECT_MALWARE"], "tag": ["Frood"], "target_value": ["HIGH"],
+                                     "process_reputation": ["SUSPECT_MALWARE"], "tags": ["Frood"],
+                                     "device_target_value": ["HIGH"],
                                      "threat_id": ["B0RG"], "type": ["DEVICE_CONTROL"], "workflow": ["OPEN"],
-                                     "external_device_friendly_name": ["/dev/ice"], "external_device_id": ["626"],
+                                     "external_device_friendly_name": ["/dev/ice"], "device_id": ["626"],
                                      "product_id": ["0x5581"], "product_name": ["Ultra"],
                                      "serial_number": ["4C531001331122115172"], "vendor_id": ["0x0781"],
                                      "vendor_name": ["SanDisk"]},
@@ -388,8 +391,10 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
+    # in Alert v7 on a Device Control alert, the device_id is the USB device id.
+    # external_device_id does not exist, therefore it's not valid to set both device_id and external_device_id
     query = api.select(DeviceControlAlert).where("Blort") \
-        .set_device_ids([6023]).set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
+        .set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
         .set_device_username(["JRN"]).set_alert_ids(["S0L0"]) \
         .set_legacy_alert_ids(["S0L0_1"]).set_minimum_severity(6).set_policy_ids([8675309]) \
         .set_policy_names(["Strict"]).set_process_names(["IEXPLORE.EXE"]) \
@@ -450,11 +455,12 @@ def test_query_watchlistalert_with_all_bells_and_whistles(cbcsdk_mock):
                         "rows": 2,
                         "criteria": {"device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
-                                     "device_username": ["JRN"], "id": ["S0L0"],
-                                     "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
-                                     "policy_name": ["Strict"], "process_name": ["IEXPLORE.EXE"],
+                                     "device_username": ["JRN"], "id": ["S0L0", "S0L0_1"],
+                                     "minimum_severity": 6, "device_policy_id": [8675309],
+                                     "device_policy": ["Strict"], "process_name": ["IEXPLORE.EXE"],
                                      "process_sha256": ["0123456789ABCDEF0123456789ABCDEF"],
-                                     "reputation": ["SUSPECT_MALWARE"], "tag": ["Frood"], "target_value": ["HIGH"],
+                                     "process_reputation": ["SUSPECT_MALWARE"], "tags": ["Frood"],
+                                     "device_target_value": ["HIGH"],
                                      "threat_id": ["B0RG"], "type": ["WATCHLIST"], "workflow": ["OPEN"],
                                      "watchlist_id": ["100"], "watchlist_name": ["Gandalf"]},
                         "sort": [{"field": "name", "order": "DESC"}]}
@@ -513,12 +519,13 @@ def test_query_containeralert_with_all_bells_and_whistles(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
                         "rows": 2,
-                        "criteria": {"cluster_name": ["TURTLE"], 'type': ['CONTAINER_RUNTIME'], "namespace": ["RG"],
-                                     "workload_id": ["1234"], "workload_name": ["BUNNY"], "replica_id": ["FAKE"],
-                                     "remote_ip": ["10.29.99.1"], "remote_domain": ["example.com"], "protocol": ["TCP"],
-                                     "port": [12345], "egress_group_id": ["5150"], "egress_group_name": ["EGRET"],
-                                     "ip_reputation": [75], "rule_id": ["66"], "rule_name": ["KITTEH"],
-                                     "workload_kind": ["Job"]},
+                        "criteria": {"k8s_cluster": ["TURTLE"], 'type': ['CONTAINER_RUNTIME'], "k8s_namespace": ["RG"],
+                                     "k8s_workload_name": ["BUNNY"], "k8s_pod_name": ["FAKE"],
+                                     "netconn_remote_ip": ["10.29.99.1"], "netconn_remote_domain": ["example.com"],
+                                     "netconn_protocol": ["TCP"], "netconn_local_port": [12345],
+                                     "egress_group_id": ["5150"], "egress_group_name": ["EGRET"],
+                                     "ip_reputation": [75], "rule_id": ["66"], "k8s_rule": ["KITTEH"],
+                                     "k8s_kind": ["Job"]},
                         "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"state": "OPEN"}}], "num_found": 1}
@@ -527,7 +534,7 @@ def test_query_containeralert_with_all_bells_and_whistles(cbcsdk_mock):
     api = cbcsdk_mock.api
 
     query = api.select(ContainerRuntimeAlert).where("Blort").set_cluster_names(['TURTLE']).set_namespaces(['RG']) \
-        .set_workload_kinds(['Job']).set_workload_ids(['1234']).set_workload_names(['BUNNY']) \
+        .set_workload_kinds(['Job']).set_workload_names(['BUNNY']) \
         .set_replica_ids(['FAKE']).set_remote_ips(['10.29.99.1']).set_remote_domains(['example.com']) \
         .set_protocols(['TCP']).set_ports([12345]).set_egress_group_ids(['5150']).set_egress_group_names(['EGRET']) \
         .set_ip_reputations([75]).set_rule_ids(['66']).set_rule_names(['KITTEH']).sort_by("name", "DESC")
@@ -542,7 +549,6 @@ def test_query_containeralert_with_all_bells_and_whistles(cbcsdk_mock):
     ("set_cluster_names", [12345]),
     ("set_namespaces", [12345]),
     ("set_workload_kinds", [12345]),
-    ("set_workload_ids", [12345]),
     ("set_workload_names", [12345]),
     ("set_replica_ids", [12345]),
     ("set_remote_ips", [12345]),

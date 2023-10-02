@@ -167,6 +167,15 @@ def test_set_threat_cause_vectors(cb):
         cb.select(WatchlistAlert).set_threat_cause_vectors(["EMAIL"])
 
 
+def test_set_workload_ids(cb):
+    """Test the set_kill_chain_statuses method on base and CBAnalytics legacy alert class."""
+    with pytest.raises(FunctionalityDecommissioned):
+        cb.select(BaseAlert).set_workload_ids(["UNKNOWN"])
+
+    with pytest.raises(FunctionalityDecommissioned):
+        cb.select(ContainerRuntimeAlert).set_workload_ids(["UNKNOWN"])
+
+
 def test_get_attr_cb_analytics_alert(cbcsdk_mock):
     """Test the __get_attr_ method for each attribute that applies to cb_analytics alerts."""
     cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
