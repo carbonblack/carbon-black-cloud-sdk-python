@@ -253,8 +253,7 @@ def test_set_alert_ids(cbcsdk_mock):
                     "123"
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -264,19 +263,25 @@ def test_set_alert_ids(cbcsdk_mock):
     query = api.select(BaseAlert).set_alert_ids(["123"]).set_rows(1)
     len(query)
 
-    # def test_set_create_time(cbcsdk_mock):
-    #    """Test legacy template method"""
-    # def on_post(url, body, **kwargs):
-    #    assert body == {
-    # }
-    # return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
-    #                     "workflow": {"status": "OPEN"}}], "num_found": 1}
-    # cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
-    # api = cbcsdk_mock.api
+
+def test_set_create_time(cbcsdk_mock):
+    """Test legacy set_create_time method"""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "time_range": {
+                "end": "2023-09-20T01:00:00.000000Z",
+                "start": "2023-09-19T21:00:00.000000Z"
+            },
+            "rows": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
     # no assertions, the check is that the post request is formed correctly.
-    # query = api.select(BaseAlert).set_create_time(start="2023-09-19T21:00:00.000",end="2023-09-20T01:00:00.000")\
-    #    .set_rows(1)
-    # len(query)
+    query = api.select(BaseAlert).set_create_time(start="2023-09-19T21:00:00", end="2023-09-20T01:00:00").\
+        set_rows(1)
+    len(query)
 
 
 def test_set_device_ids(cbcsdk_mock):
@@ -288,8 +293,7 @@ def test_set_device_ids(cbcsdk_mock):
                     123
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -309,8 +313,7 @@ def test_set_device_names(cbcsdk_mock):
                     "123"
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -331,8 +334,7 @@ def test_set_device_os(cbcsdk_mock):
                     "LINUX"
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -353,8 +355,7 @@ def test_set_device_os_versions(cbcsdk_mock):
                     "123"
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -375,8 +376,7 @@ def test_set_device_username(cbcsdk_mock):
                     "123"
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -397,8 +397,7 @@ def test_set_legacy_alert_ids(cbcsdk_mock):
                     "123"
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -419,8 +418,7 @@ def test_set_policy_ids(cbcsdk_mock):
                     123
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -441,8 +439,7 @@ def test_set_policy_names(cbcsdk_mock):
                     "policy name"
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -463,8 +460,7 @@ def test_set_process_names(cbcsdk_mock):
                     "123"
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -485,8 +481,7 @@ def test_set_process_sha256(cbcsdk_mock):
                     "123"
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -507,8 +502,7 @@ def test_set_reputations(cbcsdk_mock):
                     "PUP"
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -529,8 +523,7 @@ def test_set_tags(cbcsdk_mock):
                     "123"
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -551,8 +544,7 @@ def test_set_target_priorities(cbcsdk_mock):
                     "LOW"
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -573,8 +565,7 @@ def test_set_external_device_ids(cbcsdk_mock):
                     "123"
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -595,8 +586,7 @@ def test_set_workload_names(cbcsdk_mock):
                     "123"
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -617,8 +607,7 @@ def test_set_cluster_names(cbcsdk_mock):
                     "123"
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -639,8 +628,7 @@ def test_set_namespaces(cbcsdk_mock):
                     "123"
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -661,8 +649,7 @@ def test_set_ports(cbcsdk_mock):
                     123
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -683,8 +670,7 @@ def test_set_protocols(cbcsdk_mock):
                     "PROTOCOL"
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -705,8 +691,7 @@ def test_set_remote_domains(cbcsdk_mock):
                     "123"
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -727,8 +712,7 @@ def test_set_remote_ips(cbcsdk_mock):
                     "1.2.3.4"
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -749,8 +733,7 @@ def test_set_replica_ids(cbcsdk_mock):
                     "123"
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -771,8 +754,7 @@ def test_set_rule_names(cbcsdk_mock):
                     "123"
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
@@ -793,8 +775,7 @@ def test_set_workload_kinds(cbcsdk_mock):
                     "123"
                 ]
             },
-            "rows": 1,
-            "start": 1
+            "rows": 1
         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}

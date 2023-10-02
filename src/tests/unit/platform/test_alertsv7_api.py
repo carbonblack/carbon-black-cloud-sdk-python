@@ -221,7 +221,7 @@ def test_query_alert_with_time_range_as_start_end(cbcsdk_mock):
                         "rows": 2,
                         "time_range": {"start": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                                        "end": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ")},
-                        "criteria": {}}
+                        }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
 
@@ -240,7 +240,7 @@ def test_query_alert_with_time_range_as_range(cbcsdk_mock):
     """Test an alert query with the time_range specified as a range."""
 
     def on_post(url, body, **kwargs):
-        assert body == {"query": "Blort", "criteria": {}, "time_range": {"range": "-3w"}, "rows": 2}
+        assert body == {"query": "Blort", "time_range": {"range": "-3w"}, "rows": 2}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
 

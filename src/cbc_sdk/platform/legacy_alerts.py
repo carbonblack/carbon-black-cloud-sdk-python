@@ -64,6 +64,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         Restricts the alerts that this query is performed on to the specified creation time.
 
         The time may either be specified as a start and end point or as a range.
+        In SDK 1.5.0 to align with Alerts v7 API, create_time is set as time_range outside of criteria.
 
         Args:
             *args (list): Not used.
@@ -77,15 +78,15 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
                 raise ApiError("cannot specify range= in addition to start= and end=")
             stime = kwargs["start"]
             if not isinstance(stime, str):
-                stime = stime.isoformat()
+                stime = stime.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
             etime = kwargs["end"]
             if not isinstance(etime, str):
-                etime = etime.isoformat()
-            self._time_filters["create_time"] = {"start": stime, "end": etime}
+                etime = etime.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+            self.set_time_range(start=stime, end=etime)
         elif kwargs.get("range", None):
             if kwargs.get("start", None) or kwargs.get("end", None):
                 raise ApiError("cannot specify start= or end= in addition to range=")
-            self._time_filters["create_time"] = {"range": kwargs["range"]}
+            self.set_time_range(range=kwargs["range"])
         else:
             raise ApiError("must specify either start= and end= or range=")
         return self
