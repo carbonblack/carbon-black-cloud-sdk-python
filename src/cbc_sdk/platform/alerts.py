@@ -1216,7 +1216,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         request["rows"] = self._batch_size
         if hasattr(self, "_time_range"):
             request["time_range"] = self._time_range
-        if from_row > 0:
+        if from_row > 1:
             request["start"] = from_row
         if max_rows >= 0:
             request["rows"] = max_rows
