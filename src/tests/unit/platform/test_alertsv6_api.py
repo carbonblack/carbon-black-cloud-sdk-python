@@ -13,7 +13,7 @@
 from datetime import datetime
 import pytest
 
-from cbc_sdk.errors import ApiError, TimeoutError, NonQueryableModel
+from cbc_sdk.errors import ApiError, NonQueryableModel, FunctionalityDecommissioned
 from cbc_sdk.platform import (
     BaseAlert,
     CBAnalyticsAlert,
@@ -33,17 +33,8 @@ from tests.unit.fixtures.platform.mock_process import (
     GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT,
 )
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.endpoint_standard.mock_enriched_events import (
-    POST_ENRICHED_EVENTS_SEARCH_JOB_RESP,
-    GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING,
-    GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ZERO_COMP,
-    GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_ZERO,
-    GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP,
-    GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ALERTS,
-)
 from tests.unit.fixtures.platform.mock_alerts import (
     GET_ALERT_RESP,
-    GET_ALERT_RESP_INVALID_ALERT_ID,
     GET_ALERT_TYPE_WATCHLIST,
     GET_ALERT_TYPE_WATCHLIST_INVALID,
     GET_ALERT_RESP_WITH_NOTES,
@@ -91,7 +82,6 @@ def test_query_basealert_with_all_bells_and_whistles(cbcsdk_mock):
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
-
     query = api.select(BaseAlert).where("Blort").set_device_ids([6023]) \
         .set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
         .set_device_username(["JRN"]).set_alert_ids(["S0L0"]) \
@@ -177,9 +167,10 @@ def test_query_basealert_with_time_range(cbcsdk_mock):
 
     def on_post(url, body, **kwargs):
         nonlocal _timestamp
-        assert body == {"query": "Blort", "criteria": {"last_update_time": {"start": _timestamp.isoformat(),
-                                                                            "end": _timestamp.isoformat()}},
-                        "rows": 2}
+        assert body == {"query": "Blort", "criteria": {"backend_update_timestamp": {
+            "start": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            "end": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ")}},
+            "rows": 2}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"state": "OPEN"}}], "num_found": 1}
 
@@ -200,7 +191,7 @@ def test_query_basealert_with_time_range_start_end(cbcsdk_mock):
     """Test an alert query with the last_update_time specified as a range."""
 
     def on_post(url, body, **kwargs):
-        assert body == {"query": "Blort", "criteria": {"last_update_time": {"range": "-3w"}}, "rows": 2}
+        assert body == {"query": "Blort", "criteria": {"backend_update_timestamp": {"range": "-3w"}}, "rows": 2}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"state": "OPEN"}}], "num_found": 1}
 
@@ -208,6 +199,26 @@ def test_query_basealert_with_time_range_start_end(cbcsdk_mock):
     api = cbcsdk_mock.api
 
     query = api.select(BaseAlert).where("Blort").set_time_range("last_update_time", range="-3w")
+    a = query.one()
+    assert a.id == "S0L0"
+    assert a.org_key == "test"
+    assert a.threat_id == "B0RG"
+    assert a.workflow_.state == "OPEN"
+
+
+def test_query_basealert_with_time_range_create_time_as_start_end(cbcsdk_mock):
+    """Test an alert query with the create_time specified as a range which should also set the global time_range."""
+
+    def on_post(url, body, **kwargs):
+        assert body == {"query": "Blort", "criteria": {"backend_timestamp": {"range": "-3w"}}, "rows": 2,
+                        'time_range': {'range': '-3w'}}
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
+    query = api.select(BaseAlert).where("Blort").set_time_range("create_time", range="-3w")
     a = query.one()
     assert a.id == "S0L0"
     assert a.org_key == "test"
@@ -564,7 +575,6 @@ def test_query_set_rows(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
                         "rows": 10000,
-                        "start": 1,
                         "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"state": "OPEN"}}], "num_found": 1}
@@ -577,6 +587,7 @@ def test_query_set_rows(cbcsdk_mock):
         assert a.id == "S0L0"
         assert a.org_key == "test"
         assert a.threat_id == "B0RG"
+
 
 # TODO replace bulk tests
 # def test_alerts_bulk_dismiss(cbcsdk_mock):
@@ -829,143 +840,10 @@ def test_get_events(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET",
                              "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
                              GET_ALERT_RESP)
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
-                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b/results",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ALERTS)
-
     api = cbcsdk_mock.api
     alert = api.select(CBAnalyticsAlert, '86123310980efd0b38111eba4bfa5e98aa30b19')
-    events = alert.get_events()
-    assert len(events) == 2
-    for event in events:
-        assert event.alert_id == ['62802DCE']
-
-
-def test_get_events_zero_found(cbcsdk_mock):
-    """Test get_events method - zero enriched events found"""
-    cbcsdk_mock.mock_request("GET",
-                             "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
-                             GET_ALERT_RESP)
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
-                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b/results",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_ZERO)
-
-    api = cbcsdk_mock.api
-    alert = api.select(CBAnalyticsAlert, '86123310980efd0b38111eba4bfa5e98aa30b19')
-    events = alert.get_events()
-    assert len(events) == 0
-
-
-def test_get_events_timeout(cbcsdk_mock):
-    """Test that get_events() throws a timeout appropriately."""
-    cbcsdk_mock.mock_request("GET",
-                             "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
-                             GET_ALERT_RESP)
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
-                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING)
-
-    api = cbcsdk_mock.api
-    alert = api.select(CBAnalyticsAlert, '86123310980efd0b38111eba4bfa5e98aa30b19')
-    with pytest.raises(TimeoutError):
-        alert.get_events(timeout=1)
-
-
-def test_get_events_detail_jobs_resp_handling(cbcsdk_mock):
-    """Test get_events method - different resps from details jobs request"""
-    called = 0
-
-    def get_validate(*args):
-        nonlocal called
-        called += 1
-        if called == 1:
-            return GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING
-        if called == 2:
-            return GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ZERO_COMP
-        return GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP
-
-    cbcsdk_mock.mock_request("GET",
-                             "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
-                             GET_ALERT_RESP)
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
-                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b",
-                             # noqa: E501
-                             get_validate)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b/results",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ALERTS)
-
-    api = cbcsdk_mock.api
-    alert = api.select(CBAnalyticsAlert, '86123310980efd0b38111eba4bfa5e98aa30b19')
-    events = alert.get_events()
-    assert len(events) == 2
-    for event in events:
-        assert event.alert_id == ['62802DCE']
-
-
-def test_get_events_invalid_alert_id(cbcsdk_mock):
-    """Test get_events method with invalid alert_id"""
-    cbcsdk_mock.mock_request("GET",
-                             "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
-                             GET_ALERT_RESP_INVALID_ALERT_ID)
-
-    api = cbcsdk_mock.api
-    alert = api.select(CBAnalyticsAlert, '86123310980efd0b38111eba4bfa5e98aa30b19')
-    with pytest.raises(ApiError):
+    with pytest.raises(FunctionalityDecommissioned):
         alert.get_events()
-
-
-def test_get_events_async(cbcsdk_mock):
-    """Test async get_events method"""
-    cbcsdk_mock.mock_request("GET",
-                             "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
-                             GET_ALERT_RESP)
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
-                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b/results",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ALERTS)
-
-    api = cbcsdk_mock.api
-    alert = api.select(CBAnalyticsAlert, '86123310980efd0b38111eba4bfa5e98aa30b19')
-    events = alert.get_events(async_mode=True).result()
-    assert len(events) == 2
-    for event in events:
-        assert event.alert_id == ['62802DCE']
 
 
 def test_query_basealert_with_time_range_errors(cbcsdk_mock):
@@ -973,7 +851,7 @@ def test_query_basealert_with_time_range_errors(cbcsdk_mock):
     api = cbcsdk_mock.api
     with pytest.raises(ApiError) as ex:
         api.select(BaseAlert).where("Blort").set_time_range("invalid", range="whatever")
-    assert "key must be one of create_time, first_event_time, last_event_time, backend_timestamp, "\
+    assert "key must be one of create_time, first_event_time, last_event_time, backend_timestamp, " \
            "backend_update_timestamp, or last_update_time" in str(ex.value)
 
     with pytest.raises(ApiError) as ex:
@@ -1034,6 +912,7 @@ def test_get_notes_for_alert(cbcsdk_mock):
 
 def test_base_alert_create_note(cbcsdk_mock):
     """Test creating a new note on an alert"""
+
     def on_post(url, body, **kwargs):
         body == {"note": "I am Grogu"}
         return CREATE_ALERT_NOTE

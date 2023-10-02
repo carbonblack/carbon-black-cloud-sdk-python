@@ -13,8 +13,9 @@
 
 """Model and Query Classes for Platform Alerts and Workflows"""
 import time
+import datetime
 
-from cbc_sdk.errors import ApiError, TimeoutError, ObjectNotFoundError, NonQueryableModel, FunctionalityDecommissioned
+from cbc_sdk.errors import ApiError, ObjectNotFoundError, NonQueryableModel, FunctionalityDecommissioned
 from cbc_sdk.platform import PlatformModel
 from cbc_sdk.base import (BaseQuery,
                           UnrefreshableModel,
@@ -22,7 +23,7 @@ from cbc_sdk.base import (BaseQuery,
                           QueryBuilderSupportMixin,
                           IterableQueryMixin,
                           CriteriaBuilderSupportMixin)
-from cbc_sdk.endpoint_standard.base import EnrichedEvent
+from cbc_sdk.platform.observations import Observation
 from cbc_sdk.platform.processes import AsyncProcessQuery, Process
 from cbc_sdk.platform.legacy_alerts import LegacyAlertSearchQueryCriterionMixin
 
@@ -164,6 +165,25 @@ class Alert(PlatformModel):
         self._workflow = Workflow(cb, initial_data.get("workflow", None) if initial_data else None)
         if model_unique_id is not None and initial_data is None:
             self._refresh()
+
+    def get_observations(self, timeout=0):
+        """Requests observations that are associated with the Alert.
+
+         Uses Observations bulk get details.
+
+        Returns:
+            list: Observations associated with the alert
+
+        Note:
+            - When using asynchronous mode, this method returns a python future.
+              You can call result() on the future object to wait for completion and get the results.
+        """
+        alert_id = self.get("id")
+        if not alert_id:
+            raise ApiError("Trying to get observations on an invalid alert_id {}".format(alert_id))
+
+        obs = Observation.bulk_get_details(self._cb, alert_id=alert_id, timeout=timeout)
+        return obs
 
     class Note(PlatformModel):
         """Represents a note within an alert."""
@@ -619,7 +639,12 @@ class CBAnalyticsAlert(Alert):
         return AlertSearchQuery(cls, cb).add_criteria("type", ["CB_ANALYTICS"])
 
     def get_events(self, timeout=0, async_mode=False):
-        """Requests enriched events detailed results.
+        """Removed in CBC SDK 1.5.0 because Enriched Events are deprecated.
+
+        Previously requested enriched events detailed results.  Update to use get_observations() instead.
+        See `Developer Network Observations Migration
+        <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/observations-migration>`_
+        for more details.
 
         Args:
             timeout (int): Event details request timeout in milliseconds.
@@ -631,74 +656,12 @@ class CBAnalyticsAlert(Alert):
         Note:
             - When using asynchronous mode, this method returns a python future.
               You can call result() on the future object to wait for completion and get the results.
+
+        Raises:
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
-        self._details_timeout = timeout
-        alert_id = self._info.get("legacy_alert_id")
-        if not alert_id:
-            raise ApiError("Trying to get event details on an invalid alert_id {}".format(alert_id))
-        if async_mode:
-            return self._cb._async_submit(self._get_events_detailed_results)
-        return self._get_events_detailed_results()
-
-    def _get_events_detailed_results(self, *args, **kwargs):
-        """
-        Actual search details implementation.
-
-        Returns:
-            list[EnrichedEvent]: List of enriched events.
-
-        Flow:
-            1. Start the job by providing alert_id
-            2. Check the status of the job - wait until contacted and complete are equal
-            3. Retrieve the results - it is possible for num_found to be 0, because enriched events are
-            kept for specific period, so return empty list in that case.
-        """
-        url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs".format(self._cb.credentials.org_key)
-        query_start = self._cb.post_object(url, body={"alert_id": self._info.get("legacy_alert_id")})
-        job_id = query_start.json().get("job_id")
-        timed_out = False
-        submit_time = time.time() * 1000
-
-        while True:
-            status_url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs/{}".format(
-                self._cb.credentials.org_key,
-                job_id,
-            )
-            result = self._cb.get_object(status_url)
-            searchers_contacted = result.get("contacted", 0)
-            searchers_completed = result.get("completed", 0)
-            if searchers_completed == searchers_contacted:
-                break
-            if searchers_contacted == 0:
-                time.sleep(.5)
-                continue
-            if searchers_completed < searchers_contacted:
-                if self._details_timeout != 0 and (time.time() * 1000) - submit_time > self._details_timeout:
-                    timed_out = True
-                    break
-
-            time.sleep(.5)
-
-        if timed_out:
-            raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
-
-        still_fetching = True
-        result_url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs/{}/results".format(
-            self._cb.credentials.org_key,
-            job_id
-        )
-
-        query_parameters = {}
-        while still_fetching:
-            result = self._cb.get_object(result_url, query_parameters=query_parameters)
-            available_results = result.get('num_available', 0)
-            found_results = result.get('num_found', 0)
-            # if found is 0, then no enriched events
-            if found_results == 0:
-                return []
-            if available_results != 0:
-                results = result.get('results', [])
-                return [EnrichedEvent(self._cb, initial_data=item) for item in results]
+        raise FunctionalityDecommissioned("get_events method does not exist in in SDK v1.5.0 "
+                                          "because Enriched Events have been deprecated.  The")
 
 
 class DeviceControlAlert(Alert):
@@ -977,6 +940,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         self._doc_class = doc_class
         self._cb = cb
         self._count_valid = False
+        self._valid_criteria = False
         super(AlertSearchQuery, self).__init__()
 
         self._query_builder = QueryBuilder()
@@ -999,6 +963,166 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             raise ApiError(f"Rows must be an integer. {rows} is a {type(rows)}.")
         self._batch_size = rows
         return self
+
+    def set_time_range(self, *args, **kwargs):
+        """
+        For v7 Alerts:
+
+        Sets the 'time_range' query body parameter, determining a time range based on 'backend_timestamp'.
+
+        Args:
+            *args: not used
+            **kwargs (dict): Used to specify start= for start time, end= for end time, and range= for range. Values are
+            either timestamp ISO 8601 strings or datetime objects for start and end time. For range the time range to
+            execute the result search, ending on the current time. Should be in the form "-2w",
+            where y=year, w=week, d=day, h=hour, m=minute, s=second.
+
+        For v6 Alerts (backwards compatibility):
+
+        Restricts the alerts that this query is performed on to the specified time range for a given key. Will also set
+        the 'time_range' as in the v7 usage if key is create_time or backend_timestamp. Will be deprecated with v6 alert
+        api
+
+        Args:
+            key (str): The key to use for criteria one of create_time, first_event_time, last_event_time,
+             backend_timestamp, backend_update_timestamp, or last_update_time
+            **kwargs (dict): Used to specify start= for start time, end= for end time, and range= for range. Values are
+            either timestamp ISO 8601 strings or datetime objects for start and end time. For range the time range to
+            execute the result search, ending on the current time. Should be in the form "-2w",
+            where y=year, w=week, d=day, h=hour, m=minute, s=second.
+
+
+        Returns:
+            AlertSearchQuery: This instance.
+
+        Examples:
+            >>> query = api.select(Alert).set_time_range(start="2020-10-20T20:34:07Z")
+            >>> second_query = api.select(Alert).
+            ...     set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
+            >>> third_query = api.select(Alert).set_time_range(range='-3d')
+            >>> fourth_query = api.select(Alert).set_time_range("create_time", range='-3d')
+
+        """
+        args_count = args.__len__()
+        time_filter = self._create_valid_time_filter(kwargs)
+        if args_count > 0:
+            key = args[0]
+            self._valid_criteria = self._is_valid_time_criteria_key_v6(key)
+            if self._valid_criteria:
+                key = Alert.REMAPPED_ALERTS_V6_TO_V7.get(key, key)
+                self.add_time_criteria(key, **kwargs)
+                if key in ["create_time", "backend_timestamp"]:
+                    self._time_range = time_filter
+        else:
+            # everything before this is only for backwards compatibility, once v6 deprecates all the other
+            # checks can be removed
+            self._time_range = {}
+            self._time_range = time_filter
+        return self
+
+    def add_time_criteria(self, key, **kwargs):
+        """
+        Restricts the alerts that this query is performed on to the specified time range for a given key.
+
+        The time may either be specified as a start and end point or as a range.
+
+        Args:
+            key (str): The key to use for criteria one of create_time, first_event_time, last_event_time,
+             backend_timestamp, backend_update_timestamp, or last_update_time
+            **kwargs (dict): Used to specify start= for start time, end= for end time, and range= for range.
+
+        Returns:
+            AlertSearchQuery: This instance.
+
+        Examples:
+            >>> query = api.select(Alert).
+            ...     add_time_criteria("backend_timestamp", start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
+            >>> second_query = api.select(Alert).add_time_criteria("backend_timestamp", range='-3d')
+            >>> third_query = api.select(Alert).set_time_range("create_time", range='-3d')
+
+        """
+        # this first if statement will be removed after v6 is deprecated
+        if not self._valid_criteria:
+            self._valid_criteria = self._is_valid_time_criteria_key(key)
+
+        if self._valid_criteria:
+            self._time_filters[key] = self._create_valid_time_filter(kwargs)
+        return self
+
+    def _is_valid_time_criteria_key(self, key):
+        """
+        Verifies that an alert criteria key has the timerange functionality
+
+        Args:
+            args (str): The key to use for criteria one of one of backend_timestamp, backend_update_timestamp,
+            detection_timestamp, first_event_timestamp, last_event_timestamp, mdr_determination_change_timestamp,
+            mdr_workflow_change_timestamp, user_update_timestamp, or workflow_change_timestamp
+
+        Returns:
+            boolean true
+        """
+        if key not in ["backend_timestamp", "backend_update_timestamp", "detection_timestamp", "first_event_timestamp",
+                       "last_event_timestamp", "mdr_determination_change_timestamp", "mdr_workflow_change_timestamp",
+                       "user_update_timestamp", "workflow_change_timestamp"]:
+            raise ApiError("key must be one of backend_timestamp, backend_update_timestamp, detection_timestamp, "
+                           "first_event_timestamp, last_event_timestamp, mdr_determination_change_timestamp, "
+                           "mdr_workflow_change_timestamp, user_update_timestamp, or workflow_change_timestamp")
+        return True
+
+    def _is_valid_time_criteria_key_v6(self, key):
+        """
+        Verifies that an alert criteria key has the timerange functionality for v6 sdk calls
+
+        Args:
+            args (str): The key to use for criteria one of create_time, first_event_time, last_event_time,
+             backend_timestamp, backend_update_timestamp, or last_update_time
+
+        Returns:
+            boolean true
+        """
+        if key not in ["create_time", "first_event_time", "last_event_time", "last_update_time", "backend_timestamp",
+                       "backend_update_timestamp"]:
+            raise ApiError("key must be one of create_time, first_event_time, last_event_time, backend_timestamp,"
+                           " backend_update_timestamp, or last_update_time")
+        return True
+
+    def _create_valid_time_filter(self, kwargs):
+        """
+        Verifies that an alert criteria key has the timerange functionality
+
+        Args:
+            kwargs (dict): Used to specify start= for start time, end= for end time, and range= for range. Values are
+            either timestamp ISO 8601 strings or datetime objects for start and end time. For range the time range to
+            execute the result search, ending on the current time. Should be in the form "-2w",
+            where y=year, w=week, d=day, h=hour, m=minute, s=second.
+
+        Returns:
+            filter object to be applied to the global time range or a specific field
+        """
+        time_filter = {}
+        if kwargs.get("start", None) and kwargs.get("end", None):
+            if kwargs.get("range", None):
+                raise ApiError("cannot specify range= in addition to start= and end=")
+            stime = kwargs["start"]
+            etime = kwargs["end"]
+            try:
+                if isinstance(stime, str):
+                    stime = datetime.datetime.fromisoformat(stime)
+                if isinstance(etime, str):
+                    etime = datetime.datetime.fromisoformat(etime)
+                if isinstance(stime, datetime.datetime) and isinstance(etime, datetime.datetime):
+                    time_filter = {"start": stime.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                                   "end": etime.strftime("%Y-%m-%dT%H:%M:%S.%fZ")}
+            except:
+                raise ApiError(f"Start and end time must be a string in ISO 8601 format or an object of datetime. "
+                               f"Start time {stime} is a {type(stime)}. End time {etime} is a {type(etime)}.")
+        elif kwargs.get("range", None):
+            if kwargs.get("start", None) or kwargs.get("end", None):
+                raise ApiError("cannot specify start= or end= in addition to range=")
+            time_filter = {"range": kwargs["range"]}
+        else:
+            raise ApiError("must specify either start= and end= or range=")
+        return time_filter
 
     def _build_criteria(self):
         """
@@ -1052,7 +1176,9 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             request["query"] = query
 
         request["rows"] = self._batch_size
-        if from_row > 0:
+        if hasattr(self, "_time_range"):
+            request["time_range"] = self._time_range
+        if from_row > 1:
             request["start"] = from_row
         if max_rows >= 0:
             request["rows"] = max_rows

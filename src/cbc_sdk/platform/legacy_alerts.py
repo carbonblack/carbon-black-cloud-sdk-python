@@ -339,42 +339,6 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         self._update_criteria("threat_id", threats)
         return self
 
-    def set_time_range(self, key, **kwargs):
-        """
-        Restricts the alerts that this query is performed on to the specified time range.
-
-        The time may either be specified as a start and end point or as a range.
-
-        Args:
-            key (str): The key to use for criteria one of create_time,
-                       first_event_time, last_event_time, or last_update_time
-            **kwargs (dict): Used to specify start= for start time, end= for end time, and range= for range.
-
-        Returns:
-            AlertSearchQuery: This instance.
-        """
-        if key not in ["create_time", "first_event_time", "last_event_time", "last_update_time", "backend_timestamp",
-                       "backend_update_timestamp"]:
-            raise ApiError("key must be one of create_time, first_event_time, last_event_time, backend_timestamp, "
-                           "backend_update_timestamp, or last_update_time")
-        if kwargs.get("start", None) and kwargs.get("end", None):
-            if kwargs.get("range", None):
-                raise ApiError("cannot specify range= in addition to start= and end=")
-            stime = kwargs["start"]
-            if not isinstance(stime, str):
-                stime = stime.isoformat()
-            etime = kwargs["end"]
-            if not isinstance(etime, str):
-                etime = etime.isoformat()
-            self._time_filters[key] = {"start": stime, "end": etime}
-        elif kwargs.get("range", None):
-            if kwargs.get("start", None) or kwargs.get("end", None):
-                raise ApiError("cannot specify start= or end= in addition to range=")
-            self._time_filters[key] = {"range": kwargs["range"]}
-        else:
-            raise ApiError("must specify either start= and end= or range=")
-        return self
-
     def set_types(self, alerttypes):
         """
         Restricts the alerts that this query is performed on to the specified alert type values.
