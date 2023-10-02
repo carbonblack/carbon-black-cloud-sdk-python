@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 # *******************************************************
 # Copyright (c) VMware, Inc. 2020-2023. All Rights Reserved.
 # SPDX-License-Identifier: MIT
@@ -11,7 +10,22 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-"""Model and Query Classes for Platform Devices"""
+"""
+The model and query classes for referencing platform devices.
+
+A *platform device* represents an endpoint registered with the Carbon Black Cloud that runs a sensor, which
+communicates with Carbon Black analytics and the console.  Using these classes, you can search for devices using a
+wide variety of filterable fields, such as policy ID, status, or operating system.  You can also perform actions on
+individual devices such as quarantining/unquarantining them, enabling or disabling bypass, or upgrading them to a
+new sensor version.
+
+Typical usage example::
+
+    # assume "cb" is an instance of CBCloudAPI
+    query = cb.select(Device).where(os="WINDOWS").set_policy_ids([142857])
+    for device in query:
+        device.quarantine(True)
+"""
 
 from cbc_sdk.errors import ApiError, ServerError, NonQueryableModel
 from cbc_sdk.platform import PlatformModel
@@ -27,7 +41,12 @@ import time
 
 
 class Device(PlatformModel):
-    """Represents a device (endpoint)."""
+    """
+    Represents a device (endpoint) within the Carbon Black Cloud.
+
+    ``Device`` objects are generally located through a search (using ``DeviceSearchQuery``) before they can be
+    operated on.
+    """
     urlobject = "/appservices/v6/orgs/{0}/devices"
     urlobject_single = "/appservices/v6/orgs/{0}/devices/{1}"
     primary_key = "id"
@@ -35,12 +54,12 @@ class Device(PlatformModel):
 
     def __init__(self, cb, model_unique_id, initial_data=None):
         """
-        Initialize the Device object.
+        Initialize the ``Device`` object.
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
-            model_unique_id (str): ID of the alert represented.
-            initial_data (dict): Initial data used to populate the alert.
+            model_unique_id (str): ID of the device represented.
+            initial_data (dict): Initial data used to populate the device.
         """
         super(Device, self).__init__(cb, model_unique_id, initial_data)
         if model_unique_id is not None and initial_data is None:
@@ -49,23 +68,23 @@ class Device(PlatformModel):
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
         """
-        Returns the appropriate query object for the Device type.
+        Returns the appropriate query object for the ``Device`` type.
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
             **kwargs (dict): Not used, retained for compatibility.
-
-        Returns:
-            DeviceSearchQuery: The query object for this alert type.
         """
         return DeviceSearchQuery(cls, cb)
 
     @property
     def deviceId(self):
-        """Warn user that Platform Devices use 'id', not 'device_id'.
+        """
+        Warn user that Platform Devices use 'id', not 'device_id'.
 
-        Platform Device API's return 'id' in API responses, where Endpoint Standard
-        API's return 'deviceId'.
+        Platform Device APIs return 'id' in API responses, where Endpoint Standard APIs return 'deviceId'.
+
+        Raises:
+            AttributeError: In all cases.
         """
         raise AttributeError("Platform Devices use .id property for device ID.")
 
@@ -74,10 +93,10 @@ class Device(PlatformModel):
         Rereads the device data from the server.
 
         Required Permissions:
-            device (READ)
+            device(READ)
 
         Returns:
-            bool: True if refresh was successful, False if not.
+            bool: ``True`` if refresh was successful, ``False`` if not.
         """
         url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id)
         resp = self._cb.get_object(url)
@@ -87,16 +106,16 @@ class Device(PlatformModel):
 
     def lr_session(self, async_mode=False):
         """
-        Retrieve a Live Response session object for this Device.
+        Retrieve a Live Response session object for this ``Device``.
 
         Required Permissions:
-            org.liveresponse.session (CREATE)
+            org.liveresponse.session(CREATE)
 
         Returns:
-            LiveResponseSession: Live Response session for the Device.
+            LiveResponseSession: Live Response session for the ``Device``.
 
         Raises:
-            ApiError: If there is an error establishing a Live Response session for this Device.
+            ApiError: If there is an error establishing a Live Response session for this ``Device``.
         """
         return self._cb._request_lr_session(self._model_unique_id, async_mode=async_mode)
 
@@ -105,10 +124,10 @@ class Device(PlatformModel):
         Set the background scan option for this device.
 
         Required Permissions:
-            device.bg-scan (EXECUTE)
+            device.bg-scan(EXECUTE)
 
         Args:
-            flag (bool): True to turn background scan on, False to turn it off.
+            flag (bool): ``True`` to turn background scan on, ``False`` to turn it off.
 
         Returns:
             str: The JSON output from the request.
@@ -120,10 +139,10 @@ class Device(PlatformModel):
         Set the bypass option for this device.
 
         Required Permissions:
-            device.bypass (EXECUTE)
+            device.bypass(EXECUTE)
 
         Args:
-            flag (bool): True to enable bypass, False to disable it.
+            flag (bool): ``True`` to enable bypass, ``False`` to disable it.
 
         Returns:
             str: The JSON output from the request.
@@ -135,7 +154,7 @@ class Device(PlatformModel):
         Delete this sensor device.
 
         Required Permissions:
-            device.deregistered (DELETE)
+            device.deregistered(DELETE)
 
         Returns:
             str: The JSON output from the request.
@@ -147,7 +166,7 @@ class Device(PlatformModel):
         Uninstall this sensor device.
 
         Required Permissions:
-            device.uninstall (EXECUTE)
+            device.uninstall(EXECUTE)
 
         Returns:
             str: The JSON output from the request.
@@ -159,10 +178,10 @@ class Device(PlatformModel):
         Set the quarantine option for this device.
 
         Required Permissions:
-            device.quarantine (EXECUTE)
+            device.quarantine(EXECUTE)
 
         Args:
-            flag (bool): True to enable quarantine, False to disable it.
+            flag (bool): ``True`` to enable quarantine, ``False`` to disable it.
 
         Returns:
             str: The JSON output from the request.
@@ -174,10 +193,10 @@ class Device(PlatformModel):
         Set the current policy for this device.
 
         Required Permissions:
-            device.policy (UPDATE)
+            device.policy(UPDATE)
 
         Args:
-            policy_id (int): ID of the policy to set for the devices.
+            policy_id (int): ID of the policy to set for the device.
 
         Returns:
             str: The JSON output from the request.
@@ -189,7 +208,7 @@ class Device(PlatformModel):
         Update the sensor version for this device.
 
         Required Permissions:
-            org.kits (EXECUTE)
+            org.kits(EXECUTE)
 
         Args:
             sensor_version (dict): New version properties for the sensor.
@@ -201,10 +220,10 @@ class Device(PlatformModel):
 
     def vulnerability_refresh(self):
         """
-        Perform an action on a specific device. Only REFRESH is supported.
+        Refresh vulnerability information for the device.
 
         Required Permissions:
-            vulnerabilityAssessment.data (EXECUTE)
+            vulnerabilityAssessment.data(EXECUTE)
         """
         request = {"action_type": 'REFRESH'}
         url = "/vulnerability/assessment/api/v1/orgs/{}".format(self._cb.credentials.org_key)
@@ -222,16 +241,16 @@ class Device(PlatformModel):
 
     def get_vulnerability_summary(self, category=None):
         """
-        Get the vulnerabilities associated with this device
+        Get the vulnerabilities associated with this device.
 
         Required Permissions:
-            vulnerabilityAssessment.data (READ)
+            vulnerabilityAssessment.data(READ)
 
         Args:
-            category (string): (optional) vulnerabilty category (OS, APP)
+            category (string): (optional) Vulnerabilty category (OS, APP).
 
         Returns:
-            dict: summary for the vulnerabilities for this device
+            dict: Summary of the vulnerabilities for this device.
         """
         VALID_CATEGORY = ["OS", "APP"]
 
@@ -249,10 +268,10 @@ class Device(PlatformModel):
 
     def get_vulnerabilties(self):
         """
-        Get an Operating System or Application Vulnerability List for a specific device.
+        Return a query to get an operating system or application vulnerability list for this device.
 
         Returns:
-            dict: vulnerabilities for this device
+            VulnerabilityQuery: Query for searching for vulnerabilities on this device.
         """
         return VulnerabilityQuery(Vulnerability, self._cb, self)
 
@@ -262,7 +281,7 @@ class Device(PlatformModel):
         Returns whether NSX actions are available on this device.
 
         Returns:
-            bool: True if NSX actions are available, False if not.
+            bool: ``True`` if NSX actions are available, ``False`` if not.
         """
         return self._info['deployment_type'] == 'WORKLOAD' and self._info['nsx_enabled']
 
@@ -276,10 +295,10 @@ class Device(PlatformModel):
         Args:
             tag (str): The NSX tag to apply to this device. Valid values are "CB-NSX-Quarantine",
                        "CB-NSX-Isolate", and "CB-NSX-Custom".
-            set_tag (bool): True to toggle the specified tag on, False to toggle it off. Default True.
+            set_tag (bool): ``True`` to toggle the specified tag on, ``False`` to toggle it off. Default ``True``.
 
         Returns:
-            NSXRemediationJob: The object representing all running jobs.  None if the operation is a no-op.
+            NSXRemediationJob: The object representing all running jobs.  ``None`` if the operation is a no-op.
         """
         if not self.nsx_available:
             raise ApiError("NSX actions are not available on this device")
@@ -298,14 +317,24 @@ class Device(PlatformModel):
 
 
 class DeviceFacet(UnrefreshableModel):
-    """Represents a device field in a facet search."""
+    """
+    Represents a device field in a facet search.
+
+    *Faceting* is a search technique that categorizes search results according to common attributes. This allows
+    users to explore and discover information within a dataset, in this case, the set of devices.
+
+    Example:
+        >>> facets = api.select(Device).facets(['policy_id'])
+        >>> for value in facets[0].values_:
+        ...     print(f"Policy ID {value.id}: {value.total} device(s)")
+    """
     urlobject = "/appservices/v6/orgs/{0}/devices/_facet"
     primary_key = "id"
     swagger_meta_file = "platform/models/device_facet.yaml"
 
     def __init__(self, cb, model_unique_id, initial_data=None):
         """
-        Initialize the DeviceFacet object.
+        Initialize the ``DeviceFacet`` object.
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
@@ -316,10 +345,15 @@ class DeviceFacet(UnrefreshableModel):
         self._values = [DeviceFacet.DeviceFacetValue(cb, self, item['id'], item) for item in initial_data['values']]
 
     class DeviceFacetValue(UnrefreshableModel):
-        """Represents a value of a particular field."""
+        """
+        Represents a value of a particular faceted field.
+
+        *Faceting* is a search technique that categorizes search results according to common attributes. This allows
+        users to explore and discover information within a dataset, in this case, the set of devices.
+        """
         def __init__(self, cb, outer, model_unique_id, initial_data):
             """
-            Initialize the DeviceFacetValue object.
+            Initialize the ``DeviceFacetValue`` object.
 
             Args:
                 cb (BaseAPI): Reference to API object used to communicate with the server.
@@ -336,14 +370,15 @@ class DeviceFacet(UnrefreshableModel):
             Set up a device query to find all devices that match this facet value.
 
             Example:
-                >>> facets = api.select(Device).where('').facets(['policy_id'])
+                >>> facets = api.select(Device).facets(['policy_id'])
                 >>> for value in facets[0].values_:
                 ...     print(f"Policy ID = {value.id}:")
                 ...     for dev in value.query_devices():
                 ...         print(f"    {dev.name} ({dev.last_external_ip_address})")
 
             Returns:
-                DeviceQuery: A new DeviceQuery set with the criteria, which may have additional criteria added to it.
+                DeviceQuery: A new ``DeviceQuery`` set with the criteria, which may have additional criteria added
+                    to it.
             """
             query = self._cb.select(Device)
             if self._outer.field == 'policy_id':
@@ -370,9 +405,6 @@ class DeviceFacet(UnrefreshableModel):
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
             **kwargs (dict): Not used, retained for compatibility.
-
-        Returns:
-            DeviceFacetQuery: The query object for this alert type.
         """
         raise NonQueryableModel("use facets() on DeviceQuery to get DeviceFacet")
 
@@ -384,7 +416,7 @@ class DeviceFacet(UnrefreshableModel):
             name (str): Name of the subobject value to be returned.
 
         Returns:
-            Any: Subobject value for the attribute, or None if there is none.
+            Any: Subobject value for the attribute, or ``None`` if there is none.
         """
         if name == 'values':
             return self._values
@@ -392,12 +424,7 @@ class DeviceFacet(UnrefreshableModel):
 
     @property
     def values_(self):
-        """
-        Return the list of facet values for this facet.
-
-        Returns:
-            list[DeviceFacetValue]: The list of values for this facet.
-        """
+        """Returns the list of facet values for this facet."""
         return self._values
 
 
@@ -406,7 +433,12 @@ class DeviceFacet(UnrefreshableModel):
 
 class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
                         IterableQueryMixin, AsyncQueryMixin):
-    """Represents a query that is used to locate Device objects."""
+    """
+    Query object that is used to locate ``Device`` objects.
+
+    The ``DeviceSearchQuery`` is constructed via SDK functions like the ``select()`` method on ``CBCloudAPI``.
+    The user would then add a query and/or criteria to it before iterating over the results.
+    """
     VALID_OS = ["WINDOWS", "ANDROID", "MAC", "IOS", "LINUX", "OTHER"]
     VALID_STATUSES = ["PENDING", "REGISTERED", "UNINSTALLED", "DEREGISTERED",
                       "ACTIVE", "INACTIVE", "ERROR", "ALL", "BYPASS_ON",
@@ -419,7 +451,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
 
     def __init__(self, doc_class, cb):
         """
-        Initialize the DeviceSearchQuery.
+        Initialize the ``DeviceSearchQuery``.
 
         Args:
             doc_class (class): The model class that will be returned by this query.
@@ -460,9 +492,6 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
 
         Returns:
             DeviceSearchQuery: This instance.
-
-        Raises:
-            ApiError: If invalid (non-int) values are passed in the list.
         """
         if not all(isinstance(ad_group_id, int) for ad_group_id in ad_group_ids):
             raise ApiError("One or more invalid AD group IDs")
@@ -478,9 +507,6 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
 
         Returns:
             DeviceSearchQuery: This instance.
-
-        Raises:
-            ApiError: If invalid (non-int) values are passed in the list.
         """
         if not all(isinstance(device_id, int) for device_id in device_ids):
             raise ApiError("One or more invalid device IDs")
@@ -498,9 +524,6 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
 
         Returns:
             DeviceSearchQuery: This instance.
-
-        Raises:
-            ApiError: If an invalid combination of keyword parameters are specified.
         """
         if kwargs.get("start", None) and kwargs.get("end", None):
             if kwargs.get("range", None):
@@ -530,9 +553,6 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
 
         Returns:
             DeviceSearchQuery: This instance.
-
-        Raises:
-            ApiError: If invalid operating system values are passed in the list.
         """
         if not all((osval in DeviceSearchQuery.VALID_OS) for osval in operating_systems):
             raise ApiError("One or more invalid operating systems")
@@ -548,9 +568,6 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
 
         Returns:
             DeviceSearchQuery: This instance.
-
-        Raises:
-            ApiError: If invalid (non-int) values are passed in the list.
         """
         if not all(isinstance(policy_id, int) for policy_id in policy_ids):
             raise ApiError("One or more invalid policy IDs")
@@ -568,9 +585,6 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
 
         Returns:
             DeviceSearchQuery: This instance.
-
-        Raises:
-            ApiError: If invalid status values are passed in the list.
         """
         if not all((stat in DeviceSearchQuery.VALID_STATUSES) for stat in statuses):
             raise ApiError("One or more invalid status values")
@@ -587,9 +601,6 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
 
         Returns:
             DeviceSearchQuery: This instance.
-
-        Raises:
-            ApiError: If invalid priority values are passed in the list.
         """
         if not all((prio in DeviceSearchQuery.VALID_PRIORITIES) for prio in target_priorities):
             raise ApiError("One or more invalid target priority values")
@@ -644,9 +655,6 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
 
         Returns:
             DeviceSearchQuery: This instance.
-
-        Raises:
-            ApiError: If invalid (non-string) values are passed in the list.
         """
         if not all(isinstance(v, str) for v in sensor_versions):
             raise ApiError("One or more invalid sensor versions")
@@ -666,9 +674,6 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
 
         Returns:
             DeviceSearchQuery: This instance.
-
-        Raises:
-            ApiError: If an invalid direction value is passed.
         """
         if direction not in CriteriaBuilderSupportMixin.VALID_DIRECTIONS:
             raise ApiError("invalid sort direction specified")
@@ -684,9 +689,6 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
 
         Returns:
             DeviceSearchQuery: This instance.
-
-        Raises:
-            ApiError: If invalid deployment type values are passed in the list.
         """
         if not all((type in DeviceSearchQuery.VALID_DEPLOYMENT_TYPES) for type in deployment_type):
             raise ApiError("invalid deployment_type specified")
@@ -698,13 +700,10 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         Sets the max number of devices to fetch in a singular query
 
         Args:
-            max_rows (integer): Max number of devices
+            max_rows (integer): Max number of devices. Must be in the range (0, 10000).
 
         Returns:
             DeviceSearchQuery: This instance.
-
-        Raises:
-            ApiError: If rows is negative or greater than 10000
         """
         if max_rows < 0 or max_rows > 10000:
             raise ApiError("Max rows must be between 0 and 10000")
@@ -755,10 +754,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         Returns the number of results from the run of this query.
 
         Required Permissions:
-            device (READ)
-
-        Returns:
-            int: The number of results from the run of this query.
+            device(READ)
         """
         if self._count_valid:
             return self._total_results
@@ -777,17 +773,18 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         """
         Performs the query and returns the results of the query in an iterable fashion.
 
-        Device v6 API uses base 1 instead of 0.
+        Note:
+            Device v6 API uses base 1 instead of 0.
 
         Required Permissions:
-            device (READ)
+            device(READ)
 
         Args:
             from_row (int): The row to start the query at (default 1).
             max_rows (int): The maximum number of rows to be returned (default -1, meaning "all").
 
-        Returns:
-            Iterable: The iterated query.
+        Yields:
+            Device: The individual devices which match the query.
         """
         url = self._build_url("/_search")
         current = from_row
@@ -818,13 +815,13 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
 
     def _run_async_query(self, context):
         """
-        Executed in the background to run an asynchronous query. Must be implemented in any inheriting classes.
+        Executed in the background to run an asynchronous query on devices.
 
         Required Permissions:
-            device (READ)
+            device(READ)
 
         Args:
-            context (object): The context returned by _init_async_query. May be None.
+            context (object): The context returned by _init_async_query. May be ``None``.
 
         Returns:
             Any: Result of the async query, which is then returned by the future.
@@ -848,7 +845,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
 
     def facets(self, fieldlist, max_rows=0):
         """
-        Return information about the facets for all known evices, using the defined criteria.
+        Return information about the facets for all matching devices, using the defined criteria.
 
         Example:
             >>> query = api.select(Device).where('')
@@ -857,7 +854,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
             ...     print(f"Field {f.field} - {len(f.values_)} distinct values")
 
         Required Permissions:
-            device (READ)
+            device(READ)
 
         Args:
             fieldlist (list[str]): List of facet field names. Valid names are "policy_id", "status", "os",
@@ -894,7 +891,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
             >>> cb.select(Device).set_status(["ALL"]).download()
 
         Required Permissions:
-            device (READ)
+            device(READ)
 
         Returns:
             str: The CSV raw data as returned from the server.
@@ -948,10 +945,10 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         Set the background scan option for the specified devices.
 
         Required Permissions:
-            device.bg-scan (EXECUTE)
+            device.bg-scan(EXECUTE)
 
         Args:
-            scan (bool): True to turn background scan on, False to turn it off.
+            scan (bool): ``True`` to turn background scan on, ``False`` to turn it off.
 
         Returns:
             str: The JSON output from the request.
@@ -963,10 +960,10 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         Set the bypass option for the specified devices.
 
         Required Permissions:
-            device.bypass (EXECUTE)
+            device.bypass(EXECUTE)
 
         Args:
-            enable (bool): True to enable bypass, False to disable it.
+            enable (bool): ``True`` to enable bypass, ``False`` to disable it.
 
         Returns:
             str: The JSON output from the request.
@@ -978,7 +975,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         Delete the specified sensor devices.
 
         Required Permissions:
-            device.deregistered (DELETE)
+            device.deregistered(DELETE)
 
         Returns:
             str: The JSON output from the request.
@@ -990,7 +987,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         Uninstall the specified sensor devices.
 
         Required Permissions:
-            device.uninstall (EXECUTE)
+            device.uninstall(EXECUTE)
 
         Returns:
             str: The JSON output from the request.
@@ -1002,10 +999,10 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         Set the quarantine option for the specified devices.
 
         Required Permissions:
-            device.quarantine (EXECUTE)
+            device.quarantine(EXECUTE)
 
         Args:
-            enable (bool): True to enable quarantine, False to disable it.
+            enable (bool): ``True`` to enable quarantine, ``False`` to disable it.
 
         Returns:
             str: The JSON output from the request.
@@ -1017,7 +1014,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         Set the current policy for the specified devices.
 
         Required Permissions:
-            device.policy (UPDATE)
+            device.policy(UPDATE)
 
         Args:
             policy_id (int): ID of the policy to set for the devices.
@@ -1032,7 +1029,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         Update the sensor version for the specified devices.
 
         Required Permissions:
-            org.kits (EXECUTE)
+            org.kits(EXECUTE)
 
         Args:
             sensor_version (dict): New version properties for the sensor.
