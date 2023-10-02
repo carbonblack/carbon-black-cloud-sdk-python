@@ -3,6 +3,11 @@ Alert Migration
 
 TO DO items:
 * Add links to RTD sections
+* set_ports sets netconn_local_ports. 
+Note that in SDK 1.5.0, to align with Alerts API v7, the search field was updated from
+        `port` to `netconn_local_port`.  It is possible to search on either `netconn_local_port`
+        or `netconn_remote_port` using the `add_criteria(fieldname, [field values]) method.
+
 
 This guide will help you update from SDK v1.4.3 or earlier which used Alerts v6 API to
 SDK v1.5.0 or later which has been updated to use the Alerts v7 API.
