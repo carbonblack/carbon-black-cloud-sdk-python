@@ -20,7 +20,7 @@ from cbc_sdk.platform import (
     WatchlistAlert,
     DeviceControlAlert,
     ContainerRuntimeAlert,
-    Process,
+    Process
 )
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.platform.mock_process import (
@@ -30,16 +30,16 @@ from tests.unit.fixtures.platform.mock_process import (
     GET_PROCESS_SEARCH_JOB_RESULTS_RESP,
     GET_PROCESS_SUMMARY_STR,
     GET_PROCESS_NOT_FOUND,
-    GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT,
+    GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT
 )
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.platform.mock_alerts import (
+from tests.unit.fixtures.platform.mock_alerts_v7 import (
     GET_ALERT_RESP,
     GET_ALERT_TYPE_WATCHLIST,
     GET_ALERT_TYPE_WATCHLIST_INVALID,
     GET_ALERT_RESP_WITH_NOTES,
     GET_ALERT_NOTES,
-    CREATE_ALERT_NOTE,
+    CREATE_ALERT_NOTE_RESP
 )
 from tests.unit.fixtures.mock_rest_api import ALERT_SEARCH_SUGGESTIONS_RESP
 
@@ -710,14 +710,14 @@ def test_query_set_rows(cbcsdk_mock):
 def test_get_process(cbcsdk_mock):
     """Test of getting process through a WatchlistAlert"""
     # mock the alert request
-    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/6b2348cb-87c1-4076-bc8e-7c717e8af608",
+    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/887e6bbc-6224-4f36-ad37-084038b7fcab",
                              GET_ALERT_TYPE_WATCHLIST)
     # mock the search validation
     cbcsdk_mock.mock_request("GET",
                              "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=WNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&q=process_guid%3AWNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&query=process_guid%3AWNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
+                             "process_guid=ABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
+                             "q=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
+                             "query=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
                              GET_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
@@ -730,15 +730,9 @@ def test_get_process(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
                                      "2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=500"),
                              GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT)
-    # mock the POST of a summary search (using same Job ID)
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/summary_jobs",
-                             POST_PROCESS_SEARCH_JOB_RESP)
-    # mock the GET to get summary search results
-    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
-                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
-                             GET_PROCESS_SUMMARY_STR)
+
     api = cbcsdk_mock.api
-    alert = api.select(WatchlistAlert, "6b2348cb-87c1-4076-bc8e-7c717e8af608")
+    alert = api.select(WatchlistAlert, "887e6bbc-6224-4f36-ad37-084038b7fcab")
     process = alert.get_process()
     assert isinstance(process, Process)
     assert process.process_guid == "WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00"
@@ -747,14 +741,14 @@ def test_get_process(cbcsdk_mock):
 def test_get_process_zero_found(cbcsdk_mock):
     """Test of getting process through a WatchlistAlert"""
     # mock the alert request
-    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
+    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/887e6bbc-6224-4f36-ad37-084038b7fcab",
                              GET_ALERT_TYPE_WATCHLIST)
     # mock the search validation
     cbcsdk_mock.mock_request("GET",
                              "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=WNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&q=process_guid%3AWNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&query=process_guid%3AWNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
+                             "process_guid=ABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
+                             "q=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
+                             "query=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
                              GET_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
@@ -768,7 +762,7 @@ def test_get_process_zero_found(cbcsdk_mock):
                                      "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=500"),
                              GET_PROCESS_NOT_FOUND)
     api = cbcsdk_mock.api
-    alert = api.select(WatchlistAlert, "86123310980efd0b38111eba4bfa5e98aa30b19")
+    alert = api.select(WatchlistAlert, "887e6bbc-6224-4f36-ad37-084038b7fcab")
     process = alert.get_process()
     assert not process
 
@@ -805,14 +799,14 @@ def test_get_process_raises_api_error(cbcsdk_mock):
 def test_get_process_async(cbcsdk_mock):
     """Test of getting process through a WatchlistAlert async"""
     # mock the alert request
-    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/6b2348cb-87c1-4076-bc8e-7c717e8af608",
+    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/887e6bbc-6224-4f36-ad37-084038b7fcab",
                              GET_ALERT_TYPE_WATCHLIST)
     # mock the search validation
     cbcsdk_mock.mock_request("GET",
                              "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=WNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&q=process_guid%3AWNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&query=process_guid%3AWNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
+                             "process_guid=ABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
+                             "q=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
+                             "query=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
                              GET_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
@@ -833,7 +827,7 @@ def test_get_process_async(cbcsdk_mock):
                                      "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
                              GET_PROCESS_SUMMARY_STR)
     api = cbcsdk_mock.api
-    alert = api.select(WatchlistAlert, "6b2348cb-87c1-4076-bc8e-7c717e8af608")
+    alert = api.select(WatchlistAlert, "887e6bbc-6224-4f36-ad37-084038b7fcab")
     process = alert.get_process(async_mode=True).result()
     assert isinstance(process, Process)
     assert process.process_guid == "WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00"
@@ -897,21 +891,21 @@ def test_query_basealert_facets_error(cbcsdk_mock):
 def test_get_notes_for_alert(cbcsdk_mock):
     """Test retrieving notes for an alert"""
     cbcsdk_mock.mock_request('GET',
-                             "/api/alerts/v7/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35",
+                             "/api/alerts/v7/orgs/test/alerts/52dbd1b6-539b-a3f7-34bd-f6eb13a99b81",
                              GET_ALERT_RESP_WITH_NOTES)
 
     cbcsdk_mock.mock_request('GET',
-                             "/api/alerts/v7/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35/notes",
+                             "/api/alerts/v7/orgs/test/alerts/52dbd1b6-539b-a3f7-34bd-f6eb13a99b81/notes",
                              GET_ALERT_NOTES)
 
     api = cbcsdk_mock.api
-    alert = api.select(BaseAlert, "1ba0c35f-9c01-4413-afd8-fe4f01365e35")
+    alert = api.select(BaseAlert, "52dbd1b6-539b-a3f7-34bd-f6eb13a99b81")
     notes = alert.notes_()
     assert len(notes) == 2
     assert notes[0].author == "Grogu"
-    assert notes[0].id == "1"
-    assert notes[0].create_time == "2021-05-13T00:20:46.474Z"
-    assert notes[0].note == "I am a note"
+    assert notes[0].id == "3gsgsfds"
+    assert notes[0].create_time == "2023-04-18T03:25:44.397Z"
+    assert notes[0].note == "I am Grogu"
 
 
 def test_base_alert_create_note(cbcsdk_mock):
@@ -919,18 +913,18 @@ def test_base_alert_create_note(cbcsdk_mock):
 
     def on_post(url, body, **kwargs):
         body == {"note": "I am Grogu"}
-        return CREATE_ALERT_NOTE
+        return CREATE_ALERT_NOTE_RESP
 
     cbcsdk_mock.mock_request('GET',
-                             "/api/alerts/v7/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35",
+                             "/api/alerts/v7/orgs/test/alerts/52dbd1b6-539b-a3f7-34bd-f6eb13a99b81",
                              GET_ALERT_RESP_WITH_NOTES)
 
     cbcsdk_mock.mock_request('POST',
-                             "/api/alerts/v7/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35/notes",
+                             "/api/alerts/v7/orgs/test/alerts/52dbd1b6-539b-a3f7-34bd-f6eb13a99b81/notes",
                              on_post)
 
     api = cbcsdk_mock.api
-    alert = api.select(BaseAlert, "1ba0c35f-9c01-4413-afd8-fe4f01365e35")
+    alert = api.select(BaseAlert, "52dbd1b6-539b-a3f7-34bd-f6eb13a99b81")
     note = alert.create_note("I am Grogu")
     assert note[0].note == "I am Grogu"
 
@@ -938,19 +932,19 @@ def test_base_alert_create_note(cbcsdk_mock):
 def test_base_alert_delete_note(cbcsdk_mock):
     """Test deleting a note from an alert"""
     cbcsdk_mock.mock_request('GET',
-                             "/api/alerts/v7/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35",
+                             "/api/alerts/v7/orgs/test/alerts/52dbd1b6-539b-a3f7-34bd-f6eb13a99b81",
                              GET_ALERT_RESP_WITH_NOTES)
 
     cbcsdk_mock.mock_request('GET',
-                             "/api/alerts/v7/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35/notes",
+                             "/api/alerts/v7/orgs/test/alerts/52dbd1b6-539b-a3f7-34bd-f6eb13a99b81/notes",
                              GET_ALERT_NOTES)
 
     cbcsdk_mock.mock_request('DELETE',
-                             "/api/alerts/v7/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35/notes/1",
+                             "/api/alerts/v7/orgs/test/alerts/52dbd1b6-539b-a3f7-34bd-f6eb13a99b81/notes/3gsgsfds",
                              None)
 
     api = cbcsdk_mock.api
-    alert = api.select(BaseAlert, "1ba0c35f-9c01-4413-afd8-fe4f01365e35")
+    alert = api.select(BaseAlert, "52dbd1b6-539b-a3f7-34bd-f6eb13a99b81")
     notes = alert.notes_()
     notes[0].delete()
     assert notes[0]._is_deleted
@@ -966,15 +960,15 @@ def test_base_alert_unsupported_query_notes(cbcsdk_mock):
 def test_base_alert_refresh_note(cbcsdk_mock):
     """Testing single note refresh"""
     cbcsdk_mock.mock_request('GET',
-                             "/api/alerts/v7/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35",
+                             "/api/alerts/v7/orgs/test/alerts/52dbd1b6-539b-a3f7-34bd-f6eb13a99b81",
                              GET_ALERT_RESP_WITH_NOTES)
 
     cbcsdk_mock.mock_request('GET',
-                             "/api/alerts/v7/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35/notes",
+                             "/api/alerts/v7/orgs/test/alerts/52dbd1b6-539b-a3f7-34bd-f6eb13a99b81/notes",
                              GET_ALERT_NOTES)
 
     api = cbcsdk_mock.api
-    alert = api.select(BaseAlert, "1ba0c35f-9c01-4413-afd8-fe4f01365e35")
+    alert = api.select(BaseAlert, "52dbd1b6-539b-a3f7-34bd-f6eb13a99b81")
     notes = alert.notes_()
     assert notes[0]._refresh() is True
 
@@ -995,3 +989,20 @@ def test_alert_search_suggestions_api_error():
     """Tests getting alert search suggestions - no CBCloudAPI arg"""
     with pytest.raises(ApiError):
         BaseAlert.search_suggestions("", "")
+
+
+def test_set_types(cbcsdk_mock):
+    """Tests that when an invalid alert type is entered an APIError is raised"""
+    api = cbcsdk_mock.api
+    query = api.select(BaseAlert).set_types(["CB_ANALYTICS"])
+    assert query._criteria == {'type': ['CB_ANALYTICS']}
+
+
+def test_get_attr_alert_v6_valid_attrib(cbcsdk_mock):
+    """Test the __get_attr_ method for a valid attribute."""
+    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/12ab345cd6-e2d1-4118-8a8d-04f521ae66aa",
+                             GET_ALERT_RESP)
+    cb = cbcsdk_mock.api
+    alert = cb.select(BaseAlert, GET_ALERT_RESP.get("id"))
+
+    assert alert.policy_id == 1234567
