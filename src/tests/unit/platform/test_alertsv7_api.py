@@ -1005,7 +1005,7 @@ def test_query_set_remote_is_private(cbcsdk_mock):
 
 
 def test_get_observations(cbcsdk_mock):
-    """Test tget_observations method."""
+    """Test get_observations method."""
     cbcsdk_mock.mock_request("GET",
                              "/api/alerts/v7/orgs/test/alerts/12ab345cd6-e2d1-4118-8a8d-04f521ae66aa",
                              GET_ALERT_RESP)
@@ -1025,6 +1025,19 @@ def test_get_observations(cbcsdk_mock):
     alert = api.select(Alert, '12ab345cd6-e2d1-4118-8a8d-04f521ae66aa')
     obs = alert.get_observations()
     assert len(obs) == 1
+
+
+def test_get_observations_invalid(cbcsdk_mock):
+    """Test get_observations method with invalid alert id."""
+    def on_post(url, body, **kwargs):
+        return {"results": [{"id": "", "org_key": "invalid_alert"}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+    alert_list = api.select(Alert)
+    alert = alert_list.first()
+    with pytest.raises(ApiError):
+        alert.get_observations()
 
 
 def test_get_observations_with_timeout(cbcsdk_mock):

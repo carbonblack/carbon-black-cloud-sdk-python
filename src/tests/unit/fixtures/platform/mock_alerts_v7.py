@@ -288,6 +288,15 @@ GET_ALERT_NOTES = {"num_found": 2, "num_available": 2, "results": [
      "last_update_timestamp": "2023-04-18T03:25:44.397Z", "id": "2", "source": "CUSTOMER", "note": "My first note",
      "parent_id": None, "read_history": None, "thread": None}]}
 
+
+GET_ALERT_NOTES_INTEGER_ID = {"num_found": 2, "num_available": 2, "results": [
+    {"author": "Grogu", "id": "1", "note": "I am Grogu", "create_timestamp": "2023-04-18T03:25:44.397Z",
+     "last_update_timestamp": "2023-04-18T03:25:44.397Z", "source": "CUSTOMER", "parent_id": None,
+     "read_history": None, "thread": None},
+    {"author": "demouser@demoorg.com", "create_timestamp": "2023-04-18T03:25:44.397Z",
+     "last_update_timestamp": "2023-04-18T03:25:44.397Z", "id": "2", "source": "CUSTOMER", "note": "My first note",
+     "parent_id": None, "read_history": None, "thread": None}]}
+
 CREATE_ALERT_NOTE_RESP = {"author": "Grogu", "id": "3gsgsfds", "note": "I am Grogu",
                           "create_timestamp": "2023-04-18T03:25:44.397Z",
                           "last_update_timestamp": "2023-04-18T03:25:44.397Z",
