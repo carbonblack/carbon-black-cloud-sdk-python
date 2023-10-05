@@ -480,8 +480,8 @@ def test_query_watchlistalert_with_all_bells_and_whistles(cbcsdk_mock):
                                      "severity": ["6"], "device_policy_id": ["8675309"],
                                      "device_policy": ["Strict"],
                                      "device_target_value": ["HIGH"],
-                                     "threat_id": ["B0RG"], "type": ["WATCHLIST"], "workflow_status": ["OPEN"],
                                      "watchlists_id": ["100"], "watchlists_name": ["Gandalf"],
+                                     "threat_id": ["B0RG"], "type": ["WATCHLIST"], "workflow_status": ["OPEN"],
                                      "netconn_remote_ip": ["10.29.99.1"], "netconn_remote_domain": ["example.com"],
                                      "netconn_protocol": ["TCP"], "netconn_remote_port": ["54321"],
                                      "netconn_local_port": ["12345"],
@@ -563,6 +563,121 @@ def test_query_watchlistalert_facets(cbcsdk_mock):
 
     query = api.select(Alert).where("Blort").add_criteria("type", ["WATCHLIST"]).add_criteria("workflow_status",
                                                                                               ["OPEN"])
+    f = query.facets(["REPUTATION", "STATUS"])
+    assert f == [{"field": {}, "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
+                 {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
+
+
+def test_query_intrusion_detection_system_with_all_bells_and_whistles(cbcsdk_mock):
+    """Test a IDS alert query with all options selected."""
+
+    def on_post(url, body, **kwargs):
+        assert body == {"query": "Blort",
+                        "rows": 2,
+                        "criteria": {"device_id": ["6023"], "device_name": ["HAL"],
+                                     "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
+                                     "device_username": ["JRN"],
+                                     "device_internal_ip": ["10.10.8.2"], "device_external_ip": ["10.10.10.55"],
+                                     "id": ["S0L0"],
+                                     "severity": ["6"], "device_policy_id": ["8675309"],
+                                     "device_policy": ["Strict"], "device_uem_id": ["uemId"],
+                                     "device_target_value": ["HIGH"], "threat_name": ["dangerous"],
+                                     "threat_id": ["B0RG"], "type": ["INTRUSION_DETECTION_SYSTEM"],
+                                     "policy_applied": ["APPLIED"],
+                                     "reason_code": ["ATTACK_VECTOR"], "run_state": ["RAN"], "sensor_action": ["DENY"],
+                                     "alert_notes_present": ["True"], "attack_tactic": ["tactic"],
+                                     "attack_technique": ["technique"], "blocked_effective_reputation": ["NOT_LISTED"],
+                                     "blocked_md5": ["md5_hash"], "blocked_name": ["tim"],
+                                     "blocked_sha256": ["sha256_hash"],
+                                     "ttps": ["malicious"], "tms_rule_id": ["xtvr"],
+                                     "workflow_status": ["OPEN"],
+                                     "netconn_remote_ip": ["10.29.99.1"], "netconn_remote_domain": ["example.com"],
+                                     "netconn_protocol": ["TCP"], "netconn_remote_port": ["54321"],
+                                     "netconn_local_port": ["12345"],
+                                     "childproc_cmdline": ["/usr/bin/python"],
+                                     "childproc_effective_reputation": ["PUP"],
+                                     "childproc_guid": ["12345678"], "childproc_name": ["python"],
+                                     "childproc_sha256": ["sha256_child"], "childproc_username": ["steven"],
+                                     "primary_event_id": ["123456"],
+                                     "parent_cmdline": ["/usr/bin/python"],
+                                     "parent_effective_reputation": ["PUP"],
+                                     "parent_guid": ["12345678"], "parent_name": ["python"],
+                                     "parent_sha256": ["sha256_parent"], "parent_username": ["steven"],
+                                     "process_cmdline": ["/usr/bin/python"],
+                                     "process_effective_reputation": ["PUP"],
+                                     "process_guid": ["12345678"], "process_name": ["IEXPLORE.EXE"],
+                                     "process_sha256": ["0123456789ABCDEF0123456789ABCDEF"],
+                                     "process_username": ["steven"],
+                                     "process_reputation": ["SUSPECT_MALWARE"],
+                                     "process_issuer": ["Microsoft"], "process_publisher": ["Microsoft"]},
+                        "sort": [{"field": "name", "order": "DESC"}]}
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
+    query = api.select(Alert).where("Blort").add_criteria("type", ["INTRUSION_DETECTION_SYSTEM"])\
+        .add_criteria("device_id", ["6023"]) \
+        .add_criteria("device_name", ["HAL"]).add_criteria("device_os", ["LINUX"]) \
+        .add_criteria("device_os_version", ["0.1.2"]).add_criteria("device_internal_ip", ["10.10.8.2"]) \
+        .add_criteria("device_username", ["JRN"]).add_criteria("id", ["S0L0"])\
+        .add_criteria("device_external_ip", ["10.10.10.55"]).add_criteria("device_uem_id", ["uemId"]) \
+        .add_criteria("severity", "6").add_criteria("device_policy_id", ["8675309"]) \
+        .add_criteria("device_policy", ["Strict"]).add_criteria("process_name", ["IEXPLORE.EXE"]) \
+        .add_criteria("process_sha256", ["0123456789ABCDEF0123456789ABCDEF"]) \
+        .add_criteria("process_reputation", ["SUSPECT_MALWARE"]) \
+        .add_criteria("netconn_remote_ip", ['10.29.99.1']).add_criteria("netconn_remote_domain", ['example.com']) \
+        .add_criteria("netconn_protocol", ['TCP']).add_criteria("netconn_local_port", ["12345"]) \
+        .add_criteria("netconn_remote_port", ["54321"]) \
+        .add_criteria("policy_applied", ["APPLIED"]).add_criteria("reason_code", ["ATTACK_VECTOR"]).add_criteria(
+        "run_state", ["RAN"]) \
+        .add_criteria("device_target_value", ["HIGH"]).add_criteria("threat_id", ["B0RG"]) \
+        .add_criteria("threat_name", ["dangerous"]).add_criteria("alert_notes_present", "True") \
+        .add_criteria("attack_tactic", ["tactic"]).add_criteria("attack_technique", ["technique"]) \
+        .add_criteria("workflow_status", ["OPEN"]).add_criteria("blocked_effective_reputation", ["NOT_LISTED"]).\
+        add_criteria("blocked_md5", ["md5_hash"]).add_criteria("blocked_name", ["tim"]) \
+        .add_criteria("blocked_sha256", ["sha256_hash"]) \
+        .add_criteria("childproc_cmdline", ["/usr/bin/python"]).add_criteria("primary_event_id", ["123456"]) \
+        .add_criteria("childproc_effective_reputation", ["PUP"]) \
+        .add_criteria("childproc_guid", ["12345678"]).add_criteria("childproc_name", ["python"]).add_criteria(
+        "childproc_sha256", ["sha256_child"]) \
+        .add_criteria("childproc_username", ["steven"]) \
+        .add_criteria("parent_cmdline", ["/usr/bin/python"]).add_criteria("parent_effective_reputation", ["PUP"]) \
+        .add_criteria("parent_guid", ["12345678"]).add_criteria("parent_name", ["python"]) \
+        .add_criteria("parent_sha256", ["sha256_parent"]) \
+        .add_criteria("parent_username", ["steven"]) \
+        .add_criteria("process_cmdline", ["/usr/bin/python"]).add_criteria("process_effective_reputation", ["PUP"]) \
+        .add_criteria("process_guid", ["12345678"]).add_criteria("process_issuer", ["Microsoft"]).add_criteria(
+        "process_publisher", ["Microsoft"]) \
+        .add_criteria("reason_code", ["ATTACK_VECTOR"]).add_criteria("sensor_action", ["DENY"])\
+        .add_criteria("process_username", ["steven"]) \
+        .add_criteria("ttps", ["malicious"]).add_criteria("tms_rule_id", ["xtvr"]) \
+        .sort_by("name", "DESC")
+    a = query.one()
+    assert a.id == "S0L0"
+    assert a.org_key == "test"
+    assert a.threat_id == "B0RG"
+    assert a.workflow_.status == "OPEN"
+
+
+def test_query_intrusion_detection_system_alert_facets(cbcsdk_mock):
+    """Test a IDS alert facet query."""
+
+    def on_post(url, body, **kwargs):
+        assert body == {"query": "Blort", "criteria": {'type': ['INTRUSION_DETECTION_SYSTEM'],
+                                                       "workflow_status": ["OPEN"]},
+                        "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]}}
+        return {"results": [{"field": {},
+                             "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
+                            {"field": {},
+                             "values": [{"id": "status", "name": "statusX", "total": 9}]}]}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_facet", on_post)
+    api = cbcsdk_mock.api
+
+    query = api.select(Alert).where("Blort").add_criteria("type", ["INTRUSION_DETECTION_SYSTEM"])\
+        .add_criteria("workflow_status", ["OPEN"])
     f = query.facets(["REPUTATION", "STATUS"])
     assert f == [{"field": {}, "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
                  {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
