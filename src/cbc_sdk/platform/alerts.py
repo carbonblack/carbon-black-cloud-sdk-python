@@ -1420,7 +1420,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         """
         Restricts the alerts that this query is performed on based on matching the remote_is_private field.
 
-        This field is only present on CONTAINER_RUNTIME alerts and so filtering will be ingored on other alert types.
+        This field is only present on CONTAINER_RUNTIME alerts and so filtering will be ignored on other alert types.
 
         Args:
             is_private (boolean): Whether the remote information is private: true or false
@@ -1429,4 +1429,46 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             AlertSearchQuery: This instance.
         """
         self._criteria["remote_is_private"] = is_private
+        return self
+
+    def add_exclusion_threat_notes_present(self, is_present):
+        """
+        Limits alerts returned such that any alerts which match threat_notes_present value are not in the results
+
+        Args:
+            is_present (bool): If true, alerts that have a note attached to the threat_id are excluded from results
+
+        Returns:
+            AlertSearchQuery: This instance.
+        """
+        self._exclusions["threat_notes_present"] = is_present
+        return self
+
+    def add_exclusion_alert_notes_present(self, is_present):
+        """
+        Limits alerts returned such that any alerts which match alert_notes_present value are not in the results
+
+        Args:
+            is_present (bool): If true, returns alerts that have a note attached are excluded from results
+
+        Returns:
+            AlertSearchQuery: This instance.
+        """
+        self._exclusions["alert_notes_present"] = is_present
+        return self
+
+    def add_exclusion_remote_is_private(self, is_private):
+        """
+        Limits alerts returned such that any alerts which match remote_is_private value are not in the results
+
+        This field is only present on CONTAINER_RUNTIME alerts and so filtering will be ignored on other alert types.
+
+        Args:
+            is_private (boolean): Indicates whether the remote information is private. Alerts that match this
+            value are excluded from results.
+
+        Returns:
+            AlertSearchQuery: This instance.
+        """
+        self._exclusions["remote_is_private"] = is_private
         return self
