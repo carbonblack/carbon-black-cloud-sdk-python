@@ -1390,33 +1390,40 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         self._criteria["minimum_severity"] = severity
         return self
 
-    def set_threat_notes_present(self, is_present):
+    def set_threat_notes_present(self, is_present, exclude=False):
         """
         Restricts the alerts that this query is performed on to those with or without threat_notes.
 
         Args:
             is_present (bool): If true, returns alerts that have a note attached to the threat_id
-
+            exclude (bool): If true, will set is_present in the exclusions. Otherwise adds to criteria
         Returns:
             AlertSearchQuery: This instance.
         """
-        self._criteria["threat_notes_present"] = is_present
+        if not exclude:
+            self._criteria["threat_notes_present"] = is_present
+        else:
+            self._exclusions["threat_notes_present"] = is_present
         return self
 
-    def set_alert_notes_present(self, is_present):
+    def set_alert_notes_present(self, is_present, exclude=False):
         """
         Restricts the alerts that this query is performed on to those with or without notes.
 
         Args:
             is_present (bool): If true, returns alerts that have a note attached
+            exclude (bool): If true, will set is_present in the exclusions. Otherwise adds to criteria
 
         Returns:
             AlertSearchQuery: This instance.
         """
-        self._criteria["alert_notes_present"] = is_present
+        if not exclude:
+            self._criteria["alert_notes_present"] = is_present
+        else:
+            self._exclusions["alert_notes_present"] = is_present
         return self
 
-    def set_remote_is_private(self, is_private):
+    def set_remote_is_private(self, is_private, exclude=False):
         """
         Restricts the alerts that this query is performed on based on matching the remote_is_private field.
 
@@ -1424,37 +1431,15 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
 
         Args:
             is_private (boolean): Whether the remote information is private: true or false
+            exclude (bool): If true, will set is_present in the exclusions. Otherwise adds to criteria
 
         Returns:
             AlertSearchQuery: This instance.
         """
-        self._criteria["remote_is_private"] = is_private
-        return self
-
-    def add_exclusion_threat_notes_present(self, is_present):
-        """
-        Limits alerts returned such that any alerts which match threat_notes_present value are not in the results
-
-        Args:
-            is_present (bool): If true, alerts that have a note attached to the threat_id are excluded from results
-
-        Returns:
-            AlertSearchQuery: This instance.
-        """
-        self._exclusions["threat_notes_present"] = is_present
-        return self
-
-    def add_exclusion_alert_notes_present(self, is_present):
-        """
-        Limits alerts returned such that any alerts which match alert_notes_present value are not in the results
-
-        Args:
-            is_present (bool): If true, returns alerts that have a note attached are excluded from results
-
-        Returns:
-            AlertSearchQuery: This instance.
-        """
-        self._exclusions["alert_notes_present"] = is_present
+        if not exclude:
+            self._criteria["remote_is_private"] = is_private
+        else:
+            self._exclusions["remote_is_private"] = is_private
         return self
 
     def add_exclusion_remote_is_private(self, is_private):

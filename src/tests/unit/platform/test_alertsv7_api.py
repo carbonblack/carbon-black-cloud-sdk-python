@@ -1125,7 +1125,7 @@ def test_exclusion_singleton(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(Alert).add_exclusion_alert_notes_present(False) \
+    query = api.select(Alert).set_alert_notes_present(False, True) \
         .set_rows(1)
     len(query)
     # no assertions, the check is that the post request is formed correctly.
@@ -1149,7 +1149,7 @@ def test_exclusion_list_and_singleton(cbcsdk_mock):
     api = cbcsdk_mock.api
 
     query = api.select(Alert).add_exclusions("type", ["CB_ANALYTICS"])\
-        .add_exclusion_alert_notes_present(True) \
+        .set_alert_notes_present(True, True) \
         .set_rows(1)
     len(query)
     # no assertions, the check is that the post request is formed correctly.
@@ -1169,7 +1169,7 @@ def test_exclusion_remote_is_private(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(Alert).add_exclusion_remote_is_private(True) \
+    query = api.select(Alert).set_remote_is_private(True, True) \
         .set_rows(1)
     len(query)
     # no assertions, the check is that the post request is formed correctly.
@@ -1189,7 +1189,7 @@ def test_exclusion_threat_notes_present(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(Alert).add_exclusion_threat_notes_present(True) \
+    query = api.select(Alert).set_threat_notes_present(True, True) \
         .set_rows(1)
     len(query)
     # no assertions, the check is that the post request is formed correctly.
