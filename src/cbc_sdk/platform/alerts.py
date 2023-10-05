@@ -22,7 +22,9 @@ from cbc_sdk.base import (BaseQuery,
                           QueryBuilder,
                           QueryBuilderSupportMixin,
                           IterableQueryMixin,
-                          CriteriaBuilderSupportMixin)
+                          CriteriaBuilderSupportMixin,
+                          ExclusionBuilderSupportMixin
+                          )
 from cbc_sdk.platform.observations import Observation
 from cbc_sdk.platform.processes import AsyncProcessQuery, Process
 from cbc_sdk.platform.legacy_alerts import LegacyAlertSearchQueryCriterionMixin
@@ -914,7 +916,7 @@ class WorkflowStatus(PlatformModel):
 
 
 class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, LegacyAlertSearchQueryCriterionMixin,
-                       CriteriaBuilderSupportMixin):
+                       CriteriaBuilderSupportMixin, ExclusionBuilderSupportMixin):
     """Represents a query that is used to locate Alert objects."""
     VALID_REPUTATIONS = ["KNOWN_MALWARE", "SUSPECT_MALWARE", "PUP", "NOT_LISTED", "ADAPTIVE_WHITE_LIST",
                          "COMMON_WHITE_LIST", "TRUSTED_WHITE_LIST", "COMPANY_BLACK_LIST"]
@@ -945,6 +947,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
 
         self._query_builder = QueryBuilder()
         self._criteria = {}
+        self._exclusions = {}
         self._time_filters = {}
         self._sortcriteria = {}
         self._bulkupdate_url = "/api/alerts/v7/orgs/{0}/alerts/workflow"
@@ -1136,6 +1139,19 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             mycrit.update(self._time_filters)
         return mycrit
 
+    def _build_exclusions(self):
+        """
+        Builds the exclusions object for use in a query.
+
+        Returns:
+            dict: The exclusions object.
+        """
+        myexclusions = self._exclusions
+        # No time filters. Pending confirmation from backend
+        # if self._time_filters:
+        #    mycrit.update(self._time_filters)
+        return myexclusions
+
     def sort_by(self, key, direction="ASC"):
         """
         Sets the sorting behavior on a query's results.
@@ -1169,9 +1185,12 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         """
         request = {}
         criteria = self._build_criteria()
+        exclusions = self._build_exclusions()
         query = self._query_builder._collapse()
         if criteria:
             request["criteria"] = criteria
+        if exclusions:
+            request["exclusions"] = exclusions
         if query:
             request["query"] = query
 

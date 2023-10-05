@@ -1061,3 +1061,96 @@ def test_get_observations_with_timeout(cbcsdk_mock):
     with pytest.raises(TimeoutError):
         alert.get_observations(timeout=1)
         print("the end")
+
+
+def test_exclusion_single_list(cbcsdk_mock):
+    """Test a single exclusion in an array"""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "exclusions": {
+                "type": [
+                    "WATCHLIST"
+                ]
+            },
+            "rows": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "type": "WATCHLIST"}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
+    query = api.select(Alert).add_exclusions("type", ["WATCHLIST"]).set_rows(1)
+    len(query)
+    # no assertions, the check is that the post request is formed correctly.
+
+
+def test_exclusion_two_list(cbcsdk_mock):
+    """Test a single exclusion in an array"""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "exclusions": {
+                "process_effective_reputation": [
+                    "TRUSTED_WHITE_LIST"
+                ],
+                "type": [
+                    "WATCHLIST"
+                ]
+            },
+            "rows": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "type": "WATCHLIST"}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
+    query = api.select(Alert).add_exclusions("type", ["WATCHLIST"])\
+        .add_exclusions("type", ["WATCHLIST"]) \
+        .add_exclusions("process_effective_reputation", ["TRUSTED_WHITE_LIST"]) \
+        .set_rows(1)
+    len(query)
+    # no assertions, the check is that the post request is formed correctly.
+
+
+def test_exclusion_singleton(cbcsdk_mock):
+    """Test a single value exclusion"""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "exclusions": {
+                "alert_notes_present": False
+            },
+            "rows": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "type": "WATCHLIST"}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
+    query = api.select(Alert).add_exclusions("type", ["WATCHLIST"])\
+        .add_exclusions("alert_notes_present", False) \
+        .set_rows(1)
+    len(query)
+    # no assertions, the check is that the post request is formed correctly.
+
+
+def test_exclusion_list_and_singleton(cbcsdk_mock):
+    """Test a single value and list exclusion in an array"""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "exclusions": {
+                "alert_notes_present": True,
+                "type": [
+                    "CB_ANALYTICS"
+                ]
+            },
+            "rows": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "type": "WATCHLIST"}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
+    query = api.select(Alert).add_exclusions("type", ["CB_ANALYTICS"])\
+        .add_exclusions("alert_notes_present", True) \
+        .set_rows(1)
+    len(query)
+    # no assertions, the check is that the post request is formed correctly.
