@@ -16,9 +16,32 @@
 from cbc_sdk.errors import ApiError, FunctionalityDecommissioned
 from cbc_sdk.platform.devices import DeviceSearchQuery
 from cbc_sdk.base import CriteriaBuilderSupportMixin
+import logging
 
-ALERT_VALID_REPUTATIONS = ["KNOWN_MALWARE", "SUSPECT_MALWARE", "PUP", "NOT_LISTED", "ADAPTIVE_WHITE_LIST",
-                           "COMMON_WHITE_LIST", "TRUSTED_WHITE_LIST", "COMPANY_BLACK_LIST"]
+log = logging.getLogger(__name__)
+
+ALERT_VALID_REPUTATIONS = [
+    "ADAPTIVE_WHITE_LIST",
+    "COMMON_WHITE_LIST",
+    "COMPANY_BLACK_LIST",
+    "COMPANY_WHITE_LIST",
+    "PUP",
+    "TRUSTED_WHITE_LIST",
+    "RESOLVING",
+    "COMPROMISED_OBSOLETE",
+    "DLP_OBSOLETE",
+    "IGNORE",
+    "ADWARE",
+    "HEURISTIC",
+    "SUSPECT_MALWARE",
+    "KNOWN_MALWARE",
+    "ADMIN_RESTRICT_OBSOLETE",
+    "NOT_LISTED",
+    "GRAY_OBSOLETE",
+    "NOT_COMPANY_WHITE_OBSOLETE",
+    "LOCAL_WHITE",
+    "NOT_SUPPORTED"
+]
 ALERT_VALID_ALERT_TYPES = ["CB_ANALYTICS", "DEVICE_CONTROL", "WATCHLIST", "CONTAINER_RUNTIME"]
 ALERT_VALID_WORKFLOW_VALS = ["OPEN", "DISMISSED"]
 ALERT_VALID_FACET_FIELDS = ["ALERT_TYPE", "CATEGORY", "REPUTATION", "WORKFLOW", "TAG", "POLICY_ID",
@@ -290,7 +313,8 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
             AlertSearchQuery: This instance.
         """
         if not all((r in ALERT_VALID_REPUTATIONS) for r in reps):
-            raise ApiError("One or more invalid reputation values")
+            log.warning("Reputation value not in enumeration. May be valid as enumeration values are extended in "
+                        "Carbon Black Cloud ahead of SDK updates.")
         self._update_criteria("process_reputation", reps)
         return self
 
