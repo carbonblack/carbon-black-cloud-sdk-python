@@ -45,7 +45,8 @@ class Process(UnrefreshableModel):
     """
     default_sort = 'last_update desc'
     primary_key = "process_guid"
-    validation_url = "/api/investigate/v1/orgs/{}/processes/search_validation"
+    validation_url = "/api/investigate/v2/orgs/{}/processes/search_validation"
+    validation_method = "POST"
     urlobject = ""
 
     class Summary(UnrefreshableModel):
