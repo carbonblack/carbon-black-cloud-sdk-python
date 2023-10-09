@@ -48,16 +48,10 @@ ALERT_VALID_FACET_FIELDS = ["ALERT_TYPE", "CATEGORY", "REPUTATION", "WORKFLOW", 
                             "POLICY_NAME", "DEVICE_ID", "DEVICE_NAME", "APPLICATION_HASH",
                             "APPLICATION_NAME", "STATUS", "RUN_STATE", "POLICY_APPLIED_STATE",
                             "POLICY_APPLIED", "SENSOR_ACTION"]
-CB_ANALYTICS_VALID_ALERT_TYPES = ["CB_ANALYTICS"]
-CB_ANALYTICS_VALID_THREAT_CATEGORIES = ["UNKNOWN", "NON_MALWARE", "NEW_MALWARE", "KNOWN_MALWARE", "RISKY_PROGRAM"]
 CB_ANALYTICS_VALID_LOCATIONS = ["ONSITE", "OFFSITE", "UNKNOWN"]
-CB_ANALYTICS_VALID_KILL_CHAIN_STATUSES = ["RECONNAISSANCE", "WEAPONIZE", "DELIVER_EXPLOIT", "INSTALL_RUN",
-                                          "COMMAND_AND_CONTROL", "EXECUTE_GOAL", "BREACH"]
 CB_ANALYTICS_VALID_POLICY_APPLIED = ["APPLIED", "NOT_APPLIED"]
 CB_ANALYTICS_VALID_RUN_STATES = ["DID_NOT_RUN", "RAN", "UNKNOWN"]
 CB_ANALYTICS_VALID_SENSOR_ACTIONS = ["POLICY_NOT_APPLIED", "ALLOW", "ALLOW_AND_LOG", "TERMINATE", "DENY"]
-CB_ANALYTICS_VALID_THREAT_CAUSE_VECTORS = ["EMAIL", "WEB", "GENERIC_SERVER", "GENERIC_CLIENT", "REMOTE_DRIVE",
-                                           "REMOVABLE_MEDIA", "UNKNOWN", "APP_STORE", "THIRD_PARTY"]
 
 
 class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
@@ -366,11 +360,15 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
 
     def set_types(self, alerttypes):
         """
+        This method is deprecated.  Update to use `add_criteria(field_name, [field_value])`.
+
         Restricts the alerts that this query is performed on to the specified alert type values.
 
         Args:
             alerttypes (list): List of string alert type values.  Valid values are "CB_ANALYTICS",
-                               "WATCHLIST", "DEVICE_CONTROL", and "CONTAINER_RUNTIME".
+                               "WATCHLIST", "DEVICE_CONTROL", and "CONTAINER_RUNTIME".  In SDK 1.5.0,
+                               to align with Alert API v7, more alert types are available but the `add_criteria`
+                               method must be used.
 
         Returns:
             AlertSearchQuery: This instance.
