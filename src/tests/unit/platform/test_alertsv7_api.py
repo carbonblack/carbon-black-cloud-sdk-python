@@ -28,7 +28,8 @@ from tests.unit.fixtures.platform.mock_alerts_v7 import (
     GET_ALERT_RESP_WITH_NOTES,
     GET_ALERT_NOTES,
     CREATE_ALERT_NOTE_RESP,
-    GET_ALERT_RESP
+    GET_ALERT_RESP,
+    GET_NEW_ALERT_TYPE_RESP
 )
 from tests.unit.fixtures.platform.mock_process import (
     GET_PROCESS_VALIDATION_RESP,
@@ -1061,3 +1062,45 @@ def test_get_observations_with_timeout(cbcsdk_mock):
     with pytest.raises(TimeoutError):
         alert.get_observations(timeout=1)
         print("the end")
+
+
+def test_new_alert_type(cbcsdk_mock):
+    """Test Alert class instantiation with an alert type unknown to CBC SDK."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/MYVERYFIRSTNEWALERTTYPE0001",
+                             GET_NEW_ALERT_TYPE_RESP)
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, 'MYVERYFIRSTNEWALERTTYPE0001')
+    assert isinstance(alert, Alert)
+    assert alert.id == "MYVERYFIRSTNEWALERTTYPE0001"
+    assert alert.type == "FIRST_NEW_TEST_ALERT_TYPE"
+
+
+def test_new_alert_type_search(cbcsdk_mock):
+    """Test Alert class instantiation with an alert type unknown to CBC SDK. Expect success."""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "type": [
+                    "FIRST_NEW_TEST_ALERT_TYPE"
+                ]
+            },
+            "rows": 1
+        }
+        return {"results": [{"org_key": "ABCD1234",
+                             "alert_url": "https://defense.conferdeploy.net/alerts?s[c][query_string]="
+                                          "id:MYVERYFIRSTNEWALERTTYPE0001&orgKey=ABCD1234",
+                             "id": "MYVERYFIRSTNEWALERTTYPE0001",
+                             "type": "FIRST_NEW_TEST_ALERT_TYPE",
+                             "backend_timestamp": "2023-04-14T21:30:40.570Z",
+                             "user_update_timestamp": None}],
+                "num_found": 1}
+    cbcsdk_mock.mock_request("POST",
+                             "/api/alerts/v7/orgs/test/alerts/_search",
+                             on_post)
+    api = cbcsdk_mock.api
+    alert_list = api.select(Alert).add_criteria('type', 'FIRST_NEW_TEST_ALERT_TYPE').set_rows(1)
+    assert len(alert_list) == 1
+    alert = alert_list.first()
+    assert alert.id == "MYVERYFIRSTNEWALERTTYPE0001"
+    assert alert.type == "FIRST_NEW_TEST_ALERT_TYPE"

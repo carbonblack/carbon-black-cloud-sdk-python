@@ -301,3 +301,12 @@ CREATE_ALERT_NOTE_RESP = {"author": "Grogu", "id": "3gsgsfds", "note": "I am Gro
                           "create_timestamp": "2023-04-18T03:25:44.397Z",
                           "last_update_timestamp": "2023-04-18T03:25:44.397Z",
                           "source": "CUSTOMER", "parent_id": None, "read_history": None, "thread": None}
+
+
+GET_NEW_ALERT_TYPE_RESP = {"org_key": "ABCD1234",
+                           "alert_url": "https://defense.conferdeploy.net/alerts?s[c][query_string]="
+                                        "id:MYVERYFIRSTNEWALERTTYPE0001&orgKey=ABCD1234",
+                           "id": "MYVERYFIRSTNEWALERTTYPE0001",
+                           "type": "FIRST_NEW_TEST_ALERT_TYPE",
+                           "backend_timestamp": "2023-04-14T21:30:40.570Z",
+                           "user_update_timestamp": None}
