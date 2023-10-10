@@ -11,54 +11,90 @@
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
 """
-Example script illustrating retrieval of container runtime alerts.
+This example shows changes required in Alerts code to move from Carbon Black Cloud Python SDK v1.4.3 to 1.5.0
 
-Based on code written by Stephane List in the article "Carbon Black Container APIs Just got better! Get container
-runtime alerts with CBC python SDK," VMware Carbon Black Tech Zone, June 20, 2022. (Permalink to article:
-https://carbonblack.vmware.com/blog/carbon-black-container-apis-just-got-better-get-container-runtime-alerts-cbc-python-sdk)
-Code modified and adapted for CBC SDK example script use by Amy Bowersox, Developer Relations.
+SDK v1.4.3 and earlier used the Alerts v6 API.  SDK 1.5.0 uses Alerts v7 API which has significantly more metadata
+on the Alert record, but also some breaking changes.
+
+It complements the Alert Migration guide available in Read The Docs
+https://carbon-black-cloud-python-sdk.readthedocs.io
+-->  Guides --> Migration Guides --> Alert Migration
+
+Significant effort was put towards backwards compatibility to minimise the breaking changes in SDK 1.5.0.
+The code to support legacy
 """
 
-# Imports from the article's code
 import sys
-from cbc_sdk.platform import ContainerRuntimeAlert
+from cbc_sdk import CBCloudAPI
+from cbc_sdk.platform import Alert, BaseAlert
+from cbc_sdk.errors import FunctionalityDecommissioned
 
-# Additional imports to use the "helper" functions to perform command-line parsing and build a CBCloudAPI object from
-# command-line arguments. Since we don't construct CBCloudAPI directly, we don't need to import it.
-from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
+# To see the http requests being made, and the structure of the search requests enable debug logging
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 
 def main():
     """For convenience, all running code will be under this main function."""
-    # Build a parser to parse standard command-line arguments for CBCloudAPI, and add some additional arguments.
-    parser = build_cli_parser("Retrieve ContainerRuntimeAlerts from Carbon Black Cloud")
-    parser.add_argument("-w", "--weeks", type=int, default=12,
-                        help="Number of weeks to look back at alerts (default 12)")
-    parser.add_argument("-f", "--find", default=None,
-                        help="Find a specific string in alert reason, only print alerts with that reason")
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("--reason", action="store_true", help="Only show alert reason")
-    group.add_argument("--ip", action="store_true", help="Only show alert remote IP address")
+    # This example does not use command line parsing in order to reduce complexity and focus on the SDK functions.
+    # Review the Authentication section of the Read the Docs for information about Authentication in the SDK
+    # https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/authentication/
+    api = CBCloudAPI(profile="YOUR PROFILE HERE")
 
-    # Parse the command line arguments and create a CBCloudAPI object. If you want to run against the "default"
-    # credentials as written in the article, pass the command-line parameters "--profile default" to the script.
-    args = parser.parse_args()
-    cb = get_cb_cloud_object(args)
+    # The base class has changed from BaseAlert, to simply Alert.
+    # Backwards compatibility was built in so this is not a breaking change
+    # The default time range that was searched changed from one month to two weeks.
 
-    # Get Container Runtime alerts from the last however-many weeks.
-    alerts = cb.select(ContainerRuntimeAlert).set_time_range('last_update_time', range=f"-{args.weeks}w")
+    # If you did this in SDK 1.4.3 it would have got one month of alerts.
+    # Because SDK 1.5.0 is implemented only with Alerts v7 API, it returns the new default of the last 2 weeks.
+    alerts = api.select(BaseAlert)
+    # The search request in the SDK is not made until the results are requested.
+    len(alerts)
+    # The equivalent search in SDK 1.5.0 is:
+    alerts = api.select(Alert).set_time_range(range="-1M")
+    len(alerts)
+    # Observed Alerts are not returned by the Alerts API v7 and are not available in SDK 1.5.0 onwards.
+    # If you are calling the v6 API directly or using SDK 1.4.3 or earlier, use criteria is category=THREAT
+    # to get the same alerts as will be returned by the v7 API and SDK 1.5.0.
+    try:
+        api.select(BaseAlert).set_categories("THREAT")
+    except FunctionalityDecommissioned:
+        print("The FunctionalityDecommissioned exception is expected.")
+        print("In SDK 1.5.0 and Alert v7 API, `category` is not a valid attribute.")
+        print("In SDK 1.4.3 and earlier this will limit the alert returned to match those from Alerts v7 API and "
+              "SDK 1.5.0 onwards.")
 
-    # This duplicates the main for-loop in the article's example code.
-    for alert in alerts:
-        # This complicated if allows us to bypass checking the alert reason if "find" was not specified.
-        if not args.find or (args.find in alert.reason):
-            # Based on the reason and ip flags, print out either the reason, the remote IP, or the whole alert.
-            if args.reason:
-                print(alert.reason)
-            elif args.ip:
-                print(alert.netconn_remote_ip)
-            else:
-                print(alert)
+    # get() methods
+    # where the field has been renamed, the get_xxx method has been updated to return the value from the field using
+    # the new name
+    alert_list = api.select(BaseAlert)
+    alert = alert_list.first()
+    print("Printing the value of remote_ip = {}".format(alert.get("remote_ip")))
+    print("Printing the value of netconn_remote_ip, the new name for that data = {}".
+          format(alert.get("netconn_remote_ip")))
+
+    # Some fields have been deprecated and do not have an equivalent value in Alerts v7 or SDK 1.5.0.
+    # These will raise a FunctionalityDecommissioned exception.
+    try:
+        alert.get("blocked_threat_category")
+    except FunctionalityDecommissioned:
+        print("The FunctionalityDecommissioned exception is expected.")
+        print("blocked_threat_category is not a valid field")
+
+    # port - there are now two fields, netconn_local_port and netconn_remote_port that replace the legacy `port`.
+    # The legacy method set_port in the criteria is translated to a search criteria of netconn_local_port.
+    alerts = api.select(BaseAlert).set_ports([1234])
+    len(alerts)
+    #
+    # in SDK 1.5.0, criteria uses a generic add_criteria method instead of hand crafted set_xxx methods.
+    # The value can be a single value or a list of values
+    # Validation is performed by the API, providing consistency to all callers
+    #
+    alerts = api.select(Alert).add_criteria('netconn_local_port', 1234)
+    len(alerts)
+    # or
+    alerts = api.select(Alert).add_criteria('netconn_remote_port', [1234])
+    len(alerts)
 
     return 0
 

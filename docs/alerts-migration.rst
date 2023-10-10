@@ -3,7 +3,7 @@ Alert Migration
 
 TO DO items:
 * Add links to RTD sections
-* set_ports sets netconn_local_ports. 
+* set_ports sets netconn_local_ports.
 Note that in SDK 1.5.0, to align with Alerts API v7, the search field was updated from
         `port` to `netconn_local_port`.  It is possible to search on either `netconn_local_port`
         or `netconn_remote_port` using the `add_criteria(fieldname, [field values]) method.
@@ -24,6 +24,44 @@ Resources
 * `Alerts v7 Announcement <https://developer.carbonblack.com/2023/06/announcing-vmware-carbon-black-cloud-alerts-v7-api/>`_
 * `Alert Search and Response Fields <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields>`_
 
+Backwards compatibility
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Backwards compatibility has been built into SDK 1.5.0 to minimise breakages for users of 1.4.3 with the following
+mechanisms:
+
+* `set_<v6 field name>()` on the query object will translate to the new field name for the request
+
+    * Should be updated to use `add_criteria(field_name, [field_value])
+    * Many new fields can be used in criteria to search Alerts using add_criteria,
+      but do not have set_<field_name> methods
+    * Another benefit of moving to add_criteria is that it has an additional parameter `exclude`.
+      If this is set to True, then Alerts that match these values are excluded from the results.
+
+* `get(<v6 field name>)` will translate to the new field name to look up the value.
+* `alert.fieldname` will translate fieldname to the new name and return the matching value
+* `to_json` is a new method that returns the alert object in json format.  It has been added to replace the use
+of `_info` as this is an internal representation.
+
+    * `to_json("v6")` will translate field names from the v7 field name to v6 field names and return a structure as
+close to v6 (SDK 1.4.3) as possible.  The fields that do not have equivalents in the v7 API will be missing.
+
+Breaking Changes
+^^^^^^^^^^^^^^^^
+
+Breaking changes happen in the following places:
+
+* Fields that were in Alerts v6 API (and therefore SDK 1.4.3) but are not in Alerts v7 and therefore cannot be
+made available in SDK 1.5.0.  See `Breaking Change: Attributes that have been removed`_
+
+* Helper functions that operated on deprecated objects.  See `Breaking Change: Helper Functions that have been removed`_
+
+* Bulk Workflow. This was rebuilt in Carbon Black Cloud as Close Alerts and is a more streamlined workflow and improved
+Alert lifecycle management.  See <TO DO CREATE AND REFERENCE AN EXAMPLE> for the new workflow
+
+* Notes.  Notes can now be attached to either an Alert or a Threat, and more metadata about the note is stored.
+TO DO CONFIRM IF THIS IS REALLY BREAKING OR JUST NEW AND IMPROVED
+
 Attributes that have been renamed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 This section outlines the fields that were deprecated from Alerts API v6 to v7 and the behaviour of this SDK.
@@ -32,11 +70,6 @@ Detail of all changes to API endpoints and fields are on the Developer Network i
 `Alerts Migration Guide <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/alerts-migration>`_.
 
 The following fields have a new name in Alert v7 and the new field name contains the same value.
-
-Backwards compatibility has been built in such that calling legacy `set_<v6 field name>()` methods on the query object
-and `get(<v6 field name>)` will return the expected results.
-
-
 .. list-table:: Field mappings where the field has been renamed
    :widths: 50, 50
    :header-rows: 1
@@ -113,9 +146,23 @@ and `get(<v6 field name>)` will return the expected results.
    * - workload_name
      - k8s_workload_name"
 
+Things to consider
+^^^^^^^^^^^^^^^^^^
 
-Attributes that have been removed
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+**Port**
+
+In SDK 1.4.3 and earlier there was a single field `port`.
+In Alerts v7 API and therefore SDK 1.5.0, there are two fields; `netconn_local_port` and `netconn_remote_port`.
+The legacy method set_ports() sets the criteria for `netconn_local_port`
+.. code-block:: python
+
+    >>> # This legacy search request:
+    >>> api.select(BaseAlert).set_ports(["NON_MALWARE"])
+
+
+
+Breaking Change: Attributes that have been removed
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following attributes do not have an equivalent in Alert v7 API. If they are accessed using the
 legacy *set_<v6 field name>()* methods on the query object or *get(<v6 field name>)* a
@@ -203,8 +250,8 @@ Deprecated Fields on Host Based Firewall Alerts
 * group_details
 * threat_cause_threat_category
 
-Workflow has changed significantly
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Breaking Change: Workflow has changed significantly
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The workflow feature for bulk closure of Alerts has changed significantly. The workflow fields do not have
 backwards compatibility built in.  The new workflow is:
@@ -223,8 +270,8 @@ TO DO ADD EXAMPLE AFTER CHANGE IS IMPLEMENTED
 
 #. Use the Alert Search to see updated status of an alert
 
-Helper Functions that have been removed
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Breaking Change: Helper Functions that have been removed
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 CBAnalytics get_events() has been removed
 
