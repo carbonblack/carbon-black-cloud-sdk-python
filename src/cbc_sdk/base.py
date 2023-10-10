@@ -1905,10 +1905,12 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
             args["exclusions"] = self._exclusions
         if self._time_range:
             args["time_range"] = self._time_range
-        args['query'] = self._query_builder._collapse()
+        query = self._query_builder._collapse()
+        if query:
+            args['query'] = query
         if self._query_builder._process_guid is not None:
             args["process_guid"] = self._query_builder._process_guid
-        if 'process_guid:' in args['query']:
+        if 'process_guid:' in args.get('query', ""):
             q = args['query'].split('process_guid:', 1)[1].split(' ', 1)[0]
             args["process_guid"] = q
 
@@ -1965,6 +1967,8 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
     def _validate(self, args):
         if not hasattr(self._doc_class, "validation_url"):
             return
+        if not args.get('query'):
+            return
 
         url = self._doc_class.validation_url.format(self._cb.credentials.org_key)
 
@@ -1978,6 +1982,8 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
 
         # Re-add sort
         args["sort"] = sort
+        # remove duplicate q
+        args.pop("q")
 
         if not validated.get("valid"):
             raise ApiError("Invalid query: {}: {}".format(args, validated["invalid_message"]))
@@ -2261,7 +2267,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
             args["time_range"] = self._time_range
         query = self._query_builder._collapse()
         if query:
-            args['query'] = query
+            args["query"] = query
         return args
 
     def _submit(self):
@@ -2321,6 +2327,9 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
         if not hasattr(self._doc_class, "validation_url"):
             return
 
+        if not args.get('query'):
+            return
+
         url = self._doc_class.validation_url.format(self._cb.credentials.org_key)
 
         if args.get('query', False):
@@ -2328,6 +2337,8 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
 
         # v2 search sort key does not work with v1 validation
         args.pop('sort', None)
+        # remove duplicate q
+        args.pop("q")
 
         validated = self._cb.get_object(url, query_parameters=args)
 

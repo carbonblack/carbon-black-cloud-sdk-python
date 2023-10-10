@@ -167,6 +167,15 @@ def test_set_threat_cause_vectors(cb):
         cb.select(WatchlistAlert).set_threat_cause_vectors(["EMAIL"])
 
 
+def test_set_workload_ids(cb):
+    """Test the set_kill_chain_statuses method on base and CBAnalytics legacy alert class."""
+    with pytest.raises(FunctionalityDecommissioned):
+        cb.select(BaseAlert).set_workload_ids(["UNKNOWN"])
+
+    with pytest.raises(FunctionalityDecommissioned):
+        cb.select(ContainerRuntimeAlert).set_workload_ids(["UNKNOWN"])
+
+
 def test_get_attr_cb_analytics_alert(cbcsdk_mock):
     """Test the __get_attr_ method for each attribute that applies to cb_analytics alerts."""
     cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
@@ -293,3 +302,47 @@ def test_get_attr_watchlists_alert(cbcsdk_mock):
     for f in DEPRECATED_FIELDS_WATCHLISTS:
         with (pytest.raises(FunctionalityDecommissioned)):
             alert.get(f)
+
+
+def test_get_attr_alert_invalid_attrib(cbcsdk_mock):
+    """Test the __get_attr_ method for an invalid attribute on Alert."""
+    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+    cb = cbcsdk_mock.api
+    alert = cb.select(Alert, GET_ALERT_v7_CB_ANALYTICS_RESPONSE.get("id"))
+
+    with (pytest.raises(AttributeError)):
+        alert.invalid_field
+
+
+def test_get_attr_basealert_invalid_attrib(cbcsdk_mock):
+    """Test the __get_attr_ method for an invalid attribute on BaseAlert."""
+    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+    cb = cbcsdk_mock.api
+    alert = cb.select(BaseAlert, GET_ALERT_v7_CB_ANALYTICS_RESPONSE.get("id"))
+
+    with (pytest.raises(AttributeError)):
+        alert.invalid_field
+
+
+def test_get_attr_cbalnalyticsalert_invalid_attrib(cbcsdk_mock):
+    """Test the __get_attr_ method for an invalid attribute on CBAnalyticsAlert."""
+    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+    cb = cbcsdk_mock.api
+    alert = cb.select(CBAnalyticsAlert, GET_ALERT_v7_CB_ANALYTICS_RESPONSE.get("id"))
+
+    with (pytest.raises(AttributeError)):
+        alert.invalid_field
+
+
+def test_get_attr_alert_deprecated_v6_attrib(cbcsdk_mock):
+    """Test the __get_attr_ method for a v6 attribute that has been deprecated."""
+    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+    cb = cbcsdk_mock.api
+    alert = cb.select(Alert, GET_ALERT_v7_CB_ANALYTICS_RESPONSE.get("id"))
+
+    with (pytest.raises(FunctionalityDecommissioned)):
+        alert.kill_chain_status

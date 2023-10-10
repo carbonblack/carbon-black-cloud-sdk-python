@@ -13,14 +13,14 @@
 from datetime import datetime
 import pytest
 
-from cbc_sdk.errors import ApiError, TimeoutError, NonQueryableModel
+from cbc_sdk.errors import ApiError, NonQueryableModel, FunctionalityDecommissioned
 from cbc_sdk.platform import (
     BaseAlert,
     CBAnalyticsAlert,
     WatchlistAlert,
     DeviceControlAlert,
     ContainerRuntimeAlert,
-    Process,
+    Process
 )
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.platform.mock_process import (
@@ -30,25 +30,16 @@ from tests.unit.fixtures.platform.mock_process import (
     GET_PROCESS_SEARCH_JOB_RESULTS_RESP,
     GET_PROCESS_SUMMARY_STR,
     GET_PROCESS_NOT_FOUND,
-    GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT,
+    GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT
 )
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.endpoint_standard.mock_enriched_events import (
-    POST_ENRICHED_EVENTS_SEARCH_JOB_RESP,
-    GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING,
-    GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ZERO_COMP,
-    GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_ZERO,
-    GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP,
-    GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ALERTS,
-)
-from tests.unit.fixtures.platform.mock_alerts import (
+from tests.unit.fixtures.platform.mock_alerts_v7 import (
     GET_ALERT_RESP,
-    GET_ALERT_RESP_INVALID_ALERT_ID,
     GET_ALERT_TYPE_WATCHLIST,
     GET_ALERT_TYPE_WATCHLIST_INVALID,
     GET_ALERT_RESP_WITH_NOTES,
     GET_ALERT_NOTES,
-    CREATE_ALERT_NOTE,
+    CREATE_ALERT_NOTE_RESP
 )
 from tests.unit.fixtures.mock_rest_api import ALERT_SEARCH_SUGGESTIONS_RESP
 
@@ -78,11 +69,12 @@ def test_query_basealert_with_all_bells_and_whistles(cbcsdk_mock):
                         "rows": 2,
                         "criteria": {"device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
-                                     "device_username": ["JRN"], "id": ["S0L0"],
-                                     "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
-                                     "policy_name": ["Strict"], "process_name": ["IEXPLORE.EXE"],
+                                     "device_username": ["JRN"], "id": ["S0L0", "S0L0_1"],
+                                     "minimum_severity": 6, "device_policy_id": [8675309],
+                                     "device_policy": ["Strict"], "process_name": ["IEXPLORE.EXE"],
                                      "process_sha256": ["0123456789ABCDEF0123456789ABCDEF"],
-                                     "reputation": ["SUSPECT_MALWARE"], "tag": ["Frood"], "target_value": ["HIGH"],
+                                     "process_reputation": ["SUSPECT_MALWARE"], "tags": ["Frood"],
+                                     "device_target_value": ["HIGH"],
                                      "threat_id": ["B0RG"], "workflow": ["OPEN"]},
                         "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG", "type": "WATCHLIST",
@@ -90,7 +82,6 @@ def test_query_basealert_with_all_bells_and_whistles(cbcsdk_mock):
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
-
     query = api.select(BaseAlert).where("Blort").set_device_ids([6023]) \
         .set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
         .set_device_username(["JRN"]).set_alert_ids(["S0L0"]) \
@@ -111,17 +102,19 @@ def test_query_basealert_with_create_time_as_start_end(cbcsdk_mock):
 
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
-                        "rows": 2,
-                        "criteria": {"create_time": {"start": "2019-09-30T12:34:56", "end": "2019-10-01T12:00:12"}}}
+                        "time_range": {"start": "2023-09-19T12:34:56.000000Z",
+                                       "end": "2023-09-20T12:00:12.000000Z"},
+                        "rows": 1
+                        }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"state": "OPEN"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select("BaseAlert").where("Blort").set_create_time(start="2019-09-30T12:34:56",
-                                                                   end="2019-10-01T12:00:12")
-    a = query.one()
+    query = api.select("BaseAlert").where("Blort").set_create_time(start="2023-09-19T12:34:56",
+                                                                   end="2023-09-20T12:00:12").set_rows(1)
+    a = query.first()
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
@@ -135,16 +128,18 @@ def test_query_basealert_with_create_time_as_start_end_as_objs(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         nonlocal _timestamp
         assert body == {"query": "Blort",
-                        "rows": 2,
-                        "criteria": {"create_time": {"start": _timestamp.isoformat(), "end": _timestamp.isoformat()}}}
+                        "rows": 1,
+                        "time_range": {"start": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                                       "end": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ")}}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"state": "OPEN"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(BaseAlert).where("Blort").set_create_time(start=_timestamp, end=_timestamp)
-    a = query.one()
+    query = api.select(BaseAlert).where("Blort").set_create_time(start=_timestamp.isoformat(),
+                                                                 end=_timestamp.isoformat()).set_rows(1)
+    a = query.first()
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
@@ -155,7 +150,7 @@ def test_query_basealert_with_create_time_as_range(cbcsdk_mock):
     """Test an alert query with the creation time specified as a range."""
 
     def on_post(url, body, **kwargs):
-        assert body == {"query": "Blort", "criteria": {"create_time": {"range": "-3w"}}, "rows": 2}
+        assert body == {"query": "Blort", "time_range": {"range": "-3w"}, "rows": 2}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"state": "OPEN"}}], "num_found": 1}
 
@@ -176,9 +171,10 @@ def test_query_basealert_with_time_range(cbcsdk_mock):
 
     def on_post(url, body, **kwargs):
         nonlocal _timestamp
-        assert body == {"query": "Blort", "criteria": {"last_update_time": {"start": _timestamp.isoformat(),
-                                                                            "end": _timestamp.isoformat()}},
-                        "rows": 2}
+        assert body == {"query": "Blort", "criteria": {"backend_update_timestamp": {
+            "start": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            "end": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ")}},
+            "rows": 2}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"state": "OPEN"}}], "num_found": 1}
 
@@ -199,7 +195,7 @@ def test_query_basealert_with_time_range_start_end(cbcsdk_mock):
     """Test an alert query with the last_update_time specified as a range."""
 
     def on_post(url, body, **kwargs):
-        assert body == {"query": "Blort", "criteria": {"last_update_time": {"range": "-3w"}}, "rows": 2}
+        assert body == {"query": "Blort", "criteria": {"backend_update_timestamp": {"range": "-3w"}}, "rows": 2}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"state": "OPEN"}}], "num_found": 1}
 
@@ -207,6 +203,26 @@ def test_query_basealert_with_time_range_start_end(cbcsdk_mock):
     api = cbcsdk_mock.api
 
     query = api.select(BaseAlert).where("Blort").set_time_range("last_update_time", range="-3w")
+    a = query.one()
+    assert a.id == "S0L0"
+    assert a.org_key == "test"
+    assert a.threat_id == "B0RG"
+    assert a.workflow_.state == "OPEN"
+
+
+def test_query_basealert_with_time_range_create_time_as_start_end(cbcsdk_mock):
+    """Test an alert query with the create_time specified as a range which should also set the global time_range."""
+
+    def on_post(url, body, **kwargs):
+        assert body == {"query": "Blort", "criteria": {"backend_timestamp": {"range": "-3w"}}, "rows": 2,
+                        'time_range': {'range': '-3w'}}
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
+    query = api.select(BaseAlert).where("Blort").set_time_range("create_time", range="-3w")
     a = query.one()
     assert a.id == "S0L0"
     assert a.org_key == "test"
@@ -286,11 +302,12 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
                         "rows": 2,
                         "criteria": {"device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
-                                     "device_username": ["JRN"], "id": ["S0L0"],
-                                     "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
-                                     "policy_name": ["Strict"], "process_name": ["IEXPLORE.EXE"],
+                                     "device_username": ["JRN"], "id": ["S0L0", "S0L0_1"],
+                                     "minimum_severity": 6, "device_policy_id": [8675309],
+                                     "device_policy": ["Strict"], "process_name": ["IEXPLORE.EXE"],
                                      "process_sha256": ["0123456789ABCDEF0123456789ABCDEF"],
-                                     "reputation": ["SUSPECT_MALWARE"], "tag": ["Frood"], "target_value": ["HIGH"],
+                                     "process_reputation": ["SUSPECT_MALWARE"], "tags": ["Frood"],
+                                     "device_target_value": ["HIGH"],
                                      "threat_id": ["B0RG"], "type": ["CB_ANALYTICS"], "workflow": ["OPEN"],
                                      "device_location": ["ONSITE"], "policy_applied": ["APPLIED"],
                                      "reason_code": ["ATTACK_VECTOR"], "run_state": ["RAN"], "sensor_action": ["DENY"]},
@@ -303,7 +320,7 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
 
     query = api.select(CBAnalyticsAlert).where("Blort") \
         .set_device_ids([6023]).set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
-        .set_device_username(["JRN"]).set_alert_ids(["S0L0"]).set_legacy_alert_ids(["S0L0_1"]) \
+        .set_device_username(["JRN"]).set_alert_ids(["S0L0", "S0L0_1"])\
         .set_minimum_severity(6).set_policy_ids([8675309]).set_policy_names(["Strict"]) \
         .set_process_names(["IEXPLORE.EXE"]).set_process_sha256(["0123456789ABCDEF0123456789ABCDEF"]) \
         .set_reputations(["SUSPECT_MALWARE"]).set_tags(["Frood"]).set_target_priorities(["HIGH"]) \
@@ -358,15 +375,16 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
                         "rows": 2,
-                        "criteria": {"device_id": [6023], "device_name": ["HAL"],
+                        "criteria": {"device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
-                                     "device_username": ["JRN"], "id": ["S0L0"],
-                                     "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
-                                     "policy_name": ["Strict"], "process_name": ["IEXPLORE.EXE"],
+                                     "device_username": ["JRN"], "id": ["S0L0", "S0L0_1"],
+                                     "minimum_severity": 6, "device_policy_id": [8675309],
+                                     "device_policy": ["Strict"], "process_name": ["IEXPLORE.EXE"],
                                      "process_sha256": ["0123456789ABCDEF0123456789ABCDEF"],
-                                     "reputation": ["SUSPECT_MALWARE"], "tag": ["Frood"], "target_value": ["HIGH"],
+                                     "process_reputation": ["SUSPECT_MALWARE"], "tags": ["Frood"],
+                                     "device_target_value": ["HIGH"],
                                      "threat_id": ["B0RG"], "type": ["DEVICE_CONTROL"], "workflow": ["OPEN"],
-                                     "external_device_friendly_name": ["/dev/ice"], "external_device_id": ["626"],
+                                     "external_device_friendly_name": ["/dev/ice"], "device_id": ["626"],
                                      "product_id": ["0x5581"], "product_name": ["Ultra"],
                                      "serial_number": ["4C531001331122115172"], "vendor_id": ["0x0781"],
                                      "vendor_name": ["SanDisk"]},
@@ -377,8 +395,10 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
+    # in Alert v7 on a Device Control alert, the device_id is the USB device id.
+    # external_device_id does not exist, therefore it's not valid to set both device_id and external_device_id
     query = api.select(DeviceControlAlert).where("Blort") \
-        .set_device_ids([6023]).set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
+        .set_device_names(["HAL"]).set_device_os(["LINUX"]).set_device_os_versions(["0.1.2"]) \
         .set_device_username(["JRN"]).set_alert_ids(["S0L0"]) \
         .set_legacy_alert_ids(["S0L0_1"]).set_minimum_severity(6).set_policy_ids([8675309]) \
         .set_policy_names(["Strict"]).set_process_names(["IEXPLORE.EXE"]) \
@@ -439,11 +459,12 @@ def test_query_watchlistalert_with_all_bells_and_whistles(cbcsdk_mock):
                         "rows": 2,
                         "criteria": {"device_id": [6023], "device_name": ["HAL"],
                                      "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
-                                     "device_username": ["JRN"], "id": ["S0L0"],
-                                     "legacy_alert_id": ["S0L0_1"], "minimum_severity": 6, "policy_id": [8675309],
-                                     "policy_name": ["Strict"], "process_name": ["IEXPLORE.EXE"],
+                                     "device_username": ["JRN"], "id": ["S0L0", "S0L0_1"],
+                                     "minimum_severity": 6, "device_policy_id": [8675309],
+                                     "device_policy": ["Strict"], "process_name": ["IEXPLORE.EXE"],
                                      "process_sha256": ["0123456789ABCDEF0123456789ABCDEF"],
-                                     "reputation": ["SUSPECT_MALWARE"], "tag": ["Frood"], "target_value": ["HIGH"],
+                                     "process_reputation": ["SUSPECT_MALWARE"], "tags": ["Frood"],
+                                     "device_target_value": ["HIGH"],
                                      "threat_id": ["B0RG"], "type": ["WATCHLIST"], "workflow": ["OPEN"],
                                      "watchlist_id": ["100"], "watchlist_name": ["Gandalf"]},
                         "sort": [{"field": "name", "order": "DESC"}]}
@@ -502,12 +523,13 @@ def test_query_containeralert_with_all_bells_and_whistles(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
                         "rows": 2,
-                        "criteria": {"cluster_name": ["TURTLE"], 'type': ['CONTAINER_RUNTIME'], "namespace": ["RG"],
-                                     "workload_id": ["1234"], "workload_name": ["BUNNY"], "replica_id": ["FAKE"],
-                                     "remote_ip": ["10.29.99.1"], "remote_domain": ["example.com"], "protocol": ["TCP"],
-                                     "port": [12345], "egress_group_id": ["5150"], "egress_group_name": ["EGRET"],
-                                     "ip_reputation": [75], "rule_id": ["66"], "rule_name": ["KITTEH"],
-                                     "workload_kind": ["Job"]},
+                        "criteria": {"k8s_cluster": ["TURTLE"], 'type': ['CONTAINER_RUNTIME'], "k8s_namespace": ["RG"],
+                                     "k8s_workload_name": ["BUNNY"], "k8s_pod_name": ["FAKE"],
+                                     "netconn_remote_ip": ["10.29.99.1"], "netconn_remote_domain": ["example.com"],
+                                     "netconn_protocol": ["TCP"], "netconn_local_port": [12345],
+                                     "egress_group_id": ["5150"], "egress_group_name": ["EGRET"],
+                                     "ip_reputation": [75], "k8s_rule_id": ["66"], "k8s_rule": ["KITTEH"],
+                                     "k8s_kind": ["Job"]},
                         "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"state": "OPEN"}}], "num_found": 1}
@@ -516,7 +538,7 @@ def test_query_containeralert_with_all_bells_and_whistles(cbcsdk_mock):
     api = cbcsdk_mock.api
 
     query = api.select(ContainerRuntimeAlert).where("Blort").set_cluster_names(['TURTLE']).set_namespaces(['RG']) \
-        .set_workload_kinds(['Job']).set_workload_ids(['1234']).set_workload_names(['BUNNY']) \
+        .set_workload_kinds(['Job']).set_workload_names(['BUNNY']) \
         .set_replica_ids(['FAKE']).set_remote_ips(['10.29.99.1']).set_remote_domains(['example.com']) \
         .set_protocols(['TCP']).set_ports([12345]).set_egress_group_ids(['5150']).set_egress_group_names(['EGRET']) \
         .set_ip_reputations([75]).set_rule_ids(['66']).set_rule_names(['KITTEH']).sort_by("name", "DESC")
@@ -531,7 +553,6 @@ def test_query_containeralert_with_all_bells_and_whistles(cbcsdk_mock):
     ("set_cluster_names", [12345]),
     ("set_namespaces", [12345]),
     ("set_workload_kinds", [12345]),
-    ("set_workload_ids", [12345]),
     ("set_workload_names", [12345]),
     ("set_replica_ids", [12345]),
     ("set_remote_ips", [12345]),
@@ -557,9 +578,7 @@ def test_query_set_rows(cbcsdk_mock):
 
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
-                        "criteria": {},
                         "rows": 10000,
-                        "start": 1,
                         "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"state": "OPEN"}}], "num_found": 1}
@@ -572,6 +591,7 @@ def test_query_set_rows(cbcsdk_mock):
         assert a.id == "S0L0"
         assert a.org_key == "test"
         assert a.threat_id == "B0RG"
+
 
 # TODO replace bulk tests
 # def test_alerts_bulk_dismiss(cbcsdk_mock):
@@ -690,14 +710,14 @@ def test_query_set_rows(cbcsdk_mock):
 def test_get_process(cbcsdk_mock):
     """Test of getting process through a WatchlistAlert"""
     # mock the alert request
-    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/6b2348cb-87c1-4076-bc8e-7c717e8af608",
+    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/887e6bbc-6224-4f36-ad37-084038b7fcab",
                              GET_ALERT_TYPE_WATCHLIST)
     # mock the search validation
     cbcsdk_mock.mock_request("GET",
                              "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=WNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&q=process_guid%3AWNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&query=process_guid%3AWNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
+                             "process_guid=ABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
+                             "q=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
+                             "query=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
                              GET_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
@@ -710,15 +730,9 @@ def test_get_process(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
                                      "2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=500"),
                              GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT)
-    # mock the POST of a summary search (using same Job ID)
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/summary_jobs",
-                             POST_PROCESS_SEARCH_JOB_RESP)
-    # mock the GET to get summary search results
-    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
-                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
-                             GET_PROCESS_SUMMARY_STR)
+
     api = cbcsdk_mock.api
-    alert = api.select(WatchlistAlert, "6b2348cb-87c1-4076-bc8e-7c717e8af608")
+    alert = api.select(WatchlistAlert, "887e6bbc-6224-4f36-ad37-084038b7fcab")
     process = alert.get_process()
     assert isinstance(process, Process)
     assert process.process_guid == "WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00"
@@ -727,14 +741,14 @@ def test_get_process(cbcsdk_mock):
 def test_get_process_zero_found(cbcsdk_mock):
     """Test of getting process through a WatchlistAlert"""
     # mock the alert request
-    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
+    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/887e6bbc-6224-4f36-ad37-084038b7fcab",
                              GET_ALERT_TYPE_WATCHLIST)
     # mock the search validation
     cbcsdk_mock.mock_request("GET",
                              "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=WNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&q=process_guid%3AWNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&query=process_guid%3AWNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
+                             "process_guid=ABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
+                             "q=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
+                             "query=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
                              GET_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
@@ -748,7 +762,7 @@ def test_get_process_zero_found(cbcsdk_mock):
                                      "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=500"),
                              GET_PROCESS_NOT_FOUND)
     api = cbcsdk_mock.api
-    alert = api.select(WatchlistAlert, "86123310980efd0b38111eba4bfa5e98aa30b19")
+    alert = api.select(WatchlistAlert, "887e6bbc-6224-4f36-ad37-084038b7fcab")
     process = alert.get_process()
     assert not process
 
@@ -785,14 +799,14 @@ def test_get_process_raises_api_error(cbcsdk_mock):
 def test_get_process_async(cbcsdk_mock):
     """Test of getting process through a WatchlistAlert async"""
     # mock the alert request
-    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/6b2348cb-87c1-4076-bc8e-7c717e8af608",
+    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/887e6bbc-6224-4f36-ad37-084038b7fcab",
                              GET_ALERT_TYPE_WATCHLIST)
     # mock the search validation
     cbcsdk_mock.mock_request("GET",
                              "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=WNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&q=process_guid%3AWNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&query=process_guid%3AWNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
+                             "process_guid=ABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
+                             "q=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
+                             "query=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
                              GET_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
@@ -813,7 +827,7 @@ def test_get_process_async(cbcsdk_mock):
                                      "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
                              GET_PROCESS_SUMMARY_STR)
     api = cbcsdk_mock.api
-    alert = api.select(WatchlistAlert, "6b2348cb-87c1-4076-bc8e-7c717e8af608")
+    alert = api.select(WatchlistAlert, "887e6bbc-6224-4f36-ad37-084038b7fcab")
     process = alert.get_process(async_mode=True).result()
     assert isinstance(process, Process)
     assert process.process_guid == "WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00"
@@ -824,143 +838,10 @@ def test_get_events(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET",
                              "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
                              GET_ALERT_RESP)
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
-                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b/results",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ALERTS)
-
     api = cbcsdk_mock.api
     alert = api.select(CBAnalyticsAlert, '86123310980efd0b38111eba4bfa5e98aa30b19')
-    events = alert.get_events()
-    assert len(events) == 2
-    for event in events:
-        assert event.alert_id == ['62802DCE']
-
-
-def test_get_events_zero_found(cbcsdk_mock):
-    """Test get_events method - zero enriched events found"""
-    cbcsdk_mock.mock_request("GET",
-                             "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
-                             GET_ALERT_RESP)
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
-                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b/results",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_ZERO)
-
-    api = cbcsdk_mock.api
-    alert = api.select(CBAnalyticsAlert, '86123310980efd0b38111eba4bfa5e98aa30b19')
-    events = alert.get_events()
-    assert len(events) == 0
-
-
-def test_get_events_timeout(cbcsdk_mock):
-    """Test that get_events() throws a timeout appropriately."""
-    cbcsdk_mock.mock_request("GET",
-                             "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
-                             GET_ALERT_RESP)
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
-                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING)
-
-    api = cbcsdk_mock.api
-    alert = api.select(CBAnalyticsAlert, '86123310980efd0b38111eba4bfa5e98aa30b19')
-    with pytest.raises(TimeoutError):
-        alert.get_events(timeout=1)
-
-
-def test_get_events_detail_jobs_resp_handling(cbcsdk_mock):
-    """Test get_events method - different resps from details jobs request"""
-    called = 0
-
-    def get_validate(*args):
-        nonlocal called
-        called += 1
-        if called == 1:
-            return GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING
-        if called == 2:
-            return GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ZERO_COMP
-        return GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP
-
-    cbcsdk_mock.mock_request("GET",
-                             "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
-                             GET_ALERT_RESP)
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
-                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b",
-                             # noqa: E501
-                             get_validate)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b/results",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ALERTS)
-
-    api = cbcsdk_mock.api
-    alert = api.select(CBAnalyticsAlert, '86123310980efd0b38111eba4bfa5e98aa30b19')
-    events = alert.get_events()
-    assert len(events) == 2
-    for event in events:
-        assert event.alert_id == ['62802DCE']
-
-
-def test_get_events_invalid_alert_id(cbcsdk_mock):
-    """Test get_events method with invalid alert_id"""
-    cbcsdk_mock.mock_request("GET",
-                             "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
-                             GET_ALERT_RESP_INVALID_ALERT_ID)
-
-    api = cbcsdk_mock.api
-    alert = api.select(CBAnalyticsAlert, '86123310980efd0b38111eba4bfa5e98aa30b19')
-    with pytest.raises(ApiError):
+    with pytest.raises(FunctionalityDecommissioned):
         alert.get_events()
-
-
-def test_get_events_async(cbcsdk_mock):
-    """Test async get_events method"""
-    cbcsdk_mock.mock_request("GET",
-                             "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
-                             GET_ALERT_RESP)
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/enriched_events/detail_jobs",
-                             POST_ENRICHED_EVENTS_SEARCH_JOB_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v2/orgs/test/enriched_events/detail_jobs/08ffa932-b633-4107-ba56"
-                             "-8741e929e48b/results",
-                             # noqa: E501
-                             GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ALERTS)
-
-    api = cbcsdk_mock.api
-    alert = api.select(CBAnalyticsAlert, '86123310980efd0b38111eba4bfa5e98aa30b19')
-    events = alert.get_events(async_mode=True).result()
-    assert len(events) == 2
-    for event in events:
-        assert event.alert_id == ['62802DCE']
 
 
 def test_query_basealert_with_time_range_errors(cbcsdk_mock):
@@ -968,7 +849,7 @@ def test_query_basealert_with_time_range_errors(cbcsdk_mock):
     api = cbcsdk_mock.api
     with pytest.raises(ApiError) as ex:
         api.select(BaseAlert).where("Blort").set_time_range("invalid", range="whatever")
-    assert "key must be one of create_time, first_event_time, last_event_time, backend_timestamp, "\
+    assert "key must be one of create_time, first_event_time, last_event_time, backend_timestamp, " \
            "backend_update_timestamp, or last_update_time" in str(ex.value)
 
     with pytest.raises(ApiError) as ex:
@@ -1010,39 +891,40 @@ def test_query_basealert_facets_error(cbcsdk_mock):
 def test_get_notes_for_alert(cbcsdk_mock):
     """Test retrieving notes for an alert"""
     cbcsdk_mock.mock_request('GET',
-                             "/api/alerts/v7/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35",
+                             "/api/alerts/v7/orgs/test/alerts/52dbd1b6-539b-a3f7-34bd-f6eb13a99b81",
                              GET_ALERT_RESP_WITH_NOTES)
 
     cbcsdk_mock.mock_request('GET',
-                             "/api/alerts/v7/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35/notes",
+                             "/api/alerts/v7/orgs/test/alerts/52dbd1b6-539b-a3f7-34bd-f6eb13a99b81/notes",
                              GET_ALERT_NOTES)
 
     api = cbcsdk_mock.api
-    alert = api.select(BaseAlert, "1ba0c35f-9c01-4413-afd8-fe4f01365e35")
+    alert = api.select(BaseAlert, "52dbd1b6-539b-a3f7-34bd-f6eb13a99b81")
     notes = alert.notes_()
     assert len(notes) == 2
     assert notes[0].author == "Grogu"
-    assert notes[0].id == "1"
-    assert notes[0].create_time == "2021-05-13T00:20:46.474Z"
-    assert notes[0].note == "I am a note"
+    assert notes[0].id == "3gsgsfds"
+    assert notes[0].create_time == "2023-04-18T03:25:44.397Z"
+    assert notes[0].note == "I am Grogu"
 
 
 def test_base_alert_create_note(cbcsdk_mock):
     """Test creating a new note on an alert"""
+
     def on_post(url, body, **kwargs):
         body == {"note": "I am Grogu"}
-        return CREATE_ALERT_NOTE
+        return CREATE_ALERT_NOTE_RESP
 
     cbcsdk_mock.mock_request('GET',
-                             "/api/alerts/v7/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35",
+                             "/api/alerts/v7/orgs/test/alerts/52dbd1b6-539b-a3f7-34bd-f6eb13a99b81",
                              GET_ALERT_RESP_WITH_NOTES)
 
     cbcsdk_mock.mock_request('POST',
-                             "/api/alerts/v7/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35/notes",
+                             "/api/alerts/v7/orgs/test/alerts/52dbd1b6-539b-a3f7-34bd-f6eb13a99b81/notes",
                              on_post)
 
     api = cbcsdk_mock.api
-    alert = api.select(BaseAlert, "1ba0c35f-9c01-4413-afd8-fe4f01365e35")
+    alert = api.select(BaseAlert, "52dbd1b6-539b-a3f7-34bd-f6eb13a99b81")
     note = alert.create_note("I am Grogu")
     assert note[0].note == "I am Grogu"
 
@@ -1050,19 +932,19 @@ def test_base_alert_create_note(cbcsdk_mock):
 def test_base_alert_delete_note(cbcsdk_mock):
     """Test deleting a note from an alert"""
     cbcsdk_mock.mock_request('GET',
-                             "/api/alerts/v7/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35",
+                             "/api/alerts/v7/orgs/test/alerts/52dbd1b6-539b-a3f7-34bd-f6eb13a99b81",
                              GET_ALERT_RESP_WITH_NOTES)
 
     cbcsdk_mock.mock_request('GET',
-                             "/api/alerts/v7/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35/notes",
+                             "/api/alerts/v7/orgs/test/alerts/52dbd1b6-539b-a3f7-34bd-f6eb13a99b81/notes",
                              GET_ALERT_NOTES)
 
     cbcsdk_mock.mock_request('DELETE',
-                             "/api/alerts/v7/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35/notes/1",
+                             "/api/alerts/v7/orgs/test/alerts/52dbd1b6-539b-a3f7-34bd-f6eb13a99b81/notes/3gsgsfds",
                              None)
 
     api = cbcsdk_mock.api
-    alert = api.select(BaseAlert, "1ba0c35f-9c01-4413-afd8-fe4f01365e35")
+    alert = api.select(BaseAlert, "52dbd1b6-539b-a3f7-34bd-f6eb13a99b81")
     notes = alert.notes_()
     notes[0].delete()
     assert notes[0]._is_deleted
@@ -1078,15 +960,15 @@ def test_base_alert_unsupported_query_notes(cbcsdk_mock):
 def test_base_alert_refresh_note(cbcsdk_mock):
     """Testing single note refresh"""
     cbcsdk_mock.mock_request('GET',
-                             "/api/alerts/v7/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35",
+                             "/api/alerts/v7/orgs/test/alerts/52dbd1b6-539b-a3f7-34bd-f6eb13a99b81",
                              GET_ALERT_RESP_WITH_NOTES)
 
     cbcsdk_mock.mock_request('GET',
-                             "/api/alerts/v7/orgs/test/alerts/1ba0c35f-9c01-4413-afd8-fe4f01365e35/notes",
+                             "/api/alerts/v7/orgs/test/alerts/52dbd1b6-539b-a3f7-34bd-f6eb13a99b81/notes",
                              GET_ALERT_NOTES)
 
     api = cbcsdk_mock.api
-    alert = api.select(BaseAlert, "1ba0c35f-9c01-4413-afd8-fe4f01365e35")
+    alert = api.select(BaseAlert, "52dbd1b6-539b-a3f7-34bd-f6eb13a99b81")
     notes = alert.notes_()
     assert notes[0]._refresh() is True
 
@@ -1107,3 +989,20 @@ def test_alert_search_suggestions_api_error():
     """Tests getting alert search suggestions - no CBCloudAPI arg"""
     with pytest.raises(ApiError):
         BaseAlert.search_suggestions("", "")
+
+
+def test_set_types(cbcsdk_mock):
+    """Tests that when an invalid alert type is entered an APIError is raised"""
+    api = cbcsdk_mock.api
+    query = api.select(BaseAlert).set_types(["CB_ANALYTICS"])
+    assert query._criteria == {'type': ['CB_ANALYTICS']}
+
+
+def test_get_attr_alert_v6_valid_attrib(cbcsdk_mock):
+    """Test the __get_attr_ method for a valid attribute."""
+    cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/12ab345cd6-e2d1-4118-8a8d-04f521ae66aa",
+                             GET_ALERT_RESP)
+    cb = cbcsdk_mock.api
+    alert = cb.select(BaseAlert, GET_ALERT_RESP.get("id"))
+
+    assert alert.policy_id == 1234567
