@@ -935,10 +935,6 @@ class WorkflowStatus(PlatformModel):
 class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, LegacyAlertSearchQueryCriterionMixin,
                        CriteriaBuilderSupportMixin):
     """Represents a query that is used to locate Alert objects."""
-    VALID_REPUTATIONS = ["KNOWN_MALWARE", "SUSPECT_MALWARE", "PUP", "NOT_LISTED", "ADAPTIVE_WHITE_LIST",
-                         "COMMON_WHITE_LIST", "TRUSTED_WHITE_LIST", "COMPANY_BLACK_LIST"]
-    VALID_ALERT_TYPES = ["CB_ANALYTICS", "DEVICE_CONTROL", "WATCHLIST", "CONTAINER_RUNTIME", "HOST_BASED_FIREWALL",
-                         "INTRUSION_DETECTION_SYSTEM"]
     # TODO verify and update if needed
     VALID_WORKFLOW_VALS = ["OPEN", "DISMISSED"]
 
