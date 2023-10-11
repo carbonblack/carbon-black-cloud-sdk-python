@@ -45,6 +45,7 @@ from tests.unit.fixtures.platform.mock_observations import (
     GET_OBSERVATIONS_DETAIL_JOB_RESULTS_RESP,
     GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING
 )
+from tests.unit.fixtures.platform.mock_alert_v6_v7_compatibility import GET_ALERT_v7_CONTAINER_RUNTIME_RESPONSE
 
 
 @pytest.fixture(scope="function")
@@ -1104,3 +1105,17 @@ def test_new_alert_type_search(cbcsdk_mock):
     alert = alert_list.first()
     assert alert.id == "MYVERYFIRSTNEWALERTTYPE0001"
     assert alert.type == "FIRST_NEW_TEST_ALERT_TYPE"
+
+
+def test_container_alert_v6_field(cbcsdk_mock):
+    """Test that when a container specific field is used it is mapped correctly on get()"""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/46b419c8-3d67-ead8-dbf1-9d8417610fac",
+                             GET_ALERT_v7_CONTAINER_RUNTIME_RESPONSE)
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, "46b419c8-3d67-ead8-dbf1-9d8417610fac")
+    print(alert.get("policy_id"))
+    print(alert.get("k8s_policy_id"))
+    print(alert.policy_id)
+    print(alert.k8s_policy_id)
+    assert alert.policy_id == alert.k8s_policy_id
