@@ -12,6 +12,7 @@
 """Tests of the Alerts V6 API queries."""
 from datetime import datetime
 import pytest
+import logging
 
 from cbc_sdk.errors import ApiError, NonQueryableModel, FunctionalityDecommissioned
 from cbc_sdk.platform import (
@@ -279,7 +280,6 @@ def test_query_basealert_invalid_create_time_combinations(cb):
     ("set_policy_names", [323]),
     ("set_process_names", [7071]),
     ("set_process_sha256", [123456789]),
-    ("set_reputations", ["MICROSOFT_FUDWARE"]),
     ("set_tags", [-1]),
     ("set_target_priorities", ["DOGWASH"]),
     ("set_threat_ids", [4096]),
@@ -292,6 +292,32 @@ def test_query_basealert_invalid_criteria_values(cb, method, arg):
     meth = getattr(query, method, None)
     with pytest.raises(ApiError):
         meth(arg)
+
+
+def test_set_reputations_warning_criteria_values(cbcsdk_mock, caplog):
+    """Test invalid reputation value in alert query where warnings rather than exceptions are raised."""
+    # Note - this will generate a 400 error from the real API if the reputation is invalid.
+    # v6 criteria "reputations" is translated to request criteria "process_reputations" for v6/v7 compatibility
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {"process_reputation": ["MICROSOFT_FUDWARE"]},
+            "rows": 1
+        }
+        return {"results": [{"org_key": "ABCD1234",
+                             "alert_url": "https://defense.conferdeploy.net/alerts?s[c][query_string]="
+                                          "id:987654321&orgKey=ABCD1234",
+                             "id": "987654321",
+                             "type": "CB_ANALYTICS",
+                             "backend_timestamp": "2023-04-14T21:30:40.570Z",
+                             "user_update_timestamp": None}],
+                "num_found": 1}
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+    caplog.set_level(logging.WARNING)
+    query = api.select(BaseAlert).set_reputations(["MICROSOFT_FUDWARE"]).set_rows(1)
+    len(query)
+    assert "Reputation value not in enumeration. May be valid as enumeration values are extended in " \
+           "Carbon Black Cloud ahead of SDK updates." in caplog.text
 
 
 def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
@@ -1006,3 +1032,29 @@ def test_get_attr_alert_v6_valid_attrib(cbcsdk_mock):
     alert = cb.select(BaseAlert, GET_ALERT_RESP.get("id"))
 
     assert alert.policy_id == 1234567
+
+
+def test_new_alert_type(cbcsdk_mock):
+    """Test legacy BaseAlert class instantiation with an alert type unknown to CBC SDK."""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {"type": ["FIRST_NEW_TEST_ALERT_TYPE"]},
+            "rows": 1
+        }
+        return {"results": [{"org_key": "ABCD1234",
+                             "alert_url": "https://defense.conferdeploy.net/alerts?s[c][query_string]="
+                                          "id:MYVERYFIRSTNEWALERTTYPE0001&orgKey=ABCD1234",
+                             "id": "MYVERYFIRSTNEWALERTTYPE0001",
+                             "type": "FIRST_NEW_TEST_ALERT_TYPE",
+                             "backend_timestamp": "2023-04-14T21:30:40.570Z",
+                             "user_update_timestamp": None}],
+                "num_found": 1}
+    cbcsdk_mock.mock_request("POST",
+                             "/api/alerts/v7/orgs/test/alerts/_search",
+                             on_post)
+    api = cbcsdk_mock.api
+    alert_list = api.select(BaseAlert).add_criteria('type', 'FIRST_NEW_TEST_ALERT_TYPE').set_rows(1)
+    assert len(alert_list) == 1
+    alert = alert_list.first()
+    assert alert.id == "MYVERYFIRSTNEWALERTTYPE0001"
+    assert alert.type == "FIRST_NEW_TEST_ALERT_TYPE"

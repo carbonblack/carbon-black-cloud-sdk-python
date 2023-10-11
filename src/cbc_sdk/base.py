@@ -1652,8 +1652,8 @@ class CriteriaBuilderSupportMixin:
             The query object with specified custom criteria.
 
         Example:
-            >>> query = api.select(Event).add_criteria("event_type", ["filemod", "scriptload"])
-            >>> query = api.select(Event).add_criteria("event_type", "filemod")
+            >>> query = api.select(Alert).add_criteria("type", ["CB_ANALYTIC", "WATCHLIST"])
+            >>> query = api.select(Alert).add_criteria("type", "CB_ANALYTIC")
         """
         if not isinstance(newlist, list):
             if not isinstance(newlist, str):
@@ -1867,8 +1867,8 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
             The ResultQuery with specified custom exclusion.
 
         Example:
-            >>> query = api.select(Event).add_exclusions("netconn_domain", ["www.google.com"])
-            >>> query = api.select(Event).add_exclusions("netconn_domain", "www.google.com")
+            >>> query = api.select(Observation).add_exclusions("netconn_domain", ["www.google.com", "www.example.com"])
+            >>> query = api.select(Observation).add_exclusions("netconn_domain", "www.google.com")
         """
         if not isinstance(newlist, list):
             if not isinstance(newlist, str):
@@ -1946,10 +1946,10 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
             - `window` will take precendent over `start` and `end` if provided.
 
         Examples:
-            >>> query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z")
-            >>> second_query = api.select(Event).
-            ...     set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
-            >>> third_query = api.select(Event).set_time_range(window='-3d')
+            >>> query = api.select(Process).set_time_range(start="2020-10-20T20:34:07Z").where("query is required")
+            >>> second_query = api.select(Process).
+            ...     set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z").where("query is required")
+            >>> third_query = api.select(Process).set_time_range(window='-3d').where("query is required")
         """
         if start:
             if not isinstance(start, str):
@@ -2124,8 +2124,8 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
             The ResultQuery with specified custom exclusion.
 
         Example:
-            >>> query = api.select(Event).add_exclusions("netconn_domain", ["www.google.com"])
-            >>> query = api.select(Event).add_exclusions("netconn_domain", "www.google.com")
+            >>> query = api.select(Observation).add_exclusions("device_external_ip", ["1,2,3,4", "5.6.7.8"])
+            >>> query = api.select(Observation).add_exclusions("device_external_ip", "1,2,3,4")
         """
         if not isinstance(newlist, list):
             if not isinstance(newlist, str):
@@ -2294,10 +2294,10 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
             - `window` will take precendent over `start` and `end` if provided.
 
         Examples:
-            >>> query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z")
-            >>> second_query = api.select(Event).
-            ...     set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
-            >>> third_query = api.select(Event).set_time_range(window='-3d')
+            >>> query = api.select(Process).set_time_range(start="2020-10-20T20:34:07Z").where("query is required")
+            >>> second_query = api.select(Process).
+            ...     set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z").where("query is required")
+            >>> third_query = api.select(Process).set_time_range(window='-3d').where("query is required")
         """
         if start:
             if not isinstance(start, str):
