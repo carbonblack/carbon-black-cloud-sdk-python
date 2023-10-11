@@ -390,3 +390,11 @@ GET_ALERT_v7_INTRUSION_DETECTION_SYSTEM_RESPONSE = {
     "tms_rule_id": "4b98443a-ba0d-4ff5-b99e-e5e70432a214",
     "threat_name": "CVE-2021-44228 Exploit"
 }
+
+GET_NEW_ALERT_TYPE_RESP = {"org_key": "ABCD1234",
+                           "alert_url": "https://defense.conferdeploy.net/alerts?s[c][query_string]="
+                                        "id:MYVERYFIRSTNEWALERTTYPE0001&orgKey=ABCD1234",
+                           "id": "MYVERYFIRSTNEWALERTTYPE0001",
+                           "type": "FIRST_NEW_TEST_ALERT_TYPE",
+                           "backend_timestamp": "2023-04-14T21:30:40.570Z",
+                           "user_update_timestamp": None}
