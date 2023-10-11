@@ -53,7 +53,6 @@ from tests.unit.fixtures.platform.mock_observations import (
     GET_OBSERVATIONS_DETAIL_JOB_RESULTS_RESP,
     GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING
 )
-from tests.unit.fixtures.platform.mock_alert_v6_v7_compatibility import GET_ALERT_v7_CONTAINER_RUNTIME_RESPONSE
 
 from tests.unit.fixtures.platform.mock_alert_v6_v7_compatibility import (
     GET_ALERT_v7_CB_ANALYTICS_RESPONSE,
@@ -1080,6 +1079,7 @@ def test_get_observations_with_timeout(cbcsdk_mock):
         alert.get_observations(timeout=1)
         print("the end")
 
+
 def test_alert_subtype_alert_class(cbcsdk_mock):
     """Test Alert class instantiation."""
     cbcsdk_mock.mock_request("GET",
@@ -1248,6 +1248,7 @@ def test_alert_subtype_invalid_string_class(cbcsdk_mock):
     api = cbcsdk_mock.api
     with (pytest.raises(ModelNotFound)):
         api.select('invalidAlertType', 'ca316d99-a808-3779-8aab-62b2b6d9541c')
+
 
 def test_new_alert_type(cbcsdk_mock):
     """Test Alert class instantiation with an alert type unknown to CBC SDK."""
