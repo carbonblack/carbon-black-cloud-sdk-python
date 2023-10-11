@@ -14,10 +14,17 @@ from datetime import datetime
 
 import pytest
 
-from cbc_sdk.errors import ApiError, TimeoutError, NonQueryableModel
+from cbc_sdk.errors import ApiError, TimeoutError, NonQueryableModel, ModelNotFound
 from cbc_sdk.platform import (
+    BaseAlert,
     Alert,
-    WatchlistAlert, ContainerRuntimeAlert, Process,
+    CBAnalyticsAlert,
+    WatchlistAlert,
+    ContainerRuntimeAlert,
+    HostBasedFirewallAlert,
+    IntrusionDetectionSystemAlert,
+    DeviceControlAlert,
+    Process
 )
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -29,6 +36,7 @@ from tests.unit.fixtures.platform.mock_alerts_v7 import (
     GET_ALERT_NOTES,
     CREATE_ALERT_NOTE_RESP,
     GET_ALERT_RESP,
+    GET_ALERT_v7_INTRUSION_DETECTION_SYSTEM_RESPONSE,
     GET_NEW_ALERT_TYPE_RESP
 )
 from tests.unit.fixtures.platform.mock_process import (
@@ -38,12 +46,20 @@ from tests.unit.fixtures.platform.mock_process import (
     GET_PROCESS_SEARCH_JOB_RESULTS_RESP,
     GET_PROCESS_SUMMARY_STR,
     GET_PROCESS_NOT_FOUND,
-    GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT_V7,
+    GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT_V7
 )
 from tests.unit.fixtures.platform.mock_observations import (
     POST_OBSERVATIONS_SEARCH_JOB_RESP,
     GET_OBSERVATIONS_DETAIL_JOB_RESULTS_RESP,
     GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING
+)
+
+from tests.unit.fixtures.platform.mock_alert_v6_v7_compatibility import (
+    GET_ALERT_v7_CB_ANALYTICS_RESPONSE,
+    GET_ALERT_v7_WATCHLIST_RESPONSE,
+    GET_ALERT_v7_DEVICE_CONTROL_RESPONSE,
+    GET_ALERT_v7_HBFW_RESPONSE,
+    GET_ALERT_v7_CONTAINER_RUNTIME_RESPONSE
 )
 
 
@@ -1042,7 +1058,7 @@ def test_get_observations_invalid(cbcsdk_mock):
 
 
 def test_get_observations_with_timeout(cbcsdk_mock):
-    """Test tget_observations method."""
+    """Test get_observations method."""
     cbcsdk_mock.mock_request("GET",
                              "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
                              GET_ALERT_RESP)
@@ -1063,6 +1079,174 @@ def test_get_observations_with_timeout(cbcsdk_mock):
         alert.get_observations(timeout=1)
         print("the end")
 
+def test_alert_subtype_alert_class(cbcsdk_mock):
+    """Test Alert class instantiation."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, '6f1173f5-f921-8e11-2160-edf42b799333')
+    assert isinstance(alert, Alert)
+
+
+def test_alert_subtype_alert_string_class(cbcsdk_mock):
+    """Test Alert class using string instantiation."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+    api = cbcsdk_mock.api
+    alert = api.select('Alert', '6f1173f5-f921-8e11-2160-edf42b799333')
+    assert isinstance(alert, Alert)
+
+
+def test_alert_subtype_basealert_class(cbcsdk_mock):
+    """Test BaseAlert class instantiation."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+    api = cbcsdk_mock.api
+    alert = api.select(BaseAlert, '6f1173f5-f921-8e11-2160-edf42b799333')
+    assert isinstance(alert, BaseAlert)
+
+
+def test_alert_subtype_basealert_string_class(cbcsdk_mock):
+    """Test BaseAlert class using string instantiation."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+    api = cbcsdk_mock.api
+    alert = api.select('BaseAlert', '6f1173f5-f921-8e11-2160-edf42b799333')
+    assert isinstance(alert, BaseAlert)
+
+
+def test_alert_subtype_cbanalyticsalert_class(cbcsdk_mock):
+    """Test CBAnalyticsAlert class instantiation."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+    api = cbcsdk_mock.api
+    alert = api.select(CBAnalyticsAlert, '6f1173f5-f921-8e11-2160-edf42b799333')
+    assert isinstance(alert, CBAnalyticsAlert)
+
+
+def test_alert_subtype_cbanalyticsalert_string_class(cbcsdk_mock):
+    """Test CBAnalyticsAlert class using string instantiation."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+    api = cbcsdk_mock.api
+    alert = api.select('CBAnalyticsAlert', '6f1173f5-f921-8e11-2160-edf42b799333')
+    assert isinstance(alert, CBAnalyticsAlert)
+
+
+def test_alert_subtype_watchlistalert_class(cbcsdk_mock):
+    """Test WatchlistAlert class instantiation."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/f6af290d-6a7f-461c-a8af-cf0d24311105",
+                             GET_ALERT_v7_WATCHLIST_RESPONSE)
+    api = cbcsdk_mock.api
+    alert = api.select(WatchlistAlert, 'f6af290d-6a7f-461c-a8af-cf0d24311105')
+    assert isinstance(alert, WatchlistAlert)
+
+
+def test_alert_subtype_watchlistalert_string_class(cbcsdk_mock):
+    """Test WatchlistAlert class as string instantiation."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/f6af290d-6a7f-461c-a8af-cf0d24311105",
+                             GET_ALERT_v7_WATCHLIST_RESPONSE)
+    api = cbcsdk_mock.api
+    alert = api.select('WatchlistAlert', 'f6af290d-6a7f-461c-a8af-cf0d24311105')
+    assert isinstance(alert, WatchlistAlert)
+
+
+def test_alert_subtype_devicecontrolalert_class(cbcsdk_mock):
+    """Test DeviceControlAlert class instantiation."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/b6a7e48b-1d14-11ee-a9e0-888888888788",
+                             GET_ALERT_v7_DEVICE_CONTROL_RESPONSE)
+    api = cbcsdk_mock.api
+    alert = api.select(DeviceControlAlert, 'b6a7e48b-1d14-11ee-a9e0-888888888788')
+    assert isinstance(alert, DeviceControlAlert)
+
+
+def test_alert_subtype_devicecontrolalert_string_class(cbcsdk_mock):
+    """Test DeviceControlAlert class as string instantiation."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/b6a7e48b-1d14-11ee-a9e0-888888888788",
+                             GET_ALERT_v7_DEVICE_CONTROL_RESPONSE)
+    api = cbcsdk_mock.api
+    alert = api.select('DeviceControlAlert', 'b6a7e48b-1d14-11ee-a9e0-888888888788')
+    assert isinstance(alert, DeviceControlAlert)
+
+
+def test_alert_subtype_hostbasedfirewallalert_class(cbcsdk_mock):
+    """Test HostBasedFirewallAlert class instantiation."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/2be0652f-20bc-3311-9ded-8b873e28d830",
+                             GET_ALERT_v7_HBFW_RESPONSE)
+    api = cbcsdk_mock.api
+    alert = api.select(HostBasedFirewallAlert, '2be0652f-20bc-3311-9ded-8b873e28d830')
+    assert isinstance(alert, HostBasedFirewallAlert)
+
+
+def test_alert_subtype_hostbasedfirewallalert_string_class(cbcsdk_mock):
+    """Test HostBasedFirewallAlert class as string instantiation."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/2be0652f-20bc-3311-9ded-8b873e28d830",
+                             GET_ALERT_v7_HBFW_RESPONSE)
+    api = cbcsdk_mock.api
+    alert = api.select('HostBasedFirewallAlert', '2be0652f-20bc-3311-9ded-8b873e28d830')
+    assert isinstance(alert, HostBasedFirewallAlert)
+
+
+def test_alert_subtype_containerruntimealert_class(cbcsdk_mock):
+    """Test ContainerRuntimeAlert class instantiation."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/46b419c8-3d67-ead8-dbf1-9d8417610fac",
+                             GET_ALERT_v7_CONTAINER_RUNTIME_RESPONSE)
+    api = cbcsdk_mock.api
+    alert = api.select(ContainerRuntimeAlert, '46b419c8-3d67-ead8-dbf1-9d8417610fac')
+    assert isinstance(alert, ContainerRuntimeAlert)
+
+
+def test_alert_subtype_containerruntimealert_string_class(cbcsdk_mock):
+    """Test ContainerRuntimeAlert class as string instantiation."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/46b419c8-3d67-ead8-dbf1-9d8417610fac",
+                             GET_ALERT_v7_CONTAINER_RUNTIME_RESPONSE)
+    api = cbcsdk_mock.api
+    alert = api.select('ContainerRuntimeAlert', '46b419c8-3d67-ead8-dbf1-9d8417610fac')
+    assert isinstance(alert, ContainerRuntimeAlert)
+
+
+def test_alert_subtype_intrusiondetectionsystemalert_class(cbcsdk_mock):
+    """Test IntrusionDetectionSystemAlert class instantiation."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/ca316d99-a808-3779-8aab-62b2b6d9541c",
+                             GET_ALERT_v7_INTRUSION_DETECTION_SYSTEM_RESPONSE)
+    api = cbcsdk_mock.api
+    alert = api.select(IntrusionDetectionSystemAlert, 'ca316d99-a808-3779-8aab-62b2b6d9541c')
+    assert isinstance(alert, IntrusionDetectionSystemAlert)
+
+
+def test_alert_subtype_intrusiondetectionsystemalert_string_class(cbcsdk_mock):
+    """Test IntrusionDetectionSystemAlert class as string instantiation."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/ca316d99-a808-3779-8aab-62b2b6d9541c",
+                             GET_ALERT_v7_INTRUSION_DETECTION_SYSTEM_RESPONSE)
+    api = cbcsdk_mock.api
+    alert = api.select('IntrusionDetectionSystemAlert', 'ca316d99-a808-3779-8aab-62b2b6d9541c')
+    assert isinstance(alert, IntrusionDetectionSystemAlert)
+
+
+def test_alert_subtype_invalid_string_class(cbcsdk_mock):
+    """Test invalidAlertType class as string instantiation."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/ca316d99-a808-3779-8aab-62b2b6d9541c",
+                             GET_ALERT_v7_INTRUSION_DETECTION_SYSTEM_RESPONSE)
+    api = cbcsdk_mock.api
+    with (pytest.raises(ModelNotFound)):
+        api.select('invalidAlertType', 'ca316d99-a808-3779-8aab-62b2b6d9541c')
 
 def test_new_alert_type(cbcsdk_mock):
     """Test Alert class instantiation with an alert type unknown to CBC SDK."""
