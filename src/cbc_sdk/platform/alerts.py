@@ -515,7 +515,7 @@ class Alert(PlatformModel):
                     "Alerts v7. In SDK 1.5.0 the".format(item, self.__class__.__name__))
 
             item = Alert.REMAPPED_ALERTS_V6_TO_V7.get(item, item)
-            if Alert.get("type") == "CONTAINER_RUNTIME":
+            if self.get("type") == "CONTAINER_RUNTIME":
                 item = Alert.REMAPPED_CONTAINER_ALERTS_V6_TO_V7.get(original_item, item)
             return super(Alert, self).__getattr__(item)
         except AttributeError:
