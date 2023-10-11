@@ -1656,8 +1656,8 @@ class CriteriaBuilderSupportMixin:
             >>> query = api.select(Event).add_criteria("event_type", "filemod")
         """
         if not isinstance(newlist, list):
-            if not isinstance(newlist, str) and not isinstance(newlist, int):
-                raise ApiError("Criteria value(s) must be a string, int or list of strings or ints. "
+            if not isinstance(newlist, str):
+                raise ApiError("Criteria value(s) must be a string or list of strings. "
                                f"{newlist} is a {type(newlist)}.")
             self._update_criteria(key, [newlist], overwrite=True)
         else:
