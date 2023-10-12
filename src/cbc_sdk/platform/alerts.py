@@ -1047,6 +1047,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             key (str): The key to use for criteria one of create_time, first_event_time, last_event_time,
              backend_timestamp, backend_update_timestamp, or last_update_time
             **kwargs (dict): Used to specify:
+
                 * start= for start time
                 * end= for end time
                 * range= for range
