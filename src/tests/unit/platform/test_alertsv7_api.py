@@ -1281,7 +1281,6 @@ def test_new_alert_type_search(cbcsdk_mock):
                              "backend_timestamp": "2023-04-14T21:30:40.570Z",
                              "user_update_timestamp": None}],
                 "num_found": 1}
-
     cbcsdk_mock.mock_request("POST",
                              "/api/alerts/v7/orgs/test/alerts/_search",
                              on_post)
@@ -1439,9 +1438,78 @@ def test_exclusion_threat_notes_present(cbcsdk_mock):
     # no assertions, the check is that the post request is formed correctly.
 
 
+def test_add_time_criteria_detection_timestamp(cbcsdk_mock):
+    """Test an alert query with the detection timestamp specified as a range."""
+
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "detection_timestamp": {
+                    "range": "-2h"
+                }
+            },
+            "rows": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "type": "CB_ANALYTICS"}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+    alerts = api.select(Alert).add_time_criteria("detection_timestamp", range="-2h").set_rows(1)
+    len(alerts)
+
+
+def test_exclusion_detection_timestamp(cbcsdk_mock):
+    """Test a timerange object in exclusions"""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "exclusions": {
+                "detection_timestamp": {
+                    "range": "-2h"
+                }
+            },
+            "rows": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "type": "WATCHLIST"}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
+    alerts = api.select(Alert).add_time_criteria("detection_timestamp", range="-2h", exclude=True).set_rows(1)
+    len(alerts)
+
+
+def test_all_timestamp_positions(cbcsdk_mock):
+    """Test a request with time_range, a timestamp in criteria and a timestamp in exclusions"""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "time_range": {
+                "range": "-1m"
+            },
+            "criteria": {
+                "detection_timestamp": {
+                    "range": "-2d"
+                }
+            },
+            "exclusions": {
+                "backend_update_timestamp": {
+                    "range": "-3h"
+                }
+            },
+            "rows": 1
+        }
+        return {"results": [{"id": "S0L0", "org_key": "test", "type": "WATCHLIST"}], "num_found": 1}
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+    alerts = api.select(Alert).set_time_range(range="-1m"). \
+        add_time_criteria("detection_timestamp", range="-2d", exclude=False).\
+        add_time_criteria("backend_update_timestamp", range="-3h", exclude=True).\
+        set_rows(1)
+    len(alerts)
+
+
 def test_exclusion_invalid_attrib(cbcsdk_mock):
     """Test an invalid exclusion field in an array.  No error, backend ignores"""
-
     def on_post(url, body, **kwargs):
         assert body == {
             "exclusions": {
@@ -1452,5 +1520,5 @@ def test_exclusion_invalid_attrib(cbcsdk_mock):
         return {"results": [{"id": "S0L0", "org_key": "test", "type": "WATCHLIST"}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
-    cb = cbcsdk_mock.api
-    cb.select(Alert).add_exclusions("invalidfield", ["invalidvalue"])
+    api = cbcsdk_mock.api
+    api.select(Alert).add_exclusions("invalidfield", ["invalidvalue"])

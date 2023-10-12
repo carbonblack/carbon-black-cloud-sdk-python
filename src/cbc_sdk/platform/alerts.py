@@ -960,8 +960,9 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
 
         self._query_builder = QueryBuilder()
         self._criteria = {}
-        self._exclusions = {}
         self._time_filters = {}
+        self._exclusions = {}
+        self._time_exclusion_filters = {}
         self._sortcriteria = {}
         self._bulkupdate_url = "/api/alerts/v7/orgs/{0}/alerts/workflow"
         self._count_valid = False
@@ -1045,7 +1046,11 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         Args:
             key (str): The key to use for criteria one of create_time, first_event_time, last_event_time,
              backend_timestamp, backend_update_timestamp, or last_update_time
-            **kwargs (dict): Used to specify start= for start time, end= for end time, and range= for range.
+            **kwargs (dict): Used to specify:
+                * start= for start time
+                * end= for end time
+                * range= for range
+                * excludes= to set this as an exclusion rather than criteria. Defaults to False.
 
         Returns:
             AlertSearchQuery: This instance.
@@ -1055,6 +1060,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             ...     add_time_criteria("backend_timestamp", start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
             >>> second_query = api.select(Alert).add_time_criteria("backend_timestamp", range='-3d')
             >>> third_query = api.select(Alert).set_time_range("create_time", range='-3d')
+            >>> exclusions_query = api.add_time_criteria("detection_timestamp", range="-2h", exclude=True)
 
         """
         # this first if statement will be removed after v6 is deprecated
@@ -1062,7 +1068,10 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             self._valid_criteria = self._is_valid_time_criteria_key(key)
 
         if self._valid_criteria:
-            self._time_filters[key] = self._create_valid_time_filter(kwargs)
+            if kwargs.get("exclude", False):
+                self._time_exclusion_filters[key] = self._create_valid_time_filter(kwargs)
+            else:
+                self._time_filters[key] = self._create_valid_time_filter(kwargs)
         return self
 
     def _is_valid_time_criteria_key(self, key):
@@ -1160,9 +1169,8 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             dict: The exclusions object.
         """
         myexclusions = self._exclusions
-        # No time filters. Pending confirmation from backend
-        # if self._time_filters:
-        #    mycrit.update(self._time_filters)
+        if self._time_exclusion_filters:
+            myexclusions.update(self._time_exclusion_filters)
         return myexclusions
 
     def sort_by(self, key, direction="ASC"):
