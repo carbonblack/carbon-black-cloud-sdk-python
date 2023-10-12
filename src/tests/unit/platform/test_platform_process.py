@@ -966,6 +966,7 @@ def test_process_md5_not_found(cbcsdk_mock):
     (GET_PROCESS_SEARCH_JOB_RESULTS_RESP_3, GET_PROCESS_SUMMARY_RESP_NO_HASH,
      "test-003513bc-0000035c-00000000-1d640200c9a6205", None)])
 def test_process_sha256(cbcsdk_mock, get_process_response, get_summary_response, guid, sha256):
+    """Testing Process.process_sha256 property."""
     def on_validation_post(url, body, **kwargs):
         newguid = guid.replace('-', '\\-')
         assert body == {"query": f"process_guid:{newguid}"}

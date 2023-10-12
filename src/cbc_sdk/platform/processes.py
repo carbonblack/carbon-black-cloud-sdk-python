@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 # *******************************************************
 # Copyright (c) VMware, Inc. 2020-2023. All Rights Reserved.
 # SPDX-License-Identifier: MIT
@@ -11,7 +10,27 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-"""Model and Query Classes for Processes"""
+"""
+Model and query that allow location and manipulation of process data reported by an organization's sensors.
+
+This data can be used to identify applications that are acting abnormally and over time, cull the outliers from the
+total observed process activity, and retroactively identify the origination point for attacks that previously escaped
+notice.  Use cases include:
+
+* Finding the process that was identified in an alert with a process search.
+* Finding processes that match targeted behavioral characteristics identified in Carbon Black or third-party threat
+  intelligence reports.
+* Finding additional details about processes that were potentially involved in malicious activity identified elsewhere.
+* Using faceting to get filtering terms or prevalent values in a set of processes.
+
+Locating processes generally requires the Endpoint Standard or Enterprise EDR products.
+
+Typical usage example:
+
+    >>> query = api.select(Process).where("process_name:chrome.exe")
+    >>> for process in query:
+    ...     print(f"Chrome PID = {process.process_guid}")
+"""
 
 from cbc_sdk.base import (UnrefreshableModel, BaseQuery, Query, FacetQuery,
                           QueryBuilderSupportMixin, QueryBuilder,
@@ -29,18 +48,20 @@ log = logging.getLogger(__name__)
 
 
 class Process(UnrefreshableModel):
-    """Represents a process retrieved by one of the Enterprise EDR endpoints.
+    """
+    Information about a process running on one of the endpoin ts connected to the Carbon Black Cloud.
+
+    Objects of this type are retrieved through queries to the Carbon Black Cloud server, such as via
+    ``AsyncProcessQuery``.
 
     Examples:
         # use the Process GUID directly
-
         >>> process = api.select(Process, "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb")
 
         # use the Process GUID in a where() clause
-
-        >>> process_query = (api.select(Process).where(process_guid=
-        "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb"))
-        >>> process_query_results = [proc for proc in process_query]
+        >>> process_query = api.select(Process).where(process_guid=
+        ...    "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb")
+        >>> process_query_results = list(process_query)
         >>> process_2 = process_query_results[0]
     """
     default_sort = 'last_update desc'
@@ -50,9 +71,10 @@ class Process(UnrefreshableModel):
     urlobject = ""
 
     class Summary(UnrefreshableModel):
-        """Represents a summary of organization-specific information for a process.
+        """
+        A summary of organization-specific information for a process.
 
-        The preferred interface for interacting with Summary models is `Process.summary`.
+        The preferred interface for interacting with ``Summary`` models is ``Process.summary``.
 
         Example:
             >>> process = api.select(Process, "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb")
@@ -75,14 +97,14 @@ class Process(UnrefreshableModel):
 
         def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
             """
-            Initialize the Summary object.
+            Initialize the ``Summary`` object.
 
             Args:
-                cb (CBCloudAPI): A reference to the CBCloudAPI object.
+                cb (CBCloudAPI): A reference to the ``CBCloudAPI`` object.
                 model_unique_id (str): The unique ID for this particular instance of the model object.
                 initial_data (dict): The data to use when initializing the model object.
-                force_init (bool): True to force object initialization.
-                full_doc (bool): True to mark the object as fully initialized.
+                force_init (bool): ``True`` to force object initialization.
+                full_doc (bool): ``True`` to mark the object as fully initialized.
             """
             if model_unique_id is not None and initial_data is None:
                 initial_data = cb.select(Process.Summary).where(process_guid=model_unique_id).results._info
@@ -91,12 +113,7 @@ class Process(UnrefreshableModel):
                                                   full_doc=True)
 
         def __str__(self):
-            """
-            Returns a string representation of the object.
-
-            Returns:
-                str: A string representation of the object.
-            """
+            """Returns a string representation of the object."""
             lines = []
             for top_level in self._info:
                 if self._info[top_level] and top_level in self.SHOW_ATTR:
@@ -127,12 +144,14 @@ class Process(UnrefreshableModel):
 
         @classmethod
         def _query_implementation(self, cb, **kwargs):
+            """Returns a new query for ``Summary`` objects (type ``SummaryQuery``)."""
             return SummaryQuery(self, cb, **kwargs)
 
     class Tree(UnrefreshableModel):
-        """Represents a summary of organization-specific information for a process.
+        """
+        Summary of organization-specific information for a process.
 
-        The preferred interface for interacting with Tree models is `Process.tree`.
+        The preferred interface for interacting with ``Tree`` models is ``Process.tree``.
 
         Example:
             >>> process = api.select(Process, "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb")
@@ -150,14 +169,14 @@ class Process(UnrefreshableModel):
 
         def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=True):
             """
-            Initialize the Tree object.
+            Initialize the ``Tree`` object.
 
             Args:
-                cb (CBCloudAPI): A reference to the CBCloudAPI object.
+                cb (CBCloudAPI): A reference to the ``CBCloudAPI`` object.
                 model_unique_id (str): The unique ID for this particular instance of the model object.
                 initial_data (dict): The data to use when initializing the model object.
-                force_init (bool): True to force object initialization.
-                full_doc (bool): True to mark the object as fully initialized.
+                force_init (bool): ``True`` to force object initialization.
+                full_doc (bool): ``True`` to mark the object as fully initialized.
             """
             if model_unique_id is not None and initial_data is None:
                 initial_data = cb.select(Process.Tree).where(process_guid=model_unique_id).results._info
@@ -167,12 +186,7 @@ class Process(UnrefreshableModel):
             )
 
         def __str__(self):
-            """
-            Returns a string representation of the object.
-
-            Returns:
-                str: A string representation of the object.
-            """
+            """Returns a string representation of the object."""
             lines = []
             lines.append('process:')
             for attr in self._info:
@@ -197,22 +211,24 @@ class Process(UnrefreshableModel):
 
         @classmethod
         def _query_implementation(self, cb, **kwargs):
+            """Returns a new query for ``Tree`` objects (type ``SummaryQuery``)."""
             return SummaryQuery(self, cb, **kwargs)
 
     @classmethod
     def _query_implementation(self, cb, **kwargs):
+        """Returns a new query for ``Process`` objects (type ``AsyncProcessQuery``)."""
         return AsyncProcessQuery(self, cb)
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
         """
-        Initialize the Process object.
+        Initialize the ``Process`` object.
 
         Args:
-            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            cb (CBCloudAPI): A reference to the ``CBCloudAPI`` object.
             model_unique_id (str): The unique ID (GUID) for this process.
             initial_data (dict): The data to use when initializing the model object.
-            force_init (bool): True to force object initialization.
-            full_doc (bool): True to mark the object as fully initialized.
+            force_init (bool): ``True`` to force object initialization.
+            full_doc (bool): ``True`` to mark the object as fully initialized.
         """
         if model_unique_id is not None and initial_data is None:
             process_future = cb.select(Process).where(process_guid=model_unique_id).execute_async()
@@ -229,10 +245,8 @@ class Process(UnrefreshableModel):
 
     @property
     def tree(self):
-        """Returns a Process Tree associated with this process.
-
-        Returns:
-            Tree (cbc_sdk.enterprise_edr.Tree): Tree with children (and possibly siblings).
+        """
+        Returns a process tree associated with this process.
 
         Example:
             >>> tree = process.tree
@@ -241,11 +255,7 @@ class Process(UnrefreshableModel):
 
     @property
     def parents(self):
-        """Returns a parent process associated with this process.
-
-        Returns:
-            parent (Process): Parent Process if one exists, None if the process has no recorded parent.
-        """
+        """Returns the parent process associated with this process, or ``None`` if there is no recorded parent."""
         if "parent_guid" in self._info:
             return self._cb.select(Process, self.parent_guid)
         elif self.summary.parent:
@@ -255,12 +265,7 @@ class Process(UnrefreshableModel):
 
     @property
     def children(self):
-        """Returns a list of child processes for this process.
-
-        Returns:
-            children ([Process]): List of Processes, one for each child of the
-                parent Process.
-        """
+        """Returns a list of child processes for this process."""
         if isinstance(self.summary.children, list):
             return [
                 Process(self._cb, initial_data=child)
@@ -271,12 +276,7 @@ class Process(UnrefreshableModel):
 
     @property
     def siblings(self):
-        """Returns a list of sibling processes for this process.
-
-        Returns:
-            siblings ([Process]): List of Processes, one for each sibling of the
-                parent Process.
-        """
+        """Returns a list of sibling processes for this process."""
         return [
             Process(self._cb, initial_data=sibling)
             for sibling in self.summary.siblings
@@ -284,13 +284,9 @@ class Process(UnrefreshableModel):
 
     @property
     def process_md5(self):
-        """Returns a string representation of the MD5 hash for this process.
-
-        Returns:
-            hash (str): MD5 hash of the process.
-        """
+        """Returns a string representation of the MD5 hash for this process."""
         # NOTE: We have to check _info instead of poking the attribute directly
-        # to avoid the missing attrbute login in NewBaseModel.
+        # to avoid the missing attribute login in NewBaseModel.
         if "process_hash" in self._info:
             return next((hsh for hsh in self.process_hash if len(hsh) == 32), None)
         elif "process_hash" in self.summary._info["process"]:
@@ -300,11 +296,7 @@ class Process(UnrefreshableModel):
 
     @property
     def process_sha256(self):
-        """Returns a string representation of the SHA256 hash for this process.
-
-        Returns:
-            hash (str): SHA256 hash of the process.
-        """
+        """Returns a string representation of the SHA256 hash for this process."""
         if "process_hash" in self._info:
             return next((hsh for hsh in self.process_hash if len(hsh) == 64), None)
         elif "process_hash" in self.summary._info["process"]:
@@ -314,12 +306,7 @@ class Process(UnrefreshableModel):
 
     @property
     def process_pids(self):
-        """Returns a list of PIDs associated with this process.
-
-        Returns:
-            pids ([int]): List of integer PIDs.
-            None if there are no associated PIDs.
-        """
+        """Returns a list of integer PIDs associated with this process, or ``None`` if there are none."""
         # NOTE(ww): This exists because the API returns the list as "process_pid",
         # which is misleading. We just give a slightly clearer name.
         if "process_pid" in self._info:
@@ -330,14 +317,11 @@ class Process(UnrefreshableModel):
             return None
 
     def events(self, **kwargs):
-        """Returns a query for events associated with this process's process GUID.
+        """
+        Returns a query for events associated with this process's process GUID.
 
         Args:
             kwargs: Arguments to filter the event query with.
-
-        Returns:
-            query (cbc_sdk.enterprise_edr.Query): Query object with the appropriate
-                search parameters for events
 
         Example:
             >>> [print(event) for event in process.events()]
@@ -351,24 +335,30 @@ class Process(UnrefreshableModel):
         return query
 
     def facets(self):
-        """Returns a FacetQuery for a Process.
+        """
+        Returns a ``FacetQuery`` for a Process.
 
-        This represents the search for a summary of result groupings (facets).
-        The returned AsyncFacetQuery object must have facet fields or ranges specified
-        before it can be submitted, using the `add_facet_field()` or `add_range()` methods.
+        This represents the search for a summary of result groupings (facets). The returned ``AsyncFacetQuery``
+        object must have facet fields or ranges specified before it can be submitted, using the ``add_facet_field()``
+        or ``add_range()`` methods.
         """
         return self._cb.select(ProcessFacet).where(process_guid=self.process_guid)
 
     def get_details(self, timeout=0, async_mode=False):
-        """Requests detailed results.
+        """
+        Requests detailed information about this process from the Carbon Black Cloud server.
+
+        Required Permissions:
+            org.search.events(CREATE, READ)
 
         Args:
             timeout (int): Event details request timeout in milliseconds.
-            async_mode (bool): True to request details in an asynchronous manner.
+            async_mode (bool): ``True`` to request details in an asynchronous manner.
 
-        Note:
-            - When using asynchronous mode, this method returns a python future.
-              You can call result() on the future object to wait for completion and get the results.
+        Returns:
+            Future: If ``async_mode`` is ``True``. Call ``result()`` on this ``Future`` to wait for completion and
+                retrieve the results.
+            dict: If ``async_mode`` is ``False``.
         """
         self._details_timeout = timeout
         if not self.process_guid:
@@ -432,14 +422,14 @@ class Process(UnrefreshableModel):
                 return self
 
     def ban_process_sha256(self, description=""):
-        """Bans the application by adding the process_sha256 to the BLACK_LIST
+        """
+        Bans the application by adding the ``process_sha256`` to the ``BLACK_LIST``.
 
         Args:
-            description: The justification for why the application was added to the BLACK_LIST
+            description (str): The justification for why the application was added to the ``BLACK_LIST``.
 
         Returns:
-            ReputationOverride (cbc_sdk.platform.ReputationOverride): ReputationOverride object
-                created in the Carbon Black Cloud
+            cbc_sdk.platform.ReputationOverride) ``ReputationOverride`` object created in the Carbon Black Cloud.
         """
         return ReputationOverride.create(self._cb, {
             "description": description,
@@ -449,14 +439,14 @@ class Process(UnrefreshableModel):
             "filename": Path(self.process_name.replace('\\', os.sep)).name})
 
     def approve_process_sha256(self, description=""):
-        """Approves the application by adding the process_sha256 to the WHITE_LIST
+        """
+        Approves the application by adding the ``process_sha256`` to the ``WHITE_LIST``.
 
         Args:
-            description: The justification for why the application was added to the WHITE_LIST
+            description (str): The justification for why the application was added to the ``WHITE_LIST``.
 
         Returns:
-            ReputationOverride (cbc_sdk.platform.ReputationOverride): ReputationOverride object
-                created in the Carbon Black Cloud
+            cbc_sdk.platform.ReputationOverride: ``ReputationOverride`` object created in the Carbon Black Cloud.
         """
         return ReputationOverride.create(self._cb, {
             "description": description,
@@ -467,45 +457,40 @@ class Process(UnrefreshableModel):
 
 
 class ProcessFacet(UnrefreshableModel):
-    """Represents the results of an AsyncFacetQuery.
+    """
+    Represents the results of a process facet query.
 
-    ProcessFacet objects contain both Terms and Ranges. Each of those contain facet
-    fields and values.
+    ``ProcessFacet`` objects contain both ``Terms`` and ``Ranges``. Each of those contain facet fields and values.
 
-    Access all of the Terms facet data with :func:`ProcessFacet.Terms.facets` or see just
-    the field names with :func:`ProcessFacet.Terms.fields`.
+    Access all of the ``Terms`` facet data with :py:func:`ProcessFacet.Terms.facets` or see just the field names with
+    :py:func:`ProcessFacet.Terms.fields`.
 
-    Access all of the Ranges facet data with :func:`ProcessFacet.Ranges.facets` or see just
-    the field names with :func:`ProcessFacet.Fanges.fields`.
+    Access all of the ``Ranges`` facet data with :py:func:`ProcessFacet.Ranges.facets` or see just the field names
+    with :py:func:`ProcessFacet.Ranges.fields`.
 
-    Process Facets can be queried for via `CBCloudAPI.select(ProcessFacet)`. Specify
-    facet field(s) with `.add_facet_field("my_facet_field")`.
+    Process facets can be queried for via ``CBCloudAPI.select(ProcessFacet)``. Specify facet field(s) with
+    ``.add_facet_field("my_facet_field")``.
 
-    Optionally you can limit the facet query to a single process with the following
-    two options. Using the solrq builder specify Process GUID with
-    `.where(process_guid="example_guid")` and modify the query with
-    `.or_(parent_effective_reputation="KNOWN_MALWARE")` and
-    `.and_(parent_effective_reputation="KNOWN_MALWARE")`.
+    Optionally, you can limit the facet query to a single process with the following two options. Using the solrq
+    builder, specify process GUID with ``.where(process_guid="example_guid")`` and modify the query with
+    ``.or_(parent_effective_reputation="KNOWN_MALWARE")`` and ``.and_(parent_effective_reputation="KNOWN_MALWARE")``.
 
-    If you want full control over the query string specify Process Guid in the query string
-    `.where("process_guid: example_guid OR parent_effective_reputation: KNOWN_MALWARE")`
+    If you want full control over the query string, specify the process GUID in the query string
+    ``.where("process_guid: example_guid OR parent_effective_reputation: KNOWN_MALWARE")``
+
     Examples:
-
-        >>> process_facet_query = (api.select(ProcessFacet).where(process_guid=
-                                   "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb"))
+        >>> process_facet_query = api.select(ProcessFacet).where(process_guid=
+        ...     "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb")
         >>> process_facet_query.add_facet_field("device_name")
 
         # retrieve results synchronously
-
         >>> facet = process_facet_query.results
 
         # retrieve results asynchronously
-
         >>> future = process_facet_query.execute_async()
         >>> result = future.result()
 
         # result is a list with one item, so access the first item
-
         >>> facet = result[0]
     """
     primary_key = "job_id"
@@ -514,9 +499,9 @@ class ProcessFacet(UnrefreshableModel):
     result_url = "/api/investigate/v2/orgs/{}/processes/facet_jobs/{}/results"
 
     class Terms(UnrefreshableModel):
-        """Represents the facet fields and values associated with a Process Facet query."""
+        """The facet fields and values associated with a process facet query."""
         def __init__(self, cb, initial_data):
-            """Initialize a ProcessFacet Terms object with initial_data."""
+            """Initialize a ``ProcessFacet.Terms`` object with ``initial_data``."""
             super(ProcessFacet.Terms, self).__init__(
                 cb,
                 model_unique_id=None,
@@ -541,9 +526,9 @@ class ProcessFacet(UnrefreshableModel):
             return [field for field in self._facets]
 
     class Ranges(UnrefreshableModel):
-        """Represents the range (bucketed) facet fields and values associated with a Process Facet query."""
+        """The range (bucketed) facet fields and values associated with a process facet query."""
         def __init__(self, cb, initial_data):
-            """Initialize a ProcessFacet Ranges object with initial_data."""
+            """Initialize a ``ProcessFacet.Ranges`` object with ``initial_data``."""
             super(ProcessFacet.Ranges, self).__init__(
                 cb,
                 model_unique_id=None,
@@ -559,7 +544,7 @@ class ProcessFacet(UnrefreshableModel):
 
         @property
         def facets(self):
-            """Returns the reified `ProcessFacet.Terms._facets` for this result."""
+            """Returns the reified facets for this result."""
             return self._facets
 
         @property
@@ -569,10 +554,11 @@ class ProcessFacet(UnrefreshableModel):
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
+        """Returns a new query for ``ProcessFacet`` objects (type ``FacetQuery``)."""
         return FacetQuery(cls, cb)
 
     def __init__(self, cb, model_unique_id, initial_data):
-        """Initialize a ResultFacet object with initial_data."""
+        """Initialize a ``ProcessFacet`` object with ``initial_data``."""
         super(ProcessFacet, self).__init__(
             cb,
             model_unique_id=model_unique_id,
@@ -585,28 +571,28 @@ class ProcessFacet(UnrefreshableModel):
 
     @property
     def terms_(self):
-        """Returns the reified `ProcessFacet.Terms` for this result."""
+        """Returns the reified ``ProcessFacet.Terms`` for this result."""
         return self._terms
 
     @property
     def ranges_(self):
-        """Returns the reified `ProcessFacet.Ranges` for this result."""
+        """Returns the reified ``ProcessFacet.Ranges`` for this result."""
         return self._ranges
 
 
 class AsyncProcessQuery(Query):
-    """Represents the query logic for an asychronous Process query.
+    """
+    A query object used to search for ``Process`` objects asynchronously.
 
-    This class specializes `Query` to handle the particulars of
-    process querying.
+    Create one of these objects by calling ``select(Process)`` on a ``CBCloudAPI`` object.
     """
     def __init__(self, doc_class, cb):
         """
-        Initialize the AsyncProcessQuery object.
+        Initialize the ``AsyncProcessQuery`` object.
 
         Args:
             doc_class (class): The class of the model this query returns.
-            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            cb (CBCloudAPI): A reference to the ``CBCloudAPI`` object.
         """
         super(AsyncProcessQuery, self).__init__(doc_class, cb)
         self._query_token = None
@@ -614,14 +600,14 @@ class AsyncProcessQuery(Query):
         self._timed_out = False
 
     def timeout(self, msecs):
-        """Sets the timeout on a process query.
+        """
+        Sets the timeout on a process query.
 
         Arguments:
             msecs (int): Timeout duration, in milliseconds.
 
         Returns:
-            Query (AsyncProcessQuery): The Query object with new milliseconds
-                parameter.
+            AsyncProcessQuery: The modified query object.
 
         Example:
             >>> cb.select(Process).where(process_name="foo.exe").timeout(5000)
@@ -631,10 +617,10 @@ class AsyncProcessQuery(Query):
 
     def set_rows(self, rows):
         """
-        Sets the 'rows' query parameter to the 'results' API call, determining how many rows to request per batch.
+        Sets the number of rows to request per batch.
 
-        This will not limit the total results to rows instead the batch size will use rows and all of the num_available
-        will be fetched.
+        This will not limit the total results to the specified number of rows; instead, the query will use
+        this to determine how many rows to request at a time from the server.
 
         Args:
             rows (int): How many rows to request.
@@ -647,6 +633,12 @@ class AsyncProcessQuery(Query):
         return self
 
     def _submit(self):
+        """
+        Submits the query to the server.
+
+        Required Permissions:
+            org.search.events(CREATE)
+        """
         if self._query_token:
             raise ApiError("Query already submitted: token {0}".format(self._query_token))
 
@@ -665,6 +657,12 @@ class AsyncProcessQuery(Query):
         self._submit_time = time.time() * 1000
 
     def _still_querying(self):
+        """
+        Checks to see if the query is still running.
+
+        Required Permissions:
+            org.search.events(CREATE, READ)
+        """
         if not self._query_token:
             self._submit()
 
@@ -688,6 +686,12 @@ class AsyncProcessQuery(Query):
         return False
 
     def _count(self):
+        """
+        Returns the total number of results from the query.
+
+        Required Permissions:
+            org.search.events(READ)
+        """
         if self._count_valid:
             return self._total_results
 
@@ -710,7 +714,10 @@ class AsyncProcessQuery(Query):
 
     def _search(self, start=0, rows=0):
         """
-        Execute the query, iterating over results 500 rows at a time.
+        Execute the query, iterating over results by the specified number of rows at a time.
+
+        Required Permissions:
+            org.search.events(CREATE, READ)
 
         Args:
            start (int): What index to begin retrieving results from.
@@ -768,7 +775,10 @@ class AsyncProcessQuery(Query):
 
     def _init_async_query(self):
         """
-        Initialize an async query and return a context for running in the background.
+        Initialize an asynchronous query and return a context for running in the background.
+
+        Required Permissions:
+            org.search.events(CREATE)
 
         Returns:
             object: Context for running in the background (the query token).
@@ -780,8 +790,11 @@ class AsyncProcessQuery(Query):
         """
         Executed in the background to run an asynchronous query.
 
+        Required Permissions:
+            org.search.events(READ)
+
         Args:
-            context (object): The context (query token) returned by _init_async_query.
+            context (object): The context (query token) returned by ``_init_async_query``.
 
         Returns:
             Any: Result of the async query, which is then returned by the future.
@@ -792,14 +805,19 @@ class AsyncProcessQuery(Query):
 
 
 class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
-    """Represents the logic for a Process Summary or Process Tree query."""
+    """
+    A query used to search for ``Process.Summary`` or ``Process.Tree`` objects.
+
+    Create one of these queries with a ``select()`` on either ``Process.Summary`` or ``Process.Tree``.
+    These queries are also created by accessing the ``summary`` or ``tree`` properties on ``Process``.
+    """
     def __init__(self, doc_class, cb):
         """
-        Initialize the SummaryQuery object.
+        Initialize the ``SummaryQuery`` object.
 
         Args:
             doc_class (class): The class of the model this query returns.
-            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            cb (CBCloudAPI): A reference to the ``CBCloudAPI`` object.
         """
         super(SummaryQuery, self).__init__()
         self._doc_class = doc_class
@@ -812,14 +830,14 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         self._time_range = {}
 
     def timeout(self, msecs):
-        """Sets the timeout on a process query.
+        """
+        Sets the timeout on a process query.
 
         Arguments:
             msecs (int): Timeout duration, in milliseconds.
 
         Returns:
-            Query (AsyncProcessQuery): The Query object with new milliseconds
-                parameter.
+            SummaryQuery: The modified query object.
 
         Example:
             >>> cb.select(Process).where(process_name="foo.exe").timeout(5000)
@@ -829,18 +847,19 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
 
     def set_time_range(self, start=None, end=None, window=None):
         """
-        Sets the 'time_range' query body parameter, determining a time window based on 'device_timestamp'.
+        Sets the ``time_range`` query body parameter, determining a time window based on ``device_timestamp``.
 
         Args:
             start (str in ISO 8601 timestamp): When to start the result search.
             end (str in ISO 8601 timestamp): When to end the result search.
             window (str): Time window to execute the result search, ending on the current time.
-                Should be in the form "-2w", where y=year, w=week, d=day, h=hour, m=minute, s=second.
+                Should be in the form "-nx", where n is an integer and x is y=year, w=week, d=day, h=hour,
+                m=minute, s=second.
 
         Note:
-            - `window` will take precendent over `start` and `end` if provided.
+            ``window`` will take precendent over ``start`` and ``end`` if provided.
 
-        Examples:
+        Example:
             >>> query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z")
             >>> second_query = api.select(Event).set_time_range
             ...     (start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
@@ -881,6 +900,12 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         raise ApiError('The result is not iterable')
 
     def _submit(self):
+        """
+        Submit the query to the server for processing.
+
+        Required Permissions:
+            org.search.events(CREATE)
+        """
         if self._query_token:
             raise ApiError("Query already submitted: token {0}".format(self._query_token))
 
@@ -895,6 +920,12 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         self._submit_time = time.time() * 1000
 
     def _still_querying(self):
+        """
+        Checks to see if the query is still running.
+
+        Required Permissions:
+            org.search.events(CREATE, READ)
+        """
         if not self._query_token:
             self._submit()
 
@@ -918,7 +949,16 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         return False
 
     def _search(self, start=0, rows=0):
-        """Execute the query, with one expected result."""
+        """
+        Execute the query, with one expected result.
+
+        Required Permissions:
+            org.search.events(CREATE, READ)
+
+        Args:
+            start (int): Not used.
+            rows (int): Not used.
+        """
         if not self._query_token:
             self._submit()
 
@@ -948,12 +988,23 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
                 raise ApiError(f"Failed to get Process Tree: {result['exception']}")
 
     def _perform_query(self):
+        """
+        Iterate over the results of the query.
+
+        Required Permissions:
+            org.search.events(CREATE, READ)
+        """
         for item in self.results:
             yield item
 
     @property
     def results(self):
-        """Save query results to self._results with self._search() method."""
+        """
+        Save query results to ``self._results`` with ``self._search()`` method.
+
+        Required Permissions:
+            org.search.events(CREATE, READ)
+        """
         if not self._full_init:
             for item in self._search():
                 self._results = item
@@ -965,6 +1016,9 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         """
         Initialize an async query and return a context for running in the background.
 
+        Required Permissions:
+            org.search.events(CREATE)
+
         Returns:
             object: Context for running in the background (the query token).
         """
@@ -975,11 +1029,14 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         """
         Executed in the background to run an asynchronous query.
 
+        Required Permissions:
+            org.search.events(READ)
+
         Args:
-            context (object): The context (query token) returned by _init_async_query.
+            context (object): The context (query token) returned by ``_init_async_query``.
 
         Returns:
-            Any: Result of the async query, which is then returned by the future.
+            Any: Result of the async query, which is then returned by the ``Future``.
         """
         if context != self._query_token:
             raise ApiError("Async query not properly started")
