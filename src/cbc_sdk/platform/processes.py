@@ -49,7 +49,7 @@ log = logging.getLogger(__name__)
 
 class Process(UnrefreshableModel):
     """
-    Information about a process running on one of the endpoin ts connected to the Carbon Black Cloud.
+    Information about a process running on one of the endpoints connected to the Carbon Black Cloud.
 
     Objects of this type are retrieved through queries to the Carbon Black Cloud server, such as via
     ``AsyncProcessQuery``.
@@ -1000,7 +1000,7 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
     @property
     def results(self):
         """
-        Save query results to ``self._results`` with ``self._search()`` method.
+        Return the results of this query.  If the query has not yet been run, it is run to determine the results.
 
         Required Permissions:
             org.search.events(CREATE, READ)
