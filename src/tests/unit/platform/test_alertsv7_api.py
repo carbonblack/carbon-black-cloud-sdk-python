@@ -59,7 +59,9 @@ from tests.unit.fixtures.platform.mock_alert_v6_v7_compatibility import (
     GET_ALERT_v7_WATCHLIST_RESPONSE,
     GET_ALERT_v7_DEVICE_CONTROL_RESPONSE,
     GET_ALERT_v7_HBFW_RESPONSE,
-    GET_ALERT_v7_CONTAINER_RUNTIME_RESPONSE
+    GET_ALERT_v7_CONTAINER_RUNTIME_RESPONSE,
+    GET_ALERT_HISTORY,
+    GET_THREAT_HISTORY
 )
 
 
@@ -1641,3 +1643,39 @@ def test_exclusion_integer(cbcsdk_mock):
     alert = query.first()
     assert alert.device_id == device_id
     assert alert.get("device_id") == device_id
+
+
+def test_alert_history(cbcsdk_mock):
+    """Test get_history for alerts"""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333/history",
+                             GET_ALERT_HISTORY)
+
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, "6f1173f5-f921-8e11-2160-edf42b799333")
+    history = alert.get_history()
+
+    assert history == GET_ALERT_HISTORY["history"]
+
+
+def test_threat_history(cbcsdk_mock):
+    """Test get_history for threats"""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/threats/"
+                             "9e0afc389c1acc43b382b1ba590498d2/history",
+                             GET_THREAT_HISTORY)
+
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, "6f1173f5-f921-8e11-2160-edf42b799333")
+
+    history = alert.get_history(threat=True)
+
+    assert history == GET_THREAT_HISTORY["history"]
