@@ -164,6 +164,7 @@ class Alert(PlatformModel):
 
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
     urlobject_single = "/api/alerts/v7/orgs/{0}/alerts/{1}"
+    threat_urlobject_single = "/api/alerts/v7/orgs/{0}/threats/{1}"
     primary_key = "id"
     swagger_meta_file = "platform/models/alert.yaml"
 
@@ -199,6 +200,23 @@ class Alert(PlatformModel):
 
         obs = Observation.bulk_get_details(self._cb, alert_id=alert_id, timeout=timeout)
         return obs
+
+    def get_history(self, threat=False):
+        """
+        Get the actions taken on an Alert such as Notes added and workflow state changes.
+
+        Returns:
+            list: The dicts of each determination, note or workflow change
+
+        """
+        if threat:
+            url = Alert.threat_urlobject_single.format(self._cb.credentials.org_key, self.threat_id)
+        else:
+            url = Alert.urlobject_single.format(self._cb.credentials.org_key, self._info[self.primary_key])
+
+        url = f"{url}/history"
+        resp = self._cb.get_object(url)
+        return resp.get("history", [])
 
     class Note(PlatformModel):
         """Represents a note within an alert."""
