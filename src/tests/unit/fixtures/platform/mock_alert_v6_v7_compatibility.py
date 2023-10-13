@@ -740,3 +740,61 @@ GET_ALERT_v7_DEVICE_CONTROL_RESPONSE = {
     "external_device_friendly_name": "Generic Flash Disk USB Device",
     "serial_number": "56787654"
 }
+
+
+GET_ALERT_HISTORY = {
+    "history": [
+        {
+            "type": "USER_WORKFLOW_UPDATE",
+            "workflow": {
+                "change_timestamp": "2023-04-14T21:30:40.570Z",
+                "changed_by_type": "SYSTEM",
+                "changed_by": "ALERT_CREATION",
+                "closure_reason": "NO_REASON",
+                "status": "OPEN"
+            }
+        },
+        {
+            "type": "USER_DETERMINATION_UPDATE",
+            "determination": {
+                "changed_by": "demouser@demoorg.com",
+                "changed_by_type": "USER",
+                "change_timestamp": "2023-04-16T23:32:41.182Z",
+                "value": "TRUE_POSITIVE"
+            }
+        },
+        {
+            "type": "ALERT_NOTE_ADDED",
+            "note": {
+                "author": "demouser@demoorg.com",
+                "create_timestamp": "2023-04-16T23:35:10.295Z",
+                "last_update_timestamp": "2023-04-16T23:35:10.295Z",
+                "id": "eb0c0791-505b-408e-8b03-24562a95a875",
+                "source": "CUSTOMER",
+                "note": "A note for API demo",
+                "parent_id": None,
+                "read_history": None,
+                "thread": None
+            }
+        }
+    ]
+}
+
+GET_THREAT_HISTORY = {
+    "history": [
+        {
+            "type": "THREAT_NOTE_ADDED",
+            "note": {
+                "author": "demouser@demoorg.com",
+                "create_timestamp": "2023-04-18T03:20:59.426Z",
+                "last_update_timestamp": "2023-04-18T03:20:59.426Z",
+                "id": "372ab282-7733-48fd-b26c-d58508b8c88f",
+                "source": "CUSTOMER",
+                "note": "A note on the threat",
+                "parent_id": None,
+                "read_history": None,
+                "thread": None
+            }
+        }
+    ]
+}
