@@ -204,21 +204,19 @@ class Alert(PlatformModel):
         """Represents a note within an alert."""
         REMAPPED_NOTES_V6_TO_V7 = {
             "create_time": "create_timestamp",
-
         }
 
         REMAPPED_NOTES_V7_TO_V6 = {
             "create_timestamp": "create_time",
-
         }
 
         urlobject = "/api/alerts/v7/orgs/{0}/alerts/{1}/notes"
-        urlobject_single = "/api/alerts/v7/orgs/{0}/alerts/{1}/notes/{2}"
+        threat_urlobject = "/api/alerts/v7/orgs/{0}/threats/{1}/notes"
         primary_key = "id"
         swagger_meta_file = "platform/models/alert_note.yaml"
         _is_deleted = False
 
-        def __init__(self, cb, alert, model_unique_id, initial_data=None):
+        def __init__(self, cb, alert, model_unique_id, threat_note=False, initial_data=None):
             """
             Initialize the Note object.
 
@@ -226,10 +224,12 @@ class Alert(PlatformModel):
                 cb (BaseAPI): Reference to API object used to communicate with the server.
                 alert (Alert): The alert where the note is saved.
                 model_unique_id (str): ID of the note represented.
+                threat_note (bool): Whether the note is an Alert or Threat note
                 initial_data (dict): Initial data used to populate the note.
             """
             super(Alert.Note, self).__init__(cb, model_unique_id, initial_data)
             self._alert = alert
+            self._threat_note = threat_note
             if model_unique_id is not None and initial_data is None:
                 self._refresh()
 
@@ -244,7 +244,14 @@ class Alert(PlatformModel):
             if self._is_deleted:
                 raise ApiError("Cannot refresh a deleted Note")
 
-            url = Alert.Note.urlobject.format(self._cb.credentials.org_key, self._alert.id)
+            if self._threat_note:
+                if self._alert.threat_id:
+                    url = Alert.Note.threat_urlobject.format(self._cb.credentials.org_key, self._alert.threat_id)
+                else:
+                    raise ObjectNotFoundError(url, "Cannot refresh: threat_id not found")
+            else:
+                url = Alert.Note.urlobject.format(self._cb.credentials.org_key, self._alert.id)
+
             resp = self._cb.get_object(url)
             item_list = resp.get("results", [])
 
@@ -272,8 +279,12 @@ class Alert(PlatformModel):
 
         def delete(self):
             """Deletes a note from an alert."""
-            url = self.urlobject_single.format(self._cb.credentials.org_key, self._alert.id,
-                                               self.id)
+            if self._threat_note:
+                url = self.threat_urlobject.format(self._cb.credentials.org_key, self._alert.threat_id)
+            else:
+                url = self.urlobject.format(self._cb.credentials.org_key, self._alert.id)
+
+            url = f"{url}/{self.id}"
             self._cb.delete_object(url)
             self._is_deleted = True
 
@@ -318,21 +329,39 @@ class Alert(PlatformModel):
                                                                                   item))
                 # fall through to the rest of the logic...
 
-    def notes_(self):
-        """Retrieves all notes for an alert."""
-        url = Alert.Note.urlobject.format(self._cb.credentials.org_key, self._info[self.primary_key])
+    def notes_(self, threat_note=False):
+        """
+        Retrieves all notes for an alert.
+
+        Args:
+            threat_note (bool): Whether to return the Alert notes or Threat notes
+        """
+        if threat_note:
+            url = Alert.Note.threat_urlobject.format(self._cb.credentials.org_key, self.threat_id)
+        else:
+            url = Alert.Note.urlobject.format(self._cb.credentials.org_key, self._info[self.primary_key])
+
         resp = self._cb.get_object(url)
         item_list = resp.get("results", [])
-        return [Alert.Note(self._cb, self, item[Alert.Note.primary_key], item)
+        return [Alert.Note(self._cb, self, item[Alert.Note.primary_key], threat_note, item)
                 for item in item_list]
 
-    def create_note(self, note):
-        """Creates a new note."""
+    def create_note(self, note, threat_note=False):
+        """
+        Creates a new note.
+
+        Args:
+            note (str): Note content to add
+            threat_note (bool): Whether to return the Alert notes or Threat notes
+        """
         request = {"note": note}
-        url = Alert.Note.urlobject.format(self._cb.credentials.org_key, self._info[self.primary_key])
+        if threat_note:
+            url = Alert.Note.threat_urlobject.format(self._cb.credentials.org_key, self.threat_id)
+        else:
+            url = Alert.Note.urlobject.format(self._cb.credentials.org_key, self._info[self.primary_key])
         resp = self._cb.post_object(url, request)
         result = resp.json()
-        return [Alert.Note(self._cb, self, result["id"], result)]
+        return [Alert.Note(self._cb, self, result["id"], threat_note, result)]
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
