@@ -901,6 +901,91 @@ def test_base_alert_refresh_note(cbcsdk_mock):
     assert notes[0]._refresh() is True
 
 
+def test_get_threat_notes_for_alert(cbcsdk_mock):
+    """Test retrieving threat notes for an alert"""
+    cbcsdk_mock.mock_request('GET',
+                             "/api/alerts/v7/orgs/test/alerts/52dbd1b6-539b-a3f7-34bd-f6eb13a99b81",
+                             GET_ALERT_RESP_WITH_NOTES)
+
+    cbcsdk_mock.mock_request('GET',
+                             "/api/alerts/v7/orgs/test/threats/"
+                             "78de82d612a7d3d4a6caffa4ce7e7bb718e23d926dcd9a5047f6e9f129279d44/notes",
+                             GET_ALERT_NOTES)
+
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, "52dbd1b6-539b-a3f7-34bd-f6eb13a99b81")
+    notes = alert.notes_(threat_note=True)
+    assert len(notes) == 2
+    assert notes[0].author == "Grogu"
+    assert notes[0].id == "3gsgsfds"
+    assert notes[0].create_timestamp == "2023-04-18T03:25:44.397Z"
+    assert notes[0].last_update_timestamp == "2023-04-18T03:25:44.397Z"
+    assert notes[0].note == "I am Grogu"
+    assert notes[0].source == "CUSTOMER"
+
+
+def test_base_alert_create_threat_note(cbcsdk_mock):
+    """Test creating a new threat note on an alert"""
+
+    def on_post(url, body, **kwargs):
+        body == {"note": "I am Grogu"}
+        return CREATE_ALERT_NOTE_RESP
+
+    cbcsdk_mock.mock_request('GET',
+                             "/api/alerts/v7/orgs/test/alerts/52dbd1b6-539b-a3f7-34bd-f6eb13a99b81",
+                             GET_ALERT_RESP_WITH_NOTES)
+
+    cbcsdk_mock.mock_request('POST',
+                             "/api/alerts/v7/orgs/test/threats/"
+                             "78de82d612a7d3d4a6caffa4ce7e7bb718e23d926dcd9a5047f6e9f129279d44/notes",
+                             on_post)
+
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, "52dbd1b6-539b-a3f7-34bd-f6eb13a99b81")
+    note = alert.create_note("I am Grogu", threat_note=True)
+    assert note[0].note == "I am Grogu"
+
+
+def test_base_alert_delete_threat_note(cbcsdk_mock):
+    """Test deleting a note from an alert"""
+    cbcsdk_mock.mock_request('GET',
+                             "/api/alerts/v7/orgs/test/alerts/52dbd1b6-539b-a3f7-34bd-f6eb13a99b81",
+                             GET_ALERT_RESP_WITH_NOTES)
+
+    cbcsdk_mock.mock_request('GET',
+                             "/api/alerts/v7/orgs/test/threats/"
+                             "78de82d612a7d3d4a6caffa4ce7e7bb718e23d926dcd9a5047f6e9f129279d44/notes",
+                             GET_ALERT_NOTES)
+
+    cbcsdk_mock.mock_request('DELETE',
+                             "/api/alerts/v7/orgs/test/threats/"
+                             "78de82d612a7d3d4a6caffa4ce7e7bb718e23d926dcd9a5047f6e9f129279d44/notes/3gsgsfds",
+                             None)
+
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, "52dbd1b6-539b-a3f7-34bd-f6eb13a99b81")
+    notes = alert.notes_(threat_note=True)
+    notes[0].delete()
+    assert notes[0]._is_deleted
+
+
+def test_base_alert_refresh_threat_note(cbcsdk_mock):
+    """Testing single note refresh"""
+    cbcsdk_mock.mock_request('GET',
+                             "/api/alerts/v7/orgs/test/alerts/52dbd1b6-539b-a3f7-34bd-f6eb13a99b81",
+                             GET_ALERT_RESP_WITH_NOTES)
+
+    cbcsdk_mock.mock_request('GET',
+                             "/api/alerts/v7/orgs/test/threats/"
+                             "78de82d612a7d3d4a6caffa4ce7e7bb718e23d926dcd9a5047f6e9f129279d44/notes",
+                             GET_ALERT_NOTES)
+
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, "52dbd1b6-539b-a3f7-34bd-f6eb13a99b81")
+    notes = alert.notes_(threat_note=True)
+    assert notes[0]._refresh() is True
+
+
 def test_alert_search_suggestions(cbcsdk_mock):
     """Tests getting alert search suggestions"""
     api = cbcsdk_mock.api
