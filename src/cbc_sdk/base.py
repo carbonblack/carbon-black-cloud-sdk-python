@@ -1905,10 +1905,12 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
             args["exclusions"] = self._exclusions
         if self._time_range:
             args["time_range"] = self._time_range
-        args['query'] = self._query_builder._collapse()
+        query = self._query_builder._collapse()
+        if query:
+            args['query'] = query
         if self._query_builder._process_guid is not None:
             args["process_guid"] = self._query_builder._process_guid
-        if 'process_guid:' in args['query']:
+        if 'process_guid:' in args.get('query', ''):
             q = args['query'].split('process_guid:', 1)[1].split(' ', 1)[0]
             args["process_guid"] = q
 
@@ -1976,8 +1978,12 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
         sort = args.pop('sort', None)
 
         if method == "POST":
-            result = self._cb.post_object(url, {'query': args['q']})
-            validated = result.json()
+            qparam = args.get('q', None)
+            if qparam:
+                result = self._cb.post_object(url, {'query': qparam})
+                validated = result.json()
+            else:
+                validated = {"valid": True}  # fake result - nothing to validate
         else:
             validated = self._cb.get_object(url, query_parameters=args)
 
