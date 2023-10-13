@@ -7,7 +7,19 @@ GET_PROCESS_VALIDATION_RESP = {
     "value_search_query": False
 }
 
+POST_PROCESS_VALIDATION_RESP = {
+    "valid": True,
+    "value_search_query": False
+}
+
 GET_PROCESS_VALIDATION_RESP_INVALID = {
+    "invalid_message": "Invalid Query Parameter",
+    "valid": False,
+    "value_search_query": False,
+    "invalid_trigger_offset": 0
+}
+
+POST_PROCESS_VALIDATION_RESP_INVALID = {
     "invalid_message": "Invalid Query Parameter",
     "valid": False,
     "value_search_query": False,
