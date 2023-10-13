@@ -2,9 +2,10 @@ Alert Migration
 ===============
 
 TO DO items:
+
 * Add links to RTD sections
-* set_ports sets netconn_local_ports.
 Note that in SDK 1.5.0, to align with Alerts API v7, the search field was updated from
+
         `port` to `netconn_local_port`.  It is possible to search on either `netconn_local_port`
         or `netconn_remote_port` using the `add_criteria(fieldname, [field values]) method.
 
@@ -53,12 +54,11 @@ Breaking changes happen in the following places:
 
 * Fields that were in Alerts v6 API (and therefore SDK 1.4.3) but are not in Alerts v7 and therefore cannot be
 made available in SDK 1.5.0.  See `Breaking Change: Attributes that have been removed`_
-
-* Helper functions that operated on deprecated objects.  See `Breaking Change: Helper Functions that have been removed`_
-
+* Facet term names have been updated.  Only Alert v7 API field names are supported.  Others will raise a
+``FunctionalityDecommissioned`` exception.
+* Helper functions that operated on deprecated objects have been removed.  See `Breaking Change: Helper Functions that have been removed`_
 * Bulk Workflow. This was rebuilt in Carbon Black Cloud as Close Alerts and is a more streamlined workflow and improved
 Alert lifecycle management.  See <TO DO CREATE AND REFERENCE AN EXAMPLE> for the new workflow
-
 * Notes.  Notes can now be attached to either an Alert or a Threat, and more metadata about the note is stored.
 TO DO CONFIRM IF THIS IS REALLY BREAKING OR JUST NEW AND IMPROVED
 
@@ -145,6 +145,13 @@ The following fields have a new name in Alert v7 and the new field name contains
      - k8s_kind
    * - workload_name
      - k8s_workload_name"
+
+Facet Term Names
+^^^^^^^^^^^^^^^^
+
+ In Alerts v6 API (and therefore SDK 1.4.3) the terms available for use in a facet
+were very limited and the names did not always match the field name it operated on. In Alerts v7 API and SDK 1.5.0,
+many more fields are available
 
 Things to consider
 ^^^^^^^^^^^^^^^^^^
