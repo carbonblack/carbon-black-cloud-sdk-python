@@ -14,7 +14,7 @@ from datetime import datetime
 
 import pytest
 
-from cbc_sdk.errors import ApiError, TimeoutError, NonQueryableModel
+from cbc_sdk.errors import ApiError, TimeoutError, NonQueryableModel, FunctionalityDecommissioned
 from cbc_sdk.platform import (
     Alert,
     WatchlistAlert, ContainerRuntimeAlert, Process,
@@ -28,7 +28,9 @@ from tests.unit.fixtures.platform.mock_alerts_v7 import (
     GET_ALERT_RESP_WITH_NOTES,
     GET_ALERT_NOTES,
     CREATE_ALERT_NOTE_RESP,
-    GET_ALERT_RESP
+    GET_ALERT_RESP,
+    GET_ALERT_FACET_RESP_INVALID,
+    GET_ALERT_FACET_RESP
 )
 from tests.unit.fixtures.platform.mock_process import (
     GET_PROCESS_VALIDATION_RESP,
@@ -260,22 +262,18 @@ def test_query_alert_facets(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         assert body["query"] == "Blort"
         t = body["criteria"]
-        assert t["workflow"] == ["OPEN"]
+        assert t["minimum_severity"] == ['3']
         t = body["terms"]
         assert t["rows"] == 0
-        assert t["fields"] == ["REPUTATION", "STATUS"]
-        return {"results": [{"field": {},
-                             "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                            {"field": {},
-                             "values": [{"id": "status", "name": "statusX", "total": 9}]}]}
-
+        assert t["fields"] == ["type"]
+        return GET_ALERT_FACET_RESP
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_facet", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(Alert).where("Blort").set_workflows(["OPEN"])
-    f = query.facets(["REPUTATION", "STATUS"])
-    assert f == [{"field": {}, "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                 {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
+    query = api.select(Alert).where("Blort").add_criteria("minimum_severity", "3")
+    f = query.facets(["type"])
+    assert f == [{'field': 'type', 'values': [{'id': 'WATCHLIST', 'name': 'WATCHLIST', 'total': 1916},
+                                              {'id': 'CB_ANALYTICS', 'name': 'CB_ANALYTICS', 'total': 41}]}]
 
 
 def test_query_alert_invalid_backend_timestamp_combinations(cb):
@@ -378,27 +376,6 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
     assert a.workflow_.state == "OPEN"
 
 
-def test_query_cbanalyticsalert_facets(cbcsdk_mock):
-    """Test a CB Analytics alert facet query."""
-
-    def on_post(url, body, **kwargs):
-        assert body == {"query": "Blort", "criteria": {'type': ['CB_ANALYTICS'], "workflow_status": ["OPEN"]},
-                        "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]}}
-        return {"results": [{"field": {},
-                             "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                            {"field": {},
-                             "values": [{"id": "status", "name": "statusX", "total": 9}]}]}
-
-    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_facet", on_post)
-    api = cbcsdk_mock.api
-
-    query = api.select(Alert).where("Blort").add_criteria("type", ["CB_ANALYTICS"]).add_criteria("workflow_status",
-                                                                                                 ["OPEN"])
-    f = query.facets(["REPUTATION", "STATUS"])
-    assert f == [{"field": {}, "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                 {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
-
-
 def test_query_devicecontrolalert_with_all_bells_and_whistles(cbcsdk_mock):
     """Test a device control alert query with all options selected."""
 
@@ -445,27 +422,6 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(cbcsdk_mock):
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
     assert a.workflow_.state == "OPEN"
-
-
-def test_query_devicecontrolalert_facets(cbcsdk_mock):
-    """Test a Device Control alert facet query."""
-
-    def on_post(url, body, **kwargs):
-        assert body == {"query": "Blort", "criteria": {'type': ['DEVICE_CONTROL'], "workflow_status": ["OPEN"]},
-                        "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]}}
-        return {"results": [{"field": {},
-                             "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                            {"field": {},
-                             "values": [{"id": "status", "name": "statusX", "total": 9}]}]}
-
-    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_facet", on_post)
-    api = cbcsdk_mock.api
-
-    query = api.select(Alert).where("Blort").add_criteria("type", ["DEVICE_CONTROL"]).add_criteria("workflow_status",
-                                                                                                   ["OPEN"])
-    f = query.facets(["REPUTATION", "STATUS"])
-    assert f == [{"field": {}, "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                 {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
 
 
 def test_query_watchlistalert_with_all_bells_and_whistles(cbcsdk_mock):
@@ -547,27 +503,6 @@ def test_query_watchlistalert_with_all_bells_and_whistles(cbcsdk_mock):
     assert a.workflow_.status == "OPEN"
 
 
-def test_query_watchlistalert_facets(cbcsdk_mock):
-    """Test a watchlist alert facet query."""
-
-    def on_post(url, body, **kwargs):
-        assert body == {"query": "Blort", "criteria": {'type': ['WATCHLIST'], "workflow_status": ["OPEN"]},
-                        "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]}}
-        return {"results": [{"field": {},
-                             "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                            {"field": {},
-                             "values": [{"id": "status", "name": "statusX", "total": 9}]}]}
-
-    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_facet", on_post)
-    api = cbcsdk_mock.api
-
-    query = api.select(Alert).where("Blort").add_criteria("type", ["WATCHLIST"]).add_criteria("workflow_status",
-                                                                                              ["OPEN"])
-    f = query.facets(["REPUTATION", "STATUS"])
-    assert f == [{"field": {}, "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                 {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
-
-
 def test_query_intrusion_detection_system_with_all_bells_and_whistles(cbcsdk_mock):
     """Test a IDS alert query with all options selected."""
 
@@ -585,7 +520,7 @@ def test_query_intrusion_detection_system_with_all_bells_and_whistles(cbcsdk_moc
                                      "threat_id": ["B0RG"], "type": ["INTRUSION_DETECTION_SYSTEM"],
                                      "policy_applied": ["APPLIED"],
                                      "reason_code": ["ATTACK_VECTOR"], "run_state": ["RAN"], "sensor_action": ["DENY"],
-                                     "alert_notes_present": ["True"], "attack_tactic": ["tactic"],
+                                     "alert_notes_present": True, "attack_tactic": ["tactic"],
                                      "attack_technique": ["technique"], "blocked_effective_reputation": ["NOT_LISTED"],
                                      "blocked_md5": ["md5_hash"], "blocked_name": ["tim"],
                                      "blocked_sha256": ["sha256_hash"],
@@ -610,7 +545,7 @@ def test_query_intrusion_detection_system_with_all_bells_and_whistles(cbcsdk_moc
                                      "process_username": ["steven"],
                                      "process_reputation": ["SUSPECT_MALWARE"],
                                      "process_issuer": ["Microsoft"], "process_publisher": ["Microsoft"]},
-                        "sort": [{"field": "name", "order": "DESC"}]}
+                        "sort": [{"field": "device_name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
 
@@ -633,7 +568,7 @@ def test_query_intrusion_detection_system_with_all_bells_and_whistles(cbcsdk_moc
         .add_criteria("policy_applied", ["APPLIED"]).add_criteria("reason_code", ["ATTACK_VECTOR"]).add_criteria(
         "run_state", ["RAN"]) \
         .add_criteria("device_target_value", ["HIGH"]).add_criteria("threat_id", ["B0RG"]) \
-        .add_criteria("threat_name", ["dangerous"]).add_criteria("alert_notes_present", "True") \
+        .add_criteria("threat_name", ["dangerous"]).set_alert_notes_present(True) \
         .add_criteria("attack_tactic", ["tactic"]).add_criteria("attack_technique", ["technique"]) \
         .add_criteria("workflow_status", ["OPEN"]).add_criteria("blocked_effective_reputation", ["NOT_LISTED"]).\
         add_criteria("blocked_md5", ["md5_hash"]).add_criteria("blocked_name", ["tim"]) \
@@ -653,34 +588,12 @@ def test_query_intrusion_detection_system_with_all_bells_and_whistles(cbcsdk_moc
         .add_criteria("reason_code", ["ATTACK_VECTOR"]).add_criteria("sensor_action", ["DENY"])\
         .add_criteria("process_username", ["steven"]) \
         .add_criteria("ttps", ["malicious"]).add_criteria("tms_rule_id", ["xtvr"]) \
-        .sort_by("name", "DESC")
+        .sort_by("device_name", "DESC")
     a = query.one()
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
     assert a.workflow_.status == "OPEN"
-
-
-def test_query_intrusion_detection_system_alert_facets(cbcsdk_mock):
-    """Test a IDS alert facet query."""
-
-    def on_post(url, body, **kwargs):
-        assert body == {"query": "Blort", "criteria": {'type': ['INTRUSION_DETECTION_SYSTEM'],
-                                                       "workflow_status": ["OPEN"]},
-                        "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]}}
-        return {"results": [{"field": {},
-                             "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                            {"field": {},
-                             "values": [{"id": "status", "name": "statusX", "total": 9}]}]}
-
-    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_facet", on_post)
-    api = cbcsdk_mock.api
-
-    query = api.select(Alert).where("Blort").add_criteria("type", ["INTRUSION_DETECTION_SYSTEM"])\
-        .add_criteria("workflow_status", ["OPEN"])
-    f = query.facets(["REPUTATION", "STATUS"])
-    assert f == [{"field": {}, "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                 {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
 
 
 def test_query_containeralert_with_all_bells_and_whistles(cbcsdk_mock):
@@ -921,13 +834,31 @@ def test_query_alert_sort_error(cbcsdk_mock):
     assert "invalid sort direction specified" in str(ex.value)
 
 
-def test_query_alert_facets_error(cbcsdk_mock):
+def test_query_alert_facets_functionality_decommissioned_error(cbcsdk_mock):
     """Test an alert facet query with invalid term."""
+    cbcsdk_mock.mock_request('POST',
+                             "/api/alerts/v7/orgs/test/alerts/_facet",
+                             GET_ALERT_FACET_RESP_INVALID)
+
+    api = cbcsdk_mock.api
+    query = api.select(Alert).where("Blort").set_workflows(["OPEN"])
+    with pytest.raises(FunctionalityDecommissioned) as ex:
+        query.facets(["ALABALA", "STATUS"])
+    assert "The Field 'STATUS' does is not a valid facet name because it was deprecated in Alerts v7. functionality " \
+           "has been decommissioned." in str(ex.value)
+
+
+def test_query_alert_facets_api_error(cbcsdk_mock):
+    """Test an alert facet query with invalid term."""
+    cbcsdk_mock.mock_request('POST',
+                             "/api/alerts/v7/orgs/test/alerts/_facet",
+                             GET_ALERT_FACET_RESP_INVALID)
+    cbcsdk_mock.mocks['POST:/api/alerts/v7/orgs/test/alerts/_facet'].__setattr__("status_code", 400)
     api = cbcsdk_mock.api
     query = api.select(Alert).where("Blort").set_workflows(["OPEN"])
     with pytest.raises(ApiError) as ex:
-        query.facets(["ALABALA", "STATUS"])
-    assert "One or more invalid term field names" in str(ex.value)
+        query.facets(["jager"])
+    assert "'error_code': 'INVALID_ENUM_VALUE'" in str(ex.value)
 
 
 def test_get_notes_for_alert(cbcsdk_mock):

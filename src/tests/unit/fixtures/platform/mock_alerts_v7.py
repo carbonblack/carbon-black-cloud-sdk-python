@@ -301,3 +301,108 @@ CREATE_ALERT_NOTE_RESP = {"author": "Grogu", "id": "3gsgsfds", "note": "I am Gro
                           "create_timestamp": "2023-04-18T03:25:44.397Z",
                           "last_update_timestamp": "2023-04-18T03:25:44.397Z",
                           "source": "CUSTOMER", "parent_id": None, "read_history": None, "thread": None}
+
+CREATE_ALERT_FACET_BODY = {
+    "terms": {
+        "fields": [
+            "TYPE"
+        ],
+    },
+    "criteria": {
+        "minimum_severity": "3"
+    },
+}
+GET_ALERT_FACET_RESP = {
+    "results": [
+        {
+            "field": "type",
+            "values": [
+                {
+                    "total": 1916,
+                    "id": "WATCHLIST",
+                    "name": "WATCHLIST"
+                },
+                {
+                    "total": 41,
+                    "id": "CB_ANALYTICS",
+                    "name": "CB_ANALYTICS"
+                }
+            ]
+        }
+    ]
+}
+
+GET_ALERT_FACET_RESP_INVALID = {
+    "error_code": "INVALID_ENUM_VALUE", "message": "Malformed JSON input: terms.fields[0]", "field": "terms.fields[0]",
+    "invalid_value": "jager", "known_values": [
+        "TYPE",
+        "K8S_POLICY",
+        "K8S_POLICY_ID",
+        "K8S_RULE",
+        "K8S_RULE_ID",
+        "ATTACK_TACTIC",
+        "ATTACK_TECHNIQUE",
+        "DEVICE_ID",
+        "DEVICE_NAME",
+        "APPLICATION_HASH",
+        "APPLICATION_NAME",
+        "RUN_STATE",
+        "POLICY_APPLIED",
+        "SENSOR_ACTION",
+        "K8S_CLUSTER",
+        "K8S_NAMESPACE",
+        "K8S_KIND",
+        "K8S_WORKLOAD_NAME",
+        "CONNECTION_TYPE",
+        "RULE_ID",
+        "RULE_CONFIG_CATEGORY",
+        "RULE_CONFIG_NAME",
+        "RULE_CONFIG_ID",
+        "THREAT_ID",
+        "POLICY_CONFIGURATION_NAME",
+        "DEVICE_POLICY",
+        "REPORT_NAME",
+        "WATCHLISTS_NAME",
+        "THREAT_HUNT_NAME",
+        "VENDOR_NAME",
+        "PRODUCT_NAME",
+        "EXTERNAL_DEVICE_FRIENDLY_NAME",
+        "PROCESS_NAME",
+        "PROCESS_SHA256",
+        "PROCESS_EFFECTIVE_REPUTATION",
+        "PROCESS_REPUTATION",
+        "PROCESS_USERNAME",
+        "PARENT_NAME",
+        "PARENT_SHA256",
+        "PARENT_USERNAME",
+        "PARENT_REPUTATION",
+        "PARENT_EFFECTIVE_REPUTATION",
+        "CHILDPROC_EFFECTIVE_REPUTATION",
+        "MDR_ALERT",
+        "ORG_KEY",
+        "TAGS",
+        "SEVERITY",
+        "WORKFLOW_STATUS",
+        "WORKFLOW_CHANGED_BY_TYPE",
+        "WORKFLOW_CHANGED_BY_AUTOCLOSE_RULE_ID",
+        "DETERMINATION_VALUE",
+        "DETERMINATION_CHANGED_BY_TYPE",
+        "ORG_FEATURE_ENTITLEMENT",
+        "ACCOUNT_NAME",
+        "SLO_TIME_RANGE",
+        "MDR_WORKFLOW_STATUS",
+        "MDR_WORKFLOW_CHANGED_BY_TYPE",
+        "MDR_WORKFLOW_CHANGED_BY",
+        "MDR_WORKFLOW_CHANGED_BY_RULE_ID",
+        "MDR_WORKFLOW_ASSIGNED_TO",
+        "MDR_DETERMINATION_VALUE",
+        "MDR_CLASSIFICATION_DETERMINATION_CODE",
+        "MDR_DETERMINATION_SUB_DETERMINATION",
+        "MDR_DETERMINATION_CHANGED_BY_TYPE",
+        "MDR_ML_CLASSIFICATION_CONFIDENCE",
+        "MDR_ML_CLASSIFICATION_VERDICT",
+        "ML_CLASSIFICATION_FINAL_VERDICT",
+        "CONTAINER_IMAGE_NAME",
+        "CONTAINER_NAME"
+    ]
+}
