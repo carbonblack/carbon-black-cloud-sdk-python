@@ -1,17 +1,8 @@
 Alert Migration
 ===============
 
-TO DO items:
-
-* Add links to RTD sections
-Note that in SDK 1.5.0, to align with Alerts API v7, the search field was updated from
-
-        `port` to `netconn_local_port`.  It is possible to search on either `netconn_local_port`
-        or `netconn_remote_port` using the `add_criteria(fieldname, [field values]) method.
-
-
-This guide will help you update from SDK v1.4.3 or earlier which used Alerts v6 API to
-SDK v1.5.0 or later which has been updated to use the Alerts v7 API.
+This guide will help you update from SDK v1.4.3 or earlier (which used Alerts v6 API) to
+SDK v1.5.0 or later when the SDK was updated to use the Alerts v7 API.
 
 We recommend that customers evaluate the new fields available in Alerts v7 API, and supported in SDK 1.5.0 onwards,
 to maximise benefit from the new data. There is a lot of new metadata included in the Alert record, and you may be able
@@ -25,27 +16,59 @@ Resources
 * `Alerts v7 Announcement <https://developer.carbonblack.com/2023/06/announcing-vmware-carbon-black-cloud-alerts-v7-api/>`_
 * `Alert Search and Response Fields <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields>`_
 
-Backwards compatibility
-^^^^^^^^^^^^^^^^^^^^^^^
+Breaking Changes and Backwards compatibility
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Backwards compatibility has been built into SDK 1.5.0 to minimise breakages for users of 1.4.3 with the following
-mechanisms:
+Backwards compatibility has been built into SDK 1.5.0 to minimise breakages for users moving from 1.4.3.
+
+An example script that demonstrates compatibility and breaking changes is in GitHub in
+`examples --> platform --> alert_v6_v7_migration.py
+<https://github.com/carbonblack/carbon-black-cloud-sdk-python/tree/develop/examples/platform>`_.  The "Example Method"
+references are to this file.
+
+* The base class for Alerts in the SDK has changed from ``BaseAlert`` to ``Alert``
+
+    * Backwards compatibility has been retained
+    * Example method: ``base_class_and_default_time_range(api)``
+
+* The default search period changed in Carbon Black Cloud.  It was one month and is now two weeks.
+
+    * The SDK does not make any compensating changes for this change of time period
+    * Example method: ``base_class_and_default_time_range(api)``
 
 * `set_<v6 field name>()` on the query object will translate to the new field name for the request
 
-    * Should be updated to use `add_criteria(field_name, [field_value])
+    * Should update to use `add_criteria(field_name, [field_value])
     * Many new fields can be used in criteria to search Alerts using add_criteria,
       but do not have set_<field_name> methods
     * Another benefit of moving to add_criteria is that it has an additional parameter `exclude`.
       If this is set to True, then Alerts that match these values are excluded from the results.
+    * Example method: ``set_methods_backwards_compatibility(api)``
 
 * `get(<v6 field name>)` will translate to the new field name to look up the value.
-* `alert.fieldname` will translate fieldname to the new name and return the matching value
+
+    * Example method: ``get_methods_backwards_compatibility(api)`` and ``category_monitored_removed(api)``
+
+* `alert.field_name` will translate the field name to the new name and return the matching value.
+
+    * If a field does not have an equivalent field, a ``FunctionalityDecommissioned`` exception is raised
+    * Example method: ``get_methods_backwards_compatibility(api)`` and ``category_monitored_removed(api)``
+
 * `to_json` is a new method that returns the alert object in json format.  It has been added to replace the use
 of `_info` as this is an internal representation.
 
     * `to_json("v6")` will translate field names from the v7 field name to v6 field names and return a structure as
 close to v6 (SDK 1.4.3) as possible.  The fields that do not have equivalents in the v7 API will be missing.
+    * Example method: ``show_to_json(api)``
+
+* Enriched Events have been replaced by Observations
+
+    * Example method: ``observation_replaces_enriched_event(api)``
+
+* Facet terms now match the field name the facet applies to
+
+    * If the term used in v6 is the same as the field in v7 the facet term will continue to work
+    * If the term used in v6 is not the same as v7, a ``FunctionalityDecommissioned`` exception will be raised
 
 Breaking Changes
 ^^^^^^^^^^^^^^^^
@@ -149,9 +172,21 @@ The following fields have a new name in Alert v7 and the new field name contains
 Facet Term Names
 ^^^^^^^^^^^^^^^^
 
- In Alerts v6 API (and therefore SDK 1.4.3) the terms available for use in a facet
+In Alerts v6 API (and therefore SDK 1.4.3) the terms available for use in a facet
 were very limited and the names did not always match the field name it operated on. In Alerts v7 API and SDK 1.5.0,
-many more fields are available
+many more fields are available and the term name matches the field name.
+
+Term names available in SDK 1.4.3 that do not match the field name now raise a ``FunctionalityDecommissioned``
+exception.  This was a conscious choice to reduce the complexity and ongoing maintenance effort in the SDK going
+and also to ensure it is visible to customers that the Facet capability has had significant improvements that
+integrations will benefit from.
+
+This snippet shows a pre-SDK 1.4.3 facet request and the ``FunctionalityDecommissioned`` exception generated by the
+SDK 1.5.0 SDK.
+
+
+The replacement snippet is:
+
 
 Things to consider
 ^^^^^^^^^^^^^^^^^^
