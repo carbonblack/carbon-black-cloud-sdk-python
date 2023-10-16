@@ -146,12 +146,17 @@ class CBCloudAPI(BaseAPI):
         """
         return self.select(RunHistory).where(query)
 
-    # ---- Notifications
+    # ---- Notifications (deprecated)
 
     def notification_listener(self, interval=60):
-        """Continually polls the Cb Endpoint Standard server for notifications (alerts).
+        """
+        Continually polls the Cb Endpoint Standard server for notifications (alerts).
 
-        Note that this can only be used with a 'SIEM' key generated in the Cb Endpoint Standard console.
+        Note:
+            This can only be used with a 'SIEM' key generated in the Cb Endpoint Standard console.
+
+        Deprecated:
+            Use the Alerts API or the Data Forwarder to get similar notifications.
 
         Args:
             interval (int): Time period to wait in between polls for notifications, in seconds.  Default is 60.
@@ -159,26 +164,34 @@ class CBCloudAPI(BaseAPI):
         Yields:
             dict: A dictionary representing a notification.
         """
+        log.warning("CBCloudAPI.notification_listener is deprecated, use Alerts API or Data Forwarder instead")
         while True:
             for notification in self.get_notifications():
                 yield notification
             time.sleep(interval)
 
     def get_notifications(self):
-        """Retrieve queued notifications (alerts) from the Cb Endpoint Standard server.
+        """
+        Retrieve queued notifications (alerts) from the Cb Endpoint Standard server.
 
-        Note that this can only be used with a 'SIEM' key generated in the Cb Endpoint Standard console.
+        Note:
+            This can only be used with a 'SIEM' key generated in the Cb Endpoint Standard console.
+
+        Deprecated:
+            Use the Alerts API or the Data Forwarder to get similar notifications.
 
         Returns:
             list[dict]: List of dictionary objects representing the notifications, or an empty list if none available.
         """
+        log.warning("CBCloudAPI.get_notifications is deprecated, use Alerts API or Data Forwarder instead")
         res = self.get_object("/integrationServices/v3/notification")
         return res.get("notifications", [])
 
     def get_auditlogs(self):
-        """Retrieve queued audit logs from the Carbon Black Cloud Endpoint Standard server.
+        """
+        Retrieve queued audit logs from the Carbon Black Cloud Endpoint Standard server.
 
-        Notes:
+        Note:
             This can only be used with a 'API' key generated in the Carbon Black Cloud console.
 
         Deprecated:
