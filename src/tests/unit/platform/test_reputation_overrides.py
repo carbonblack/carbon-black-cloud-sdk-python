@@ -21,7 +21,7 @@ from tests.unit.fixtures.platform.mock_reputation_override import (REPUTATION_OV
                                                                    REPUTATION_OVERRIDE_SHA256_RESPONSE,
                                                                    REPUTATION_OVERRIDE_SHA256_SEARCH_RESPONSE)
 
-from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_VALIDATION_RESP,
+from tests.unit.fixtures.platform.mock_process import (POST_PROCESS_VALIDATION_RESP,
                                                        POST_PROCESS_SEARCH_JOB_RESP,
                                                        GET_PROCESS_SEARCH_JOB_RESP,
                                                        GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
@@ -180,12 +180,8 @@ def test_reputation_override_bulk_delete(cbcsdk_mock):
 def test_reputation_override_process_ban_process_sha256(cbcsdk_mock):
     """Testing Reputation Override creation from process"""
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=WNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&q=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&query=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation",
+                             POST_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -225,12 +221,8 @@ def test_reputation_override_process_ban_process_sha256(cbcsdk_mock):
 def test_reputation_override_process_approve_process_sha256(cbcsdk_mock):
     """Testing Reputation Override creation from process"""
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=WNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&q=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&query=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation",
+                             POST_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)

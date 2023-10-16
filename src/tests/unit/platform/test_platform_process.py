@@ -15,7 +15,7 @@ from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_SUMMARY_RESP,
                                                        GET_PROCESS_SUMMARY_RESP_ZERO_CONTACTED,
                                                        GET_PROCESS_SUMMARY_RESP_NO_HASH,
                                                        GET_PROCESS_SUMMARY_RESP_NO_PID,
-                                                       GET_PROCESS_VALIDATION_RESP,
+                                                       POST_PROCESS_VALIDATION_RESP,
                                                        POST_PROCESS_SEARCH_JOB_RESP,
                                                        POST_TREE_SEARCH_JOB_RESP,
                                                        GET_PROCESS_NOT_FOUND,
@@ -62,13 +62,12 @@ def cbcsdk_mock(monkeypatch, cb):
 
 def test_process_select(cbcsdk_mock):
     """Testing Process Querying with select()"""
+    def on_validation_post(url, body, **kwargs):
+        assert body == {"query": "process_guid:WNEXFKQ7\\-0002b226\\-000015bd\\-00000000\\-1d6225bbba74c00"}
+        return POST_PROCESS_VALIDATION_RESP
+
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=WNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&q=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&query=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -270,13 +269,12 @@ def test_summary_select_set_time_range_failures(cbcsdk_mock):
 
 def test_process_events(cbcsdk_mock):
     """Testing Process.events()."""
+    def on_validation_post(url, body, **kwargs):
+        assert body == {"query": "process_guid:WNEXFKQ7\\-0002b226\\-000015bd\\-00000000\\-1d6225bbba74c00"}
+        return POST_PROCESS_VALIDATION_RESP
+
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=WNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&q=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&query=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -308,13 +306,12 @@ def test_process_events(cbcsdk_mock):
 
 def test_process_events_with_criteria_exclusions(cbcsdk_mock):
     """Testing the add_criteria() method when selecting events."""
+    def on_validation_post(url, body, **kwargs):
+        assert body == {"query": "process_guid:WNEXFKQ7\\-0002b226\\-000015bd\\-00000000\\-1d6225bbba74c00"}
+        return POST_PROCESS_VALIDATION_RESP
+
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=WNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&q=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&query=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -359,13 +356,12 @@ def test_process_events_with_criteria_exclusions(cbcsdk_mock):
 
 def test_process_events_exceptions(cbcsdk_mock):
     """Testing raising an Exception when using Query.add_criteria() and Query.add_exclusions()."""
+    def on_validation_post(url, body, **kwargs):
+        assert body == {"query": "process_guid:WNEXFKQ7\\-0002b226\\-000015bd\\-00000000\\-1d6225bbba74c00"}
+        return POST_PROCESS_VALIDATION_RESP
+
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=WNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&q=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&query=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -391,18 +387,17 @@ def test_process_events_exceptions(cbcsdk_mock):
 
 def test_process_with_criteria_exclusions(cbcsdk_mock):
     """Testing AsyncProcessQuery.add_criteria() and AsyncProcessQuery.add_exclusions()."""
+    def on_validation_post(url, body, **kwargs):
+        assert body == {"query": "event_type:modload"}
+        return POST_PROCESS_VALIDATION_RESP
+
     api = cbcsdk_mock.api
     # use the update methods
     process = api.select(Process).where("event_type:modload").add_criteria("device_id", [1234]).add_exclusions(
         "crossproc_effective_reputation", ["REP_WHITE"])
     process.timeout(1000)
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "criteria=%7B%27device_id%27%3A+%5B1234%5D%7D&exclusions=%7B%27"
-                             "crossproc_effective_reputation%27%3A+%5B%27REP_WHITE%27%5D%7D"
-                             "&q=event_type%3Amodload&query=event_type%3Amodload",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -542,13 +537,12 @@ def test_process_sort(cbcsdk_mock):
 
 def test_process_events_query_with_criteria_exclusions(cbcsdk_mock):
     """Testing the add_criteria() method when selecting events."""
+    def on_validation_post(url, body, **kwargs):
+        assert body == {"query": "process_guid:WNEXFKQ7\\-0002b226\\-000015bd\\-00000000\\-1d6225bbba74c00"}
+        return POST_PROCESS_VALIDATION_RESP
+
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=WNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&q=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&query=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -596,13 +590,12 @@ def test_process_events_query_with_criteria_exclusions(cbcsdk_mock):
 
 def test_process_events_raise_exceptions(cbcsdk_mock):
     """Testing raising an Exception when using Query.add_criteria() and Query.add_exclusions()."""
+    def on_validation_post(url, body, **kwargs):
+        assert body == {"query": "process_guid:WNEXFKQ7\\-0002b226\\-000015bd\\-00000000\\-1d6225bbba74c00"}
+        return POST_PROCESS_VALIDATION_RESP
+
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=WNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&q=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&query=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -628,17 +621,16 @@ def test_process_events_raise_exceptions(cbcsdk_mock):
 
 def test_process_query_with_criteria_exclusions(cbcsdk_mock):
     """Testing AsyncProcessQuery.add_criteria() and AsyncProcessQuery.add_exclusions()."""
+    def on_validation_post(url, body, **kwargs):
+        assert body == {"query": "event_type:modload"}
+        return POST_PROCESS_VALIDATION_RESP
+
     api = cbcsdk_mock.api
     # use the update methods
     process = api.select(Process).where("event_type:modload").add_criteria("device_id", [1234]).add_exclusions(
         "crossproc_effective_reputation", ["REP_WHITE"])
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "criteria=%7B%27device_id%27%3A+%5B1234%5D%7D&exclusions=%7B%27"
-                             "crossproc_effective_reputation%27%3A+%5B%27REP_WHITE%27%5D%7D"
-                             "&q=event_type%3Amodload&query=event_type%3Amodload",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -771,13 +763,14 @@ def test_process_sort_by(cbcsdk_mock):
                           ])
 def test_process_parents(cbcsdk_mock, get_summary_response, guid, process_search_results, has_parent_process):
     """Testing Process.parents property/method."""
+    def on_validation_post(url, body, **kwargs):
+        newguid = guid.replace('-', '\\-')
+        assert body == {"query": f"process_guid:{newguid}"}
+        return POST_PROCESS_VALIDATION_RESP
+
     api = cbcsdk_mock.api
     # mock the search validation
-    guid_escaped = guid.replace('-', '%5C-')
-    query = f"process_guid={guid_escaped}&q=process_guid%3A{guid_escaped}&query=process_guid%3A{guid_escaped}"
-    cbcsdk_mock.mock_request("GET",
-                             f"/api/investigate/v1/orgs/test/processes/search_validation?{query}",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -801,11 +794,15 @@ def test_process_parents(cbcsdk_mock, get_summary_response, guid, process_search
     # the process has a parent process (manually flagged)
     if has_parent_process:
         # mock the search validation
-        parent_escaped = process.parent_guid.replace('-', '%5C-')
-        query = f"process_guid={parent_escaped}&q=process_guid%3A{parent_escaped}&query=process_guid%3A{parent_escaped}"
-        cbcsdk_mock.mock_request("GET",
-                                 f"/api/investigate/v1/orgs/test/processes/search_validation?{query}",
-                                 GET_PROCESS_VALIDATION_RESP)
+        parent_escaped = process.parent_guid.replace('-', '\\-')
+
+        def on_parent_validation(url, body, **kwargs):
+            nonlocal parent_escaped
+            assert body == {"query": f"process_guid:{parent_escaped}"}
+            return POST_PROCESS_VALIDATION_RESP
+
+        cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation",
+                                 on_parent_validation)
 
         # Process.parents property returns a Process object, or [] if None
         assert isinstance(process.parents, Process)
@@ -832,12 +829,13 @@ def test_process_parents(cbcsdk_mock, get_summary_response, guid, process_search
     (GET_PROCESS_SUMMARY_RESP_NO_CHILDREN, "test-003513bc-0000035c-00000000-1d640200c9a6205", 0)])
 def test_process_children(cbcsdk_mock, get_summary_response, guid, expected_num_children):
     """Testing Process.children property."""
+    def on_validation_post(url, body, **kwargs):
+        newguid = guid.replace('-', '\\-')
+        assert body == {"query": f"process_guid:{newguid}"}
+        return POST_PROCESS_VALIDATION_RESP
+
     # mock the search validation
-    guid_escaped = guid.replace('-', '%5C-')
-    query = f"process_guid={guid_escaped}&q=process_guid%3A{guid_escaped}&query=process_guid%3A{guid_escaped}"
-    cbcsdk_mock.mock_request("GET",
-                             f"/api/investigate/v1/orgs/test/processes/search_validation?{query}",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
     # mock the POST of a process search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -881,12 +879,13 @@ def test_process_children(cbcsdk_mock, get_summary_response, guid, expected_num_
      "test-003513bc-0000035c-00000000-1d640200c9a6205", None)])
 def test_process_md5(cbcsdk_mock, get_process_search_response, get_summary_response, guid, md5):
     """Testing Process.process_md5 property."""
+    def on_validation_post(url, body, **kwargs):
+        newguid = guid.replace('-', '\\-')
+        assert body == {"query": f"process_guid:{newguid}"}
+        return POST_PROCESS_VALIDATION_RESP
+
     # mock the search validation
-    guid_escaped = guid.replace('-', '%5C-')
-    query = f"process_guid={guid_escaped}&q=process_guid%3A{guid_escaped}&query=process_guid%3A{guid_escaped}"
-    cbcsdk_mock.mock_request("GET",
-                             f"/api/investigate/v1/orgs/test/processes/search_validation?{query}",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
     # mock the POST of a process search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -918,13 +917,12 @@ def test_process_md5(cbcsdk_mock, get_process_search_response, get_summary_respo
 
 def test_process_md5_not_found(cbcsdk_mock):
     """Testing error raising when receiving 404 for a Process."""
+    def on_validation_post(url, body, **kwargs):
+        assert body == {"query": "process_guid:someNonexistantGuid"}
+        return POST_PROCESS_VALIDATION_RESP
+
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=someNonexistantGuid"
-                             "&q=process_guid%3AsomeNonexistantGuid"
-                             "&query=process_guid%3AsomeNonexistantGuid",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
     # mock the POST of a process search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -969,12 +967,14 @@ def test_process_md5_not_found(cbcsdk_mock):
      "test-003513bc-0000035c-00000000-1d640200c9a6205", None)])
 def test_process_sha256(cbcsdk_mock, get_process_response, get_summary_response, guid, sha256):
     """Testing Process.process_sha256 property."""
+    def on_validation_post(url, body, **kwargs):
+        newguid = guid.replace('-', '\\-')
+        assert body == {"query": f"process_guid:{newguid}"}
+        return POST_PROCESS_VALIDATION_RESP
+
+    """Testing Process.process_sha256 property."""
     # mock the search validation
-    guid_escaped = guid.replace('-', '%5C-')
-    query = f"process_guid={guid_escaped}&q=process_guid%3A{guid_escaped}&query=process_guid%3A{guid_escaped}"
-    cbcsdk_mock.mock_request("GET",
-                             f"/api/investigate/v1/orgs/test/processes/search_validation?{query}",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
     # mock the POST of a process search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -1017,12 +1017,13 @@ def test_process_sha256(cbcsdk_mock, get_process_response, get_summary_response,
      "test-003513bc-0000035c-00000000-1d640200c9a6205", None)])
 def test_process_pids(cbcsdk_mock, get_process_response, get_summary_response, guid, pids):
     """Testing Process.process_pids property."""
+    def on_validation_post(url, body, **kwargs):
+        newguid = guid.replace('-', '\\-')
+        assert body == {"query": f"process_guid:{newguid}"}
+        return POST_PROCESS_VALIDATION_RESP
+
     # mock the search validation
-    guid_escaped = guid.replace('-', '%5C-')
-    query = f"process_guid={guid_escaped}&q=process_guid%3A{guid_escaped}&query=process_guid%3A{guid_escaped}"
-    cbcsdk_mock.mock_request("GET",
-                             f"/api/investigate/v1/orgs/test/processes/search_validation?{query}",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
     # mock the POST of a process search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -1050,13 +1051,12 @@ def test_process_pids(cbcsdk_mock, get_process_response, get_summary_response, g
 
 def test_process_select_where(cbcsdk_mock):
     """Testing Process querying with where()."""
+    def on_validation_post(url, body, **kwargs):
+        assert body == {"query": "process_guid:WNEXFKQ7\\-0002b226\\-000015bd\\-00000000\\-1d6225bbba74c00"}
+        return POST_PROCESS_VALIDATION_RESP
+
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=WNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&q=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&query=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -1078,16 +1078,15 @@ def test_process_select_where(cbcsdk_mock):
 
 def test_process_still_querying(cbcsdk_mock):
     """Testing Process"""
+    def on_validation_post(url, body, **kwargs):
+        assert body == {"query": "process_guid:WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00"}
+        return POST_PROCESS_VALIDATION_RESP
+
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00"
-                             "&q=process_guid%3AWNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00"
-                             "&query=process_guid%3AWNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
     # mock the GET to check search status
     cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
                                      "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=0"),
@@ -1101,16 +1100,15 @@ def test_process_still_querying(cbcsdk_mock):
 
 def test_process_still_querying_zero(cbcsdk_mock):
     """Testing Process"""
+    def on_validation_post(url, body, **kwargs):
+        assert body == {"query": "process_guid:WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00"}
+        return POST_PROCESS_VALIDATION_RESP
+
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00"
-                             "&q=process_guid%3AWNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00"
-                             "&query=process_guid%3AWNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
     # mock the GET to check search status
     cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
                                      "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=0"),
@@ -1218,13 +1216,12 @@ def test_process_facet_select(cbcsdk_mock):
 
 def test_process_facets(cbcsdk_mock):
     """Testing Process.facets() method."""
+    def on_validation_post(url, body, **kwargs):
+        assert body == {"query": "process_guid:WNEXFKQ7\\-0002b226\\-000015bd\\-00000000\\-1d6225bbba74c00"}
+        return POST_PROCESS_VALIDATION_RESP
+
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=WNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&q=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&query=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -1284,13 +1281,12 @@ def test_process_facet_query_check_range(cbcsdk_mock, bucket_size, start, end, f
 
 def test_tree_select(cbcsdk_mock):
     """Testing Process.Tree Querying"""
+    def on_validation_post(url, body, **kwargs):
+        assert body == {"query": "process_guid:WNEXFKQ7\\-0002b226\\-000015bd\\-00000000\\-1d6225bbba74c00"}
+        return POST_PROCESS_VALIDATION_RESP
+
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=WNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&q=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&query=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)

@@ -25,7 +25,7 @@ from cbc_sdk.platform import (
 )
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.platform.mock_process import (
-    GET_PROCESS_VALIDATION_RESP,
+    POST_PROCESS_VALIDATION_RESP,
     POST_PROCESS_SEARCH_JOB_RESP,
     GET_PROCESS_SEARCH_JOB_RESP,
     GET_PROCESS_SEARCH_JOB_RESULTS_RESP,
@@ -739,12 +739,8 @@ def test_get_process(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/887e6bbc-6224-4f36-ad37-084038b7fcab",
                              GET_ALERT_TYPE_WATCHLIST)
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=ABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
-                             "q=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
-                             "query=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation",
+                             POST_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -770,12 +766,8 @@ def test_get_process_zero_found(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/887e6bbc-6224-4f36-ad37-084038b7fcab",
                              GET_ALERT_TYPE_WATCHLIST)
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=ABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
-                             "q=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
-                             "query=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation",
+                             POST_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -799,12 +791,8 @@ def test_get_process_raises_api_error(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/6b2348cb-87c1-4076-bc8e-7c717e8af608",
                              GET_ALERT_TYPE_WATCHLIST_INVALID)
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=WNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&q=process_guid%3AWNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&query=process_guid%3AWNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation",
+                             POST_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -828,12 +816,8 @@ def test_get_process_async(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/887e6bbc-6224-4f36-ad37-084038b7fcab",
                              GET_ALERT_TYPE_WATCHLIST)
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=ABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
-                             "q=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
-                             "query=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation",
+                             POST_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)

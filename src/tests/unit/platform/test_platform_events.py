@@ -14,7 +14,7 @@ from tests.unit.fixtures.platform.mock_events import (EVENT_SEARCH_VALIDATION_RE
                                                       EVENT_SEARCH_RESP_PART_TWO,
                                                       EVENT_FACETS_RESP,
                                                       EVENT_FACETS_RESP_INCOMPLETE)
-from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_VALIDATION_RESP,
+from tests.unit.fixtures.platform.mock_process import (POST_PROCESS_VALIDATION_RESP,
                                                        POST_PROCESS_SEARCH_JOB_RESP,
                                                        GET_PROCESS_SEARCH_JOB_RESP,
                                                        GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
@@ -42,12 +42,8 @@ def cbcsdk_mock(monkeypatch, cb):
 def test_event_query_process_select_with_guid(cbcsdk_mock):
     """Test Event Querying with GUID inside process.select()"""
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation"
-                             "?process_guid=J7G6DTLN%5C-006633e3%5C-00000334%5C-00000000%5C-1d677bedfbb1c2e"
-                             "&q=process_guid%3AJ7G6DTLN%5C-006633e3%5C-00000334%5C-00000000%5C-1d677bedfbb1c2e"
-                             "&query=process_guid%3AJ7G6DTLN%5C-006633e3%5C-00000334%5C-00000000%5C-1d677bedfbb1c2e",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation",
+                             POST_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)

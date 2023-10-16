@@ -1978,7 +1978,7 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
             args['query'] = query
         if self._query_builder._process_guid is not None:
             args["process_guid"] = self._query_builder._process_guid
-        if 'process_guid:' in args.get('query', ""):
+        if 'process_guid:' in args.get('query', ''):
             q = args['query'].split('process_guid:', 1)[1].split(' ', 1)[0]
             args["process_guid"] = q
 
@@ -2039,6 +2039,7 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
             return
 
         url = self._doc_class.validation_url.format(self._cb.credentials.org_key)
+        method = self._doc_class.validation_method if hasattr(self._doc_class, "validation_method") else "GET"
 
         if args.get('query', False):
             args['q'] = args['query']
@@ -2046,7 +2047,15 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
         # v2 search sort key does not work with v1 validation
         sort = args.pop('sort', None)
 
-        validated = self._cb.get_object(url, query_parameters=args)
+        if method == "POST":
+            qparam = args.get('q', None)
+            if qparam:
+                result = self._cb.post_object(url, {'query': qparam})
+                validated = result.json()
+            else:
+                validated = {"valid": True}  # fake result - nothing to validate
+        else:
+            validated = self._cb.get_object(url, query_parameters=args)
 
         # Re-add sort
         args["sort"] = sort
@@ -2399,6 +2408,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
             return
 
         url = self._doc_class.validation_url.format(self._cb.credentials.org_key)
+        method = self._doc_class.validation_method if hasattr(self._doc_class, "validation_method") else "GET"
 
         if args.get('query', False):
             args['q'] = args['query']
@@ -2408,7 +2418,11 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
         # remove duplicate q
         args.pop("q")
 
-        validated = self._cb.get_object(url, query_parameters=args)
+        if method == "POST":
+            result = self._cb.post_object(url, {'query': args['q']})
+            validated = result.json()
+        else:
+            validated = self._cb.get_object(url, query_parameters=args)
 
         if not validated.get("valid"):
             raise ApiError("Invalid query: {}: {}".format(args, validated["invalid_message"]))

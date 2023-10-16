@@ -7,7 +7,7 @@ from cbc_sdk.errors import ModelNotFound
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_grants import QUERY_GRANT_RESP
 from tests.unit.fixtures.platform.mock_process import (
-    GET_PROCESS_VALIDATION_RESP,
+    POST_PROCESS_VALIDATION_RESP,
     POST_PROCESS_SEARCH_JOB_RESP,
     GET_PROCESS_SEARCH_JOB_RESP,
     GET_PROCESS_SEARCH_JOB_RESULTS_RESP,
@@ -145,12 +145,9 @@ class TestReferenceProcess:
         """Test the dynamic reference for the `Process` class."""
         # mock the search validation
         cbcsdk_mock.mock_request(
-            "GET",
-            "/api/investigate/v1/orgs/Z100/processes/search_validation?"
-            "process_guid=WNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-            "&q=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-            "&query=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00",
-            GET_PROCESS_VALIDATION_RESP,
+            "POST",
+            "/api/investigate/v2/orgs/Z100/processes/search_validation",
+            POST_PROCESS_VALIDATION_RESP,
         )
         # mock the POST of a search
         cbcsdk_mock.mock_request(
@@ -221,9 +218,9 @@ class TestReferenceProcess:
         """Test the dynamic reference for the `Process.Tree` class."""
         # mock the search validation
         cbcsdk_mock.mock_request(
-            "GET",
-            "/api/investigate/v1/orgs/Z100/processes/search_validation",
-            GET_PROCESS_VALIDATION_RESP,
+            "POST",
+            "/api/investigate/v2/orgs/Z100/processes/search_validation",
+            POST_PROCESS_VALIDATION_RESP,
         )
         # mock the POST of a search
         cbcsdk_mock.mock_request(
