@@ -11,9 +11,10 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-"""Definition of the CBCloudAPI object, the core object for interacting with the Carbon Black Cloud SDK.
+"""
+Definition of the ``CBCloudAPI`` object, the core object for interacting with the Carbon Black Cloud SDK.
 
-All interaction with the Carbon Black Cloud SDK begins with creating a CBCloudAPI object, which represents a
+All interaction with the Carbon Black Cloud SDK begins with creating a ``CBCloudAPI`` object, which represents a
 connection to the Carbon Black Cloud.
 """
 
@@ -31,14 +32,14 @@ log = logging.getLogger(__name__)
 
 
 class CBCloudAPI(BaseAPI):
-    """A connection to the Carbon Black Cloud.
+    """
+    A connection to the Carbon Black Cloud.
 
     The core object for interacting with the Carbon Black Cloud SDK.
 
-    Typical usage:
-
-    >>> from cbc_sdk import CBCloudAPI
-    >>> cb = CBCloudAPI(profile="production")
+    Example:
+        >>> from cbc_sdk import CBCloudAPI
+        >>> cb = CBCloudAPI(profile="production")
     """
     def __init__(self, *args, **kwargs):
         """Create a new instance of the CBCloudAPI object.
@@ -93,7 +94,8 @@ class CBCloudAPI(BaseAPI):
     # ---- Async
 
     def _async_submit(self, callable, *args, **kwargs):
-        """Submit a task to the background executor, creating it if it doesn't yet exist.
+        """
+        Submit a task to the background executor, creating it if it doesn't yet exist.
 
         Args:
             callable (func): A callable to be executed as a background task.
@@ -101,7 +103,7 @@ class CBCloudAPI(BaseAPI):
             **kwargs (dict): Keyword arguments to be passed to the callable.
 
         Returns:
-            Future: A future object representing the background task, which will pass along the result.
+            Future: An object representing the background task, which will pass along the result.
         """
         if not self._async_executor:
             self._async_executor = ThreadPoolExecutor(max_workers=self._thread_pool_count)
@@ -111,7 +113,8 @@ class CBCloudAPI(BaseAPI):
 
     @property
     def live_response(self):
-        """The Live Response session manager object.
+        """
+        The Live Response session manager object.
 
         It is created if it does not yet exist when this property is read.
         """
@@ -125,7 +128,8 @@ class CBCloudAPI(BaseAPI):
     # ---- Audit and Remediation
 
     def audit_remediation(self, sql):
-        """Run an audit-remediation query.
+        """
+        Run an audit-remediation query.
 
         Args:
             sql (str): The SQL for the query.
@@ -136,7 +140,8 @@ class CBCloudAPI(BaseAPI):
         return self.select(Run).where(sql=sql)
 
     def audit_remediation_history(self, query=None):
-        """Run an audit-remediation history query.
+        """
+        Run an audit-remediation history query.
 
         Args:
             query (str): The SQL for the query.
@@ -206,7 +211,8 @@ class CBCloudAPI(BaseAPI):
     # ---- Device API
 
     def _raw_device_action(self, request):
-        """Invokes the API method for a device action.
+        """
+        Invokes the API method for a device action.
 
         Args:
             request (dict): The request body to be passed as JSON to the API method.
@@ -228,7 +234,8 @@ class CBCloudAPI(BaseAPI):
                               uri=url)
 
     def _device_action(self, device_ids, action_type, options=None):
-        """Executes a device action on multiple device IDs.
+        """
+        Executes a device action on multiple device IDs.
 
         Args:
             device_ids (list[int]): The list of device IDs to execute the action on.
@@ -247,7 +254,8 @@ class CBCloudAPI(BaseAPI):
         return self._raw_device_action(request)
 
     def _action_toggle(self, flag):
-        """Converts a boolean flag value into a "toggle" option.
+        """
+        Converts a boolean flag value into a "toggle" option.
 
         Args:
             flag (bool): The value to be converted.
@@ -261,7 +269,8 @@ class CBCloudAPI(BaseAPI):
             return {"toggle": "OFF"}
 
     def device_background_scan(self, device_ids, scan):
-        """Set the background scan option for the specified devices.
+        """
+        Set the background scan option for the specified devices.
 
         Args:
             device_ids (list[int]): List of IDs of devices to be set.
@@ -276,7 +285,8 @@ class CBCloudAPI(BaseAPI):
         return self._device_action(device_ids, "BACKGROUND_SCAN", self._action_toggle(scan))
 
     def device_bypass(self, device_ids, enable):
-        """Set the bypass option for the specified devices.
+        """
+        Set the bypass option for the specified devices.
 
         Args:
             device_ids (list[int]): List of IDs of devices to be set.
@@ -291,7 +301,8 @@ class CBCloudAPI(BaseAPI):
         return self._device_action(device_ids, "BYPASS", self._action_toggle(enable))
 
     def device_delete_sensor(self, device_ids):
-        """Delete the specified sensor devices.
+        """
+        Delete the specified sensor devices.
 
         Args:
             device_ids (list[int]): List of IDs of devices to be deleted.
@@ -305,7 +316,8 @@ class CBCloudAPI(BaseAPI):
         return self._device_action(device_ids, "DELETE_SENSOR")
 
     def device_uninstall_sensor(self, device_ids):
-        """Uninstall the specified sensor devices.
+        """
+        Uninstall the specified sensor devices.
 
         Args:
             device_ids (list[int]): List of IDs of devices to be uninstalled.
@@ -319,7 +331,8 @@ class CBCloudAPI(BaseAPI):
         return self._device_action(device_ids, "UNINSTALL_SENSOR")
 
     def device_quarantine(self, device_ids, enable):
-        """Set the quarantine option for the specified devices.
+        """
+        Set the quarantine option for the specified devices.
 
         Args:
             device_ids (list[int]): List of IDs of devices to be set.
@@ -334,7 +347,8 @@ class CBCloudAPI(BaseAPI):
         return self._device_action(device_ids, "QUARANTINE", self._action_toggle(enable))
 
     def device_update_policy(self, device_ids, policy_id):
-        """Set the current policy for the specified devices.
+        """
+        Set the current policy for the specified devices.
 
         Args:
             device_ids (list[int]): List of IDs of devices to be changed.
@@ -349,7 +363,8 @@ class CBCloudAPI(BaseAPI):
         return self._device_action(device_ids, "UPDATE_POLICY", {"policy_id": policy_id})
 
     def device_update_sensor_version(self, device_ids, sensor_version):
-        """Update the sensor version for the specified devices.
+        """
+        Update the sensor version for the specified devices.
 
         Args:
             device_ids (list[int]): List of IDs of devices to be changed.
@@ -366,7 +381,8 @@ class CBCloudAPI(BaseAPI):
     # ---- Alerts API
 
     def alert_search_suggestions(self, query):
-        """Returns suggestions for keys and field values that can be used in a search.
+        """
+        Returns suggestions for keys and field values that can be used in a search.
 
         Args:
             query (str): A search query to use.
@@ -380,7 +396,8 @@ class CBCloudAPI(BaseAPI):
         return output["suggestions"]
 
     def _bulk_threat_update_status(self, threat_ids, status, remediation, comment):
-        """Update the status of alerts associated with multiple threat IDs, past and future.
+        """
+        Update the status of alerts associated with multiple threat IDs, past and future.
 
         Args:
             threat_ids (list[str]): List of string threat IDs.
@@ -404,7 +421,8 @@ class CBCloudAPI(BaseAPI):
         return output["request_id"]
 
     def bulk_threat_update(self, threat_ids, remediation=None, comment=None):
-        """Update the alert status of alerts associated with multiple threat IDs.
+        """
+        Update the alert status of alerts associated with multiple threat IDs.
 
          The alerts will be left in an OPEN state
 
@@ -419,7 +437,8 @@ class CBCloudAPI(BaseAPI):
         return self._bulk_threat_update_status(threat_ids, "OPEN", remediation, comment)
 
     def bulk_threat_dismiss(self, threat_ids, remediation=None, comment=None):
-        """Dismiss the alerts associated with multiple threat IDs.
+        """
+        Dismiss the alerts associated with multiple threat IDs.
 
         The alerts will be left in a DISMISSED state.
 
@@ -436,7 +455,8 @@ class CBCloudAPI(BaseAPI):
     # ---- Enterprise EDR
 
     def create(self, cls, data=None):
-        """Creates a new model.
+        """
+        Creates a new model.
 
         Args:
             cls (class): The model being created.
@@ -451,7 +471,8 @@ class CBCloudAPI(BaseAPI):
         return cls(self, initial_data=data)
 
     def validate_process_query(self, query):
-        """Validates the given IOC query.
+        """
+        Validates the given IOC query.
 
         Args:
             query (str): The query to validate.
@@ -471,7 +492,8 @@ class CBCloudAPI(BaseAPI):
         return resp.get("valid", False)
 
     def convert_feed_query(self, query):
-        """Converts a legacy CB Response query to a ThreatHunter query.
+        """
+        Converts a legacy CB Response query to a ThreatHunter query.
 
         Args:
             query (str): The query to convert.
@@ -504,7 +526,8 @@ class CBCloudAPI(BaseAPI):
         return ids.get("query_ids", [])
 
     def process_limits(self):
-        """Returns a dictionary containing API limiting information.
+        """
+        Returns a dictionary containing API limiting information.
 
         Examples:
             >>> cb.process_limits()
@@ -518,7 +541,8 @@ class CBCloudAPI(BaseAPI):
     # --- Policies
 
     def get_policy_ruleconfig_parameter_schema(self, ruleconfig_id):
-        """Returns the parameter schema for a specified rule configuration.
+        """
+        Returns the parameter schema for a specified rule configuration.
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
