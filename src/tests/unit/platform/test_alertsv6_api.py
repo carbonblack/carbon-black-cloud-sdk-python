@@ -12,6 +12,7 @@
 """Tests of the Alerts V6 API queries."""
 from datetime import datetime
 import pytest
+import logging
 
 from cbc_sdk.errors import ApiError, NonQueryableModel, FunctionalityDecommissioned
 from cbc_sdk.platform import (
@@ -24,7 +25,7 @@ from cbc_sdk.platform import (
 )
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.platform.mock_process import (
-    GET_PROCESS_VALIDATION_RESP,
+    POST_PROCESS_VALIDATION_RESP,
     POST_PROCESS_SEARCH_JOB_RESP,
     GET_PROCESS_SEARCH_JOB_RESP,
     GET_PROCESS_SEARCH_JOB_RESULTS_RESP,
@@ -279,7 +280,6 @@ def test_query_basealert_invalid_create_time_combinations(cb):
     ("set_policy_names", [323]),
     ("set_process_names", [7071]),
     ("set_process_sha256", [123456789]),
-    ("set_reputations", ["MICROSOFT_FUDWARE"]),
     ("set_tags", [-1]),
     ("set_target_priorities", ["DOGWASH"]),
     ("set_threat_ids", [4096]),
@@ -292,6 +292,32 @@ def test_query_basealert_invalid_criteria_values(cb, method, arg):
     meth = getattr(query, method, None)
     with pytest.raises(ApiError):
         meth(arg)
+
+
+def test_set_reputations_warning_criteria_values(cbcsdk_mock, caplog):
+    """Test invalid reputation value in alert query where warnings rather than exceptions are raised."""
+    # Note - this will generate a 400 error from the real API if the reputation is invalid.
+    # v6 criteria "reputations" is translated to request criteria "process_reputations" for v6/v7 compatibility
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {"process_reputation": ["MICROSOFT_FUDWARE"]},
+            "rows": 1
+        }
+        return {"results": [{"org_key": "ABCD1234",
+                             "alert_url": "https://defense.conferdeploy.net/alerts?s[c][query_string]="
+                                          "id:987654321&orgKey=ABCD1234",
+                             "id": "987654321",
+                             "type": "CB_ANALYTICS",
+                             "backend_timestamp": "2023-04-14T21:30:40.570Z",
+                             "user_update_timestamp": None}],
+                "num_found": 1}
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+    caplog.set_level(logging.WARNING)
+    query = api.select(BaseAlert).set_reputations(["MICROSOFT_FUDWARE"]).set_rows(1)
+    len(query)
+    assert "Reputation value not in enumeration. May be valid as enumeration values are extended in " \
+           "Carbon Black Cloud ahead of SDK updates." in caplog.text
 
 
 def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
@@ -713,12 +739,8 @@ def test_get_process(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/887e6bbc-6224-4f36-ad37-084038b7fcab",
                              GET_ALERT_TYPE_WATCHLIST)
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=ABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
-                             "q=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
-                             "query=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation",
+                             POST_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -744,12 +766,8 @@ def test_get_process_zero_found(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/887e6bbc-6224-4f36-ad37-084038b7fcab",
                              GET_ALERT_TYPE_WATCHLIST)
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=ABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
-                             "q=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
-                             "query=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation",
+                             POST_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -773,12 +791,8 @@ def test_get_process_raises_api_error(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/6b2348cb-87c1-4076-bc8e-7c717e8af608",
                              GET_ALERT_TYPE_WATCHLIST_INVALID)
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=WNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&q=process_guid%3AWNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&query=process_guid%3AWNEXFKQ7%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation",
+                             POST_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -802,12 +816,8 @@ def test_get_process_async(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/887e6bbc-6224-4f36-ad37-084038b7fcab",
                              GET_ALERT_TYPE_WATCHLIST)
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=ABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
-                             "q=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805&"
-                             "query=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation",
+                             POST_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -1006,3 +1016,29 @@ def test_get_attr_alert_v6_valid_attrib(cbcsdk_mock):
     alert = cb.select(BaseAlert, GET_ALERT_RESP.get("id"))
 
     assert alert.policy_id == 1234567
+
+
+def test_new_alert_type(cbcsdk_mock):
+    """Test legacy BaseAlert class instantiation with an alert type unknown to CBC SDK."""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {"type": ["FIRST_NEW_TEST_ALERT_TYPE"]},
+            "rows": 1
+        }
+        return {"results": [{"org_key": "ABCD1234",
+                             "alert_url": "https://defense.conferdeploy.net/alerts?s[c][query_string]="
+                                          "id:MYVERYFIRSTNEWALERTTYPE0001&orgKey=ABCD1234",
+                             "id": "MYVERYFIRSTNEWALERTTYPE0001",
+                             "type": "FIRST_NEW_TEST_ALERT_TYPE",
+                             "backend_timestamp": "2023-04-14T21:30:40.570Z",
+                             "user_update_timestamp": None}],
+                "num_found": 1}
+    cbcsdk_mock.mock_request("POST",
+                             "/api/alerts/v7/orgs/test/alerts/_search",
+                             on_post)
+    api = cbcsdk_mock.api
+    alert_list = api.select(BaseAlert).add_criteria('type', 'FIRST_NEW_TEST_ALERT_TYPE').set_rows(1)
+    assert len(alert_list) == 1
+    alert = alert_list.first()
+    assert alert.id == "MYVERYFIRSTNEWALERTTYPE0001"
+    assert alert.type == "FIRST_NEW_TEST_ALERT_TYPE"

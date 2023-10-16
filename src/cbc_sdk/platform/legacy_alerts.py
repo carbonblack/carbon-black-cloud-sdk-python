@@ -16,25 +16,42 @@
 from cbc_sdk.errors import ApiError, FunctionalityDecommissioned
 from cbc_sdk.platform.devices import DeviceSearchQuery
 from cbc_sdk.base import CriteriaBuilderSupportMixin
+import logging
 
-ALERT_VALID_REPUTATIONS = ["KNOWN_MALWARE", "SUSPECT_MALWARE", "PUP", "NOT_LISTED", "ADAPTIVE_WHITE_LIST",
-                           "COMMON_WHITE_LIST", "TRUSTED_WHITE_LIST", "COMPANY_BLACK_LIST"]
+log = logging.getLogger(__name__)
+
+ALERT_VALID_REPUTATIONS = [
+    "ADAPTIVE_WHITE_LIST",
+    "COMMON_WHITE_LIST",
+    "COMPANY_BLACK_LIST",
+    "COMPANY_WHITE_LIST",
+    "PUP",
+    "TRUSTED_WHITE_LIST",
+    "RESOLVING",
+    "COMPROMISED_OBSOLETE",
+    "DLP_OBSOLETE",
+    "IGNORE",
+    "ADWARE",
+    "HEURISTIC",
+    "SUSPECT_MALWARE",
+    "KNOWN_MALWARE",
+    "ADMIN_RESTRICT_OBSOLETE",
+    "NOT_LISTED",
+    "GRAY_OBSOLETE",
+    "NOT_COMPANY_WHITE_OBSOLETE",
+    "LOCAL_WHITE",
+    "NOT_SUPPORTED"
+]
 ALERT_VALID_ALERT_TYPES = ["CB_ANALYTICS", "DEVICE_CONTROL", "WATCHLIST", "CONTAINER_RUNTIME"]
 ALERT_VALID_WORKFLOW_VALS = ["OPEN", "DISMISSED"]
 ALERT_VALID_FACET_FIELDS = ["ALERT_TYPE", "CATEGORY", "REPUTATION", "WORKFLOW", "TAG", "POLICY_ID",
                             "POLICY_NAME", "DEVICE_ID", "DEVICE_NAME", "APPLICATION_HASH",
                             "APPLICATION_NAME", "STATUS", "RUN_STATE", "POLICY_APPLIED_STATE",
                             "POLICY_APPLIED", "SENSOR_ACTION"]
-CB_ANALYTICS_VALID_ALERT_TYPES = ["CB_ANALYTICS"]
-CB_ANALYTICS_VALID_THREAT_CATEGORIES = ["UNKNOWN", "NON_MALWARE", "NEW_MALWARE", "KNOWN_MALWARE", "RISKY_PROGRAM"]
 CB_ANALYTICS_VALID_LOCATIONS = ["ONSITE", "OFFSITE", "UNKNOWN"]
-CB_ANALYTICS_VALID_KILL_CHAIN_STATUSES = ["RECONNAISSANCE", "WEAPONIZE", "DELIVER_EXPLOIT", "INSTALL_RUN",
-                                          "COMMAND_AND_CONTROL", "EXECUTE_GOAL", "BREACH"]
 CB_ANALYTICS_VALID_POLICY_APPLIED = ["APPLIED", "NOT_APPLIED"]
 CB_ANALYTICS_VALID_RUN_STATES = ["DID_NOT_RUN", "RAN", "UNKNOWN"]
 CB_ANALYTICS_VALID_SENSOR_ACTIONS = ["POLICY_NOT_APPLIED", "ALLOW", "ALLOW_AND_LOG", "TERMINATE", "DENY"]
-CB_ANALYTICS_VALID_THREAT_CAUSE_VECTORS = ["EMAIL", "WEB", "GENERIC_SERVER", "GENERIC_CLIENT", "REMOTE_DRIVE",
-                                           "REMOVABLE_MEDIA", "UNKNOWN", "APP_STORE", "THIRD_PARTY"]
 
 
 class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
@@ -292,7 +309,8 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
             AlertSearchQuery: This instance.
         """
         if not all((r in ALERT_VALID_REPUTATIONS) for r in reps):
-            raise ApiError("One or more invalid reputation values")
+            log.warning("Reputation value not in enumeration. May be valid as enumeration values are extended in "
+                        "Carbon Black Cloud ahead of SDK updates.")
         self._update_criteria("process_reputation", reps)
         return self
 
@@ -344,11 +362,15 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
 
     def set_types(self, alerttypes):
         """
+        This method is deprecated.  Update to use `add_criteria(field_name, [field_value])`.
+
         Restricts the alerts that this query is performed on to the specified alert type values.
 
         Args:
             alerttypes (list): List of string alert type values.  Valid values are "CB_ANALYTICS",
-                               "WATCHLIST", "DEVICE_CONTROL", and "CONTAINER_RUNTIME".
+                               "WATCHLIST", "DEVICE_CONTROL", and "CONTAINER_RUNTIME".  In SDK 1.5.0,
+                               to align with Alert API v7, more alert types are available but the `add_criteria`
+                               method must be used.
 
         Returns:
             AlertSearchQuery: This instance.
