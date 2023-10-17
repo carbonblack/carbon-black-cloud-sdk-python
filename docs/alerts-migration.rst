@@ -83,13 +83,16 @@ close to v6 (SDK 1.4.3) as possible.  The fields that do not have equivalents in
     * See <TO DO CREATE AND REFERENCE AN EXAMPLE> for the new workflow
 
 * Notes.  Notes can now be attached to either an Alert or a Threat, and more metadata about the note is stored.
-    * TO DO CONFIRM IF THIS IS REALLY BREAKING OR JUST NEW AND IMPROVED
+    * **BREAKING** ``alert.create_note() returns a Note object instead of a list
 
 New Features
 ^^^^^^^^^^^^
 
 * ``add_exclusions()`` : This is a new method that exposes the exclusion element.  Any records that match these values
 are excluded from the result set.
+* ``get_observations()`` : Gets the Observations that are related to the alert, similar to getting processes for
+a Watchlist Alert.
+* Notes can be added to an Alert or a Threat
 
 
 Attributes that have been renamed
