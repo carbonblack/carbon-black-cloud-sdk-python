@@ -382,7 +382,7 @@ class Alert(PlatformModel):
             url = Alert.Note.urlobject.format(self._cb.credentials.org_key, self._info[self.primary_key])
         resp = self._cb.post_object(url, request)
         result = resp.json()
-        return [Alert.Note(self._cb, self, result["id"], threat_note, result)]
+        return Alert.Note(self._cb, self, result["id"], threat_note, result)
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
