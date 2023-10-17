@@ -856,7 +856,7 @@ def test_base_alert_create_note(cbcsdk_mock):
     api = cbcsdk_mock.api
     alert = api.select(Alert, "52dbd1b6-539b-a3f7-34bd-f6eb13a99b81")
     note = alert.create_note("I am Grogu")
-    assert note[0].note == "I am Grogu"
+    assert note.note == "I am Grogu"
 
 
 def test_base_alert_delete_note(cbcsdk_mock):
@@ -945,7 +945,7 @@ def test_base_alert_create_threat_note(cbcsdk_mock):
     api = cbcsdk_mock.api
     alert = api.select(Alert, "52dbd1b6-539b-a3f7-34bd-f6eb13a99b81")
     note = alert.create_note("I am Grogu", threat_note=True)
-    assert note[0].note == "I am Grogu"
+    assert note.note == "I am Grogu"
 
 
 def test_base_alert_delete_threat_note(cbcsdk_mock):
