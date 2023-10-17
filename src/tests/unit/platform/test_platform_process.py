@@ -354,8 +354,8 @@ def test_process_events_with_criteria_exclusions(cbcsdk_mock):
     assert events_query_params == expected_params
 
 
-def test_process_events_exceptions(cbcsdk_mock):
-    """Testing raising an Exception when using Query.add_criteria() and Query.add_exclusions()."""
+def test_process_events_integer_criteria(cbcsdk_mock):
+    """Testing that a valid integer criteria does not raise an exception.  Changed in SDK 1.5.0"""
     def on_validation_post(url, body, **kwargs):
         assert body == {"query": "process_guid:WNEXFKQ7\\-0002b226\\-000015bd\\-00000000\\-1d6225bbba74c00"}
         return POST_PROCESS_VALIDATION_RESP
@@ -377,12 +377,8 @@ def test_process_events_exceptions(cbcsdk_mock):
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     process = api.select(Process, guid)
     assert isinstance(process.events(), Query)
-    # use a criteria value that's not a string or list
-    with pytest.raises(ApiError):
-        process.events(event_type="modload").add_criteria("crossproc_action", 0)
-    # use an exclusion value that's not a string or list
-    with pytest.raises(ApiError):
-        process.events().add_exclusions("crossproc_effective_reputation", 0)
+    # use a criteria value that's an integer
+    process.events(event_type="modload").add_criteria("process_pid", 1234)
 
 
 def test_process_with_criteria_exclusions(cbcsdk_mock):
@@ -588,7 +584,7 @@ def test_process_events_query_with_criteria_exclusions(cbcsdk_mock):
     assert events_query_params == expected_params
 
 
-def test_process_events_raise_exceptions(cbcsdk_mock):
+def test_process_events_exclusion_and_criteria_int(cbcsdk_mock):
     """Testing raising an Exception when using Query.add_criteria() and Query.add_exclusions()."""
     def on_validation_post(url, body, **kwargs):
         assert body == {"query": "process_guid:WNEXFKQ7\\-0002b226\\-000015bd\\-00000000\\-1d6225bbba74c00"}
@@ -611,12 +607,41 @@ def test_process_events_raise_exceptions(cbcsdk_mock):
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     process = api.select(Process, guid)
     assert isinstance(process.events(), Query)
-    # use a criteria value that's not a string or list
+    # use a criteria value that's an integer
+    process.events(event_type="modload").add_criteria("process_pid", 1234)
+    # use an exclusion value that's an integer
+    process.events().add_exclusions("process_pid", 4321)
+
+
+def test_process_events_exclusion_and_criteria_exception(cbcsdk_mock):
+    """Testing raising an Exception when using Query.add_criteria() and Query.add_exclusions()."""
+    def on_validation_post(url, body, **kwargs):
+        assert body == {"query": "process_guid:WNEXFKQ7\\-0002b226\\-000015bd\\-00000000\\-1d6225bbba74c00"}
+        return POST_PROCESS_VALIDATION_RESP
+
+    # mock the search validation
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
+    # mock the POST of a search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=0"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=500"),
+                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
+    api = cbcsdk_mock.api
+    guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
+    process = api.select(Process, guid)
+    assert isinstance(process.events(), Query)
     with pytest.raises(ApiError):
-        process.events(event_type="modload").add_criteria("crossproc_action", 0)
-    # use an exclusion value that's not a string or list
+        # use a criteria value that's an integer
+        process.events(event_type="modload").add_criteria("process_pid", 0.987)
     with pytest.raises(ApiError):
-        process.events().add_exclusions("crossproc_effective_reputation", 0)
+        # use an exclusion value that's an integer
+        process.events().add_exclusions("process_pid", 0.654)
 
 
 def test_process_query_with_criteria_exclusions(cbcsdk_mock):
