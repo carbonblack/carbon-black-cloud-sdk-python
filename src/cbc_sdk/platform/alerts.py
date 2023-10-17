@@ -205,6 +205,9 @@ class Alert(PlatformModel):
         """
         Get the actions taken on an Alert such as Notes added and workflow state changes.
 
+        Args:
+            threat (bool): Whether to return the Alert or Threat history
+
         Returns:
             list: The dicts of each determination, note or workflow change
 
