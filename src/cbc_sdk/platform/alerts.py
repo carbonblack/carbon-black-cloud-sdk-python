@@ -187,6 +187,37 @@ class Alert(PlatformModel):
         if model_unique_id is not None and initial_data is None:
             self._refresh()
 
+    def get_process(self, async_mode=False):
+        """
+        Gets the process corresponding with the alert.
+
+        Args:
+            async_mode: True to request process in an asynchronous manner.
+
+        Returns:
+            Process: The process corresponding to the alert.
+        """
+        process_guid = self._info.get("process_guid")
+        if not process_guid:
+            raise ApiError(f"Trying to get process details on an invalid process_id {process_guid}")
+        if async_mode:
+            return self._cb._async_submit(self._get_process)
+        return self._get_process()
+
+    def _get_process(self, *args, **kwargs):
+        """
+        Implementation of the get_process.
+
+        Returns:
+            Process: The process corresponding to the alert. May return None if no process is found.
+        """
+        process_guid = self._info.get("process_guid")
+        try:
+            process = AsyncProcessQuery(Process, self._cb).where(process_guid=process_guid).one()
+        except ObjectNotFoundError:
+            return None
+        return process
+
     def get_observations(self, timeout=0):
         """Requests observations that are associated with the Alert.
 
@@ -667,37 +698,6 @@ class WatchlistAlert(Alert):
             AlertSearchQuery: The query object for this alert type.
         """
         return AlertSearchQuery(cls, cb).add_criteria("type", ["WATCHLIST"])
-
-    def get_process(self, async_mode=False):
-        """
-        Gets the process corresponding with the alert.
-
-        Args:
-            async_mode: True to request process in an asynchronous manner.
-
-        Returns:
-            Process: The process corresponding to the alert.
-        """
-        process_guid = self._info.get("process_guid")
-        if not process_guid:
-            raise ApiError(f"Trying to get process details on an invalid process_id {process_guid}")
-        if async_mode:
-            return self._cb._async_submit(self._get_process)
-        return self._get_process()
-
-    def _get_process(self, *args, **kwargs):
-        """
-        Implementation of the get_process.
-
-        Returns:
-            Process: The process corresponding to the alert. May return None if no process is found.
-        """
-        process_guid = self._info.get("process_guid")
-        try:
-            process = AsyncProcessQuery(Process, self._cb).where(process_guid=process_guid).one()
-        except ObjectNotFoundError:
-            return None
-        return process
 
 
 class CBAnalyticsAlert(Alert):
