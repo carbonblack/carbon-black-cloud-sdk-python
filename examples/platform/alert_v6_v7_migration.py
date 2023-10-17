@@ -147,11 +147,10 @@ def ports_split_local_remote(api):
     # In SDK 1.5.0, criteria uses a generic add_criteria method instead of hand-crafted set_xxx methods.
     # The value can be a single value or a list of values
     # Validation is performed by the API, providing consistency to all callers
-    # TO DO - change these to ints
-    alerts = api.select(Alert).add_criteria('netconn_local_port', "1234")
+    alerts = api.select(Alert).add_criteria('netconn_local_port', 1234)
     len(alerts)
     # or
-    alerts = api.select(Alert).add_criteria('netconn_remote_port', ["1234"])
+    alerts = api.select(Alert).add_criteria('netconn_remote_port', [1234])
     len(alerts)
 
 

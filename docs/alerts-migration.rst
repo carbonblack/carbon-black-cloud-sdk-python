@@ -53,13 +53,13 @@ references are to this file.
 
 * ``alert.field_name`` will translate the field name to the new name and return the matching value.
 
-    * * **BREAKING** when the v6 field name does not have a v7 equivalent a ``FunctionalityDecommissioned`` exception is
+    * **BREAKING** when the v6 field name does not have a v7 equivalent a ``FunctionalityDecommissioned`` exception is
       raised.  See `Breaking Change: Attributes that have been removed`_
     * Example method: ``get_methods_backwards_compatibility(api)`` and ``category_monitored_removed(api)``
 
-* ``to_json`` is a new method that returns the alert object in json format.  It has been added to replace the use
-    of `_info` as this is an internal representation.
+* ``to_json`` is a new method that returns the alert object in json format.
 
+    * It has been added to replace the use of `_info` as this is an internal representation.
     * ``to_json("v6")`` will translate field names from the v7 field name to v6 field names and return a structure as
     close to v6 (SDK 1.4.3) as possible.  The fields that do not have equivalents in the v7 API will be missing.
     * Details are in `New Helper Function - to_json(version)`_
@@ -84,7 +84,7 @@ references are to this file.
 
 * Notes.  Notes can now be attached to either an Alert or a Threat, and more metadata about the note is stored.
 
-    * **BREAKING** ``alert.create_note() returns a Note object instead of a list
+    * **BREAKING** ``alert.create_note()`` returns a Note object instead of a list
 
 New Features
 ^^^^^^^^^^^^
@@ -104,10 +104,12 @@ Detail of all changes to API endpoints and fields are on the Developer Network i
 `Alerts Migration Guide <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/alerts-migration>`_.
 
 The following fields have a new name in Alert v7 and the new field name contains the same value.
+
 .. list-table:: Field mappings where the field has been renamed
    :widths: 50, 50
    :header-rows: 1
    :class: longtable
+
    * - Alert v6 API - SDK 1.4.3 or earlier
      - Alert v7 API - SDK 1.5.0 or later
    * - cluster_name
@@ -200,9 +202,9 @@ TO DO ADD THIS - PENDING changes merged to feature branch
 Port - now split into local and remote
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* In SDK 1.4.3 and earlier there was a single field `port`.
-* In Alerts v7 API and therefore SDK 1.5.0, there are two fields; `netconn_local_port` and `netconn_remote_port`.
-* The legacy method set_ports() sets the criteria for `netconn_local_port`
+* In SDK 1.4.3 and earlier there was a single field ``port``.
+* In Alerts v7 API and therefore SDK 1.5.0, there are two fields; ``netconn_local_port`` and ``netconn_remote_port``.
+* The legacy method set_ports() sets the criteria for ``netconn_local_port``
 
 .. code-block:: python
 
@@ -214,10 +216,10 @@ Breaking Change: Attributes that have been removed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The following attributes do not have an equivalent in Alert v7 API. If they are accessed using the
-legacy *set_<v6 field name>()* methods on the query object or *get(<v6 field name>)* a
+legacy ``set_<v6 field name>()`` methods on the query object or ``get(<v6 field name>)`` a
 ``FunctionalityDecommissioned`` exception will be raised.
 
-This code block which calls the decommissioned method set_blocked_threat_categories:
+This code block which calls the decommissioned method ``set_blocked_threat_categories``:
 
 .. code-block:: python
 
@@ -235,7 +237,7 @@ Will generate the following exception:
     because kill_chain_status is not a valid field on Alert v7 API.  The functionality has been decommissioned.
 
 
-Similarly this code block which calls the get attribute function with the decommissioned attribute, blocked_threat_categories:
+Similarly this code block which calls the get attribute function with the decommissioned attribute, ``blocked_threat_categories``:
 
 .. code-block:: python
 
@@ -337,22 +339,22 @@ Instead of:
     >>> alert = alert_list.first()
     >>> alert.get_events()
 
-Use: TO DO VERIFY THIS IS ACCURATE AFTER get_observations is implemented.
+
+Use ``get_observations``. Observations are available for many Alert Types whereas Enriched Events were limited to
+CB_Analytics Alerts. Watchlist Alerts do not have observations associated so these are excluded from the search.
 
 .. code-block:: python
 
-    >>> cb = get_cb_cloud_object(args)
-    >>> alert_list = cb.select(Alert)
+    >>> alert_list = cb.select(Alert).add_exclusions("type", "WATCHLIST")
     >>> alert = alert_list.first()
-    >>> alert.get_observations()
+    >>> observations_list = alert.get_observations()
+    >>> len(observations_list) # execute the query
 
-
-Also note that Observations can be retrieved for any type of Alert. It is not limited to CB Analytics Alerts.
 
 New Helper Function - to_json(version)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* to_json() should be used instead of accessing ``_info`` directly
+* ``to_json()`` should be used instead of accessing ``_info`` directly
 * This is a new method that returns the json representation of the alert
 * It defaults to the current API version, v7.
 * "v6" can be passed as a parameter and the attribute names will be translated to the Alert v6 names
