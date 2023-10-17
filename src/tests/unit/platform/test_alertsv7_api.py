@@ -262,7 +262,7 @@ def test_query_alert_facets(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         assert body["query"] == "Blort"
         t = body["criteria"]
-        assert t["minimum_severity"] == ['3']
+        assert t["minimum_severity"] == 3
         t = body["terms"]
         assert t["rows"] == 0
         assert t["fields"] == ["type"]
@@ -270,10 +270,10 @@ def test_query_alert_facets(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_facet", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(Alert).where("Blort").add_criteria("minimum_severity", "3")
+    query = api.select(Alert).where("Blort").set_minimum_severity(3)
     f = query.facets(["type"])
-    assert f == [{'field': 'type', 'values': [{'id': 'WATCHLIST', 'name': 'WATCHLIST', 'total': 1916},
-                                              {'id': 'CB_ANALYTICS', 'name': 'CB_ANALYTICS', 'total': 41}]}]
+    assert f == [{"field": "type", "values": [{"id": 'WATCHLIST', "name": 'WATCHLIST', "total": 1916},
+                                              {"id": "CB_ANALYTICS", "name": "CB_ANALYTICS", "total": 41}]}]
 
 
 def test_query_alert_invalid_backend_timestamp_combinations(cb):
@@ -306,7 +306,7 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
                                      "device_location": ["ONSITE"],
                                      "policy_applied": ["APPLIED"],
                                      "reason_code": ["ATTACK_VECTOR"], "run_state": ["RAN"], "sensor_action": ["DENY"],
-                                     "alert_notes_present": ["True"], "attack_tactic": ["tactic"],
+                                     "alert_notes_present": True, "attack_tactic": ["tactic"],
                                      "attack_technique": ["technique"],
                                      "blocked_effective_reputation": ["NOT_LISTED"], "blocked_md5": ["md5_hash"],
                                      "blocked_name": ["tim"],
@@ -349,7 +349,7 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
         .add_criteria("device_location", ["ONSITE"]) \
         .add_criteria("policy_applied", ["APPLIED"]).add_criteria("reason_code", ["ATTACK_VECTOR"]).add_criteria(
         "run_state", ["RAN"]) \
-        .add_criteria("alert_notes_present", "True").add_criteria("attack_tactic", ["tactic"]).add_criteria(
+        .set_alert_notes_present(True).add_criteria("attack_tactic", ["tactic"]).add_criteria(
         "attack_technique", ["technique"]) \
         .add_criteria("blocked_effective_reputation", ["NOT_LISTED"]).add_criteria("blocked_md5",
                                                                                    ["md5_hash"]).add_criteria(
@@ -545,7 +545,7 @@ def test_query_intrusion_detection_system_with_all_bells_and_whistles(cbcsdk_moc
                                      "process_username": ["steven"],
                                      "process_reputation": ["SUSPECT_MALWARE"],
                                      "process_issuer": ["Microsoft"], "process_publisher": ["Microsoft"]},
-                        "sort": [{"field": "device_name", "order": "DESC"}]}
+                        "sort": [{"field": "severity", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
 
@@ -588,7 +588,7 @@ def test_query_intrusion_detection_system_with_all_bells_and_whistles(cbcsdk_moc
         .add_criteria("reason_code", ["ATTACK_VECTOR"]).add_criteria("sensor_action", ["DENY"])\
         .add_criteria("process_username", ["steven"]) \
         .add_criteria("ttps", ["malicious"]).add_criteria("tms_rule_id", ["xtvr"]) \
-        .sort_by("device_name", "DESC")
+        .sort_by("severity", "DESC")
     a = query.one()
     assert a.id == "S0L0"
     assert a.org_key == "test"
