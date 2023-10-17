@@ -197,7 +197,11 @@ class CBCloudAPI(BaseAPI):
         Retrieve queued audit logs from the Carbon Black Cloud Endpoint Standard server.
 
         Note:
-            This can only be used with a 'API' key generated in the Carbon Black Cloud console.
+            While this can be used with an 'API' key generated in the Carbon Black Cloud console, those key types are
+            officially deprecated.  Use a Custom key type with permissions as given here.
+
+        Required Permissions:
+            org,audits(READ)
 
         Deprecated:
             Use ``AuditLog.getAuditLogs`` (from ``cbc_sdk.platform``) instead.
