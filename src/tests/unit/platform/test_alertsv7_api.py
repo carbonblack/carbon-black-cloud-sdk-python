@@ -40,7 +40,7 @@ from tests.unit.fixtures.platform.mock_alerts_v7 import (
     GET_NEW_ALERT_TYPE_RESP
 )
 from tests.unit.fixtures.platform.mock_process import (
-    GET_PROCESS_VALIDATION_RESP,
+    POST_PROCESS_VALIDATION_RESP,
     POST_PROCESS_SEARCH_JOB_RESP,
     GET_PROCESS_SEARCH_JOB_RESP,
     GET_PROCESS_SEARCH_JOB_RESULTS_RESP,
@@ -654,16 +654,14 @@ def test_query_set_rows(cbcsdk_mock):
 
 def test_get_process(cbcsdk_mock):
     """Test of getting process through a WatchlistAlert"""
+    def on_validation_post(url, body, **kwargs):
+        assert body == {"query": "process_guid:ABC12345\\-000309c2\\-00000478\\-00000000\\-1d6a1c1f2b02805"}
+        return POST_PROCESS_VALIDATION_RESP
     # mock the alert request
     cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/887e6bbc-6224-4f36-ad37-084038b7fcab",
                              GET_ALERT_TYPE_WATCHLIST)
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=ABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&q=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&query=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -675,13 +673,6 @@ def test_get_process(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
                                      "2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=500"),
                              GET_PROCESS_SEARCH_JOB_RESULTS_RESP_WATCHLIST_ALERT_V7)
-    # mock the POST of a summary search (using same Job ID)
-    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/summary_jobs",
-                             POST_PROCESS_SEARCH_JOB_RESP)
-    # mock the GET to get summary search results
-    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
-                                     "summary_jobs/2c292717-80ed-4f0d-845f-779e09470920/results"),
-                             GET_PROCESS_SUMMARY_STR)
     api = cbcsdk_mock.api
     alert = api.select(WatchlistAlert, "887e6bbc-6224-4f36-ad37-084038b7fcab")
     process = alert.get_process()
@@ -694,13 +685,12 @@ def test_get_process_zero_found(cbcsdk_mock):
     # mock the alert request
     cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
                              GET_ALERT_TYPE_WATCHLIST)
+
+    def on_validation_post(url, body, **kwargs):
+        assert body == {"query": "process_guid:ABC12345\\-000309c2\\-00000478\\-00000000\\-1d6a1c1f2b02805"}
+        return POST_PROCESS_VALIDATION_RESP
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=ABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&q=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&query=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -724,12 +714,8 @@ def test_get_process_raises_api_error(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/887e6bbc-6224-4f36-ad37-084038b7fcab",
                              GET_ALERT_TYPE_WATCHLIST_INVALID)
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=ABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&q=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&query=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation",
+                             POST_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -753,12 +739,8 @@ def test_get_process_async(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", "/api/alerts/v7/orgs/test/alerts/887e6bbc-6224-4f36-ad37-084038b7fcab",
                              GET_ALERT_TYPE_WATCHLIST)
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=ABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&q=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805"
-                             "&query=process_guid%3AABC12345%5C-000309c2%5C-00000478%5C-00000000%5C-1d6a1c1f2b02805",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation",
+                             POST_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -1522,3 +1504,55 @@ def test_exclusion_invalid_attrib(cbcsdk_mock):
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
     api.select(Alert).add_exclusions("invalidfield", ["invalidvalue"])
+
+
+def test_criteria_integer(cbcsdk_mock):
+    """Test criteria as an integer"""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "device_id": [
+                    12345678
+                ]
+            },
+            "rows": 1
+        }
+        return {"results": [
+            {"id": "S0L0", "org_key": "test", "type": "WATCHLIST", "device_id": 12345678}
+        ],
+            "num_found": 1
+        }
+    device_id = 12345678
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
+    query = api.select(Alert).add_criteria("device_id", device_id).set_rows(1)
+    alert = query.first()
+    assert alert.device_id == device_id
+    assert alert.get("device_id") == device_id
+
+
+def test_exclusion_integer(cbcsdk_mock):
+    """Test an exclusion as an integer"""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "exclusions": {
+                "device_id": [
+                    12345678
+                ]
+            },
+            "rows": 1
+        }
+        return {"results": [
+            {"id": "S0L0", "org_key": "test", "type": "WATCHLIST", "device_id": 12345678}
+        ],
+            "num_found": 1
+        }
+    device_id = 12345678
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
+    query = api.select(Alert).add_exclusions("device_id", device_id).set_rows(1)
+    alert = query.first()
+    assert alert.device_id == device_id
+    assert alert.get("device_id") == device_id
