@@ -23,13 +23,15 @@ SDK v1.5.0 does have breaking changes.
 
 import sys
 import time
+import json
 from cbc_sdk import CBCloudAPI
-from cbc_sdk.platform import Alert, CBAnalyticsAlert
-from cbc_sdk.platform import Device, Observation, Process
+from cbc_sdk.platform import Alert, WatchlistAlert
+from cbc_sdk.platform import Device
 
 # To see the http requests being made, and the structure of the search requests enable debug logging
 # import logging
 # logging.basicConfig(level=logging.DEBUG)
+
 
 def main():
     """This script demonstrates how to use Alerts in the SDK and common operations to link to related objects.
@@ -91,6 +93,7 @@ def main():
     new_threat_note = alert.create_note("Adding note to the threat from SDK, current timestamp: {}".format(time.time()))
     # print the history of what has happened on the alert
     history = alert.get_history()
+    print("printing history of the alert")
     for h in history:
         print(h)
     # clean up our notes
@@ -100,14 +103,9 @@ def main():
     # To do: Add facets
 
     # Contextual information around the Alert
-    # Some information is only available for particular alert types
-    # Processes
-    #process = alert.get_process()
-    #print("This is the process for the watchlist alert")
-    #print(process)
-
     # Observations
     observation_list = alert.get_observations()
+    len(observation_list)  # force the query execution
     print("There are {} related observations".format(len(observation_list)))
 
     # Which device was this alert on?
@@ -116,8 +114,16 @@ def main():
 
     # To get an export of the raw json alert, there's a to_json method.  Use this instead of the internal _info
     print("This is the json representation of the alert. There's a lot of useful data available.")
-    print(alert.to_json())
+    print(json.dumps(alert.to_json(), indent=2))
 
+    # Some information is only available for particular alert types
+    # Processes
+    # Get a Watchlist Alert.  select(WatchlistAlert) is equivalent to select(Alert).add_criteria("type", "WATCHLIST")
+    watchlist_alert = api.select(WatchlistAlert).first()
+
+    process = watchlist_alert.get_process()
+    print("This is the process for the watchlist alert")
+    print(process)
 
 
 if __name__ == "__main__":

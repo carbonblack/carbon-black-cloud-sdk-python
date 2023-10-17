@@ -36,7 +36,7 @@ references are to this file.
     * The SDK does not make any compensating changes for this change of time period
     * Example method: ``base_class_and_default_time_range(api)``
 
-* `set_<v6 field name>()` on the query object will translate to the new field name for the request
+* ``set_<v6 field name>()`` on the query object will translate to the new field name for the request
 
     * Should update to use `add_criteria(field_name, [field_value])
     * Many new fields can be used in criteria to search Alerts using add_criteria,
@@ -45,23 +45,23 @@ references are to this file.
       raised.  See `Breaking Change: Attributes that have been removed`_
     * Example method: ``set_methods_backwards_compatibility(api)``
 
-* `get(<v6 field name>)` will translate to the new field name to look up the value.
+* ``get(<v6 field name>)`` will translate to the new field name to look up the value.
 
     * **BREAKING** when the v6 field name does not have a v7 equivalent a ``FunctionalityDecommissioned`` exception is
       raised.  See `Breaking Change: Attributes that have been removed`_
     * Example method: ``get_methods_backwards_compatibility(api)`` and ``category_monitored_removed(api)``
 
-* `alert.field_name` will translate the field name to the new name and return the matching value.
+* ``alert.field_name`` will translate the field name to the new name and return the matching value.
 
     * * **BREAKING** when the v6 field name does not have a v7 equivalent a ``FunctionalityDecommissioned`` exception is
       raised.  See `Breaking Change: Attributes that have been removed`_
     * Example method: ``get_methods_backwards_compatibility(api)`` and ``category_monitored_removed(api)``
 
-* `to_json` is a new method that returns the alert object in json format.  It has been added to replace the use
-of `_info` as this is an internal representation.
+* ``to_json`` is a new method that returns the alert object in json format.  It has been added to replace the use
+    of `_info` as this is an internal representation.
 
-    * `to_json("v6")` will translate field names from the v7 field name to v6 field names and return a structure as
-close to v6 (SDK 1.4.3) as possible.  The fields that do not have equivalents in the v7 API will be missing.
+    * ``to_json("v6")`` will translate field names from the v7 field name to v6 field names and return a structure as
+    close to v6 (SDK 1.4.3) as possible.  The fields that do not have equivalents in the v7 API will be missing.
     * Details are in `New Helper Function - to_json(version)`_
     * Example method: ``show_to_json(api)``
 
@@ -83,15 +83,16 @@ close to v6 (SDK 1.4.3) as possible.  The fields that do not have equivalents in
     * See <TO DO CREATE AND REFERENCE AN EXAMPLE> for the new workflow
 
 * Notes.  Notes can now be attached to either an Alert or a Threat, and more metadata about the note is stored.
+
     * **BREAKING** ``alert.create_note() returns a Note object instead of a list
 
 New Features
 ^^^^^^^^^^^^
 
 * ``add_exclusions()`` : This is a new method that exposes the exclusion element.  Any records that match these values
-are excluded from the result set.
+  are excluded from the result set.
 * ``get_observations()`` : Gets the Observations that are related to the alert, similar to getting processes for
-a Watchlist Alert.
+  a Watchlist Alert.
 * Notes can be added to an Alert or a Threat
 
 
@@ -107,7 +108,6 @@ The following fields have a new name in Alert v7 and the new field name contains
    :widths: 50, 50
    :header-rows: 1
    :class: longtable
-
    * - Alert v6 API - SDK 1.4.3 or earlier
      - Alert v7 API - SDK 1.5.0 or later
    * - cluster_name
