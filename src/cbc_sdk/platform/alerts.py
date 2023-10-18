@@ -22,7 +22,9 @@ from cbc_sdk.base import (BaseQuery,
                           QueryBuilder,
                           QueryBuilderSupportMixin,
                           IterableQueryMixin,
-                          CriteriaBuilderSupportMixin)
+                          CriteriaBuilderSupportMixin,
+                          ExclusionBuilderSupportMixin
+                          )
 from cbc_sdk.platform.observations import Observation
 from cbc_sdk.platform.processes import AsyncProcessQuery, Process
 from cbc_sdk.platform.legacy_alerts import LegacyAlertSearchQueryCriterionMixin
@@ -35,9 +37,6 @@ MAX_RESULTS_LIMIT = 10000
 class Alert(PlatformModel):
     """Represents a basic alert."""
     REMAPPED_ALERTS_V6_TO_V7 = {
-        "alert_classification.classification": "ml_classification_final_verdict",
-        "alert_classification.global_prevalence": "ml_classification_global_prevalence",
-        "alert_classification.org_prevalence": "ml_classification_org_prevalence",
         "alert_classification.user_feedback": "determination_value",
         "cluster_name": "k8s_cluster",
         "create_time": "backend_timestamp",
@@ -91,9 +90,6 @@ class Alert(PlatformModel):
         "k8s_pod_name": "replica_id",
         "k8s_workload_name": "workload_name",
         "last_event_timestamp": "last_event_time",
-        "ml_classification_final_verdict": "alert_classification.classification",
-        "ml_classification_global_prevalence": "alert_classification.global_prevalence",
-        "ml_classification_org_prevalence": "alert_classification.org_prevalence",
         "netconn_local_port": "port",
         "netconn_protocol": "protocol",
         "netconn_remote_domain": "remote_domain",
@@ -122,6 +118,9 @@ class Alert(PlatformModel):
     DEPRECATED_FIELDS_NOT_IN_V7 = [
         "category",
         "group_details",
+        "alert_classification.classification",
+        "alert_classification.global_prevalence",
+        "alert_classification.org_prevalence",
         # CB Analytics Fields
         "blocked_threat_category",
         "kill_chain_status",
@@ -142,6 +141,20 @@ class Alert(PlatformModel):
         "workflow.comment"
     ]
 
+    REMAPPED_CONTAINER_ALERTS_V7_TO_V6 = {
+        "k8s_policy_id": "policy_id",
+        "k8s_policy": "policy_name",
+        "k8s_rule_id": "rule_id",
+        "k8s_rule": "rule_name"
+    }
+
+    REMAPPED_CONTAINER_ALERTS_V6_TO_V7 = {
+        "policy_id": "k8s_policy_id",
+        "policy_name": "k8s_policy",
+        "rule_id": "k8s_rule_id",
+        "rule_name": "k8s_rule"
+    }
+
     # these fields are deprecated from container runtime but mapped to a new field for other alert types
     DEPRECATED_FIELDS_NOT_IN_V7_CONTAINER_ONLY = [
         "target_value"
@@ -149,6 +162,7 @@ class Alert(PlatformModel):
 
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
     urlobject_single = "/api/alerts/v7/orgs/{0}/alerts/{1}"
+    threat_urlobject_single = "/api/alerts/v7/orgs/{0}/threats/{1}"
     primary_key = "id"
     swagger_meta_file = "platform/models/alert.yaml"
 
@@ -185,25 +199,43 @@ class Alert(PlatformModel):
         obs = Observation.bulk_get_details(self._cb, alert_id=alert_id, timeout=timeout)
         return obs
 
+    def get_history(self, threat=False):
+        """
+        Get the actions taken on an Alert such as Notes added and workflow state changes.
+
+        Args:
+            threat (bool): Whether to return the Alert or Threat history
+
+        Returns:
+            list: The dicts of each determination, note or workflow change
+
+        """
+        if threat:
+            url = Alert.threat_urlobject_single.format(self._cb.credentials.org_key, self.threat_id)
+        else:
+            url = Alert.urlobject_single.format(self._cb.credentials.org_key, self._info[self.primary_key])
+
+        url = f"{url}/history"
+        resp = self._cb.get_object(url)
+        return resp.get("history", [])
+
     class Note(PlatformModel):
         """Represents a note within an alert."""
         REMAPPED_NOTES_V6_TO_V7 = {
             "create_time": "create_timestamp",
-
         }
 
         REMAPPED_NOTES_V7_TO_V6 = {
             "create_timestamp": "create_time",
-
         }
 
         urlobject = "/api/alerts/v7/orgs/{0}/alerts/{1}/notes"
-        urlobject_single = "/api/alerts/v7/orgs/{0}/alerts/{1}/notes/{2}"
+        threat_urlobject = "/api/alerts/v7/orgs/{0}/threats/{1}/notes"
         primary_key = "id"
         swagger_meta_file = "platform/models/alert_note.yaml"
         _is_deleted = False
 
-        def __init__(self, cb, alert, model_unique_id, initial_data=None):
+        def __init__(self, cb, alert, model_unique_id, threat_note=False, initial_data=None):
             """
             Initialize the Note object.
 
@@ -211,10 +243,12 @@ class Alert(PlatformModel):
                 cb (BaseAPI): Reference to API object used to communicate with the server.
                 alert (Alert): The alert where the note is saved.
                 model_unique_id (str): ID of the note represented.
+                threat_note (bool): Whether the note is an Alert or Threat note
                 initial_data (dict): Initial data used to populate the note.
             """
             super(Alert.Note, self).__init__(cb, model_unique_id, initial_data)
             self._alert = alert
+            self._threat_note = threat_note
             if model_unique_id is not None and initial_data is None:
                 self._refresh()
 
@@ -229,7 +263,14 @@ class Alert(PlatformModel):
             if self._is_deleted:
                 raise ApiError("Cannot refresh a deleted Note")
 
-            url = Alert.Note.urlobject.format(self._cb.credentials.org_key, self._alert.id)
+            if self._threat_note:
+                if self._alert.threat_id:
+                    url = Alert.Note.threat_urlobject.format(self._cb.credentials.org_key, self._alert.threat_id)
+                else:
+                    raise ObjectNotFoundError(url, "Cannot refresh: threat_id not found")
+            else:
+                url = Alert.Note.urlobject.format(self._cb.credentials.org_key, self._alert.id)
+
             resp = self._cb.get_object(url)
             item_list = resp.get("results", [])
 
@@ -257,8 +298,12 @@ class Alert(PlatformModel):
 
         def delete(self):
             """Deletes a note from an alert."""
-            url = self.urlobject_single.format(self._cb.credentials.org_key, self._alert.id,
-                                               self.id)
+            if self._threat_note:
+                url = self.threat_urlobject.format(self._cb.credentials.org_key, self._alert.threat_id)
+            else:
+                url = self.urlobject.format(self._cb.credentials.org_key, self._alert.id)
+
+            url = f"{url}/{self.id}"
             self._cb.delete_object(url)
             self._is_deleted = True
 
@@ -303,21 +348,39 @@ class Alert(PlatformModel):
                                                                                   item))
                 # fall through to the rest of the logic...
 
-    def notes_(self):
-        """Retrieves all notes for an alert."""
-        url = Alert.Note.urlobject.format(self._cb.credentials.org_key, self._info[self.primary_key])
+    def notes_(self, threat_note=False):
+        """
+        Retrieves all notes for an alert.
+
+        Args:
+            threat_note (bool): Whether to return the Alert notes or Threat notes
+        """
+        if threat_note:
+            url = Alert.Note.threat_urlobject.format(self._cb.credentials.org_key, self.threat_id)
+        else:
+            url = Alert.Note.urlobject.format(self._cb.credentials.org_key, self._info[self.primary_key])
+
         resp = self._cb.get_object(url)
         item_list = resp.get("results", [])
-        return [Alert.Note(self._cb, self, item[Alert.Note.primary_key], item)
+        return [Alert.Note(self._cb, self, item[Alert.Note.primary_key], threat_note, item)
                 for item in item_list]
 
-    def create_note(self, note):
-        """Creates a new note."""
+    def create_note(self, note, threat_note=False):
+        """
+        Creates a new note.
+
+        Args:
+            note (str): Note content to add
+            threat_note (bool): Whether to return the Alert notes or Threat notes
+        """
         request = {"note": note}
-        url = Alert.Note.urlobject.format(self._cb.credentials.org_key, self._info[self.primary_key])
+        if threat_note:
+            url = Alert.Note.threat_urlobject.format(self._cb.credentials.org_key, self.threat_id)
+        else:
+            url = Alert.Note.urlobject.format(self._cb.credentials.org_key, self._info[self.primary_key])
         resp = self._cb.post_object(url, request)
         result = resp.json()
-        return [Alert.Note(self._cb, self, result["id"], result)]
+        return Alert.Note(self._cb, self, result["id"], threat_note, result)
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -491,6 +554,7 @@ class Alert(PlatformModel):
             FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
         try:
+            original_item = item
             if item in Alert.DEPRECATED_FIELDS_NOT_IN_V7:
                 raise FunctionalityDecommissioned(
                     "Attribute '{0}' does not exist in object '{1}' because it was deprecated in "
@@ -499,7 +563,10 @@ class Alert(PlatformModel):
                 raise FunctionalityDecommissioned(
                     "Attribute '{0}' does not exist in object '{1}' because it was deprecated in "
                     "Alerts v7. In SDK 1.5.0 the".format(item, self.__class__.__name__))
+
             item = Alert.REMAPPED_ALERTS_V6_TO_V7.get(item, item)
+            if self.get("type") == "CONTAINER_RUNTIME":
+                item = Alert.REMAPPED_CONTAINER_ALERTS_V6_TO_V7.get(original_item, item)
             return super(Alert, self).__getattr__(item)
         except AttributeError:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
@@ -519,6 +586,8 @@ class Alert(PlatformModel):
         if version == "v6":
             modified_json = {}
             for key, value in self._info.items():
+                if self.type == "CONTAINER_RUNTIME":
+                    key = Alert.REMAPPED_CONTAINER_ALERTS_V7_TO_V6.get(key, key)
                 modified_json[Alert.REMAPPED_ALERTS_V7_TO_V6.get(key, key)] = value
                 if key == "id":
                     modified_json["legacy_alert_id"] = value
@@ -914,12 +983,8 @@ class WorkflowStatus(PlatformModel):
 
 
 class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, LegacyAlertSearchQueryCriterionMixin,
-                       CriteriaBuilderSupportMixin):
+                       CriteriaBuilderSupportMixin, ExclusionBuilderSupportMixin):
     """Represents a query that is used to locate Alert objects."""
-    VALID_REPUTATIONS = ["KNOWN_MALWARE", "SUSPECT_MALWARE", "PUP", "NOT_LISTED", "ADAPTIVE_WHITE_LIST",
-                         "COMMON_WHITE_LIST", "TRUSTED_WHITE_LIST", "COMPANY_BLACK_LIST"]
-    VALID_ALERT_TYPES = ["CB_ANALYTICS", "DEVICE_CONTROL", "WATCHLIST", "CONTAINER_RUNTIME", "HOST_BASED_FIREWALL",
-                         "INTRUSION_DETECTION_SYSTEM"]
     # TODO verify and update if needed
     VALID_WORKFLOW_VALS = ["OPEN", "DISMISSED"]
 
@@ -944,6 +1009,8 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         self._query_builder = QueryBuilder()
         self._criteria = {}
         self._time_filters = {}
+        self._exclusions = {}
+        self._time_exclusion_filters = {}
         self._sortcriteria = {}
         self._bulkupdate_url = "/api/alerts/v7/orgs/{0}/alerts/workflow"
         self._count_valid = False
@@ -1027,7 +1094,12 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         Args:
             key (str): The key to use for criteria one of create_time, first_event_time, last_event_time,
              backend_timestamp, backend_update_timestamp, or last_update_time
-            **kwargs (dict): Used to specify start= for start time, end= for end time, and range= for range.
+            **kwargs (dict): Used to specify:
+
+                * start= for start time
+                * end= for end time
+                * range= for range
+                * excludes= to set this as an exclusion rather than criteria. Defaults to False.
 
         Returns:
             AlertSearchQuery: This instance.
@@ -1037,6 +1109,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             ...     add_time_criteria("backend_timestamp", start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
             >>> second_query = api.select(Alert).add_time_criteria("backend_timestamp", range='-3d')
             >>> third_query = api.select(Alert).set_time_range("create_time", range='-3d')
+            >>> exclusions_query = api.add_time_criteria("detection_timestamp", range="-2h", exclude=True)
 
         """
         # this first if statement will be removed after v6 is deprecated
@@ -1044,7 +1117,10 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             self._valid_criteria = self._is_valid_time_criteria_key(key)
 
         if self._valid_criteria:
-            self._time_filters[key] = self._create_valid_time_filter(kwargs)
+            if kwargs.get("exclude", False):
+                self._time_exclusion_filters[key] = self._create_valid_time_filter(kwargs)
+            else:
+                self._time_filters[key] = self._create_valid_time_filter(kwargs)
         return self
 
     def _is_valid_time_criteria_key(self, key):
@@ -1134,6 +1210,18 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             mycrit.update(self._time_filters)
         return mycrit
 
+    def _build_exclusions(self):
+        """
+        Builds the exclusions object for use in a query.
+
+        Returns:
+            dict: The exclusions object.
+        """
+        myexclusions = self._exclusions
+        if self._time_exclusion_filters:
+            myexclusions.update(self._time_exclusion_filters)
+        return myexclusions
+
     def sort_by(self, key, direction="ASC"):
         """
         Sets the sorting behavior on a query's results.
@@ -1167,9 +1255,12 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         """
         request = {}
         criteria = self._build_criteria()
+        exclusions = self._build_exclusions()
         query = self._query_builder._collapse()
         if criteria:
             request["criteria"] = criteria
+        if exclusions:
+            request["exclusions"] = exclusions
         if query:
             request["query"] = query
 
@@ -1377,43 +1468,54 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         self._criteria["minimum_severity"] = severity
         return self
 
-    def set_threat_notes_present(self, is_present):
+    def set_threat_notes_present(self, is_present, exclude=False):
         """
         Restricts the alerts that this query is performed on to those with or without threat_notes.
 
         Args:
             is_present (bool): If true, returns alerts that have a note attached to the threat_id
-
+            exclude (bool): If true, will set is_present in the exclusions. Otherwise adds to criteria
         Returns:
             AlertSearchQuery: This instance.
         """
-        self._criteria["threat_notes_present"] = is_present
+        if not exclude:
+            self._criteria["threat_notes_present"] = is_present
+        else:
+            self._exclusions["threat_notes_present"] = is_present
         return self
 
-    def set_alert_notes_present(self, is_present):
+    def set_alert_notes_present(self, is_present, exclude=False):
         """
         Restricts the alerts that this query is performed on to those with or without notes.
 
         Args:
             is_present (bool): If true, returns alerts that have a note attached
+            exclude (bool): If true, will set is_present in the exclusions. Otherwise adds to criteria
 
         Returns:
             AlertSearchQuery: This instance.
         """
-        self._criteria["alert_notes_present"] = is_present
+        if not exclude:
+            self._criteria["alert_notes_present"] = is_present
+        else:
+            self._exclusions["alert_notes_present"] = is_present
         return self
 
-    def set_remote_is_private(self, is_private):
+    def set_remote_is_private(self, is_private, exclude=False):
         """
         Restricts the alerts that this query is performed on based on matching the remote_is_private field.
 
-        This field is only present on CONTAINER_RUNTIME alerts and so filtering will be ingored on other alert types.
+        This field is only present on CONTAINER_RUNTIME alerts and so filtering will be ignored on other alert types.
 
         Args:
             is_private (boolean): Whether the remote information is private: true or false
+            exclude (bool): If true, will set is_present in the exclusions. Otherwise adds to criteria
 
         Returns:
             AlertSearchQuery: This instance.
         """
-        self._criteria["remote_is_private"] = is_private
+        if not exclude:
+            self._criteria["remote_is_private"] = is_private
+        else:
+            self._exclusions["remote_is_private"] = is_private
         return self

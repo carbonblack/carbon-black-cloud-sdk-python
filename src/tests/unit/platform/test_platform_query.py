@@ -9,8 +9,8 @@ from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_SUMMARY_RESP,
                                                        GET_PROCESS_SUMMARY_RESP_1,
-                                                       GET_PROCESS_VALIDATION_RESP,
-                                                       GET_PROCESS_VALIDATION_RESP_INVALID,
+                                                       POST_PROCESS_VALIDATION_RESP,
+                                                       POST_PROCESS_VALIDATION_RESP_INVALID,
                                                        POST_PROCESS_SEARCH_JOB_RESP,
                                                        GET_PROCESS_SEARCH_JOB_RESP,
                                                        GET_PROCESS_SEARCH_JOB_RESULTS_RESP,
@@ -48,10 +48,8 @@ def test_query_count(cbcsdk_mock, get_summary_response, get_process_search_respo
     """Testing Process.process_pids property."""
     api = cbcsdk_mock.api
     # mock the GET of query parameter validation
-    query = f"process_guid={guid}&q=process_guid%3A{guid}&query=process_guid%3A{guid}"
-    cbcsdk_mock.mock_request("GET",
-                             f"/api/investigate/v1/orgs/test/processes/search_validation?{query}",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation",
+                             POST_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
@@ -76,10 +74,8 @@ def test_query_get_query_parameters(cbcsdk_mock, get_process_search_response, gu
     """Testing Query._get_query_parameters()."""
     api = cbcsdk_mock.api
     # mock the GET of query parameter validation
-    query = f"process_guid={guid}&q=process_guid%3A{guid}&query=process_guid%3A{guid}"
-    cbcsdk_mock.mock_request("GET",
-                             f"/api/investigate/v1/orgs/test/processes/search_validation?{query}",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation",
+                             POST_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST",
                              "/api/investigate/v2/orgs/test/processes/search_jobs",
@@ -105,10 +101,8 @@ def test_query_validate_not_valid(cbcsdk_mock, get_process_search_response, guid
     """Testing Query._validate()."""
     api = cbcsdk_mock.api
     # mock the GET of query parameter validation
-    query = f"process_guid={guid}&q=process_guid%3A{guid}&query=process_guid%3A{guid}"
-    cbcsdk_mock.mock_request("GET",
-                             f"/api/investigate/v1/orgs/test/processes/search_validation?{query}",
-                             GET_PROCESS_VALIDATION_RESP_INVALID)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation",
+                             POST_PROCESS_VALIDATION_RESP_INVALID)
 
     process_query = api.select(Process).where(f"process_guid:{guid}")
     with pytest.raises(ApiError):
@@ -223,10 +217,8 @@ def test_query_execute_async(cbcsdk_mock, get_summary_response, get_process_sear
     """Testing Process.process_pids property."""
     api = cbcsdk_mock.api
     # mock the GET of query parameter validation
-    query = f"process_guid={guid}&q=process_guid%3A{guid}&query=process_guid%3A{guid}"
-    cbcsdk_mock.mock_request("GET",
-                             f"/api/investigate/v1/orgs/test/processes/search_validation?{query}",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation",
+                             POST_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)
