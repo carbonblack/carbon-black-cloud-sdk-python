@@ -1,7 +1,3 @@
-testingpython37:
-  build:
-    dockerfile: ./docker/python3.7/Dockerfile
-
 testingpython38:
   build:
     dockerfile: ./docker/python3.8/Dockerfile

@@ -5,9 +5,6 @@
 - name: Tests
   type: parallel
   steps:
-  - name: testing python 3.7
-    service: testingpython37
-    command: pytest
   - name: testing python 3.8
     service: testingpython38
     command: bin/tests_n_reports.sh
