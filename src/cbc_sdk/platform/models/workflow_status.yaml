@@ -54,5 +54,4 @@ properties:
         enum:
         - OPEN
         - IN_PROGRESS
-        - DISMISSED
         - CLOSED

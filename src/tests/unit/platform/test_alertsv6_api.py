@@ -622,19 +622,19 @@ def test_query_set_rows(cbcsdk_mock):
 # TODO replace bulk tests
 # def test_alerts_bulk_dismiss(cbcsdk_mock):
 #     """Test dismissing a batch of alerts."""
-#
+
 #     def on_post(url, body, **kwargs):
 #         assert body == {"query": "Blort", "state": "DISMISSED", "remediation_state": "Fixed", "comment": "Yessir",
 #                         "criteria": {"device_name": ["HAL9000"]}}
 #         return {"request_id": "497ABX"}
-#
+
 #     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
 #     api = cbcsdk_mock.api
-#
+
 #     q = api.select(BaseAlert).where("Blort").set_device_names(["HAL9000"])
 #     reqid = q.dismiss("Fixed", "Yessir")
 #     assert reqid == "497ABX"
-#
+
 
 # def test_alerts_bulk_undismiss(cbcsdk_mock):
 #     """Test undismissing a batch of alerts."""
@@ -719,15 +719,15 @@ def test_query_set_rows(cbcsdk_mock):
 #     with pytest.raises(ApiError):
 #         cb.bulk_threat_dismiss([123], "Fixed", "Yessir")
 
+
 # TODO rework workflow tests after workflow updated
 # def test_load_workflow(cbcsdk_mock):
-#     """Test loading a workflow status."""
-#     cbcsdk_mock.mock_request('GET', "/api/alerts/v7/orgs/test/workflow/497ABX",
-#                              {"errors": [], "failed_ids": [], "id": "497ABX", "num_hits": 0, "num_success": 0,
-#                               "status": "QUEUED", "workflow": {"state": "DISMISSED", "remediation": "Fixed",
-#                                                                "comment": "Yessir", "changed_by": "Robocop",
-#                                                                "last_update_time": "2019-10-31T16:03:13.951Z"}})
-#     api = cbcsdk_mock.api
+#    """Test loading a workflow status."""
+#                             {"errors": [], "failed_ids": [], "id": "497ABX", "num_hits": 0, "num_success": 0,
+#                              "status": "QUEUED", "workflow": {"state": "DISMISSED", "remediation": "Fixed",
+#                                                               "comment": "Yessir", "changed_by": "Robocop",
+#                                                               "last_update_time": "2019-10-31T16:03:13.951Z"}})
+#    api = cbcsdk_mock.api
 #
 #     workflow = api.select(WorkflowStatus, "497ABX")
 #     assert workflow.id_ == "497ABX"
