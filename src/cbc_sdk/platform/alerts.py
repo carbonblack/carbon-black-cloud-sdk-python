@@ -28,6 +28,7 @@ from cbc_sdk.base import (BaseQuery,
 from cbc_sdk.platform.observations import Observation
 from cbc_sdk.platform.processes import AsyncProcessQuery, Process
 from cbc_sdk.platform.legacy_alerts import LegacyAlertSearchQueryCriterionMixin
+from cbc_sdk.platform.jobs import Job
 
 """Alert Models"""
 
@@ -269,6 +270,7 @@ class Alert(PlatformModel):
                 if self._alert.threat_id:
                     url = Alert.Note.threat_urlobject.format(self._cb.credentials.org_key, self._alert.threat_id)
                 else:
+                    url = self.url
                     raise ObjectNotFoundError(url, "Cannot refresh: threat_id not found")
             else:
                 url = Alert.Note.urlobject.format(self._cb.credentials.org_key, self._alert.id)
@@ -422,44 +424,54 @@ class Alert(PlatformModel):
         """
         return self._workflow
 
-    def _update_workflow_status(self, state, remediation, comment):
+    def _update_workflow_status(self, status, closure_reason, determination, note):
         """
         Updates the workflow status of this alert.
 
         Args:
-            state (str): The state to set for this alert, either "OPEN" or "DISMISSED".
-            remediation (str): The remediation status to set for the alert.
-            comment (str): The comment to set for the alert.
+            status (str): The status to set for this alert, either "OPEN", "IN_PROGRESS", or "CLOSED".
+            closure_reason (str): the closure reason for this alert, either "TRUE_POSITIVE", "FALSE_POSITIVE", or "NONE"
+            determination (str): The determination status to set for the alert, either "NO_REASON", "RESOLVED",
+            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", or "OTHER"
+            note (str): The comment to set for the alert.
         """
-        request = {"status": state}
-        if remediation:
-            request["closure_reason"] = remediation
-        if comment:
-            request["note"] = comment
-        url = self.urlobject.format(self._cb.credentials.org_key) + "/workflow"
-        resp = self._cb.post_object(url, request)
+        request = {}
+        if status:
+            request["status"] = status
+        if determination:
+            request["determination"] = determination
+        if closure_reason:
+            request["closure_reason"] = closure_reason
+        if note:
+            request["note"] = note
+
+        resp = self._cb.post_object(self.url, request)
         self._workflow = Workflow(self._cb, resp.json())
         self._last_refresh_time = time.time()
 
-    def dismiss(self, remediation=None, comment=None):
+    def dismiss(self, determination=None, closure_reason=None, note=None):
         """
         Dismisses this alert.
 
         Args:
-            remediation (str): The remediation status to set for the alert.
-            comment (str): The comment to set for the alert.
+            closure_reason (str): the closure reason for this alert, either "TRUE_POSITIVE", "FALSE_POSITIVE", or "NONE"
+            determination (str): The determination status to set for the alert, either "NO_REASON", "RESOLVED",
+            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", or "OTHER"
+            note (str): The comment to set for the alert.
         """
-        self._update_workflow_status("CLOSED", remediation, comment)
+        self._update_workflow_status("CLOSED", determination, closure_reason, note)
 
-    def update(self, remediation=None, comment=None):
+    def update(self, determination=None, closure_reason=None, note=None):
         """
         Updates this alert while leaving it open.
 
         Args:
-            remediation (str): The remediation status to set for the alert.
-            comment (str): The comment to set for the alert.
+            closure_reason (str): the closure reason for this alert, either "TRUE_POSITIVE", "FALSE_POSITIVE", or "NONE"
+            determination (str): The determination status to set for the alert, either "NO_REASON", "RESOLVED",
+            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", or "OTHER"
+            note (str): The comment to set for the alert.
         """
-        self._update_workflow_status("OPEN", remediation, comment)
+        self._update_workflow_status("OPEN", determination, closure_reason, note)
 
     def _update_threat_workflow_status(self, state, remediation, comment):
         """
@@ -475,7 +487,7 @@ class Alert(PlatformModel):
             request["remediation_state"] = remediation
         if comment:
             request["comment"] = comment
-        url = "/api/alerts/v7/orgs/{0}/alerts/workflow".format(self._cb.credentials.org_key)
+        url = "appservices/v6/orgs/{0}/threat/workflow/_criteria".format(self._cb.credentials.org_key)
         resp = self._cb.post_object(url, request)
         return Workflow(self._cb, resp.json())
 
@@ -819,10 +831,12 @@ class IntrusionDetectionSystemAlert(Alert):
 
 
 class Workflow(UnrefreshableModel):
-    """Represents the workflow associated with alerts."""
+    """Represents Workflow alerts."""
+    urlobject = "/api/alerts/v7/orgs/{0}/alerts/workflow"
+    swagger_meta_file = "platform/models/workflow.yaml"
+
     REMAPPED_WORKFLOWS_V6_TO_V7 = {
         "workflow.last_update_time": "workflow.change_timestamp",
-        "workflow.comment": "workflow.note",
         # TO DO: values of state and status are different but able to be mapped.  CBAPI-4969
         # v6 value - v7 value
         # OPEN  -  OPEN
@@ -832,11 +846,9 @@ class Workflow(UnrefreshableModel):
     }
     REMAPPED_WORKFLOWS_V7_TO_V6 = {
         "change_timestamp": "last_update_time",
-        "note": "comment",
         # TO DO: values of state and status are different but able to be mapped
         "status": "state"
     }
-    swagger_meta_file = "platform/models/workflow.yaml"
 
     def __init__(self, cb, initial_data=None):
         """
@@ -889,7 +901,6 @@ class Workflow(UnrefreshableModel):
         except AttributeError:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
                                                                               item))
-            # fall through to the rest of the logic...
 
 
 class WorkflowStatus(PlatformModel):
@@ -1398,17 +1409,19 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         result = resp.json()
         return result.get("results", [])
 
-    def _update_status(self, status, remediation, comment):
+    def _update_status(self, status, determination, closure_reason, note):
         """
         Updates the status of all alerts matching the given query.
 
         Args:
-            status (str): The status to put the alerts into, either "OPEN" or "DISMISSED".
-            remediation (str): The remediation state to set for all alerts.
-            comment (str): The comment to set for all alerts.
+            status (str): The status to set for this alert, either "OPEN", "IN_PROGRESS", or "CLOSED".
+            closure_reason (str): the closure reason for this alert, either "TRUE_POSITIVE", "FALSE_POSITIVE", or "NONE"
+            determination (str): The determination status to set for the alert, either "NO_REASON", "RESOLVED",
+            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", or "OTHER"
+            note (str): The comment to set for the alert.
 
         Returns:
-            str: The request ID, which may be used to select a WorkflowStatus object.
+            str: The job response for the bulk workflow action.
         """
         criteria = self._build_criteria()
         query = self._query_builder._collapse()
@@ -1417,39 +1430,45 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             request["criteria"] = criteria
         if query:
             request["query"] = query
-        if remediation is not None:
-            request["closure_reason"] = remediation
-        if comment is not None:
-            request["note"] = comment
+        if closure_reason is not None:
+            request["closure_reason"] = closure_reason
+        if determination is not None:
+            request["determination"] = determination
+        if note is not None:
+            request["note"] = note
         resp = self._cb.post_object(self._bulkupdate_url.format(self._cb.credentials.org_key), body=request)
         output = resp.json()
-        return output["request_id"]
+        return Job(self._cb, output["request_id"]).await_completion()
 
-    def update(self, remediation=None, comment=None):
+    def update(self, determination=None, closure_reason=None, note=None):
         """
         Update all alerts matching the given query. The alerts will be left in an OPEN state after this request.
 
         Args:
-            remediation (str): The remediation state to set for all alerts.
-            comment (str): The comment to set for all alerts.
+            closure_reason (str): the closure reason for this alert, either "TRUE_POSITIVE", "FALSE_POSITIVE", or "NONE"
+            determination (str): The determination status to set for the alert, either "NO_REASON", "RESOLVED",
+            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", or "OTHER"
+            note (str): The comment to set for the alert.
 
         Returns:
-            str: The request ID, which may be used to select a WorkflowStatus object.
+            str: The job response for the bulk workflow action.
         """
-        return self._update_status("OPEN", remediation, comment)
+        return self._update_status("OPEN", determination, closure_reason, note)
 
-    def dismiss(self, remediation=None, comment=None):
+    def dismiss(self, determination=None, closure_reason=None, note=None):
         """
         Dismiss all alerts matching the given query. The alerts will be left in a DISMISSED state after this request.
 
         Args:
-            remediation (str): The remediation state to set for all alerts.
-            comment (str): The comment to set for all alerts.
+            closure_reason (str): the closure reason for this alert, either "TRUE_POSITIVE", "FALSE_POSITIVE", or "NONE"
+            determination (str): The determination status to set for the alert, either "NO_REASON", "RESOLVED",
+            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", or "OTHER"
+            note (str): The comment to set for the alert.
 
         Returns:
-            str: The request ID, which may be used to select a WorkflowStatus object.
+            str: The job response for the bulk workflow action.
         """
-        return self._update_status("CLOSED", remediation, comment)
+        return self._update_status("CLOSED", determination, closure_reason, note)
 
     def set_minimum_severity(self, severity):
         """

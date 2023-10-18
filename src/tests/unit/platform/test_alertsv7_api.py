@@ -37,7 +37,10 @@ from tests.unit.fixtures.platform.mock_alerts_v7 import (
     CREATE_ALERT_NOTE_RESP,
     GET_ALERT_RESP,
     GET_ALERT_v7_INTRUSION_DETECTION_SYSTEM_RESPONSE,
-    GET_NEW_ALERT_TYPE_RESP
+    GET_NEW_ALERT_TYPE_RESP,
+    GET_OPEN_WORKFLOW_JOB_RESP,
+    GET_CLOSE_WORKFLOW_JOB_RESP,
+    GET_ALERT_WORKFLOW_INIT
 )
 from tests.unit.fixtures.platform.mock_process import (
     POST_PROCESS_VALIDATION_RESP,
@@ -1679,3 +1682,83 @@ def test_threat_history(cbcsdk_mock):
     history = alert.get_history(threat=True)
 
     assert history == GET_THREAT_HISTORY["history"]
+
+
+def test_bulk_update_workflow(cbcsdk_mock):
+    """Test loading a workflow job."""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "type": ["CB_ANALYTICS"]
+            },
+            "determination": "TRUE_POSITIVE",
+            "closure_reason": "OTHER",
+            "status": "OPEN",
+            "note": "Note about the determination"
+        }
+        return {
+            "request_id": "666666"
+        }
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/jobs/v1/orgs/test/jobs/666666",
+        GET_OPEN_WORKFLOW_JOB_RESP
+    )
+    api = cbcsdk_mock.api
+
+    workflow = api.select(Alert).add_criteria("type", ["CB_ANALYTICS"])
+    workflow.update("TRUE_POSITIVE", "OTHER", "Note about the determination")
+
+
+def test_bulk_dismiss_workflow(cbcsdk_mock):
+    """Test loading a workflow job."""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "type": ["CB_ANALYTICS"]
+            },
+            "determination": "TRUE_POSITIVE",
+            "closure_reason": "OTHER",
+            "status": "CLOSED",
+            "note": "Note about the determination"
+        }
+        return {
+            "request_id": "666666"
+        }
+
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
+    cbcsdk_mock.mock_request("GET", "/jobs/v1/orgs/test/jobs/666666", GET_CLOSE_WORKFLOW_JOB_RESP)
+    api = cbcsdk_mock.api
+
+    workflow = api.select(Alert).add_criteria("type", ["CB_ANALYTICS"])
+    workflow.dismiss("TRUE_POSITIVE", "OTHER", "Note about the determination")
+
+
+def test_alert_update_workflow(cbcsdk_mock):
+    """Test loading a workflow job."""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "id": ["SOLO"]
+            },
+            "determination": "TRUE_POSITIVE",
+            "closure_reason": "OTHER",
+            "status": "OPEN",
+            "note": "Note about the determination"
+        }
+        return {
+            "request_id": "666666"
+        }
+
+    cbcsdk_mock.mock_request('GET', "/api/alerts/v7/orgs/test/alerts/SOLO", GET_ALERT_WORKFLOW_INIT)
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/jobs/v1/orgs/test/jobs/666666",
+        GET_OPEN_WORKFLOW_JOB_RESP
+    )
+    api = cbcsdk_mock.api
+    q = api.select(Alert).add_criteria("id", ["SOLO"])
+    q.update("TRUE_POSITIVE", "OTHER", "Note about the determination")
