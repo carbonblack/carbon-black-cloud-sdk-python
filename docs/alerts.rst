@@ -8,13 +8,12 @@ You can use all of the operations shown in the API such as retrieving, filtering
 alert or the associated threat.
 The full list of operations and attributes can be found in the :py:mod:`Alert() <cbc_sdk.platform.alerts.Alert>` class.
 
-For more information see
-`the developer documentation <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alerts-api/>`_
-
-If you are updating from SDK version 1.4.3 or earlier, see the `alerts-migration`_ guide.
-
-An example script which will demonstrate these features is available in
-`GitHub <https://github.com/carbonblack/carbon-black-cloud-sdk-python/tree/develop/examples/platform>`_
+Resources
+---------
+* `API Documentation <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alerts-api/>`_ on Developer Network
+* `Alert Search Fields <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields/>`_ on Developer Network
+* Example script in `GitHub <https://github.com/carbonblack/carbon-black-cloud-sdk-python/tree/develop/examples/platform>`_
+* If you are updating from SDK version 1.4.3 or earlier, see the `alerts-migration`_ guide.
 
 .. note::
     In Alerts v7, and therefore SDK 1.5.0 onwards, Observed Alerts are not emitted as an Alert. The field ``category``
@@ -165,10 +164,10 @@ New fields include process, child process and parent process commandlines and ip
 complete list of fields in the
 `Alert Search Fields <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields/>`_
 
-Observations are part of the
-`Investigate Search Fields page <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/platform-search-fields/>`_.
+Observations are part of
+`Investigate Search Fields <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/platform-search-fields/>`_.
 Available fields are identified by the route "Observation".
-Methods on the Observation Class can be found here :py:mod:`Observation() <cbc_sdk.platform.observation.Observation>`
+Methods on the Observation Class can be found here :py:mod:`Observation() <cbc_sdk.platform.observations.Observation>`
 
 .. code-block:: python
 
@@ -258,31 +257,34 @@ to see all available fields.
 Migrating from Notifications to Alerts
 --------------------------------------
 
-TO DO - refresh and this section
+.. note::
+    The Notifications API has been deprecated and deactivation is planned for October 31st 2024.
 
-The notifications are working on a subscription based principle and they require a ``SIEM`` key of authentication.
-With that key you are subscribing to a certain criteria of alerts, note that only CB Analytics and Watchlist alerts
-can be retrieved from the notifications API.
+    Information about migrating from the API and alternative solutions are in the
+    `IntegrationService notification v3 API Migration Guide <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/notification-migration/>`_
 
-Please referer to `the official notes <https://developer.carbonblack.com/reference/carbon-black-cloud/cb-defense/latest/rest-api/#get-notifications>`_ in the Carbon Black's API website.
+The notifications work on a subscription based principle and they require a ``SIEM`` key of authentication.
+With that key you are subscribing to a certain criteria of alerts, note that as this is deprecated, new alert types
+cannot be retrieved from the notifications API.
+
+Please refer to `the official notes <https://developer.carbonblack.com/reference/carbon-black-cloud/cb-defense/latest/rest-api/#get-notifications>`_ in the Carbon Black's API website.
 
 .. image:: _static/cbc_platform_notification_edit.png
    :alt: Editing a notification in the CBC Platform
    :align: center
 
-Those settings shown in the screenshot can be replicated with the following code:
-
+Those settings shown in the screenshot can be replicated with the following search criteria on Alerts:
 
 .. code-block:: python
 
     >>> from cbc_sdk import CBCloudAPI
     >>> from cbc_sdk.platform import Alert
-    >>> from solrq import Q
-    >>> api = CBCloudAPI(profile='sample')
-    >>> alerts = api.select(Alert).where("category:MONITORED or category:THREAT and policy_name:Standard").set_minimum_severity(7)[:5]
+    >>> alerts = api.select(Alert).set_minimum_severity(7).\
+    >>>     add_criteria("type", ["CB_ANALYTICS", "DEVICE_CONTROL"]).\
+    >>>     add_criteria("device_policy", "Standard")
 
 
-Advanced usage of alerts
-------------------------
+High Volume and Streaming Solution for Alerts
+---------------------------------------------
 
 If you want near-real-time streaming of alerts we advise you to refer to our `Data Forwarder <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/data-forwarder-api/>`_.
