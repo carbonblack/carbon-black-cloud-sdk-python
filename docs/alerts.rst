@@ -4,11 +4,23 @@ Alerts
 Use alerts to get notifications about important App Control-monitored activities, such as the
 appearance or spread of risky files on your endpoints. The Carbon Black Cloud Python SDK provides
 all of the functionalities you might need to use them efficiently.
-You can use all of the operations shown in the API such as retrieving, filtering, dismissing, creating and updating.
+You can use all of the operations shown in the API such as retrieving, filtering, closing, and adding notes to the
+alert or the associated threat.
 The full list of operations and attributes can be found in the :py:mod:`Alert() <cbc_sdk.platform.alerts.Alert>` class.
 
 For more information see
 `the developer documentation <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alerts-api/>`_
+
+If you are updating from SDK version 1.4.3 or earlier, see the `alerts-migration`_ guide.
+
+An example script which will demonstrate these features is available in
+`GitHub <https://github.com/carbonblack/carbon-black-cloud-sdk-python/tree/develop/examples/platform>`_
+
+.. note::
+    In Alerts v7, and therefore SDK 1.5.0 onwards, Observed Alerts are not emitted as an Alert. The field ``category``
+    has been removed from Alert.  In other APIs where this field remains it will always have a value of ``THREAT``.
+    More information is available
+    `here <https://carbonblack.vmware.com/blog/announcing-alerts-v7-api-and-%E2%80%9Cobserved-alerts%E2%80%9D-become-%E2%80%9Cobservations%E2%80%9D>`_.
 
 Retrieving of Alerts
 --------------------
@@ -29,53 +41,78 @@ Filtering
 ^^^^^^^^^
 
 Filter alerts using the fields described in the
-`Alert Search Schema <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alerts-api/#alert-search>`_.
+`Alert Search Schema <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields/>`_.
 
-You can use the ``where`` method to filter the alerts. The ``where`` supports strings and solr like queries, alternatively you can use the ``solrq`` query objects
-for more complex searches. The example below will search with a solr query search string for alerts within the ``MONITORED`` and ``THREAT`` category.
+Use the ``add_criteria()`` method to limit the alerts by setting required values for specific fields.  This should be
+used for fields identified in the `Alert Search Fields <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields/>`_
+with "Searchable Array".
+This snippet shows limiting to specific devices where the device_id is an integer, and then the device_target_value
+which is a string.
 
 .. code-block:: python
 
     >>> from cbc_sdk import CBCloudAPI
     >>> from cbc_sdk.platform import Alert
     >>> api = CBCloudAPI(profile='sample')
-    >>> alerts = api.select(Alert).where("category:THREAT or category:MONITORED")[:5]
+    >>> alerts = api.select(Alert).add_criteria("device_id", [123, 456])
+    >>> alerts = api.select(Alert).add_criteria("device_target_value", ["MISSION_CRITICAL", "HIGH"])
+
+
+Fields in the `Alert Search Fields <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields/>`_
+identified only with "Searchable" require the criteria to be a single value instead of a list of values.
+The SDK has hand crafted methods to set the criteria for these fields.
+
+The code snippet shows the methods for ``alert_notes_present`` and ``set_minimum_severity`` and the different number of
+alerts that meet each criteria.
+
+.. code-block:: python
+
+    >>> alerts = api.select(Alert).set_alert_notes_present(True)
+    >>> print(len(alerts))
+    3
+    >>> alerts = api.select(Alert).set_minimum_severity(9)
+    >>> print(len(alerts))
+    1072
+    >>> alerts = api.select(Alert).set_minimum_severity(3)
+    >>> print(len(alerts))
+    69100
+    >>>
+
+
+You can also use the ``where`` method to filter the alerts. The ``where`` supports strings and solr like queries, alternatively you can use the ``solrq`` query objects
+for more complex searches. The example below will search with a solr query search string for alerts
+where the device_target_value is MISSION_CRITICAL or HIGH, and is the equivalent of the add_criteria clause above.
+
+.. code-block:: python
+
+    >>> from cbc_sdk import CBCloudAPI
+    >>> from cbc_sdk.platform import Alert
+    >>> api = CBCloudAPI(profile='sample')
+    >>> alerts = api.select(Alert).where("device_target_value:MISSION_CRITICAL or device_target_value:HIGH")
     >>> for alert in alerts:
-    ...     print(alert.id, alert.device_os, alert.device_name, alert.category)
-    e45330ae-<truncated> WINDOWS WINDOWS-TEST THREAT
-    8791878a-<truncated> WINDOWS WINDOWS-TEST MONITORED
-    9d7caee4-<truncated> WINDOWS WINDOWS-TEST MONITORED
-    9d327888-<truncated> WINDOWS WINDOWS-TEST THREAT
-    aab3c640-<truncated> WINDOWS WINDOWS-TEST THREAT
+    ...     print(alert.id, alert.device_os, alert.device_name, alert.device_target_value)
+    8aa6272a-17cb-31c0-9352-67e45c0251f3 WINDOWS jenkin MISSION_CRITICAL
+    d987a112-8b7b-18c9-43d9-76ced09d9ded WINDOWS MYDEMOMACHINE\DESKTOP-04 MISSION_CRITICAL
+    0f915c4d-5652-b3e5-50d8-f4dcfc632396 WINDOWS jenkin MISSION_CRITICAL
+    1f13e581-840f-1207-f661-d9b176ee9d6c WINDOWS jenkin MISSION_CRITICAL
+    6ae56007-1213-4ee1-a50c-d221066ce8c9 WINDOWS MYBUILDMACHINE\Desktop-01 HIGH
+    ... truncated ...
 
 .. tip::
     When filtering by fields that take a list parameter, an empty list will be treated as a wildcard and match everything.
 
-Ex: Returns all types
+For example, this snippet returns all types:
 
 .. code-block:: python
 
-    >>> alerts = list(cb.select(Alert).set_types([]))
+    >>> alerts = cb.select(Alert).set_types([])
+
+And it is equivalent to:
+    >>> alerts = cb.select(Alert)
 
 .. tip::
-    More information about the ``solrq`` can be found in the
+    More information about the ``solrq`` can be found in
     their `documentation <https://solrq.readthedocs.io/en/latest/index.html>`_.
-
-You can also filter on different kind of **TTPs** (*Tools Techniques Procedures*) and *Policy Actions**.
-
-.. code-block:: python
-
-    >>> from cbc_sdk import CBCloudAPI
-    >>> from cbc_sdk.platform import Alert
-    >>> api = CBCloudAPI(profile='sample')
-    >>> alerts = api.select(Alert).where(ttp='UNKNOWN_APP', sensor_action='TERMINATE', policy_name='Standard')[:5]
-    >>> for alert in alerts:
-    ...     print(alert.threat_indicators)
-    [{'process_name': 'notepad.exe', 'sha256': '<truncated>', 'ttps': ['POLICY_TERMINATE', 'UNKNOWN_APP']}]
-    [{'process_name': 'test_file.exe', 'sha256': '<truncated>', 'ttps': ['POLICY_DENY', 'POLICY_TERMINATE', 'UNKNOWN_APP']}]
-    [{'process_name': 'notepad.exe', 'sha256': '<truncated>', 'ttps': ['POLICY_TERMINATE', 'UNKNOWN_APP']}]
-    ...
-
 
 Retrieving Alerts for Multiple Organizations
 --------------------------------------------
@@ -88,10 +125,10 @@ With the example below, you can retrieve alerts for multiple organizations.
     >>> from cbc_sdk.platform import Alert
     >>> org_list = ["org1", "org2"]
     >>> for org in org_list:
-    ...     org = ''.join(org)
+    ...     org = "".join(org)
     ...     api = CBCloudAPI(profile=org)
     ...     alerts = api.select(Alert).set_minimum_severity(7)[:5]
-    ...     print('Results for Org {}'.format(org))
+    ...     print("Results for Org {}".format(org))
     >>> for alert in alerts:
     ...     print(alert.id, alert.device_os, alert.device_name, alert.category)
     ...
@@ -103,142 +140,68 @@ You can also read from a csv file with values that match the profile names in yo
     >>> from cbc_sdk import CBCloudAPI
     >>> from cbc_sdk.platform import Alert
     >>> import csv
-    >>> file = open ("data.csv", "r", encoding='utf-8-sig')
+    >>> file = open ("data.csv", "r", encoding="utf-8-sig")
     >>> org_list = list(csv.reader(file, delimiter=","))
     >>> file.close()
     >>> for org in org_list:
-    ...     org = ''.join(org)
+    ...     org = "".join(org)
     ...     api = CBCloudAPI(profile=org)
     ...     alerts = api.select(Alert).set_minimum_severity(7)[:5]
-    ...     print('Results for Org {}'.format(org))
+    ...     print("Results for Org {}".format(org))
     >>> for alert in alerts:
     ...     print(alert.id, alert.device_os, alert.device_name, alert.category)
     ...
     ...
 
-Retrieving of Carbon Black Analytics Alerts (CBAnalyticsAlert)
---------------------------------------------------------------
+Retrieving Observations To Provide Context About An Alert
+---------------------------------------------------------
 
-The Carbon Black Analytics Alerts can retrieve us information about different events
-which are related to our alerts. Those events contain metadata such as ``process_name`` and ``process_cmdline``.
-The full list of all the attributes can be found in the
-:py:mod:`EnrichedEvent() <cbc_sdk.endpoint_standard.base.EnrichedEvent>` class.
+All alert types other than Watchlist Alerts have Observations associated with them which provide more information
+about the interesting events that contributed to the identification of an Alert.
+
+The Alert v7 object (supported in SDK 1.5.0 onwards) has significantly more metadata when compared to the earlier
+Alerts v6 API (in the SDK version 1.4.3 and earlier) so the enrichment may not be required depending on your use case.
+New fields include process, child process and parent process commandlines and ip addresses for network events. Find the
+complete list of fields in the
+`Alert Search Fields <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields/>`_
+
+Observations are part of the
+`Investigate Search Fields page <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/platform-search-fields/>`_.
+Available fields are identified by the route "Observation".
+Methods on the Observation Class can be found here :py:mod:`Observation() <cbc_sdk.platform.observation.Observation>`
 
 .. code-block:: python
 
     >>> from cbc_sdk import CBCloudAPI
     >>> from cbc_sdk.platform import CBAnalyticsAlert
-    >>> api = CBCloudAPI(profile='sample')
-    >>> alert = api.select(CBAnalyticsAlert).first()
-    >>> events = alert.get_events()
-    >>> events
-    [<cbc_sdk.endpoint_standard.base.EnrichedEvent: id <truncated> @ https://<truncated>, <cbc_sdk.endpoint_standard.base.EnrichedEvent: id <truncated>> @ https://<truncated>, ...]
-    >>> print(events[0].get_details())
-    ...
-    EnrichedEvent object, bound to <truncated>
-    -------------------------------------------------------------------------------
+    >>> api = CBCloudAPI(profile="sample")
+    >>> alert = api.select(Alert).add_criteria("type", "CB_ANALYTICS").first()
+    >>> observations = alert.get_observations()
+    >>> observations
+    [<cbc_sdk.platform.observations.Observation: id a5aa40856d5511ee8059132eb84e1d6d:470147c9-d79b-3f01-2083-b30bc0c0629f> @ https://defense.conferdeploy.net]
+    >>> print(observations[0].get_details())
+    Observation object, bound to https://defense.conferdeploy.net.
+    ------------------------------------------------------------------------------
+                                 alert_id: [list:1 item]:
+                                           [0]: 470147c9-d79b-3f01-2083-b30bc0c0629f
+                        backend_timestamp: 2023-10-18T01:28:59.900Z
+             blocked_effective_reputation: KNOWN_MALWARE
+                             blocked_hash: [list:1 item]:
+                                           [0]: 659e469f8dadcb6c32ab1641817ee57c327003dffa443c3...
+                             blocked_name: c:\windows\system32\fltlib.dll
+           childproc_effective_reputation: KNOWN_MALWARE
+    childproc_effective_reputation_source: HASH_REP
+                           childproc_hash: [list:1 item]:
+                                           [0]: 659e469f8dadcb6c32ab1641817ee57c327003dffa443c3...
+    ... truncated ...
 
-              alert_category: ['MONITORED']
-                    alert_id: ['<truncated>']
-         associated_alert_id: ['<truncated>']
-           backend_timestamp: 2021-09-20T10:06:06.728Z
-          device_external_ip: <truncated>
-             device_group_id: 0
-                   device_id: <truncated>
-         device_installed_by: bit9qa
-          device_internal_ip: <truncated>
-             device_location: OFFSITE
-                 device_name: <truncated>
-                   device_os: WINDOWS
-           device_os_version: Windows 10 x64
-               device_policy: perf_events_do_not_delete_policy
-            device_policy_id: <truncated>
-        device_target_priority: MEDIUM
-            device_timestamp: 2021-09-20T10:04:02.290Z
-               document_guid: <truncated>
-                    enriched: True
-         enriched_event_type: NETWORK
-           event_description: <truncated>
-                    event_id: <truncated>
-    event_network_inbound: False
-    event_network_local_ipv4: <truncated>
-    event_network_location: San Jose,CA,United States
-    event_network_protocol: TCP
-    event_network_remote_ipv4: <truncated>
-    event_network_remote_port: <truncated>
-       event_report_code: SUB_RPT_NONE
-      event_threat_score: [0]
-              event_type: netconn
-            ingress_time: 1632132315179
-                  legacy: True
-          netconn_domain: <truncated>
-         netconn_inbound: False
-            netconn_ipv4: <truncated>
-      netconn_local_ipv4: <truncated>
-      netconn_local_port: <truncated>
-        netconn_location: San Jose,CA,United States
-            netconn_port: <truncated>
-        netconn_protocol: PROTO_TCP
-                  org_id: <truncated>
-    parent_effective_reputation: LOCAL_WHITE
-    parent_effective_reputation_source: CERT
-             parent_guid: <truncated>-<truncated>-00000280-00000000-1d79a95c52...
-             parent_hash: ['<truncated>...
-             parent_name: c:\windows\system32\services.exe
-              parent_pid: 640
-       parent_reputation: NOT_LISTED
-         process_cmdline: ['C:\\Windows\\System32\\svchost.exe -k utcsvc ...
-    process_cmdline_length: [44]
-    process_effective_reputation: TRUSTED_WHITE_LIST
-    process_effective_reputation_source: APPROVED_DATABASE
-            process_guid: <truncated>-<truncated>-00000b44-00000000-1d79a95c67...
-            process_hash: ['<truncated>', '<truncated>...
-            process_name: c:\windows\system32\svchost.exe
-             process_pid: [2884]
-      process_reputation: ADAPTIVE_WHITE_LIST
-          process_sha256: <truncated>...
-      process_start_time: 2021-08-26T6:16:50.162Z
-        process_username: ['NT AUTHORITY\\SYSTEM']
-      triggered_alert_id: ['<truncated>-<truncated>-8af4-d6d0-e4bbe7917dff']
-                     ttp: ['PORTSCAN', 'MITRE_T1046_NETWORK_SERVICE_SCANN...
-    ...
 
-Event Details
-^^^^^^^^^^^^^
+Retrieving Processes To Provide Context About An Alert
+------------------------------------------------------
 
-You can retrieve the event(s) behind a ``CBAnalyticsAlert`` easily with its ``get_events()`` method::
-
-    >>> from cbc_sdk import CBCloudAPI
-    >>> from cbc_sdk.platform import CBAnalyticsAlert
-    >>> api = CBCloudAPI(profile='platform')
-    >>> query = cb.select(CBAnalyticsAlert).set_create_time(range="-4w")
-    >>> # get the first alert returned by the query
-    >>> alert = query[0]
-    >>> # get the events associated with that alert
-    >>> for event in alert.get_events():
-    ...     print(
-    ...         f'''
-    ...         Category: {event.alert_category}
-    ...         Type: {event.enriched_event_type}
-    ...         Alert Id: {event.alert_id}
-    ...         ''')
-    Category: ['OBSERVED']
-    Type: SYSTEM_API_CALL
-    Alert Id: ['BE084638']
-
-    Category: ['OBSERVED']
-    Type: NETWORK
-    Alert Id: ['BE084638']
-
-Watchlist Alerts
-----------------
-
-Process Details
-^^^^^^^^^^^^^^^
-
-You can retrieve each process details on each ``WatchlistAlert`` by using the example below. You can use list slicing
+You can retrieve process details on each ``WatchlistAlert`` and some other alert types using the example below. You can use list slicing
 to retrieve the first ``n`` results, in the example below ``10``. The ``get_details()`` method would give us metadata
-very similar to the one we've received by ``EnrichedEvent``.
+very similar to the one we've received by ``Observation``.
 The full list of attributes and methods can be seen in the :py:mod:`Process() <cbc_sdk.platform.processes.Process>` class.
 
 .. code-block:: python
@@ -248,11 +211,11 @@ The full list of attributes and methods can be seen in the :py:mod:`Process() <c
     >>> api = CBCloudAPI(profile='sample')
     >>> alerts = api.select(WatchlistAlert)[:10]
     >>> for alert in alerts:
-    ...     process = api.select(Process).where(process_guid=alert.process_guid).first()
+    ...     process = alert.get_process()
     ...     print(process.get_details())
-    {'alert_category': ['OBSERVED', 'THREAT'], 'alert_id': ['06eca427-1e64-424<truncated>..}
-    {'alert_category': ['OBSERVED', 'THREAT'], 'alert_id': ['2307bf6e-fd39-4b6<truncated>..}
-    ...
+    {'alert_id': ['0a3c45bf-fce6-4a63', '12030b8f-ce3f-48bd'], 'attack_tactic': 'TA0002' <truncated>..}
+    {'alert_id': ['02f6aecd-73d7-456d', 'e47c13dd-75a9-44de'], 'attack_tactic': 'TA0002' <truncated>..}
+    ... truncated ...
 
 Get Process Events
 ^^^^^^^^^^^^^^^^^^
@@ -270,12 +233,11 @@ We could also fetch every event which corresponds with our Process, we can do so
     >>> from cbc_sdk.platform import WatchlistAlert, Process
     >>> api = CBCloudAPI(profile='sample')
     >>> alert = api.select(WatchlistAlert).first()
-    >>> process = api.select(Process).where(process_guid=alert.process_guid).first()
+    >>> process = alert.get_process()
     >>> events = process.events()[:10]
     >>> print(events[0].event_description) # Note that I've striped the `<share>` and `<link>` tags which are also available in the response.
     'The application c:\\program files (x86)\\google\\chrome\\application\\chrome.exe attempted to modify the memory of "c:\\program files (x86)\\google\\chrome\\application\\chrome.exe", by calling the function "NtWriteVirtualMemory". The operation was successful.'
     ...
-
 
 Device Control Alerts
 ---------------------
@@ -287,12 +249,16 @@ Container Runtime Alerts
 
 These represent alerts for behavior noticed inside a Kubernetes container, which are based on network traffic and are
 triggered by anomalies from the learned behavior of workloads or applications.  For these events, the ``type`` will be
-``CONTAINER_RUNTIME``, the ``device_id`` will always be 0, and the ``device_name``, ``device_os``,
-``device_os_version``, and ``device_username`` will always be ``None``. Instead, the workload generating the alert will
-be identified by the ``workload_id`` and ``workload_name`` attributes.
+``CONTAINER_RUNTIME``.  Additional fields such as ``connection_type`` and ``egress_group_name`` are available.
+
+Filter Alert Types Supported to CONTAINER_RUNTIME on the
+`Alert Search Fields <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields/>`_
+to see all available fields.
 
 Migrating from Notifications to Alerts
 --------------------------------------
+
+TO DO - refresh and this section
 
 The notifications are working on a subscription based principle and they require a ``SIEM`` key of authentication.
 With that key you are subscribing to a certain criteria of alerts, note that only CB Analytics and Watchlist alerts
