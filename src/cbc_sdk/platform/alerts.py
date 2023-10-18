@@ -250,6 +250,65 @@ class Alert(PlatformModel):
         resp = self._cb.get_object(url)
         return resp.get("history", [])
 
+    def get_threat_tags(self):
+        """
+        Gets the threat's tags
+
+        Required Permissions:
+            org.alerts.tags (READ)
+
+        Returns:
+            (list[str]): The list of current tags
+        """
+        url = Alert.threat_urlobject_single.format(self._cb.credentials.org_key, self.threat_id)
+        url = f"{url}/tags"
+        resp = self._cb.get_object(url)
+        return resp.get("list", [])
+
+    def add_threat_tags(self, tags):
+        """
+        Adds tags to the threat
+
+        Required Permissions:
+            org.alerts.tags (CREATE)
+
+        Args:
+            tags (list[str]): List of tags to add to the threat
+
+        Raises:
+            ApiError: If tags is not a list of strings
+
+        Returns:
+            (list[str]): The list of current tags
+        """
+        if not isinstance(tags, list) or not isinstance(tags[0], str):
+            raise ApiError("Tags must be a list of strings")
+
+        url = Alert.threat_urlobject_single.format(self._cb.credentials.org_key, self.threat_id)
+        url = f"{url}/tags"
+        resp = self._cb.post_object(url, {"tags": tags})
+        resp_json = resp.json()
+        return resp_json.get("tags", [])
+
+    def delete_threat_tag(self, tag):
+        """
+        Delete a threat tag
+
+        Required Permissions:
+            org.alerts.tags (DELETE)
+
+        Args:
+            tag (str): The tag to delete
+
+        Returns:
+            (list[str]): The list of current tags
+        """
+        url = Alert.threat_urlobject_single.format(self._cb.credentials.org_key, self.threat_id)
+        url = f"{url}/tags/{tag}"
+        resp = self._cb.delete_object(url)
+        resp_json = resp.json()
+        return resp_json.get("tags", [])
+
     class Note(PlatformModel):
         """Represents a note within an alert."""
         REMAPPED_NOTES_V6_TO_V7 = {
