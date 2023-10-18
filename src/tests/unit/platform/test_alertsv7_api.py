@@ -1841,3 +1841,73 @@ def test_alert_dismiss_workflow(cbcsdk_mock):
     alert = api.select(Alert, "SOLO")
     job = alert.update("OTHER", "Note about the determination", "TRUE_POSITIVE")
     assert isinstance(job, Job)
+
+
+def test_add_threat_tags(cbcsdk_mock):
+    """Test add_threat_tags"""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+
+    tags = ["tag1", "tag2"]
+
+    cbcsdk_mock.mock_request("POST",
+                             "/api/alerts/v7/orgs/test/threats/"
+                             "9e0afc389c1acc43b382b1ba590498d2/tags",
+                             {"tags": tags})
+
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, "6f1173f5-f921-8e11-2160-edf42b799333")
+
+    assert tags == alert.add_threat_tags(tags)
+
+
+def test_add_threat_tags_error(cbcsdk_mock):
+    """Test add_threat_tags raises ApiError"""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, "6f1173f5-f921-8e11-2160-edf42b799333")
+
+    with pytest.raises(ApiError):
+        alert.add_threat_tags(5)
+
+
+def test_get_threat_tags(cbcsdk_mock):
+    """Test get_threat_tags"""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+
+    tags = ["tag1", "tag2"]
+
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/threats/"
+                             "9e0afc389c1acc43b382b1ba590498d2/tags",
+                             {"list": tags})
+
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, "6f1173f5-f921-8e11-2160-edf42b799333")
+
+    assert tags == alert.get_threat_tags()
+
+
+def test_delete_threat_tag(cbcsdk_mock):
+    """Test delete_threat_tag"""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+
+    tags = ["tag1"]
+
+    cbcsdk_mock.mock_request("DELETE",
+                             "/api/alerts/v7/orgs/test/threats/"
+                             "9e0afc389c1acc43b382b1ba590498d2/tags/tag2",
+                             {"tags": tags})
+
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, "6f1173f5-f921-8e11-2160-edf42b799333")
+
+    assert tags == alert.delete_threat_tag("tag2")
