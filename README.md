@@ -30,7 +30,7 @@ Visit [ReadTheDocs](https://carbon-black-cloud-python-sdk.readthedocs.io/en/late
 
 ## Requirements
 
-The Carbon Black Cloud Python SDK is design to work on Python 3.7 and above.
+The Carbon Black Cloud Python SDK is design to work on Python 3.8 and above.
 
 All requirements are installed as part of `pip install carbon-black-cloud-sdk`. If you're planning on pushing changes to the Carbon Black Cloud Python SDK, the following can be used after cloning the repo `pip install -r requirements.txt`
 
