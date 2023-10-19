@@ -328,7 +328,6 @@ GET_ALERT_v7_CB_ANALYTICS_RESPONSE = {
     "run_state": "RAN",
     "sensor_action": "TERMINATE",
     "workflow": {
-        "state": "OPEN",
         "change_timestamp": "2023-08-03T00:23:09.659Z",
         "changed_by_type": "SYSTEM",
         "changed_by": "ABCD1234",
