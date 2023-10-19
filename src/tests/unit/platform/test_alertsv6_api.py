@@ -64,7 +64,11 @@ def cbcsdk_mock(monkeypatch, cb):
 # ==================================== UNIT TESTS BELOW ====================================
 
 def test_query_basealert_with_all_bells_and_whistles(cbcsdk_mock):
-    """Test an alert query with all options selected."""
+    """Test an alert query with all options selected.
+
+    Will convert to v7 values for API request and when accessed using v7 alert.workflow_.state
+    should give the v6 value
+    """
 
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort",
@@ -77,10 +81,10 @@ def test_query_basealert_with_all_bells_and_whistles(cbcsdk_mock):
                                      "process_sha256": ["0123456789ABCDEF0123456789ABCDEF"],
                                      "process_reputation": ["SUSPECT_MALWARE"], "tags": ["Frood"],
                                      "device_target_value": ["HIGH"],
-                                     "threat_id": ["B0RG"], "workflow": ["DISMISSED"]},
+                                     "threat_id": ["B0RG"], "workflow": ["CLOSED"]},
                         "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG", "type": "WATCHLIST",
-                             "workflow": {"state": "DISMISSED"}}], "num_found": 1}
+                             "workflow": {"status": "CLOSED"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
@@ -96,7 +100,8 @@ def test_query_basealert_with_all_bells_and_whistles(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.state == "CLOSED"
+    # not testing v6 value lookup here. Done in other tests
+    assert a.workflow["status"] == "CLOSED"  # v7 value for v7 attribute name
 
 
 def test_query_basealert_with_create_time_as_start_end(cbcsdk_mock):
@@ -109,7 +114,7 @@ def test_query_basealert_with_create_time_as_start_end(cbcsdk_mock):
                         "rows": 1
                         }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
-                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
@@ -120,7 +125,8 @@ def test_query_basealert_with_create_time_as_start_end(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.state == "OPEN"
+    # not testing v6 value lookup here. Done in other tests
+    assert a.workflow["status"] == "OPEN"  # v7 value for v7 attribute name
 
 
 def test_query_basealert_with_create_time_as_start_end_as_objs(cbcsdk_mock):
@@ -134,7 +140,7 @@ def test_query_basealert_with_create_time_as_start_end_as_objs(cbcsdk_mock):
                         "time_range": {"start": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                                        "end": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ")}}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
-                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
@@ -145,7 +151,8 @@ def test_query_basealert_with_create_time_as_start_end_as_objs(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.state == "OPEN"
+    # not testing v6 value lookup here. Done in other tests
+    assert a.workflow["status"] == "OPEN"  # v7 value for v7 attribute name
 
 
 def test_query_basealert_with_create_time_as_range(cbcsdk_mock):
@@ -154,7 +161,7 @@ def test_query_basealert_with_create_time_as_range(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort", "time_range": {"range": "-3w"}, "rows": 2}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
-                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
@@ -164,7 +171,8 @@ def test_query_basealert_with_create_time_as_range(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.state == "OPEN"
+    # not testing v6 value lookup here. Done in other tests
+    assert a.workflow["status"] == "OPEN"  # v7 value for v7 attribute name
 
 
 def test_query_basealert_with_time_range(cbcsdk_mock):
@@ -178,7 +186,7 @@ def test_query_basealert_with_time_range(cbcsdk_mock):
             "end": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ")}},
             "rows": 2}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
-                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
@@ -190,7 +198,8 @@ def test_query_basealert_with_time_range(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.state == "OPEN"
+    # not testing v6 value lookup here. Done in other tests
+    assert a.workflow["status"] == "OPEN"  # v7 value for v7 attribute name
 
 
 def test_query_basealert_with_time_range_start_end(cbcsdk_mock):
@@ -199,7 +208,7 @@ def test_query_basealert_with_time_range_start_end(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort", "criteria": {"backend_update_timestamp": {"range": "-3w"}}, "rows": 2}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
-                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
@@ -209,7 +218,8 @@ def test_query_basealert_with_time_range_start_end(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.state == "OPEN"
+    # not testing v6 value lookup here. Done in other tests
+    assert a.workflow["status"] == "OPEN"  # v7 value for v7 attribute name
 
 
 def test_query_basealert_with_time_range_create_time_as_start_end(cbcsdk_mock):
@@ -219,7 +229,7 @@ def test_query_basealert_with_time_range_create_time_as_start_end(cbcsdk_mock):
         assert body == {"query": "Blort", "criteria": {"backend_timestamp": {"range": "-3w"}}, "rows": 2,
                         'time_range': {'range': '-3w'}}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
-                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
@@ -229,12 +239,13 @@ def test_query_basealert_with_time_range_create_time_as_start_end(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.state == "OPEN"
+    # not testing v6 value lookup here. Done in other tests
+    assert a.workflow["status"] == "OPEN"  # v7 value for v7 attribute name
 
 
 def test_query_basealert_facets(cbcsdk_mock):
     """Test an alert facet query."""
-
+    # TO DO Review this test - is set_workflows still supported or will it raise functionality decommissioned?
     def on_post(url, body, **kwargs):
         assert body["query"] == "Blort"
         t = body["criteria"]
@@ -339,7 +350,7 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
                                      "reason_code": ["ATTACK_VECTOR"], "run_state": ["RAN"], "sensor_action": ["DENY"]},
                         "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
-                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
@@ -357,12 +368,12 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.state == "OPEN"
+    # not testing v6 value lookup here. Done in other tests
+    assert a.workflow["status"] == "OPEN"  # v7 value for v7 attribute name
 
 
 def test_query_cbanalyticsalert_facets(cbcsdk_mock):
     """Test a CB Analytics alert facet query."""
-
     def on_post(url, body, **kwargs):
         assert body == {"query": "Blort", "criteria": {'type': ['CB_ANALYTICS'], "workflow": ["OPEN"]},
                         "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]}}
@@ -415,7 +426,7 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(cbcsdk_mock):
                                      "vendor_name": ["SanDisk"]},
                         "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
-                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
@@ -436,26 +447,26 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.state == "OPEN"
+    # not testing v6 value lookup here. Done in other tests
+    assert a.workflow["status"] == "OPEN"  # v7 value for v7 attribute name
 
 
 def test_query_devicecontrolalert_facets(cbcsdk_mock):
     """Test a Device Control alert facet query."""
 
     def on_post(url, body, **kwargs):
-        assert body == {"query": "Blort", "criteria": {'type': ['DEVICE_CONTROL'], "workflow": ["OPEN"]},
-                        "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]}}
-        return {"results": [{"field": {},
-                             "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                            {"field": {},
-                             "values": [{"id": "status", "name": "statusX", "total": 9}]}]}
-
+        assert body == {"criteria": {"type": ["DEVICE_CONTROL"]},
+                        "terms": {"rows": 0, "fields": ["WORKFLOW_STATUS", "VENDOR_NAME"]}}
+        return {"results": [{"field": "workflow_status", "values": [{"total": 12, "id": "OPEN", "name": "OPEN"}]},
+                            {"field": "vendor_name", "values": [{"total": 12, "id": "Generic", "name": "Generic"}]}]
+                }
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_facet", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(DeviceControlAlert).where("Blort").set_workflows(["OPEN"])
-    with pytest.raises(FunctionalityDecommissioned):
-        query.facets(["REPUTATION", "STATUS"])
+    query = api.select(DeviceControlAlert)
+    f = query.facets(["WORKFLOW_STATUS", "VENDOR_NAME"])
+    assert f == [{"field": "workflow_status", "values": [{"id": "OPEN", "name": "OPEN", "total": 12}]},
+                 {"field": "vendor_name", "values": [{"id": "Generic", "name": "Generic", "total": 12}]}]
 
 
 @pytest.mark.parametrize("method, arg", [
@@ -491,9 +502,9 @@ def test_query_watchlistalert_with_all_bells_and_whistles(cbcsdk_mock):
                                      "device_target_value": ["HIGH"],
                                      "threat_id": ["B0RG"], "type": ["WATCHLIST"], "workflow": ["OPEN"],
                                      "watchlist_id": ["100"], "watchlist_name": ["Gandalf"]},
-                        "sort": [{"field": "name", "order": "DESC"}]}
+                        "sort": [{"field": "backend_timestamp", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
-                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
@@ -505,24 +516,27 @@ def test_query_watchlistalert_with_all_bells_and_whistles(cbcsdk_mock):
         .set_policy_names(["Strict"]).set_process_names(["IEXPLORE.EXE"]) \
         .set_process_sha256(["0123456789ABCDEF0123456789ABCDEF"]).set_reputations(["SUSPECT_MALWARE"]) \
         .set_tags(["Frood"]).set_target_priorities(["HIGH"]).set_threat_ids(["B0RG"]) \
-        .set_workflows(["OPEN"]).set_watchlist_ids(["100"]).set_watchlist_names(["Gandalf"]).sort_by("name", "DESC")
+        .set_workflows(["OPEN"]).set_watchlist_ids(["100"]).set_watchlist_names(["Gandalf"]).\
+        sort_by("backend_timestamp", "DESC")
     a = query.one()
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.state == "OPEN"
+    # not testing v6 value lookup here. Done in other tests
+    assert a.workflow["status"] == "OPEN"  # v7 value for v7 attribute name
 
 
 def test_query_watchlistalert_facets(cbcsdk_mock):
     """Test a watchlist alert facet query."""
 
     def on_post(url, body, **kwargs):
-        assert body == {"query": "Blort", "criteria": {'type': ['WATCHLIST'], "workflow": ["OPEN"]},
-                        "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]}}
-        return {"results": [{"field": {},
-                             "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                            {"field": {},
-                             "values": [{"id": "status", "name": "statusX", "total": 9}]}]}
+        assert body == {"criteria": {"type": ["WATCHLIST"]},
+                        "terms": {"rows": 1, "fields": ["WATCHLISTS_NAME", "WORKFLOW_STATUS"]}
+                        }
+
+        return {"results": [{"field": "workflow_status", "values": [{"total": 13, "id": "OPEN", "name": "OPEN"}]},
+                            {"field": "watchlists_name", "values": [{"total": 13, "id": "Test", "name": "Test"}]}]
+                }
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_facet", on_post)
     api = cbcsdk_mock.api
@@ -555,7 +569,7 @@ def test_query_containeralert_with_all_bells_and_whistles(cbcsdk_mock):
                                      "k8s_kind": ["Job"]},
                         "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
-                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
@@ -569,7 +583,8 @@ def test_query_containeralert_with_all_bells_and_whistles(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.state == "OPEN"
+    # not testing v6 value lookup here. Done in other tests
+    assert a.workflow["status"] == "OPEN"  # v7 value for v7 attribute name
 
 
 @pytest.mark.parametrize("method, arg", [
@@ -604,7 +619,7 @@ def test_query_set_rows(cbcsdk_mock):
                         "rows": 10000,
                         "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
-                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
