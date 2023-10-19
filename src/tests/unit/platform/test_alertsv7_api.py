@@ -683,9 +683,6 @@ def test_query_set_rows(cbcsdk_mock):
         assert a.threat_id == "B0RG"
 
 
-# TODO Alerts workflow tests
-
-
 def test_get_process(cbcsdk_mock):
     """Test of getting process through a WatchlistAlert"""
     def on_validation_post(url, body, **kwargs):

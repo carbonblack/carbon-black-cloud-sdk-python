@@ -631,118 +631,92 @@ def test_query_set_rows(cbcsdk_mock):
         assert a.threat_id == "B0RG"
 
 
-# TODO replace bulk tests
-# def test_alerts_bulk_dismiss(cbcsdk_mock):
-#     """Test dismissing a batch of alerts."""
+def test_alerts_bulk_dismiss_threat(cbcsdk_mock):
+    """Test dismissing a batch of threat alerts."""
 
-#     def on_post(url, body, **kwargs):
-#         assert body == {"query": "Blort", "state": "DISMISSED", "remediation_state": "Fixed", "comment": "Yessir",
-#                         "criteria": {"device_name": ["HAL9000"]}}
-#         return {"request_id": "497ABX"}
+    def on_post(url, body, **kwargs):
+        assert body == {"threat_id": ["B0RG", "F3R3NG1"], "state": "DISMISSED", "remediation_state": "Fixed",
+                        "comment": "Yessir"}
+        return {"request_id": "497ABX"}
 
-#     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
-#     api = cbcsdk_mock.api
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/threat/workflow/_criteria", on_post)
+    api = cbcsdk_mock.api
 
-#     q = api.select(BaseAlert).where("Blort").set_device_names(["HAL9000"])
-#     reqid = q.dismiss("Fixed", "Yessir")
-#     assert reqid == "497ABX"
+    reqid = api.bulk_threat_dismiss(["B0RG", "F3R3NG1"], "Fixed", "Yessir")
+    assert reqid == "497ABX"
 
 
-# def test_alerts_bulk_undismiss(cbcsdk_mock):
-#     """Test undismissing a batch of alerts."""
-#
-#     def on_post(url, body, **kwargs):
-#         assert body == {"query": "Blort", "state": "OPEN", "remediation_state": "Fixed", "comment": "NoSir",
-#                         "criteria": {"device_name": ["HAL9000"]}}
-#         return {"request_id": "497ABX"}
-#
-#     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
-#     api = cbcsdk_mock.api
-#
-#     q = api.select(BaseAlert).where("Blort").set_device_names(["HAL9000"])
-#     reqid = q.update("Fixed", "NoSir")
-#     assert reqid == "497ABX"
-#
-#
-# def test_alerts_bulk_dismiss_watchlist(cbcsdk_mock):
-#     """Test dismissing a batch of watchlist alerts."""
-#
-#     def on_post(url, body, **kwargs):
-#         assert body == {"query": "Blort", "state": "DISMISSED", "remediation_state": "Fixed", "comment": "Yessir",
-#                         "criteria": {"device_name": ["HAL9000"], 'type': ['WATCHLIST']}}
-#         return {"request_id": "497ABX"}
-#
-#     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
-#     api = cbcsdk_mock.api
-#
-#     q = api.select(WatchlistAlert).where("Blort").set_device_names(["HAL9000"])
-#     reqid = q.dismiss("Fixed", "Yessir")
-#     assert reqid == "497ABX"
-#
-#
-# def test_alerts_bulk_dismiss_cbanalytics(cbcsdk_mock):
-#     """Test dismissing a batch of CB Analytics alerts."""
-#
-#     def on_post(url, body, **kwargs):
-#         assert body == {"query": "Blort", "state": "DISMISSED", "remediation_state": "Fixed", "comment": "Yessir",
-#                         "criteria": {"device_name": ["HAL9000"], 'type': ['CB_ANALYTICS']}}
-#         return {"request_id": "497ABX"}
-#
-#     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
-#     api = cbcsdk_mock.api
-#
-#     q = api.select(CBAnalyticsAlert).where("Blort").set_device_names(["HAL9000"])
-#     reqid = q.dismiss("Fixed", "Yessir")
-#     assert reqid == "497ABX"
-#
-#
-# def test_alerts_bulk_dismiss_threat(cbcsdk_mock):
-#     """Test dismissing a batch of threat alerts."""
-#
-#     def on_post(url, body, **kwargs):
-#         assert body == {"threat_id": ["B0RG", "F3R3NG1"], "state": "DISMISSED", "remediation_state": "Fixed",
-#                         "comment": "Yessir"}
-#         return {"request_id": "497ABX"}
-#
-#     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
-#     api = cbcsdk_mock.api
-#
-#     reqid = api.bulk_threat_dismiss(["B0RG", "F3R3NG1"], "Fixed", "Yessir")
-#     assert reqid == "497ABX"
-#
-#
-# def test_alerts_bulk_undismiss_threat(cbcsdk_mock):
-#     """Test undismissing a batch of threat alerts."""
-#
-#     def on_post(url, body, **kwargs):
-#         assert body == {"threat_id": ["B0RG", "F3R3NG1"], "state": "OPEN", "remediation_state": "Fixed",
-#                         "comment": "NoSir"}
-#         return {"request_id": "497ABX"}
-#
-#     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
-#     api = cbcsdk_mock.api
-#
-#     reqid = api.bulk_threat_update(["B0RG", "F3R3NG1"], "Fixed", "NoSir")
-#     assert reqid == "497ABX"
-#
-#
-# def test_alerts_bulk_threat_error(cb):
-#     """Test error raise from bulk threat update status"""
-#     with pytest.raises(ApiError):
-#         cb.bulk_threat_dismiss([123], "Fixed", "Yessir")
+def test_alerts_bulk_undismiss_threat(cbcsdk_mock):
+    """Test undismissing a batch of threat alerts."""
+
+    def on_post(url, body, **kwargs):
+        assert body == {"threat_id": ["B0RG", "F3R3NG1"], "state": "OPEN", "remediation_state": "Fixed",
+                        "comment": "NoSir"}
+        return {"request_id": "497ABX"}
+
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/threat/workflow/_criteria", on_post)
+    api = cbcsdk_mock.api
+
+    reqid = api.bulk_threat_update(["B0RG", "F3R3NG1"], "Fixed", "NoSir")
+    assert reqid == "497ABX"
 
 
-# TODO rework workflow tests after workflow updated
-# def test_load_workflow(cbcsdk_mock):
-#    """Test loading a workflow status."""
-#                             {"errors": [], "failed_ids": [], "id": "497ABX", "num_hits": 0, "num_success": 0,
-#                              "status": "QUEUED", "workflow": {"state": "DISMISSED", "remediation": "Fixed",
-#                                                               "comment": "Yessir", "changed_by": "Robocop",
-#                                                               "last_update_time": "2019-10-31T16:03:13.951Z"}})
-#    api = cbcsdk_mock.api
-#
-#     workflow = api.select(WorkflowStatus, "497ABX")
-#     assert workflow.id_ == "497ABX"
+def test_alerts_bulk_threat_error(cb):
+    """Test error raise from bulk threat update status"""
+    with pytest.raises(ApiError):
+        cb.bulk_threat_dismiss([123], "Fixed", "Yessir")
+
+
+def test_alert_dismiss_threat(cbcsdk_mock):
+    """Test dismissal of a threat alert."""
+
+    def on_post(url, body, **kwargs):
+        assert body == {"state": "DISMISSED", "remediation_state": "Fixed", "comment": "Yessir"}
+        return {
+            "state": "DISMISSED",
+            "remediation": "Fixed",
+            "last_update_time": "2019-10-31T16:03:13.951Z",
+            "comment": "Yessir",
+            "changed_by": "Robocop"
+        }
+
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/threat/workflow/_criteria", on_post)
+
+    api = cbcsdk_mock.api
+
+    alert = BaseAlert(api, "ESD14U2C", {"id": "ESD14U2C", "threat_id": "B0RG", "workflow": {"status": "OPEN"}})
+    wf = alert.dismiss_threat("Fixed", "Yessir")
+    assert wf["changed_by"] == "Robocop"
+    assert wf["state"] == "DISMISSED"
+    assert wf["remediation"] == "Fixed"
+    assert wf["comment"] == "Yessir"
+    assert wf["last_update_time"] == "2019-10-31T16:03:13.951Z"
+
+
+def test_alert_undismiss_threat(cbcsdk_mock):
+    """Test undismissal of a threat alert."""
+
+    def on_post(url, body, **kwargs):
+        assert body == {"state": "OPEN", "remediation_state": "Investigating", "comment": "Yessir"}
+        return {
+            "state": "OPEN",
+            "remediation": "Investigating",
+            "comment": "Yessir",
+            "changed_by": "Robocop",
+            "last_update_time": "2019-10-31T16:03:13.951Z"
+        }
+
+    cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/threat/workflow/_criteria", on_post)
+
+    api = cbcsdk_mock.api
+
+    alert = BaseAlert(api, "ESD14U2C", {"id": "ESD14U2C", "threat_id": "B0RG", "workflow": {"status": "OPEN"}})
+    wf = alert.update_threat("Investigating", "Yessir")
+    assert wf["changed_by"] == "Robocop"
+    assert wf["state"] == "OPEN"
+    assert wf["remediation"] == "Investigating"
+    assert wf["comment"] == "Yessir"
+    assert wf["last_update_time"] == "2019-10-31T16:03:13.951Z"
 
 
 def test_get_process(cbcsdk_mock):

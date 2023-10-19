@@ -570,7 +570,7 @@ class Alert(PlatformModel):
             request["remediation_state"] = remediation
         if comment:
             request["comment"] = comment
-        url = "appservices/v6/orgs/{0}/threat/workflow/_criteria".format(self._cb.credentials.org_key)
+        url = "/appservices/v6/orgs/{0}/threat/workflow/_criteria".format(self._cb.credentials.org_key)
         resp = self._cb.post_object(url, request)
         return resp.json()
 
@@ -893,10 +893,6 @@ class IntrusionDetectionSystemAlert(Alert):
 class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, LegacyAlertSearchQueryCriterionMixin,
                        CriteriaBuilderSupportMixin, ExclusionBuilderSupportMixin):
     """Represents a query that is used to locate Alert objects."""
-    # TODO verify and update if needed
-    VALID_WORKFLOW_VALS = ["OPEN", "DISMISSED"]
-
-    # TODO verify and update if needed
     DEPRECATED_FACET_FIELDS = ["ALERT_TYPE", "CATEGORY", "REPUTATION", "WORKFLOW", "TAG", "POLICY_ID",
                                "POLICY_NAME", "APPLICATION_HASH", "APPLICATION_NAME", "STATUS", "POLICY_APPLIED_STATE"]
 
