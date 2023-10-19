@@ -76,10 +76,10 @@ def test_query_basealert_with_all_bells_and_whistles(cbcsdk_mock):
                                      "process_sha256": ["0123456789ABCDEF0123456789ABCDEF"],
                                      "process_reputation": ["SUSPECT_MALWARE"], "tags": ["Frood"],
                                      "device_target_value": ["HIGH"],
-                                     "threat_id": ["B0RG"], "workflow": ["OPEN"]},
+                                     "threat_id": ["B0RG"], "workflow": ["DISMISSED"]},
                         "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG", "type": "WATCHLIST",
-                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+                             "workflow": {"state": "DISMISSED"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
@@ -90,12 +90,12 @@ def test_query_basealert_with_all_bells_and_whistles(cbcsdk_mock):
         .set_policy_names(["Strict"]).set_process_names(["IEXPLORE.EXE"]) \
         .set_process_sha256(["0123456789ABCDEF0123456789ABCDEF"]).set_reputations(["SUSPECT_MALWARE"]) \
         .set_tags(["Frood"]).set_target_priorities(["HIGH"]).set_threat_ids(["B0RG"]) \
-        .set_workflows(["OPEN"]).sort_by("name", "DESC")
+        .set_workflows(["DISMISSED"]).sort_by("name", "DESC")
     a = query.one()
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.state == "OPEN"
+    assert a.workflow_.state == "CLOSED"
 
 
 def test_query_basealert_with_create_time_as_start_end(cbcsdk_mock):

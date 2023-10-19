@@ -474,7 +474,7 @@ GET_CLOSE_WORKFLOW_JOB_RESP = {
 }
 
 GET_ALERT_WORKFLOW_INIT = {
-    "id": "S0L0",
+    "id": "SOLO",
     "org_key": "test",
     "threat_id": "B0RG",
     "type": "WATCHLIST",
