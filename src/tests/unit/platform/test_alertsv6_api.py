@@ -40,7 +40,8 @@ from tests.unit.fixtures.platform.mock_alerts_v7 import (
     GET_ALERT_TYPE_WATCHLIST_INVALID,
     GET_ALERT_RESP_WITH_NOTES,
     GET_ALERT_NOTES,
-    CREATE_ALERT_NOTE_RESP
+    CREATE_ALERT_NOTE_RESP,
+    GET_ALERT_FACET_RESP_INVALID
 )
 from tests.unit.fixtures.mock_rest_api import ALERT_SEARCH_SUGGESTIONS_RESP
 
@@ -250,9 +251,8 @@ def test_query_basealert_facets(cbcsdk_mock):
     api = cbcsdk_mock.api
 
     query = api.select(BaseAlert).where("Blort").set_workflows(["OPEN"])
-    f = query.facets(["REPUTATION", "STATUS"])
-    assert f == [{"field": {}, "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                 {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
+    with pytest.raises(FunctionalityDecommissioned):
+        query.facets(["REPUTATION", "STATUS"])
 
 
 def test_query_basealert_invalid_create_time_combinations(cb):
@@ -375,9 +375,8 @@ def test_query_cbanalyticsalert_facets(cbcsdk_mock):
     api = cbcsdk_mock.api
 
     query = api.select(CBAnalyticsAlert).where("Blort").set_workflows(["OPEN"])
-    f = query.facets(["REPUTATION", "STATUS"])
-    assert f == [{"field": {}, "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                 {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
+    with pytest.raises(FunctionalityDecommissioned):
+        query.facets(["REPUTATION", "STATUS"])
 
 
 @pytest.mark.parametrize("method, arg", [
@@ -455,9 +454,8 @@ def test_query_devicecontrolalert_facets(cbcsdk_mock):
     api = cbcsdk_mock.api
 
     query = api.select(DeviceControlAlert).where("Blort").set_workflows(["OPEN"])
-    f = query.facets(["REPUTATION", "STATUS"])
-    assert f == [{"field": {}, "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                 {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
+    with pytest.raises(FunctionalityDecommissioned):
+        query.facets(["REPUTATION", "STATUS"])
 
 
 @pytest.mark.parametrize("method, arg", [
@@ -530,9 +528,8 @@ def test_query_watchlistalert_facets(cbcsdk_mock):
     api = cbcsdk_mock.api
 
     query = api.select(WatchlistAlert).where("Blort").set_workflows(["OPEN"])
-    f = query.facets(["REPUTATION", "STATUS"])
-    assert f == [{"field": {}, "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                 {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
+    with pytest.raises(FunctionalityDecommissioned):
+        query.facets(["REPUTATION", "STATUS"])
 
 
 def test_query_watchlistalert_invalid_criteria_values(cb):
@@ -891,11 +888,13 @@ def test_query_basealert_sort_error(cbcsdk_mock):
 
 def test_query_basealert_facets_error(cbcsdk_mock):
     """Test an alert facet query with invalid term."""
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_facet", GET_ALERT_FACET_RESP_INVALID)
+    cbcsdk_mock.mocks['POST:/api/alerts/v7/orgs/test/alerts/_facet'].__setattr__("status_code", 400)
     api = cbcsdk_mock.api
     query = api.select(BaseAlert).where("Blort").set_workflows(["OPEN"])
     with pytest.raises(ApiError) as ex:
-        query.facets(["ALABALA", "STATUS"])
-    assert "One or more invalid term field names" in str(ex.value)
+        query.facets(["ALABALA"])
+    assert "'error_code': 'INVALID_ENUM_VALUE'" in str(ex.value)
 
 
 def test_get_notes_for_alert(cbcsdk_mock):

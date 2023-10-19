@@ -14,7 +14,7 @@ from datetime import datetime
 
 import pytest
 
-from cbc_sdk.errors import ApiError, TimeoutError, NonQueryableModel, ModelNotFound
+from cbc_sdk.errors import ApiError, TimeoutError, NonQueryableModel, ModelNotFound, FunctionalityDecommissioned
 from cbc_sdk.platform import (
     BaseAlert,
     Alert,
@@ -37,6 +37,8 @@ from tests.unit.fixtures.platform.mock_alerts_v7 import (
     GET_ALERT_NOTES,
     CREATE_ALERT_NOTE_RESP,
     GET_ALERT_RESP,
+    GET_ALERT_FACET_RESP_INVALID,
+    GET_ALERT_FACET_RESP,
     GET_ALERT_v7_INTRUSION_DETECTION_SYSTEM_RESPONSE,
     GET_NEW_ALERT_TYPE_RESP,
     GET_OPEN_WORKFLOW_JOB_RESP,
@@ -283,22 +285,18 @@ def test_query_alert_facets(cbcsdk_mock):
     def on_post(url, body, **kwargs):
         assert body["query"] == "Blort"
         t = body["criteria"]
-        assert t["workflow"] == ["OPEN"]
+        assert t["minimum_severity"] == 3
         t = body["terms"]
         assert t["rows"] == 0
-        assert t["fields"] == ["REPUTATION", "STATUS"]
-        return {"results": [{"field": {},
-                             "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                            {"field": {},
-                             "values": [{"id": "status", "name": "statusX", "total": 9}]}]}
-
+        assert t["fields"] == ["type"]
+        return GET_ALERT_FACET_RESP
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_facet", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(Alert).where("Blort").set_workflows(["OPEN"])
-    f = query.facets(["REPUTATION", "STATUS"])
-    assert f == [{"field": {}, "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                 {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
+    query = api.select(Alert).where("Blort").set_minimum_severity(3)
+    f = query.facets(["type"])
+    assert f == [{"field": "type", "values": [{"id": 'WATCHLIST', "name": 'WATCHLIST', "total": 1916},
+                                              {"id": "CB_ANALYTICS", "name": "CB_ANALYTICS", "total": 41}]}]
 
 
 def test_query_alert_invalid_backend_timestamp_combinations(cb):
@@ -331,7 +329,7 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
                                      "device_location": ["ONSITE"],
                                      "policy_applied": ["APPLIED"],
                                      "reason_code": ["ATTACK_VECTOR"], "run_state": ["RAN"], "sensor_action": ["DENY"],
-                                     "alert_notes_present": ["True"], "attack_tactic": ["tactic"],
+                                     "alert_notes_present": True, "attack_tactic": ["tactic"],
                                      "attack_technique": ["technique"],
                                      "blocked_effective_reputation": ["NOT_LISTED"], "blocked_md5": ["md5_hash"],
                                      "blocked_name": ["tim"],
@@ -374,7 +372,7 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
         .add_criteria("device_location", ["ONSITE"]) \
         .add_criteria("policy_applied", ["APPLIED"]).add_criteria("reason_code", ["ATTACK_VECTOR"]).add_criteria(
         "run_state", ["RAN"]) \
-        .add_criteria("alert_notes_present", "True").add_criteria("attack_tactic", ["tactic"]).add_criteria(
+        .set_alert_notes_present(True).add_criteria("attack_tactic", ["tactic"]).add_criteria(
         "attack_technique", ["technique"]) \
         .add_criteria("blocked_effective_reputation", ["NOT_LISTED"]).add_criteria("blocked_md5",
                                                                                    ["md5_hash"]).add_criteria(
@@ -399,27 +397,6 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
     assert a.workflow_.status == "OPEN"
-
-
-def test_query_cbanalyticsalert_facets(cbcsdk_mock):
-    """Test a CB Analytics alert facet query."""
-
-    def on_post(url, body, **kwargs):
-        assert body == {"query": "Blort", "criteria": {'type': ['CB_ANALYTICS'], "workflow_status": ["OPEN"]},
-                        "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]}}
-        return {"results": [{"field": {},
-                             "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                            {"field": {},
-                             "values": [{"id": "status", "name": "statusX", "total": 9}]}]}
-
-    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_facet", on_post)
-    api = cbcsdk_mock.api
-
-    query = api.select(Alert).where("Blort").add_criteria("type", ["CB_ANALYTICS"]).add_criteria("workflow_status",
-                                                                                                 ["OPEN"])
-    f = query.facets(["REPUTATION", "STATUS"])
-    assert f == [{"field": {}, "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                 {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
 
 
 def test_query_devicecontrolalert_with_all_bells_and_whistles(cbcsdk_mock):
@@ -470,27 +447,6 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(cbcsdk_mock):
     assert a.workflow_.status == "OPEN"
 
 
-def test_query_devicecontrolalert_facets(cbcsdk_mock):
-    """Test a Device Control alert facet query."""
-
-    def on_post(url, body, **kwargs):
-        assert body == {"query": "Blort", "criteria": {'type': ['DEVICE_CONTROL'], "workflow_status": ["OPEN"]},
-                        "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]}}
-        return {"results": [{"field": {},
-                             "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                            {"field": {},
-                             "values": [{"id": "status", "name": "statusX", "total": 9}]}]}
-
-    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_facet", on_post)
-    api = cbcsdk_mock.api
-
-    query = api.select(Alert).where("Blort").add_criteria("type", ["DEVICE_CONTROL"]).add_criteria("workflow_status",
-                                                                                                   ["OPEN"])
-    f = query.facets(["REPUTATION", "STATUS"])
-    assert f == [{"field": {}, "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                 {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
-
-
 def test_query_watchlistalert_with_all_bells_and_whistles(cbcsdk_mock):
     """Test a watchlist alert query with all options selected."""
 
@@ -503,8 +459,8 @@ def test_query_watchlistalert_with_all_bells_and_whistles(cbcsdk_mock):
                                      "severity": ["6"], "device_policy_id": ["8675309"],
                                      "device_policy": ["Strict"],
                                      "device_target_value": ["HIGH"],
-                                     "threat_id": ["B0RG"], "type": ["WATCHLIST"], "workflow_status": ["OPEN"],
                                      "watchlists_id": ["100"], "watchlists_name": ["Gandalf"],
+                                     "threat_id": ["B0RG"], "type": ["WATCHLIST"], "workflow_status": ["OPEN"],
                                      "netconn_remote_ip": ["10.29.99.1"], "netconn_remote_domain": ["example.com"],
                                      "netconn_protocol": ["TCP"], "netconn_remote_port": ["54321"],
                                      "netconn_local_port": ["12345"],
@@ -570,25 +526,97 @@ def test_query_watchlistalert_with_all_bells_and_whistles(cbcsdk_mock):
     assert a.workflow_.status == "OPEN"
 
 
-def test_query_watchlistalert_facets(cbcsdk_mock):
-    """Test a watchlist alert facet query."""
+def test_query_intrusion_detection_system_with_all_bells_and_whistles(cbcsdk_mock):
+    """Test a IDS alert query with all options selected."""
 
     def on_post(url, body, **kwargs):
-        assert body == {"query": "Blort", "criteria": {'type': ['WATCHLIST'], "workflow_status": ["OPEN"]},
-                        "terms": {"rows": 0, "fields": ["REPUTATION", "STATUS"]}}
-        return {"results": [{"field": {},
-                             "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                            {"field": {},
-                             "values": [{"id": "status", "name": "statusX", "total": 9}]}]}
+        assert body == {"query": "Blort",
+                        "rows": 2,
+                        "criteria": {"device_id": ["6023"], "device_name": ["HAL"],
+                                     "device_os": ["LINUX"], "device_os_version": ["0.1.2"],
+                                     "device_username": ["JRN"],
+                                     "device_internal_ip": ["10.10.8.2"], "device_external_ip": ["10.10.10.55"],
+                                     "id": ["S0L0"],
+                                     "severity": ["6"], "device_policy_id": ["8675309"],
+                                     "device_policy": ["Strict"], "device_uem_id": ["uemId"],
+                                     "device_target_value": ["HIGH"], "threat_name": ["dangerous"],
+                                     "threat_id": ["B0RG"], "type": ["INTRUSION_DETECTION_SYSTEM"],
+                                     "policy_applied": ["APPLIED"],
+                                     "reason_code": ["ATTACK_VECTOR"], "run_state": ["RAN"], "sensor_action": ["DENY"],
+                                     "alert_notes_present": True, "attack_tactic": ["tactic"],
+                                     "attack_technique": ["technique"], "blocked_effective_reputation": ["NOT_LISTED"],
+                                     "blocked_md5": ["md5_hash"], "blocked_name": ["tim"],
+                                     "blocked_sha256": ["sha256_hash"],
+                                     "ttps": ["malicious"], "tms_rule_id": ["xtvr"],
+                                     "workflow_status": ["OPEN"],
+                                     "netconn_remote_ip": ["10.29.99.1"], "netconn_remote_domain": ["example.com"],
+                                     "netconn_protocol": ["TCP"], "netconn_remote_port": ["54321"],
+                                     "netconn_local_port": ["12345"],
+                                     "childproc_cmdline": ["/usr/bin/python"],
+                                     "childproc_effective_reputation": ["PUP"],
+                                     "childproc_guid": ["12345678"], "childproc_name": ["python"],
+                                     "childproc_sha256": ["sha256_child"], "childproc_username": ["steven"],
+                                     "primary_event_id": ["123456"],
+                                     "parent_cmdline": ["/usr/bin/python"],
+                                     "parent_effective_reputation": ["PUP"],
+                                     "parent_guid": ["12345678"], "parent_name": ["python"],
+                                     "parent_sha256": ["sha256_parent"], "parent_username": ["steven"],
+                                     "process_cmdline": ["/usr/bin/python"],
+                                     "process_effective_reputation": ["PUP"],
+                                     "process_guid": ["12345678"], "process_name": ["IEXPLORE.EXE"],
+                                     "process_sha256": ["0123456789ABCDEF0123456789ABCDEF"],
+                                     "process_username": ["steven"],
+                                     "process_reputation": ["SUSPECT_MALWARE"],
+                                     "process_issuer": ["Microsoft"], "process_publisher": ["Microsoft"]},
+                        "sort": [{"field": "severity", "order": "DESC"}]}
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
 
-    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_facet", on_post)
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
 
-    query = api.select(Alert).where("Blort").add_criteria("type", ["WATCHLIST"]).add_criteria("workflow_status",
-                                                                                              ["OPEN"])
-    f = query.facets(["REPUTATION", "STATUS"])
-    assert f == [{"field": {}, "values": [{"id": "reputation", "name": "reputationX", "total": 4}]},
-                 {"field": {}, "values": [{"id": "status", "name": "statusX", "total": 9}]}]
+    query = api.select(Alert).where("Blort").add_criteria("type", ["INTRUSION_DETECTION_SYSTEM"])\
+        .add_criteria("device_id", ["6023"]) \
+        .add_criteria("device_name", ["HAL"]).add_criteria("device_os", ["LINUX"]) \
+        .add_criteria("device_os_version", ["0.1.2"]).add_criteria("device_internal_ip", ["10.10.8.2"]) \
+        .add_criteria("device_username", ["JRN"]).add_criteria("id", ["S0L0"])\
+        .add_criteria("device_external_ip", ["10.10.10.55"]).add_criteria("device_uem_id", ["uemId"]) \
+        .add_criteria("severity", "6").add_criteria("device_policy_id", ["8675309"]) \
+        .add_criteria("device_policy", ["Strict"]).add_criteria("process_name", ["IEXPLORE.EXE"]) \
+        .add_criteria("process_sha256", ["0123456789ABCDEF0123456789ABCDEF"]) \
+        .add_criteria("process_reputation", ["SUSPECT_MALWARE"]) \
+        .add_criteria("netconn_remote_ip", ['10.29.99.1']).add_criteria("netconn_remote_domain", ['example.com']) \
+        .add_criteria("netconn_protocol", ['TCP']).add_criteria("netconn_local_port", ["12345"]) \
+        .add_criteria("netconn_remote_port", ["54321"]) \
+        .add_criteria("policy_applied", ["APPLIED"]).add_criteria("reason_code", ["ATTACK_VECTOR"]).add_criteria(
+        "run_state", ["RAN"]) \
+        .add_criteria("device_target_value", ["HIGH"]).add_criteria("threat_id", ["B0RG"]) \
+        .add_criteria("threat_name", ["dangerous"]).set_alert_notes_present(True) \
+        .add_criteria("attack_tactic", ["tactic"]).add_criteria("attack_technique", ["technique"]) \
+        .add_criteria("workflow_status", ["OPEN"]).add_criteria("blocked_effective_reputation", ["NOT_LISTED"]).\
+        add_criteria("blocked_md5", ["md5_hash"]).add_criteria("blocked_name", ["tim"]) \
+        .add_criteria("blocked_sha256", ["sha256_hash"]) \
+        .add_criteria("childproc_cmdline", ["/usr/bin/python"]).add_criteria("primary_event_id", ["123456"]) \
+        .add_criteria("childproc_effective_reputation", ["PUP"]) \
+        .add_criteria("childproc_guid", ["12345678"]).add_criteria("childproc_name", ["python"]).add_criteria(
+        "childproc_sha256", ["sha256_child"]) \
+        .add_criteria("childproc_username", ["steven"]) \
+        .add_criteria("parent_cmdline", ["/usr/bin/python"]).add_criteria("parent_effective_reputation", ["PUP"]) \
+        .add_criteria("parent_guid", ["12345678"]).add_criteria("parent_name", ["python"]) \
+        .add_criteria("parent_sha256", ["sha256_parent"]) \
+        .add_criteria("parent_username", ["steven"]) \
+        .add_criteria("process_cmdline", ["/usr/bin/python"]).add_criteria("process_effective_reputation", ["PUP"]) \
+        .add_criteria("process_guid", ["12345678"]).add_criteria("process_issuer", ["Microsoft"]).add_criteria(
+        "process_publisher", ["Microsoft"]) \
+        .add_criteria("reason_code", ["ATTACK_VECTOR"]).add_criteria("sensor_action", ["DENY"])\
+        .add_criteria("process_username", ["steven"]) \
+        .add_criteria("ttps", ["malicious"]).add_criteria("tms_rule_id", ["xtvr"]) \
+        .sort_by("severity", "DESC")
+    a = query.one()
+    assert a.id == "S0L0"
+    assert a.org_key == "test"
+    assert a.threat_id == "B0RG"
+    assert a.workflow_.status == "OPEN"
 
 
 def test_query_containeralert_with_all_bells_and_whistles(cbcsdk_mock):
@@ -811,13 +839,31 @@ def test_query_alert_sort_error(cbcsdk_mock):
     assert "invalid sort direction specified" in str(ex.value)
 
 
-def test_query_alert_facets_error(cbcsdk_mock):
+def test_query_alert_facets_functionality_decommissioned_error(cbcsdk_mock):
     """Test an alert facet query with invalid term."""
+    cbcsdk_mock.mock_request('POST',
+                             "/api/alerts/v7/orgs/test/alerts/_facet",
+                             GET_ALERT_FACET_RESP_INVALID)
+
+    api = cbcsdk_mock.api
+    query = api.select(Alert).where("Blort").set_workflows(["OPEN"])
+    with pytest.raises(FunctionalityDecommissioned) as ex:
+        query.facets(["ALABALA", "STATUS"])
+    assert "The Field 'STATUS' does is not a valid facet name because it was deprecated in Alerts v7. functionality " \
+           "has been decommissioned." in str(ex.value)
+
+
+def test_query_alert_facets_api_error(cbcsdk_mock):
+    """Test an alert facet query with invalid term."""
+    cbcsdk_mock.mock_request('POST',
+                             "/api/alerts/v7/orgs/test/alerts/_facet",
+                             GET_ALERT_FACET_RESP_INVALID)
+    cbcsdk_mock.mocks['POST:/api/alerts/v7/orgs/test/alerts/_facet'].__setattr__("status_code", 400)
     api = cbcsdk_mock.api
     query = api.select(Alert).where("Blort").set_workflows(["OPEN"])
     with pytest.raises(ApiError) as ex:
-        query.facets(["ALABALA", "STATUS"])
-    assert "One or more invalid term field names" in str(ex.value)
+        query.facets(["jager"])
+    assert "'error_code': 'INVALID_ENUM_VALUE'" in str(ex.value)
 
 
 def test_get_notes_for_alert(cbcsdk_mock):
@@ -1795,3 +1841,73 @@ def test_alert_dismiss_workflow(cbcsdk_mock):
     alert = api.select(Alert, "SOLO")
     job = alert.update("OTHER", "Note about the determination", "TRUE_POSITIVE")
     assert isinstance(job, Job)
+
+
+def test_add_threat_tags(cbcsdk_mock):
+    """Test add_threat_tags"""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+
+    tags = ["tag1", "tag2"]
+
+    cbcsdk_mock.mock_request("POST",
+                             "/api/alerts/v7/orgs/test/threats/"
+                             "9e0afc389c1acc43b382b1ba590498d2/tags",
+                             {"tags": tags})
+
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, "6f1173f5-f921-8e11-2160-edf42b799333")
+
+    assert tags == alert.add_threat_tags(tags)
+
+
+def test_add_threat_tags_error(cbcsdk_mock):
+    """Test add_threat_tags raises ApiError"""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, "6f1173f5-f921-8e11-2160-edf42b799333")
+
+    with pytest.raises(ApiError):
+        alert.add_threat_tags(5)
+
+
+def test_get_threat_tags(cbcsdk_mock):
+    """Test get_threat_tags"""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+
+    tags = ["tag1", "tag2"]
+
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/threats/"
+                             "9e0afc389c1acc43b382b1ba590498d2/tags",
+                             {"list": tags})
+
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, "6f1173f5-f921-8e11-2160-edf42b799333")
+
+    assert tags == alert.get_threat_tags()
+
+
+def test_delete_threat_tag(cbcsdk_mock):
+    """Test delete_threat_tag"""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+
+    tags = ["tag1"]
+
+    cbcsdk_mock.mock_request("DELETE",
+                             "/api/alerts/v7/orgs/test/threats/"
+                             "9e0afc389c1acc43b382b1ba590498d2/tags/tag2",
+                             {"tags": tags})
+
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, "6f1173f5-f921-8e11-2160-edf42b799333")
+
+    assert tags == alert.delete_threat_tag("tag2")

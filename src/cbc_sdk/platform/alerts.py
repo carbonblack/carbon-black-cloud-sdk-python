@@ -185,6 +185,37 @@ class Alert(PlatformModel):
         if model_unique_id is not None and initial_data is None:
             self._refresh()
 
+    def get_process(self, async_mode=False):
+        """
+        Gets the process corresponding with the alert.
+
+        Args:
+            async_mode: True to request process in an asynchronous manner.
+
+        Returns:
+            Process: The process corresponding to the alert.
+        """
+        process_guid = self._info.get("process_guid")
+        if not process_guid:
+            raise ApiError(f"Trying to get process details on an invalid process_id {process_guid}")
+        if async_mode:
+            return self._cb._async_submit(self._get_process)
+        return self._get_process()
+
+    def _get_process(self, *args, **kwargs):
+        """
+        Implementation of the get_process.
+
+        Returns:
+            Process: The process corresponding to the alert. May return None if no process is found.
+        """
+        process_guid = self._info.get("process_guid")
+        try:
+            process = AsyncProcessQuery(Process, self._cb).where(process_guid=process_guid).one()
+        except ObjectNotFoundError:
+            return None
+        return process
+
     def get_observations(self, timeout=0):
         """Requests observations that are associated with the Alert.
 
@@ -223,6 +254,65 @@ class Alert(PlatformModel):
         url = f"{url}/history"
         resp = self._cb.get_object(url)
         return resp.get("history", [])
+
+    def get_threat_tags(self):
+        """
+        Gets the threat's tags
+
+        Required Permissions:
+            org.alerts.tags (READ)
+
+        Returns:
+            (list[str]): The list of current tags
+        """
+        url = Alert.threat_urlobject_single.format(self._cb.credentials.org_key, self.threat_id)
+        url = f"{url}/tags"
+        resp = self._cb.get_object(url)
+        return resp.get("list", [])
+
+    def add_threat_tags(self, tags):
+        """
+        Adds tags to the threat
+
+        Required Permissions:
+            org.alerts.tags (CREATE)
+
+        Args:
+            tags (list[str]): List of tags to add to the threat
+
+        Raises:
+            ApiError: If tags is not a list of strings
+
+        Returns:
+            (list[str]): The list of current tags
+        """
+        if not isinstance(tags, list) or not isinstance(tags[0], str):
+            raise ApiError("Tags must be a list of strings")
+
+        url = Alert.threat_urlobject_single.format(self._cb.credentials.org_key, self.threat_id)
+        url = f"{url}/tags"
+        resp = self._cb.post_object(url, {"tags": tags})
+        resp_json = resp.json()
+        return resp_json.get("tags", [])
+
+    def delete_threat_tag(self, tag):
+        """
+        Delete a threat tag
+
+        Required Permissions:
+            org.alerts.tags (DELETE)
+
+        Args:
+            tag (str): The tag to delete
+
+        Returns:
+            (list[str]): The list of current tags
+        """
+        url = Alert.threat_urlobject_single.format(self._cb.credentials.org_key, self.threat_id)
+        url = f"{url}/tags/{tag}"
+        resp = self._cb.delete_object(url)
+        resp_json = resp.json()
+        return resp_json.get("tags", [])
 
     class Note(PlatformModel):
         """Represents a note within an alert."""
@@ -666,37 +756,6 @@ class WatchlistAlert(Alert):
         """
         return AlertSearchQuery(cls, cb).add_criteria("type", ["WATCHLIST"])
 
-    def get_process(self, async_mode=False):
-        """
-        Gets the process corresponding with the alert.
-
-        Args:
-            async_mode: True to request process in an asynchronous manner.
-
-        Returns:
-            Process: The process corresponding to the alert.
-        """
-        process_guid = self._info.get("process_guid")
-        if not process_guid:
-            raise ApiError(f"Trying to get process details on an invalid process_id {process_guid}")
-        if async_mode:
-            return self._cb._async_submit(self._get_process)
-        return self._get_process()
-
-    def _get_process(self, *args, **kwargs):
-        """
-        Implementation of the get_process.
-
-        Returns:
-            Process: The process corresponding to the alert. May return None if no process is found.
-        """
-        process_guid = self._info.get("process_guid")
-        try:
-            process = AsyncProcessQuery(Process, self._cb).where(process_guid=process_guid).one()
-        except ObjectNotFoundError:
-            return None
-        return process
-
 
 class CBAnalyticsAlert(Alert):
     """Represents CB Analytics alerts."""
@@ -838,10 +897,8 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
     VALID_WORKFLOW_VALS = ["OPEN", "DISMISSED"]
 
     # TODO verify and update if needed
-    VALID_FACET_FIELDS = ["ALERT_TYPE", "CATEGORY", "REPUTATION", "WORKFLOW", "TAG", "POLICY_ID",
-                          "POLICY_NAME", "DEVICE_ID", "DEVICE_NAME", "APPLICATION_HASH",
-                          "APPLICATION_NAME", "STATUS", "RUN_STATE", "POLICY_APPLIED_STATE",
-                          "POLICY_APPLIED", "SENSOR_ACTION"]
+    DEPRECATED_FACET_FIELDS = ["ALERT_TYPE", "CATEGORY", "REPUTATION", "WORKFLOW", "TAG", "POLICY_ID",
+                               "POLICY_NAME", "APPLICATION_HASH", "APPLICATION_NAME", "STATUS", "POLICY_APPLIED_STATE"]
 
     def __init__(self, doc_class, cb):
         """
@@ -1226,22 +1283,30 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         Return information about the facets for this alert by search, using the defined criteria.
 
         Args:
-            fieldlist (list): List of facet field names. Valid names are "ALERT_TYPE", "CATEGORY", "REPUTATION",
-                              "WORKFLOW", "TAG", "POLICY_ID", "POLICY_NAME", "DEVICE_ID", "DEVICE_NAME",
-                              "APPLICATION_HASH", "APPLICATION_NAME", "STATUS", "RUN_STATE", "POLICY_APPLIED_STATE",
-                              "POLICY_APPLIED", and "SENSOR_ACTION".
+            fieldlist (list): List of facet field names.
             max_rows (int): The maximum number of rows to return. 0 means return all rows.
 
         Returns:
             list: A list of facet information specified as dicts.
+            error: invalid enum
+
+        Raises:
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
+            APIError: If the facet field is not valid
         """
-        if not all((field in AlertSearchQuery.VALID_FACET_FIELDS) for field in fieldlist):
-            raise ApiError("One or more invalid term field names")
+        for field in fieldlist:
+            if field in AlertSearchQuery.DEPRECATED_FACET_FIELDS:
+                raise FunctionalityDecommissioned(
+                    "Field '{0}' does is not a valid facet name because it was deprecated in "
+                    "Alerts v7.".format(field))
+
         request = self._build_request(0, -1, False)
         del request['rows']
         request["terms"] = {"fields": fieldlist, "rows": max_rows}
         url = self._build_url("/_facet")
         resp = self._cb.post_object(url, body=request)
+        if resp.status_code == 400:
+            raise ApiError(resp.json())
         result = resp.json()
         return result.get("results", [])
 
