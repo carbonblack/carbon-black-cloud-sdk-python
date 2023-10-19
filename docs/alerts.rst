@@ -287,4 +287,4 @@ Those settings shown in the screenshot can be replicated with the following sear
 High Volume and Streaming Solution for Alerts
 ---------------------------------------------
 
-If you want near-real-time streaming of alerts we advise you to refer to our `Data Forwarder <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/data-forwarder-api/>`_.
+If you want near-real-time streaming of alerts we advise you to refer to our `Data Forwarder <https://docs.vmware.com/en/VMware-Carbon-Black-Cloud/services/carbon-black-cloud-user-guide/GUID-E8D33F72-BABB-4157-A908-D8BBDB5AF349.html/>`_.
