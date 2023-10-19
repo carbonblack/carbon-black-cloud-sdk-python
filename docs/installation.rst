@@ -6,18 +6,18 @@ If you already have Python installed, skip to `Use Pip`_.
 Install Python
 --------------
 
-Carbon Black Cloud Python SDK is compatible with Python 3.7+.  UNIX systems usually have Python installed by default;
+Carbon Black Cloud Python SDK is compatible with Python 3.8+.  UNIX systems usually have Python installed by default;
 it will have to be installed on Windows systems separately.
 
 If you believe you have Python installed already, run the following two commands at a command prompt::
 
     $ python --version
-    Python 3.7.5
+    Python 3.8.16
 
     $ pip --version
-    pip 20.2.3 from /usr/local/lib/python3.7/site-packages (python 3.7)
+    pip 20.2.3 from /usr/local/lib/python3.8/site-packages (python 3.8)
 
-If ``python --version`` reports back a version of 3.7.x or higher, you’re all set.  If ``pip`` is not found, follow the
+If ``python --version`` reports back a version of 3.8.x or higher, you’re all set.  If ``pip`` is not found, follow the
 instructions on this `guide <https://pip.pypa.io/en/stable/installing/>`_.
 
 .. note:: On many UNIX/Linux environments, the ``python`` and ``pip`` commands invoke Python version 2, for backwards

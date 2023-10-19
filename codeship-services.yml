@@ -1,7 +1,3 @@
-testingpython37:
-  build:
-    dockerfile: ./docker/python3.7/Dockerfile
-
 testingpython38:
   build:
     dockerfile: ./docker/python3.8/Dockerfile
@@ -19,6 +15,10 @@ testingpython310:
 testingpython311:
   build:
     dockerfile: ./docker/python3.11/Dockerfile
+
+testingpython312:
+  build:
+    dockerfile: ./docker/python3.12/Dockerfile
 
 testingrhel:
   build:
