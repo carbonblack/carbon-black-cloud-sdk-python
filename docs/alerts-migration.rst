@@ -26,18 +26,18 @@ when they were not.
 
 * Breaking Changes
 
-    * Default Search Time Period reduced to two weeks. See `Default Search Time Period`_
-    * Fields that do not exist in Alert v7 API: FunctionalityDecommissioned exception is raised if called. See `Fields that have been removed`_
-    * ``get_events()`` method has been removed: `Enriched Events have been replaced by Observations`_
-    * `Facet terms match the field name the facet applies to`_
-    * Workflow has been rebuilt. See `Bulk Workflow streamlined`_
-    * Create Note returns a single Note instead of a list. See `create_note() returns a Note instead of a list`_
+    * Default Search Time Period reduced to two weeks. See `Default Search Time Period`_.
+    * Fields that do not exist in Alert v7 API: FunctionalityDecommissioned exception is raised if called. See `Fields that have been removed`_.
+    * ``get_events()`` method has been removed: `Enriched Events have been replaced by Observations`_.
+    * `Facet terms match the field name the facet applies to`_.
+    * Workflow has been rebuilt. See `Bulk Workflow streamlined`_.
+    * Create Note returns a single Note instead of a list. See `create_note() returns a Note instead of a list`_.
 
 * Backwards compatibility:
 
-    * Class name change: Alert replaces BaseAlert, BaseAlert retained. See `Class Name Changes`_
-    * Field name changes: The old name is aliased to the new name on get, set and access by property name. See `Field names aliased`_
-    * The single field port has been separated into local and remote fields.  See `Port - split into local and remote`_
+    * Class name change: Alert replaces BaseAlert, BaseAlert retained. See `Class Name Changes`_.
+    * Field name changes: The old name is aliased to the new name on get, set and access by property name. See `Field names aliased`_.
+    * The single field port has been separated into local and remote fields.  See `Port - split into local and remote`_.
 
 New Features
 ------------
@@ -52,19 +52,19 @@ An example script that demonstrates the SDK 1.5.0 features is in
   are excluded from the result set.
 * ``get_observations()`` : Gets the Observations that are related to the alert, similar to getting processes for
   a Watchlist Alert.
-* Notes can be added to an Alert or a Threat
-* Alert History can be retrieved
+* Notes can be added to an Alert or a Threat.
+* Alert History can be retrieved.
 * Observations related to Alerts can be retrieved for most Alert types. This was previously only available on CB Analytics Alerts.
 * Processes related to Alerts can be retrieved for most Alert types. The was previously only available on Watchlist Alerts.
 * ``to_json(version)`` is a new method that returns the alert object in json format.
 
     * It has been added to replace the use of `_info` as this is an internal representation.
     * If no version is provided, it defaults to the current API version, v7.
-    * "v6" can be passed as a parameter and the attribute names will be translated to the Alert v6 names
+    * "v6" can be passed as a parameter and the attribute names will be translated to the Alert v6 names.
     * ``to_json("v6")`` will translate field names from the v7 field name to v6 field names and return a structure as
     close to v6 (SDK 1.4.3) as possible. The fields that do not have equivalents in the v7 API will be missing.
     * It is intended to ease the update path if the ``_info`` attribute was being used.
-    * Example method: ``show_to_json(api)``
+    * Example method: ``show_to_json(api)``.
 
     .. code-block:: python
 
@@ -92,8 +92,8 @@ Default Search Time Period
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 The default search period changed in Carbon Black Cloud. It was one month and is now two weeks.
 
-* The SDK does not make any compensating changes for this change of time period
-* Example method: ``base_class_and_default_time_range(api)``
+* The SDK does not make any compensating changes for this change of time period.
+* Example method: ``base_class_and_default_time_range(api)``.
 
 Fields that have been removed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -101,19 +101,19 @@ A small number of fields from the Alert API v6 (SDK 1.4.3 and earlier) do not ha
 Alert v7 API (SDK 1.5.0+). A ``FunctionalityDecommissioned`` exception will be raised if they are used.
 
 You should:
-* Review the fields that do not have an equivalent
+* Review the fields that do not have an equivalent.
 * After updating to the SDK 1.5.0, check your integrations for error logs containing ``FunctionalityDecommissioned``
   exceptions.
-* Review the new fields and determine what will enhance your use cases
-* Use the ``add_criteria`` method to search for alerts. This replaces the hand-crafted ``set_<field_name>`` methods
-* Example method: ``set_methods_backwards_compatibility(api)``
+* Review the new fields and determine what will enhance your use cases.
+* Use the ``add_criteria`` method to search for alerts. This replaces the hand-crafted ``set_<field_name>`` methods.
+* Example method: ``set_methods_backwards_compatibility(api)``.
 
 SDK 1.5.0+ behaviour:
 
 * ``set_<v6 field name>()`` will raise a ``FunctionalityDecommissioned`` exception.
 * ``get(<v6 field name>)`` will raise a ``FunctionalityDecommissioned`` exception.
 * ``alert.field_name`` will raise a ``FunctionalityDecommissioned`` exception.
-* Example method: ``get_methods_backwards_compatibility(api)`` and ``category_monitored_removed(api)``
+* Example method: ``get_methods_backwards_compatibility(api)`` and ``category_monitored_removed(api)``.
 
 Detail of all changes to API endpoints and fields are on the Developer Network in the
 `Alerts Migration Guide <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/alerts-migration>`_.
@@ -205,9 +205,10 @@ Enriched Events have been replaced by Observations
 
 CBAnalytics get_events() has been removed.
 
-* The Enriched Events that this method returns have been deprecated
-* Instead, use `Observations <https://developer.carbonblack.com/2023/07/how-to-take-advantage-of-the-new-observations-api/>`_
-* More information is on the Developer Network Blog, `How to Take Advantage of the New Observations API <https://developer.carbonblack.com/2023/07/how-to-take-advantage-of-the-new-observations-api/>`_
+* The Enriched Events that this method returns have been deprecated.
+* Instead, use `Observations <https://developer.carbonblack.com/2023/07/how-to-take-advantage-of-the-new-observations-api/>`_.
+* More information is on the Developer Network Blog,
+  `How to Take Advantage of the New Observations API <https://developer.carbonblack.com/2023/07/how-to-take-advantage-of-the-new-observations-api/>`_.
 
 Instead of:
 
@@ -314,22 +315,22 @@ As a result of the underlying change, the workflow does not have backwards compa
 
 1. Submit a job to update the status of Alerts.
 
-    * The request body is a search request and all alerts matching the request will be updated
-    * The status can be ``OPEN``, ``IN PROGRESS`` or ``CLOSED`` (previously ``DISMISSED``)
-    * A Closure Reason may be included
+    * The request body is a search request and all alerts matching the request will be updated.
+    * The status can be ``OPEN``, ``IN PROGRESS`` or ``CLOSED`` (previously ``DISMISSED``).
+    * A Closure Reason may be included.
 
-2. The immediate API response confirms the job was successfully submitted
-3. Use the :py:mod:`Job() cbc_sdk.platform.jobs.Job` class to determine when the update is complete
-3. Use the Alert Search to get the updated alert
+2. The immediate API response confirms the job was successfully submitted.
+3. Use the :py:mod:`Job() cbc_sdk.platform.jobs.Job` class to determine when the update is complete.
+3. Use the Alert Search to get the updated alert.
 
 The Dismissal of Future Alerts has not yet changed.
 
-* See <TO DO CREATE AND REFERENCE AN EXAMPLE> for the new workflow
+* See <TO DO CREATE AND REFERENCE AN EXAMPLE> for the new workflow.
 
 create_note() returns a Note instead of a list
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``alert.create_note()`` returns a Note object instead of a list
+``alert.create_note()`` returns a Note object instead of a list.
 
 
 Backwards compatibility
@@ -342,10 +343,10 @@ The "Example Method" references are to the example script `alert_v6_v7_migration
 
 Class Name Changes
 ^^^^^^^^^^^^^^^^^^
-* The base class for Alerts in the SDK has changed from ``BaseAlert`` to ``Alert``
+* The base class for Alerts in the SDK has changed from ``BaseAlert`` to ``Alert``.
 
-    * Backwards compatibility has been retained
-    * Example method: ``base_class_and_default_time_range(api)``
+    * Backwards compatibility has been retained.
+    * Example method: ``base_class_and_default_time_range(api)``.
 
 Field names aliased
 ^^^^^^^^^^^^^^^^^^^
@@ -359,18 +360,18 @@ Detail of all changes to API endpoints and fields are on the Developer Network i
 
 ``set_<v6 field name>()`` on the query object will translate to the new field name for the request.
 
-    * Should update to use `add_criteria(field_name, [field_value])
+    * Should update to use `add_criteria(field_name, [field_value]).
     * Many new fields can be used in criteria to search Alerts using add_criteria,
-      but do not have set_<field_name> methods
-    * Example method: ``set_methods_backwards_compatibility(api)``
+      but do not have set_<field_name> methods.
+    * Example method: ``set_methods_backwards_compatibility(api)``.
 
 ``get(<v6 field name>)`` will translate to the new field name to look up the value.
 
-    * Example method: ``get_methods_backwards_compatibility(api)``
+    * Example method: ``get_methods_backwards_compatibility(api)``.
 
 ``alert.field_name`` will translate the field name to the new name and return the matching value.
 
-    * Example method: ``set_methods_backwards_compatibility(api)``
+    * Example method: ``set_methods_backwards_compatibility(api)``.
 
 
 The following fields have a new name in Alert v7 and the new field name contains the same value.
@@ -449,14 +450,14 @@ The following fields have a new name in Alert v7 and the new field name contains
    * - workload_kind
      - k8s_kind
    * - workload_name
-     - k8s_workload_name"
+     - k8s_workload_name
 
 Port - split into local and remote
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * In SDK 1.4.3 and earlier there was a single field ``port``.
 * In Alerts v7 API and therefore SDK 1.5.0, there are two fields; ``netconn_local_port`` and ``netconn_remote_port``.
-* The legacy method set_ports() sets the criteria for ``netconn_local_port``
+* The legacy method set_ports() sets the criteria for ``netconn_local_port``.
 
 .. code-block:: python
 
