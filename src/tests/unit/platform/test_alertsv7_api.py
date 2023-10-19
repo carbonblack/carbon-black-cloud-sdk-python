@@ -24,7 +24,8 @@ from cbc_sdk.platform import (
     HostBasedFirewallAlert,
     IntrusionDetectionSystemAlert,
     DeviceControlAlert,
-    Process
+    Process,
+    Job
 )
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -353,7 +354,7 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
                                      },
                         "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
-                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
@@ -397,7 +398,7 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.state == "OPEN"
+    assert a.workflow_.status == "OPEN"
 
 
 def test_query_cbanalyticsalert_facets(cbcsdk_mock):
@@ -441,7 +442,7 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(cbcsdk_mock):
                                      "vendor_name": ["SanDisk"]},
                         "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
-                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
@@ -466,7 +467,7 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.state == "OPEN"
+    assert a.workflow_.status == "OPEN"
 
 
 def test_query_devicecontrolalert_facets(cbcsdk_mock):
@@ -1709,7 +1710,8 @@ def test_bulk_update_workflow(cbcsdk_mock):
     api = cbcsdk_mock.api
 
     workflow = api.select(Alert).add_criteria("type", ["CB_ANALYTICS"])
-    workflow.update("TRUE_POSITIVE", "OTHER", "Note about the determination")
+    job = workflow.update("OTHER", "Note about the determination", "TRUE_POSITIVE")
+    assert isinstance(job, Job)
 
 
 def test_bulk_dismiss_workflow(cbcsdk_mock):
@@ -1733,7 +1735,8 @@ def test_bulk_dismiss_workflow(cbcsdk_mock):
     api = cbcsdk_mock.api
 
     workflow = api.select(Alert).add_criteria("type", ["CB_ANALYTICS"])
-    workflow.dismiss("TRUE_POSITIVE", "OTHER", "Note about the determination")
+    job = workflow.close("OTHER", "Note about the determination", "TRUE_POSITIVE")
+    assert isinstance(job, Job)
 
 
 def test_alert_update_workflow(cbcsdk_mock):
@@ -1760,5 +1763,35 @@ def test_alert_update_workflow(cbcsdk_mock):
         GET_OPEN_WORKFLOW_JOB_RESP
     )
     api = cbcsdk_mock.api
-    q = api.select(Alert).add_criteria("id", ["SOLO"])
-    q.update("TRUE_POSITIVE", "OTHER", "Note about the determination")
+    alert = api.select(Alert, "SOLO")
+    job = alert.update("OTHER", "Note about the determination", "TRUE_POSITIVE")
+    assert isinstance(job, Job)
+
+
+def test_alert_dismiss_workflow(cbcsdk_mock):
+    """Test loading a workflow job."""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "id": ["SOLO"]
+            },
+            "determination": "TRUE_POSITIVE",
+            "closure_reason": "OTHER",
+            "status": "OPEN",
+            "note": "Note about the determination"
+        }
+        return {
+            "request_id": "666666"
+        }
+
+    cbcsdk_mock.mock_request('GET', "/api/alerts/v7/orgs/test/alerts/SOLO", GET_ALERT_WORKFLOW_INIT)
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/jobs/v1/orgs/test/jobs/666666",
+        GET_OPEN_WORKFLOW_JOB_RESP
+    )
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, "SOLO")
+    job = alert.update("OTHER", "Note about the determination", "TRUE_POSITIVE")
+    assert isinstance(job, Job)

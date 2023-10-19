@@ -422,7 +422,7 @@ class Alert(PlatformModel):
         """
         return self._workflow
 
-    def _update_workflow_status(self, status, closure_reason, determination, note):
+    def _update_workflow_status(self, status, closure_reason, note, determination):
         """
         Updates the workflow status of this alert.
 
@@ -432,34 +432,32 @@ class Alert(PlatformModel):
             determination (str): The determination status to set for the alert, either "NO_REASON", "RESOLVED",
             "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", or "OTHER"
             note (str): The comment to set for the alert.
-        """
-        request = {}
-        if status:
-            request["status"] = status
-        if determination:
-            request["determination"] = determination
-        if closure_reason:
-            request["closure_reason"] = closure_reason
-        if note:
-            request["note"] = note
 
-        resp = self._cb.post_object(self.url, request)
-        self._workflow = Workflow(self._cb, resp.json())
+        Returns:
+            str: The Job object for the alert workflow action.
+        """
+        job = AlertSearchQuery(Alert, self._cb).add_criteria("id", [self.get("id")]) \
+            ._update_status(status, closure_reason, note, determination)
+
         self._last_refresh_time = time.time()
+        return job
 
-    def dismiss(self, determination=None, closure_reason=None, note=None):
+    def close(self, closure_reason=None, note=None, determination=None, ):
         """
-        Dismisses this alert.
+        Closes this alert.
 
         Args:
             closure_reason (str): the closure reason for this alert, either "TRUE_POSITIVE", "FALSE_POSITIVE", or "NONE"
             determination (str): The determination status to set for the alert, either "NO_REASON", "RESOLVED",
             "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", or "OTHER"
             note (str): The comment to set for the alert.
-        """
-        self._update_workflow_status("CLOSED", determination, closure_reason, note)
 
-    def update(self, determination=None, closure_reason=None, note=None):
+        Returns:
+            str: The Job object for the alert workflow action.
+        """
+        return self._update_workflow_status("CLOSED", closure_reason, note, determination)
+
+    def update(self, closure_reason=None, note=None, determination=None,):
         """
         Updates this alert while leaving it open.
 
@@ -468,8 +466,11 @@ class Alert(PlatformModel):
             determination (str): The determination status to set for the alert, either "NO_REASON", "RESOLVED",
             "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", or "OTHER"
             note (str): The comment to set for the alert.
+
+        Returns:
+            str: The Job object for the alert workflow action.
         """
-        self._update_workflow_status("OPEN", determination, closure_reason, note)
+        return self._update_workflow_status("OPEN", closure_reason, note, determination)
 
     def _update_threat_workflow_status(self, state, remediation, comment):
         """
@@ -620,6 +621,8 @@ class Alert(PlatformModel):
                 if key == "workflow":
                     wf = {}
                     for wf_key, wf_value in value.items():
+                        if wf_key == "status" and wf_value == "CLOSED":
+                            wf_value = "DISMISSED"
                         wf[Workflow.REMAPPED_WORKFLOWS_V7_TO_V6.get(wf_key, wf_key)] = wf_value
                     modified_json[key] = wf
             return modified_json
@@ -799,6 +802,7 @@ class HostBasedFirewallAlert(Alert):
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
+            cb (BaseAPI): Reference to API object used to communicate with the server.
             **kwargs (dict): Not used, retained for compatibility.
 
         Returns:
@@ -841,11 +845,13 @@ class Workflow(UnrefreshableModel):
         # DISMISSED - CLOSED
         # OPEN - IN_PROGRESS --> only when mapping v7 to v6, not for v6 to v7
         "workflow.state": "workflow.status",
+        "state": "status",
+        "last_update_time": "change_timestamp"
     }
     REMAPPED_WORKFLOWS_V7_TO_V6 = {
         "change_timestamp": "last_update_time",
         # TO DO: values of state and status are different but able to be mapped
-        "status": "state"
+        "status": "state",
     }
 
     def __init__(self, cb, initial_data=None):
@@ -856,6 +862,11 @@ class Workflow(UnrefreshableModel):
         cb (BaseAPI): Reference to API object used to communicate with the server.
         initial_data (dict): Initial data used to populate the workflow.
         """
+        if initial_data is not None:
+            mapped_data = {}
+            for key in initial_data:
+                mapped_data[Workflow.REMAPPED_WORKFLOWS_V6_TO_V7.get(key, key)] = initial_data[key]
+            initial_data = mapped_data
         super(Workflow, self).__init__(cb, model_unique_id=None, initial_data=initial_data)
 
     def __getitem__(self, item):
@@ -872,7 +883,14 @@ class Workflow(UnrefreshableModel):
             AttributeError: If the object has no such attribute.
         """
         try:
-            return super(Workflow, self).__getattribute__(Workflow.REMAPPED_WORKFLOWS_V6_TO_V7.get(item, item))
+            init_value = super(Workflow, self).__getattribute__(item)
+
+            item = Workflow.REMAPPED_WORKFLOWS_V6_TO_V7.get(item, item)
+            value = super(Workflow, self).__getattribute__(item)
+
+            if item == "workflow.status" and init_value == "DISMISSED":
+                value = "CLOSED"
+            return value
 
         except AttributeError:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
@@ -893,8 +911,15 @@ class Workflow(UnrefreshableModel):
             AttributeError: If the object has no such attribute.
         """
         try:
+            init_item = item
             item = Workflow.REMAPPED_WORKFLOWS_V6_TO_V7.get(item, item)
-            return super(Workflow, self).__getattr__(item)
+            value = super(Workflow, self).__getattribute__(item)
+
+            if (item == "workflow.status" or item == "status") and \
+                    (init_item == "workflow.state" or init_item == "state"):
+                if value == "DISMISSED":
+                    value = "CLOSED"
+            return value
 
         except AttributeError:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
@@ -905,7 +930,7 @@ class WorkflowStatus(PlatformModel):
     """Represents the current workflow status of a request."""
     urlobject_single = "/jobs/v1/orgs/{0}/jobs/{1}"
     primary_key = "id"
-    swagger_meta_file = "platform/models/job.yaml"
+    swagger_meta_file = "platform/models/workflow_status.yaml"
 
     def __init__(self, cb, model_unique_id, initial_data=None):
         """
@@ -1407,7 +1432,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         result = resp.json()
         return result.get("results", [])
 
-    def _update_status(self, status, determination, closure_reason, note):
+    def _update_status(self, status, closure_reason, note, determination):
         """
         Updates the status of all alerts matching the given query.
 
@@ -1419,7 +1444,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             note (str): The comment to set for the alert.
 
         Returns:
-            str: The job response for the bulk workflow action.
+            str: The Job object for the bulk workflow action.
         """
         criteria = self._build_criteria()
         query = self._query_builder._collapse()
@@ -1436,9 +1461,9 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             request["note"] = note
         resp = self._cb.post_object(self._bulkupdate_url.format(self._cb.credentials.org_key), body=request)
         output = resp.json()
-        return Job(self._cb, output["request_id"]).await_completion()
+        return Job(self._cb, output["request_id"])
 
-    def update(self, determination=None, closure_reason=None, note=None):
+    def update(self, closure_reason=None, note=None, determination=None):
         """
         Update all alerts matching the given query. The alerts will be left in an OPEN state after this request.
 
@@ -1449,13 +1474,13 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             note (str): The comment to set for the alert.
 
         Returns:
-            str: The job response for the bulk workflow action.
+            str: The Job object for the bulk workflow action.
         """
-        return self._update_status("OPEN", determination, closure_reason, note)
+        return self._update_status("OPEN", closure_reason, note, determination)
 
-    def dismiss(self, determination=None, closure_reason=None, note=None):
+    def close(self, closure_reason=None, note=None, determination=None):
         """
-        Dismiss all alerts matching the given query. The alerts will be left in a DISMISSED state after this request.
+        Close all alerts matching the given query. The alerts will be left in a CLOSED state after this request.
 
         Args:
             closure_reason (str): the closure reason for this alert, either "TRUE_POSITIVE", "FALSE_POSITIVE", or "NONE"
@@ -1464,9 +1489,9 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             note (str): The comment to set for the alert.
 
         Returns:
-            str: The job response for the bulk workflow action.
+            str: The Job object for the bulk workflow action.
         """
-        return self._update_status("CLOSED", determination, closure_reason, note)
+        return self._update_status("CLOSED", closure_reason, note, determination)
 
     def set_minimum_severity(self, severity):
         """

@@ -232,7 +232,7 @@ ALERT_V6_INFO_HBFW_SDK_1_4_3 = {
     "policy_name": "demo_policy",
     "target_value": "MEDIUM",
     "workflow": {
-        "state": "OPEN",
+        "state": "DISMISSED",
         "remediation": "",
         "last_update_time": "2023-03-10T11:30:53.388Z",
         "comment": "",
@@ -610,7 +610,7 @@ GET_ALERT_v7_HBFW_RESPONSE = {
         "changed_by_type": "SYSTEM",
         "changed_by": "ALERT_CREATION",
         "closure_reason": "NO_REASON",
-        "status": "OPEN"
+        "status": "CLOSED"
     },
     "determination": {
         "change_timestamp": "2023-03-10T11:30:53.388Z",
