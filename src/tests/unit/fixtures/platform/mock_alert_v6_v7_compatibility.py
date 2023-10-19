@@ -22,9 +22,8 @@ ALERT_V6_INFO_CB_ANALYTICS_SDK_1_4_3 = {
     "target_value": "MEDIUM",
     "workflow": {
         "state": "OPEN",
-        "remediation": "v6_solved",
+        "remediation": "NO_REASON",
         "last_update_time": "2023-08-03T00:23:09.659Z",
-        "comment": "Testing v6 with v7 live",
         "changed_by": "ABCD1234"
     },
     "notes_present": True,
@@ -102,9 +101,8 @@ ALERT_V6_INFO_WATCHLIST_SDK_1_4_3 = {
     "target_value": "MEDIUM",
     "workflow": {
         "state": "OPEN",
-        "remediation": "",
+        "remediation": "NO_REASON",
         "last_update_time": "2023-08-03T15:46:03.764Z",
-        "comment": "",
         "changed_by": "ALERT_CREATION"
     },
     "notes_present": False,
@@ -176,9 +174,8 @@ ALERT_V6_INFO_CONTAINER_RUNTIME_SDK_1_4_3 = {
     "target_value": "MEDIUM",
     "workflow": {
         "state": "OPEN",
-        "remediation": "",
+        "remediation": "NO_REASON",
         "last_update_time": "2023-08-03T10:48:54.536Z",
-        "comment": "",
         "changed_by": "ALERT_CREATION"
     },
     "notes_present": False,
@@ -233,9 +230,8 @@ ALERT_V6_INFO_HBFW_SDK_1_4_3 = {
     "target_value": "MEDIUM",
     "workflow": {
         "state": "DISMISSED",
-        "remediation": "",
+        "remediation": "NO_REASON",
         "last_update_time": "2023-03-10T11:30:53.388Z",
-        "comment": "",
         "changed_by": "ALERT_CREATION"
     },
     "notes_present": False,
@@ -279,9 +275,8 @@ ALERT_V6_INFO_DEVICE_CONTROL_SDK_1_4_3 = {
     "target_value": "MEDIUM",
     "workflow": {
         "state": "OPEN",
-        "remediation": "",
+        "remediation": "NO_REASON",
         "last_update_time": "2023-07-10T14:27:42.772Z",
-        "comment": "",
         "changed_by": "ALERT_CREATION"
     },
     "notes_present": False,
