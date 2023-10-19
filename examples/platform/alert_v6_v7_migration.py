@@ -25,6 +25,7 @@ The code to support legacy
 """
 
 import sys
+import json
 from cbc_sdk import CBCloudAPI
 from cbc_sdk.platform import Alert, BaseAlert, CBAnalyticsAlert
 from cbc_sdk.errors import FunctionalityDecommissioned
@@ -147,10 +148,10 @@ def ports_split_local_remote(api):
     # In SDK 1.5.0, criteria uses a generic add_criteria method instead of hand-crafted set_xxx methods.
     # The value can be a single value or a list of values
     # Validation is performed by the API, providing consistency to all callers
-    alerts = api.select(Alert).add_criteria('netconn_local_port', 1234)
+    alerts = api.select(Alert).add_criteria("netconn_local_port", 1234)
     len(alerts)
     # or
-    alerts = api.select(Alert).add_criteria('netconn_remote_port', [1234])
+    alerts = api.select(Alert).add_criteria("netconn_remote_port", [1234])
     len(alerts)
 
 
@@ -161,16 +162,20 @@ def facet_terms(api):
     names did not always match the field name it operated on.
     """
     print("\nInside facet_terms\n")
-    # This is an example of a field in v6 that is unchanged in v7.  This code snippet will continue to succeed.
-    facet_list = api.select(BaseAlert).facets(['POLICY_APPLIED'])
-    print(facet_list)
+    # This is an example using a term in v6 that is unchanged in v7, and a new term.
+    # This code snippet will to succeed.
+    facet_list = api.select(Alert).facets(["policy_applied", "attack_technique"])
+    print("This is a valid facet response: {}".format(json.dumps(facet_list, indent=4)))
     # This is an example of a field in v6 that was renamed in v7.  This code snippet will raise a
     # ``FunctionalityDecommissioned exception.
     # Use the migration guide to determine which field should be used instead, and also consider if there are new fields
     # that can improve the utility of your integration.
     # Fields that can be used as Facets
-    facet_list = api.select(BaseAlert).facets(['ALERT_TYPE'])
-    print(facet_list)
+    try:
+        print("Calling facets with invalid term.")
+        facet_list = api.select(BaseAlert).facets(["ALERT_TYPE"])
+    except FunctionalityDecommissioned as e:
+        print(e)
 
 
 def show_to_json(api):
@@ -230,16 +235,15 @@ def main():
     https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields/
     """
     # api = CBCloudAPI(profile="YOUR PROFILE HERE")
-    api = CBCloudAPI(profile="TECH_AL")
-
+    api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
+    facet_terms(api)
     base_class_and_default_time_range(api)
     set_methods_backwards_compatibility(api)
     get_methods_backwards_compatibility(api)
     show_to_json(api)
     observation_replaces_enriched_event(api)
     category_monitored_removed(api)
-    # TO DO PUT FACETS IN
-    # facet_terms(api)
+
     ports_split_local_remote(api)
 
 

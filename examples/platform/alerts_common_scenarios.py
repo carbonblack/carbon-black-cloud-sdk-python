@@ -29,8 +29,8 @@ from cbc_sdk.platform import Alert, WatchlistAlert
 from cbc_sdk.platform import Device
 
 # To see the http requests being made, and the structure of the search requests enable debug logging
-# import logging
-# logging.basicConfig(level=logging.DEBUG)
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 
 def main():
@@ -43,8 +43,17 @@ def main():
     This is written for clarity of explanation, not perfect coding practices.
     """
     # CBCloudAPI is the connection to the cloud.  It holds the credentials for connectivity.
-    # api = CBCloudAPI(profile="YOUR PROFILE HERE")
-    api = CBCloudAPI(profile="TECH_AL")
+    # To execute this script, the profile must have an API key with the following permissions.
+    # If you are restricted in the actions you're allowed to perform, expect a 403 response for missing permissions
+    # Permissions are set on Settings -> API Access -> Access Level and then assigned to an API Key
+    # Alerts - org.alerts - READ: For Alert searching and facets
+    # Alerts - org.alerts.tags - CREATE, READ, DELETE
+    # Search - org.search.events - CREATE, READ: For Process and Observation searches
+    # Device - device - READ: For Device Searches
+    # Alerts - org.alerts.close - EXECUTE:
+    # Alerts - org.alerts.notes - CREATE, READ, UPDATE, DELETE
+
+    api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
 
     # To start, get some alerts that have a few interesting criteria set for selection.
     # All the fields that can be used are on the Developer Network
@@ -60,7 +69,7 @@ def main():
     alert_list.set_time_range(range="-1d")
     # rows default to 100, let's override that
     alert_list.set_rows(1000)
-    # and I think that Watchlist alerts are really noisy so I'm going to exclude them from the results
+    # and I think that Watchlist alerts are really noisy, so I'm going to exclude them from the results
     alert_list.add_exclusions("type", "WATCHLIST")
     # Wasn't that easier than crafting this json and making a curl request?
     # {
@@ -68,7 +77,12 @@ def main():
     #         "device_os": [
     #             "WINDOWS"
     #         ],
-    #         "minimum_severity": 7
+    #         "minimum_severity": 3
+    #     },
+    #     "exclusions": {
+    #         "type": [
+    #             "WATCHLIST"
+    #         ]
     #     },
     #     "rows": 1000,
     #     "time_range": {
@@ -93,14 +107,20 @@ def main():
     new_threat_note = alert.create_note("Adding note to the threat from SDK, current timestamp: {}".format(time.time()))
     # print the history of what has happened on the alert
     history = alert.get_history()
-    print("printing history of the alert")
+    print("Printing history of the alert")
     for h in history:
         print(h)
     # clean up our notes
     new_note.delete()
     new_threat_note.delete()
 
-    # To do: Add facets
+    # Here is how to call facets.
+    # Facets generate statistics indicating the relative weighting of values for the specified terms.
+    print("\nShowing a facet request and response\n")
+    # This is an example of a field in v6 that is unchanged in v7.  This code snippet will continue to succeed.
+    facet_list = api.select(Alert).facets(["policy_applied", "attack_technique"])
+    # The base object (e.g. Alert) has pretty printing implemented.  We're working on other objects.  Sorry.
+    print("This is a valid facet response: {}".format(json.dumps(facet_list, indent=4)))
 
     # Contextual information around the Alert
     # Observations
