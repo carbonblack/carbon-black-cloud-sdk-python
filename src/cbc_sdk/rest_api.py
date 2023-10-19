@@ -419,7 +419,7 @@ class CBCloudAPI(BaseAPI):
             request["remediation_state"] = remediation
         if comment is not None:
             request["comment"] = comment
-        url = "/api/alerts/v7/orgs/{0}/alerts/workflow".format(self.credentials.org_key)
+        url = "/appservices/v6/orgs/{0}/threat/workflow/_criteria".format(self.credentials.org_key)
         resp = self.post_object(url, body=request)
         output = resp.json()
         return output["request_id"]
