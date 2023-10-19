@@ -28,10 +28,10 @@ when they were not.
 
     * Default Search Time Period reduced to two weeks. See `Default Search Time Period`_.
     * Fields that do not exist in Alert v7 API: FunctionalityDecommissioned exception is raised if called. See `Fields that have been removed`_.
-    * ``get_events()`` method has been removed: `Enriched Events have been replaced by Observations`_.
-    * `Facet terms match the field name the facet applies to`_.
-    * Workflow has been rebuilt. See `Bulk Workflow streamlined`_.
-    * Create Note returns a single Note instead of a list. See `create_note() returns a Note instead of a list`_.
+    * ``get_events()`` method has been removed. See `Enriched Events have been replaced by Observations`_.
+    * Facet terms match the field names. See `Facet Terms`_.
+    * Workflow has been rebuilt. See `Alert Workflow Streamlined`_.
+    * Create Note returns a single Note instead of a list. See `create_note() return type`_.
 
 * Backwards compatibility:
 
@@ -47,24 +47,26 @@ An example script that demonstrates the SDK 1.5.0 features is in
 `GitHub Examples, alerts_common_scenarios.py
 <https://github.com/carbonblack/carbon-black-cloud-sdk-python/tree/develop/examples/platform>`_.
 
-* Many new metadata fields including command lines. Many can be used in criteria, exclusions and as a facet term.
-* ``add_exclusions()`` : This is a new method that exposes the exclusion element. Any records that match these values
+* Many new metadata fields including command lines. Find the new fields and which can be used in criteria, exclusions
+  and as a facet term on the `Developer Network Alerts Search Fields <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields/>`_.
+* ``add_exclusions()``: This is a new method that exposes the exclusion element. Any records that match these values
   are excluded from the result set.
-* ``get_observations()`` : Gets the Observations that are related to the alert, similar to getting processes for
-  a Watchlist Alert.
+* ``get_observations()``: Gets the Observations that are related to the alert.  This is available for most Alert types.
+* ``get_process()``: This is an existing method that previously got the process related to a Watchlist Alert.  It has
+  been extended to get processes for other Alert Types if the Alert has a ``process_guid`` set.
 * Notes can be added to an Alert or a Threat.
 * Alert History can be retrieved.
-* Observations related to Alerts can be retrieved for most Alert types. This was previously only available on CB Analytics Alerts.
-* Processes related to Alerts can be retrieved for most Alert types. The was previously only available on Watchlist Alerts.
 * ``to_json(version)`` is a new method that returns the alert object in json format.
 
     * It has been added to replace the use of `_info` as this is an internal representation.
     * If no version is provided, it defaults to the current API version, v7.
     * "v6" can be passed as a parameter and the attribute names will be translated to the Alert v6 names.
     * ``to_json("v6")`` will translate field names from the v7 field name to v6 field names and return a structure as
-    close to v6 (SDK 1.4.3) as possible. The fields that do not have equivalents in the v7 API will be missing.
+      close to v6 (SDK 1.4.3) as possible. The fields that do not have equivalents in the v7 API will be missing.
     * It is intended to ease the update path if the ``_info`` attribute was being used.
     * Example method: ``show_to_json(api)``.
+
+    This code snippet shows how to call the    ``to_json`` method for an alert:
 
     .. code-block:: python
 
@@ -78,7 +80,6 @@ An example script that demonstrates the SDK 1.5.0 features is in
 
     The returned object v6_dict will have a dictionary representation of the alert using v6 attribute names and structure.
     If the field does not exist in v7, then the field will also be missing from the json representation.
-
 
 
 Breaking Changes
@@ -95,12 +96,20 @@ The default search period changed in Carbon Black Cloud. It was one month and is
 * The SDK does not make any compensating changes for this change of time period.
 * Example method: ``base_class_and_default_time_range(api)``.
 
+This snippet shows how to set the search window to the previous month.  See the Developer Network for details on the
+`Time Range Filter <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alerts-api/#time-range-filter>`_
+
+.. code-block:: python
+
+    >>>alerts = api.select(Alert).set_time_range(range="-1M")
+
 Fields that have been removed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 A small number of fields from the Alert API v6 (SDK 1.4.3 and earlier) do not have an equivalent in
 Alert v7 API (SDK 1.5.0+). A ``FunctionalityDecommissioned`` exception will be raised if they are used.
 
 You should:
+
 * Review the fields that do not have an equivalent.
 * After updating to the SDK 1.5.0, check your integrations for error logs containing ``FunctionalityDecommissioned``
   exceptions.
@@ -232,15 +241,15 @@ CB_Analytics Alerts. Watchlist Alerts do not have observations associated so the
 
 * Example method: ``observation_replaces_enriched_event(api)``
 
-Facet terms match the field name the facet applies to
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Facet Terms
+^^^^^^^^^^^
 
-In Alerts v6 API (and therefore SDK 1.4.3) the terms available for use in a facet
-were very limited and the names did not always match the field name it operated on. In Alerts v7 API and SDK 1.5.0,
-many more fields are available and the term name matches the field name.
+In Alerts v6 API (and therefore SDK 1.4.3) the terms available for use in facet requests
+were very limited and the facet terms did not always match the field name it operated on.
+In Alerts v7 API and SDK 1.5.0, many more fields are available and the facet term matches the field name.
 
 * If the term used in v6 is the same as the field in v7 the facet term will continue to work
-* If the term used in v6 is not the same as v7, a ``FunctionalityDecommissioned`` exception will be raised
+* If the term used in v6 is not the same as v7, a ``FunctionalityDecommissioned`` exception will be raised.
 
     * This was a conscious choice to reduce the complexity and ongoing maintenance effort in the SDK going
       and also to ensure it is visible to customers that the Facet capability has had significant improvements that
@@ -304,8 +313,8 @@ This is a snippet of a valid request and (pretty printed) response.
 
 
 
-Bulk Workflow streamlined
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Alert Workflow Streamlined
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The Alert Closure workflow has been updated and is more streamlined and has improved Alert lifecycle management.
 The workflow leverages the alert search structure to specify the alerts that should be closed, and includes a status
@@ -319,21 +328,28 @@ As a result of the underlying change, the workflow does not have backwards compa
     * The status can be ``OPEN``, ``IN PROGRESS`` or ``CLOSED`` (previously ``DISMISSED``).
     * A Closure Reason may be included.
 
-2. The immediate API response confirms the job was successfully submitted.
+2. The immediate response confirms the job was successfully submitted.
 3. Use the :py:mod:`Job() cbc_sdk.platform.jobs.Job` class to determine when the update is complete.
 3. Use the Alert Search to get the updated alert.
 
-The Dismissal of Future Alerts has not yet changed.
+The Dismissal of Future Alerts for the same threat id has not yet changed.
 
 * See <TO DO CREATE AND REFERENCE AN EXAMPLE> for the new workflow.
 
-create_note() returns a Note instead of a list
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+create_note() Return Type
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``alert.create_note()`` returns a Note object instead of a list.
 
+.. code-block:: python
 
-Backwards compatibility
+    >>> alert_list = api.select(Alert)
+    >>> alert = alert_list.first()
+    >>> new_note = alert.create_note("Adding note from SDK with current timestamp: {}".format(time.time()))
+    >>> print(type(new_note))
+    <class 'cbc_sdk.platform.alerts.Alert.Note'>
+
+Backwards Compatibility
 -----------------------
 These changes have code in the SDK to map updated functionality to previous SDK functions. The SDK will continue
 to work, but new features should be reviewed to enhance integration and automation.
@@ -348,7 +364,7 @@ Class Name Changes
     * Backwards compatibility has been retained.
     * Example method: ``base_class_and_default_time_range(api)``.
 
-Field names aliased
+Field Names Aliased
 ^^^^^^^^^^^^^^^^^^^
 
 To align with other parts of Carbon Black Cloud and industry conventions, many fields were deprecated
