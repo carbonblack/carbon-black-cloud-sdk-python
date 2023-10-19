@@ -123,7 +123,7 @@ def test_query_alert_with_all_bells_and_whistles(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_alert_with_backend_timestamp_as_start_end(cbcsdk_mock):
@@ -146,7 +146,7 @@ def test_query_alert_with_backend_timestamp_as_start_end(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_alert_with_backend_timestamp_as_start_end_as_objs(cbcsdk_mock):
@@ -171,7 +171,7 @@ def test_query_alert_with_backend_timestamp_as_start_end_as_objs(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_alert_with_backend_timestamp_as_range(cbcsdk_mock):
@@ -190,7 +190,7 @@ def test_query_alert_with_backend_timestamp_as_range(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_alert_with_backend_update_timestamp_as_start_end(cbcsdk_mock):
@@ -215,7 +215,7 @@ def test_query_alert_with_backend_update_timestamp_as_start_end(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_alert_with_backend_update_timestamp_as_range(cbcsdk_mock):
@@ -233,7 +233,7 @@ def test_query_alert_with_backend_update_timestamp_as_range(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_alert_with_time_range_as_start_end(cbcsdk_mock):
@@ -258,7 +258,7 @@ def test_query_alert_with_time_range_as_start_end(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_alert_with_time_range_as_range(cbcsdk_mock):
@@ -276,7 +276,7 @@ def test_query_alert_with_time_range_as_range(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_alert_facets(cbcsdk_mock):
@@ -396,7 +396,7 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_devicecontrolalert_with_all_bells_and_whistles(cbcsdk_mock):
@@ -444,7 +444,7 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_watchlistalert_with_all_bells_and_whistles(cbcsdk_mock):
@@ -523,7 +523,7 @@ def test_query_watchlistalert_with_all_bells_and_whistles(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_intrusion_detection_system_with_all_bells_and_whistles(cbcsdk_mock):
@@ -616,7 +616,7 @@ def test_query_intrusion_detection_system_with_all_bells_and_whistles(cbcsdk_moc
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_containeralert_with_all_bells_and_whistles(cbcsdk_mock):
@@ -660,7 +660,7 @@ def test_query_containeralert_with_all_bells_and_whistles(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_set_rows(cbcsdk_mock):
@@ -1738,6 +1738,10 @@ def test_bulk_update_workflow(cbcsdk_mock):
             "criteria": {
                 "type": ["CB_ANALYTICS"]
             },
+            "exclusions": {
+                "type": ["WATCHLIST"]
+            },
+            "query": "some_query",
             "determination": "TRUE_POSITIVE",
             "closure_reason": "OTHER",
             "status": "OPEN",
@@ -1755,8 +1759,10 @@ def test_bulk_update_workflow(cbcsdk_mock):
     )
     api = cbcsdk_mock.api
 
-    workflow = api.select(Alert).add_criteria("type", ["CB_ANALYTICS"])
-    job = workflow.update("OTHER", "Note about the determination", "TRUE_POSITIVE")
+    alert_query = api.select(Alert).add_criteria("type", ["CB_ANALYTICS"]) \
+                                   .where("some_query") \
+                                   .add_exclusions("type", ["WATCHLIST"])
+    job = alert_query.update("OPEN", "OTHER", "TRUE_POSITIVE", "Note about the determination")
     assert isinstance(job, Job)
 
 
@@ -1780,8 +1786,8 @@ def test_bulk_dismiss_workflow(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", "/jobs/v1/orgs/test/jobs/666666", GET_CLOSE_WORKFLOW_JOB_RESP)
     api = cbcsdk_mock.api
 
-    workflow = api.select(Alert).add_criteria("type", ["CB_ANALYTICS"])
-    job = workflow.close("OTHER", "Note about the determination", "TRUE_POSITIVE")
+    alert_query = api.select(Alert).add_criteria("type", ["CB_ANALYTICS"])
+    job = alert_query.close("OTHER", "TRUE_POSITIVE", "Note about the determination")
     assert isinstance(job, Job)
 
 
@@ -1794,7 +1800,7 @@ def test_alert_update_workflow(cbcsdk_mock):
             },
             "determination": "TRUE_POSITIVE",
             "closure_reason": "OTHER",
-            "status": "OPEN",
+            "status": "IN_PROGRESS",
             "note": "Note about the determination"
         }
         return {
@@ -1810,7 +1816,7 @@ def test_alert_update_workflow(cbcsdk_mock):
     )
     api = cbcsdk_mock.api
     alert = api.select(Alert, "SOLO")
-    job = alert.update("OTHER", "Note about the determination", "TRUE_POSITIVE")
+    job = alert.update("IN_PROGRESS", "OTHER", "TRUE_POSITIVE", "Note about the determination")
     assert isinstance(job, Job)
 
 
@@ -1823,7 +1829,7 @@ def test_alert_dismiss_workflow(cbcsdk_mock):
             },
             "determination": "TRUE_POSITIVE",
             "closure_reason": "OTHER",
-            "status": "OPEN",
+            "status": "CLOSED",
             "note": "Note about the determination"
         }
         return {
@@ -1839,7 +1845,7 @@ def test_alert_dismiss_workflow(cbcsdk_mock):
     )
     api = cbcsdk_mock.api
     alert = api.select(Alert, "SOLO")
-    job = alert.update("OTHER", "Note about the determination", "TRUE_POSITIVE")
+    job = alert.close("OTHER", "TRUE_POSITIVE", "Note about the determination")
     assert isinstance(job, Job)
 
 
