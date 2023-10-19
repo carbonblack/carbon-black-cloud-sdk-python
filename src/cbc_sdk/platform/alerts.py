@@ -18,7 +18,6 @@ import datetime
 from cbc_sdk.errors import ApiError, ObjectNotFoundError, NonQueryableModel, FunctionalityDecommissioned
 from cbc_sdk.platform import PlatformModel
 from cbc_sdk.base import (BaseQuery,
-                          UnrefreshableModel,
                           QueryBuilder,
                           QueryBuilderSupportMixin,
                           IterableQueryMixin,
@@ -163,6 +162,12 @@ class Alert(PlatformModel):
         "target_value"
     ]
 
+    REMAPPED_WORKFLOWS_V7_TO_V6 = {
+        "change_timestamp": "last_update_time",
+        "status": "state",
+        "closure_reason": "remediation"
+    }
+
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
     urlobject_single = "/api/alerts/v7/orgs/{0}/alerts/{1}"
     threat_urlobject_single = "/api/alerts/v7/orgs/{0}/threats/{1}"
@@ -179,7 +184,6 @@ class Alert(PlatformModel):
             initial_data (dict): Initial data used to populate the alert.
         """
         super(Alert, self).__init__(cb, model_unique_id, initial_data)
-        self._workflow = Workflow(cb, initial_data.get("workflow", None) if initial_data else None)
         if model_unique_id is not None and initial_data is None:
             self._refresh()
 
@@ -410,7 +414,6 @@ class Alert(PlatformModel):
         url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id)
         resp = self._cb.get_object(url)
         self._info = resp
-        self._workflow = Workflow(self._cb, resp.get("workflow", None))
         self._last_refresh_time = time.time()
         return True
 
@@ -420,59 +423,50 @@ class Alert(PlatformModel):
         Returns the workflow associated with this alert.
 
         Returns:
-            Workflow: The workflow associated with this alert.
+            dict: The workflow associated with this alert.
         """
-        return self._workflow
+        return self.workflow
 
-    def _update_workflow_status(self, status, closure_reason, note, determination):
-        """
-        Updates the workflow status of this alert.
-
-        Args:
-            status (str): The status to set for this alert, either "OPEN", "IN_PROGRESS", or "CLOSED".
-            closure_reason (str): the closure reason for this alert, either "TRUE_POSITIVE", "FALSE_POSITIVE", or "NONE"
-            determination (str): The determination status to set for the alert, either "NO_REASON", "RESOLVED",
-            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", or "OTHER"
-            note (str): The comment to set for the alert.
-
-        Returns:
-            str: The Job object for the alert workflow action.
-        """
-        job = AlertSearchQuery(Alert, self._cb).add_criteria("id", [self.get("id")]) \
-            ._update_status(status, closure_reason, note, determination)
-
-        self._last_refresh_time = time.time()
-        return job
-
-    def close(self, closure_reason=None, note=None, determination=None, ):
+    def close(self, closure_reason=None, determination=None, note=None):
         """
         Closes this alert.
 
         Args:
-            closure_reason (str): the closure reason for this alert, either "TRUE_POSITIVE", "FALSE_POSITIVE", or "NONE"
-            determination (str): The determination status to set for the alert, either "NO_REASON", "RESOLVED",
-            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", or "OTHER"
+            closure_reason (str): the closure reason for this alert, either "NO_REASON", "RESOLVED", \
+            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", "OTHER"
+            determination (str): The determination status to set for the alert, either "TRUE_POSITIVE", \
+            "FALSE_POSITIVE", or "NONE"
             note (str): The comment to set for the alert.
 
         Returns:
-            str: The Job object for the alert workflow action.
+            Job: The Job object for the alert workflow action.
         """
-        return self._update_workflow_status("CLOSED", closure_reason, note, determination)
+        job = self._cb.select(Alert).add_criteria("id", [self.get("id")]) \
+                                    ._update_status("CLOSED", closure_reason, note, determination)
 
-    def update(self, closure_reason=None, note=None, determination=None,):
+        self._last_refresh_time = time.time()
+        return job
+
+    def update(self, status, closure_reason=None, determination=None, note=None):
         """
-        Updates this alert while leaving it open.
+        Update the Alert with optional closure_reason, determination, note, or status.
 
         Args:
-            closure_reason (str): the closure reason for this alert, either "TRUE_POSITIVE", "FALSE_POSITIVE", or "NONE"
-            determination (str): The determination status to set for the alert, either "NO_REASON", "RESOLVED",
-            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", or "OTHER"
+            status (str): The status to set for this alert, either "OPEN", "IN_PROGRESS", or "CLOSED".
+            closure_reason (str): the closure reason for this alert, either "NO_REASON", "RESOLVED", \
+            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", "OTHER"
+            determination (str): The determination status to set for the alert, either "TRUE_POSITIVE", \
+            "FALSE_POSITIVE", or "NONE"
             note (str): The comment to set for the alert.
 
         Returns:
-            str: The Job object for the alert workflow action.
+            Job: The Job object for the alert workflow action.
         """
-        return self._update_workflow_status("OPEN", closure_reason, note, determination)
+        job = self._cb.select(Alert).add_criteria("id", [self.get("id")]) \
+                                    ._update_status(status, closure_reason, note, determination)
+
+        self._last_refresh_time = time.time()
+        return job
 
     def _update_threat_workflow_status(self, state, remediation, comment):
         """
@@ -490,7 +484,7 @@ class Alert(PlatformModel):
             request["comment"] = comment
         url = "appservices/v6/orgs/{0}/threat/workflow/_criteria".format(self._cb.credentials.org_key)
         resp = self._cb.post_object(url, request)
-        return Workflow(self._cb, resp.json())
+        return resp.json()
 
     def dismiss_threat(self, remediation=None, comment=None):
         """
@@ -625,7 +619,9 @@ class Alert(PlatformModel):
                     for wf_key, wf_value in value.items():
                         if wf_key == "status" and wf_value == "CLOSED":
                             wf_value = "DISMISSED"
-                        wf[Workflow.REMAPPED_WORKFLOWS_V7_TO_V6.get(wf_key, wf_key)] = wf_value
+                        elif wf_key == "status" and wf_value == "IN_PROGRESS":
+                            wf_value = "OPEN"
+                        wf[Alert.REMAPPED_WORKFLOWS_V7_TO_V6.get(wf_key, wf_key)] = wf_value
                     modified_json[key] = wf
             return modified_json
         else:
@@ -832,189 +828,6 @@ class IntrusionDetectionSystemAlert(Alert):
             AlertSearchQuery: The query object for this alert type.
         """
         return AlertSearchQuery(cls, cb).add_criteria("type", ["INTRUSION_DETECTION_SYSTEM"])
-
-
-class Workflow(UnrefreshableModel):
-    """Represents Workflow alerts."""
-    urlobject = "/api/alerts/v7/orgs/{0}/alerts/workflow"
-    swagger_meta_file = "platform/models/workflow.yaml"
-
-    REMAPPED_WORKFLOWS_V6_TO_V7 = {
-        "workflow.last_update_time": "workflow.change_timestamp",
-        # TO DO: values of state and status are different but able to be mapped.  CBAPI-4969
-        # v6 value - v7 value
-        # OPEN  -  OPEN
-        # DISMISSED - CLOSED
-        # OPEN - IN_PROGRESS --> only when mapping v7 to v6, not for v6 to v7
-        "workflow.state": "workflow.status",
-        "state": "status",
-        "last_update_time": "change_timestamp"
-    }
-    REMAPPED_WORKFLOWS_V7_TO_V6 = {
-        "change_timestamp": "last_update_time",
-        # TO DO: values of state and status are different but able to be mapped
-        "status": "state",
-    }
-
-    def __init__(self, cb, initial_data=None):
-        """
-        Initialize the Workflow object.
-
-        Args:
-        cb (BaseAPI): Reference to API object used to communicate with the server.
-        initial_data (dict): Initial data used to populate the workflow.
-        """
-        if initial_data is not None:
-            mapped_data = {}
-            for key in initial_data:
-                mapped_data[Workflow.REMAPPED_WORKFLOWS_V6_TO_V7.get(key, key)] = initial_data[key]
-            initial_data = mapped_data
-        super(Workflow, self).__init__(cb, model_unique_id=None, initial_data=initial_data)
-
-    def __getitem__(self, item):
-        """
-        Return an attribute of this object.
-
-        Args:
-            item (str): Name of the attribute to be returned.
-
-        Returns:
-            Any: The returned attribute value.
-
-        Raises:
-            AttributeError: If the object has no such attribute.
-        """
-        try:
-            init_value = super(Workflow, self).__getattribute__(item)
-
-            item = Workflow.REMAPPED_WORKFLOWS_V6_TO_V7.get(item, item)
-            value = super(Workflow, self).__getattribute__(item)
-
-            if item == "workflow.status" and init_value == "DISMISSED":
-                value = "CLOSED"
-            return value
-
-        except AttributeError:
-            raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
-                                                                              item))
-            # fall through to the rest of the logic...
-
-    def __getattr__(self, item):
-        """
-        Return an attribute of this object.
-
-        Args:
-            item (str): Name of the attribute to be returned.
-
-        Returns:
-            Any: The returned attribute value.
-
-        Raises:
-            AttributeError: If the object has no such attribute.
-        """
-        try:
-            init_item = item
-            item = Workflow.REMAPPED_WORKFLOWS_V6_TO_V7.get(item, item)
-            value = super(Workflow, self).__getattribute__(item)
-
-            if (item == "workflow.status" or item == "status") and \
-                    (init_item == "workflow.state" or init_item == "state"):
-                if value == "DISMISSED":
-                    value = "CLOSED"
-            return value
-
-        except AttributeError:
-            raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
-                                                                              item))
-
-
-class WorkflowStatus(PlatformModel):
-    """Represents the current workflow status of a request."""
-    urlobject_single = "/jobs/v1/orgs/{0}/jobs/{1}"
-    primary_key = "id"
-    swagger_meta_file = "platform/models/workflow_status.yaml"
-
-    def __init__(self, cb, model_unique_id, initial_data=None):
-        """
-        Initialize the Alert object.
-
-        Args:
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-            model_unique_id (str): ID of the request being processed.
-            initial_data (dict): Initial data used to populate the status.
-        """
-        super(WorkflowStatus, self).__init__(cb, model_unique_id, initial_data)
-        self._request_id = model_unique_id
-        self._workflow = None
-        if model_unique_id is not None:
-            self._refresh()
-
-    def _refresh(self):
-        """
-        Rereads the request status from the server.
-
-        Returns:
-            bool: True if refresh was successful, False if not.
-        """
-        url = self.urlobject_single.format(self._cb.credentials.org_key, self._request_id)
-        resp = self._cb.get_object(url)
-        self._info = resp
-        self._workflow = Workflow(self._cb, resp.get("workflow", None))
-        self._last_refresh_time = time.time()
-        return True
-
-    @property
-    def id_(self):
-        """
-        Returns the request ID of the associated request.
-
-        Returns:
-            str: The request ID of the associated request.
-        """
-        return self._request_id
-
-    @property
-    def workflow_(self):
-        """
-        Returns the current workflow associated with this request.
-
-        Returns:
-            Workflow: The current workflow associated with this request.
-        """
-        return self._workflow
-
-    @property
-    def queued(self):
-        """
-        Returns whether this request has been queued.
-
-        Returns:
-            bool: True if the request is in "queued" state, False if not.
-        """
-        self._refresh()
-        return self._info.get("status", "") == "QUEUED"
-
-    @property
-    def in_progress(self):
-        """
-        Returns whether this request is currently in progress.
-
-        Returns:
-            bool: True if the request is in "in progress" state, False if not.
-        """
-        self._refresh()
-        return self._info.get("status", "") == "IN_PROGRESS"
-
-    @property
-    def finished(self):
-        """
-        Returns whether this request has been completed.
-
-        Returns:
-            bool: True if the request is in "finished" state, False if not.
-        """
-        self._refresh()
-        return self._info.get("status", "") == "FINISHED"
 
 
 """Alert Queries"""
@@ -1441,20 +1254,18 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         Args:
             status (str): The status to set for this alert, either "OPEN", "IN_PROGRESS", or "CLOSED".
             closure_reason (str): the closure reason for this alert, either "TRUE_POSITIVE", "FALSE_POSITIVE", or "NONE"
-            determination (str): The determination status to set for the alert, either "NO_REASON", "RESOLVED",
-            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", or "OTHER"
             note (str): The comment to set for the alert.
+            determination (str): The determination status to set for the alert, either "NO_REASON", "RESOLVED", \
+            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", "OTHER"
 
         Returns:
-            str: The Job object for the bulk workflow action.
+            Job: The Job object for the bulk workflow action.
         """
-        criteria = self._build_criteria()
-        query = self._query_builder._collapse()
-        request = {"status": status}
-        if criteria:
-            request["criteria"] = criteria
-        if query:
-            request["query"] = query
+        request = self._build_request(0, -1)
+        del request["rows"]
+
+        if status:
+            request["status"] = status
         if closure_reason is not None:
             request["closure_reason"] = closure_reason
         if determination is not None:
@@ -1465,33 +1276,36 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         output = resp.json()
         return Job(self._cb, output["request_id"])
 
-    def update(self, closure_reason=None, note=None, determination=None):
+    def update(self, status, closure_reason=None, determination=None, note=None):
         """
-        Update all alerts matching the given query. The alerts will be left in an OPEN state after this request.
+        Update all alerts matching the given query.
 
         Args:
-            closure_reason (str): the closure reason for this alert, either "TRUE_POSITIVE", "FALSE_POSITIVE", or "NONE"
-            determination (str): The determination status to set for the alert, either "NO_REASON", "RESOLVED",
-            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", or "OTHER"
+            status (str): The status to set for this alert, either "OPEN", "IN_PROGRESS", or "CLOSED".
+            closure_reason (str): the closure reason for this alert, either "NO_REASON", "RESOLVED", \
+            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", "OTHER"
+            determination (str): The determination status to set for the alert, either "TRUE_POSITIVE", \
+            "FALSE_POSITIVE", or "NONE"
             note (str): The comment to set for the alert.
 
         Returns:
-            str: The Job object for the bulk workflow action.
+            Job: The Job object for the bulk workflow action.
         """
-        return self._update_status("OPEN", closure_reason, note, determination)
+        return self._update_status(status, closure_reason, note, determination)
 
-    def close(self, closure_reason=None, note=None, determination=None):
+    def close(self, closure_reason=None, determination=None, note=None, ):
         """
         Close all alerts matching the given query. The alerts will be left in a CLOSED state after this request.
 
         Args:
-            closure_reason (str): the closure reason for this alert, either "TRUE_POSITIVE", "FALSE_POSITIVE", or "NONE"
-            determination (str): The determination status to set for the alert, either "NO_REASON", "RESOLVED",
-            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", or "OTHER"
+            closure_reason (str): the closure reason for this alert, either "NO_REASON", "RESOLVED", \
+            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", "OTHER"
+            determination (str): The determination status to set for the alert, either "TRUE_POSITIVE", \
+            "FALSE_POSITIVE", or "NONE"
             note (str): The comment to set for the alert.
 
         Returns:
-            str: The Job object for the bulk workflow action.
+            Job: The Job object for the bulk workflow action.
         """
         return self._update_status("CLOSED", closure_reason, note, determination)
 
