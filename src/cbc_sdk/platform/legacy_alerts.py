@@ -393,9 +393,16 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         Returns:
             AlertSearchQuery: This instance.
         """
-        if not all((t in ALERT_VALID_WORKFLOW_VALS) for t in workflow_vals):
-            raise ApiError("One or more invalid workflow status values")
-        self._update_criteria("workflow", workflow_vals)
+        new_vals = []
+        for val in workflow_vals:
+            if val not in ALERT_VALID_WORKFLOW_VALS:
+                raise ApiError("One or more invalid workflow status values")
+            elif val == "DISMISSED":
+                new_vals.append("CLOSED")
+            else:
+                new_vals.append(val)
+
+        self._update_criteria("workflow", new_vals)
         return self
 
     def set_cluster_names(self, names):

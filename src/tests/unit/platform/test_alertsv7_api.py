@@ -24,7 +24,8 @@ from cbc_sdk.platform import (
     HostBasedFirewallAlert,
     IntrusionDetectionSystemAlert,
     DeviceControlAlert,
-    Process
+    Process,
+    Job
 )
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -39,7 +40,10 @@ from tests.unit.fixtures.platform.mock_alerts_v7 import (
     GET_ALERT_FACET_RESP_INVALID,
     GET_ALERT_FACET_RESP,
     GET_ALERT_v7_INTRUSION_DETECTION_SYSTEM_RESPONSE,
-    GET_NEW_ALERT_TYPE_RESP
+    GET_NEW_ALERT_TYPE_RESP,
+    GET_OPEN_WORKFLOW_JOB_RESP,
+    GET_CLOSE_WORKFLOW_JOB_RESP,
+    GET_ALERT_WORKFLOW_INIT
 )
 from tests.unit.fixtures.platform.mock_process import (
     POST_PROCESS_VALIDATION_RESP,
@@ -119,7 +123,7 @@ def test_query_alert_with_all_bells_and_whistles(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_alert_with_backend_timestamp_as_start_end(cbcsdk_mock):
@@ -142,7 +146,7 @@ def test_query_alert_with_backend_timestamp_as_start_end(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_alert_with_backend_timestamp_as_start_end_as_objs(cbcsdk_mock):
@@ -167,7 +171,7 @@ def test_query_alert_with_backend_timestamp_as_start_end_as_objs(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_alert_with_backend_timestamp_as_range(cbcsdk_mock):
@@ -186,7 +190,7 @@ def test_query_alert_with_backend_timestamp_as_range(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_alert_with_backend_update_timestamp_as_start_end(cbcsdk_mock):
@@ -211,7 +215,7 @@ def test_query_alert_with_backend_update_timestamp_as_start_end(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_alert_with_backend_update_timestamp_as_range(cbcsdk_mock):
@@ -229,7 +233,7 @@ def test_query_alert_with_backend_update_timestamp_as_range(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_alert_with_time_range_as_start_end(cbcsdk_mock):
@@ -254,7 +258,7 @@ def test_query_alert_with_time_range_as_start_end(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_alert_with_time_range_as_range(cbcsdk_mock):
@@ -272,7 +276,7 @@ def test_query_alert_with_time_range_as_range(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_alert_facets(cbcsdk_mock):
@@ -348,7 +352,7 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
                                      },
                         "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
-                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
@@ -392,7 +396,7 @@ def test_query_cbanalyticsalert_with_all_bells_and_whistles(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.state == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_devicecontrolalert_with_all_bells_and_whistles(cbcsdk_mock):
@@ -415,7 +419,7 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(cbcsdk_mock):
                                      "vendor_name": ["SanDisk"]},
                         "sort": [{"field": "name", "order": "DESC"}]}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
-                             "workflow": {"state": "OPEN"}}], "num_found": 1}
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
 
     cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/_search", on_post)
     api = cbcsdk_mock.api
@@ -440,7 +444,7 @@ def test_query_devicecontrolalert_with_all_bells_and_whistles(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.state == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_watchlistalert_with_all_bells_and_whistles(cbcsdk_mock):
@@ -519,7 +523,7 @@ def test_query_watchlistalert_with_all_bells_and_whistles(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_intrusion_detection_system_with_all_bells_and_whistles(cbcsdk_mock):
@@ -612,7 +616,7 @@ def test_query_intrusion_detection_system_with_all_bells_and_whistles(cbcsdk_moc
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_containeralert_with_all_bells_and_whistles(cbcsdk_mock):
@@ -656,7 +660,7 @@ def test_query_containeralert_with_all_bells_and_whistles(cbcsdk_mock):
     assert a.id == "S0L0"
     assert a.org_key == "test"
     assert a.threat_id == "B0RG"
-    assert a.workflow_.status == "OPEN"
+    assert a.workflow["status"] == "OPEN"
 
 
 def test_query_set_rows(cbcsdk_mock):
@@ -677,9 +681,6 @@ def test_query_set_rows(cbcsdk_mock):
         assert a.id == "S0L0"
         assert a.org_key == "test"
         assert a.threat_id == "B0RG"
-
-
-# TODO Alerts workflow tests
 
 
 def test_get_process(cbcsdk_mock):
@@ -1725,3 +1726,191 @@ def test_threat_history(cbcsdk_mock):
     history = alert.get_history(threat=True)
 
     assert history == GET_THREAT_HISTORY["history"]
+
+
+def test_bulk_update_workflow(cbcsdk_mock):
+    """Test loading a workflow job."""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "type": ["CB_ANALYTICS"]
+            },
+            "exclusions": {
+                "type": ["WATCHLIST"]
+            },
+            "query": "some_query",
+            "determination": "TRUE_POSITIVE",
+            "closure_reason": "OTHER",
+            "status": "OPEN",
+            "note": "Note about the determination"
+        }
+        return {
+            "request_id": "666666"
+        }
+
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/jobs/v1/orgs/test/jobs/666666",
+        GET_OPEN_WORKFLOW_JOB_RESP
+    )
+    api = cbcsdk_mock.api
+
+    alert_query = api.select(Alert).add_criteria("type", ["CB_ANALYTICS"]) \
+                                   .where("some_query") \
+                                   .add_exclusions("type", ["WATCHLIST"])
+    job = alert_query.update("OPEN", "OTHER", "TRUE_POSITIVE", "Note about the determination")
+    assert isinstance(job, Job)
+
+
+def test_bulk_dismiss_workflow(cbcsdk_mock):
+    """Test loading a workflow job."""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "type": ["CB_ANALYTICS"]
+            },
+            "determination": "TRUE_POSITIVE",
+            "closure_reason": "OTHER",
+            "status": "CLOSED",
+            "note": "Note about the determination"
+        }
+        return {
+            "request_id": "666666"
+        }
+
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
+    cbcsdk_mock.mock_request("GET", "/jobs/v1/orgs/test/jobs/666666", GET_CLOSE_WORKFLOW_JOB_RESP)
+    api = cbcsdk_mock.api
+
+    alert_query = api.select(Alert).add_criteria("type", ["CB_ANALYTICS"])
+    job = alert_query.close("OTHER", "TRUE_POSITIVE", "Note about the determination")
+    assert isinstance(job, Job)
+
+
+def test_alert_update_workflow(cbcsdk_mock):
+    """Test loading a workflow job."""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "id": ["SOLO"]
+            },
+            "determination": "TRUE_POSITIVE",
+            "closure_reason": "OTHER",
+            "status": "IN_PROGRESS",
+            "note": "Note about the determination"
+        }
+        return {
+            "request_id": "666666"
+        }
+
+    cbcsdk_mock.mock_request('GET', "/api/alerts/v7/orgs/test/alerts/SOLO", GET_ALERT_WORKFLOW_INIT)
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/jobs/v1/orgs/test/jobs/666666",
+        GET_OPEN_WORKFLOW_JOB_RESP
+    )
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, "SOLO")
+    job = alert.update("IN_PROGRESS", "OTHER", "TRUE_POSITIVE", "Note about the determination")
+    assert isinstance(job, Job)
+
+
+def test_alert_dismiss_workflow(cbcsdk_mock):
+    """Test loading a workflow job."""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "id": ["SOLO"]
+            },
+            "determination": "TRUE_POSITIVE",
+            "closure_reason": "OTHER",
+            "status": "CLOSED",
+            "note": "Note about the determination"
+        }
+        return {
+            "request_id": "666666"
+        }
+
+    cbcsdk_mock.mock_request('GET', "/api/alerts/v7/orgs/test/alerts/SOLO", GET_ALERT_WORKFLOW_INIT)
+    cbcsdk_mock.mock_request('POST', "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/jobs/v1/orgs/test/jobs/666666",
+        GET_OPEN_WORKFLOW_JOB_RESP
+    )
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, "SOLO")
+    job = alert.close("OTHER", "TRUE_POSITIVE", "Note about the determination")
+    assert isinstance(job, Job)
+
+
+def test_add_threat_tags(cbcsdk_mock):
+    """Test add_threat_tags"""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+
+    tags = ["tag1", "tag2"]
+
+    cbcsdk_mock.mock_request("POST",
+                             "/api/alerts/v7/orgs/test/threats/"
+                             "9e0afc389c1acc43b382b1ba590498d2/tags",
+                             {"tags": tags})
+
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, "6f1173f5-f921-8e11-2160-edf42b799333")
+
+    assert tags == alert.add_threat_tags(tags)
+
+
+def test_add_threat_tags_error(cbcsdk_mock):
+    """Test add_threat_tags raises ApiError"""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, "6f1173f5-f921-8e11-2160-edf42b799333")
+
+    with pytest.raises(ApiError):
+        alert.add_threat_tags(5)
+
+
+def test_get_threat_tags(cbcsdk_mock):
+    """Test get_threat_tags"""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+
+    tags = ["tag1", "tag2"]
+
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/threats/"
+                             "9e0afc389c1acc43b382b1ba590498d2/tags",
+                             {"list": tags})
+
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, "6f1173f5-f921-8e11-2160-edf42b799333")
+
+    assert tags == alert.get_threat_tags()
+
+
+def test_delete_threat_tag(cbcsdk_mock):
+    """Test delete_threat_tag"""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/6f1173f5-f921-8e11-2160-edf42b799333",
+                             GET_ALERT_v7_CB_ANALYTICS_RESPONSE)
+
+    tags = ["tag1"]
+
+    cbcsdk_mock.mock_request("DELETE",
+                             "/api/alerts/v7/orgs/test/threats/"
+                             "9e0afc389c1acc43b382b1ba590498d2/tags/tag2",
+                             {"tags": tags})
+
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, "6f1173f5-f921-8e11-2160-edf42b799333")
+
+    assert tags == alert.delete_threat_tag("tag2")

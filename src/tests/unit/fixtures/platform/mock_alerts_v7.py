@@ -504,3 +504,85 @@ GET_NEW_ALERT_TYPE_RESP = {"org_key": "ABCD1234",
                            "type": "FIRST_NEW_TEST_ALERT_TYPE",
                            "backend_timestamp": "2023-04-14T21:30:40.570Z",
                            "user_update_timestamp": None}
+
+GET_OPEN_WORKFLOW_JOB_RESP = {
+    "id": 666666,
+    "type": "user_workflow_update",
+    "job_parameters": {
+        "job_parameters": {
+            "request": {
+                "criteria": {
+                    "id": [
+                        "ABC12345-2ee5-88a2-4427-4af4ab93f528"
+                    ]
+                },
+                "determination": "TRUE_POSITIVE",
+                "closure_reason": "OTHER",
+                "status": "CLOSED",
+                "note": "Note about the determination"
+            },
+            "userWorkflowDto": {
+                "change_timestamp": "2023-10-18T13:19:01.921Z",
+                "changed_by_type": "API",
+                "changed_by": "EG3XXXXX",
+                "closure_reason": "OTHER",
+                "status": "CLOSED"
+            }
+        }
+    },
+    "connector_id": "EG3XXXXX",
+    "org_key": "TEST",
+    "status": "COMPLETED",
+    "progress": {
+        "num_total": 0,
+        "num_completed": 0,
+        "message": "Dismissal completed"
+    },
+    "create_time": "2023-10-18T13:19:02.000467Z",
+    "last_update_time": "2023-10-18T13:19:02.527935Z"
+}
+
+GET_CLOSE_WORKFLOW_JOB_RESP = {
+    "id": 666666,
+    "type": "user_workflow_update",
+    "job_parameters": {
+        "job_parameters": {
+            "request": {
+                "criteria": {
+                    "id": [
+                        "ABC12345-2ee5-88a2-4427-4af4ab93f528"
+                    ]
+                },
+                "determination": "TRUE_POSITIVE",
+                "closure_reason": "OTHER",
+                "status": "CLOSED",
+                "note": "Note about the determination"
+            },
+            "userWorkflowDto": {
+                "change_timestamp": "2023-10-18T13:19:01.921Z",
+                "changed_by_type": "API",
+                "changed_by": "EG3XXXXX",
+                "closure_reason": "OTHER",
+                "status": "CLOSED"
+            }
+        }
+    },
+    "connector_id": "EG3XXXXX",
+    "org_key": "TEST",
+    "status": "COMPLETED",
+    "progress": {
+        "num_total": 0,
+        "num_completed": 0,
+        "message": "Dismissal completed"
+    },
+    "create_time": "2023-10-18T13:19:02.000467Z",
+    "last_update_time": "2023-10-18T13:19:02.527935Z"
+}
+
+GET_ALERT_WORKFLOW_INIT = {
+    "id": "SOLO",
+    "org_key": "test",
+    "threat_id": "B0RG",
+    "type": "WATCHLIST",
+    "workflow": {"status": "OPEN"}
+}

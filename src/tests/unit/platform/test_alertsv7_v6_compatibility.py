@@ -57,7 +57,6 @@ BASE_FIELDS_V6 = {
     "category",
     "comment",
     "group_details",
-    "remediation",
     "threat_activity_c2",
     "threat_cause_threat_category",
     "threat_cause_actor_process_pid"
