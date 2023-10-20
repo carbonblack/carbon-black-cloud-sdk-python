@@ -602,9 +602,9 @@ class Alert(PlatformModel):
             remediation (str): The remediation status to set for the alert.
             comment (str): The comment to set for the alert.
 
-        Notes:
-            - If you want to dismiss all open alerts associated to the threat use the following
-            >>>cb.select(Alert).add_criteria("threat_id", [alert.threat_id]).close(...)
+        Note:
+            - If you want to dismiss all past and current open alerts associated to the threat use the following:
+                >>> cb.select(Alert).add_criteria("threat_id", [alert.threat_id]).close(...)
         """
         return self._update_threat_workflow_status("DISMISSED", remediation, comment)
 
@@ -616,9 +616,9 @@ class Alert(PlatformModel):
             remediation (str): The remediation status to set for the alert.
             comment (str): The comment to set for the alert.
 
-        Notes:
-            - If you want to dismiss all open alerts associated to the threat use the following
-            >>>cb.select(Alert).add_criteria("threat_id", [alert.threat_id]).close(...)
+        Note:
+            - If you want to update all past and current alerts associated to the threat use the following:
+                >>> cb.select(Alert).add_criteria("threat_id", [alert.threat_id]).update(...)
         """
         return self._update_threat_workflow_status("OPEN", remediation, comment)
 
