@@ -8,10 +8,25 @@ properties:
     type: string
     format: date-time
     description: When the workflow was last updated
+  changed_by_type:
+    type: string
+    description: The type of request that made the change
+  determination:
+    type: string
+    enum:
+      - TRUE_POSITIVE
+      - FALSE_POSITIVE
+      - NONE
   closure_reason:
     type: string
     description: Alert remediation code. Indicates the result of the investigation
       into the alert
+    enum:
+      - NO_REASON
+      - RESOLVED
+      - RESOLVED_BENIGN_KNOWN_GOOD
+      - DUPLICATE_CLEANUP
+      - OTHER
   note:
     type: string
     description: Comment when updating the workflow
@@ -19,7 +34,6 @@ properties:
     type: string
     description: State of the workflow
     enum:
-    - OPEN
-    - IN_PROGRESS
-    - DISMISSED
-    - CLOSED
+      - OPEN
+      - IN_PROGRESS
+      - CLOSED
