@@ -528,6 +528,15 @@ class Alert(PlatformModel):
             "FALSE_POSITIVE", or "NONE"
             note (str): The comment to set for the alert.
 
+        Note:
+            - This is an asynchronus call that returns a python future.
+              You can call result() on the future object to wait for completion and get the results.
+
+        Examples:
+            >>> job = alert.close("RESOLVED", "NONE", "Setting to closed for SDK test")
+            >>> job.await_completion().result()
+            >>> alert.refresh()
+
         Returns:
             Job: The Job object for the alert workflow action.
         """
@@ -549,6 +558,15 @@ class Alert(PlatformModel):
             "FALSE_POSITIVE", or "NONE"
             note (str): The comment to set for the alert.
 
+        Note:
+            - This is an asynchronus call that returns a python future.
+              You can call result() on the future object to wait for completion and get the results.
+
+        Examples:
+            >>> job = alert.update("OPEN", "RESOLVED", "NONE", "Setting to open for SDK test")
+            >>> job.await_completion().result()
+            >>> alert.refresh()
+
         Returns:
             Job: The Job object for the alert workflow action.
         """
@@ -560,7 +578,7 @@ class Alert(PlatformModel):
 
     def _update_threat_workflow_status(self, state, remediation, comment):
         """
-        Updates the workflow status of all alerts with the same threat ID, past or future.
+        Updates the workflow status of all future alerts with the same threat ID.
 
         Args:
             state (str): The state to set for this alert, either "OPEN" or "DISMISSED".
@@ -578,21 +596,29 @@ class Alert(PlatformModel):
 
     def dismiss_threat(self, remediation=None, comment=None):
         """
-        Dismisses all alerts with the same threat ID, past or future.
+        Dismisses all future alerts assigned to the threat_id.
 
         Args:
             remediation (str): The remediation status to set for the alert.
             comment (str): The comment to set for the alert.
+
+        Notes:
+            - If you want to dismiss all open alerts associated to the threat use the following
+            >>>cb.select(Alert).add_criteria("threat_id", [alert.threat_id]).close(...)
         """
         return self._update_threat_workflow_status("DISMISSED", remediation, comment)
 
     def update_threat(self, remediation=None, comment=None):
         """
-        Updates the status of all alerts with the same threat ID, past or future, while leaving them in OPEN state.
+        Updates all future alerts assigned to the threat_id to the OPEN state.
 
         Args:
             remediation (str): The remediation status to set for the alert.
             comment (str): The comment to set for the alert.
+
+        Notes:
+            - If you want to dismiss all open alerts associated to the threat use the following
+            >>>cb.select(Alert).add_criteria("threat_id", [alert.threat_id]).close(...)
         """
         return self._update_threat_workflow_status("OPEN", remediation, comment)
 
