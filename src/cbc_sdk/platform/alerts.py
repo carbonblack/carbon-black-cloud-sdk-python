@@ -527,12 +527,14 @@ class Alert(PlatformModel):
             note (str): The comment to set for the alert.
 
         Note:
-            - This is an asynchronus call that returns a python future.
-              You can call result() on the future object to wait for completion and get the results.
+            - This is an asynchronus call that returns a Job. If you want to wait and block on the results
+              you can call await_completion() to get a Futre then result() on the future object to wait for
+              completion and get the results.
 
-        Examples:
-            >>> job = alert.close("RESOLVED", "NONE", "Setting to closed for SDK test")
-            >>> job.await_completion().result()
+        Example:
+            >>> alert = cb.select(Alert, "708d7dbf-2020-42d4-9cbc-0cddd0ffa31a")
+            >>> job = alert.close("RESOLVED", "FALSE_POSITIVE", "Normal behavior")
+            >>> completed_job = job.await_completion().result()
             >>> alert.refresh()
 
         Returns:
@@ -557,12 +559,14 @@ class Alert(PlatformModel):
             note (str): The comment to set for the alert.
 
         Note:
-            - This is an asynchronus call that returns a python future.
-              You can call result() on the future object to wait for completion and get the results.
+            - This is an asynchronus call that returns a Job. If you want to wait and block on the results
+              you can call await_completion() to get a Futre then result() on the future object to wait for
+              completion and get the results.
 
-        Examples:
-            >>> job = alert.update("OPEN", "RESOLVED", "NONE", "Setting to open for SDK test")
-            >>> job.await_completion().result()
+        Example:
+            >>> alert = cb.select(Alert, "708d7dbf-2020-42d4-9cbc-0cddd0ffa31a")
+            >>> job = alert.update("IN_PROGESS", "NO_REASON", "NONE", "Starting Investigation")
+            >>> completed_job = job.await_completion().result()
             >>> alert.refresh()
 
         Returns:
@@ -1375,6 +1379,16 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
 
         Returns:
             Job: The Job object for the bulk workflow action.
+
+        Note:
+            - This is an asynchronus call that returns a Job. If you want to wait and block on the results
+              you can call await_completion() to get a Futre then result() on the future object to wait for
+              completion and get the results.
+
+        Example:
+            >>> alert_query = cb.select(Alert).add_criteria("threat_id", ["19261158DBBF00775959F8AA7F7551A1"])
+            >>> job = alert_query.update("IN_PROGESS", "NO_REASON", "NONE", "Starting Investigation")
+            >>> completed_job = job.await_completion().result()
         """
         return self._update_status(status, closure_reason, note, determination)
 
@@ -1391,6 +1405,16 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
 
         Returns:
             Job: The Job object for the bulk workflow action.
+
+        Note:
+            - This is an asynchronus call that returns a Job. If you want to wait and block on the results
+              you can call await_completion() to get a Futre then result() on the future object to wait for
+              completion and get the results.
+
+        Example:
+            >>> alert_query = cb.select(Alert).add_criteria("threat_id", ["19261158DBBF00775959F8AA7F7551A1"])
+            >>> job = alert_query.close("RESOLVED", "FALSE_POSITIVE", "Normal behavior")
+            >>> completed_job = job.await_completion().result()
         """
         return self._update_status("CLOSED", closure_reason, note, determination)
 
