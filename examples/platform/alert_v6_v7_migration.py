@@ -81,8 +81,8 @@ def get_methods_backwards_compatibility(api):
     If the field has no equivalent, a ``FunctionalityDecommissioned`` exception is raised.
     """
     print("\nInside get_methods_backwards_compatibility\n")
-    alert_list = api.select(BaseAlert)
-    alert = alert_list.first()
+    alert_query = api.select(BaseAlert)
+    alert = alert_query.first()
     # This shows the field known as policy_id in Alert API v6 / SDK 1.4.3 and as device_policy_id in SDK 1.5.0 onwards
     print("Printing the value of policy_id = {}".format(alert.get("policy_id")))
     print("Printing the value of device_policy_id, the new name for that data = {}".
@@ -110,21 +110,21 @@ def set_methods_backwards_compatibility(api):
     If the field has no equivalent, a ``FunctionalityDecommissioned`` exception is raised.
     """
     print("\nInside set_methods_backwards_compatibility\n")
-    alert_list = api.select(Alert).set_policy_ids([1234])
-    # To see the API Request generated, enable debug logging and the json will be printed when len(alert_list) is called
-    len(alert_list)
+    alert_query = api.select(Alert).set_policy_ids([1234])
+    # To see the API Request generated, enable debug logging and the json will be printed on eacy API call
+    len(alert_query)
     # This shows the field known as policy_id in Alert API v6 / SDK 1.4.3 and as device_policy_id in SDK 1.5.0 onwards
-    alert_list = api.select(Alert).add_criteria("device_policy_id", [1234])
-    len(alert_list)
+    alert_query = api.select(Alert).add_criteria("device_policy_id", [1234])
+    len(alert_query)
     # The set method has been extended to also enable exclusions, i.e. exclude records that match from the result
-    alert_list = api.select(Alert).add_exclusions("device_policy_id", [1234])
-    len(alert_list)
+    alert_query = api.select(Alert).add_exclusions("device_policy_id", [1234])
+    len(alert_query)
     # Fields that require a single value rather than a list continue to have specific setters
-    alert_list = api.select(Alert).set_alert_notes_present(True)
-    len(alert_list)
+    alert_query = api.select(Alert).set_alert_notes_present(True)
+    len(alert_query)
     # And the specific setter takes an optional parameter to make it an exclusion
-    alert_list = api.select(Alert).set_alert_notes_present(True, True)
-    len(alert_list)
+    alert_query = api.select(Alert).set_alert_notes_present(True, True)
+    len(alert_query)
     # Some fields have been deprecated and do not have an equivalent value in Alerts v7 or SDK 1.5.0.
     # These will raise a FunctionalityDecommissioned exception.
     # This example uses field ``blocked_threat_category``
@@ -213,6 +213,47 @@ def observation_replaces_enriched_event(api):
         print(e)
 
 
+def alert_workflow(api):
+    """The workflow has been simplified.  The Workflow object no longer exists.
+
+    Field values will be mapped in the to_json("v6") method.  To changes status, please use the following sequence.
+    """
+    # This example closes a single alert.  Any alert search can be used.
+    ALERT_ID = "4ae2e0a4-3115-4692-8452-2ecd71db36ab"
+    alert_query = api.select(Alert).add_criteria("id", [ALERT_ID])
+    # get the first alert. This is not needed to modify the status, but it's useful to print info
+    alert = alert_query.first()
+
+    print("about to call update to closed")
+    job = alert_query.update("CLOSED", "RESOLVED", "NONE", "Setting to closed for SDK demo")
+    print("job.id = {}".format(job.id))
+    # This is an asynchronous request meaning that HTTP response 200 means the request to change status was successful
+    # Use the job object to determine when the work has been completed.
+    job.await_completion().result()
+    # refresh the alert to get the updated data from Carbon Black Cloud into the SDK
+    alert.refresh()
+    print("Status = {}, Expecting CLOSED".format(alert.workflow["status"]))
+    # The earlier version of workflow is not supported, but the field values are mapped when using to_json("v6")
+    # v7 CLOSED == v6 DISMISSED
+    # v7 OPEN == v6 OPEN
+    # v7 IN_PROGRESS is mapped to v6 OPEN
+    v6_alert = alert.to_json("v6")
+    v6_wf = v6_alert["workflow"]
+    print("v6 compatibility not fully implemented for workflow. Use to_json(v6)")
+    print("Status = {}, Expecting OPEN for v6 equivalence".format(v6_wf["state"]))
+
+    # So we can run this script again, return the alert to OPEN
+    job = alert_query.update("OPEN", "OTHER", "NONE", "Setting to open to reset after the SDK demo")
+    job.await_completion().result()
+    alert.refresh()
+    print("Status = {}, Expecting return to OPEN at the end".format(
+        alert.workflow["status"]))
+    # view the history of changes on the alert
+    print("printing the history of this alert")
+    for h in alert.get_history():
+        print(h)
+
+
 def main():
     """For convenience, each change has been put in a function.
 
@@ -235,7 +276,7 @@ def main():
     https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields/
     """
     # api = CBCloudAPI(profile="YOUR PROFILE HERE")
-    api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
+    api = CBCloudAPI(profile="YOUR PROFILE HERE ")
     facet_terms(api)
     base_class_and_default_time_range(api)
     set_methods_backwards_compatibility(api)
@@ -243,8 +284,8 @@ def main():
     show_to_json(api)
     observation_replaces_enriched_event(api)
     category_monitored_removed(api)
-
     ports_split_local_remote(api)
+    alert_workflow(api)
 
 
 if __name__ == "__main__":

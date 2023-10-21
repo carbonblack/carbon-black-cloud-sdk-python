@@ -27,7 +27,8 @@ when they were not.
 * Breaking Changes
 
     * Default Search Time Period reduced to two weeks. See `Default Search Time Period`_.
-    * Fields that do not exist in Alert v7 API: FunctionalityDecommissioned exception is raised if called. See `Fields that have been removed`_.
+    * Fields that do not exist in Alert v7 API: FunctionalityDecommissioned exception is raised if called. See
+      `SDK Treatment of Fields that have been removed`_.
     * ``get_events()`` method has been removed. See `Enriched Events have been replaced by Observations`_.
     * Facet terms match the field names. See `Facet Terms`_.
     * Workflow has been rebuilt. See `Alert Workflow Streamlined`_.
@@ -71,8 +72,8 @@ An example script that demonstrates the SDK 1.5.0 features is in
     .. code-block:: python
 
         >>> cb = get_cb_cloud_object(args)
-        >>> alert_list = cb.select(Alert)
-        >>> alert = alert_list.first()
+        >>> alert_query = cb.select(Alert)
+        >>> alert = alert_query.first()
         >>> v7_dict = alert.to_json()
         >>> v6_dict = alert.to_json("v6")
 
@@ -103,10 +104,11 @@ This snippet shows how to set the search window to the previous month.  See the 
 
     >>>alerts = api.select(Alert).set_time_range(range="-1M")
 
-Fields that have been removed
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+SDK Treatment of Fields that have been removed
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 A small number of fields from the Alert API v6 (SDK 1.4.3 and earlier) do not have an equivalent in
 Alert v7 API (SDK 1.5.0+). A ``FunctionalityDecommissioned`` exception will be raised if they are used.
+See `SDK Treatment of Fields that have been removed`_ for a list of these fields.
 
 You should:
 
@@ -118,6 +120,8 @@ You should:
 * Example method: ``set_methods_backwards_compatibility(api)``.
 
 SDK 1.5.0+ behaviour:
+
+For the fields listed below in `SDK Treatment of Fields that have been removed`_:
 
 * ``set_<v6 field name>()`` will raise a ``FunctionalityDecommissioned`` exception.
 * ``get(<v6 field name>)`` will raise a ``FunctionalityDecommissioned`` exception.
@@ -134,7 +138,7 @@ This code block which calls the decommissioned method ``set_blocked_threat_categ
     >>> from cbc_sdk import CBCloudAPI
     >>> from cbc_sdk.platform import BaseAlert
     >>> api = CBCloudAPI(profile="sample")
-    >>> alert_list = api.select(BaseAlert).set_blocked_threat_categories(["NON_MALWARE"])
+    >>> alert_query = api.select(BaseAlert).set_blocked_threat_categories(["NON_MALWARE"])
 
 
 Will generate the following exception:
@@ -152,8 +156,8 @@ Similarly this code block which calls the get attribute function with the decomm
     >>> from cbc_sdk import CBCloudAPI
     >>> from cbc_sdk.platform import BaseAlert
     >>> api = CBCloudAPI(profile="sample")
-    >>> alert_list = api.select(BaseAlert)
-    >>> alert = alert_list.first()
+    >>> alert_query = api.select(BaseAlert)
+    >>> alert = alert_query.first()
     >>> alert.get("blocked_threat_category")
 
 
@@ -165,6 +169,8 @@ Will generate the following exception:
     The Attribute 'blocked_threat_category' does not exist in object 'WatchlistAlert' because it was
     deprecated in Alerts v7. In SDK 1.5.0 the functionality has been decommissioned.
 
+Fields that have been removed
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Deprecated Fields on CB Analytics Alerts:
 
@@ -224,8 +230,8 @@ Instead of:
 .. code-block:: python
 
     >>> cb = get_cb_cloud_object(args)
-    >>> alert_list = cb.select(CBAnalyticsAlert)
-    >>> alert = alert_list.first()
+    >>> alert_query = cb.select(CBAnalyticsAlert)
+    >>> alert = alert_query.first()
     >>> alert.get_events()
 
 
@@ -234,8 +240,8 @@ CB_Analytics Alerts. Watchlist Alerts do not have observations associated so the
 
 .. code-block:: python
 
-    >>> alert_list = cb.select(Alert).add_exclusions("type", "WATCHLIST")
-    >>> alert = alert_list.first()
+    >>> alert_query = cb.select(Alert).add_exclusions("type", "WATCHLIST")
+    >>> alert = alert_query.first()
     >>> observations_list = alert.get_observations()
     >>> len(observations_list) # execute the query
 
@@ -317,24 +323,72 @@ Alert Workflow Streamlined
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The Alert Closure workflow has been updated and is more streamlined and has improved Alert lifecycle management.
-The workflow leverages the alert search structure to specify the alerts that should be closed, and includes a status
-of *In Progress* as well as *Closed* (replaced *Dismissed*) and *Open*.
+The workflow leverages the alert search structure to specify the alerts that should be closed, and includes a new status
+of *In Progress*, *Closed* which replaces *Dismissed* and *Open* which is unchanged.
 
 As a result of the underlying change, the workflow does not have backwards compatibility built in. The new workflow is:
 
-1. Submit a job to update the status of Alerts.
+1. Use an Alert Search to specify which Alerts will have their status updated.
 
     * The request body is a search request and all alerts matching the request will be updated.
+    * Two common uses are to update one alert, or to update all alerts with a specific threat id.
+    * Any search request can be used as the criteria to select alerts to update the alert status.
+
+    .. code-block:: python
+
+    >>> # This query will select only the alert with the specified id
+    >>> ALERT_ID = "id of the alert that you want to close"
+    >>> alert_query = api.select(Alert).add_criteria("id", [ALERT_ID])
+    >>> # This query will select all alerts with the specified threat id.  It is not used again in this example
+    >>> alert_query_for_threat = api.select(Alert).add_criteria("threat_id","CFED0B211ED09F8EC1C83D4F3FBF1709")
+
+2. Submit a job to update the status of Alerts.
+
     * The status can be ``OPEN``, ``IN PROGRESS`` or ``CLOSED`` (previously ``DISMISSED``).
     * A Closure Reason may be included.
 
-2. The immediate response confirms the job was successfully submitted.
-3. Use the :py:mod:`Job() cbc_sdk.platform.jobs.Job` class to determine when the update is complete.
-3. Use the Alert Search to get the updated alert.
+    .. code-block:: python
 
-The Dismissal of Future Alerts for the same threat id has not yet changed.
+    >>> # by calling update on the alert_query, the a request to change the status
+    >>> # for all alerts matching that criteria will be submitted
+    >>> job = alert_query.update("CLOSED", "RESOLVED", "NONE", "Setting to closed for SDK demo")
 
-* See <TO DO CREATE AND REFERENCE AN EXAMPLE> for the new workflow.
+3. The immediate response confirms the job was successfully submitted.
+
+    .. code-block:: python
+
+        >>> print("job.id = {}".format(job.id))
+        job.id = 1234567
+
+4. Use the :py:mod:`Job() cbc_sdk.platform.jobs.Job` class to determine when the update is complete.
+
+    Use the Job object like this to wait until the Job has completed.  Your python script will wait, while
+    the SDK manages the polling to determine when the job is complete.
+
+    .. code-block:: python
+
+    >>> job.await_completion().result()
+
+5. Refresh the Alert Search to get the updated alert data into the SDK.
+
+    .. code-block:: python
+
+    >>> alert.refresh()
+    >>> print("Status = {}, Expecting CLOSED".format(alert.workflow["status"]))
+
+
+6. The Dismissal of Future Alerts for the same threat id has not yet changed.
+
+    This is the sequence of calls to update future alerts with the same threat id.  It is usually used in combination
+    with the alert closure. i.e. use the dismiss future alerts call to close future occurences and the also call
+    alert closure to close current open alerts with the threat id.
+
+    .. code-block:: python
+
+    >>> alert_threat_query = api.select(Alert).add_criteria("threat_id","CFED0B211ED09F8EC1C83D4F3FBF1709")
+    >>> alert.dismiss_threat("threat remediation done", "testing dismiss_threat in the SDK")
+    >>> # To undo the dismissal, call update
+    >>> alert.update_threat("threat remediation un-done", "testing update_threat in the SDK")
 
 create_note() Return Type
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -343,8 +397,8 @@ create_note() Return Type
 
 .. code-block:: python
 
-    >>> alert_list = api.select(Alert)
-    >>> alert = alert_list.first()
+    >>> alert_query = api.select(Alert)
+    >>> alert = alert_query.first()
     >>> new_note = alert.create_note("Adding note from SDK with current timestamp: {}".format(time.time()))
     >>> print(type(new_note))
     <class 'cbc_sdk.platform.alerts.Alert.Note'>

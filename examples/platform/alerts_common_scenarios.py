@@ -29,8 +29,70 @@ from cbc_sdk.platform import Alert, WatchlistAlert
 from cbc_sdk.platform import Device
 
 # To see the http requests being made, and the structure of the search requests enable debug logging
-import logging
-logging.basicConfig(level=logging.DEBUG)
+# import logging
+# logging.basicConfig(level=logging.DEBUG)
+
+
+def alert_workflow(api):
+    """The workflow was simplified in SDK 1.5.0 to align with Alert v7 API.
+
+    1. Use an Alert Search to specify the alerts that will have their status updated
+
+    * The request body is a search request and all alerts matching the request will be updated.
+    * Two common uses are to update one alert, or to update all alerts with a specific threat id.
+    * Any search request can be used as the criteria to select alerts to update the alert status.
+
+    2. Submit a job to update the status of Alerts.
+
+    * The status can be ``OPEN``, ``IN PROGRESS`` or ``CLOSED`` (previously ``DISMISSED``).
+    * A Closure Reason may be included.
+
+    3. The immediate response confirms the job was successfully submitted.
+
+    4. Use the :py:mod:`Job() cbc_sdk.platform.jobs.Job` class to determine when the update is complete.
+
+    * Use job.await_completion().result()
+
+    5. Refresh the Alert Search to get the updated alert data into the SDK.
+
+    6. The future Alerts with the same threat id can be set to automatically close.
+    """
+    # This example closes a single alert.  Any alert search can be used.
+    ALERT_ID = "4ae2e0a4-3115-4692-8452-2ecd71db36ab"
+    alert_query = api.select(Alert).add_criteria("id", [ALERT_ID])
+    # get the first alert. This is not needed to modify the status, but it's useful to print info
+    alert = alert_query.first()
+
+    print("about to call update to closed")
+    job = alert_query.update("CLOSED", "RESOLVED", "NONE", "Setting to closed for SDK demo")
+    print("job.id = {}".format(job.id))
+    # This is an asynchronous request meaning that HTTP response 200 means the request to change status was successful
+    # Use the job object to determine when the work has been completed.
+    job.await_completion().result()
+    # refresh the alert to get the updated data from Carbon Black Cloud into the SDK
+    alert.refresh()
+
+    print("Status = {}, Expecting CLOSED. After job.await_completion().result() + alert.refresh()".format(
+        alert.workflow["status"]))
+    print("Status = {}, Expecting CLOSED".format(alert.workflow["status"]))
+    # So we can run this script again, return the alert to OPEN
+    job = alert_query.update("OPEN", "OTHER", "NONE", "Setting to open to reset after the SDK demo")
+    job.await_completion().result()
+    alert.refresh()
+    print("Status = {}, Expecting return to OPEN at the end".format(
+        alert.workflow["status"]))
+    # view the history of changes on the alert
+    print("printing the history of this alert")
+    for h in alert.get_history():
+        print(h)
+
+    print("Dismissing all future alerts with the same threat id as the current threat")
+    alert.dismiss_threat("threat remediation done", "testing dismiss_threat in the SDK")
+    print("Future alerts with that threat Id will be Dismissed / Closed")
+
+    print("Un-Dismissing future alerts with the same threat id")
+    alert.update_threat("threat remediation un-done", "testing update_threat in the SDK")
+    print("Future alerts with that threat Id will not be Dismissed / Closed")
 
 
 def main():
@@ -55,22 +117,25 @@ def main():
 
     api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
 
+    # workflow is in a separate method.
+    alert_workflow(api)
+
     # To start, get some alerts that have a few interesting criteria set for selection.
     # All the fields that can be used are on the Developer Network
     # https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields/
 
     # start by specifying Alert as the type of object to search
-    alert_list = api.select(Alert)
+    alert_query = api.select(Alert)
     # add_criteria is used for all fields that are searchable arrays
-    alert_list.add_criteria("device_os", "WINDOWS")
+    alert_query.add_criteria("device_os", "WINDOWS")
     # when the field is a single value, a set_xxx function is used.
-    alert_list.set_minimum_severity(3)
+    alert_query.set_minimum_severity(3)
     # and limit the time to the last day
-    alert_list.set_time_range(range="-1d")
+    alert_query.set_time_range(range="-1d")
     # rows default to 100, let's override that
-    alert_list.set_rows(1000)
+    alert_query.set_rows(1000)
     # and I think that Watchlist alerts are really noisy, so I'm going to exclude them from the results
-    alert_list.add_exclusions("type", "WATCHLIST")
+    alert_query.add_exclusions("type", "WATCHLIST")
     # Wasn't that easier than crafting this json and making a curl request?
     # {
     #     "criteria": {
@@ -91,11 +156,11 @@ def main():
     # }
 
     # Trigger the query to be executed on Carbon Black Cloud.  Any access the result set will trigger this.
-    # Including, iterating through the results (for alert in alert_list: ...), first() and one() methods
-    print("{} Alerts were returned".format(len(alert_list)))
+    # Including, iterating through the results (for alert in alert_query: ...), first() and one() methods
+    print("{} Alerts were returned".format(len(alert_query)))
 
     # Get a single alert to work with.  This could be in an iterator
-    alert = alert_list.first()
+    alert = alert_query.first()
     # here's the ID of the alert.  Use this to follow along in the console
     print("Alert id = {}".format(alert.id))
 
