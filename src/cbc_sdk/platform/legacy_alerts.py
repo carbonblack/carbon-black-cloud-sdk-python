@@ -68,8 +68,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         for more details.
 
         Args:
-            categories (list): List of categories to be restricted to. Valid categories are
-                               "THREAT", "MONITORED", "INFO", "MINOR", "SERIOUS", and "CRITICAL."
+            categories (list): List of categories to be restricted to.
 
         Raises:
             FunctionalityDecommissioned: If the requested attribute is no longer available.
@@ -679,8 +678,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         for more details.
 
         Args:
-        categories (list): List of threat categories to look for.  Valid values are "UNKNOWN",
-                           "NON_MALWARE", "NEW_MALWARE", "KNOWN_MALWARE", and "RISKY_PROGRAM".
+        categories (list): List of threat categories to look for.
 
         Raises:
             FunctionalityDecommissioned: If the requested attribute is no longer available.
@@ -714,9 +712,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         for more details.
 
         Args:
-        statuses (list): List of kill chain statuses to look for. Valid values are "RECONNAISSANCE",
-                         "WEAPONIZE", "DELIVER_EXPLOIT", "INSTALL_RUN","COMMAND_AND_CONTROL", "EXECUTE_GOAL",
-                         and "BREACH".
+        statuses (list): List of kill chain statuses to look for.
 
         Raises:
             FunctionalityDecommissioned: If the requested attribute is no longer available.
@@ -733,8 +729,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         for more details.
 
         Args:
-        categories (list): List of threat categories to look for.  Valid values are "UNKNOWN",
-                           "NON_MALWARE", "NEW_MALWARE", "KNOWN_MALWARE", and "RISKY_PROGRAM".
+        categories (list): List of threat categories to look for.
 
         Raises:
             FunctionalityDecommissioned: If the requested attribute is no longer available.
@@ -816,9 +811,7 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         for more details.
 
         Args:
-            vectors (list): List of threat cause vectors to look for.  Valid values are "EMAIL", "WEB",
-                            "GENERIC_SERVER", "GENERIC_CLIENT", "REMOTE_DRIVE", "REMOVABLE_MEDIA", "UNKNOWN",
-                            "APP_STORE", and "THIRD_PARTY".
+            vectors (list): List of threat cause vectors to look for.
 
         Raises:
             FunctionalityDecommissioned: If the requested attribute is no longer available.
