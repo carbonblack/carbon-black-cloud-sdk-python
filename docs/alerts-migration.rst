@@ -119,9 +119,7 @@ You should:
 * Use the ``add_criteria`` method to search for alerts. This replaces the hand-crafted ``set_<field_name>`` methods.
 * Example method: ``set_methods_backwards_compatibility(api)``.
 
-SDK 1.5.0+ behaviour:
-
-For the fields listed below in `SDK Treatment of Fields that have been removed`_:
+SDK 1.5.0+ behaviour for the fields listed below in `Fields that have been removed`_:
 
 * ``set_<v6 field name>()`` will raise a ``FunctionalityDecommissioned`` exception.
 * ``get(<v6 field name>)`` will raise a ``FunctionalityDecommissioned`` exception.
@@ -336,11 +334,11 @@ As a result of the underlying change, the workflow does not have backwards compa
 
     .. code-block:: python
 
-    >>> # This query will select only the alert with the specified id
-    >>> ALERT_ID = "id of the alert that you want to close"
-    >>> alert_query = api.select(Alert).add_criteria("id", [ALERT_ID])
-    >>> # This query will select all alerts with the specified threat id.  It is not used again in this example
-    >>> alert_query_for_threat = api.select(Alert).add_criteria("threat_id","CFED0B211ED09F8EC1C83D4F3FBF1709")
+        >>> # This query will select only the alert with the specified id
+        >>> ALERT_ID = "id of the alert that you want to close"
+        >>> alert_query = api.select(Alert).add_criteria("id", [ALERT_ID])
+        >>> # This query will select all alerts with the specified threat id.  It is not used again in this example
+        >>> alert_query_for_threat = api.select(Alert).add_criteria("threat_id","CFED0B211ED09F8EC1C83D4F3FBF1709")
 
 2. Submit a job to update the status of Alerts.
 
@@ -349,9 +347,9 @@ As a result of the underlying change, the workflow does not have backwards compa
 
     .. code-block:: python
 
-    >>> # by calling update on the alert_query, the a request to change the status
-    >>> # for all alerts matching that criteria will be submitted
-    >>> job = alert_query.update("CLOSED", "RESOLVED", "NONE", "Setting to closed for SDK demo")
+        >>> # by calling update on the alert_query, the a request to change the status
+        >>> # for all alerts matching that criteria will be submitted
+        >>> job = alert_query.update("CLOSED", "RESOLVED", "NONE", "Setting to closed for SDK demo")
 
 3. The immediate response confirms the job was successfully submitted.
 
@@ -367,14 +365,14 @@ As a result of the underlying change, the workflow does not have backwards compa
 
     .. code-block:: python
 
-    >>> job.await_completion().result()
+        >>> job.await_completion().result()
 
 5. Refresh the Alert Search to get the updated alert data into the SDK.
 
     .. code-block:: python
 
-    >>> alert.refresh()
-    >>> print("Status = {}, Expecting CLOSED".format(alert.workflow["status"]))
+        >>> alert.refresh()
+        >>> print("Status = {}, Expecting CLOSED".format(alert.workflow["status"]))
 
 
 6. The Dismissal of Future Alerts for the same threat id has not yet changed.
@@ -385,10 +383,10 @@ As a result of the underlying change, the workflow does not have backwards compa
 
     .. code-block:: python
 
-    >>> alert_threat_query = api.select(Alert).add_criteria("threat_id","CFED0B211ED09F8EC1C83D4F3FBF1709")
-    >>> alert.dismiss_threat("threat remediation done", "testing dismiss_threat in the SDK")
-    >>> # To undo the dismissal, call update
-    >>> alert.update_threat("threat remediation un-done", "testing update_threat in the SDK")
+        >>> alert_threat_query = api.select(Alert).add_criteria("threat_id","CFED0B211ED09F8EC1C83D4F3FBF1709")
+        >>> alert.dismiss_threat("threat remediation done", "testing dismiss_threat in the SDK")
+        >>> # To undo the dismissal, call update
+        >>> alert.update_threat("threat remediation un-done", "testing update_threat in the SDK")
 
 create_note() Return Type
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -529,7 +527,7 @@ Port - split into local and remote
 * In Alerts v7 API and therefore SDK 1.5.0, there are two fields; ``netconn_local_port`` and ``netconn_remote_port``.
 * The legacy method set_ports() sets the criteria for ``netconn_local_port``.
 
-.. code-block:: python
+    .. code-block:: python
 
-    >>> # This legacy search request:
-    >>> api.select(BaseAlert).set_ports(["NON_MALWARE"])
+        >>> # This legacy search request:
+        >>> api.select(BaseAlert).set_ports(["NON_MALWARE"])
