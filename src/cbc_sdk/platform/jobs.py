@@ -17,7 +17,7 @@ import io
 import logging
 import time
 from cbc_sdk.base import NewBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
-from cbc_sdk.errors import ServerError
+from cbc_sdk.errors import ObjectNotFoundError, ServerError
 
 
 log = logging.getLogger(__name__)
@@ -103,7 +103,7 @@ class Job(NewBaseModel):
                 time.sleep(0.5)
             try:
                 progress_data = self.get_progress()
-            except ServerError:
+            except (ServerError, ObjectNotFoundError):
                 errorcount += 1
                 if errorcount == 3:
                     raise
