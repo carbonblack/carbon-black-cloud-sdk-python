@@ -102,7 +102,7 @@ This snippet shows how to set the search window to the previous month.  See the 
 
 .. code-block:: python
 
-    >>>alerts = api.select(Alert).set_time_range(range="-1M")
+    >>> alerts = api.select(Alert).set_time_range(range="-1M")
 
 SDK Treatment of Fields that have been removed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
