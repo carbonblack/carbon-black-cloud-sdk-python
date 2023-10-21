@@ -254,6 +254,78 @@ Filter Alert Types Supported to CONTAINER_RUNTIME on the
 `Alert Search Fields <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields/>`_
 to see all available fields.
 
+Alert Workflow
+^^^^^^^^^^^^^^
+
+The Alert Closure workflow enables management of the Alert lifecycle management.
+
+An alert goes through the states of Open, In Progress and Closed. It is possible to make any transition, including
+from Closed back to Open or In Progress.
+
+The workflow leverages the alert search structure to specify the alerts that should be closed.
+
+1. Use an Alert Search to specify which Alerts will have their status updated.
+
+    * The request body is a search request and all alerts matching the request will be updated.
+    * Two common uses are to update one alert, or to update all alerts with a specific threat id.
+    * Any search request can be used as the criteria to select alerts to update the alert status.
+
+    .. code-block:: python
+
+    >>> # This query will select only the alert with the specified id
+    >>> ALERT_ID = "id of the alert that you want to close"
+    >>> alert_query = api.select(Alert).add_criteria("id", [ALERT_ID])
+    >>> # This query will select all alerts with the specified threat id.  It is not used again in this example
+    >>> alert_query_for_threat = api.select(Alert).add_criteria("threat_id","CFED0B211ED09F8EC1C83D4F3FBF1709")
+
+2. Submit a job to update the status of Alerts.
+
+    * The status can be ``OPEN``, ``IN PROGRESS`` or ``CLOSED`` (previously ``DISMISSED``).
+    * A Closure Reason may be included.
+
+    .. code-block:: python
+
+    >>> # by calling update on the alert_query, the a request to change the status
+    >>> # for all alerts matching that criteria will be submitted
+    >>> job = alert_query.update("CLOSED", "RESOLVED", "NONE", "Setting to closed for SDK demo")
+
+3. The immediate response confirms the job was successfully submitted.
+
+    .. code-block:: python
+
+        >>> print("job.id = {}".format(job.id))
+        job.id = 1234567
+
+4. Use the :py:mod:`Job() cbc_sdk.platform.jobs.Job` class to determine when the update is complete.
+
+    Use the Job object like this to wait until the Job has completed.  Your python script will wait, while
+    the SDK manages the polling to determine when the job is complete.
+
+    .. code-block:: python
+
+    >>> job.await_completion().result()
+
+5. Refresh the Alert Search to get the updated alert data into the SDK.
+
+    .. code-block:: python
+
+    >>> alert.refresh()
+    >>> print("Status = {}, Expecting CLOSED".format(alert.workflow["status"]))
+
+
+6. It is also possible to dismiss future Alerts for the same threat id.
+
+    This is the sequence of calls to update future alerts with the same threat id.  It is usually used in combination
+    with the alert closure. i.e. use the dismiss future alerts call to close future occurrences and then also call
+    alert closure to close current open alerts with the threat id.
+
+    .. code-block:: python
+
+    >>> alert_threat_query = api.select(Alert).add_criteria("threat_id","CFED0B211ED09F8EC1C83D4F3FBF1709")
+    >>> alert.dismiss_threat("threat remediation done", "testing dismiss_threat in the SDK")
+    >>> # To undo the dismissal, call update
+    >>> alert.update_threat("threat remediation un-done", "testing update_threat in the SDK")
+
 Migrating from Notifications to Alerts
 --------------------------------------
 
