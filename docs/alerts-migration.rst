@@ -65,6 +65,7 @@ See an example script that demonstrates the SDK 1.5.0 features in
     * The ``to_json`` method is intended to ease the update path if the ``_info`` attribute was being used.
     * Example method: ``show_to_json(api)``.
 
+
     The following code snippet shows how to call the ``to_json`` method for an alert:
 
     .. code-block:: python
@@ -168,7 +169,7 @@ It generates the following exception:
 Removed Fields
 ^^^^^^^^^^^^^^
 
-.. list-table:: Field mappings where the field has been renamed
+.. list-table:: Field that have been removed from Alert v7 API
    :widths: 50, 50
    :header-rows: 1
    :class: longtable
@@ -521,7 +522,7 @@ Port - split into local and remote
 * In Alerts v7 API and SDK 1.5.0, there are two fields; ``netconn_local_port`` and ``netconn_remote_port``.
 * The legacy method set_ports() sets the criteria for ``netconn_local_port``.
 
-    .. code-block:: python
+.. code-block:: python
 
-        >>> # This legacy search request:
-        >>> api.select(BaseAlert).set_ports(["NON_MALWARE"])
+    >>> # This legacy search request:
+    >>> api.select(BaseAlert).set_ports(["NON_MALWARE"])
