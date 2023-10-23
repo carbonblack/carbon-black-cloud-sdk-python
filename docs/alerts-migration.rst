@@ -170,48 +170,38 @@ Will generate the following exception:
 Fields that have been removed
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Deprecated Fields on CB Analytics Alerts:
 
-* blocked_threat_category
-* category
-* group_details
-* kill_chain_status
-* not_blocked_threat_category
-* threat_activity_dlp
-* threat_activity_phish
-* threat_cause_threat_category
-* threat_cause_vector
+   * - Field Name
+     - Alert Types
+   * - blocked_threat_category
+     - CB Analytics
+   * - category
+     - All
+   * - count
+     - Watchlist
+   * - document_guid
+     - Watchlist
+   * - group_details
+     - All
+   * - kill_chain_status
+     - CB Analytics
+   * - not_blocked_threat_category
+     - CB Analytics
+   * - target_value
+     - Container Runtime
+   * - threat_activity_dlp
+     - CB Analytics
+   * - threat_activity_phish
+     - CB Analytics
+   * - threat_cause_threat_category
+     - All
+   * - threat_cause_vector
+     - All
+   * - threat_indicators
+     - Watchlist
+   * - workload_id
+     - Container Runtime
 
-Deprecated Fields on Watchlist Alerts
-
-* category
-* count
-* document_guid
-* group_details
-* threat_cause_threat_category
-* threat_cause_vector
-* threat_indicators
-
-Deprecated Fields on Device Control Alerts
-
-* category
-* group_details
-* threat_cause_threat_category
-* threat_cause_vector
-
-Deprecated Fields on Container Runtime Alerts
-
-* category
-* group_details
-* target_value
-* threat_cause_threat_category
-* workload_id
-
-Deprecated Fields on Host Based Firewall Alerts
-
-* category
-* group_details
-* threat_cause_threat_category
 
 Enriched Events have been replaced by Observations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
