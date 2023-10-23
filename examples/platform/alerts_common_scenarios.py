@@ -58,8 +58,7 @@ def alert_workflow(api):
     6. The future Alerts with the same threat id can be set to automatically close.
     """
     # This example closes a single alert.  Any alert search can be used.
-    ALERT_ID = "4ae2e0a4-3115-4692-8452-2ecd71db36ab"
-    alert_query = api.select(Alert).add_criteria("id", [ALERT_ID])
+    alert_query = api.select(Alert).set_rows(1)
     # get the first alert. This is not needed to modify the status, but it's useful to print info
     alert = alert_query.first()
 
