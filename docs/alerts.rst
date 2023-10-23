@@ -63,7 +63,7 @@ identified only with "Searchable" require the criteria to be a single value inst
 The SDK has hand-crafted methods to set the criteria for these fields.
 
 The following code snippet shows the methods for ``alert_notes_present`` and ``set_minimum_severity``, and the
-alerts that meet each criteria
+alerts that meet each criteria.
 
 .. code-block:: python
 
