@@ -57,10 +57,7 @@ Jobs Module
    :inherited-members:
    :show-inheritance:
 
-<<<<<<< HEAD
-Network Threat Metadata Module
-=======
-cbc\_sdk.platform.legacy\_alerts module
+Legacy Alerts Module
 ---------------------------------------
 
 .. automodule:: cbc_sdk.platform.legacy_alerts
@@ -68,8 +65,7 @@ cbc\_sdk.platform.legacy\_alerts module
    :undoc-members:
    :show-inheritance:
 
-cbc\_sdk.platform.network\_threat\_metadata module
->>>>>>> 7f7f9d0 (pipeline errors fixed)
+Network Threat Metadata Module
 --------------------------------------------------
 
 .. automodule:: cbc_sdk.platform.network_threat_metadata
