@@ -1045,7 +1045,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
 
         Args:
             key (str): The key to use for criteria one of create_time, first_event_time, last_event_time,
-             backend_timestamp, backend_update_timestamp, or last_update_time
+             backend_update_timestamp, or last_update_time
             **kwargs (dict): Used to specify:
 
                 * start= for start time
@@ -1058,9 +1058,9 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
 
         Examples:
             >>> query = api.select(Alert).
-            ...     add_time_criteria("backend_timestamp", start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
-            >>> second_query = api.select(Alert).add_time_criteria("backend_timestamp", range='-3d')
-            >>> third_query = api.select(Alert).set_time_range("create_time", range='-3d')
+            ...     add_time_criteria("detection_timestamp", start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
+            >>> second_query = api.select(Alert).add_time_criteria("detection_timestamp", range='-3d')
+            >>> third_query_legacy = api.select(Alert).set_time_range("create_time", range='-3d')
             >>> exclusions_query = api.add_time_criteria("detection_timestamp", range="-2h", exclude=True)
 
         """
@@ -1080,17 +1080,17 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         Verifies that an alert criteria key has the timerange functionality
 
         Args:
-            args (str): The key to use for criteria one of one of backend_timestamp, backend_update_timestamp,
+            args (str): The key to use for criteria must be one of backend_update_timestamp,
             detection_timestamp, first_event_timestamp, last_event_timestamp, mdr_determination_change_timestamp,
             mdr_workflow_change_timestamp, user_update_timestamp, or workflow_change_timestamp
 
         Returns:
             boolean true
         """
-        if key not in ["backend_timestamp", "backend_update_timestamp", "detection_timestamp", "first_event_timestamp",
+        if key not in ["backend_update_timestamp", "detection_timestamp", "first_event_timestamp",
                        "last_event_timestamp", "mdr_determination_change_timestamp", "mdr_workflow_change_timestamp",
                        "user_update_timestamp", "workflow_change_timestamp"]:
-            raise ApiError("key must be one of backend_timestamp, backend_update_timestamp, detection_timestamp, "
+            raise ApiError("key must be one of backend_update_timestamp, detection_timestamp, "
                            "first_event_timestamp, last_event_timestamp, mdr_determination_change_timestamp, "
                            "mdr_workflow_change_timestamp, user_update_timestamp, or workflow_change_timestamp")
         return True
