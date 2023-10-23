@@ -1,0 +1,229 @@
+type: object
+properties:
+  alert_notes_present:
+    type: boolean
+    description: True if notes are present on the alert ID. False if notes are not present.
+  alert_url:
+    type: string
+    description: Link to the alerts page for this alert. Does not vary by alert type
+  backend_timestamp:
+    type: string
+    format: date-time
+    description: Timestamp when the Carbon Black Cloud processed and enabled the alert for searching. Corresponds to the Created column on the Alerts page.
+  backend_update_timestamp:
+    type: string
+    format: date-time
+    description: Timestamp when the Carbon Black Cloud initiated and processed an update to an alert. Corresponds to the Updated column on the Alerts page.   Note that changes made by users do not change this date; those changes are reflected on `user_update_timestamp`
+  detection_timestamp:
+    type: string
+    format: date-time
+    description: For sensor-sent alerts, this is the time of the event on the sensor. For alerts generated on the backend, this is the time the backend system triggered the alert.
+  determination:
+    description: User-updatable determination of the alert
+    type: object
+    properties:
+      change_timestamp:
+        type: string
+        format: date-time
+        description:  When the determination was updated.
+      changed_by:
+        type: string
+        description: User the determination was changed by.
+      changed_by_type:
+        type: string
+        description:
+        enum:
+        - SYSTEM
+        - USER
+        - API
+        - AUTOMATION
+      value:
+        type: string
+        description: Determination of the alert set by a user
+        enum:
+        - NONE
+        - TRUE_POSITIVE
+        - FALSE_POSITIVE
+  device_external_ip:
+    type: string
+    description: IP address of the endpoint according to the Carbon Black Cloud; can differ from device_internal_ip due to network proxy or NAT; either IPv4 (dotted decimal notation) or IPv6 (proprietary format)
+  device_id:
+    type: integer
+    format: int64
+    description: ID of devices
+  device_internal_ip:
+    type: string
+    description: IP address of the endpoint reported by the sensor; either IPv4 (dotted decimal notation) or IPv6 (proprietary format)
+  device_location:
+    type: string
+    enum:
+    - ONSITE
+    - OFFSITE
+    - UNKNOWN
+    description: Whether the device was on or off premises when the alert started, based on the current IP address and the device’s registered DNS domain suffix
+  device_name:
+    type: string
+    description: Device name
+  device_os:
+    type: string
+    enum:
+    - WINDOWS
+    - ANDROID
+    - MAC
+    - LINUX
+    - OTHER
+    description: Device Operating Systems
+  device_os_version:
+    type: string
+    example: Windows 10 x64
+    description: The operating system and version of the endpoint. Requires Windows CBC sensor version 3.5 or later.
+  device_policy:
+    type: string
+    description: Device policy
+  device_policy_id:
+    type: integer
+    format: int64
+    description: Device policy id
+  device_target_value:
+    type: string
+    enum:
+    - LOW
+    - MEDIUM
+    - HIGH
+    - MISSION_CRITICAL
+    description:  Target value assigned to the device, set from the policy
+  device_uem_id:
+    type: string
+    description: Device correlation with WS1/EUC, required for our Workspace ONE Intelligence integration to function
+  device_username:
+    type: string
+    description: Logged on user during the alert. This is filled on a best-effort
+      approach. If the user is not available it may be populated with the device
+      owner (empty for Container Runtime alerts)
+  external_device_friendly_name:
+    type: string
+    description: Human-readable external device names
+  first_event_timestamp:
+    type: string
+    format: date-time
+    description: Timestamp when the first event in the alert occurred
+  id:
+    type: string
+    description: Unique IDs of alerts
+  is_updated:
+    type: boolean
+    description: Boolean that describes whether or not this is the original copy of the alert
+  last_event_timestamp:
+    type: string
+    format: date-time
+    description: Timestamp when the last event in the alert occurred
+  org_key:
+    type: string
+    description: Unique alphanumeric string that identifies your organization in the Carbon Black Cloud
+  policy_applied:
+    type: string
+    enum:
+    - APPLIED
+    - NOT_APPLIED
+    description: Indicates whether or not a policy has been applied to any event associated with this alert
+  primary_event_id:
+    type: string
+    description: ID of the primary event in the alert
+  product_id:
+    type: string
+    description: IDs of the product that identifies USB devices
+  product_name:
+    type: string
+    description: Names of the product that identifies USB devices
+  reason:
+    type: string
+    description: A spoken language written explanation of the what and why the alert occurred and any action taken, usually consisting of 1 to 3 sentences.
+  reason_code:
+    type: string
+    description: A unique short-hand code or GUID identifying the particular alert reason
+  run_state:
+    type: string
+    enum:
+    - DID_NOT_RUN
+    - RAN
+    - UNKNOWN
+    description: Whether the threat in the alert actually ran
+  sensor_action:
+    type: string
+    enum:
+    - ALLOW
+    - ALLOW_AND_LOG
+    - DENY
+    - TERMINATE
+    description: Actions taken by the sensor, according to the rules of a policy
+  serial_number:
+    type: string
+    description: Serial numbers of the specific devices
+  severity:
+    type: integer
+    format: int64
+    description:  integer representation of the impact of alert if true positive
+  tags:
+    type: array
+    description: Tags added to the threat ID of the alert
+    items:
+      type: string
+  threat_id:
+    type: string
+    description: ID assigned to a group of alerts with common criteria, based on alert type
+  threat_notes_present:
+    type: boolean
+    description: True if notes are present on the threat ID. False if notes are not present.
+  type:
+    type: string
+    enum:
+    - CB_ANALYTICS
+    - WATCHLIST
+    - DEVICE_CONTROL
+    - CONTAINER_RUNTIME
+    - HOST_BASED_FIREWALL
+    - INTRUSION_DETECTION_SYSTEM
+    - NETWORK_TRAFFIC_ANALYSIS
+    description: Type of alert generated
+  user_update_timestamp:
+    type: string
+    format: date-time
+    description: Timestamp of the last property of an alert changed by a user, such as the alert workflow or determination
+  vendor_id:
+    type: string
+    description: IDs of the vendors who produced the devices
+  vendor_name:
+    type: string
+    description: Names of the vendors who produced the devices
+  workflow:
+    type: object
+    description: Current workflow state of an alert. The workflow represents the flow from `OPEN` to `IN_PROGRESS` to `CLOSED` and captures who moved the alert into the current state. The history of these state transitions is available via the alert history route.
+    properties:
+      change_timestamp:
+        type: string
+        format: date-time
+        description: When the last status change occurred
+      workflow_changed_by:
+        type: string
+        description: Who (or what) made the last status change
+      workflow_changed_by_rule_id:
+        type: string
+        description:
+      workflow_changed_by_type:
+        type: string
+        enum:
+        - SYSTEM
+        - USER
+        - API
+        - AUTOMATION
+        description:
+      workflow_closure_reason:
+        type: string  `NO_REASON`, `RESOLVED`, `RESOLVED_BENIGN_KNOWN_GOOD`, `DUPLICATE_CLEANUP`, `OTHER`
+        description: A more detailed description of why the alert was resolved
+      workflow_status:
+        type: string
+        enum:
+        - OPEN
+        - IN_PROGRESS
+        - CLOSED
+        description: primary value used to determine if the alert is active or inactive and displayed in the UI by default

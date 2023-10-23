@@ -13,285 +13,179 @@
 
 """Model and Query Classes for Platform Alerts and Workflows"""
 import time
+import datetime
 
-from cbc_sdk.errors import ApiError, TimeoutError, ObjectNotFoundError, NonQueryableModel
+from cbc_sdk.errors import ApiError, ObjectNotFoundError, NonQueryableModel, FunctionalityDecommissioned
 from cbc_sdk.platform import PlatformModel
 from cbc_sdk.base import (BaseQuery,
-                          UnrefreshableModel,
                           QueryBuilder,
                           QueryBuilderSupportMixin,
                           IterableQueryMixin,
-                          CriteriaBuilderSupportMixin)
-from cbc_sdk.endpoint_standard.base import EnrichedEvent
-from cbc_sdk.platform.devices import DeviceSearchQuery
+                          CriteriaBuilderSupportMixin,
+                          ExclusionBuilderSupportMixin
+                          )
+from cbc_sdk.platform.observations import Observation
 from cbc_sdk.platform.processes import AsyncProcessQuery, Process
+from cbc_sdk.platform.legacy_alerts import LegacyAlertSearchQueryCriterionMixin
+from cbc_sdk.platform.jobs import Job
 
 """Alert Models"""
 
 MAX_RESULTS_LIMIT = 10000
 
 
-class BaseAlert(PlatformModel):
+class Alert(PlatformModel):
     """Represents a basic alert."""
-    urlobject = "/appservices/v6/orgs/{0}/alerts"
-    urlobject_single = "/appservices/v6/orgs/{0}/alerts/{1}"
+    REMAPPED_ALERTS_V6_TO_V7 = {
+        "alert_classification.user_feedback": "determination_value",
+        "cluster_name": "k8s_cluster",
+        "create_time": "backend_timestamp",
+        "created_by_event_id": "primary_event_id",
+        "first_event_time": "first_event_timestamp",
+        "last_event_time": "last_event_timestamp",
+        "last_update_time": "backend_update_timestamp",
+        "legacy_alert_id": "id",
+        "namespace": "k8s_namespace",
+        "notes_present": "alert_notes_present",
+        "policy_id": "device_policy_id",
+        "policy_name": "device_policy",
+        "port": "netconn_local_port",
+        "protocol": "netconn_protocol",
+        "remote_domain": "netconn_remote_domain",
+        "remote_ip": "netconn_remote_ip",
+        "remote_namespace": "remote_k8s_namespace",
+        "remote_replica_id": "remote_k8s_pod_name",
+        "remote_workload_kind": "remote_k8s_kind",
+        "remote_workload_name": "remote_k8s_workload_name",
+        "replica_id": "k8s_pod_name",
+        "rule_id": "rule_id ",
+        "run_state": "run_state",
+        "target_value": "device_target_value",
+        "threat_cause_actor_certificate_authority": "process_issuer",
+        "threat_cause_actor_name": "process_name",
+        "threat_cause_actor_publisher": "process_publisher",
+        "threat_cause_actor_sha256": "process_sha256",
+        "threat_cause_cause_event_id": "primary_event_id",
+        "threat_cause_md5": "process_md5",
+        "threat_cause_parent_guid": "parent_guid",
+        "threat_cause_reputation": "process_reputation",
+        "threat_indicators": "ttps",
+        "watchlists": "watchlists.id",
+        "workflow.last_update_time": "workflow.change_timestamp",
+        "workflow.state": "workflow.status",
+        "workload_kind": "k8s_kind",
+        "workload_name": "k8s_workload_name"
+    }
+
+    REMAPPED_ALERTS_V7_TO_V6 = {
+        "alert_notes_present": "notes_present",
+        "backend_timestamp": "create_time",
+        "backend_update_timestamp": "last_update_time",
+        "determination_value": "alert_classification.user_feedback",
+        "device_policy": "policy_name",
+        "device_policy_id": "policy_id",
+        "device_target_value": "target_value",
+        "first_event_timestamp": "first_event_time",
+        "k8s_cluster": "cluster_name",
+        "k8s_kind": "workload_kind",
+        "k8s_namespace": "namespace",
+        "k8s_pod_name": "replica_id",
+        "k8s_workload_name": "workload_name",
+        "last_event_timestamp": "last_event_time",
+        "netconn_local_port": "port",
+        "netconn_protocol": "protocol",
+        "netconn_remote_domain": "remote_domain",
+        "netconn_remote_ip": "remote_ip",
+        "parent_guid": "threat_cause_parent_guid",
+        "primary_event_id": "threat_cause_cause_event_id",
+        "process_guid": "threat_cause_process_guid",
+        "process_issuer": "threat_cause_actor_certificate_authority",
+        "process_md5": "threat_cause_actor_md5",
+        "process_name": "threat_cause_actor_name",
+        "process_publisher": "threat_cause_actor_publisher",
+        "process_reputation": "threat_cause_reputation",
+        "process_sha256": "threat_cause_actor_sha256",
+        "remote_k8s_kind": "remote_workload_kind",
+        "remote_k8s_namespace": "remote_namespace",
+        "remote_k8s_pod_name": "remote_replica_id",
+        "remote_k8s_workload_name": "remote_workload_name",
+        "rule_id ": "rule_id",
+        "run_state": "run_state",
+        "ttps": "threat_indicators",
+        "watchlists.id": "watchlists",
+        "workflow.change_timestamp": "workflow.last_update_time",
+        "workflow.status": "workflow.state"
+    }
+
+    DEPRECATED_FIELDS_NOT_IN_V7 = [
+        "category",
+        "group_details",
+        "alert_classification.classification",
+        "alert_classification.global_prevalence",
+        "alert_classification.org_prevalence",
+        # CB Analytics Fields
+        "blocked_threat_category",
+        "kill_chain_status",
+        "not_blocked_threat_category",
+        "threat_activity_c2",
+        "threat_activity_dlp",
+        "threat_activity_phish",
+        # CB Analytics and Host Based Firewall and Device Control and Watchlist
+        "threat_cause_threat_category",
+        # CB Analytics and Device Control and Watchlist
+        "threat_cause_vector",
+        # Container Runtime Fields
+        "workload_id",
+        # Watchlists Fields
+        "count",
+        "document_guid",
+        "threat_indicators",
+        "workflow.comment"
+    ]
+
+    REMAPPED_CONTAINER_ALERTS_V7_TO_V6 = {
+        "k8s_policy_id": "policy_id",
+        "k8s_policy": "policy_name",
+        "k8s_rule_id": "rule_id",
+        "k8s_rule": "rule_name"
+    }
+
+    REMAPPED_CONTAINER_ALERTS_V6_TO_V7 = {
+        "policy_id": "k8s_policy_id",
+        "policy_name": "k8s_policy",
+        "rule_id": "k8s_rule_id",
+        "rule_name": "k8s_rule"
+    }
+
+    # these fields are deprecated from container runtime but mapped to a new field for other alert types
+    DEPRECATED_FIELDS_NOT_IN_V7_CONTAINER_ONLY = [
+        "target_value"
+    ]
+
+    REMAPPED_WORKFLOWS_V7_TO_V6 = {
+        "change_timestamp": "last_update_time",
+        "status": "state",
+        "closure_reason": "remediation"
+    }
+
+    urlobject = "/api/alerts/v7/orgs/{0}/alerts"
+    urlobject_single = "/api/alerts/v7/orgs/{0}/alerts/{1}"
+    threat_urlobject_single = "/api/alerts/v7/orgs/{0}/threats/{1}"
     primary_key = "id"
-    swagger_meta_file = "platform/models/base_alert.yaml"
+    swagger_meta_file = "platform/models/alert.yaml"
 
     def __init__(self, cb, model_unique_id, initial_data=None):
         """
-        Initialize the BaseAlert object.
+        Initialize the Alert object.
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
             model_unique_id (str): ID of the alert represented.
             initial_data (dict): Initial data used to populate the alert.
         """
-        super(BaseAlert, self).__init__(cb, model_unique_id, initial_data)
-        self._workflow = Workflow(cb, initial_data.get("workflow", None) if initial_data else None)
+        super(Alert, self).__init__(cb, model_unique_id, initial_data)
         if model_unique_id is not None and initial_data is None:
             self._refresh()
-
-    class Note(PlatformModel):
-        """Represents a note within an alert."""
-        urlobject = "/appservices/v6/orgs/{0}/alerts/{1}/notes"
-        urlobject_single = "/appservices/v6/orgs/{0}/alerts/{1}/notes/{2}"
-        primary_key = "id"
-        swagger_meta_file = "platform/models/base_alert_note.yaml"
-        _is_deleted = False
-
-        def __init__(self, cb, alert, model_unique_id, initial_data=None):
-            """
-            Initialize the Note object.
-
-            Args:
-                cb (BaseAPI): Reference to API object used to communicate with the server.
-                alert (BaseAlert): The alert where the note is saved.
-                model_unique_id (str): ID of the note represented.
-                initial_data (dict): Initial data used to populate the note.
-            """
-            super(BaseAlert.Note, self).__init__(cb, model_unique_id, initial_data)
-            self._alert = alert
-            if model_unique_id is not None and initial_data is None:
-                self._refresh()
-
-        def _refresh(self):
-            """
-            Rereads the alert data from the server.
-
-            Returns:
-                bool: True if refresh was successful, False if not.
-            """
-            _exists_in_list = False
-            if self._is_deleted:
-                raise ApiError("Cannot refresh a deleted Note")
-
-            url = BaseAlert.Note.urlobject.format(self._cb.credentials.org_key, self._alert.id)
-            resp = self._cb.get_object(url)
-            item_list = resp.get("results", [])
-
-            for item in item_list:
-                if item["id"] == self.id:
-                    _exists_in_list = True
-                    return True
-
-            if not _exists_in_list:
-                raise ObjectNotFoundError(url, "Cannot refresh: Note not found")
-
-        @classmethod
-        def _query_implementation(cls, cb, **kwargs):
-            """
-            Raises an error, as Notes cannot be queried directly.
-
-            Args:
-                cb (BaseAPI): Reference to API object used to communicate with the server.
-                **kwargs (dict): Not used, retained for compatibility.
-
-            Raises:
-                ApiError: Always.
-            """
-            raise NonQueryableModel("Notes cannot be queried directly")
-
-        def delete(self):
-            """Deletes a note from an alert."""
-            url = self.urlobject_single.format(self._cb.credentials.org_key, self._alert.id,
-                                               self.id)
-            self._cb.delete_object(url)
-            self._is_deleted = True
-
-    def notes_(self):
-        """Retrieves all notes for an alert."""
-        url = BaseAlert.Note.urlobject.format(self._cb.credentials.org_key, self._info[self.primary_key])
-        resp = self._cb.get_object(url)
-        item_list = resp.get("results", [])
-        return [BaseAlert.Note(self._cb, self, item[BaseAlert.Note.primary_key], item)
-                for item in item_list]
-
-    def create_note(self, note):
-        """Creates a new note."""
-        request = {"note": note}
-        url = BaseAlert.Note.urlobject.format(self._cb.credentials.org_key, self._info[self.primary_key])
-        resp = self._cb.post_object(url, request)
-        result = resp.json()
-        return [BaseAlert.Note(self._cb, self, result["id"], result)]
-
-    @classmethod
-    def _query_implementation(cls, cb, **kwargs):
-        """
-        Returns the appropriate query object for this alert type.
-
-        Args:
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-            **kwargs (dict): Not used, retained for compatibility.
-
-        Returns:
-            BaseAlertSearchQuery: The query object for this alert type.
-        """
-        return BaseAlertSearchQuery(cls, cb)
-
-    def _refresh(self):
-        """
-        Rereads the alert data from the server.
-
-        Returns:
-            bool: True if refresh was successful, False if not.
-        """
-        url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id)
-        resp = self._cb.get_object(url)
-        self._info = resp
-        self._workflow = Workflow(self._cb, resp.get("workflow", None))
-        self._last_refresh_time = time.time()
-        return True
-
-    @property
-    def workflow_(self):
-        """
-        Returns the workflow associated with this alert.
-
-        Returns:
-            Workflow: The workflow associated with this alert.
-        """
-        return self._workflow
-
-    def _update_workflow_status(self, state, remediation, comment):
-        """
-        Updates the workflow status of this alert.
-
-        Args:
-            state (str): The state to set for this alert, either "OPEN" or "DISMISSED".
-            remediation (str): The remediation status to set for the alert.
-            comment (str): The comment to set for the alert.
-        """
-        request = {"state": state}
-        if remediation:
-            request["remediation_state"] = remediation
-        if comment:
-            request["comment"] = comment
-        url = self.urlobject_single.format(self._cb.credentials.org_key,
-                                           self._model_unique_id) + "/workflow"
-        resp = self._cb.post_object(url, request)
-        self._workflow = Workflow(self._cb, resp.json())
-        self._last_refresh_time = time.time()
-
-    def dismiss(self, remediation=None, comment=None):
-        """
-        Dismisses this alert.
-
-        Args:
-            remediation (str): The remediation status to set for the alert.
-            comment (str): The comment to set for the alert.
-        """
-        self._update_workflow_status("DISMISSED", remediation, comment)
-
-    def update(self, remediation=None, comment=None):
-        """
-        Updates this alert while leaving it open.
-
-        Args:
-            remediation (str): The remediation status to set for the alert.
-            comment (str): The comment to set for the alert.
-        """
-        self._update_workflow_status("OPEN", remediation, comment)
-
-    def _update_threat_workflow_status(self, state, remediation, comment):
-        """
-        Updates the workflow status of all alerts with the same threat ID, past or future.
-
-        Args:
-            state (str): The state to set for this alert, either "OPEN" or "DISMISSED".
-            remediation (str): The remediation status to set for the alert.
-            comment (str): The comment to set for the alert.
-        """
-        request = {"state": state}
-        if remediation:
-            request["remediation_state"] = remediation
-        if comment:
-            request["comment"] = comment
-        url = "/appservices/v6/orgs/{0}/threat/{1}/workflow".format(self._cb.credentials.org_key,
-                                                                    self.threat_id)
-        resp = self._cb.post_object(url, request)
-        return Workflow(self._cb, resp.json())
-
-    def dismiss_threat(self, remediation=None, comment=None):
-        """
-        Dismisses all alerts with the same threat ID, past or future.
-
-        Args:
-            remediation (str): The remediation status to set for the alert.
-            comment (str): The comment to set for the alert.
-        """
-        return self._update_threat_workflow_status("DISMISSED", remediation, comment)
-
-    def update_threat(self, remediation=None, comment=None):
-        """
-        Updates the status of all alerts with the same threat ID, past or future, while leaving them in OPEN state.
-
-        Args:
-            remediation (str): The remediation status to set for the alert.
-            comment (str): The comment to set for the alert.
-        """
-        return self._update_threat_workflow_status("OPEN", remediation, comment)
-
-    @staticmethod
-    def search_suggestions(cb, query):
-        """
-        Returns suggestions for keys and field values that can be used in a search.
-
-        Args:
-            cb (CBCloudAPI): A reference to the CBCloudAPI object.
-            query (str): A search query to use.
-
-        Returns:
-            list: A list of search suggestions expressed as dict objects.
-
-        Raises:
-            ApiError: if cb is not instance of CBCloudAPI
-        """
-        if cb.__class__.__name__ != "CBCloudAPI":
-            raise ApiError("cb argument should be instance of CBCloudAPI.")
-        query_params = {"suggest.q": query}
-        url = "/appservices/v6/orgs/{0}/alerts/search_suggestions".format(cb.credentials.org_key)
-        output = cb.get_object(url, query_params)
-        return output["suggestions"]
-
-
-class WatchlistAlert(BaseAlert):
-    """Represents watch list alerts."""
-    urlobject = "/appservices/v6/orgs/{0}/alerts/watchlist"
-
-    @classmethod
-    def _query_implementation(cls, cb, **kwargs):
-        """
-        Returns the appropriate query object for this alert type.
-
-        Args:
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-            **kwargs (dict): Not used, retained for compatibility.
-
-        Returns:
-            WatchlistAlertSearchQuery: The query object for this alert type.
-        """
-        return WatchlistAlertSearchQuery(cls, cb)
 
     def get_process(self, async_mode=False):
         """
@@ -324,10 +218,267 @@ class WatchlistAlert(BaseAlert):
             return None
         return process
 
+    def get_observations(self, timeout=0):
+        """Requests observations that are associated with the Alert.
 
-class CBAnalyticsAlert(BaseAlert):
-    """Represents CB Analytics alerts."""
-    urlobject = "/appservices/v6/orgs/{0}/alerts/cbanalytics"
+         Uses Observations bulk get details.
+
+        Returns:
+            list: Observations associated with the alert
+
+        Note:
+            - When using asynchronous mode, this method returns a python future.
+              You can call result() on the future object to wait for completion and get the results.
+        """
+        alert_id = self.get("id")
+        if not alert_id:
+            raise ApiError("Trying to get observations on an invalid alert_id {}".format(alert_id))
+
+        obs = Observation.bulk_get_details(self._cb, alert_id=alert_id, timeout=timeout)
+        return obs
+
+    def get_history(self, threat=False):
+        """
+        Get the actions taken on an Alert such as Notes added and workflow state changes.
+
+        Args:
+            threat (bool): Whether to return the Alert or Threat history
+
+        Returns:
+            list: The dicts of each determination, note or workflow change
+
+        """
+        if threat:
+            url = Alert.threat_urlobject_single.format(self._cb.credentials.org_key, self.threat_id)
+        else:
+            url = Alert.urlobject_single.format(self._cb.credentials.org_key, self._info[self.primary_key])
+
+        url = f"{url}/history"
+        resp = self._cb.get_object(url)
+        return resp.get("history", [])
+
+    def get_threat_tags(self):
+        """
+        Gets the threat's tags
+
+        Required Permissions:
+            org.alerts.tags (READ)
+
+        Returns:
+            (list[str]): The list of current tags
+        """
+        url = Alert.threat_urlobject_single.format(self._cb.credentials.org_key, self.threat_id)
+        url = f"{url}/tags"
+        resp = self._cb.get_object(url)
+        return resp.get("list", [])
+
+    def add_threat_tags(self, tags):
+        """
+        Adds tags to the threat
+
+        Required Permissions:
+            org.alerts.tags (CREATE)
+
+        Args:
+            tags (list[str]): List of tags to add to the threat
+
+        Raises:
+            ApiError: If tags is not a list of strings
+
+        Returns:
+            (list[str]): The list of current tags
+        """
+        if not isinstance(tags, list) or not isinstance(tags[0], str):
+            raise ApiError("Tags must be a list of strings")
+
+        url = Alert.threat_urlobject_single.format(self._cb.credentials.org_key, self.threat_id)
+        url = f"{url}/tags"
+        resp = self._cb.post_object(url, {"tags": tags})
+        resp_json = resp.json()
+        return resp_json.get("tags", [])
+
+    def delete_threat_tag(self, tag):
+        """
+        Delete a threat tag
+
+        Required Permissions:
+            org.alerts.tags (DELETE)
+
+        Args:
+            tag (str): The tag to delete
+
+        Returns:
+            (list[str]): The list of current tags
+        """
+        url = Alert.threat_urlobject_single.format(self._cb.credentials.org_key, self.threat_id)
+        url = f"{url}/tags/{tag}"
+        resp = self._cb.delete_object(url)
+        resp_json = resp.json()
+        return resp_json.get("tags", [])
+
+    class Note(PlatformModel):
+        """Represents a note within an alert."""
+        REMAPPED_NOTES_V6_TO_V7 = {
+            "create_time": "create_timestamp",
+        }
+
+        REMAPPED_NOTES_V7_TO_V6 = {
+            "create_timestamp": "create_time",
+        }
+
+        urlobject = "/api/alerts/v7/orgs/{0}/alerts/{1}/notes"
+        threat_urlobject = "/api/alerts/v7/orgs/{0}/threats/{1}/notes"
+        primary_key = "id"
+        swagger_meta_file = "platform/models/alert_note.yaml"
+        _is_deleted = False
+
+        def __init__(self, cb, alert, model_unique_id, threat_note=False, initial_data=None):
+            """
+            Initialize the Note object.
+
+            Args:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+                alert (Alert): The alert where the note is saved.
+                model_unique_id (str): ID of the note represented.
+                threat_note (bool): Whether the note is an Alert or Threat note
+                initial_data (dict): Initial data used to populate the note.
+            """
+            super(Alert.Note, self).__init__(cb, model_unique_id, initial_data)
+            self._alert = alert
+            self._threat_note = threat_note
+            if model_unique_id is not None and initial_data is None:
+                self._refresh()
+
+        def _refresh(self):
+            """
+            Rereads the alert data from the server.
+
+            Returns:
+                bool: True if refresh was successful, False if not.
+            """
+            _exists_in_list = False
+            if self._is_deleted:
+                raise ApiError("Cannot refresh a deleted Note")
+
+            if self._threat_note:
+                if self._alert.threat_id:
+                    url = Alert.Note.threat_urlobject.format(self._cb.credentials.org_key, self._alert.threat_id)
+                else:
+                    url = self.url
+                    raise ObjectNotFoundError(url, "Cannot refresh: threat_id not found")
+            else:
+                url = Alert.Note.urlobject.format(self._cb.credentials.org_key, self._alert.id)
+
+            resp = self._cb.get_object(url)
+            item_list = resp.get("results", [])
+
+            for item in item_list:
+                if item["id"] == self.id:
+                    _exists_in_list = True
+                    return True
+
+            if not _exists_in_list:
+                raise ObjectNotFoundError(url, "Cannot refresh: Note not found")
+
+        @classmethod
+        def _query_implementation(cls, cb, **kwargs):
+            """
+            Raises an error, as Notes cannot be queried directly.
+
+            Args:
+                cb (BaseAPI): Reference to API object used to communicate with the server.
+                **kwargs (dict): Not used, retained for compatibility.
+
+            Raises:
+                ApiError: Always.
+            """
+            raise NonQueryableModel("Notes cannot be queried directly")
+
+        def delete(self):
+            """Deletes a note from an alert."""
+            if self._threat_note:
+                url = self.threat_urlobject.format(self._cb.credentials.org_key, self._alert.threat_id)
+            else:
+                url = self.urlobject.format(self._cb.credentials.org_key, self._alert.id)
+
+            url = f"{url}/{self.id}"
+            self._cb.delete_object(url)
+            self._is_deleted = True
+
+        def __getitem__(self, item):
+            """
+            Return an attribute of this object.
+
+            Args:
+                item (str): Name of the attribute to be returned.
+
+            Returns:
+                Any: The returned attribute value.
+
+            Raises:
+                AttributeError: If the object has no such attribute.
+            """
+            try:
+                return super(Alert.Note, self).__getattribute__(Alert.Note.REMAPPED_NOTES_V6_TO_V7.get(item, item))
+            except AttributeError:
+                raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
+                                                                                  item))
+                # fall through to the rest of the logic...
+
+        def __getattr__(self, item):
+            """
+            Return an attribute of this object.
+
+            Args:
+                item (str): Name of the attribute to be returned.
+
+            Returns:
+                Any: The returned attribute value.
+
+            Raises:
+                AttributeError: If the object has no such attribute.
+            """
+            try:
+                item = Alert.Note.REMAPPED_NOTES_V6_TO_V7.get(item, item)
+                return super(Alert.Note, self).__getattr__(Alert.Note.REMAPPED_NOTES_V6_TO_V7.get(item, item))
+            except AttributeError:
+                raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
+                                                                                  item))
+                # fall through to the rest of the logic...
+
+    def notes_(self, threat_note=False):
+        """
+        Retrieves all notes for an alert.
+
+        Args:
+            threat_note (bool): Whether to return the Alert notes or Threat notes
+        """
+        if threat_note:
+            url = Alert.Note.threat_urlobject.format(self._cb.credentials.org_key, self.threat_id)
+        else:
+            url = Alert.Note.urlobject.format(self._cb.credentials.org_key, self._info[self.primary_key])
+
+        resp = self._cb.get_object(url)
+        item_list = resp.get("results", [])
+        return [Alert.Note(self._cb, self, item[Alert.Note.primary_key], threat_note, item)
+                for item in item_list]
+
+    def create_note(self, note, threat_note=False):
+        """
+        Creates a new note.
+
+        Args:
+            note (str): Note content to add
+            threat_note (bool): Whether to add the note to the Alert or Threat
+        """
+        request = {"note": note}
+        if threat_note:
+            url = Alert.Note.threat_urlobject.format(self._cb.credentials.org_key, self.threat_id)
+        else:
+            url = Alert.Note.urlobject.format(self._cb.credentials.org_key, self._info[self.primary_key])
+        resp = self._cb.post_object(url, request)
+        result = resp.json()
+        return Alert.Note(self._cb, self, result["id"], threat_note, result)
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -339,12 +490,332 @@ class CBAnalyticsAlert(BaseAlert):
             **kwargs (dict): Not used, retained for compatibility.
 
         Returns:
-            CBAnalyticsAlertSearchQuery: The query object for this alert type.
+            AlertSearchQuery: The query object for this alert type.
         """
-        return CBAnalyticsAlertSearchQuery(cls, cb)
+        return AlertSearchQuery(cls, cb)
+
+    def _refresh(self):
+        """
+        Rereads the alert data from the server.
+
+        Returns:
+            bool: True if refresh was successful, False if not.
+        """
+        url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id)
+        resp = self._cb.get_object(url)
+        self._info = resp
+        self._last_refresh_time = time.time()
+        return True
+
+    @property
+    def workflow_(self):
+        """
+        Returns the workflow associated with this alert.
+
+        Returns:
+            dict: The workflow associated with this alert.
+        """
+        return self.workflow
+
+    def close(self, closure_reason=None, determination=None, note=None):
+        """
+        Closes this alert.
+
+        Args:
+            closure_reason (str): the closure reason for this alert, either "NO_REASON", "RESOLVED", \
+            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", "OTHER"
+            determination (str): The determination status to set for the alert, either "TRUE_POSITIVE", \
+            "FALSE_POSITIVE", or "NONE"
+            note (str): The comment to set for the alert.
+
+        Note:
+            - This is an asynchronus call that returns a Job. If you want to wait and block on the results
+              you can call await_completion() to get a Futre then result() on the future object to wait for
+              completion and get the results.
+
+        Example:
+            >>> alert = cb.select(Alert, "708d7dbf-2020-42d4-9cbc-0cddd0ffa31a")
+            >>> job = alert.close("RESOLVED", "FALSE_POSITIVE", "Normal behavior")
+            >>> completed_job = job.await_completion().result()
+            >>> alert.refresh()
+
+        Returns:
+            Job: The Job object for the alert workflow action.
+        """
+        job = self._cb.select(Alert).add_criteria("id", [self.get("id")]) \
+                                    ._update_status("CLOSED", closure_reason, note, determination)
+
+        self._last_refresh_time = time.time()
+        return job
+
+    def update(self, status, closure_reason=None, determination=None, note=None):
+        """
+        Update the Alert with optional closure_reason, determination, note, or status.
+
+        Args:
+            status (str): The status to set for this alert, either "OPEN", "IN_PROGRESS", or "CLOSED".
+            closure_reason (str): the closure reason for this alert, either "NO_REASON", "RESOLVED", \
+            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", "OTHER"
+            determination (str): The determination status to set for the alert, either "TRUE_POSITIVE", \
+            "FALSE_POSITIVE", or "NONE"
+            note (str): The comment to set for the alert.
+
+        Note:
+            - This is an asynchronus call that returns a Job. If you want to wait and block on the results
+              you can call await_completion() to get a Futre then result() on the future object to wait for
+              completion and get the results.
+
+        Example:
+            >>> alert = cb.select(Alert, "708d7dbf-2020-42d4-9cbc-0cddd0ffa31a")
+            >>> job = alert.update("IN_PROGESS", "NO_REASON", "NONE", "Starting Investigation")
+            >>> completed_job = job.await_completion().result()
+            >>> alert.refresh()
+
+        Returns:
+            Job: The Job object for the alert workflow action.
+        """
+        job = self._cb.select(Alert).add_criteria("id", [self.get("id")]) \
+                                    ._update_status(status, closure_reason, note, determination)
+
+        self._last_refresh_time = time.time()
+        return job
+
+    def _update_threat_workflow_status(self, state, remediation, comment):
+        """
+        Updates the workflow status of all future alerts with the same threat ID.
+
+        Args:
+            state (str): The state to set for this alert, either "OPEN" or "DISMISSED".
+            remediation (str): The remediation status to set for the alert.
+            comment (str): The comment to set for the alert.
+        """
+        request = {"state": state}
+        if remediation:
+            request["remediation_state"] = remediation
+        if comment:
+            request["comment"] = comment
+        url = "/appservices/v6/orgs/{0}/threat/workflow/_criteria".format(self._cb.credentials.org_key)
+        resp = self._cb.post_object(url, request)
+        return resp.json()
+
+    def dismiss_threat(self, remediation=None, comment=None):
+        """
+        Dismisses all future alerts assigned to the threat_id.
+
+        Args:
+            remediation (str): The remediation status to set for the alert.
+            comment (str): The comment to set for the alert.
+
+        Note:
+            - If you want to dismiss all past and current open alerts associated to the threat use the following:
+                >>> cb.select(Alert).add_criteria("threat_id", [alert.threat_id]).close(...)
+        """
+        return self._update_threat_workflow_status("DISMISSED", remediation, comment)
+
+    def update_threat(self, remediation=None, comment=None):
+        """
+        Updates all future alerts assigned to the threat_id to the OPEN state.
+
+        Args:
+            remediation (str): The remediation status to set for the alert.
+            comment (str): The comment to set for the alert.
+
+        Note:
+            - If you want to update all past and current alerts associated to the threat use the following:
+                >>> cb.select(Alert).add_criteria("threat_id", [alert.threat_id]).update(...)
+        """
+        return self._update_threat_workflow_status("OPEN", remediation, comment)
+
+    @staticmethod
+    def search_suggestions(cb, query):
+        """
+        Returns suggestions for keys and field values that can be used in a search.
+
+        Args:
+            cb (CBCloudAPI): A reference to the CBCloudAPI object.
+            query (str): A search query to use.
+
+        Returns:
+            list: A list of search suggestions expressed as dict objects.
+
+        Raises:
+            ApiError: if cb is not instance of CBCloudAPI
+        """
+        if cb.__class__.__name__ != "CBCloudAPI":
+            raise ApiError("cb argument should be instance of CBCloudAPI.")
+        query_params = {"suggest.q": query}
+        url = "/api/alerts/v7/orgs/{0}/alerts/search_suggestions".format(cb.credentials.org_key)
+        output = cb.get_object(url, query_params)
+        return output["suggestions"]
+
+    def __getitem__(self, item):
+        """
+        Return an attribute of this object.
+
+        Args:
+            item (str): Name of the attribute to be returned.
+
+        Returns:
+            Any: The returned attribute value.
+
+        Raises:
+            AttributeError: If the object has no such attribute.
+        """
+        try:
+            return super(Alert, self).__getattribute__(Alert.REMAPPED_ALERTS_V6_TO_V7.get(item, item))
+        except AttributeError:
+            raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
+                                                                              item))
+            # fall through to the rest of the logic...
+
+    def __getattr__(self, item):
+        """
+        Return an attribute of this object.
+
+        Args:
+            item (str): Name of the attribute to be returned.
+
+        Returns:
+            Any: The returned attribute value.
+
+        Raises:
+            AttributeError: If the object has no such attribute.
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
+        """
+        try:
+            original_item = item
+            if item in Alert.DEPRECATED_FIELDS_NOT_IN_V7:
+                raise FunctionalityDecommissioned(
+                    "Attribute '{0}' does not exist in object '{1}' because it was deprecated in "
+                    "Alerts v7. In SDK 1.5.0 the".format(item, self.__class__.__name__))
+            if item in Alert.DEPRECATED_FIELDS_NOT_IN_V7_CONTAINER_ONLY and self.type == "CONTAINER_RUNTIME":
+                raise FunctionalityDecommissioned(
+                    "Attribute '{0}' does not exist in object '{1}' because it was deprecated in "
+                    "Alerts v7. In SDK 1.5.0 the".format(item, self.__class__.__name__))
+
+            item = Alert.REMAPPED_ALERTS_V6_TO_V7.get(item, item)
+            if self.get("type") == "CONTAINER_RUNTIME":
+                item = Alert.REMAPPED_CONTAINER_ALERTS_V6_TO_V7.get(original_item, item)
+            return super(Alert, self).__getattr__(item)
+        except AttributeError:
+            raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
+                                                                              item))
+            # fall through to the rest of the logic...
+
+    def to_json(self, version="v7"):
+        """
+        Return a json object of the response.
+
+        Args:
+            version (str): version of json to return. Either v6 or v7. DEFAULT v7
+
+        Returns:
+            Any: The returned attribute value.
+        """
+        if version == "v6":
+            modified_json = {}
+            for key, value in self._info.items():
+                if self.type == "CONTAINER_RUNTIME":
+                    key = Alert.REMAPPED_CONTAINER_ALERTS_V7_TO_V6.get(key, key)
+                modified_json[Alert.REMAPPED_ALERTS_V7_TO_V6.get(key, key)] = value
+                if key == "id":
+                    modified_json["legacy_alert_id"] = value
+                if key == "process_name":
+                    modified_json["process_name"] = value
+                if key == "primary_event_id":
+                    if self.type == "CB_ANALYTICS":
+                        modified_json["created_by_event_id"] = value
+                if key == "process_guid":
+                    if self.type == "WATCHLIST":
+                        modified_json["process_guid"] = value
+                    if self.type == "CB_ANALYTICS":
+                        modified_json["threat_cause_process_guid"] = value
+                if key == "ttps":
+                    ti = {"process_name": self._info.get("process_name"), "sha256": self._info.get("process_sha256"),
+                          "ttps": value}
+                    modified_json["threat_indicators"] = [ti]
+                if key == "workflow":
+                    wf = {}
+                    for wf_key, wf_value in value.items():
+                        if wf_key == "status" and wf_value == "CLOSED":
+                            wf_value = "DISMISSED"
+                        elif wf_key == "status" and wf_value == "IN_PROGRESS":
+                            wf_value = "OPEN"
+                        wf[Alert.REMAPPED_WORKFLOWS_V7_TO_V6.get(wf_key, wf_key)] = wf_value
+                    modified_json[key] = wf
+            return modified_json
+        else:
+            return self._info
+
+    def get(self, item, default_val=None):
+        """
+        Return an attribute of this object.
+
+        Args:
+            item (str): Name of the attribute to be returned.
+            default_val (Any): Default value to be used if the attribute is not set.
+
+        Raises:
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
+
+        Returns:
+            Any: The returned attribute value, which may be defaulted.
+        """
+        if item in Alert.DEPRECATED_FIELDS_NOT_IN_V7:
+            raise FunctionalityDecommissioned(
+                "Attribute '{0}' does not exist in object '{1}' because it was deprecated in "
+                "Alerts v7. In SDK 1.5.0 the".format(item, self.__class__.__name__))
+        return super(Alert, self).get(item, default_val)
+
+
+class WatchlistAlert(Alert):
+    """Represents watch list alerts."""
+    urlobject = "/api/alerts/v7/orgs/{0}/alerts"
+    type = ["WATCHLIST"]
+    swagger_meta_file = "platform/models/alert_watchlist.yaml"
+
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
+        """
+        Returns the appropriate query object for this alert type.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            AlertSearchQuery: The query object for this alert type.
+        """
+        return AlertSearchQuery(cls, cb).add_criteria("type", ["WATCHLIST"])
+
+
+class CBAnalyticsAlert(Alert):
+    """Represents CB Analytics alerts."""
+    urlobject = "/api/alerts/v7/orgs/{0}/alerts"
+    type = ["CB_ANALYTICS"]
+    swagger_meta_file = "platform/models/alert_cb_analytic.yaml"
+
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
+        """
+        Returns the appropriate query object for this alert type.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            AlertSearchQuery: The query object for this alert type.
+        """
+        return AlertSearchQuery(cls, cb).add_criteria("type", ["CB_ANALYTICS"])
 
     def get_events(self, timeout=0, async_mode=False):
-        """Requests enriched events detailed results.
+        """Removed in CBC SDK 1.5.0 because Enriched Events are deprecated.
+
+        Previously requested enriched events detailed results.  Update to use get_observations() instead.
+        See `Developer Network Observations Migration
+        <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/observations-migration>`_
+        for more details.
 
         Args:
             timeout (int): Event details request timeout in milliseconds.
@@ -356,79 +827,18 @@ class CBAnalyticsAlert(BaseAlert):
         Note:
             - When using asynchronous mode, this method returns a python future.
               You can call result() on the future object to wait for completion and get the results.
+
+        Raises:
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
         """
-        self._details_timeout = timeout
-        alert_id = self._info.get("legacy_alert_id")
-        if not alert_id:
-            raise ApiError("Trying to get event details on an invalid alert_id {}".format(alert_id))
-        if async_mode:
-            return self._cb._async_submit(self._get_events_detailed_results)
-        return self._get_events_detailed_results()
-
-    def _get_events_detailed_results(self, *args, **kwargs):
-        """
-        Actual search details implementation.
-
-        Returns:
-            list[EnrichedEvent]: List of enriched events.
-
-        Flow:
-            1. Start the job by providing alert_id
-            2. Check the status of the job - wait until contacted and complete are equal
-            3. Retrieve the results - it is possible for num_found to be 0, because enriched events are
-            kept for specific period, so return empty list in that case.
-        """
-        url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs".format(self._cb.credentials.org_key)
-        query_start = self._cb.post_object(url, body={"alert_id": self._info.get("legacy_alert_id")})
-        job_id = query_start.json().get("job_id")
-        timed_out = False
-        submit_time = time.time() * 1000
-
-        while True:
-            status_url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs/{}".format(
-                self._cb.credentials.org_key,
-                job_id,
-            )
-            result = self._cb.get_object(status_url)
-            searchers_contacted = result.get("contacted", 0)
-            searchers_completed = result.get("completed", 0)
-            if searchers_completed == searchers_contacted:
-                break
-            if searchers_contacted == 0:
-                time.sleep(.5)
-                continue
-            if searchers_completed < searchers_contacted:
-                if self._details_timeout != 0 and (time.time() * 1000) - submit_time > self._details_timeout:
-                    timed_out = True
-                    break
-
-            time.sleep(.5)
-
-        if timed_out:
-            raise TimeoutError(message="user-specified timeout exceeded while waiting for results")
-
-        still_fetching = True
-        result_url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs/{}/results".format(
-            self._cb.credentials.org_key,
-            job_id
-        )
-
-        query_parameters = {}
-        while still_fetching:
-            result = self._cb.get_object(result_url, query_parameters=query_parameters)
-            available_results = result.get('num_available', 0)
-            found_results = result.get('num_found', 0)
-            # if found is 0, then no enriched events
-            if found_results == 0:
-                return []
-            if available_results != 0:
-                results = result.get('results', [])
-                return [EnrichedEvent(self._cb, initial_data=item) for item in results]
+        raise FunctionalityDecommissioned("get_events method does not exist in in SDK v1.5.0 "
+                                          "because Enriched Events have been deprecated.  The")
 
 
-class DeviceControlAlert(BaseAlert):
+class DeviceControlAlert(Alert):
     """Represents Device Control alerts."""
-    urlobject = "/appservices/v6/orgs/{0}/alerts/devicecontrol"
+    urlobject = "/api/alerts/v7/orgs/{0}/alerts"
+    swagger_meta_file = "platform/models/alert_device_control.yaml"
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -440,14 +850,16 @@ class DeviceControlAlert(BaseAlert):
             **kwargs (dict): Not used, retained for compatibility.
 
         Returns:
-            DeviceControlAlertSearchQuery: The query object for this alert type.
+            AlertSearchQuery: The query object for this alert type.
         """
-        return DeviceControlAlertSearchQuery(cls, cb)
+        return AlertSearchQuery(cls, cb).add_criteria("type", ["DEVICE_CONTROL"])
 
 
-class ContainerRuntimeAlert(BaseAlert):
+class ContainerRuntimeAlert(Alert):
     """Represents Container Runtime alerts."""
-    urlobject = "/appservices/v6/orgs/{0}/alerts/containerruntime"
+    urlobject = "/api/alerts/v7/orgs/{0}/alerts"
+    swagger_meta_file = "platform/models/alert_container_runtime.yaml"
+    type = ["CONTAINER_RUNTIME"]
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -459,133 +871,66 @@ class ContainerRuntimeAlert(BaseAlert):
             **kwargs (dict): Not used, retained for compatibility.
 
         Returns:
-            ContainerRuntimeAlertSearchQuery: The query object for this alert type.
+            AlertSearchQuery: The query object for this alert type.
         """
-        return ContainerRuntimeAlertSearchQuery(cls, cb)
+        return AlertSearchQuery(cls, cb).add_criteria("type", ["CONTAINER_RUNTIME"])
 
 
-class Workflow(UnrefreshableModel):
-    """Represents the workflow associated with alerts."""
-    swagger_meta_file = "platform/models/workflow.yaml"
+class HostBasedFirewallAlert(Alert):
+    """Represents Host Based Firewall alerts."""
+    urlobject = "/api/alerts/v7/orgs/{0}/alerts"
+    swagger_meta_file = "platform/models/alert_host_based_firewall.yaml"
+    type = ["HOST_BASED_FIREWALL"]
 
-    def __init__(self, cb, initial_data=None):
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
         """
-        Initialize the Workflow object.
+        Returns the appropriate query object for this alert type.
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
-            initial_data (dict): Initial data used to populate the workflow.
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            AlertSearchQuery: The query object for this alert type.
         """
-        super(Workflow, self).__init__(cb, model_unique_id=None, initial_data=initial_data)
+        return AlertSearchQuery(cls, cb).add_criteria("type", ["HOST_BASED_FIREWALL"])
 
 
-class WorkflowStatus(PlatformModel):
-    """Represents the current workflow status of a request."""
-    urlobject_single = "/appservices/v6/orgs/{0}/workflow/status/{1}"
-    primary_key = "id"
-    swagger_meta_file = "platform/models/workflow_status.yaml"
+class IntrusionDetectionSystemAlert(Alert):
+    """Represents Intrusion Detection System alerts."""
+    urlobject = "/api/alerts/v7/orgs/{0}/alerts"
+    swagger_meta_file = "platform/models/alert_intrusion_detection_system.yaml"
+    type = ["INTRUSION_DETECTION_SYSTEM"]
 
-    def __init__(self, cb, model_unique_id, initial_data=None):
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
         """
-        Initialize the BaseAlert object.
+        Returns the appropriate query object for this alert type.
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
-            model_unique_id (str): ID of the request being processed.
-            initial_data (dict): Initial data used to populate the status.
-        """
-        super(WorkflowStatus, self).__init__(cb, model_unique_id, initial_data)
-        self._request_id = model_unique_id
-        self._workflow = None
-        if model_unique_id is not None:
-            self._refresh()
-
-    def _refresh(self):
-        """
-        Rereads the request status from the server.
+            **kwargs (dict): Not used, retained for compatibility.
 
         Returns:
-            bool: True if refresh was successful, False if not.
+            AlertSearchQuery: The query object for this alert type.
         """
-        url = self.urlobject_single.format(self._cb.credentials.org_key, self._request_id)
-        resp = self._cb.get_object(url)
-        self._info = resp
-        self._workflow = Workflow(self._cb, resp.get("workflow", None))
-        self._last_refresh_time = time.time()
-        return True
-
-    @property
-    def id_(self):
-        """
-        Returns the request ID of the associated request.
-
-        Returns:
-            str: The request ID of the associated request.
-        """
-        return self._request_id
-
-    @property
-    def workflow_(self):
-        """
-        Returns the current workflow associated with this request.
-
-        Returns:
-            Workflow: The current workflow associated with this request.
-        """
-        return self._workflow
-
-    @property
-    def queued(self):
-        """
-        Returns whether this request has been queued.
-
-        Returns:
-            bool: True if the request is in "queued" state, False if not.
-        """
-        self._refresh()
-        return self._info.get("status", "") == "QUEUED"
-
-    @property
-    def in_progress(self):
-        """
-        Returns whether this request is currently in progress.
-
-        Returns:
-            bool: True if the request is in "in progress" state, False if not.
-        """
-        self._refresh()
-        return self._info.get("status", "") == "IN_PROGRESS"
-
-    @property
-    def finished(self):
-        """
-        Returns whether this request has been completed.
-
-        Returns:
-            bool: True if the request is in "finished" state, False if not.
-        """
-        self._refresh()
-        return self._info.get("status", "") == "FINISHED"
+        return AlertSearchQuery(cls, cb).add_criteria("type", ["INTRUSION_DETECTION_SYSTEM"])
 
 
 """Alert Queries"""
 
 
-class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin):
-    """Represents a query that is used to locate BaseAlert objects."""
-    VALID_CATEGORIES = ["THREAT", "MONITORED"]
-    VALID_REPUTATIONS = ["KNOWN_MALWARE", "SUSPECT_MALWARE", "PUP", "NOT_LISTED", "ADAPTIVE_WHITE_LIST",
-                         "COMMON_WHITE_LIST", "TRUSTED_WHITE_LIST", "COMPANY_BLACK_LIST"]
-    VALID_ALERT_TYPES = ["CB_ANALYTICS", "DEVICE_CONTROL", "WATCHLIST", "CONTAINER_RUNTIME"]
-    VALID_WORKFLOW_VALS = ["OPEN", "DISMISSED"]
-    VALID_FACET_FIELDS = ["ALERT_TYPE", "CATEGORY", "REPUTATION", "WORKFLOW", "TAG", "POLICY_ID",
-                          "POLICY_NAME", "DEVICE_ID", "DEVICE_NAME", "APPLICATION_HASH",
-                          "APPLICATION_NAME", "STATUS", "RUN_STATE", "POLICY_APPLIED_STATE",
-                          "POLICY_APPLIED", "SENSOR_ACTION"]
+class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, LegacyAlertSearchQueryCriterionMixin,
+                       CriteriaBuilderSupportMixin, ExclusionBuilderSupportMixin):
+    """Represents a query that is used to locate Alert objects."""
+    DEPRECATED_FACET_FIELDS = ["ALERT_TYPE", "CATEGORY", "REPUTATION", "WORKFLOW", "TAG", "POLICY_ID",
+                               "POLICY_NAME", "APPLICATION_HASH", "APPLICATION_NAME", "STATUS", "POLICY_APPLIED_STATE"]
 
     def __init__(self, doc_class, cb):
         """
-        Initialize the BaseAlertSearchQuery.
+        Initialize the AlertSearchQuery.
 
         Args:
             doc_class (class): The model class that will be returned by this query.
@@ -594,385 +939,216 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
         self._doc_class = doc_class
         self._cb = cb
         self._count_valid = False
-        super(BaseAlertSearchQuery, self).__init__()
+        self._valid_criteria = False
+        super(AlertSearchQuery, self).__init__()
 
         self._query_builder = QueryBuilder()
         self._criteria = {}
         self._time_filters = {}
+        self._exclusions = {}
+        self._time_exclusion_filters = {}
         self._sortcriteria = {}
-        self._bulkupdate_url = "/appservices/v6/orgs/{0}/alerts/workflow/_criteria"
+        self._bulkupdate_url = "/api/alerts/v7/orgs/{0}/alerts/workflow"
         self._count_valid = False
         self._total_results = 0
+        self._batch_size = 100
 
-    def set_categories(self, categories):
+    def set_rows(self, rows):
         """
-        Restricts the alerts that this query is performed on to the specified categories.
+        Sets the 'rows' query body parameter, determining how many rows of results to request.
 
         Args:
-            categories (list): List of categories to be restricted to. Valid categories are
-                               "THREAT", "MONITORED", "INFO", "MINOR", "SERIOUS", and "CRITICAL."
-
-        Returns:
-            BaseAlertSearchQuery: This instance.
+            rows (int): How many rows to request.
         """
-        if not all((c in BaseAlertSearchQuery.VALID_CATEGORIES) for c in categories):
-            raise ApiError("One or more invalid category values")
-        self._update_criteria("category", categories)
+        if not isinstance(rows, int):
+            raise ApiError(f"Rows must be an integer. {rows} is a {type(rows)}.")
+        self._batch_size = rows
         return self
 
-    def set_create_time(self, *args, **kwargs):
+    def set_time_range(self, *args, **kwargs):
         """
-        Restricts the alerts that this query is performed on to the specified creation time.
+        For v7 Alerts:
+
+        Sets the 'time_range' query body parameter, determining a time range based on 'backend_timestamp'.
+
+        Args:
+            *args: not used
+            **kwargs (dict): Used to specify
+
+                * start= for start time
+                * end= for end time
+                * range= for range.
+
+            Values are either timestamp ISO 8601 strings or datetime objects for start and end time.
+            For range the time range to execute the result search, ending on the current time. Range should be in the
+            format "-<quantity><units>" where quantity is an integer, and units is one of:
+
+                * M: month(s)
+                * w: week(s)
+                * d: day(s)
+                * h: hour(s)
+                * m: minute(s)
+                * s: second(s)
+
+        For v6 Alerts (backwards compatibility):
+
+        Restricts the alerts that this query is performed on to the specified time range for a given key. Will also set
+        the 'time_range' as in the v7 usage if key is create_time or backend_timestamp. Will be deprecated with v6 alert
+        api
+
+        Args:
+            key (str): The key to use for criteria one of create_time, first_event_time, last_event_time,
+             backend_timestamp, backend_update_timestamp, or last_update_time
+            **kwargs (dict): Used to specify
+
+                * start= for start time
+                * end= for end time
+                * range= for range
+
+            Values are either timestamp ISO 8601 strings or datetime objects for start and end time.
+            For range the time range to execute the result search, ending on the current time. The same format as above
+            for v7.
+
+        Returns:
+            AlertSearchQuery: This instance.
+
+        Examples:
+            >>> query = api.select(Alert).set_time_range(start="2020-10-20T20:34:07Z")
+            >>> second_query = api.select(Alert).
+            ...     set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
+            >>> third_query = api.select(Alert).set_time_range(range='-3d')
+            >>> fourth_query = api.select(Alert).set_time_range("create_time", range='-3d')
+
+        """
+        args_count = args.__len__()
+        time_filter = self._create_valid_time_filter(kwargs)
+        if args_count > 0:
+            key = args[0]
+            self._valid_criteria = self._is_valid_time_criteria_key_v6(key)
+            if self._valid_criteria:
+                key = Alert.REMAPPED_ALERTS_V6_TO_V7.get(key, key)
+                self.add_time_criteria(key, **kwargs)
+                if key in ["create_time", "backend_timestamp"]:
+                    self._time_range = time_filter
+        else:
+            # everything before this is only for backwards compatibility, once v6 deprecates all the other
+            # checks can be removed
+            self._time_range = {}
+            self._time_range = time_filter
+        return self
+
+    def add_time_criteria(self, key, **kwargs):
+        """
+        Restricts the alerts that this query is performed on to the specified time range for a given key.
 
         The time may either be specified as a start and end point or as a range.
 
         Args:
-            *args (list): Not used.
-            **kwargs (dict): Used to specify start= for start time, end= for end time, and range= for range.
+            key (str): The key to use for criteria one of create_time, first_event_time, last_event_time,
+             backend_timestamp, backend_update_timestamp, or last_update_time
+            **kwargs (dict): Used to specify:
+
+                * start= for start time
+                * end= for end time
+                * range= for range
+                * excludes= to set this as an exclusion rather than criteria. Defaults to False.
 
         Returns:
-            BaseAlertSearchQuery: This instance.
+            AlertSearchQuery: This instance.
+
+        Examples:
+            >>> query = api.select(Alert).
+            ...     add_time_criteria("backend_timestamp", start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
+            >>> second_query = api.select(Alert).add_time_criteria("backend_timestamp", range='-3d')
+            >>> third_query = api.select(Alert).set_time_range("create_time", range='-3d')
+            >>> exclusions_query = api.add_time_criteria("detection_timestamp", range="-2h", exclude=True)
+
         """
+        # this first if statement will be removed after v6 is deprecated
+        if not self._valid_criteria:
+            self._valid_criteria = self._is_valid_time_criteria_key(key)
+
+        if self._valid_criteria:
+            if kwargs.get("exclude", False):
+                self._time_exclusion_filters[key] = self._create_valid_time_filter(kwargs)
+            else:
+                self._time_filters[key] = self._create_valid_time_filter(kwargs)
+        return self
+
+    def _is_valid_time_criteria_key(self, key):
+        """
+        Verifies that an alert criteria key has the timerange functionality
+
+        Args:
+            args (str): The key to use for criteria one of one of backend_timestamp, backend_update_timestamp,
+            detection_timestamp, first_event_timestamp, last_event_timestamp, mdr_determination_change_timestamp,
+            mdr_workflow_change_timestamp, user_update_timestamp, or workflow_change_timestamp
+
+        Returns:
+            boolean true
+        """
+        if key not in ["backend_timestamp", "backend_update_timestamp", "detection_timestamp", "first_event_timestamp",
+                       "last_event_timestamp", "mdr_determination_change_timestamp", "mdr_workflow_change_timestamp",
+                       "user_update_timestamp", "workflow_change_timestamp"]:
+            raise ApiError("key must be one of backend_timestamp, backend_update_timestamp, detection_timestamp, "
+                           "first_event_timestamp, last_event_timestamp, mdr_determination_change_timestamp, "
+                           "mdr_workflow_change_timestamp, user_update_timestamp, or workflow_change_timestamp")
+        return True
+
+    def _is_valid_time_criteria_key_v6(self, key):
+        """
+        Verifies that an alert criteria key has the timerange functionality for v6 sdk calls
+
+        Args:
+            args (str): The key to use for criteria one of create_time, first_event_time, last_event_time,
+             backend_timestamp, backend_update_timestamp, or last_update_time
+
+        Returns:
+            boolean true
+        """
+        if key not in ["create_time", "first_event_time", "last_event_time", "last_update_time", "backend_timestamp",
+                       "backend_update_timestamp"]:
+            raise ApiError("key must be one of create_time, first_event_time, last_event_time, backend_timestamp,"
+                           " backend_update_timestamp, or last_update_time")
+        return True
+
+    def _create_valid_time_filter(self, kwargs):
+        """
+        Verifies that an alert criteria key has the timerange functionality
+
+        Args:
+            kwargs (dict): Used to specify start= for start time, end= for end time, and range= for range. Values are
+            either timestamp ISO 8601 strings or datetime objects for start and end time. For range the time range to
+            execute the result search, ending on the current time. Should be in the form "-2w",
+            where y=year, w=week, d=day, h=hour, m=minute, s=second.
+
+        Returns:
+            filter object to be applied to the global time range or a specific field
+        """
+        time_filter = {}
         if kwargs.get("start", None) and kwargs.get("end", None):
             if kwargs.get("range", None):
                 raise ApiError("cannot specify range= in addition to start= and end=")
             stime = kwargs["start"]
-            if not isinstance(stime, str):
-                stime = stime.isoformat()
             etime = kwargs["end"]
-            if not isinstance(etime, str):
-                etime = etime.isoformat()
-            self._time_filters["create_time"] = {"start": stime, "end": etime}
+            try:
+                if isinstance(stime, str):
+                    stime = datetime.datetime.fromisoformat(stime)
+                if isinstance(etime, str):
+                    etime = datetime.datetime.fromisoformat(etime)
+                if isinstance(stime, datetime.datetime) and isinstance(etime, datetime.datetime):
+                    time_filter = {"start": stime.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                                   "end": etime.strftime("%Y-%m-%dT%H:%M:%S.%fZ")}
+            except:
+                raise ApiError(f"Start and end time must be a string in ISO 8601 format or an object of datetime. "
+                               f"Start time {stime} is a {type(stime)}. End time {etime} is a {type(etime)}.")
         elif kwargs.get("range", None):
             if kwargs.get("start", None) or kwargs.get("end", None):
                 raise ApiError("cannot specify start= or end= in addition to range=")
-            self._time_filters["create_time"] = {"range": kwargs["range"]}
+            time_filter = {"range": kwargs["range"]}
         else:
             raise ApiError("must specify either start= and end= or range=")
-        return self
-
-    def set_device_ids(self, device_ids):
-        """
-        Restricts the alerts that this query is performed on to the specified device IDs.
-
-        Args:
-            device_ids (list): List of integer device IDs.
-
-        Returns:
-            BaseAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(device_id, int) for device_id in device_ids):
-            raise ApiError("One or more invalid device IDs")
-        self._update_criteria("device_id", device_ids)
-        return self
-
-    def set_device_names(self, device_names):
-        """
-        Restricts the alerts that this query is performed on to the specified device names.
-
-        Args:
-            device_names (list): List of string device names.
-
-        Returns:
-            BaseAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in device_names):
-            raise ApiError("One or more invalid device names")
-        self._update_criteria("device_name", device_names)
-        return self
-
-    def set_device_os(self, device_os):
-        """
-        Restricts the alerts that this query is performed on to the specified device operating systems.
-
-        Args:
-            device_os (list): List of string operating systems.  Valid values are "WINDOWS", "ANDROID",
-                              "MAC", "IOS", "LINUX", and "OTHER."
-
-        Returns:
-            BaseAlertSearchQuery: This instance.
-        """
-        if not all((osval in DeviceSearchQuery.VALID_OS) for osval in device_os):
-            raise ApiError("One or more invalid operating systems")
-        self._update_criteria("device_os", device_os)
-        return self
-
-    def set_device_os_versions(self, device_os_versions):
-        """
-        Restricts the alerts that this query is performed on to the specified device operating system versions.
-
-        Args:
-            device_os_versions (list): List of string operating system versions.
-
-        Returns:
-            BaseAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in device_os_versions):
-            raise ApiError("One or more invalid device OS versions")
-        self._update_criteria("device_os_version", device_os_versions)
-        return self
-
-    def set_device_username(self, users):
-        """
-        Restricts the alerts that this query is performed on to the specified user names.
-
-        Args:
-            users (list): List of string user names.
-
-        Returns:
-            BaseAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(u, str) for u in users):
-            raise ApiError("One or more invalid user names")
-        self._update_criteria("device_username", users)
-        return self
-
-    def set_group_results(self, do_group):
-        """
-        Specifies whether or not to group the results of the query.
-
-        Args:
-            do_group (bool): True to group the results, False to not do so.
-
-        Returns:
-            BaseAlertSearchQuery: This instance.
-        """
-        self._criteria["group_results"] = True if do_group else False
-        return self
-
-    def set_alert_ids(self, alert_ids):
-        """
-        Restricts the alerts that this query is performed on to the specified alert IDs.
-
-        Args:
-            alert_ids (list): List of string alert IDs.
-
-        Returns:
-            BaseAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(v, str) for v in alert_ids):
-            raise ApiError("One or more invalid alert ID values")
-        self._update_criteria("id", alert_ids)
-        return self
-
-    def set_legacy_alert_ids(self, alert_ids):
-        """
-        Restricts the alerts that this query is performed on to the specified legacy alert IDs.
-
-        Args:
-            alert_ids (list): List of string legacy alert IDs.
-
-        Returns:
-            BaseAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(v, str) for v in alert_ids):
-            raise ApiError("One or more invalid alert ID values")
-        self._update_criteria("legacy_alert_id", alert_ids)
-        return self
-
-    def set_minimum_severity(self, severity):
-        """
-        Restricts the alerts that this query is performed on to the specified minimum severity level.
-
-        Args:
-            severity (int): The minimum severity level for alerts.
-
-        Returns:
-            BaseAlertSearchQuery: This instance.
-        """
-        self._criteria["minimum_severity"] = severity
-        return self
-
-    def set_policy_ids(self, policy_ids):
-        """
-        Restricts the alerts that this query is performed on to the specified policy IDs.
-
-        Args:
-            policy_ids (list): List of integer policy IDs.
-
-        Returns:
-            BaseAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(policy_id, int) for policy_id in policy_ids):
-            raise ApiError("One or more invalid policy IDs")
-        self._update_criteria("policy_id", policy_ids)
-        return self
-
-    def set_policy_names(self, policy_names):
-        """
-        Restricts the alerts that this query is performed on to the specified policy names.
-
-        Args:
-            policy_names (list): List of string policy names.
-
-        Returns:
-            BaseAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in policy_names):
-            raise ApiError("One or more invalid policy names")
-        self._update_criteria("policy_name", policy_names)
-        return self
-
-    def set_process_names(self, process_names):
-        """
-        Restricts the alerts that this query is performed on to the specified process names.
-
-        Args:
-            process_names (list): List of string process names.
-
-        Returns:
-            BaseAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in process_names):
-            raise ApiError("One or more invalid process names")
-        self._update_criteria("process_name", process_names)
-        return self
-
-    def set_process_sha256(self, shas):
-        """
-        Restricts the alerts that this query is performed on to the specified process SHA-256 hash values.
-
-        Args:
-            shas (list): List of string process SHA-256 hash values.
-
-        Returns:
-            BaseAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in shas):
-            raise ApiError("One or more invalid SHA256 values")
-        self._update_criteria("process_sha256", shas)
-        return self
-
-    def set_reputations(self, reps):
-        """
-        Restricts the alerts that this query is performed on to the specified reputation values.
-
-        Args:
-            reps (list): List of string reputation values.  Valid values are "KNOWN_MALWARE", "SUSPECT_MALWARE",
-                         "PUP", "NOT_LISTED", "ADAPTIVE_WHITE_LIST", "COMMON_WHITE_LIST", "TRUSTED_WHITE_LIST",
-                         and "COMPANY_BLACK_LIST".
-
-        Returns:
-            BaseAlertSearchQuery: This instance.
-        """
-        if not all((r in BaseAlertSearchQuery.VALID_REPUTATIONS) for r in reps):
-            raise ApiError("One or more invalid reputation values")
-        self._update_criteria("reputation", reps)
-        return self
-
-    def set_tags(self, tags):
-        """
-        Restricts the alerts that this query is performed on to the specified tag values.
-
-        Args:
-            tags (list): List of string tag values.
-
-        Returns:
-            BaseAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(tag, str) for tag in tags):
-            raise ApiError("One or more invalid tags")
-        self._update_criteria("tag", tags)
-        return self
-
-    def set_target_priorities(self, priorities):
-        """
-        Restricts the alerts that this query is performed on to the specified target priority values.
-
-        Args:
-            priorities (list): List of string target priority values.  Valid values are "LOW", "MEDIUM",
-                               "HIGH", and "MISSION_CRITICAL".
-
-        Returns:
-            BaseAlertSearchQuery: This instance.
-        """
-        if not all((prio in DeviceSearchQuery.VALID_PRIORITIES) for prio in priorities):
-            raise ApiError("One or more invalid priority values")
-        self._update_criteria("target_value", priorities)
-        return self
-
-    def set_threat_ids(self, threats):
-        """
-        Restricts the alerts that this query is performed on to the specified threat ID values.
-
-        Args:
-            threats (list): List of string threat ID values.
-
-        Returns:
-            BaseAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(t, str) for t in threats):
-            raise ApiError("One or more invalid threat ID values")
-        self._update_criteria("threat_id", threats)
-        return self
-
-    def set_time_range(self, key, **kwargs):
-        """
-        Restricts the alerts that this query is performed on to the specified time range.
-
-        The time may either be specified as a start and end point or as a range.
-
-        Args:
-            key (str): The key to use for criteria one of create_time,
-                       first_event_time, last_event_time, or last_update_time
-            **kwargs (dict): Used to specify start= for start time, end= for end time, and range= for range.
-
-        Returns:
-            BaseAlertSearchQuery: This instance.
-        """
-        if key not in ["create_time", "first_event_time", "last_event_time", "last_update_time"]:
-            raise ApiError("key must be one of create_time, first_event_time, last_event_time, or last_update_time")
-        if kwargs.get("start", None) and kwargs.get("end", None):
-            if kwargs.get("range", None):
-                raise ApiError("cannot specify range= in addition to start= and end=")
-            stime = kwargs["start"]
-            if not isinstance(stime, str):
-                stime = stime.isoformat()
-            etime = kwargs["end"]
-            if not isinstance(etime, str):
-                etime = etime.isoformat()
-            self._time_filters[key] = {"start": stime, "end": etime}
-        elif kwargs.get("range", None):
-            if kwargs.get("start", None) or kwargs.get("end", None):
-                raise ApiError("cannot specify start= or end= in addition to range=")
-            self._time_filters[key] = {"range": kwargs["range"]}
-        else:
-            raise ApiError("must specify either start= and end= or range=")
-        return self
-
-    def set_types(self, alerttypes):
-        """
-        Restricts the alerts that this query is performed on to the specified alert type values.
-
-        Args:
-            alerttypes (list): List of string alert type values.  Valid values are "CB_ANALYTICS",
-                               "WATCHLIST", "DEVICE_CONTROL", and "CONTAINER_RUNTIME".
-
-        Returns:
-            BaseAlertSearchQuery: This instance.
-
-        Note: - When filtering by fields that take a list parameter, an empty list will be treated as a wildcard and
-        match everything.
-        """
-        if not all((t in BaseAlertSearchQuery.VALID_ALERT_TYPES) for t in alerttypes):
-            raise ApiError("One or more invalid alert type values")
-        self._update_criteria("type", alerttypes)
-        return self
-
-    def set_workflows(self, workflow_vals):
-        """
-        Restricts the alerts that this query is performed on to the specified workflow status values.
-
-        Args:
-            workflow_vals (list): List of string alert type values.  Valid values are "OPEN" and "DISMISSED".
-
-        Returns:
-            BaseAlertSearchQuery: This instance.
-        """
-        if not all((t in BaseAlertSearchQuery.VALID_WORKFLOW_VALS) for t in workflow_vals):
-            raise ApiError("One or more invalid workflow status values")
-        self._update_criteria("workflow", workflow_vals)
-        return self
+        return time_filter
 
     def _build_criteria(self):
         """
@@ -986,19 +1162,31 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
             mycrit.update(self._time_filters)
         return mycrit
 
+    def _build_exclusions(self):
+        """
+        Builds the exclusions object for use in a query.
+
+        Returns:
+            dict: The exclusions object.
+        """
+        myexclusions = self._exclusions
+        if self._time_exclusion_filters:
+            myexclusions.update(self._time_exclusion_filters)
+        return myexclusions
+
     def sort_by(self, key, direction="ASC"):
         """
         Sets the sorting behavior on a query's results.
 
         Example:
-            >>> cb.select(BaseAlert).sort_by("name")
+            >>> cb.select(Alert).sort_by("name")
 
         Args:
             key (str): The key in the schema to sort by.
             direction (str): The sort order, either "ASC" or "DESC".
 
         Returns:
-            BaseAlertSearchQuery: This instance.
+            AlertSearchQuery: This instance.
         """
         if direction not in CriteriaBuilderSupportMixin.VALID_DIRECTIONS:
             raise ApiError("invalid sort direction specified")
@@ -1017,11 +1205,21 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
         Returns:
             dict: The complete request body.
         """
-        request = {"criteria": self._build_criteria()}
-        request["query"] = self._query_builder._collapse()
-        # Fetch 100 rows per page (instead of 10 by default) for better performance
-        request["rows"] = 100
-        if from_row > 0:
+        request = {}
+        criteria = self._build_criteria()
+        exclusions = self._build_exclusions()
+        query = self._query_builder._collapse()
+        if criteria:
+            request["criteria"] = criteria
+        if exclusions:
+            request["exclusions"] = exclusions
+        if query:
+            request["query"] = query
+
+        request["rows"] = self._batch_size
+        if hasattr(self, "_time_range"):
+            request["time_range"] = self._time_range
+        if from_row > 1:
             request["start"] = from_row
         if max_rows >= 0:
             request["rows"] = max_rows
@@ -1053,7 +1251,7 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
             return self._total_results
 
         url = self._build_url("/_search")
-        request = self._build_request(0, -1)
+        request = self._build_request(1, -1)
         resp = self._cb.post_object(url, body=request)
         result = resp.json()
 
@@ -1093,7 +1291,25 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
 
             results = result.get("results", [])
             for item in results:
-                yield self._doc_class(self._cb, item["id"], item)
+                alert = self._doc_class(self._cb, item["id"], item)
+                if "type" in item:
+                    if item["type"] == "CB_ANALYTICS":
+                        alert.__class__ = CBAnalyticsAlert
+                    elif item["type"] == "WATCHLIST":
+                        alert.__class__ = WatchlistAlert
+                    elif item["type"] == "INTRUSION_DETECTION_SYSTEM":
+                        alert.__class__ = IntrusionDetectionSystemAlert
+                    elif item["type"] == "DEVICE_CONTROL":
+                        alert.__class__ = DeviceControlAlert
+                    elif item["type"] == "HOST_BASED_FIREWALL":
+                        alert.__class__ = HostBasedFirewallAlert
+                    elif item["type"] == "CONTAINER_RUNTIME":
+                        alert.__class__ = ContainerRuntimeAlert
+                    else:
+                        pass
+                else:
+                    alert.__class__ = Alert
+                yield alert
                 current += 1
                 numrows += 1
 
@@ -1111,648 +1327,176 @@ class BaseAlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
         Return information about the facets for this alert by search, using the defined criteria.
 
         Args:
-            fieldlist (list): List of facet field names. Valid names are "ALERT_TYPE", "CATEGORY", "REPUTATION",
-                              "WORKFLOW", "TAG", "POLICY_ID", "POLICY_NAME", "DEVICE_ID", "DEVICE_NAME",
-                              "APPLICATION_HASH", "APPLICATION_NAME", "STATUS", "RUN_STATE", "POLICY_APPLIED_STATE",
-                              "POLICY_APPLIED", and "SENSOR_ACTION".
+            fieldlist (list): List of facet field names.
             max_rows (int): The maximum number of rows to return. 0 means return all rows.
 
         Returns:
             list: A list of facet information specified as dicts.
+            error: invalid enum
+
+        Raises:
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
+            ApiError: If the facet field is not valid
         """
-        if not all((field in BaseAlertSearchQuery.VALID_FACET_FIELDS) for field in fieldlist):
-            raise ApiError("One or more invalid term field names")
+        for field in fieldlist:
+            if field in AlertSearchQuery.DEPRECATED_FACET_FIELDS:
+                raise FunctionalityDecommissioned(
+                    "Field '{0}' does is not a valid facet name because it was deprecated in "
+                    "Alerts v7.".format(field))
+
         request = self._build_request(0, -1, False)
         del request['rows']
         request["terms"] = {"fields": fieldlist, "rows": max_rows}
         url = self._build_url("/_facet")
         resp = self._cb.post_object(url, body=request)
+        if resp.status_code == 400:
+            raise ApiError(resp.json())
         result = resp.json()
         return result.get("results", [])
 
-    def _update_status(self, status, remediation, comment):
+    def _update_status(self, status, closure_reason, note, determination):
         """
         Updates the status of all alerts matching the given query.
 
         Args:
-            status (str): The status to put the alerts into, either "OPEN" or "DISMISSED".
-            remediation (str): The remediation state to set for all alerts.
-            comment (str): The comment to set for all alerts.
+            status (str): The status to set for this alert, either "OPEN", "IN_PROGRESS", or "CLOSED".
+            closure_reason (str): the closure reason for this alert, either "TRUE_POSITIVE", "FALSE_POSITIVE", or "NONE"
+            note (str): The comment to set for the alert.
+            determination (str): The determination status to set for the alert, either "NO_REASON", "RESOLVED", \
+            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", "OTHER"
 
         Returns:
-            str: The request ID, which may be used to select a WorkflowStatus object.
+            Job: The Job object for the bulk workflow action.
         """
-        request = {"state": status, "criteria": self._build_criteria(), "query": self._query_builder._collapse()}
-        if remediation is not None:
-            request["remediation_state"] = remediation
-        if comment is not None:
-            request["comment"] = comment
+        request = self._build_request(0, -1)
+        del request["rows"]
+
+        if status:
+            request["status"] = status
+        if closure_reason is not None:
+            request["closure_reason"] = closure_reason
+        if determination is not None:
+            request["determination"] = determination
+        if note is not None:
+            request["note"] = note
         resp = self._cb.post_object(self._bulkupdate_url.format(self._cb.credentials.org_key), body=request)
         output = resp.json()
-        return output["request_id"]
+        return Job(self._cb, output["request_id"])
 
-    def update(self, remediation=None, comment=None):
+    def update(self, status, closure_reason=None, determination=None, note=None):
         """
-        Update all alerts matching the given query. The alerts will be left in an OPEN state after this request.
+        Update all alerts matching the given query.
 
         Args:
-            remediation (str): The remediation state to set for all alerts.
-            comment (str): The comment to set for all alerts.
+            status (str): The status to set for this alert, either "OPEN", "IN_PROGRESS", or "CLOSED".
+            closure_reason (str): the closure reason for this alert, either "NO_REASON", "RESOLVED", \
+            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", "OTHER"
+            determination (str): The determination status to set for the alert, either "TRUE_POSITIVE", \
+            "FALSE_POSITIVE", or "NONE"
+            note (str): The comment to set for the alert.
 
         Returns:
-            str: The request ID, which may be used to select a WorkflowStatus object.
-        """
-        return self._update_status("OPEN", remediation, comment)
+            Job: The Job object for the bulk workflow action.
 
-    def dismiss(self, remediation=None, comment=None):
+        Note:
+            - This is an asynchronus call that returns a Job. If you want to wait and block on the results
+              you can call await_completion() to get a Futre then result() on the future object to wait for
+              completion and get the results.
+
+        Example:
+            >>> alert_query = cb.select(Alert).add_criteria("threat_id", ["19261158DBBF00775959F8AA7F7551A1"])
+            >>> job = alert_query.update("IN_PROGESS", "NO_REASON", "NONE", "Starting Investigation")
+            >>> completed_job = job.await_completion().result()
         """
-        Dismiss all alerts matching the given query. The alerts will be left in a DISMISSED state after this request.
+        return self._update_status(status, closure_reason, note, determination)
+
+    def close(self, closure_reason=None, determination=None, note=None, ):
+        """
+        Close all alerts matching the given query. The alerts will be left in a CLOSED state after this request.
 
         Args:
-            remediation (str): The remediation state to set for all alerts.
-            comment (str): The comment to set for all alerts.
+            closure_reason (str): the closure reason for this alert, either "NO_REASON", "RESOLVED", \
+            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", "OTHER"
+            determination (str): The determination status to set for the alert, either "TRUE_POSITIVE", \
+            "FALSE_POSITIVE", or "NONE"
+            note (str): The comment to set for the alert.
 
         Returns:
-            str: The request ID, which may be used to select a WorkflowStatus object.
+            Job: The Job object for the bulk workflow action.
+
+        Note:
+            - This is an asynchronus call that returns a Job. If you want to wait and block on the results
+              you can call await_completion() to get a Futre then result() on the future object to wait for
+              completion and get the results.
+
+        Example:
+            >>> alert_query = cb.select(Alert).add_criteria("threat_id", ["19261158DBBF00775959F8AA7F7551A1"])
+            >>> job = alert_query.close("RESOLVED", "FALSE_POSITIVE", "Normal behavior")
+            >>> completed_job = job.await_completion().result()
         """
-        return self._update_status("DISMISSED", remediation, comment)
+        return self._update_status("CLOSED", closure_reason, note, determination)
 
-
-class WatchlistAlertSearchQuery(BaseAlertSearchQuery):
-    """Represents a query that is used to locate WatchlistAlert objects."""
-
-    def __init__(self, doc_class, cb):
+    def set_minimum_severity(self, severity):
         """
-        Initialize the WatchlistAlertSearchQuery.
+        Restricts the alerts that this query is performed on to the specified minimum severity level.
 
         Args:
-            doc_class (class): The model class that will be returned by this query.
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-        """
-        super().__init__(doc_class, cb)
-        self._bulkupdate_url = "/appservices/v6/orgs/{0}/alerts/watchlist/workflow/_criteria"
-
-    def set_watchlist_ids(self, ids):
-        """
-        Restricts the alerts that this query is performed on to the specified watchlist ID values.
-
-        Args:
-            ids (list): List of string watchlist ID values.
+            severity (int): The minimum severity level for alerts.
 
         Returns:
-            WatchlistAlertSearchQuery: This instance.
+            AlertSearchQuery: This instance.
         """
-        if not all(isinstance(t, str) for t in ids):
-            raise ApiError("One or more invalid watchlist IDs")
-        self._update_criteria("watchlist_id", ids)
+        self._criteria["minimum_severity"] = severity
         return self
 
-    def set_watchlist_names(self, names):
+    def set_threat_notes_present(self, is_present, exclude=False):
         """
-        Restricts the alerts that this query is performed on to the specified watchlist name values.
+        Restricts the alerts that this query is performed on to those with or without threat_notes.
 
         Args:
-            names (list): List of string watchlist name values.
-
+            is_present (bool): If true, returns alerts that have a note attached to the threat_id
+            exclude (bool): If true, will set is_present in the exclusions. Otherwise adds to criteria
         Returns:
-            WatchlistAlertSearchQuery: This instance.
+            AlertSearchQuery: This instance.
         """
-        if not all(isinstance(name, str) for name in names):
-            raise ApiError("One or more invalid watchlist names")
-        self._update_criteria("watchlist_name", names)
+        if not exclude:
+            self._criteria["threat_notes_present"] = is_present
+        else:
+            self._exclusions["threat_notes_present"] = is_present
         return self
 
-
-class CBAnalyticsAlertSearchQuery(BaseAlertSearchQuery):
-    """Represents a query that is used to locate CBAnalyticsAlert objects."""
-    VALID_THREAT_CATEGORIES = ["UNKNOWN", "NON_MALWARE", "NEW_MALWARE", "KNOWN_MALWARE", "RISKY_PROGRAM"]
-    VALID_LOCATIONS = ["ONSITE", "OFFSITE", "UNKNOWN"]
-    VALID_KILL_CHAIN_STATUSES = ["RECONNAISSANCE", "WEAPONIZE", "DELIVER_EXPLOIT", "INSTALL_RUN",
-                                 "COMMAND_AND_CONTROL", "EXECUTE_GOAL", "BREACH"]
-    VALID_POLICY_APPLIED = ["APPLIED", "NOT_APPLIED"]
-    VALID_RUN_STATES = ["DID_NOT_RUN", "RAN", "UNKNOWN"]
-    VALID_SENSOR_ACTIONS = ["POLICY_NOT_APPLIED", "ALLOW", "ALLOW_AND_LOG", "TERMINATE", "DENY"]
-    VALID_THREAT_CAUSE_VECTORS = ["EMAIL", "WEB", "GENERIC_SERVER", "GENERIC_CLIENT", "REMOTE_DRIVE",
-                                  "REMOVABLE_MEDIA", "UNKNOWN", "APP_STORE", "THIRD_PARTY"]
-
-    def __init__(self, doc_class, cb):
+    def set_alert_notes_present(self, is_present, exclude=False):
         """
-        Initialize the CBAnalyticsAlertSearchQuery.
+        Restricts the alerts that this query is performed on to those with or without notes.
 
         Args:
-            doc_class (class): The model class that will be returned by this query.
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-        """
-        super().__init__(doc_class, cb)
-        self._bulkupdate_url = "/appservices/v6/orgs/{0}/alerts/cbanalytics/workflow/_criteria"
-
-    def set_blocked_threat_categories(self, categories):
-        """
-        Restricts the alerts that this query is performed on to the specified threat categories that were blocked.
-
-        Args:
-            categories (list): List of threat categories to look for.  Valid values are "UNKNOWN",
-                               "NON_MALWARE", "NEW_MALWARE", "KNOWN_MALWARE", and "RISKY_PROGRAM".
+            is_present (bool): If true, returns alerts that have a note attached
+            exclude (bool): If true, will set is_present in the exclusions. Otherwise adds to criteria
 
         Returns:
-            CBAnalyticsAlertSearchQuery: This instance.
+            AlertSearchQuery: This instance.
         """
-        if not all((category in CBAnalyticsAlertSearchQuery.VALID_THREAT_CATEGORIES)
-                   for category in categories):
-            raise ApiError("One or more invalid threat categories")
-        self._update_criteria("blocked_threat_category", categories)
+        if not exclude:
+            self._criteria["alert_notes_present"] = is_present
+        else:
+            self._exclusions["alert_notes_present"] = is_present
         return self
 
-    def set_device_locations(self, locations):
+    def set_remote_is_private(self, is_private, exclude=False):
         """
-        Restricts the alerts that this query is performed on to the specified device locations.
+        Restricts the alerts that this query is performed on based on matching the remote_is_private field.
+
+        This field is only present on CONTAINER_RUNTIME alerts and so filtering will be ignored on other alert types.
 
         Args:
-            locations (list): List of device locations to look for. Valid values are "ONSITE", "OFFSITE",
-                              and "UNKNOWN".
+            is_private (boolean): Whether the remote information is private: true or false
+            exclude (bool): If true, will set is_present in the exclusions. Otherwise adds to criteria
 
         Returns:
-            CBAnalyticsAlertSearchQuery: This instance.
+            AlertSearchQuery: This instance.
         """
-        if not all((location in CBAnalyticsAlertSearchQuery.VALID_LOCATIONS)
-                   for location in locations):
-            raise ApiError("One or more invalid device locations")
-        self._update_criteria("device_location", locations)
-        return self
-
-    def set_kill_chain_statuses(self, statuses):
-        """
-        Restricts the alerts that this query is performed on to the specified kill chain statuses.
-
-        Args:
-            statuses (list): List of kill chain statuses to look for. Valid values are "RECONNAISSANCE",
-                             "WEAPONIZE", "DELIVER_EXPLOIT", "INSTALL_RUN","COMMAND_AND_CONTROL", "EXECUTE_GOAL",
-                             and "BREACH".
-
-        Returns:
-            CBAnalyticsAlertSearchQuery: This instance.
-        """
-        if not all((status in CBAnalyticsAlertSearchQuery.VALID_KILL_CHAIN_STATUSES)
-                   for status in statuses):
-            raise ApiError("One or more invalid kill chain status values")
-        self._update_criteria("kill_chain_status", statuses)
-        return self
-
-    def set_not_blocked_threat_categories(self, categories):
-        """
-        Restricts the alerts that this query is performed on to the specified threat categories that were NOT blocked.
-
-        Args:
-            categories (list): List of threat categories to look for.  Valid values are "UNKNOWN",
-                               "NON_MALWARE", "NEW_MALWARE", "KNOWN_MALWARE", and "RISKY_PROGRAM".
-
-        Returns:
-            CBAnalyticsAlertSearchQuery: This instance.
-        """
-        if not all((category in CBAnalyticsAlertSearchQuery.VALID_THREAT_CATEGORIES)
-                   for category in categories):
-            raise ApiError("One or more invalid threat categories")
-        self._update_criteria("not_blocked_threat_category", categories)
-        return self
-
-    def set_policy_applied(self, applied_statuses):
-        """
-        Restricts the alerts that this query is performed on to the specified policy status values.
-
-        Args:
-            applied_statuses (list): List of status values to look for. Valid values are "APPLIED" and "NOT_APPLIED".
-
-        Returns:
-            CBAnalyticsAlertSearchQuery: This instance.
-        """
-        if not all((s in CBAnalyticsAlertSearchQuery.VALID_POLICY_APPLIED)
-                   for s in applied_statuses):
-            raise ApiError("One or more invalid policy-applied values")
-        self._update_criteria("policy_applied", applied_statuses)
-        return self
-
-    def set_reason_code(self, reason):
-        """
-        Restricts the alerts that this query is performed on to the specified reason codes (enum values).
-
-        Args:
-            reason (list): List of string reason codes to look for.
-
-        Returns:
-            CBAnalyticsAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(t, str) for t in reason):
-            raise ApiError("One or more invalid reason code values")
-        self._update_criteria("reason_code", reason)
-        return self
-
-    def set_run_states(self, states):
-        """
-        Restricts the alerts that this query is performed on to the specified run states.
-
-        Args:
-            states (list): List of run states to look for. Valid values are "DID_NOT_RUN", "RAN", and "UNKNOWN".
-
-        Returns:
-            CBAnalyticsAlertSearchQuery: This instance.
-        """
-        if not all((s in CBAnalyticsAlertSearchQuery.VALID_RUN_STATES)
-                   for s in states):
-            raise ApiError("One or more invalid run states")
-        self._update_criteria("run_state", states)
-        return self
-
-    def set_sensor_actions(self, actions):
-        """
-        Restricts the alerts that this query is performed on to the specified sensor actions.
-
-        Args:
-            actions (list): List of sensor actions to look for. Valid values are "POLICY_NOT_APPLIED", "ALLOW",
-                            "ALLOW_AND_LOG", "TERMINATE", and "DENY".
-
-        Returns:
-            CBAnalyticsAlertSearchQuery: This instance.
-        """
-        if not all((action in CBAnalyticsAlertSearchQuery.VALID_SENSOR_ACTIONS)
-                   for action in actions):
-            raise ApiError("One or more invalid sensor actions")
-        self._update_criteria("sensor_action", actions)
-        return self
-
-    def set_threat_cause_vectors(self, vectors):
-        """
-        Restricts the alerts that this query is performed on to the specified threat cause vectors.
-
-        Args:
-            vectors (list): List of threat cause vectors to look for.  Valid values are "EMAIL", "WEB",
-                            "GENERIC_SERVER", "GENERIC_CLIENT", "REMOTE_DRIVE", "REMOVABLE_MEDIA", "UNKNOWN",
-                            "APP_STORE", and "THIRD_PARTY".
-
-        Returns:
-            CBAnalyticsAlertSearchQuery: This instance.
-        """
-        if not all((vector in CBAnalyticsAlertSearchQuery.VALID_THREAT_CAUSE_VECTORS)
-                   for vector in vectors):
-            raise ApiError("One or more invalid threat cause vectors")
-        self._update_criteria("threat_cause_vector", vectors)
-        return self
-
-
-class DeviceControlAlertSearchQuery(BaseAlertSearchQuery):
-    """Represents a query that is used to locate DeviceControlAlert objects."""
-
-    def __init__(self, doc_class, cb):
-        """
-        Initialize the DeviceControlAlertSearchQuery.
-
-        Args:
-            doc_class (class): The model class that will be returned by this query.
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-        """
-        super().__init__(doc_class, cb)
-        self._bulkupdate_url = "/appservices/v6/orgs/{0}/alerts/cbanalytics/devicecontrol/_criteria"
-
-    def set_external_device_friendly_names(self, names):
-        """
-        Restricts the alerts that this query is performed on to the specified external device friendly names.
-
-        Args:
-            names (list): List of external device friendly names to look for.
-
-        Returns:
-            DeviceControlAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in names):
-            raise ApiError("One or more invalid device name values")
-        self._update_criteria("external_device_friendly_name", names)
-        return self
-
-    def set_external_device_ids(self, ids):
-        """
-        Restricts the alerts that this query is performed on to the specified external device IDs.
-
-        Args:
-            ids (list): List of external device IDs to look for.
-
-        Returns:
-            DeviceControlAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in ids):
-            raise ApiError("One or more invalid device ID values")
-        self._update_criteria("external_device_id", ids)
-        return self
-
-    def set_product_ids(self, ids):
-        """
-        Restricts the alerts that this query is performed on to the specified product IDs.
-
-        Args:
-            ids (list): List of product IDs to look for.
-
-        Returns:
-            DeviceControlAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in ids):
-            raise ApiError("One or more invalid product ID values")
-        self._update_criteria("product_id", ids)
-        return self
-
-    def set_product_names(self, names):
-        """
-        Restricts the alerts that this query is performed on to the specified product names.
-
-        Args:
-            names (list): List of product names to look for.
-
-        Returns:
-            DeviceControlAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in names):
-            raise ApiError("One or more invalid product name values")
-        self._update_criteria("product_name", names)
-        return self
-
-    def set_serial_numbers(self, serial_numbers):
-        """
-        Restricts the alerts that this query is performed on to the specified serial numbers.
-
-        Args:
-            serial_numbers (list): List of serial numbers to look for.
-
-        Returns:
-            DeviceControlAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in serial_numbers):
-            raise ApiError("One or more invalid serial number values")
-        self._update_criteria("serial_number", serial_numbers)
-        return self
-
-    def set_vendor_ids(self, ids):
-        """
-        Restricts the alerts that this query is performed on to the specified vendor IDs.
-
-        Args:
-            ids (list): List of vendor IDs to look for.
-
-        Returns:
-            DeviceControlAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in ids):
-            raise ApiError("One or more invalid vendor ID values")
-        self._update_criteria("vendor_id", ids)
-        return self
-
-    def set_vendor_names(self, names):
-        """
-        Restricts the alerts that this query is performed on to the specified vendor names.
-
-        Args:
-            names (list): List of vendor names to look for.
-
-        Returns:
-            DeviceControlAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in names):
-            raise ApiError("One or more invalid vendor name values")
-        self._update_criteria("vendor_name", names)
-        return self
-
-
-class ContainerRuntimeAlertSearchQuery(BaseAlertSearchQuery):
-    """Represents a query that is used to locate ContainerRuntimeAlert objects."""
-
-    def __init__(self, doc_class, cb):
-        """
-        Initialize the ContainerRuntimeAlertSearchQuery.
-
-        Args:
-            doc_class (class): The model class that will be returned by this query.
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-        """
-        super().__init__(doc_class, cb)
-        self._bulkupdate_url = "/appservices/v6/orgs/{0}/alerts/containerruntime/_criteria"
-
-    def set_cluster_names(self, names):
-        """
-        Restricts the alerts that this query is performed on to the specified Kubernetes cluster names.
-
-        Args:
-            names (list): List of Kubernetes cluster names to look for.
-
-        Returns:
-            ContainerRuntimeAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in names):
-            raise ApiError("One or more invalid cluster name values")
-        self._update_criteria("cluster_name", names)
-        return self
-
-    def set_namespaces(self, namespaces):
-        """
-        Restricts the alerts that this query is performed on to the specified Kubernetes namespaces.
-
-        Args:
-            namespaces (list): List of Kubernetes namespaces to look for.
-
-        Returns:
-            ContainerRuntimeAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in namespaces):
-            raise ApiError("One or more invalid namespace values")
-        self._update_criteria("namespace", namespaces)
-        return self
-
-    def set_workload_kinds(self, kinds):
-        """
-        Restricts the alerts that this query is performed on to the specified workload types.
-
-        Args:
-            kinds (list): List of workload types to look for.
-
-        Returns:
-            ContainerRuntimeAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in kinds):
-            raise ApiError("One or more invalid workload kind values")
-        self._update_criteria("workload_kind", kinds)
-        return self
-
-    def set_workload_ids(self, ids):
-        """
-        Restricts the alerts that this query is performed on to the specified workload IDs.
-
-        Args:
-            ids (list): List of workload IDs to look for.
-
-        Returns:
-            ContainerRuntimeAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in ids):
-            raise ApiError("One or more invalid workload ID values")
-        self._update_criteria("workload_id", ids)
-        return self
-
-    def set_workload_names(self, names):
-        """
-        Restricts the alerts that this query is performed on to the specified workload names.
-
-        Args:
-            names (list): List of workload names to look for.
-
-        Returns:
-            ContainerRuntimeAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in names):
-            raise ApiError("One or more invalid workload name values")
-        self._update_criteria("workload_name", names)
-        return self
-
-    def set_replica_ids(self, ids):
-        """
-        Restricts the alerts that this query is performed on to the specified pod names.
-
-        Args:
-            ids (list): List of pod names to look for.
-
-        Returns:
-            ContainerRuntimeAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in ids):
-            raise ApiError("One or more invalid replica ID values")
-        self._update_criteria("replica_id", ids)
-        return self
-
-    def set_remote_ips(self, addrs):
-        """
-        Restricts the alerts that this query is performed on to the specified remote IP addresses.
-
-        Args:
-            addrs (list): List of remote IP addresses to look for.
-
-        Returns:
-            ContainerRuntimeAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in addrs):
-            raise ApiError("One or more invalid remote IP values")
-        self._update_criteria("remote_ip", addrs)
-        return self
-
-    def set_remote_domains(self, domains):
-        """
-        Restricts the alerts that this query is performed on to the specified remote domains.
-
-        Args:
-            domains (list): List of remote domains to look for.
-
-        Returns:
-            ContainerRuntimeAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in domains):
-            raise ApiError("One or more invalid remote domain values")
-        self._update_criteria("remote_domain", domains)
-        return self
-
-    def set_protocols(self, protocols):
-        """
-        Restricts the alerts that this query is performed on to the specified protocols.
-
-        Args:
-            protocols (list): List of protocols to look for.
-
-        Returns:
-            ContainerRuntimeAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in protocols):
-            raise ApiError("One or more invalid protocol values")
-        self._update_criteria("protocol", protocols)
-        return self
-
-    def set_ports(self, ports):
-        """
-        Restricts the alerts that this query is performed on to the specified listening ports.
-
-        Args:
-            ports (list): List of listening ports to look for.
-
-        Returns:
-            ContainerRuntimeAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, int) for n in ports):
-            raise ApiError("One or more invalid port values")
-        self._update_criteria("port", ports)
-        return self
-
-    def set_egress_group_ids(self, ids):
-        """
-        Restricts the alerts that this query is performed on to the specified egress group IDs.
-
-        Args:
-            ids (list): List of egress group IDs to look for.
-
-        Returns:
-            ContainerRuntimeAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in ids):
-            raise ApiError("One or more invalid egress group ID values")
-        self._update_criteria("egress_group_id", ids)
-        return self
-
-    def set_egress_group_names(self, names):
-        """
-        Restricts the alerts that this query is performed on to the specified egress group names.
-
-        Args:
-            names (list): List of egress group names to look for.
-
-        Returns:
-            ContainerRuntimeAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in names):
-            raise ApiError("One or more invalid egress group name values")
-        self._update_criteria("egress_group_name", names)
-        return self
-
-    def set_ip_reputations(self, reputations):
-        """
-        Restricts the alerts that this query is performed on to the specified IP reputation values.
-
-        Args:
-            reputations (list): List of IP reputation values to look for.
-
-        Returns:
-            ContainerRuntimeAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, int) for n in reputations):
-            raise ApiError("One or more invalid IP reputation values")
-        self._update_criteria("ip_reputation", reputations)
-        return self
-
-    def set_rule_ids(self, ids):
-        """
-        Restricts the alerts that this query is performed on to the specified Kubernetes policy rule IDs.
-
-        Args:
-            ids (list): List of Kubernetes policy rule IDs to look for.
-
-        Returns:
-            ContainerRuntimeAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in ids):
-            raise ApiError("One or more invalid rule ID values")
-        self._update_criteria("rule_id", ids)
-        return self
-
-    def set_rule_names(self, names):
-        """
-        Restricts the alerts that this query is performed on to the specified Kubernetes policy rule names.
-
-        Args:
-            names (list): List of Kubernetes policy rule names to look for.
-
-        Returns:
-            ContainerRuntimeAlertSearchQuery: This instance.
-        """
-        if not all(isinstance(n, str) for n in names):
-            raise ApiError("One or more invalid rule name values")
-        self._update_criteria("rule_name", names)
+        if not exclude:
+            self._criteria["remote_is_private"] = is_private
+        else:
+            self._exclusions["remote_is_private"] = is_private
         return self

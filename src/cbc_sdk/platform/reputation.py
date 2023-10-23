@@ -226,10 +226,12 @@ class ReputationOverrideQuery(BaseQuery, QueryBuilderSupportMixin, IterableQuery
         Returns:
             dict: The complete request body.
         """
-        request = {
-            "criteria": self._criteria,
-            "query": self._query_builder._collapse()
-        }
+        request = {}
+        query = self._query_builder._collapse()
+        if self._criteria:
+            request["criteria"] = self._criteria
+        if query:
+            request["query"] = query
         if from_row > 0:
             request["start"] = from_row
         if max_rows >= 0:

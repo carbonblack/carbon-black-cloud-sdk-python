@@ -1,0 +1,492 @@
+type: object
+properties:
+  additional_events_present:
+    type: boolean
+    description: Indicator to let API and forwarder users know that they should look up other associated events related to this alert
+  alert_notes_present:
+    type: boolean
+    description: True if notes are present on the alert ID. False if notes are not present.
+  alert_url:
+    type: string
+    description: Link to the alerts page for this alert. Does not vary by alert type
+  attack_tactic:
+    type: string
+    description: A tactic from the MITRE ATT&CK framework; defines a reason for an adversary’s action, such as achieving credential access
+  attack_technique:
+    type: string
+    description: A technique from the MITRE ATT&CK framework; defines an action an adversary takes to accomplish a goal, such as dumping credentials to achieve credential access
+  backend_timestamp:
+    type: string
+    format: date-time
+    description: Timestamp when the Carbon Black Cloud processed and enabled the alert for searching. Corresponds to the Created column on the Alerts page.
+  backend_update_timestamp:
+    type: string
+    format: date-time
+    description: Timestamp when the Carbon Black Cloud initiated and processed an update to an alert. Corresponds to the Updated column on the Alerts page.   Note that changes made by users do not change this date; those changes are reflected on `user_update_timestamp`
+  blocked_effective_reputation:
+    type: string
+    enum:
+    - ADAPTIVE_WHITE_LIST
+    - COMMON_WHITE_LIST
+    - COMPANY_BLACK_LIST
+    - COMPANY_WHITE_LIST
+    - PUP
+    - TRUSTED_WHITE_LIST
+    - RESOLVING
+    - COMPROMISED_OBSOLETE
+    - DLP_OBSOLETE
+    - IGNORE
+    - ADWARE
+    - HEURISTIC
+    - SUSPECT_MALWARE
+    - KNOWN_MALWARE
+    - ADMIN_RESTRICT_OBSOLETE
+    - NOT_LISTED
+    - GRAY_OBSOLETE
+    - NOT_COMPANY_WHITE_OBSOLETE
+    - LOCAL_WHITE
+    - NOT_SUPPORTED
+    description: Effective reputation of the blocked file or process; applied by the sensor at the time the block occurred
+  blocked_md5:
+    type: string
+    description: MD5 hash of the child process binary; for any process terminated by the sensor
+  blocked_name:
+    type: string
+    description: Tokenized file path of the files blocked by sensor action
+  blocked_sha256:
+    type: string
+    description: SHA-256 hash of the child process binary; for any process terminated by the sensor
+  category:
+    type: string
+    description: Alert category - Monitored vs Threat
+    enum:
+    - THREAT
+    - MONITORED
+    - INFO
+    - MINOR
+    - SERIOUS
+    - CRITICAL
+  childproc_cmdline:
+    type: string
+    description: Command line for the child process
+  childproc_effective_reputation:
+    type: string
+    enum:
+    - ADAPTIVE_WHITE_LIST
+    - COMMON_WHITE_LIST
+    - COMPANY_BLACK_LIST
+    - COMPANY_WHITE_LIST
+    - PUP
+    - TRUSTED_WHITE_LIST
+    - RESOLVING
+    - COMPROMISED_OBSOLETE
+    - DLP_OBSOLETE
+    - IGNORE
+    - ADWARE
+    - HEURISTIC
+    - SUSPECT_MALWARE
+    - KNOWN_MALWARE
+    - ADMIN_RESTRICT_OBSOLETE
+    - NOT_LISTED
+    - GRAY_OBSOLETE
+    - NOT_COMPANY_WHITE_OBSOLETE
+    - LOCAL_WHITE
+    - NOT_SUPPORTED
+    description: Effective reputation of the child process; applied by the sensor at the time the event occurred
+  childproc_guid:
+    type: string
+    description: Unique process identifier assigned to the child process
+  childproc_md5:
+    type: string
+    description: Hash of the child process' binary (Enterprise EDR)
+  childproc_name:
+    type: string
+    description: Filesystem path of the child process' binary
+  childproc_sha256:
+    type: string
+    description: Hash of the child process' binary (Endpoint Standard)
+  childproc_username:
+    type: string
+    description: User context in which the child process was executed
+  detection_timestamp:
+    type: string
+    format: date-time
+    description: For sensor-sent alerts, this is the time of the event on the sensor. For alerts generated on the backend, this is the time the backend system triggered the alert.
+  determination:
+    description: User-updatable determination of the alert
+    type: object
+    properties:
+      change_timestamp:
+        type: string
+        format: date-time
+        description:  When the determination was updated.
+      changed_by:
+        type: string
+        description: User the determination was changed by.
+      changed_by_type:
+        type: string
+        description:
+        enum:
+        - SYSTEM
+        - USER
+        - API
+        - AUTOMATION
+      value:
+        type: string
+        description: Determination of the alert set by a user
+        enum:
+        - NONE
+        - TRUE_POSITIVE
+        - FALSE_POSITIVE
+  device_external_ip:
+    type: string
+    description: IP address of the endpoint according to the Carbon Black Cloud; can differ from device_internal_ip due to network proxy or NAT; either IPv4 (dotted decimal notation) or IPv6 (proprietary format)
+  device_id:
+    type: integer
+    format: int64
+    description: ID of devices
+  device_internal_ip:
+    type: string
+    description: IP address of the endpoint reported by the sensor; either IPv4 (dotted decimal notation) or IPv6 (proprietary format)
+  device_location:
+    type: string
+    enum:
+    - ONSITE
+    - OFFSITE
+    - UNKNOWN
+    description: Whether the device was on or off premises when the alert started, based on the current IP address and the device’s registered DNS domain suffix
+  device_name:
+    type: string
+    description: Device name
+  device_os:
+    type: string
+    enum:
+    - WINDOWS
+    - ANDROID
+    - MAC
+    - LINUX
+    - OTHER
+    description: Device Operating Systems
+  device_os_version:
+    type: string
+    example: Windows 10 x64
+    description: The operating system and version of the endpoint. Requires Windows CBC sensor version 3.5 or later.
+  device_policy:
+    type: string
+    description: Device policy
+  device_policy_id:
+    type: integer
+    format: int64
+    description: Device policy id
+  device_target_value:
+    type: string
+    enum:
+    - LOW
+    - MEDIUM
+    - HIGH
+    - MISSION_CRITICAL
+    description:  Target value assigned to the device, set from the policy
+  device_uem_id:
+    type: string
+    description: Device correlation with WS1/EUC, required for our Workspace ONE Intelligence integration to function
+  device_username:
+    type: string
+    description: Logged on user during the alert. This is filled on a best-effort
+      approach. If the user is not available it may be populated with the device
+      owner (empty for Container Runtime alerts)
+  first_event_timestamp:
+    type: string
+    format: date-time
+    description: Timestamp when the first event in the alert occurred
+  id:
+    type: string
+    description: Unique IDs of alerts
+  is_updated:
+    type: boolean
+    description: Boolean that describes whether or not this is the original copy of the alert
+  last_event_timestamp:
+    type: string
+    format: date-time
+    description: Timestamp when the last event in the alert occurred
+  netconn_local_ip:
+    type: string
+    description: IP address of the remote side of the network connection; stored as dotted decimal
+  netconn_local_ipv4:
+    type: string
+    description: IPv4 address of the local side of the network connection; stored as a dotted decimal. Only one of ipv4 and ipv6 fields will be populated.
+  netconn_local_ipv6:
+    type: string
+    description: IPv6 address of the local side of the network connection; stored as a string without octet-separating colon characters. Only one of ipv4 and ipv6 fields will be populated.
+  netconn_local_port:
+    type: integer
+    format: int64
+    description: TCP or UDP port used by the local side of the network connection
+  netconn_protocol:
+    type: string
+    description: Network protocol of the network connection
+  netconn_remote_domain:
+    type: string
+    description: Domain name (FQDN) associated with the remote end of the network connection, if available
+  netconn_remote_ip:
+    type: string
+    description: IP address of the local side of the network connection; stored as dotted decimal
+  netconn_remote_ipv4:
+    type: string
+    description: IPv4 address of the remote side of the network connection; stored as dotted decimal. Only one of ipv4 and ipv6 fields will be populated.
+  netconn_remote_ipv6:
+    type: string
+    description: IPv6 address of the remote side of the network connection; stored as a string without octet-separating colon characters. Only one of ipv4 and ipv6 fields will be populated.
+  netconn_remote_port:
+    type: integer
+    format: int64
+    description: TCP or UDP port used by the remote side of the network connection; same as netconn_port and event_network_remote_port
+  org_key:
+    type: string
+    description: Unique alphanumeric string that identifies your organization in the Carbon Black Cloud
+  parent_cmdline:
+    type: string
+    description: Command line of the parent process
+  parent_effective_reputation:
+    type: string
+    enum:
+    - ADAPTIVE_WHITE_LIST
+    - COMMON_WHITE_LIST
+    - COMPANY_BLACK_LIST
+    - COMPANY_WHITE_LIST
+    - PUP
+    - TRUSTED_WHITE_LIST
+    - RESOLVING
+    - COMPROMISED_OBSOLETE
+    - DLP_OBSOLETE
+    - IGNORE
+    - ADWARE
+    - HEURISTIC
+    - SUSPECT_MALWARE
+    - KNOWN_MALWARE
+    - ADMIN_RESTRICT_OBSOLETE
+    - NOT_LISTED
+    - GRAY_OBSOLETE
+    - NOT_COMPANY_WHITE_OBSOLETE
+    - LOCAL_WHITE
+    - NOT_SUPPORTED
+    description: Effective reputation of the parent process; applied by the sensor when the event occurred
+  parent_guid:
+    type: string
+    description: Unique process identifier assigned to the parent process
+  parent_md5:
+    type: string
+    description: MD5 hash of the parent process binary
+  parent_name:
+    type: string
+    description: Filesystem path of the parent process binary
+  parent_pid:
+    type: integer
+    format: int64
+    description: Identifier assigned by the operating system to the parent process
+  parent_reputation:
+    type: string
+    enum:
+    - ADAPTIVE_WHITE_LIST
+    - COMMON_WHITE_LIST
+    - COMPANY_BLACK_LIST
+    - COMPANY_WHITE_LIST
+    - PUP
+    - TRUSTED_WHITE_LIST
+    - RESOLVING
+    - COMPROMISED_OBSOLETE
+    - DLP_OBSOLETE
+    - IGNORE
+    - ADWARE
+    - HEURISTIC
+    - SUSPECT_MALWARE
+    - KNOWN_MALWARE
+    - ADMIN_RESTRICT_OBSOLETE
+    - NOT_LISTED
+    - GRAY_OBSOLETE
+    - NOT_COMPANY_WHITE_OBSOLETE
+    - LOCAL_WHITE
+    - NOT_SUPPORTED
+    description: Reputation of the parent process; applied by the Carbon Black Cloud when the event is initially processed
+  parent_sha256:
+    type: string
+    description: SHA-256 hash of the parent process binary
+  parent_username:
+    type: string
+    description: User context in which the parent process was executed
+  policy_applied:
+    type: string
+    enum:
+    - APPLIED
+    - NOT_APPLIED
+    description: Indicates whether or not a policy has been applied to any event associated with this alert
+  primary_event_id:
+    type: string
+    description: ID of the primary event in the alert
+  process_cmdline:
+    type: string
+    description: Command line executed by the actor process
+  process_effective_reputation:
+    type: string
+    enum:
+    - ADAPTIVE_WHITE_LIST
+    - COMMON_WHITE_LIST
+    - COMPANY_BLACK_LIST
+    - COMPANY_WHITE_LIST
+    - PUP
+    - TRUSTED_WHITE_LIST
+    - RESOLVING
+    - COMPROMISED_OBSOLETE
+    - DLP_OBSOLETE
+    - IGNORE
+    - ADWARE
+    - HEURISTIC
+    - SUSPECT_MALWARE
+    - KNOWN_MALWARE
+    - ADMIN_RESTRICT_OBSOLETE
+    - NOT_LISTED
+    - GRAY_OBSOLETE
+    - NOT_COMPANY_WHITE_OBSOLETE
+    - LOCAL_WHITE
+    - NOT_SUPPORTED
+    description: Effective reputation of the actor hash
+  process_guid:
+    type: string
+    description: Guid of the process that has fired the alert (optional)
+  process_issuer:
+    type: string
+    description:
+  process_md5:
+    type: string
+    description: MD5 hash of the actor process binary
+  process_name:
+    type: string
+    description: Process names of an alert
+  process_pid:
+    type: integer
+    format: int64
+    description: PID of the process that has fired the alert (optional)
+  process_publisher:
+    type: string
+    description:
+  process_reputation:
+    type: string
+    enum:
+    - ADAPTIVE_WHITE_LIST
+    - COMMON_WHITE_LIST
+    - COMPANY_BLACK_LIST
+    - COMPANY_WHITE_LIST
+    - PUP
+    - TRUSTED_WHITE_LIST
+    - RESOLVING
+    - COMPROMISED_OBSOLETE
+    - DLP_OBSOLETE
+    - IGNORE
+    - ADWARE
+    - HEURISTIC
+    - SUSPECT_MALWARE
+    - KNOWN_MALWARE
+    - ADMIN_RESTRICT_OBSOLETE
+    - NOT_LISTED
+    - GRAY_OBSOLETE
+    - NOT_COMPANY_WHITE_OBSOLETE
+    - LOCAL_WHITE
+    - NOT_SUPPORTED
+    description: Reputation of the actor process; applied when event is processed by the Carbon Black Cloud
+  process_sha256:
+    type: string
+    description: SHA-256 hash of the actor process binary
+  process_username:
+    type: string
+    description: User context in which the actor process was executed. MacOS - all users for the PID for fork() and exec() transitions. Linux - process user for exec() events, but in a future sensor release can be multi-valued due to setuid().
+  reason:
+    type: string
+    description: A spoken language written explanation of the what and why the alert occurred and any action taken, usually consisting of 1 to 3 sentences.
+  reason_code:
+    type: string
+    description: A unique short-hand code or GUID identifying the particular alert reason
+  rule_category_id:
+    type: string
+    description: ID representing the category of the rule_id for certain alert types
+  rule_id:
+    type: string
+    description: ID of the rule that triggered an alert; applies to Intrusion Detection System, Host-Based Firewall, TAU Intelligence, and USB Device Control alerts
+  run_state:
+    type: string
+    enum:
+    - DID_NOT_RUN
+    - RAN
+    - UNKNOWN
+    description: Whether the threat in the alert actually ran
+  sensor_action:
+    type: string
+    enum:
+    - ALLOW
+    - ALLOW_AND_LOG
+    - DENY
+    - TERMINATE
+    description: Actions taken by the sensor, according to the rules of a policy
+  severity:
+    type: integer
+    format: int64
+    description:  integer representation of the impact of alert if true positive
+  tags:
+    type: array
+    description: Tags added to the threat ID of the alert
+    items:
+      type: string
+  threat_id:
+    type: string
+    description: ID assigned to a group of alerts with common criteria, based on alert type
+  threat_notes_present:
+    type: boolean
+    description: True if notes are present on the threat ID. False if notes are not present.
+  ttps:
+    type: string
+    description: Other potential malicious activities involved in a threat
+  type:
+    type: string
+    enum:
+    - CB_ANALYTICS
+    - WATCHLIST
+    - DEVICE_CONTROL
+    - CONTAINER_RUNTIME
+    - HOST_BASED_FIREWALL
+    - INTRUSION_DETECTION_SYSTEM
+    - NETWORK_TRAFFIC_ANALYSIS
+    description: Type of alert generated
+  user_update_timestamp:
+    type: string
+    format: date-time
+    description: Timestamp of the last property of an alert changed by a user, such as the alert workflow or determination
+  workflow:
+    type: object
+    description: Current workflow state of an alert. The workflow represents the flow from `OPEN` to `IN_PROGRESS` to `CLOSED` and captures who moved the alert into the current state. The history of these state transitions is available via the alert history route.
+    properties:
+      change_timestamp:
+        type: string
+        format: date-time
+        description: When the last status change occurred
+      workflow_changed_by:
+        type: string
+        description: Who (or what) made the last status change
+      workflow_changed_by_rule_id:
+        type: string
+        description:
+      workflow_changed_by_type:
+        type: string
+        enum:
+        - SYSTEM
+        - USER
+        - API
+        - AUTOMATION
+        description:
+      workflow_closure_reason:
+        type: string  `NO_REASON`, `RESOLVED`, `RESOLVED_BENIGN_KNOWN_GOOD`, `DUPLICATE_CLEANUP`, `OTHER`
+        description: A more detailed description of why the alert was resolved
+      workflow_status:
+        type: string
+        enum:
+        - OPEN
+        - IN_PROGRESS
+        - CLOSED
+        description: primary value used to determine if the alert is active or inactive and displayed in the UI by default

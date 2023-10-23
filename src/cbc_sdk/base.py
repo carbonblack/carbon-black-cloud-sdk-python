@@ -1652,12 +1652,12 @@ class CriteriaBuilderSupportMixin:
             The query object with specified custom criteria.
 
         Example:
-            >>> query = api.select(Event).add_criteria("event_type", ["filemod", "scriptload"])
-            >>> query = api.select(Event).add_criteria("event_type", "filemod")
+            >>> query = api.select(Alert).add_criteria("type", ["CB_ANALYTIC", "WATCHLIST"])
+            >>> query = api.select(Alert).add_criteria("type", "CB_ANALYTIC")
         """
         if not isinstance(newlist, list):
-            if not isinstance(newlist, str):
-                raise ApiError("Criteria value(s) must be a string or list of strings. "
+            if not isinstance(newlist, str) and not isinstance(newlist, int):
+                raise ApiError("Criteria value(s) must be a string, int or list of strings or ints. "
                                f"{newlist} is a {type(newlist)}.")
             self._update_criteria(key, [newlist], overwrite=True)
         else:
@@ -1704,6 +1704,74 @@ class CriteriaBuilderSupportMixin:
             self._criteria[key].extend(newlist)
 
 
+class ExclusionBuilderSupportMixin:
+    """A mixin that supplies wrapper methods to access the exclusions."""
+
+    def add_exclusions(self, key, newlist):
+        """Add to the exclusions on this query with a custom exclusions key.
+
+        Will overwrite any existing exclusion for the specified key.
+
+        Args:
+            key (str): The key for the exclusion item to be set.
+            newlist (str or list[str]): Value or list of values to be set for the exclusion item.
+
+        Returns:
+            The query object with specified custom exclusion.
+
+        Example:
+            >>> query = api.select(Alert).add_exclusions("type", ["WATCHLIST"])
+            >>> query = api.select(Alert).add_exclusions("type", "WATCHLIST")
+        """
+        if not isinstance(newlist, list):
+            if not isinstance(newlist, str) and not isinstance(newlist, int):
+                raise ApiError("Exclusion value(s) must be a string, int or list of strings or ints. "
+                               f"{newlist} is a {type(newlist)}.")
+            self._update_exclusions(key, [newlist], overwrite=True)
+        else:
+            self._update_exclusions(key, newlist, overwrite=True)
+        return self
+
+    def update_exclusions(self, key, newlist):
+        """Update the exclusion on this query with a custom exclusion key.
+
+        Args:
+            key (str): The key for the exclusion item to be set.
+            newlist (list): List of values to be set for the exclusion item.
+
+        Returns:
+            The query object with specified custom exclusion.
+
+        Example:
+            >>> query = api.select(Alert).update_exclusions("my.criteria.key", ["criteria_value"])
+
+        Note:
+            Use this method if there is no implemented method for your desired criteria.
+        """
+        if not isinstance(newlist, list):
+            if not isinstance(newlist, str):
+                raise ApiError("Exclusion value(s) must be a string or list of strings. "
+                               f"{newlist} is a {type(newlist)}.")
+            self._update_exclusions(key, [newlist])
+        else:
+            self._update_exclusions(key, newlist)
+        return self
+
+    def _update_exclusions(self, key, newlist, overwrite=False):
+        """
+        Updates a list of exclusions being collected for a query, by setting or appending items.
+
+        Args:
+            key (str): The key for the exclusion item to be set.
+            newlist (list): List of values to be set for the exclusion item.
+            overwrite (bool): Overwrite the existing exclusions for specified key
+        """
+        if self._exclusions.get(key, None) is None or overwrite:
+            self._exclusions[key] = newlist
+        else:
+            self._exclusions[key].extend(newlist)
+
+
 class AsyncQueryMixin:
     """A mix-in which provides support for asynchronous queries."""
 
@@ -1739,7 +1807,8 @@ class AsyncQueryMixin:
         return self._cb._async_submit(lambda arg, kwarg: arg[0]._run_async_query(arg[1]), self, context)
 
 
-class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin, CriteriaBuilderSupportMixin):
+class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin, CriteriaBuilderSupportMixin,
+            ExclusionBuilderSupportMixin):
     """Represents a prepared query to the Carbon Black Cloud.
 
     This object is returned as part of a `CBCCloudAPI.select`
@@ -1787,29 +1856,6 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
         self._time_range = {}
         self._fields = ["*"]
         self._default_args = {}
-
-    def add_exclusions(self, key, newlist):
-        """Add to the excluions on this query with a custom exclusion key.
-
-        Args:
-            key (str): The key for the exclusion item to be set.
-            newlist (str or list[str]): Value or list of values to be set for the exclusion item.
-
-        Returns:
-            The ResultQuery with specified custom exclusion.
-
-        Example:
-            >>> query = api.select(Event).add_exclusions("netconn_domain", ["www.google.com"])
-            >>> query = api.select(Event).add_exclusions("netconn_domain", "www.google.com")
-        """
-        if not isinstance(newlist, list):
-            if not isinstance(newlist, str):
-                raise ApiError("Exclusion value(s) must be a string or list of strings. "
-                               f"{newlist} is a {type(newlist)}.")
-            self._add_exclusions(key, [newlist])
-        else:
-            self._add_exclusions(key, newlist)
-        return self
 
     def _add_exclusions(self, key, newlist):
         """
@@ -1878,10 +1924,10 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
             - `window` will take precendent over `start` and `end` if provided.
 
         Examples:
-            >>> query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z")
-            >>> second_query = api.select(Event).
-            ...     set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
-            >>> third_query = api.select(Event).set_time_range(window='-3d')
+            >>> query = api.select(Process).set_time_range(start="2020-10-20T20:34:07Z").where("query is required")
+            >>> second_query = api.select(Process).
+            ...     set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z").where("query is required")
+            >>> third_query = api.select(Process).set_time_range(window='-3d').where("query is required")
         """
         if start:
             if not isinstance(start, str):
@@ -1967,6 +2013,8 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
     def _validate(self, args):
         if not hasattr(self._doc_class, "validation_url"):
             return
+        if not args.get('query'):
+            return
 
         url = self._doc_class.validation_url.format(self._cb.credentials.org_key)
         method = self._doc_class.validation_method if hasattr(self._doc_class, "validation_method") else "GET"
@@ -1989,6 +2037,8 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
 
         # Re-add sort
         args["sort"] = sort
+        # remove duplicate q
+        args.pop("q")
 
         if not validated.get("valid"):
             raise ApiError("Invalid query: {}: {}".format(args, validated["invalid_message"]))
@@ -2019,7 +2069,8 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
         return list(self._search())
 
 
-class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin):
+class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
+                 ExclusionBuilderSupportMixin):
     """Query class for asynchronous Facet API calls.
 
     These API calls return one result, and are not paginated or iterable.
@@ -2049,40 +2100,6 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
         self._facet_rows = None
         self._ranges = []
         self._default_args = {}
-
-    def add_exclusions(self, key, newlist):
-        """Add to the excluions on this query with a custom exclusion key.
-
-        Args:
-            key (str): The key for the exclusion item to be set.
-            newlist (str or list[str]): Value or list of values to be set for the exclusion item.
-
-        Returns:
-            The ResultQuery with specified custom exclusion.
-
-        Example:
-            >>> query = api.select(Event).add_exclusions("netconn_domain", ["www.google.com"])
-            >>> query = api.select(Event).add_exclusions("netconn_domain", "www.google.com")
-        """
-        if not isinstance(newlist, list):
-            if not isinstance(newlist, str):
-                raise ApiError("Exclusion value(s) must be a string or list of strings. "
-                               f"{newlist} is a {type(newlist)}.")
-            self._add_exclusions(key, [newlist])
-        else:
-            self._add_exclusions(key, newlist)
-        return self
-
-    def _add_exclusions(self, key, newlist):
-        """
-        Updates a list of exclusion being collected for a query, by setting or appending items.
-
-        Args:
-            key (str): The key for the exclusion item to be set.
-            newlist (list): List of values to be set for the exclusion item.
-        """
-        oldlist = self._exclusions.get(key, [])
-        self._exclusions[key] = oldlist + newlist
 
     def timeout(self, msecs):
         """Sets the timeout on an AsyncQuery. By default, there is no timeout.
@@ -2231,10 +2248,10 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
             - `window` will take precendent over `start` and `end` if provided.
 
         Examples:
-            >>> query = api.select(Event).set_time_range(start="2020-10-20T20:34:07Z")
-            >>> second_query = api.select(Event).
-            ...     set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
-            >>> third_query = api.select(Event).set_time_range(window='-3d')
+            >>> query = api.select(Process).set_time_range(start="2020-10-20T20:34:07Z").where("query is required")
+            >>> second_query = api.select(Process).
+            ...     set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z").where("query is required")
+            >>> third_query = api.select(Process).set_time_range(window='-3d').where("query is required")
         """
         if start:
             if not isinstance(start, str):
@@ -2272,7 +2289,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
             args["time_range"] = self._time_range
         query = self._query_builder._collapse()
         if query:
-            args['query'] = query
+            args["query"] = query
         return args
 
     def _submit(self):
@@ -2332,6 +2349,9 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
         if not hasattr(self._doc_class, "validation_url"):
             return
 
+        if not args.get('query'):
+            return
+
         url = self._doc_class.validation_url.format(self._cb.credentials.org_key)
         method = self._doc_class.validation_method if hasattr(self._doc_class, "validation_method") else "GET"
 
@@ -2340,6 +2360,8 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
 
         # v2 search sort key does not work with v1 validation
         args.pop('sort', None)
+        # remove duplicate q
+        args.pop("q")
 
         if method == "POST":
             result = self._cb.post_object(url, {'query': args['q']})

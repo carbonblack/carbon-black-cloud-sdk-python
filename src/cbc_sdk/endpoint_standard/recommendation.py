@@ -437,7 +437,9 @@ class RecommendationQuery(BaseQuery, CriteriaBuilderSupportMixin, IterableQueryM
         Returns:
             dict: The complete request body.
         """
-        request = {"criteria": self._criteria, "rows": 50}
+        request = {"rows": 50}
+        if self._criteria:
+            request["criteria"] = self._criteria
         # Fetch 50 rows per page (instead of 10 by default) for better performance
         if from_row > 0:
             request["start"] = from_row

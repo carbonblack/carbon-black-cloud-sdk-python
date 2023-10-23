@@ -395,7 +395,7 @@ class CBCloudAPI(BaseAPI):
             list[dict]: A list of search suggestions expressed as dict objects.
         """
         query_params = {"suggest.q": query}
-        url = "/appservices/v6/orgs/{0}/alerts/search_suggestions".format(self.credentials.org_key)
+        url = "/api/alerts/v7/orgs/{0}/alerts/search_suggestions".format(self.credentials.org_key)
         output = self.get_object(url, query_params)
         return output["suggestions"]
 

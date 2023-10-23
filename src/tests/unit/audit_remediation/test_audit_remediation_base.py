@@ -117,7 +117,7 @@ def test_result_query_criteria(cbcsdk_mock):
         "device.policy_id": [1, 2],
         "device.policy_name": ["default", "policy2"],
         "status": ["not_started", "matched"]
-    }, "start": 0, "rows": 100, "query": ""}
+    }, "start": 0, "rows": 100}
 
 
 def test_result_query_update_criteria(cbcsdk_mock):
@@ -127,7 +127,7 @@ def test_result_query_update_criteria(cbcsdk_mock):
     query = query.update_criteria("my.key.dot.notation", ["criteria_val_2"])
     assert query._build_request(start=0, rows=100) == {"criteria": {
         "my.key.dot.notation": ["criteria_val_1", "criteria_val_2"]
-    }, "start": 0, "rows": 100, "query": ""}
+    }, "start": 0, "rows": 100}
 
 
 def test_facet_query_criteria(cbcsdk_mock):
@@ -145,7 +145,7 @@ def test_facet_query_criteria(cbcsdk_mock):
         "device.policy_id": [1, 2],
         "device.policy_name": ["default", "policy2"],
         "status": ["not_started", "matched"]
-    }, "query": "", "terms": {"fields": [], "rows": 100}}
+    }, "terms": {"fields": [], "rows": 100}}
 
 
 def test_result_facet_query_update_criteria(cbcsdk_mock):
@@ -155,7 +155,7 @@ def test_result_facet_query_update_criteria(cbcsdk_mock):
                                                               ["criteria_val_1", "criteria_val_2"])
     assert query._build_request(rows=100) == {"criteria": {
         "my.key.dot.notation": ["criteria_val_1", "criteria_val_2"]
-    }, "query": "", "terms": {"fields": [], "rows": 100}}
+    }, "terms": {"fields": [], "rows": 100}}
 
 
 def test_device_summary_metrics(cbcsdk_mock):
