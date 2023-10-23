@@ -56,7 +56,7 @@ def main():
             if args.reason:
                 print(alert.reason)
             elif args.ip:
-                print(alert.remote_ip)
+                print(alert.netconn_remote_ip)
             else:
                 print(alert)
 

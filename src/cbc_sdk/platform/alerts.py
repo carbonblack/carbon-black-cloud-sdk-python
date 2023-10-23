@@ -971,10 +971,22 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
 
         Args:
             *args: not used
-            **kwargs (dict): Used to specify start= for start time, end= for end time, and range= for range. Values are
-            either timestamp ISO 8601 strings or datetime objects for start and end time. For range the time range to
-            execute the result search, ending on the current time. Should be in the form "-2w",
-            where y=year, w=week, d=day, h=hour, m=minute, s=second.
+            **kwargs (dict): Used to specify
+
+                * start= for start time
+                * end= for end time
+                * range= for range.
+
+            Values are either timestamp ISO 8601 strings or datetime objects for start and end time.
+            For range the time range to execute the result search, ending on the current time. Range should be in the
+            format "-<quantity><units>" where quantity is an integer, and units is one of:
+
+                * M: month(s)
+                * w: week(s)
+                * d: day(s)
+                * h: hour(s)
+                * m: minute(s)
+                * s: second(s)
 
         For v6 Alerts (backwards compatibility):
 
@@ -985,11 +997,15 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         Args:
             key (str): The key to use for criteria one of create_time, first_event_time, last_event_time,
              backend_timestamp, backend_update_timestamp, or last_update_time
-            **kwargs (dict): Used to specify start= for start time, end= for end time, and range= for range. Values are
-            either timestamp ISO 8601 strings or datetime objects for start and end time. For range the time range to
-            execute the result search, ending on the current time. Should be in the form "-2w",
-            where y=year, w=week, d=day, h=hour, m=minute, s=second.
+            **kwargs (dict): Used to specify
 
+                * start= for start time
+                * end= for end time
+                * range= for range
+
+            Values are either timestamp ISO 8601 strings or datetime objects for start and end time.
+            For range the time range to execute the result search, ending on the current time. The same format as above
+            for v7.
 
         Returns:
             AlertSearchQuery: This instance.
