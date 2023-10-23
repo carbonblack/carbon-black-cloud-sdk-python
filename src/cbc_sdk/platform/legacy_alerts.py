@@ -83,6 +83,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         The time may either be specified as a start and end point or as a range.
         In SDK 1.5.0 to align with Alerts v7 API, create_time is set as time_range outside of criteria.
 
+        Deprecated:
+            Use `add_time_criteria(field_name, start, end, range)` instead.
+
         Args:
             *args (list): Not used.
             **kwargs (dict): Used to specify start= for start time, end= for end time, and range= for range.
@@ -112,6 +115,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified device IDs.
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             device_ids (list): List of integer device IDs.
 
@@ -127,6 +133,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified device names.
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             device_names (list): List of string device names.
 
@@ -141,6 +150,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_device_os(self, device_os):
         """
         Restricts the alerts that this query is performed on to the specified device operating systems.
+
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
 
         Args:
             device_os (list): List of string operating systems.  Valid values are "WINDOWS", "ANDROID",
@@ -158,6 +170,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified device operating system versions.
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             device_os_versions (list): List of string operating system versions.
 
@@ -172,6 +187,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_device_username(self, users):
         """
         Restricts the alerts that this query is performed on to the specified user names.
+
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
 
         Args:
             users (list): List of string user names.
@@ -209,6 +227,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified alert IDs.
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             alert_ids (list): List of string alert IDs.
 
@@ -223,6 +244,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_legacy_alert_ids(self, alert_ids):
         """
         Restricts the alerts that this query is performed on to the specified legacy alert IDs.
+
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
 
         Args:
             alert_ids (list): List of string legacy alert IDs.
@@ -239,6 +263,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified policy IDs.
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             policy_ids (list): List of integer policy IDs.
 
@@ -253,6 +280,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_policy_names(self, policy_names):
         """
         Restricts the alerts that this query is performed on to the specified policy names.
+
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
 
         Args:
             policy_names (list): List of string policy names.
@@ -269,6 +299,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified process names.
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             process_names (list): List of string process names.
 
@@ -284,6 +317,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified process SHA-256 hash values.
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             shas (list): List of string process SHA-256 hash values.
 
@@ -298,6 +334,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_reputations(self, reps):
         """
         Restricts the alerts that this query is performed on to the specified reputation values.
+
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
 
         Args:
             reps (list): List of string reputation values.  Valid values are "KNOWN_MALWARE", "SUSPECT_MALWARE",
@@ -317,6 +356,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified tag values.
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             tags (list): List of string tag values.
 
@@ -331,6 +373,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_target_priorities(self, priorities):
         """
         Restricts the alerts that this query is performed on to the specified target priority values.
+
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
 
         Args:
             priorities (list): List of string target priority values.  Valid values are "LOW", "MEDIUM",
@@ -348,6 +393,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified threat ID values.
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             threats (list): List of string threat ID values.
 
@@ -361,9 +409,13 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
 
     def set_types(self, alerttypes):
         """
-        This method is deprecated.  Update to use `add_criteria(field_name, [field_value])`.
-
         Restricts the alerts that this query is performed on to the specified alert type values.
+
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
 
         Args:
             alerttypes (list): List of string alert type values.  Valid values are "CB_ANALYTICS",
@@ -385,6 +437,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_workflows(self, workflow_vals):
         """
         Restricts the alerts that this query is performed on to the specified workflow status values.
+
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
 
         Args:
             workflow_vals (list): List of string alert type values.  Valid values are "OPEN" and "DISMISSED".
@@ -408,6 +463,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified Kubernetes cluster names.
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             names (list): List of Kubernetes cluster names to look for.
 
@@ -423,6 +481,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified Kubernetes namespaces.
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             namespaces (list): List of Kubernetes namespaces to look for.
 
@@ -437,6 +498,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_workload_kinds(self, kinds):
         """
         Restricts the alerts that this query is performed on to the specified workload types.
+
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
 
         Args:
             kinds (list): List of workload types to look for.
@@ -470,6 +534,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified workload names.
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             names (list): List of workload names to look for.
 
@@ -484,6 +551,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_replica_ids(self, ids):
         """
         Restricts the alerts that this query is performed on to the specified pod names.
+
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
 
         Args:
             ids (list): List of pod names to look for.
@@ -500,6 +570,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified remote IP addresses.
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             addrs (list): List of remote IP addresses to look for.
 
@@ -514,6 +587,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_remote_domains(self, domains):
         """
         Restricts the alerts that this query is performed on to the specified remote domains.
+
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
 
         Args:
             domains (list): List of remote domains to look for.
@@ -530,6 +606,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified protocols.
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             protocols (list): List of protocols to look for.
 
@@ -544,6 +623,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_ports(self, ports):
         """
         Restricts the alerts that this query is performed on to the specified netconn_local_ports.
+
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
 
         Note that in SDK 1.5.0, to align with Alerts API v7, the search field was updated from
         `port` to `netconn_local_port`.  It is possible to search on either `netconn_local_port`
@@ -564,6 +646,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified egress group IDs.
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             ids (list): List of egress group IDs to look for.
 
@@ -578,6 +663,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_egress_group_names(self, names):
         """
         Restricts the alerts that this query is performed on to the specified egress group names.
+
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
 
         Args:
             names (list): List of egress group names to look for.
@@ -594,6 +682,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified IP reputation values.
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             reputations (list): List of IP reputation values to look for.
 
@@ -608,6 +699,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_rule_ids(self, ids):
         """
         Restricts the alerts that this query is performed on to the specified Kubernetes policy rule IDs.
+
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
 
         In SDK prior to 1.5.0 this was only supported for Container Runtime Alerts so will
         convert to k8s_rule_id in criteria.  In SDK 1.5.0 and later, aligned to Alert v7 API, use add_criteria()
@@ -628,6 +722,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified Kubernetes policy rule names.
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             names (list): List of Kubernetes policy rule names to look for.
 
@@ -643,6 +740,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified watchlist ID values.
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             ids (list): List of string watchlist ID values.
 
@@ -657,6 +757,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_watchlist_names(self, names):
         """
         Restricts the alerts that this query is performed on to the specified watchlist name values.
+
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
 
         Args:
             names (list): List of string watchlist name values.
@@ -689,6 +792,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_device_locations(self, locations):
         """
         Restricts the alerts that this query is performed on to the specified device locations.
+
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
 
         Args:
             locations (list): List of device locations to look for. Valid values are "ONSITE", "OFFSITE",
@@ -742,6 +848,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified policy status values.
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             applied_statuses (list): List of status values to look for. Valid values are "APPLIED" and "NOT_APPLIED".
 
@@ -758,6 +867,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified reason codes (enum values).
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             reason (list): List of string reason codes to look for.
 
@@ -772,6 +884,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_run_states(self, states):
         """
         Restricts the alerts that this query is performed on to the specified run states.
+
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
 
         Args:
             states (list): List of run states to look for. Valid values are "DID_NOT_RUN", "RAN", and "UNKNOWN".
@@ -788,6 +903,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_sensor_actions(self, actions):
         """
         Restricts the alerts that this query is performed on to the specified sensor actions.
+
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
 
         Args:
             actions (list): List of sensor actions to look for. Valid values are "POLICY_NOT_APPLIED", "ALLOW",
@@ -823,6 +941,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified external device friendly names.
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             names (list): List of external device friendly names to look for.
 
@@ -837,6 +958,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_external_device_ids(self, ids):
         """
         Restricts the alerts that this query is performed on to the specified external device IDs.
+
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
 
         Args:
             ids (list): List of external device IDs to look for.
@@ -853,6 +977,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified product IDs.
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             ids (list): List of product IDs to look for.
 
@@ -867,6 +994,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_product_names(self, names):
         """
         Restricts the alerts that this query is performed on to the specified product names.
+
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
 
         Args:
             names (list): List of product names to look for.
@@ -883,6 +1013,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified serial numbers.
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             serial_numbers (list): List of serial numbers to look for.
 
@@ -898,6 +1031,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the alerts that this query is performed on to the specified vendor IDs.
 
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
+
         Args:
             ids (list): List of vendor IDs to look for.
 
@@ -912,6 +1048,9 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_vendor_names(self, names):
         """
         Restricts the alerts that this query is performed on to the specified vendor names.
+
+        Deprecated:
+            Use `add_criteria(field_name, [field_value])` instead.
 
         Args:
             names (list): List of vendor names to look for.

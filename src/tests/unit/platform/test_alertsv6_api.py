@@ -990,7 +990,7 @@ def test_alert_search_suggestions_api_error():
 
 
 def test_set_types(cbcsdk_mock):
-    """Tests that when an invalid alert type is entered an APIError is raised"""
+    """Tests that when an invalid alert type is entered an ApiError is raised"""
     api = cbcsdk_mock.api
     query = api.select(BaseAlert).set_types(["CB_ANALYTICS"])
     assert query._criteria == {'type': ['CB_ANALYTICS']}

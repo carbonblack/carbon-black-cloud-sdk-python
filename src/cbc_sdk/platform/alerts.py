@@ -469,7 +469,7 @@ class Alert(PlatformModel):
 
         Args:
             note (str): Note content to add
-            threat_note (bool): Whether to return the Alert notes or Threat notes
+            threat_note (bool): Whether to add the note to the Alert or Threat
         """
         request = {"note": note}
         if threat_note:
@@ -1336,7 +1336,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
 
         Raises:
             FunctionalityDecommissioned: If the requested attribute is no longer available.
-            APIError: If the facet field is not valid
+            ApiError: If the facet field is not valid
         """
         for field in fieldlist:
             if field in AlertSearchQuery.DEPRECATED_FACET_FIELDS:

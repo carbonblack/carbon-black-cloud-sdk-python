@@ -25,7 +25,7 @@ Resources
 Retrieve Alerts
 ---------------
 
-By using the following the example, you can retrieve the last 5 ``[:5]`` alerts that have a minimum severity level of ``7``.
+By using the following the example, you can retrieve the first 5 ``[:5]`` alerts that have a minimum severity level of ``7``.
 
 .. code-block:: python
 
@@ -46,6 +46,7 @@ Filter alerts by using the fields described in the
 Set required values for specific fields by using the ``add_criteria()`` method to limit the number of returned alerts.
 Use this method for fields that are identified in the `Alert Search Fields <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields/>`_
 with "Searchable Array".
+
 The following snippet limits returns to specific devices, where the device_id is an integer and the device_target_value
 is a string.
 
@@ -62,7 +63,7 @@ Fields in the `Alert Search Fields <https://developer.carbonblack.com/reference/
 identified only with "Searchable" require the criteria to be a single value instead of a list of values.
 The SDK has hand-crafted methods to set the criteria for these fields.
 
-The following code snippet shows the methods for ``alert_notes_present`` and ``set_minimum_severity``, and the
+The following code snippet shows the methods for ``alert_notes_present`` and ``minimum_severity``, and the
 alerts that meet each criteria.
 
 .. code-block:: python
@@ -79,7 +80,7 @@ alerts that meet each criteria.
     >>>
 
 
-You can use the ``where`` method to filter alerts. The ``where`` method supports strings and solr-like queries. Alternatively, you can use ``solrq`` query objects
+You can use the ``where`` method to define a custom query to filter alerts. The ``where`` method supports strings and solr-like queries. Alternatively, you can use ``solrq`` query objects
 for more complex searches. The following example searches by using a solr query search string for alerts
 where the device_target_value is MISSION_CRITICAL or HIGH and is the equivalent of the preceding add_criteria clause.
 
@@ -120,7 +121,7 @@ It is equivalent to:
 Retrieving Alerts for Multiple Organizations
 --------------------------------------------
 
-By using the following example, you can retrieve alerts for multiple organizations.
+By using the following example, you can retrieve alerts for multiple organizations. Ensure you have a profile created for each org in the cbc credential file.
 
 .. code-block:: python
 
@@ -169,6 +170,9 @@ Observations are part of
 Available fields are identified by the route "Observation".
 Methods on the Observation Class, which can be found here: :py:mod:`Observation() <cbc_sdk.platform.observations.Observation>`
 
+For the entire Observation details including fields marked with ``OBSERVATION***`` in the `Investigate Search Fields <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/platform-search-fields/>`_
+then use ``get_details()`` on the Observation object.
+
 .. code-block:: python
 
     >>> from cbc_sdk import CBCloudAPI
@@ -178,7 +182,7 @@ Methods on the Observation Class, which can be found here: :py:mod:`Observation(
     >>> observations = alert.get_observations()
     >>> observations
     [<cbc_sdk.platform.observations.Observation: id a5aa40856d5511ee8059132eb84e1d6d:470147c9-d79b-3f01-2083-b30bc0c0629f> @ https://defense.conferdeploy.net]
-    >>> print(observations[0].get_details())
+    >>> print(observations[0])
     Observation object, bound to https://defense.conferdeploy.net.
     ------------------------------------------------------------------------------
                                  alert_id: [list:1 item]:
@@ -198,10 +202,12 @@ Methods on the Observation Class, which can be found here: :py:mod:`Observation(
 Retrieving Processes to Provide Context About an Alert
 ------------------------------------------------------
 
-You can retrieve process details on each ``WatchlistAlert`` and some other alert types by using the following example. You can use list slicing
-to retrieve the first ``n`` results (in the example, this value is ``10``). The ``get_details()`` method gives metadata
-that is similar to the one received by using ``Observation``.
+You can retrieve process details on any Alert with a ``process_guid``. You can use list slicing
+to retrieve the first ``n`` results (in the example, this value is ``10``).
 The full list of attributes and methods are in the :py:mod:`Process() <cbc_sdk.platform.processes.Process>` class.
+
+For the entire process details including fields marked with ``PROCESS***`` in the `Investigate Search Fields <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/platform-search-fields/>`_
+then use ``get_details()`` on the Process object.
 
 
 .. code-block:: python
@@ -212,7 +218,7 @@ The full list of attributes and methods are in the :py:mod:`Process() <cbc_sdk.p
     >>> alerts = api.select(WatchlistAlert)[:10]
     >>> for alert in alerts:
     ...     process = alert.get_process()
-    ...     print(process.get_details())
+    ...     print(process)
     {'alert_id': ['0a3c45bf-fce6-4a63', '12030b8f-ce3f-48bd'], 'attack_tactic': 'TA0002' <truncated>..}
     {'alert_id': ['02f6aecd-73d7-456d', 'e47c13dd-75a9-44de'], 'attack_tactic': 'TA0002' <truncated>..}
     ... truncated ...
@@ -270,7 +276,6 @@ The workflow leverages the alert search structure to specify the alerts to close
     * Any search request can be used as the criteria to select alerts to update the alert status.
 
     .. code-block:: python
-
     >>> # This query will select only the alert with the specified id
     >>> ALERT_ID = "id of the alert that you want to close"
     >>> alert_query = api.select(Alert).add_criteria("id", [ALERT_ID])
@@ -283,7 +288,6 @@ The workflow leverages the alert search structure to specify the alerts to close
     * You may include a Closure Reason.
 
     .. code-block:: python
-
     >>> # by calling update on the alert_query, the a request to change the status
     >>> # for all alerts matching that criteria will be submitted
     >>> job = alert_query.update("CLOSED", "RESOLVED", "NONE", "Setting to closed for SDK demo")
@@ -291,7 +295,6 @@ The workflow leverages the alert search structure to specify the alerts to close
 3. The immediate response confirms that the job was successfully submitted.
 
     .. code-block:: python
-
         >>> print("job.id = {}".format(job.id))
         job.id = 1234567
 
@@ -301,13 +304,11 @@ The workflow leverages the alert search structure to specify the alerts to close
     the SDK polls to determine when the job is complete.
 
     .. code-block:: python
-
-    >>> job.await_completion().result()
+    >>> completed_job = job.await_completion().result()
 
 5. Refresh the Alert Search to get the updated alert data into the SDK.
 
     .. code-block:: python
-
     >>> alert.refresh()
     >>> print("Status = {}, Expecting CLOSED".format(alert.workflow["status"]))
 
@@ -319,7 +320,6 @@ Use the sequence of calls to update future alerts that have the same threat id. 
     alert closure to close current open alerts that have the threat id.
 
     .. code-block:: python
-
     >>> alert_threat_query = api.select(Alert).add_criteria("threat_id","CFED0B211ED09F8EC1C83D4F3FBF1709")
     >>> alert.dismiss_threat("threat remediation done", "testing dismiss_threat in the SDK")
     >>> # To undo the dismissal, call update
@@ -347,7 +347,6 @@ See `the official notes <https://developer.carbonblack.com/reference/carbon-blac
 You can replicate the settings shown in the screenshot by running the following search on Alerts:
 
 .. code-block:: python
-
     >>> from cbc_sdk import CBCloudAPI
     >>> from cbc_sdk.platform import Alert
     >>> alerts = api.select(Alert).set_minimum_severity(7).\
