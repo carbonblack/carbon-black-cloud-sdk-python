@@ -14,15 +14,15 @@ functionality to manage alert workflow.
 **New Features in Alerts V7**
 
 * Extended alert schema with additional metadata such as process command line and username, parent and child process
-information, netconn data, additional device fields, MITRE categorization when available, and more
+  information, netconn data, additional device fields, MITRE categorization when available, and more
 * Easier management and consumption of grouped alerts
 * Ability to mark alerts as “In Progress”
 * Ability to mark alerts as True Positive or False Positive
 * Additional fields available for both searching and faceting
 * Enhanced note management with the ability to add notes to both individual alerts and threats (alerts grouped
-by threat)
+  by threat)
 * Observed Alerts have been removed from the Alerts API as these events are not considered actionable threats. They
-can now be retrieved via the Observations API.
+  can now be retrieved via the Observations API.
 
 **Breaking Changes:**
 
