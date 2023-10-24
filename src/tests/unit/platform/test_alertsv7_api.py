@@ -127,16 +127,22 @@ def test_query_alert_with_all_bells_and_whistles(cbcsdk_mock):
     assert a.workflow["status"] == "OPEN"
 
 
-def test_query_alert_with_backend_update_timestamp_as_start_end(cbcsdk_mock):
-    """Test an alert query with the backend_update_timestamp specified as a range."""
+def test_query_alert_with_backend_update_timestamp_as_start_end_as_objs(cbcsdk_mock):
+    """Test an alert query with the backend_update_timestamp specified as start and end time."""
     _timestamp = datetime.now()
 
     def on_post(url, body, **kwargs):
         nonlocal _timestamp
-        assert body == {"query": "Blort", "criteria": {"backend_update_timestamp": {
-            "start": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            "end": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ")}},
-            "rows": 2}
+        assert body == {
+            "query": "Blort",
+            "criteria": {
+                "backend_update_timestamp": {
+                    "start": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    "end": _timestamp.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+                }
+            },
+            "rows": 2
+        }
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
 
