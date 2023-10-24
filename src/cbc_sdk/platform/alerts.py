@@ -973,15 +973,13 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
 
         Args:
             *args: not used
-            **kwargs (dict): Used to specify
+            **kwargs (dict): Used to specify the period to search within
 
-                * start= for start time
-                * end= for end time
-                * range= for range.
+                * start= either timestamp ISO 8601 strings or datetime objects
+                * end= either timestamp ISO 8601 strings or datetime objects
+                * range= the period on which to execute the result search, ending on the current time.
 
-            Values are either timestamp ISO 8601 strings or datetime objects for start and end time.
-            For range the time range to execute the result search, ending on the current time. Range should be in the
-            format "-<quantity><units>" where quantity is an integer, and units is one of:
+                Range must be in the format "-<quantity><units>" where quantity is an integer, and units is one of:
 
                 * M: month(s)
                 * w: week(s)
@@ -992,32 +990,26 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
 
         For v6 Alerts (backwards compatibility):
 
-        Restricts the alerts that this query is performed on to the specified time range for a given key. Will also set
-        the 'time_range' as in the v7 usage if key is create_time or backend_timestamp. Will be deprecated with v6 alert
-        api
+        Restricts the alerts that this query is performed on to the specified time range for a given key. Will set
+        the 'time_range' as in the v7 usage if key is create_time and set a criteria value for any other valid key.
 
         Args:
-            key (str): The key to use for criteria one of create_time, first_event_time, last_event_time,
-             backend_timestamp, backend_update_timestamp, or last_update_time
-            **kwargs (dict): Used to specify
+            key (str): The key to use for criteria one of create_time, first_event_time, last_event_time
+             or last_update_time. i.e. legacy field names from the Alert v6 API.
+            **kwargs (dict): Used to specify the period to search within
 
-                * start= for start time
-                * end= for end time
-                * range= for range
-
-            Values are either timestamp ISO 8601 strings or datetime objects for start and end time.
-            For range the time range to execute the result search, ending on the current time. The same format as above
-            for v7.
+                * start= either timestamp ISO 8601 strings or datetime objects
+                * end= either timestamp ISO 8601 strings or datetime objects
+                * range= the period on which to execute the result search, ending on the current time.
 
         Returns:
             AlertSearchQuery: This instance.
 
         Examples:
-            >>> query = api.select(Alert).set_time_range(start="2020-10-20T20:34:07Z")
-            >>> second_query = api.select(Alert).
+            >>> query_specify_start_and_end = api.select(Alert).
             ...     set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
-            >>> third_query = api.select(Alert).set_time_range(range='-3d')
-            >>> fourth_query = api.select(Alert).set_time_range("create_time", range='-3d')
+            >>> query_specify_range = api.select(Alert).set_time_range(range='-3d')
+            >>> query_legacy_use = api.select(Alert).set_time_range("create_time", range='-3d')
 
         """
         args_count = args.__len__()
@@ -1027,9 +1019,11 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             self._valid_criteria = self._is_valid_time_criteria_key_v6(key)
             if self._valid_criteria:
                 key = Alert.REMAPPED_ALERTS_V6_TO_V7.get(key, key)
-                self.add_time_criteria(key, **kwargs)
-                if key in ["create_time", "backend_timestamp"]:
+                # key has been converted so v6 values are not expected here
+                if key in ["backend_timestamp"]:
                     self._time_range = time_filter
+                else:
+                    self.add_time_criteria(key, **kwargs)
         else:
             # everything before this is only for backwards compatibility, once v6 deprecates all the other
             # checks can be removed
@@ -1045,7 +1039,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
 
         Args:
             key (str): The key to use for criteria one of create_time, first_event_time, last_event_time,
-             backend_timestamp, backend_update_timestamp, or last_update_time
+             backend_update_timestamp, or last_update_time
             **kwargs (dict): Used to specify:
 
                 * start= for start time
@@ -1058,9 +1052,9 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
 
         Examples:
             >>> query = api.select(Alert).
-            ...     add_time_criteria("backend_timestamp", start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
-            >>> second_query = api.select(Alert).add_time_criteria("backend_timestamp", range='-3d')
-            >>> third_query = api.select(Alert).set_time_range("create_time", range='-3d')
+            ...     add_time_criteria("detection_timestamp", start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
+            >>> second_query = api.select(Alert).add_time_criteria("detection_timestamp", range='-3d')
+            >>> third_query_legacy = api.select(Alert).set_time_range("create_time", range='-3d')
             >>> exclusions_query = api.add_time_criteria("detection_timestamp", range="-2h", exclude=True)
 
         """
@@ -1077,27 +1071,29 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
 
     def _is_valid_time_criteria_key(self, key):
         """
-        Verifies that an alert criteria key has the timerange functionality
+        Verifies that an alert criteria key is a valid searchable time range field
 
         Args:
-            args (str): The key to use for criteria one of one of backend_timestamp, backend_update_timestamp,
+            args (str): The key to use for criteria must be a valid v7 time range field; backend_update_timestamp,
             detection_timestamp, first_event_timestamp, last_event_timestamp, mdr_determination_change_timestamp,
             mdr_workflow_change_timestamp, user_update_timestamp, or workflow_change_timestamp
 
         Returns:
             boolean true
         """
-        if key not in ["backend_timestamp", "backend_update_timestamp", "detection_timestamp", "first_event_timestamp",
+        if key not in ["backend_update_timestamp", "detection_timestamp", "first_event_timestamp",
                        "last_event_timestamp", "mdr_determination_change_timestamp", "mdr_workflow_change_timestamp",
                        "user_update_timestamp", "workflow_change_timestamp"]:
-            raise ApiError("key must be one of backend_timestamp, backend_update_timestamp, detection_timestamp, "
+            raise ApiError("key must be one of backend_update_timestamp, detection_timestamp, "
                            "first_event_timestamp, last_event_timestamp, mdr_determination_change_timestamp, "
                            "mdr_workflow_change_timestamp, user_update_timestamp, or workflow_change_timestamp")
         return True
 
     def _is_valid_time_criteria_key_v6(self, key):
         """
-        Verifies that an alert criteria key has the timerange functionality for v6 sdk calls
+        Verifies that an alert criteria key has the timerange functionality for v6 sdk calls.
+
+        Only v6 field names are valid.
 
         Args:
             args (str): The key to use for criteria one of create_time, first_event_time, last_event_time,
@@ -1106,10 +1102,8 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         Returns:
             boolean true
         """
-        if key not in ["create_time", "first_event_time", "last_event_time", "last_update_time", "backend_timestamp",
-                       "backend_update_timestamp"]:
-            raise ApiError("key must be one of create_time, first_event_time, last_event_time, backend_timestamp,"
-                           " backend_update_timestamp, or last_update_time")
+        if key not in ["create_time", "first_event_time", "last_event_time", "last_update_time"]:
+            raise ApiError("key must be one of create_time, first_event_time, last_event_time or last_update_time")
         return True
 
     def _create_valid_time_filter(self, kwargs):
