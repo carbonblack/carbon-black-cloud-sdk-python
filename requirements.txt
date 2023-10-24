@@ -8,6 +8,8 @@ validators
 jsonschema
 keyring;platform_system=='Darwin'
 boto3
+backports-datetime-fromisoformat==2.0.1
+
 
 # Dev dependencies
 pytest==7.2.1
