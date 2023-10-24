@@ -24,7 +24,8 @@ install_requires = [
     'validators',
     'jsonschema',
     "keyring;platform_system=='Darwin'",
-    'boto3'
+    'boto3',
+    'backports-datetime-fromisoformat==2.0.1'
 ]
 
 extras_require = {

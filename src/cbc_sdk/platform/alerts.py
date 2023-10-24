@@ -29,6 +29,8 @@ from cbc_sdk.platform.processes import AsyncProcessQuery, Process
 from cbc_sdk.platform.legacy_alerts import LegacyAlertSearchQueryCriterionMixin
 from cbc_sdk.platform.jobs import Job
 
+from backports._datetime_fromisoformat import datetime_fromisoformat
+
 """Alert Models"""
 
 MAX_RESULTS_LIMIT = 10000
@@ -1127,9 +1129,9 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             etime = kwargs["end"]
             try:
                 if isinstance(stime, str):
-                    stime = datetime.datetime.fromisoformat(stime)
+                    stime = datetime_fromisoformat(stime)
                 if isinstance(etime, str):
-                    etime = datetime.datetime.fromisoformat(etime)
+                    etime = datetime_fromisoformat(etime)
                 if isinstance(stime, datetime.datetime) and isinstance(etime, datetime.datetime):
                     time_filter = {"start": stime.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                                    "end": etime.strftime("%Y-%m-%dT%H:%M:%S.%fZ")}
