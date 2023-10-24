@@ -1,3 +1,5 @@
+.. _alert-migration-guide:
+
 Alert Migration
 ===============
 
