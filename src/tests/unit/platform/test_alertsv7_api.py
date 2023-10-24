@@ -1848,3 +1848,10 @@ def test_delete_threat_tag(cbcsdk_mock):
     alert = api.select(Alert, "6f1173f5-f921-8e11-2160-edf42b799333")
 
     assert tags == alert.delete_threat_tag("tag2")
+
+
+def test_backend_timestamp_as_criteria(cbcsdk_mock):
+    """Test that setting backend_timestamp as a criteria field raises an error"""
+    api = cbcsdk_mock.api
+    with pytest.raises(ApiError):
+        api.select(Alert).add_time_criteria("backend_timestamp")

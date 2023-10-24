@@ -41,9 +41,10 @@ def main():
     start = end - timedelta(minutes=5)
 
     # Fetch initial Alert batch
-    alerts = list(api.select(Alert)
-                  .set_time_range(start=start.strftime(time_format),
-                                  end=end.strftime(time_format))
+    # the time stamp can be set either as a datetime object:
+    # alerts_time_as_object = list(api.select(Alert).set_time_range(start=start, end=end).sort_by(time_field, "ASC"))
+    # or as ISO 8601 strings
+    alerts = list(api.select(Alert).set_time_range(start=start.isoformat(), end=end.isoformat())
                   .sort_by(time_field, "ASC"))
 
     # Check if 10k limit was hit.
@@ -53,8 +54,7 @@ def main():
         while True:
             new_start = datetime.strptime(last_alert.create_time, time_format) + timedelta(milliseconds=1)
             overflow = list(api.select(Alert)
-                            .set_time_range(start=new_start.strftime(time_format),
-                                            end=end.strftime(time_format))
+                            .set_time_range(start=new_start, end=end)
                             .sort_by(time_field, "ASC"))
 
             # Extend alert list with follow up alert batches

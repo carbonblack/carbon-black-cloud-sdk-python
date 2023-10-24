@@ -979,9 +979,9 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
                 * end= for end time
                 * range= for range.
 
-            Values are either timestamp ISO 8601 strings or datetime objects for start and end time.
-            For range the time range to execute the result search, ending on the current time. Range should be in the
-            format "-<quantity><units>" where quantity is an integer, and units is one of:
+                Values are either timestamp ISO 8601 strings or datetime objects for start and end time.
+                For range the time range to execute the result search, ending on the current time. Range should be in
+                the format "-<quantity><units>" where quantity is an integer, and units is one of:
 
                 * M: month(s)
                 * w: week(s)
@@ -1005,9 +1005,9 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
                 * end= for end time
                 * range= for range
 
-            Values are either timestamp ISO 8601 strings or datetime objects for start and end time.
-            For range the time range to execute the result search, ending on the current time. The same format as above
-            for v7.
+                Values are either timestamp ISO 8601 strings or datetime objects for start and end time.
+                For range the time range to execute the result search, ending on the current time. The same format as
+                above for v7.
 
         Returns:
             AlertSearchQuery: This instance.
