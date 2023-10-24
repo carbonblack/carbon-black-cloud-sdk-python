@@ -3,22 +3,38 @@ Changelog
 CBC SDK 1.5.0 - Released (TBD)
 --------------------------------------
 
+*This release contains breaking changes.*
+
+**Alerts Update to use V7 API**
+
+The new Alerts V7 API will improve alert management and allow for easier management, consumption, and triage of alerts
+in the Carbon Black Cloud. Alerts v7 API extends the capabilities with improved methods of retrieving alerts and added
+functionality to manage alert workflow.
+
+**New Features in Alerts V7**
+
+* Extended alert schema with additional metadata such as process command line and username, parent and child process
+information, netconn data, additional device fields, MITRE categorization when available, and more
+* Easier management and consumption of grouped alerts
+* Ability to mark alerts as “In Progress”
+* Ability to mark alerts as True Positive or False Positive
+* Additional fields available for both searching and faceting
+* Enhanced note management with the ability to add notes to both individual alerts and threats (alerts grouped
+by threat)
+* Observed Alerts have been removed from the Alerts API as these events are not considered actionable threats. They
+can now be retrieved via the Observations API.
+
 **Breaking Changes:**
 
-* Alerts V7: This is a new version of the Alerts API with certain changes that are not compatible with code written
-  to the old V6 API. For details, please see the :ref:`Alert Migration Guide <alert-migration-guide>`.
-  New features in Alerts include:
+* Alerts V7: Certain changes are not compatible with code written to the old V6 API. For details, please see the
+  :ref:`Alert Migration Guide <alert-migration-guide>`.  Breaking changes include:
 
-  * Extended alert schema with additional metadata such as process command line and username, parent and child process
-    information, netconn data, additional device fields, MITRE categorization when available, and more
-  * Easier management and consumption of grouped alerts
-  * Ability to mark alerts as “In Progress”
-  * Ability to mark alerts as True Positive or False Positive
-  * Additional fields available for both searching and faceting
-  * Enhanced note management with the ability to add notes to both individual alerts and threats (alerts grouped
-    by threat)
-  * Observed Alerts have been removed from the Alerts API as these events are not considered actionable threats. They
-    can now be retrieved via the Observations API.
+  * Default Search Time Period is reduced to two weeks.
+  * For fields that do not exist in the Alerts V7 API, a ``FunctionalityDecommissioned`` exception is raised.
+  * ``get_events()`` method has been removed.
+  * All facet terms match the field names.
+  * Workflow has been rebuilt.
+  * Create Note returns a single ``Note`` instance instead of a list.
 
 * Official support for Python 3.7 has been dropped, since that version is now end-of-life.  Added explicit testing
   support for Python version 3.12.  **N.B.:** End users should update their Python version to 3.8.x or greater.
