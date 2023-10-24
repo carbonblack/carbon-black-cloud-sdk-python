@@ -36,8 +36,8 @@ def main():
     time_format = "%Y-%m-%dT%H:%M:%S.%fZ"
 
     # Time window to fetch.
-    # Uses current time - 30s to allow for Carbon Black Cloud asynchronous event processing completion
-    end = datetime.now(timezone.utc) - timedelta(seconds=30)
+    # Uses current time - 60s to allow for Carbon Black Cloud asynchronous event processing completion
+    end = datetime.now(timezone.utc) - timedelta(seconds=60)
     start = end - timedelta(minutes=5)
 
     # Fetch initial Alert batch
