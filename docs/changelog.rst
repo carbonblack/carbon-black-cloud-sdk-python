@@ -1,7 +1,7 @@
 Changelog
 ================================
-CBC SDK 1.5.0 - Released (TBD)
---------------------------------------
+CBC SDK 1.5.0 - Released October 24, 2023
+-----------------------------------------
 
 **Alerts Update to use V7 API**
 
