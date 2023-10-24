@@ -4,20 +4,36 @@ properties:
   changed_by:
     type: string
     description: Username of the user who changed the workflow
-  comment:
-    type: string
-    description: Comment when updating the workflow
-  last_update_time:
+  change_timestamp:
     type: string
     format: date-time
     description: When the workflow was last updated
-  remediation:
+  changed_by_type:
+    type: string
+    description: The type of request that made the change
+  determination:
+    type: string
+    enum:
+      - TRUE_POSITIVE
+      - FALSE_POSITIVE
+      - NONE
+  closure_reason:
     type: string
     description: Alert remediation code. Indicates the result of the investigation
       into the alert
-  state:
+    enum:
+      - NO_REASON
+      - RESOLVED
+      - RESOLVED_BENIGN_KNOWN_GOOD
+      - DUPLICATE_CLEANUP
+      - OTHER
+  note:
+    type: string
+    description: Comment when updating the workflow
+  status:
     type: string
     description: State of the workflow
     enum:
-    - OPEN
-    - DISMISSED
+      - OPEN
+      - IN_PROGRESS
+      - CLOSED

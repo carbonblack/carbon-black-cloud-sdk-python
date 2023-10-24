@@ -114,10 +114,11 @@ def test_raise_ModelNotFound():
         ("Watchlist", "WatchlistQuery"),
 
         # Platform
-        ("BaseAlert", "BaseAlertSearchQuery"),
-        ("CBAnalyticsAlert", "CBAnalyticsAlertSearchQuery"),
-        ("DeviceControlAlert", "DeviceControlAlertSearchQuery"),
-        ("WatchlistAlert", "WatchlistAlertSearchQuery"),
+        ("Alert", "AlertSearchQuery"),
+        ("CBAnalyticsAlert", "AlertSearchQuery"),
+        ("DeviceControlAlert", "AlertSearchQuery"),
+        ("WatchlistAlert", "AlertSearchQuery"),
+        ("ContainerRuntimeAlert", "AlertSearchQuery"),
         ("Device", "DeviceSearchQuery"),
         ("Event", "EventQuery"),
         ("EventFacet", "EventFacetQuery"),

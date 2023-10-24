@@ -52,8 +52,8 @@ class ClientError(ApiError):
             error_code (int): The error code that was received from the server.
             message (str): The actual error message.
             kwargs (dict): Additional arguments, which may include 'result' (server operation result),
-                          'original_exception' (exception causing this one to be raised), and 'uri' (URI being accessed
-                           when this error was raised).
+                'original_exception' (exception causing this one to be raised), and 'uri' (URI being accessed
+                when this error was raised).
         """
         super(ClientError, self).__init__(message=message, original_exception=kwargs.get('original_exception', None))
 
@@ -119,8 +119,8 @@ class ServerError(ApiError):
             error_code (int): The error code that was received from the server.
             message (str): The actual error message.
             kwargs (dict): Additional arguments, which may include 'result' (server operation result),
-                          'original_exception' (exception causing this one to be raised), and 'uri' (URI being accessed
-                           when this error was raised).
+                'original_exception' (exception causing this one to be raised), and 'uri' (URI being accessed
+                when this error was raised).
         """
         super(ServerError, self).__init__(message=message, original_exception=kwargs.get('original_exception', None))
 

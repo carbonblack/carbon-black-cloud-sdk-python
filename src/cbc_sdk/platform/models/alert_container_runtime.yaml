@@ -1,0 +1,247 @@
+type: object
+properties:
+  alert_notes_present:
+    type: boolean
+    description: True if notes are present on the alert ID. False if notes are not present.
+  alert_url:
+    type: string
+    description: Link to the alerts page for this alert. Does not vary by alert type
+  backend_timestamp:
+    type: string
+    format: date-time
+    description: Timestamp when the Carbon Black Cloud processed and enabled the alert for searching. Corresponds to the Created column on the Alerts page.
+  backend_update_timestamp:
+    type: string
+    format: date-time
+    description: Timestamp when the Carbon Black Cloud initiated and processed an update to an alert. Corresponds to the Updated column on the Alerts page.   Note that changes made by users do not change this date; those changes are reflected on `user_update_timestamp`
+  connection_type:
+    type: string
+    enum:
+    - INTERNAL_INBOUND
+    - INTERNAL_OUTBOUND
+    - INGRESS
+    - EGRESS
+    description: Connection Type
+  detection_timestamp:
+    type: string
+    format: date-time
+    description: For sensor-sent alerts, this is the time of the event on the sensor. For alerts generated on the backend, this is the time the backend system triggered the alert.
+  determination:
+    description: User-updatable determination of the alert
+    type: object
+    properties:
+      change_timestamp:
+        type: string
+        format: date-time
+        description:  When the determination was updated.
+      changed_by:
+        type: string
+        description: User the determination was changed by.
+      changed_by_type:
+        type: string
+        description:
+        enum:
+        - SYSTEM
+        - USER
+        - API
+        - AUTOMATION
+      value:
+        type: string
+        description: Determination of the alert set by a user
+        enum:
+        - NONE
+        - TRUE_POSITIVE
+        - FALSE_POSITIVE
+  egress_group_id:
+    type: string
+    description: Unique identifier for the egress group
+  egress_group_name:
+    type: string
+    description: Name of the egress group
+  first_event_timestamp:
+    type: string
+    format: date-time
+    description: Timestamp when the first event in the alert occurred
+  id:
+    type: string
+    description: Unique IDs of alerts
+  ip_reputation:
+    type: integer
+    format: int64
+    description: Range of reputations to accept for the remote IP  0- unknown  1-20 high risk  21-40 suspicious  41-60 moderate  61-80 low risk  81-100 trustworthy There must be two values in this list. The first is the lower end of the range (inclusive) the second is the upper end of the range (inclusive)
+  is_updated:
+    type: boolean
+    description: Boolean that describes whether or not this is the original copy of the alert
+  k8s_cluster:
+    type: string
+    description: K8s Cluster name
+  k8s_kind:
+    type: string
+    description: K8s Workload kind
+  k8s_namespace:
+    type: string
+    description: K8s namespace
+  k8s_pod_name:
+    type: string
+    description: Name of the pod within a workload
+  k8s_policy:
+    type: string
+    description: Name of the K8s policy
+  k8s_policy_id:
+    type: string
+    description: Unique identifier for the K8s policy
+  k8s_rule:
+    type: string
+    description: Name of the K8s policy rule
+  k8s_rule_id:
+    type: string
+    description: Unique identifier for the K8s policy rule
+  k8s_workload_name:
+    type: string
+    description:  K8s Workload Name
+  last_event_timestamp:
+    type: string
+    format: date-time
+    description: Timestamp when the last event in the alert occurred
+  netconn_local_ip:
+    type: string
+    description: IP address of the remote side of the network connection; stored as dotted decimal
+  netconn_local_ipv4:
+    type: string
+    description: IPv4 address of the local side of the network connection; stored as a dotted decimal. Only one of ipv4 and ipv6 fields will be populated.
+  netconn_local_ipv6:
+    type: string
+    description: IPv6 address of the local side of the network connection; stored as a string without octet-separating colon characters. Only one of ipv4 and ipv6 fields will be populated.
+  netconn_local_port:
+    type: integer
+    format: int64
+    description: TCP or UDP port used by the local side of the network connection
+  netconn_protocol:
+    type: string
+    description: Network protocol of the network connection
+  netconn_remote_domain:
+    type: string
+    description: Domain name (FQDN) associated with the remote end of the network connection, if available
+  netconn_remote_ip:
+    type: string
+    description: IP address of the local side of the network connection; stored as dotted decimal
+  netconn_remote_ipv4:
+    type: string
+    description: IPv4 address of the remote side of the network connection; stored as dotted decimal. Only one of ipv4 and ipv6 fields will be populated.
+  netconn_remote_ipv6:
+    type: string
+    description: IPv6 address of the remote side of the network connection; stored as a string without octet-separating colon characters. Only one of ipv4 and ipv6 fields will be populated.
+  netconn_remote_port:
+    type: integer
+    format: int64
+    description: TCP or UDP port used by the remote side of the network connection; same as netconn_port and event_network_remote_port
+  org_key:
+    type: string
+    description: Unique alphanumeric string that identifies your organization in the Carbon Black Cloud
+  policy_applied:
+    type: string
+    enum:
+    - APPLIED
+    - NOT_APPLIED
+    description: Indicates whether or not a policy has been applied to any event associated with this alert
+  primary_event_id:
+    type: string
+    description: ID of the primary event in the alert
+  reason:
+    type: string
+    description: A spoken language written explanation of the what and why the alert occurred and any action taken, usually consisting of 1 to 3 sentences.
+  reason_code:
+    type: string
+    description: A unique short-hand code or GUID identifying the particular alert reason
+  remote_is_private:
+    type: boolean
+    description: Is the remote information private
+  remote_k8s_kind:
+    type: string
+    description: Kind of remote workload; set if the remote side is another workload in the same cluster
+  remote_k8s_namespace:
+    type: string
+    description: Namespace within the remote workload’s cluster; set if the remote side is another workload in the same cluster
+  remote_k8s_pod_name:
+    type: string
+    description: Remote workload pod name; set if the remote side is another workload in the same cluster
+  remote_k8s_workload_name:
+    type: string
+    description: Name of the remote workload; set if the remote side is another workload in the same cluster
+  run_state:
+    type: string
+    enum:
+    - DID_NOT_RUN
+    - RAN
+    - UNKNOWN
+    description: Whether the threat in the alert actually ran
+  sensor_action:
+    type: string
+    enum:
+    - ALLOW
+    - ALLOW_AND_LOG
+    - DENY
+    - TERMINATE
+    description: Actions taken by the sensor, according to the rules of a policy
+  severity:
+    type: integer
+    format: int64
+    description:  integer representation of the impact of alert if true positive
+  tags:
+    type: array
+    description: Tags added to the threat ID of the alert
+    items:
+      type: string
+  threat_id:
+    type: string
+    description: ID assigned to a group of alerts with common criteria, based on alert type
+  threat_notes_present:
+    type: boolean
+    description: True if notes are present on the threat ID. False if notes are not present.
+  type:
+    type: string
+    enum:
+    - CB_ANALYTICS
+    - WATCHLIST
+    - DEVICE_CONTROL
+    - CONTAINER_RUNTIME
+    - HOST_BASED_FIREWALL
+    - INTRUSION_DETECTION_SYSTEM
+    - NETWORK_TRAFFIC_ANALYSIS
+    description: Type of alert generated
+  user_update_timestamp:
+    type: string
+    format: date-time
+    description: Timestamp of the last property of an alert changed by a user, such as the alert workflow or determination
+  workflow:
+    type: object
+    description: Current workflow state of an alert. The workflow represents the flow from `OPEN` to `IN_PROGRESS` to `CLOSED` and captures who moved the alert into the current state. The history of these state transitions is available via the alert history route.
+    properties:
+      change_timestamp:
+        type: string
+        format: date-time
+        description: When the last status change occurred
+      workflow_changed_by:
+        type: string
+        description: Who (or what) made the last status change
+      workflow_changed_by_rule_id:
+        type: string
+        description:
+      workflow_changed_by_type:
+        type: string
+        enum:
+        - SYSTEM
+        - USER
+        - API
+        - AUTOMATION
+        description:
+      workflow_closure_reason:
+        type: string  `NO_REASON`, `RESOLVED`, `RESOLVED_BENIGN_KNOWN_GOOD`, `DUPLICATE_CLEANUP`, `OTHER`
+        description: A more detailed description of why the alert was resolved
+      workflow_status:
+        type: string
+        enum:
+        - OPEN
+        - IN_PROGRESS
+        - CLOSED
+        description: primary value used to determine if the alert is active or inactive and displayed in the UI by default

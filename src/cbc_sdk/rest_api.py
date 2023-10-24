@@ -11,12 +11,18 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-"""Definition of the CBCloudAPI object, the core object for interacting with the Carbon Black Cloud SDK."""
+"""
+Definition of the ``CBCloudAPI`` object, the core object for interacting with the Carbon Black Cloud SDK.
+
+All interaction with the Carbon Black Cloud SDK begins with creating a ``CBCloudAPI`` object, which represents a
+connection to the Carbon Black Cloud.
+"""
 
 from cbc_sdk.connection import BaseAPI
 from cbc_sdk.errors import ApiError, CredentialError, ServerError, InvalidObjectError
 from cbc_sdk.live_response_api import LiveResponseSessionManager
 from cbc_sdk.audit_remediation import Run, RunHistory
+from cbc_sdk.platform.audit import AuditLog
 from cbc_sdk.enterprise_edr.threat_intelligence import ReportSeverity
 import logging
 import time
@@ -26,25 +32,45 @@ log = logging.getLogger(__name__)
 
 
 class CBCloudAPI(BaseAPI):
-    """The main entry point into the CBCloudAPI.
+    """
+    A connection to the Carbon Black Cloud.
 
-    Usage:
+    The core object for interacting with the Carbon Black Cloud SDK.
 
-    >>> from cbc_sdk import CBCloudAPI
-    >>> cb = CBCloudAPI(profile="production")
+    Example:
+        >>> from cbc_sdk import CBCloudAPI
+        >>> cb = CBCloudAPI(profile="production")
     """
     def __init__(self, *args, **kwargs):
-        """
-        Initialize the CBCloudAPI object.
+        """Create a new instance of the CBCloudAPI object.
 
         Args:
             *args (list): List of arguments to pass to the API object.
             **kwargs (dict): Keyword arguments to pass to the API object.
 
         Keyword Args:
-            profile (str): Use the credentials in the named profile when connecting to the Carbon Black server.
+            credential_file (str): The name of a credential file to be used by the default credential provider.
+            credential_provider (cbc_sdk.credentials.CredentialProvider): An alternate credential provider to use to
+                find the credentials to be used when accessing the Carbon Black Cloud.
+            csp_api_token (str): The CSP API Token for Carbon Black Cloud.
+            csp_oauth_app_id (str): The CSP OAuth App ID for Carbon Black Cloud.
+            csp_oauth_app_secret (str): The CSP OAuth App Secret for Carbon Black Cloud.
+            integration_name (str): The name of the integration using this connection.  This should be specified as
+                a string in the format 'name/version'
+            max_retries (int): The maximum number of times to retry failing API calls. Default is 5.
+            org_key (str): The organization key value to use when accessing the Carbon Black Cloud.
+            pool_block (bool): ``True`` if the connection pool should block when no free connections are available.
+                Default is ``False``.
+            pool_connections (int): Number of HTTP connections to be pooled for this instance. Default is 1.
+            pool_maxsize (int): Maximum size of the connection pool.  Default is 10.
+            profile (str): Use the credentials in the named profile when connecting to the Carbon Black Cloud server.
                 Uses the profile named 'default' when not specified.
-            threat_pool_count (int): The number of threads to create for asynchronous queries. Defaults to 3.
+            proxy_session (requests.session.Session): Proxy session to be used for cookie persistence, connection
+                pooling, and configuration.  Default is ``None`` (use the standard session).
+            thread_pool_count (int): The number of threads to create for asynchronous queries. Defaults to 3.
+            timeout (float): The timeout to use for for API requests.  Default is ``None`` (no timeout).
+            token (str): The API token to use when accessing the Carbon Black Cloud.
+            url (str): The URL of the Carbon Black Cloud provider to use.
         """
         super(CBCloudAPI, self).__init__(*args, **kwargs)
         self._thread_pool_count = kwargs.pop('thread_pool_count', 3)
@@ -62,19 +88,14 @@ class CBCloudAPI(BaseAPI):
 
     @property
     def org_urn(self):
-        """
-        Returns the URN based on the configured org_key.
-
-        Returns:
-            str: The URN based on the configured org_key.
-        """
+        """The URN of the current organization, based on the configured org_key."""
         return f"psc:org:{self.credentials.org_key}"
 
     # ---- Async
 
     def _async_submit(self, callable, *args, **kwargs):
         """
-        Submit a task to the executor, creating it if it doesn't yet exist.
+        Submit a task to the background executor, creating it if it doesn't yet exist.
 
         Args:
             callable (func): A callable to be executed as a background task.
@@ -82,7 +103,7 @@ class CBCloudAPI(BaseAPI):
             **kwargs (dict): Keyword arguments to be passed to the callable.
 
         Returns:
-            Future: A future object representing the background task, which will pass along the result.
+            Future: An object representing the background task, which will pass along the result.
         """
         if not self._async_executor:
             self._async_executor = ThreadPoolExecutor(max_workers=self._thread_pool_count)
@@ -93,10 +114,9 @@ class CBCloudAPI(BaseAPI):
     @property
     def live_response(self):
         """
-        Create and return the Live Response session manager.
+        The Live Response session manager object.
 
-        Returns:
-            LiveResponseSessionManager: The session manager object.
+        It is created if it does not yet exist when this property is read.
         """
         if self._lr_scheduler is None:
             self._lr_scheduler = LiveResponseSessionManager(self)
@@ -131,13 +151,25 @@ class CBCloudAPI(BaseAPI):
         """
         return self.select(RunHistory).where(query)
 
-    # ---- Notifications
+    # ---- Notifications (deprecated)
 
     def notification_listener(self, interval=60):
-        """Generator to continually poll the Cb Endpoint Standard server for notifications (alerts).
-
-        Note that this can only be used with a 'SIEM' key generated in the Cb Endpoint Standard console.
         """
+        Continually polls the Cb Endpoint Standard server for notifications (alerts).
+
+        Note:
+            This can only be used with a 'SIEM' key generated in the Cb Endpoint Standard console.
+
+        Deprecated:
+            Use the Alerts API or the Data Forwarder to get similar notifications.
+
+        Args:
+            interval (int): Time period to wait in between polls for notifications, in seconds.  Default is 60.
+
+        Yields:
+            dict: A dictionary representing a notification.
+        """
+        log.warning("CBCloudAPI.notification_listener is deprecated, use Alerts API or Data Forwarder instead")
         while True:
             for notification in self.get_notifications():
                 yield notification
@@ -147,11 +179,16 @@ class CBCloudAPI(BaseAPI):
         """
         Retrieve queued notifications (alerts) from the Cb Endpoint Standard server.
 
-        Note that this can only be used with a 'SIEM' key generated in the Cb Endpoint Standard console.
+        Note:
+            This can only be used with a 'SIEM' key generated in the Cb Endpoint Standard console.
+
+        Deprecated:
+            Use the Alerts API or the Data Forwarder to get similar notifications.
 
         Returns:
-            list: List of dictionary objects representing the notifications, or an empty list if none available.
+            list[dict]: List of dictionary objects representing the notifications, or an empty list if none available.
         """
+        log.warning("CBCloudAPI.get_notifications is deprecated, use Alerts API or Data Forwarder instead")
         res = self.get_object("/integrationServices/v3/notification")
         return res.get("notifications", [])
 
@@ -159,12 +196,21 @@ class CBCloudAPI(BaseAPI):
         """
         Retrieve queued audit logs from the Carbon Black Cloud Endpoint Standard server.
 
-        Note that this can only be used with a 'API' key generated in the CBC console.
+        Note:
+            While this can be used with an 'API' key generated in the Carbon Black Cloud console, those key types are
+            officially deprecated.  Use a Custom key type with permissions as given here.
 
-        :returns: list of dictionary objects representing the audit logs, or an empty list if none available.
+        Required Permissions:
+            org,audits(READ)
+
+        Deprecated:
+            Use ``AuditLog.getAuditLogs`` (from ``cbc_sdk.platform``) instead.
+
+        Returns:
+            list[dict]: List of dictionary objects representing the audit logs, or an empty list if none available.
         """
-        res = self.get_object("/integrationServices/v3/auditlogs")
-        return res.get("notifications", [])
+        log.warning("CBCloudAPI.get_auditlogs is deprecated, use AuditLog.get_auditlogs instead")
+        return AuditLog.get_auditlogs(self)
 
     # ---- Device API
 
@@ -196,9 +242,9 @@ class CBCloudAPI(BaseAPI):
         Executes a device action on multiple device IDs.
 
         Args:
-            device_ids (list): The list of device IDs to execute the action on.
+            device_ids (list[int]): The list of device IDs to execute the action on.
             action_type (str): The action type to be performed.
-            options (dict): Options for the bulk device action.  Default None.
+            options (dict): Options for the bulk device action.  Default ``None``.
 
         Returns:
             dict: The parsed JSON output from the request.
@@ -231,8 +277,8 @@ class CBCloudAPI(BaseAPI):
         Set the background scan option for the specified devices.
 
         Args:
-            device_ids (list): List of IDs of devices to be set.
-            scan (bool): True to turn background scan on, False to turn it off.
+            device_ids (list[int]): List of IDs of devices to be set.
+            scan (bool): ``True`` to turn background scan on, ``False`` to turn it off.
 
         Returns:
             dict: The parsed JSON output from the request.
@@ -247,8 +293,8 @@ class CBCloudAPI(BaseAPI):
         Set the bypass option for the specified devices.
 
         Args:
-            device_ids (list): List of IDs of devices to be set.
-            enable (bool): True to enable bypass, False to disable it.
+            device_ids (list[int]): List of IDs of devices to be set.
+            enable (bool): ``True`` to enable bypass, ``False`` to disable it.
 
         Returns:
             dict: The parsed JSON output from the request.
@@ -263,7 +309,7 @@ class CBCloudAPI(BaseAPI):
         Delete the specified sensor devices.
 
         Args:
-            device_ids (list): List of IDs of devices to be deleted.
+            device_ids (list[int]): List of IDs of devices to be deleted.
 
         Returns:
             dict: The parsed JSON output from the request.
@@ -278,7 +324,7 @@ class CBCloudAPI(BaseAPI):
         Uninstall the specified sensor devices.
 
         Args:
-            device_ids (list): List of IDs of devices to be uninstalled.
+            device_ids (list[int]): List of IDs of devices to be uninstalled.
 
         Returns:
             dict: The parsed JSON output from the request.
@@ -293,8 +339,8 @@ class CBCloudAPI(BaseAPI):
         Set the quarantine option for the specified devices.
 
         Args:
-            device_ids (list): List of IDs of devices to be set.
-            enable (bool): True to enable quarantine, False to disable it.
+            device_ids (list[int]): List of IDs of devices to be set.
+            enable (bool): ``True`` to enable quarantine, ``False`` to disable it.
 
         Returns:
             dict: The parsed JSON output from the request.
@@ -309,7 +355,7 @@ class CBCloudAPI(BaseAPI):
         Set the current policy for the specified devices.
 
         Args:
-            device_ids (list): List of IDs of devices to be changed.
+            device_ids (list[int]): List of IDs of devices to be changed.
             policy_id (int): ID of the policy to set for the devices.
 
         Returns:
@@ -325,7 +371,7 @@ class CBCloudAPI(BaseAPI):
         Update the sensor version for the specified devices.
 
         Args:
-            device_ids (list): List of IDs of devices to be changed.
+            device_ids (list[int]): List of IDs of devices to be changed.
             sensor_version (dict): New version properties for the sensor.
 
         Returns:
@@ -346,10 +392,10 @@ class CBCloudAPI(BaseAPI):
             query (str): A search query to use.
 
         Returns:
-            list: A list of search suggestions expressed as dict objects.
+            list[dict]: A list of search suggestions expressed as dict objects.
         """
         query_params = {"suggest.q": query}
-        url = "/appservices/v6/orgs/{0}/alerts/search_suggestions".format(self.credentials.org_key)
+        url = "/api/alerts/v7/orgs/{0}/alerts/search_suggestions".format(self.credentials.org_key)
         output = self.get_object(url, query_params)
         return output["suggestions"]
 
@@ -358,7 +404,7 @@ class CBCloudAPI(BaseAPI):
         Update the status of alerts associated with multiple threat IDs, past and future.
 
         Args:
-            threat_ids (list): List of string threat IDs.
+            threat_ids (list[str]): List of string threat IDs.
             status (str): The status to set for all alerts, either "OPEN" or "DISMISSED".
             remediation (str): The remediation state to set for all alerts.
             comment (str): The comment to set for all alerts.
@@ -380,10 +426,12 @@ class CBCloudAPI(BaseAPI):
 
     def bulk_threat_update(self, threat_ids, remediation=None, comment=None):
         """
-        Update the alert status of alerts associated with multiple threat IDs. The alerts will be left in an OPEN state
+        Update the alert status of alerts associated with multiple threat IDs.
+
+         The alerts will be left in an OPEN state
 
         Args:
-            threat_ids (list): List of string threat IDs.
+            threat_ids (list[str]): List of string threat IDs.
             remediation (str): The remediation state to set for all alerts.
             comment (str): The comment to set for all alerts.
 
@@ -394,10 +442,12 @@ class CBCloudAPI(BaseAPI):
 
     def bulk_threat_dismiss(self, threat_ids, remediation=None, comment=None):
         """
-        Dismiss the alerts associated with multiple threat IDs.  The alerts will be left in a DISMISSED state.
+        Dismiss the alerts associated with multiple threat IDs.
+
+        The alerts will be left in a DISMISSED state.
 
         Args:
-            threat_ids (list): List of string threat IDs.
+            threat_ids (list[str]): List of string threat IDs.
             remediation (str): The remediation state to set for all alerts.
             comment (str): The comment to set for all alerts.
 
@@ -414,10 +464,10 @@ class CBCloudAPI(BaseAPI):
 
         Args:
             cls (class): The model being created.
-            data (dict): The data to pre-populate the model with.
+            data (dict): The data to pre-populate the model with.  Default ``None``.
 
         Returns:
-            object: An instance of `cls`.
+            object: An instance of ``cls``.
 
         Examples:
             >>> feed = cb.create(Feed, feed_data)
@@ -432,7 +482,7 @@ class CBCloudAPI(BaseAPI):
             query (str): The query to validate.
 
         Returns:
-            bool: True if the query is valid, False if not.
+            bool: ``True`` if the query is valid, ``False`` if not.
 
         Examples:
             >>> cb.validate_process_query("process_name:chrome.exe") # True
@@ -462,7 +512,7 @@ class CBCloudAPI(BaseAPI):
 
     @property
     def custom_severities(self):
-        """Returns a list of active ReportSeverity instances."""
+        """List of active ``ReportSeverity`` instances."""
         # TODO(ww): There's probably a better place to put this.
         url = "/threathunter/watchlistmgr/v3/orgs/{}/reports/severity".format(
             self.credentials.org_key
@@ -480,7 +530,8 @@ class CBCloudAPI(BaseAPI):
         return ids.get("query_ids", [])
 
     def process_limits(self):
-        """Returns a dictionary containing API limiting information.
+        """
+        Returns a dictionary containing API limiting information.
 
         Examples:
             >>> cb.process_limits()

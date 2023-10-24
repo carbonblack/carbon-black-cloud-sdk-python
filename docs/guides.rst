@@ -16,10 +16,35 @@ In general, and unless otherwise indicated, these guides are directed at those t
 Certain guides may be more geared towards audiences with more experience with the Carbon Black Cloud, such as
 administrators.
 
-Guides
-------
+Information about updating to new versions of the SDK to take advantage of new features in Carbon Black Cloud are
+in `Migration Guides`_.
 
+Feature Guides
+--------------
+.. toctree::
+   :maxdepth: 2
+
+   searching
+   alerts
+   audit-log
+   developing-credential-providers
+   device-control
+   differential-analysis
+   live-query
+   live-response
+   policy
+   recommendations
+   reputation-override
+   unified-binary-store
+   users-grants
+   vulnerabilities
+   watchlists-feeds-reports
+   workload
+
+* :doc:`searching` - Most operations in the SDK will require you to search for objects.
 * :doc:`alerts` - Work and manage different types of alerts such as CB Analytics Alert, Watchlist Alerts and Device Control Alerts.
+* :doc:`alerts-migration` - Update from SDK 1.4.3 or earlier to SDK 1.5.0 or later to get the benefits of the Alerts v7 API.
+* :doc:`audit-log` - Retrieve audit log events indicating various "system" events.
 * :doc:`device-control` - Control the blocking of USB devices on endpoints.
 * :doc:`differential-analysis` - Provides the ability to compare and understand the changes between two Live Query runs
 * :doc:`live-query` - Live Query allows operators to ask questions of endpoints
@@ -32,3 +57,12 @@ Guides
 * :doc:`vulnerabilities` - View asset (Endpoint or Workload) vulnerabilities to increase security visibility.
 * :doc:`watchlists-feeds-reports` - Work with Enterprise EDR watchlists, feeds, reports, and Indicators of Compromise (IOCs).
 * :doc:`workload` - Advanced protection purpose-built for securing modern workloads to reduce the attack surface and strengthen security posture.
+
+Migration Guides
+----------------
+.. toctree::
+   :maxdepth: 2
+
+   alerts-migration
+   porting-guide
+   live-response-v6-migration

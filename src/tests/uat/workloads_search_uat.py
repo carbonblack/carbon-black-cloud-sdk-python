@@ -232,7 +232,7 @@ def compare_data_summary(sdk_resp, api_resp, api_call):
     """Compare the data between the sdk and api response"""
     assert len(sdk_resp) == len(api_resp), f'TEST FAILED\nDifference between api and sdk response found for {api_call}'
     for block in api_resp:
-        assert sdk_resp.get(block['field'], -1) == block['value'],\
+        assert sdk_resp.get(block['field'], -1) == block['value'], \
             f'TEST FAILED\nDifference between api and sdk response found for {api_call}'
     print('\nTEST PASSED')
     print("----------------------------------------------------------")

@@ -473,7 +473,6 @@ class ComputeResourceFacet(UnrefreshableModel):
 class BaseComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
                                IterableQueryMixin, AsyncQueryMixin):
     """Base class for compute resource queries, not intended for direct use."""
-    VALID_DIRECTIONS = ("ASC", "DESC")
     VALID_DEPLOYMENT_TYPE = ("WORKLOAD", "AWS")
     VALID_DOWNLOAD_FORMATS = ("JSON", "CSV")
     DEFAULT_FACET_ROWS = 20
@@ -523,7 +522,7 @@ class BaseComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuil
         Returns:
             BaseComputeResourceQuery: This instance.
         """
-        if direction not in BaseComputeResourceQuery.VALID_DIRECTIONS:
+        if direction not in CriteriaBuilderSupportMixin.VALID_DIRECTIONS:
             raise ApiError("invalid sort direction specified")
         self._sortcriteria = {"field": key, "order": direction}
         return self
@@ -540,7 +539,12 @@ class BaseComputeResourceQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuil
         Returns:
             dict: The complete request body.
         """
-        request = {"criteria": self._criteria, "query": self._query_builder._collapse(), "rows": 100}
+        request = {"rows": 100}
+        query = self._query_builder._collapse()
+        if self._criteria:
+            request["criteria"] = self._criteria
+        if query:
+            request["query"] = query
         if self._exclusions != {}:
             request["exclusions"] = self._exclusions
         # Fetch 100 rows per page (instead of 10 by default) for better performance

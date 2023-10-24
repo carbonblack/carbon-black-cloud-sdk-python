@@ -130,7 +130,6 @@ SEARCH_AWS_RESOURCES = {
 }
 
 WORKLOAD_FACET_REQUEST = {
-    "query": "",
     "criteria": {
         "deployment_type": ["WORKLOAD"],
         "cluster_name": ["buster_cluster"]
@@ -202,7 +201,6 @@ WORKLOAD_FACET_RESPONSE = {
 }
 
 AWS_FACET_REQUEST = {
-    "query": "",
     "criteria": {
         "deployment_type": ["AWS"],
         "subnet_id": ["alphaworx"]
@@ -280,7 +278,6 @@ AWS_FACET_RESPONSE = {
 }
 
 WORKLOAD_DOWNLOAD_REQUEST = {
-    "query": "",
     "rows": 100,
     "criteria": {
         "deployment_type": ["WORKLOAD"],
@@ -322,7 +319,6 @@ DOWNLOAD_JOB_RESPONSE = {
 }
 
 AWS_DOWNLOAD_REQUEST = {
-    "query": "",
     "rows": 100,
     "criteria": {
         "deployment_type": ["AWS"],
@@ -341,7 +337,6 @@ AWS_DOWNLOAD_REQUEST = {
 }
 
 AWS_SUMMARY_REQUEST = {
-    "query": "",
     "criteria": {
         "deployment_type": ["AWS"],
         "auto_scaling_group_name": ["AutoScalingGroup"],

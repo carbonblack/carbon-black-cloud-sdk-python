@@ -13,7 +13,7 @@ from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.stubobject import (StubObject, STUBOBJECT_GET_RESP, STUBOBJECT_GET_PARTIAL,
                                             STUBOBJECT_GET_RESP_1, STUBOBJECT_GET_RESP_2, STUBOBJECT_UPDATE_RESP)
 from tests.unit.fixtures.enterprise_edr.mock_threatintel import FEED_GET_SPECIFIC_RESP
-from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_VALIDATION_RESP,
+from tests.unit.fixtures.platform.mock_process import (POST_PROCESS_VALIDATION_RESP,
                                                        POST_PROCESS_SEARCH_JOB_RESP,
                                                        GET_PROCESS_SEARCH_JOB_RESP,
                                                        GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
@@ -110,7 +110,7 @@ def test_model_attributes_nbm(cbcsdk_mock):
 def test_new_object_nbm(cbcsdk_mock):
     """Test new_object class method of NewBaseModel via a Policy object"""
     api = cbcsdk_mock.api
-    nbm_object = Policy.new_object(api, {'id': 6681, 'otherData': 'test'})
+    nbm_object = Policy._new_object(api, {'id': 6681, 'otherData': 'test'})
     assert nbm_object._model_unique_id == 6681
 
 
@@ -188,18 +188,6 @@ def test_parse_nbm(cbcsdk_mock):
     # _parse returns whatever is passed into it as a parameter
     assert nbm._parse(nbm._cb) == cbcsdk_mock.api
     assert nbm._parse(nbm._last_refresh_time) == 0
-
-
-def test_original_document_nbm(cbcsdk_mock):
-    """Test original_document method/property of NewBaseModel"""
-    api = cbcsdk_mock.api
-    cbcsdk_mock.mock_request("GET", "/testing_only/v1/stubobjects/30241", STUBOBJECT_GET_RESP)
-    stub = api.select(StubObject, 30241)
-    # original_document refreshes (if _full_init == False), then returns self._info
-    assert stub._full_init is False
-    assert stub.original_document == stub._info
-    assert stub._full_init is True
-    assert stub.original_document['id'] == 30241
 
 
 def test_set_attr_mbm(cbcsdk_mock):
@@ -387,12 +375,8 @@ def test_refresh_if_needed_mbm(cbcsdk_mock):
 def test_print_unrefreshablemodel(cbcsdk_mock):
     """Test printing an UnrefreshableModel"""
     # mock the search validation
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?"
-                             "process_guid=WNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&q=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-                             "&query=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00",
-                             GET_PROCESS_VALIDATION_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation",
+                             POST_PROCESS_VALIDATION_RESP)
     # mock the POST of a search
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
                              POST_PROCESS_SEARCH_JOB_RESP)

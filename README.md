@@ -1,8 +1,8 @@
 # VMware Carbon Black Cloud Python SDK
 
-**Latest Version:** 1.4.3
+**Latest Version:** 1.5.0
 <br>
-**Release Date:** June 26, 2023
+**Release Date:** October 24, 2023
 
 [![Coverage Status](https://coveralls.io/repos/github/carbonblack/carbon-black-cloud-sdk-python/badge.svg?t=Id6Baf)](https://coveralls.io/github/carbonblack/carbon-black-cloud-sdk-python)
 [![Codeship Status for carbonblack/carbon-black-cloud-sdk-python](https://app.codeship.com/projects/9e55a370-a772-0138-aae4-129773225755/status?branch=develop)](https://app.codeship.com/projects/402767)
@@ -30,7 +30,7 @@ Visit [ReadTheDocs](https://carbon-black-cloud-python-sdk.readthedocs.io/en/late
 
 ## Requirements
 
-The Carbon Black Cloud Python SDK is design to work on Python 3.7 and above.
+The Carbon Black Cloud Python SDK is design to work on Python 3.8 and above.
 
 All requirements are installed as part of `pip install carbon-black-cloud-sdk`. If you're planning on pushing changes to the Carbon Black Cloud Python SDK, the following can be used after cloning the repo `pip install -r requirements.txt`
 
@@ -116,9 +116,15 @@ pip install sphinxcontrib-apidoc sphinx_rtd_theme sphinx-copybutton
 Then, build the docs locally with the following commands:
 
 ```
-sphinx-apidoc -f -o docs src/cbc_sdk
 cd docs
 make html
+```
+
+Note that the module rst files such as ```docs/cbc_sdk.platform.rst ``` are handcrafted to control layout.
+* This command will generate new version, but it is not necessary and changes should not be added to the repository.
+* All pull requests will trigger a build of the documentation which can be viewed from Read The Docs --> Builds.
+```
+sphinx-apidoc -f -o docs src/cbc_sdk
 ```
 
 The documentation is built in `docs/_build/html`.

@@ -8,13 +8,16 @@ validators
 jsonschema
 keyring;platform_system=='Darwin'
 boto3
+backports-datetime-fromisoformat==2.0.1
+
 
 # Dev dependencies
 pytest==7.2.1
 pymox==1.0.0
 coverage==6.5.0
 coveralls==3.3.1
-flake8==5.0.4
+flake8==5.0.4; python_version < '3.8'
+flake8==6.1.0; python_version >= '3.8'
 flake8-colors==0.1.9
 flake8-docstrings==1.7.0
 pre-commit>=2.15.0

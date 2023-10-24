@@ -16,7 +16,6 @@ from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.mock_rest_api import (
     NOTIFICATIONS_RESP,
-    AUDITLOGS_RESP,
     ALERT_SEARCH_SUGGESTIONS_RESP,
     PROCESS_SEARCH_VALIDATIONS_RESP,
     CUSTOM_SEVERITY_RESP,
@@ -24,6 +23,7 @@ from tests.unit.fixtures.mock_rest_api import (
     FETCH_PROCESS_QUERY_RESP,
     CONVERT_FEED_QUERY_RESP,
 )
+from tests.unit.fixtures.platform.mock_audit import AUDITLOGS_RESP
 
 
 @pytest.fixture(scope="function")
@@ -72,7 +72,7 @@ def test_alert_search_suggestions(cbcsdk_mock):
     api = cbcsdk_mock.api
     cbcsdk_mock.mock_request(
         "GET",
-        "/appservices/v6/orgs/test/alerts/search_suggestions?suggest.q=",
+        "/api/alerts/v7/orgs/test/alerts/search_suggestions?suggest.q=",
         ALERT_SEARCH_SUGGESTIONS_RESP,
     )
     result = api.alert_search_suggestions("")

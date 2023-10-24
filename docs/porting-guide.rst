@@ -1,20 +1,32 @@
 Porting Applications from CBAPI to Carbon Black Cloud SDK
 =========================================================
+
 This guide will help you migrate from CBAPI to the Carbon Black Cloud Python SDK.
 
-Note: CBAPI applications using Carbon Black EDR (Response) or Carbon Black App Control (Protection) cannot be ported, as support for on-premise products is not present in
-the CBC SDK. Continue to use CBAPI for these applications.
+This is necessary to take advantage of new functionality in Carbon Black Cloud and also to ensure
+that functionality is not lost from your integrations when APIs are deactivated in July 2024.  Read more
+about the new features in the `Developer Network Blogs <https://developer.carbonblack.com/blog/>`_.
+
+.. note::
+
+    CBAPI applications using Carbon Black EDR (Response) or Carbon Black App Control (Protection) cannot be ported,
+    as support for on-premise products is not present in the CBC SDK. Continue to use CBAPI for these applications.
 
 Overview
 --------
-CBC SDK has changes to package names, folder structure, and functions. Import statements will need to change for the packages, modules, and functions listed in this guide.
+
+CBC SDK has changes to package names, folder structure, and functions. Import statements will need to change for the
+packages, modules, and functions listed in this guide.
 
 Package Name Changes
 --------------------
-A number of packages have new name equivalents in the CBC SDK. Endpoint Standard and Enterprise EDR have had parts replaced to use the most current API routes.
+
+A number of packages have new name equivalents in the CBC SDK. Endpoint Standard and Enterprise EDR have had parts
+replaced to use the most current API routes.
 
 Top-level Package Name Change
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 The top-level package name has changed from CBAPI to CBC SDK.
 
 +-----------------+--------------------+
@@ -25,6 +37,7 @@ The top-level package name has changed from CBAPI to CBC SDK.
 
 Product Name Changes
 ^^^^^^^^^^^^^^^^^^^^
+
 Carbon Black Cloud product names have been updated in the SDK.
 
 +----------------------------+-------------------------------+
@@ -39,20 +52,58 @@ Carbon Black Cloud product names have been updated in the SDK.
 | ``cbapi.psc``              | ``cbc_sdk.platform``          |
 +----------------------------+-------------------------------+
 
-Import statements will need to change:
+Features for new products such as Container Security and Workload Security have also been added in the appropriate
+namespace.
 
-::
+APIs that have been deprecated or deactivated
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Some modules made use of APIs that have been deactivated and are either no longer included in the Carbon Black Cloud,
+or are planned for deprecation in the second half of 2024.  The following table shows
+the original module, the replacement module, and where to find more information.
+
+For a complete list of APIs that are deprecated and the associated migration information, see the
+`Migration Guide <https://developer.carbonblack.com/reference/carbon-black-cloud/api-migration/>`_ on the
+Developer Network.  This is important if you have integrations with Carbon Black Cloud that do not use the
+Carbon Black Cloud Python SDK (this).
+
+.. list-table:: Deprecated Modules and their replacements
+   :widths: 25, 25, 50
+   :header-rows: 1
+   :class: longtable
+
+   * - CBAPI module
+     - Replacement CBC SDK Module
+     - More Information
+   * - cbapi.psc.defense Event
+     - cbc_sdk.platform Observation
+     - This was deactivated in January 2021. Review the Carbon Black Cloud User Guide to learn more about `Observations <https://docs.vmware.com/en/VMware-Carbon-Black-Cloud/services/carbon-black-cloud-user-guide/GUID-5EAF4BA6-601C-46AD-BA8E-D0BD05681ADF.html/>`_
+   * - cbapi.psc.defense Policy
+     - cbc_sdk.platform Policy
+     - `IntegrationServices Policy v3 API Migration <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/policy-migration/>`_
+   * - cbc_sdk.endpoint_standard EnrichedEvent
+     - cbc_sdk.platform Observation
+     - Enriched Events will remain available until July 2024. `Enriched Events API Migration <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/observations-migration/>`_
+   * - cbc_sdk.platform Alert
+     - Module path is unchanged. Attributes and methods will change
+     - In SDK 1.5.0 the Alert module will be updated to use the new Alert v7 API.  A migration guide will be included with that release. Planned for October 2023.
+   * - SIEM Notifications - cbc_sdk.rest_api CBCloudAPI get_notifications()
+     - cbc_sdk.platform Alert or Alert Data Forwarder
+     - `Notification Migration <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/notification-migration/>`_
+
+Modules that have been moved and need new import statements
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Import statements will need to change::
 
     # Endpoint Standard (Defense)
 
     # CBAPI
-    from cbapi.psc.defense import Device, Event, Policy
+    from cbapi.psc.defense import Device
 
     # CBC SDK
-    # note that the original "Event" has been decommissioned
-    from cbc_sdk.endpoint_standard import Device, EnrichedEvent, Policy
+    from cbc_sdk.platform import Device
 
-::
 
     # Audit and Remediation (LiveQuery)
 
@@ -62,7 +113,6 @@ Import statements will need to change:
     # CBC SDK
     from cbc_sdk.audit_remediation import Run, RunHistory, Result, DeviceSummary
 
-::
 
     # Enterprise EDR (ThreatHunter)
 
@@ -74,6 +124,7 @@ Import statements will need to change:
 
 Moved Packages and Models
 ^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Some modules have been moved to a more appropriate location.
 
 +-----------------------------+------------------------------+
@@ -86,9 +137,7 @@ Some modules have been moved to a more appropriate location.
 | ``cbapi.psc.devices_query`` | ``cbc_sdk.platform``         |
 +-----------------------------+------------------------------+
 
-Import statements will need to change:
-
-::
+Import statements will need to change::
 
     # Example Helpers
 
@@ -98,8 +147,6 @@ Import statements will need to change:
     # CBC SDK
     from cbc_sdk.helpers import build_cli_parser
 
-::
-
     # Alerts
 
     # CBAPI
@@ -107,8 +154,6 @@ Import statements will need to change:
 
     # CBC SDK
     from cbc_sdk.platform import *
-
-::
 
     # Devices
 
@@ -121,8 +166,9 @@ Import statements will need to change:
 Replaced Modules
 ^^^^^^^^^^^^^^^^
 
-With the new Unified Platform Experience, Carbon Black Cloud APIs have been updated to provide a more consistent search experience.
-Platform search is replacing Endpoint Standard Event searching, and Enterprise EDR Process and Event searching.
+In 2020, Carbon Black Cloud APIs were updated to provide a more consistent search
+experience.  Platform search replaced Endpoint Standard Event searching, and Enterprise EDR Process and Event
+searching.
 
 For help beyond import statement changes, check out these resources:
 
@@ -136,27 +182,28 @@ For help beyond import statement changes, check out these resources:
 
 Endpoint Standard
 """""""""""""""""
-Endpoint Standard Events have been replaced with Enriched Events and the old event functionality has been
-decommissioned.
 
-::
+Endpoint Standard Events have been replaced with Platform Observations and the old event functionality has been
+decommissioned::
 
     # Endpoint Standard Enriched Events
 
     # CBAPI
     from cbapi.psc.defense import Event
 
-    # CBC SDK (decommissioned--do not use)
+    # CBC SDK - decommissioned--do not use
     from cbc_sdk.endpoint_standard import Event
 
-    # CBC SDK
+    # CBC SDK - deprecated--stop using before July 31st 2024
     from cbc_sdk.endpoint_standard import EnrichedEvent
+
+    # CBC SDK - Observations.  Use this!
+    from cbc_sdk.platform import Observation
 
 Enterprise EDR
 """"""""""""""
-Enterprise EDR Processes and Events have been removed and replaced with Platform Processes and Events.
 
-::
+Enterprise EDR Processes and Events have been removed and replaced with Platform Processes and Events::
 
     # Enterprise EDR Process and Event
 
@@ -168,6 +215,7 @@ Enterprise EDR Processes and Events have been removed and replaced with Platform
 
 Folder Structure Changes
 ------------------------
+
 The directory structure for the SDK has been refined compared to CBAPI.
 
 * Addition of the Platform folder
@@ -182,10 +230,7 @@ Directory Tree Changes
 
 In general, each module's ``models.py`` and ``query.py`` files were combined into their respective ``base.py`` files.
 
-CBAPI had the following abbreviated folder structure:
-
-::
-
+CBAPI had the following abbreviated folder structure::
 
     src
     └── cbapi
@@ -225,9 +270,7 @@ CBAPI had the following abbreviated folder structure:
 
 Each product had a ``models.py`` and ``rest_api.py`` file.
 
-CBC SDK has the following abbreviated folder structure:
-
-::
+CBC SDK has the following abbreviated folder structure::
 
     src
     └── cbc_sdk
@@ -275,8 +318,9 @@ CBC SDK has the following abbreviated folder structure:
         └── rest_api.py
             └── CBCloudAPI.py
 
-Now, each product has either a ``base.py`` file with all of its objects, or categorized files like ``platform.alerts.py`` and ``platform.devices.py``.
-The package level ``rest_api.py`` replaced each product-specific ``rest_api.py`` file.
+Now, each product has either a ``base.py`` file with all of its objects, or categorized files like
+``platform.alerts.py`` and ``platform.devices.py``.  The package level ``rest_api.py`` replaced each product-specific
+``rest_api.py`` file.
 
 Function Changes
 ----------------

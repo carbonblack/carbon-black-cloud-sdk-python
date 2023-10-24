@@ -129,7 +129,7 @@ def test_search_normal(cb):
         alerts = list(query)
         body = {'criteria': {'create_time': {'range': '-3d'}}, 'query': '', 'rows': 1000,
                 'sort': [{'field': 'create_time', 'order': 'ASC'}]}
-        output = invoke_post('{}/appservices/v6/orgs/{}/alerts/_search', body)
+        output = invoke_post('{}/appservices/v7/orgs/{}/alerts/_search', body)
         results = output['results']
         if compare_search_results('test_search_normal', alerts, results):
             print("test_search_normal: OK")

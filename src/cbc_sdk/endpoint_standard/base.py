@@ -41,7 +41,7 @@ class Event:
     info_key = "eventInfo"
 
     def _parse(self, obj):
-        if type(obj) == dict and self.info_key in obj:
+        if isinstance(obj, dict) and self.info_key in obj:
             return obj[self.info_key]
 
     def __init__(self, cb, model_unique_id, initial_data=None):

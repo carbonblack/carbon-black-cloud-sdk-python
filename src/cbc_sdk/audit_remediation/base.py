@@ -957,7 +957,9 @@ class RunHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
         request = {"start": start}
 
         if self._query_builder:
-            request["query"] = self._query_builder._collapse()
+            query = self._query_builder._collapse()
+            if query:
+                request["query"] = query
         if rows != 0:
             request["rows"] = rows
         if self._criteria:
@@ -1217,8 +1219,10 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         Returns:
             dict: The complete request body.
         """
-        request = {"start": start, "query": self._query_builder._collapse()}
-
+        request = {"start": start}
+        query = self._query_builder._collapse()
+        if query:
+            request["query"] = query
         if rows != 0:
             request["rows"] = rows
         if self._criteria:
@@ -1611,7 +1615,10 @@ class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Criter
         terms = {"fields": self._facet_fields}
         if rows != 0:
             terms["rows"] = rows
-        request = {"query": self._query_builder._collapse(), "terms": terms}
+        request = {"terms": terms}
+        query = self._query_builder._collapse()
+        if query:
+            request["query"] = query
         if self._criteria:
             request["criteria"] = self._criteria
         return request

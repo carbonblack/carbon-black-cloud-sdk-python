@@ -1,0 +1,32 @@
+type: object
+properties:
+  author:
+    type: string
+    description: User who created the note
+  create_timestamp:
+    type: string
+    format: date-time
+    description: Time the note was created
+  last_update_timestamp:
+    type: string
+    format: date-time
+    description: Time the note was created
+  id:
+    type: string
+    description: Unique ID for this note
+  source:
+    type: string
+    enum:
+      - CUSTOMER
+  note:
+    type: string
+    description: Note contents
+  parent_id:
+    type: string
+    description: ID for this note of this notes parent if is a thread
+  read_history:
+    type: string
+  thread:
+    type: array
+    items:
+      type: object

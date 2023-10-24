@@ -24,7 +24,8 @@ install_requires = [
     'validators',
     'jsonschema',
     "keyring;platform_system=='Darwin'",
-    'boto3'
+    'boto3',
+    'backports-datetime-fromisoformat==2.0.1'
 ]
 
 extras_require = {
@@ -72,10 +73,11 @@ setup(
         'Intended Audience :: Developers',
         'Intended Audience :: System Administrators',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
         'Topic :: Security',
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],

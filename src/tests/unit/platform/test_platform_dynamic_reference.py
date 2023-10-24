@@ -7,7 +7,7 @@ from cbc_sdk.errors import ModelNotFound
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_grants import QUERY_GRANT_RESP
 from tests.unit.fixtures.platform.mock_process import (
-    GET_PROCESS_VALIDATION_RESP,
+    POST_PROCESS_VALIDATION_RESP,
     POST_PROCESS_SEARCH_JOB_RESP,
     GET_PROCESS_SEARCH_JOB_RESP,
     GET_PROCESS_SEARCH_JOB_RESULTS_RESP,
@@ -58,18 +58,18 @@ def test_raise_ModelNotFound(cbcsdk_mock):
 class TestReferenceAlerts:
     """Testing all types of `Alerts`"""
 
-    def test_BaseAlert_select(self, monkeypatch, cbcsdk_mock):
-        """Test the dynamic reference for the `BaseAlert` class."""
+    def test_Alert_select(self, monkeypatch, cbcsdk_mock):
+        """Test the dynamic reference for the `Alert` class."""
         stub = StubResponse({"num_found": 1, "results": [{"id": "1"}]})
         patch_cbc_sdk_api(
             monkeypatch, cbcsdk_mock.api, POST=lambda *args, **kwargs: stub
         )
-        query = cbcsdk_mock.api.select("BaseAlert").one()
-        assert type(query).__qualname__ == "BaseAlert"
+        query = cbcsdk_mock.api.select("Alert").one()
+        assert type(query).__qualname__ == "Alert"
 
     def test_CBAnalyticsAlert_select(self, monkeypatch, cbcsdk_mock):
         """Test the dynamic reference for the `CBAnalyticsAlert` class."""
-        stub = StubResponse({"num_found": 1, "results": [{"id": "1"}]})
+        stub = StubResponse({"num_found": 1, "results": [{"id": "1", "type": "CBAnalyticsAlert"}]})
         patch_cbc_sdk_api(
             monkeypatch, cbcsdk_mock.api, POST=lambda *args, **kwargs: stub
         )
@@ -77,9 +77,19 @@ class TestReferenceAlerts:
         a = query.one()
         assert type(a).__qualname__ == "CBAnalyticsAlert"
 
+    def test_ContainerRuntimeAlert_select(self, monkeypatch, cbcsdk_mock):
+        """Test the dynamic reference for the `ContainerRuntimeAlert` class."""
+        stub = StubResponse({"num_found": 1, "results": [{"id": "1", "type": "ContainerRuntimeAlert"}]})
+        patch_cbc_sdk_api(
+            monkeypatch, cbcsdk_mock.api, POST=lambda *args, **kwargs: stub
+        )
+        query = cbcsdk_mock.api.select("ContainerRuntimeAlert").where("Blort")
+        a = query.one()
+        assert type(a).__qualname__ == "ContainerRuntimeAlert"
+
     def test_DeviceControlAlert_select(self, monkeypatch, cbcsdk_mock):
         """Test the dynamic reference for the `DeviceControlAlert` class."""
-        stub = StubResponse({"num_found": 1, "results": [{"id": "1"}]})
+        stub = StubResponse({"num_found": 1, "results": [{"id": "1", "type": "DeviceControlAlert"}]})
         patch_cbc_sdk_api(
             monkeypatch, cbcsdk_mock.api, POST=lambda *args, **kwargs: stub
         )
@@ -88,7 +98,7 @@ class TestReferenceAlerts:
 
     def test_WatchlistAlert_select(self, monkeypatch, cbcsdk_mock):
         """Test the dynamic reference for the `WatchlistAlert` class."""
-        stub = StubResponse({"num_found": 1, "results": [{"id": "1"}]})
+        stub = StubResponse({"num_found": 1, "results": [{"id": "1", "type": "WatchlistAlert"}]})
         patch_cbc_sdk_api(
             monkeypatch, cbcsdk_mock.api, POST=lambda *args, **kwargs: stub
         )
@@ -135,12 +145,9 @@ class TestReferenceProcess:
         """Test the dynamic reference for the `Process` class."""
         # mock the search validation
         cbcsdk_mock.mock_request(
-            "GET",
-            "/api/investigate/v1/orgs/Z100/processes/search_validation?"
-            "process_guid=WNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-            "&q=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00"
-            "&query=process_guid%3AWNEXFKQ7%5C-0002b226%5C-000015bd%5C-00000000%5C-1d6225bbba74c00",
-            GET_PROCESS_VALIDATION_RESP,
+            "POST",
+            "/api/investigate/v2/orgs/Z100/processes/search_validation",
+            POST_PROCESS_VALIDATION_RESP,
         )
         # mock the POST of a search
         cbcsdk_mock.mock_request(
@@ -211,9 +218,9 @@ class TestReferenceProcess:
         """Test the dynamic reference for the `Process.Tree` class."""
         # mock the search validation
         cbcsdk_mock.mock_request(
-            "GET",
-            "/api/investigate/v1/orgs/Z100/processes/search_validation",
-            GET_PROCESS_VALIDATION_RESP,
+            "POST",
+            "/api/investigate/v2/orgs/Z100/processes/search_validation",
+            POST_PROCESS_VALIDATION_RESP,
         )
         # mock the POST of a search
         cbcsdk_mock.mock_request(
