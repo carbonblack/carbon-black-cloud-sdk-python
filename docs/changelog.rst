@@ -3,26 +3,14 @@ Changelog
 CBC SDK 1.5.0 - Released (TBD)
 --------------------------------------
 
-*This release contains breaking changes.*
-
 **Alerts Update to use V7 API**
 
 The new Alerts V7 API will improve alert management and allow for easier management, consumption, and triage of alerts
 in the Carbon Black Cloud. Alerts v7 API extends the capabilities with improved methods of retrieving alerts and added
 functionality to manage alert workflow.
 
-**New Features in Alerts V7**
-
-* Extended alert schema with additional metadata such as process command line and username, parent and child process
-  information, netconn data, additional device fields, MITRE categorization when available, and more
-* Easier management and consumption of grouped alerts
-* Ability to mark alerts as “In Progress”
-* Ability to mark alerts as True Positive or False Positive
-* Additional fields available for both searching and faceting
-* Enhanced note management with the ability to add notes to both individual alerts and threats (alerts grouped
-  by threat)
-* Observed Alerts have been removed from the Alerts API as these events are not considered actionable threats. They
-  can now be retrieved via the Observations API.
+**N.B.:** This change involves breaking changes to the SDK involving the core Alerts workflow. Please check your
+existing code carefully before deploying this SDK upgrade.
 
 **Breaking Changes:**
 
@@ -41,6 +29,18 @@ functionality to manage alert workflow.
 
 New Features:
 
+* Alerts V7:
+
+  * Extended alert schema with additional metadata such as process command line and username, parent and child process
+    information, netconn data, additional device fields, MITRE categorization when available, and more
+  * Ability to mark alerts as “In Progress”
+  * Ability to mark alerts as True Positive or False Positive
+  * Additional fields available for both searching and faceting
+  * Enhanced note management with the ability to add notes to both individual alerts and threats (alerts grouped
+    by threat)
+  * Observed Alerts have been removed from the Alerts API as these events are not considered actionable threats. They
+    can now be retrieved via the Observations API.
+
 * External Devices: Added External Device Export and External Device Approvals Export.
 
 Updates:
@@ -56,7 +56,7 @@ Documentation:
 * ``CBCloudAPI`` documentation has been pulled out into its own page.
 * Authentication, Getting Started, and Guides pages have been updated.
 * Concepts page has been removed, and the information it contained has moved to other pages.
-* New Searching guide added.
+* New :ref:`Searching guide <searching-guide>` added.
 * Update to left-hand sidebar to allow the Guides sub-listing to be collapsed.
 * Porting guide has been updated to reflect the latest APIs.
 * Live Response migration guide has been updated with links.
