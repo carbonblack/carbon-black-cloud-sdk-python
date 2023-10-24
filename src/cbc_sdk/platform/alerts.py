@@ -973,13 +973,11 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
 
         Args:
             *args: not used
-            **kwargs (dict): Used to specify
+            **kwargs (dict): Used to specify the period to search within
 
-                * start= for start time, either timestamp ISO 8601 strings or datetime objects
-                * end= for end time, either timestamp ISO 8601 strings or datetime objects
-                * range= for range.
-
-                Range is the period on which to execute the result search, ending on the current time.
+                * start= either timestamp ISO 8601 strings or datetime objects
+                * end= either timestamp ISO 8601 strings or datetime objects
+                * range= the period on which to execute the result search, ending on the current time.
 
                 Range must be in the format "-<quantity><units>" where quantity is an integer, and units is one of:
 
@@ -996,27 +994,22 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         the 'time_range' as in the v7 usage if key is create_time and set a criteria value for any other valid key.
 
         Args:
-            key (str): The key to use for criteria one of create_time, first_event_time, last_event_time,
-             backend_timestamp, backend_update_timestamp, or last_update_time
-            **kwargs (dict): Used to specify
+            key (str): The key to use for criteria one of create_time, first_event_time, last_event_time
+             or last_update_time. i.e. legacy field names from the Alert v6 API.
+            **kwargs (dict): Used to specify the period to search within
 
-                * start= for start time, either timestamp ISO 8601 strings or datetime objects
-                * end= for end time, either timestamp ISO 8601 strings or datetime objects
-                * range= for range
-
-                Values are for start and end time.
-                For range the time range to execute the result search, ending on the current time. The same format as
-                above for v7.
+                * start= either timestamp ISO 8601 strings or datetime objects
+                * end= either timestamp ISO 8601 strings or datetime objects
+                * range= the period on which to execute the result search, ending on the current time.
 
         Returns:
             AlertSearchQuery: This instance.
 
         Examples:
-            >>> query = api.select(Alert).set_time_range(start="2020-10-20T20:34:07Z")
-            >>> second_query = api.select(Alert).
+            >>> query_specify_start_and_end = api.select(Alert).
             ...     set_time_range(start="2020-10-20T20:34:07Z", end="2020-10-30T20:34:07Z")
-            >>> third_query = api.select(Alert).set_time_range(range='-3d')
-            >>> fourth_query = api.select(Alert).set_time_range("create_time", range='-3d')
+            >>> query_specify_range = api.select(Alert).set_time_range(range='-3d')
+            >>> query_legacy_use = api.select(Alert).set_time_range("create_time", range='-3d')
 
         """
         args_count = args.__len__()
