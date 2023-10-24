@@ -226,8 +226,7 @@ def test_query_basealert_with_time_range_create_time_as_start_end(cbcsdk_mock):
     """Test an alert query with the create_time specified as a range which should also set the global time_range."""
 
     def on_post(url, body, **kwargs):
-        assert body == {"query": "Blort", "criteria": {"backend_timestamp": {"range": "-3w"}}, "rows": 2,
-                        'time_range': {'range': '-3w'}}
+        assert body == {"query": "Blort", "rows": 2, 'time_range': {'range': '-3w'}}
         return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
                              "workflow": {"status": "OPEN"}}], "num_found": 1}
 
@@ -845,8 +844,7 @@ def test_query_basealert_with_time_range_errors(cbcsdk_mock):
     api = cbcsdk_mock.api
     with pytest.raises(ApiError) as ex:
         api.select(BaseAlert).where("Blort").set_time_range("invalid", range="whatever")
-    assert "key must be one of create_time, first_event_time, last_event_time, backend_timestamp, " \
-           "backend_update_timestamp, or last_update_time" in str(ex.value)
+    assert "key must be one of create_time, first_event_time, last_event_time or last_update_time" in str(ex.value)
 
     with pytest.raises(ApiError) as ex:
         api.select(BaseAlert).where("Blort").set_time_range("create_time",
@@ -863,8 +861,15 @@ def test_query_basealert_with_time_range_errors(cbcsdk_mock):
 
     with pytest.raises(ApiError) as ex:
         api.select(BaseAlert).where("Blort").set_time_range("create_time")
-
     assert "must specify either start= and end= or range=" in str(ex.value)
+
+    with pytest.raises(ApiError) as ex:
+        api.select(BaseAlert).where("Blort").set_time_range("backend_timestamp", range="-3w")
+    assert "key must be one of create_time, first_event_time, last_event_time or last_update_time" in str(ex.value)
+
+    with pytest.raises(ApiError) as ex:
+        api.select(BaseAlert).where("Blort").set_time_range("detection_timestamp", range="-3w")
+    assert "key must be one of create_time, first_event_time, last_event_time or last_update_time" in str(ex.value)
 
 
 def test_query_basealert_sort_error(cbcsdk_mock):

@@ -15,6 +15,7 @@ from datetime import datetime
 import pytest
 
 from cbc_sdk.errors import ApiError, TimeoutError, NonQueryableModel, ModelNotFound, FunctionalityDecommissioned
+
 from cbc_sdk.platform import (
     BaseAlert,
     Alert,
@@ -1855,3 +1856,32 @@ def test_backend_timestamp_as_criteria(cbcsdk_mock):
     api = cbcsdk_mock.api
     with pytest.raises(ApiError):
         api.select(Alert).add_time_criteria("backend_timestamp")
+
+
+def test_query_alert_with_legacy_time_range_errors(cbcsdk_mock):
+    """Test exceptions in alert query when the legacy set_time_range method is used with SDK 1.5.0 values"""
+    api = cbcsdk_mock.api
+    # This will fail when the request is made to Carbon Black Cloud. However, the SDK does not validate range values
+    api.select(Alert).where("Blort").set_time_range(range="whatever")
+
+    with pytest.raises(ApiError) as ex:
+        api.select(Alert).where("Blort").set_time_range(start="2019-09-30T12:34:56",
+                                                        end="2019-10-01T12:00:12",
+                                                        range="-3w")
+    assert "cannot specify range= in addition to start= and end=" in str(ex.value)
+
+    with pytest.raises(ApiError) as ex:
+        api.select(Alert).where("Blort").set_time_range(end="2019-10-01T12:00:12", range="-3w")
+    assert "cannot specify start= or end= in addition to range=" in str(ex.value)
+
+    with pytest.raises(ApiError) as ex:
+        api.select(Alert).where("Blort").set_time_range()
+    assert "must specify either start= and end= or range=" in str(ex.value)
+
+    with pytest.raises(ApiError) as ex:
+        api.select(Alert).where("Blort").set_time_range("backend_timestamp", range="-3w")
+    assert "key must be one of create_time, first_event_time, last_event_time or last_update_time" in str(ex.value)
+
+    with pytest.raises(ApiError) as ex:
+        api.select(Alert).where("Blort").set_time_range("detection_timestamp", range="-3w")
+    assert "key must be one of create_time, first_event_time, last_event_time or last_update_time" in str(ex.value)

@@ -29,7 +29,7 @@ from datetime import datetime, timedelta, timezone
 
 def main():
     """This script demonstrates how to use Alerts in the SDK and common operations to link to related objects."""
-    api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
+    api = CBCloudAPI(profile="EXPLORE_DEMO")
 
     # Time field and format to use
     time_field = "backend_timestamp"
