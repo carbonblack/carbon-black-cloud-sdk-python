@@ -1,5 +1,69 @@
 Changelog
 ================================
+CBC SDK 1.5.0 - Released (TBD)
+--------------------------------------
+
+**Alerts Update to use V7 API**
+
+The new Alerts V7 API will improve alert management and allow for easier management, consumption, and triage of alerts
+in the Carbon Black Cloud. Alerts v7 API extends the capabilities with improved methods of retrieving alerts and added
+functionality to manage alert workflow.
+
+**N.B.:** This change involves breaking changes to the SDK involving the core Alerts workflow. Please check your
+existing code carefully before deploying this SDK upgrade.
+
+**Breaking Changes:**
+
+* Alerts V7: Certain changes are not compatible with code written to the old V6 API. For details, please see the
+  :ref:`Alert Migration Guide <alert-migration-guide>`.  Breaking changes include:
+
+  * Default Search Time Period is reduced to two weeks.
+  * For fields that do not exist in the Alerts V7 API, a ``FunctionalityDecommissioned`` exception is raised.
+  * ``get_events()`` method has been removed.
+  * All facet terms match the field names.
+  * Workflow has been rebuilt.
+  * Create Note returns a single ``Note`` instance instead of a list.
+
+* Official support for Python 3.7 has been dropped, since that version is now end-of-life.  Added explicit testing
+  support for Python version 3.12.  **N.B.:** End users should update their Python version to 3.8.x or greater.
+
+New Features:
+
+* Alerts V7:
+
+  * Extended alert schema with additional metadata such as process command line and username, parent and child process
+    information, netconn data, additional device fields, MITRE categorization when available, and more
+  * Ability to mark alerts as “In Progress”
+  * Ability to mark alerts as True Positive or False Positive
+  * Additional fields available for both searching and faceting
+  * Enhanced note management with the ability to add notes to both individual alerts and threats (alerts grouped
+    by threat)
+  * Observed Alerts have been removed from the Alerts API as these events are not considered actionable threats. They
+    can now be retrieved via the Observations API.
+
+* External Devices: Added External Device Export and External Device Approvals Export.
+
+Updates:
+
+* Audit log requests have moved from ``CBCloudAPI`` into their own function entry point in the ``platform`` package.
+  The old function has been deprecated.
+* Process search validation has been changed to use the V2 ``POST`` API rather than the old V1 ``GET`` API.
+* ``CBCloudAPI.get_notifications()`` and ``CBCloudAPI.notification_listener()`` have been marked as deprecated.
+
+Documentation:
+
+* Added example script to poll for audit logs.
+* ``CBCloudAPI`` documentation has been pulled out into its own page.
+* Authentication, Getting Started, and Guides pages have been updated.
+* Concepts page has been removed, and the information it contained has moved to other pages.
+* New :ref:`Searching guide <searching-guide>` added.
+* Update to left-hand sidebar to allow the Guides sub-listing to be collapsed.
+* Porting guide has been updated to reflect the latest APIs.
+* Live Response migration guide has been updated with links.
+* ``README.md`` has been updated with better instructions for generating docs locally.
+* ``CBCloudAPI`` and Devices documentation have been updated to better conform to new style guide for docstrings.
+
+
 CBC SDK 1.4.3 - Released June 26, 2023
 --------------------------------------
 

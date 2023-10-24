@@ -1,3 +1,5 @@
+.. _searching-guide:
+
 Searching
 =========
 
