@@ -15,8 +15,7 @@
 import time
 import datetime
 
-from cbc_sdk.errors import ApiError, ObjectNotFoundError, NonQueryableModel, FunctionalityDecommissioned, \
-    SearchValidationError
+from cbc_sdk.errors import ApiError, ObjectNotFoundError, NonQueryableModel, FunctionalityDecommissioned
 from cbc_sdk.platform import PlatformModel
 from cbc_sdk.base import (BaseQuery,
                           QueryBuilder,
@@ -1358,9 +1357,6 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         if method == "POST":
             result = self._cb.post_object(url, args)
             validated = result.json()
-
-        if not validated.get("valid"):
-            raise SearchValidationError(error_code=validated["error_code"], message=validated)
 
         return validated
 
