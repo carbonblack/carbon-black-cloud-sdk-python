@@ -558,7 +558,7 @@ class BaseAPI(object):
         except ValueError:
             return result
 
-        if "errorMessage" in resp:
+        if "errorMessage" in resp and resp["errorMessage"] is not None:
             raise ServerError(error_code=result.status_code, message=resp["errorMessage"], uri=uri)
 
         return result

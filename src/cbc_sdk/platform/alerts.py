@@ -15,7 +15,8 @@
 import time
 import datetime
 
-from cbc_sdk.errors import ApiError, ObjectNotFoundError, NonQueryableModel, FunctionalityDecommissioned
+from cbc_sdk.errors import ApiError, ObjectNotFoundError, NonQueryableModel, FunctionalityDecommissioned, \
+    SearchValidationError
 from cbc_sdk.platform import PlatformModel
 from cbc_sdk.base import (BaseQuery,
                           QueryBuilder,
@@ -172,6 +173,8 @@ class Alert(PlatformModel):
 
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
     urlobject_single = "/api/alerts/v7/orgs/{0}/alerts/{1}"
+    validation_url = "/api/alerts/v7/orgs/{}/alerts/_validate"
+    validation_method = "POST"
     threat_urlobject_single = "/api/alerts/v7/orgs/{0}/threats/{1}"
     primary_key = "id"
     swagger_meta_file = "platform/models/alert.yaml"
@@ -954,6 +957,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         self._count_valid = False
         self._total_results = 0
         self._batch_size = 100
+        self._default_args = {}
 
     def set_rows(self, rows):
         """
@@ -1032,6 +1036,29 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             self._time_range = {}
             self._time_range = time_filter
         return self
+
+    def _get_query_parameters(self):
+        args = self._default_args.copy()
+        if self._criteria:
+            args["criteria"] = self._criteria
+        if self._exclusions:
+            args["exclusions"] = self._exclusions
+        if hasattr(self, "_time_range") and self._time_range:
+            args["time_range"] = self._time_range
+        query = self._query_builder._collapse()
+        if query:
+            args['query'] = query
+        if self._query_builder._process_guid is not None:
+            args["process_guid"] = self._query_builder._process_guid
+        if 'process_guid:' in args.get('query', ''):
+            q = args['query'].split('process_guid:', 1)[1].split(' ', 1)[0]
+            args["process_guid"] = q
+
+        if args.get("sort", None) is not None and args.get("fields", None) is None:
+            # Add default fields if only sort is specified
+            args["fields"] = ["*"]
+
+        return args
 
     def add_time_criteria(self, key, **kwargs):
         """
@@ -1317,6 +1344,25 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             if current >= self._total_results:
                 still_querying = False
                 break
+
+    def _validate(self, args):
+        if not hasattr(self._doc_class, "validation_url"):
+            return
+
+        url = self._doc_class.validation_url.format(self._cb.credentials.org_key)
+        method = self._doc_class.validation_method if hasattr(self._doc_class, "validation_method") else "GET"
+
+        # v7 search group_by key does not work with validation
+        args.pop('group_by', None)
+
+        if method == "POST":
+            result = self._cb.post_object(url, args)
+            validated = result.json()
+
+        if not validated.get("valid"):
+            raise SearchValidationError(error_code=validated["error_code"], message=validated)
+
+        return validated
 
     def facets(self, fieldlist, max_rows=0):
         """

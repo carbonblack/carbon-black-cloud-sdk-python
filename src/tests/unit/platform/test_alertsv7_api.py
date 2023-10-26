@@ -14,7 +14,8 @@ from datetime import datetime
 
 import pytest
 
-from cbc_sdk.errors import ApiError, TimeoutError, NonQueryableModel, ModelNotFound, FunctionalityDecommissioned
+from cbc_sdk.errors import ApiError, TimeoutError, NonQueryableModel, ModelNotFound, FunctionalityDecommissioned, \
+    SearchValidationError
 
 from cbc_sdk.platform import (
     BaseAlert,
@@ -44,7 +45,11 @@ from tests.unit.fixtures.platform.mock_alerts_v7 import (
     GET_NEW_ALERT_TYPE_RESP,
     GET_OPEN_WORKFLOW_JOB_RESP,
     GET_CLOSE_WORKFLOW_JOB_RESP,
-    GET_ALERT_WORKFLOW_INIT
+    GET_ALERT_WORKFLOW_INIT,
+    ALERT_VALIDATION_INVALID_REQUEST_BODY,
+    ALERT_VALIDATION_INVALID_RESPONSE,
+    ALERT_VALIDATION_VALID_REQUEST_BODY,
+    ALERT_VALIDATION_VALID_RESPONSE
 )
 from tests.unit.fixtures.platform.mock_process import (
     POST_PROCESS_VALIDATION_RESP,
@@ -1906,3 +1911,27 @@ def test_time_range_formatting(cbcsdk_mock, start, end, time_filter):
     api = cbcsdk_mock.api
     alert_query = api.select(Alert).set_time_range(start=start, end=end)
     assert alert_query._time_range == time_filter
+
+
+def test_validate_alert_search_invalid(cbcsdk_mock):
+    """Test AlertSearchQuery._validate()"""
+    cbcsdk_mock.mock_request("POST",
+                             "/api/alerts/v7/orgs/test/alerts/_validate",
+                             ALERT_VALIDATION_INVALID_RESPONSE)
+    api = cbcsdk_mock.api
+    alert = api.select(Alert)
+    with pytest.raises(SearchValidationError) as ex:
+        alert._validate(ALERT_VALIDATION_INVALID_REQUEST_BODY)
+    assert not hasattr(ex, "valid")
+
+
+def test_validate_alert_search_valid(cbcsdk_mock):
+    """Test AlertSearchQuery._validate()"""
+    cbcsdk_mock.mock_request("POST",
+                             "/api/alerts/v7/orgs/test/alerts/_validate",
+                             ALERT_VALIDATION_VALID_RESPONSE)
+    api = cbcsdk_mock.api
+    alert = api.select(Alert)
+    response = alert._validate(ALERT_VALIDATION_VALID_REQUEST_BODY)
+    assert response["errorMessage"] is None
+    assert response["valid"] is True

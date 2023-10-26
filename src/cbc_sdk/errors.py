@@ -307,3 +307,28 @@ class FunctionalityDecommissioned(ApiError):
         if alternate:
             msg += f"\nReplacement: {alternate}"
         super().__init__(message=msg)
+
+
+class SearchValidationError(ApiError):
+    """Raised when a search validation fails"""
+
+    def __init__(self, error_code=None, message=None):
+        """
+        Initialize the SearchValidation Exception
+
+        Args:
+            error_code (str): The error code for the exception
+            message (str): The actual error message.
+        """
+        self.message = str(message)
+        self.error_code = error_code
+
+    def __str__(self):
+        """
+        Convert the exception to a string.
+
+        Returns:
+            str: String equivalent of the exception.
+        """
+        msg = self.message
+        return msg

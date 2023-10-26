@@ -586,3 +586,82 @@ GET_ALERT_WORKFLOW_INIT = {
     "type": "WATCHLIST",
     "workflow": {"status": "OPEN"}
 }
+
+ALERT_VALIDATION_INVALID_REQUEST_BODY = {
+    "query": "BLORT",
+    "time_range": {
+        "range": "-10d"
+    },
+    "start": 1,
+    "rows": 100,
+    "criteria": {
+        "minimum_severity": 2,
+        "device_os": [
+            "WINDOWS"
+        ]
+    },
+    "exclusions": {
+        "device_os_version": [
+            "Windows 10 x64"
+        ],
+        "threat_id": ["7103E507844087BE20351A50D8773029"]
+    },
+    "sort": [
+        {
+            "field": "backend_update_timestamp",
+            "order": "desc"
+        }
+    ],
+    "category": [
+        "THREAT",
+        "MONITORED"
+    ]
+}
+
+ALERT_VALIDATION_INVALID_RESPONSE = {
+    "error_code": "UNEXPECTED_PROPERTY",
+    "message": "Malformed JSON input: category",
+    "field": "category",
+    "known_properties": [
+        "start",
+        "exclusions",
+        "query",
+        "rows",
+        "time_range",
+        "sort",
+        "criteria"
+    ],
+    "property_name": "category"
+}
+
+ALERT_VALIDATION_VALID_REQUEST_BODY = {
+    "query": "BLORT",
+    "time_range": {
+        "range": "-10d"
+    },
+    "start": 1,
+    "rows": 100,
+    "criteria": {
+        "minimum_severity": 2,
+        "device_os": [
+            "WINDOWS"
+        ]
+    },
+    "exclusions": {
+        "device_os_version": [
+            "Windows 10 x64"
+        ],
+        "threat_id": ["7103E507844087BE20351A50D8773029"]
+    },
+    "sort": [
+        {
+            "field": "backend_update_timestamp",
+            "order": "desc"
+        }
+    ]
+}
+
+ALERT_VALIDATION_VALID_RESPONSE = {
+    "errorMessage": None,
+    "valid": True
+}
