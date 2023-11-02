@@ -316,6 +316,19 @@ class Process(UnrefreshableModel):
         else:
             return None
 
+    def deobfuscate_cmdline(self):
+        """
+        Deobfuscates the command line of the process and returns the deobfuscated result.
+
+        Required Permissions:
+            script.deobfuscation(EXECUTE)
+
+        Returns:
+             dict: A dict containing information about the obfuscated command line, including the deobfuscated result.
+        """
+        body = {"input": self.process_cmdline}
+        return self._cb.post_object(f"/tau/v2/orgs/{self._cb.credentials.org_key}/reveal", body)
+
     def events(self, **kwargs):
         """
         Returns a query for events associated with this process's process GUID.
