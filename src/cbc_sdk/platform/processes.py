@@ -327,7 +327,8 @@ class Process(UnrefreshableModel):
              dict: A dict containing information about the obfuscated command line, including the deobfuscated result.
         """
         body = {"input": self.process_cmdline}
-        return self._cb.post_object(f"/tau/v2/orgs/{self._cb.credentials.org_key}/reveal", body)
+        result = self._cb.post_object(f"/tau/v2/orgs/{self._cb.credentials.org_key}/reveal", body)
+        return result.json()
 
     def events(self, **kwargs):
         """
