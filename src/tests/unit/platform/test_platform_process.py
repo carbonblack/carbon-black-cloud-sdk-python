@@ -297,7 +297,7 @@ def test_process_deobfuscate_cmdline(cbcsdk_mock):
     api = cbcsdk_mock.api
     process = api.select(Process, 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00')
     # poke the command line so we have something to deobfuscate
-    process._info['process_cmdline'] = PROCESS_OBFUSCATED_CMDLINE
+    process._info['process_cmdline'] = [PROCESS_OBFUSCATED_CMDLINE]
     deobfuscation = process.deobfuscate_cmdline()
     assert len(deobfuscation['identities']) == 1
     assert len(deobfuscation['strings']) == 1
