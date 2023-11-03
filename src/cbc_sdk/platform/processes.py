@@ -55,10 +55,10 @@ class Process(UnrefreshableModel):
     ``AsyncProcessQuery``.
 
     Examples:
-        # use the Process GUID directly
+        >>> # use the Process GUID directly
         >>> process = api.select(Process, "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb")
 
-        # use the Process GUID in a where() clause
+        >>> # use the Process GUID in a where() clause
         >>> process_query = api.select(Process).where(process_guid=
         ...    "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb")
         >>> process_query_results = list(process_query)
@@ -327,6 +327,8 @@ class Process(UnrefreshableModel):
              dict: A dict containing information about the obfuscated command line, including the deobfuscated result.
         """
         body = {"input": self.process_cmdline}
+        if not body['input']:
+            body['input'] = self.get_details()['process_cmdline']
         result = self._cb.post_object(f"/tau/v2/orgs/{self._cb.credentials.org_key}/reveal", body)
         return result.json()
 
