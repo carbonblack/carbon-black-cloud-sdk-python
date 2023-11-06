@@ -55,10 +55,10 @@ class Process(UnrefreshableModel):
     ``AsyncProcessQuery``.
 
     Examples:
-        # use the Process GUID directly
+        >>> # use the Process GUID directly
         >>> process = api.select(Process, "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb")
 
-        # use the Process GUID in a where() clause
+        >>> # use the Process GUID in a where() clause
         >>> process_query = api.select(Process).where(process_guid=
         ...    "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb")
         >>> process_query_results = list(process_query)
@@ -238,6 +238,11 @@ class Process(UnrefreshableModel):
         super(Process, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
                                       force_init=force_init, full_doc=full_doc)
 
+    def _retrieve_cb_info(self):
+        """Retrieve the detailed information about this object."""
+        self._details_timeout = 0
+        return self._get_detailed_results()._info
+
     @property
     def summary(self):
         """Returns organization-specific information about this process."""
@@ -315,6 +320,22 @@ class Process(UnrefreshableModel):
             return self.summary._info["process"]["process_pid"]
         else:
             return None
+
+    def deobfuscate_cmdline(self):
+        """
+        Deobfuscates the command line of the process and returns the deobfuscated result.
+
+        Required Permissions:
+            script.deobfuscation(EXECUTE)
+
+        Returns:
+             dict: A dict containing information about the obfuscated command line, including the deobfuscated result.
+        """
+        body = {"input": self.process_cmdline[0]}
+        if not body['input']:
+            body['input'] = self.get_details()['process_cmdline'][0]
+        result = self._cb.post_object(f"/tau/v2/orgs/{self._cb.credentials.org_key}/reveal", body)
+        return result.json()
 
     def events(self, **kwargs):
         """
