@@ -238,6 +238,11 @@ class Process(UnrefreshableModel):
         super(Process, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
                                       force_init=force_init, full_doc=full_doc)
 
+    def _retrieve_cb_info(self):
+        """Retrieve the detailed information about this object."""
+        self._details_timeout = 0
+        return self._get_detailed_results()._info
+
     @property
     def summary(self):
         """Returns organization-specific information about this process."""
