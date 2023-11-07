@@ -302,6 +302,114 @@ GET_OBSERVATIONS_DETAIL_JOB_RESULTS_RESP = {
 }
 
 
+GET_OBSERVATIONS_DETAIL_JOB_RESULTS_FOR_DEOBFUSCATE = {
+    "approximate_unaggregated": 2,
+    "completed": 4,
+    "contacted": 4,
+    "num_aggregated": 1,
+    "num_available": 1,
+    "num_found": 1,
+    "results": [
+        {
+            "alert_category": ["OBSERVED"],
+            "alert_id": None,
+            "backend_timestamp": "2023-02-08T03:22:21.570Z",
+            "device_external_ip": "127.0.0.1",
+            "device_group_id": 0,
+            "device_id": 17482451,
+            "device_installed_by": "bit9qa",
+            "device_internal_ip": "127.0.0.1",
+            "device_location": "ONSITE",
+            "device_name": "dev01-39x-1",
+            "device_os": "WINDOWS",
+            "device_os_version": "Windows 10 x64",
+            "device_policy": "lonergan policy",
+            "device_policy_id": 12345,
+            "device_target_priority": "MEDIUM",
+            "device_timestamp": "2023-02-08T03:20:33.751Z",
+            "document_guid": "KBrOYUNlTYe116ADgNvGw",
+            "enriched": True,
+            "enriched_event_type": "NETWORK",
+            "event_description": "The script...",
+            "event_id": "8fbccc2da75f11ed937ae3cb089984c6",
+            "event_network_inbound": False,
+            "event_network_local_ipv4": "127.0.0.1",
+            "event_network_location": "Santa Clara,CA,United States",
+            "event_network_protocol": "TCP",
+            "event_network_remote_ipv4": "127.0.0.1",
+            "event_network_remote_port": 80,
+            "event_report_code": "SUB_RPT_NONE",
+            "event_threat_score": [3],
+            "event_type": "netconn",
+            "ingress_time": 1675826462036,
+            "legacy": True,
+            "netconn_actions": ["ACTION_CONNECTION_ESTABLISHED"],
+            "netconn_domain": "a1887..dscq..akamai..net",
+            "netconn_inbound": False,
+            "netconn_ipv4": 388818410,
+            "netconn_local_ipv4": 11111,
+            "netconn_local_port": 11,
+            "netconn_location": "Santa Clara,CA,United States",
+            "netconn_port": 80,
+            "netconn_protocol": "PROTO_TCP",
+            "observation_description": "The application firefox.exe invoked ",
+            "observation_id": "8fbccc2da75f11ed937ae3cb089984c6:be6ff259-88e3-6286-789f-74defa192d2e",
+            "observation_type": "CB_ANALYTICS",
+            "org_id": "ABCD123456",
+            "parent_effective_reputation": "ADAPTIVE_WHITE_LIST",
+            "parent_effective_reputation_source": "CLOUD",
+            "parent_guid": "TEST-010ac2d3-00001c68-00000000-1d93b6c4d1f20ad",
+            "parent_hash": [
+                "69c8bd1c1dc6103df6bfa9882b5717c0dc4acb8c0c85d8f5c9900db860b6c29b"
+            ],
+            "parent_name": "c:\\Windows\\System32\\powershell.exe",
+            "parent_pid": 7272,
+            "parent_reputation": "NOT_LISTED",
+            "process_cmdline": [
+                "powershell.exe -encodedcommand VwByAGkAdABlAC0ATwB1AHQAcAB1AHQAIAAiAE4AbwAgAG0AYQB0AHQAZQByACAAaABvAHcAIAB0AGgAaQBuACAAeQBvAHUAIABzAGwAaQBjAGUAIABpAHQALAAgAGkAdAAnAHMAIABzAHQAaQBsAGwAIABiAGEAbABvAG4AZQB5AC4AIgA="  # noqa: E501
+            ],
+            "process_cmdline_length": [268],
+            "process_effective_reputation": "NOT_LISTED",
+            "process_effective_reputation_source": "AV",
+            "process_guid": "ABCD123456-010ac2d3-00001cf8-00000000-1d93b6c4d2b16a4",
+            "process_hash": [
+                "9df1ec5e25919660a1b0b85d3965d55797b9aac81e028008428106c4dc"
+            ],
+            "process_name": "c:\\programdata\\mozilla-1de4eec8-1241-4177-a864-e594e8d1fb38\\updates",
+            "process_pid": [2000],
+            "process_reputation": "NOT_LISTED",
+            "process_sha256": "9df1ec5e25919660a1b0b85d3965d55797b9aac81e028008428106c4dc",
+            "process_start_time": "2023-02-08T03:20:32.131Z",
+            "process_username": ["DEV01-39X-1\\bit9qa"],
+            "ttp": [
+                "INTERNATIONAL_SITE",
+                "ACTIVE_CLIENT",
+                "NETWORK_ACCESS",
+                "UNKNOWN_APP",
+            ],
+        }
+    ],
+}
+
+
+OBS_DEOBFUSCATE_CMDLINE_REQUEST = {
+    "input": "powershell.exe -encodedcommand VwByAGkAdABlAC0ATwB1AHQAcAB1AHQAIAAiAE4AbwAgAG0AYQB0AHQAZQByACAAaABvAHcAIAB0AGgAaQBuACAAeQBvAHUAIABzAGwAaQBjAGUAIABpAHQALAAgAGkAdAAnAHMAIABzAHQAaQBsAGwAIABiAGEAbABvAG4AZQB5AC4AIgA="  # noqa: E501
+}
+
+
+OBS_DEOBFUSCATE_CMDLINE_RESPONSE = {
+    "original_code": "Write-Output \"No matter how thin you slice it, it's still baloney.\"\n",
+    "deobfuscated_code": "Write-Output \"No matter how thin you slice it, it's still baloney.\"\n",
+    "identities": [
+        "Write-Output"
+    ],
+    "strings": [
+        "No matter how thin you slice it, it's still baloney."
+    ],
+    "obfuscation_level": 0.0
+}
+
+
 GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_ALERTS = {
     "approximate_unaggregated": 2,
     "completed": 4,
