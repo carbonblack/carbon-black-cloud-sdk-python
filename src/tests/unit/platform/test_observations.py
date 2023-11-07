@@ -673,7 +673,8 @@ def test_observation_deobfuscate_cmdline(cbcsdk_mock):
 
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/observations/detail_jobs",
                              POST_OBSERVATIONS_SEARCH_JOB_RESP)
-    cbcsdk_mock.mock_request("GET",
+    cbcsdk_mock.mock_request(
+        "GET",
         "/api/investigate/v2/orgs/test/observations/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",
         GET_OBSERVATIONS_DETAIL_JOB_RESULTS_FOR_DEOBFUSCATE)
     cbcsdk_mock.mock_request("POST", "/tau/v2/orgs/test/reveal", on_post_deobfuscate)

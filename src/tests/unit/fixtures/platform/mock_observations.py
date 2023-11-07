@@ -365,9 +365,7 @@ GET_OBSERVATIONS_DETAIL_JOB_RESULTS_FOR_DEOBFUSCATE = {
             "parent_name": "c:\\Windows\\System32\\powershell.exe",
             "parent_pid": 7272,
             "parent_reputation": "NOT_LISTED",
-            "process_cmdline": [
-                "powershell.exe -encodedcommand VwByAGkAdABlAC0ATwB1AHQAcAB1AHQAIAAiAE4AbwAgAG0AYQB0AHQAZQByACAAaABvAHcAIAB0AGgAaQBuACAAeQBvAHUAIABzAGwAaQBjAGUAIABpAHQALAAgAGkAdAAnAHMAIABzAHQAaQBsAGwAIABiAGEAbABvAG4AZQB5AC4AIgA="  # noqa: E501
-            ],
+            "process_cmdline": ["powershell.exe -encodedcommand VwByAGkAdABlAC0ATwB1AHQAcAB1AHQAIAAiAE4AbwAgAG0AYQB0AHQAZQByACAAaABvAHcAIAB0AGgAaQBuACAAeQBvAHUAIABzAGwAaQBjAGUAIABpAHQALAAgAGkAdAAnAHMAIABzAHQAaQBsAGwAIABiAGEAbABvAG4AZQB5AC4AIgA="],  # noqa: E501
             "process_cmdline_length": [268],
             "process_effective_reputation": "NOT_LISTED",
             "process_effective_reputation_source": "AV",
