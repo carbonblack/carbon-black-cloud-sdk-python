@@ -226,6 +226,20 @@ class Observation(NewBaseModel):
         except AttributeError:
             raise ApiError("No available network threat metadata.")
 
+    def deobfuscate_cmdline(self):
+        """
+        Deobfuscates the command line of the process pointed to by the observation and returns the deobfuscated result.
+
+        Required Permissions:
+            script.deobfuscation(EXECUTE)
+
+        Returns:
+             dict: A dict containing information about the obfuscated command line, including the deobfuscated result.
+        """
+        body = {"input": self.process_cmdline[0]}
+        result = self._cb.post_object(f"/tau/v2/orgs/{self._cb.credentials.org_key}/reveal", body)
+        return result.json()
+
     @staticmethod
     def search_suggestions(cb, query, count=None):
         """

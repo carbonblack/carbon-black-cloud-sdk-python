@@ -18,6 +18,9 @@ from tests.unit.fixtures.platform.mock_observations import (
     GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_0,
     GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_ZERO_COMP,
     GET_OBSERVATIONS_DETAIL_JOB_RESULTS_RESP,
+    GET_OBSERVATIONS_DETAIL_JOB_RESULTS_FOR_DEOBFUSCATE,
+    OBS_DEOBFUSCATE_CMDLINE_REQUEST,
+    OBS_DEOBFUSCATE_CMDLINE_RESPONSE,
     GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP,
     GET_OBSERVATIONS_SEARCH_JOB_RESULTS_NO_RULE_ID_RESP,
     POST_OBSERVATIONS_FACET_SEARCH_JOB_RESP,
@@ -660,6 +663,30 @@ def test_observations_still_querying2(cbcsdk_mock):
     api = cbcsdk_mock.api
     obs_list = api.select(Observation).where(process_pid=1000)
     assert obs_list._still_querying() is True
+
+
+def test_observation_deobfuscate_cmdline(cbcsdk_mock):
+    """Test the deobfuscate_cmdline() function."""
+    def on_post_deobfuscate(url, body, **kwargs):
+        assert body == OBS_DEOBFUSCATE_CMDLINE_REQUEST
+        return OBS_DEOBFUSCATE_CMDLINE_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/observations/detail_jobs",
+                             POST_OBSERVATIONS_SEARCH_JOB_RESP)
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",
+        GET_OBSERVATIONS_DETAIL_JOB_RESULTS_FOR_DEOBFUSCATE)
+    cbcsdk_mock.mock_request("POST", "/tau/v2/orgs/test/reveal", on_post_deobfuscate)
+
+    api = cbcsdk_mock.api
+    obs = Observation(api, initial_data={"observation_id": "test"})
+    observation = obs._get_detailed_results()
+    deobfuscation = observation.deobfuscate_cmdline()
+    assert len(deobfuscation['identities']) == 1
+    assert len(deobfuscation['strings']) == 1
+    assert deobfuscation['deobfuscated_code'] == \
+           "Write-Output \"No matter how thin you slice it, it's still baloney.\"\n"
 
 
 # --------------------- ObservationFacet --------------------------------------
