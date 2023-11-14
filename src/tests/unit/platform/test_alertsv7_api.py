@@ -25,6 +25,7 @@ from cbc_sdk.platform import (
     HostBasedFirewallAlert,
     IntrusionDetectionSystemAlert,
     DeviceControlAlert,
+    GroupedAlert,
     Process,
     Job
 )
@@ -44,7 +45,10 @@ from tests.unit.fixtures.platform.mock_alerts_v7 import (
     GET_NEW_ALERT_TYPE_RESP,
     GET_OPEN_WORKFLOW_JOB_RESP,
     GET_CLOSE_WORKFLOW_JOB_RESP,
-    GET_ALERT_WORKFLOW_INIT
+    GET_ALERT_WORKFLOW_INIT,
+    GROUP_SEARCH_ALERT_RESPONSE,
+    GROUP_SEARCH_ALERT_REQUEST,
+    MOST_RECENT_ALERT
 )
 from tests.unit.fixtures.platform.mock_process import (
     POST_PROCESS_VALIDATION_RESP,
@@ -1906,3 +1910,37 @@ def test_time_range_formatting(cbcsdk_mock, start, end, time_filter):
     api = cbcsdk_mock.api
     alert_query = api.select(Alert).set_time_range(start=start, end=end)
     assert alert_query._time_range == time_filter
+
+
+def test_group_alert_search_request(cbcsdk_mock):
+    """Test group alert search."""
+    def on_post(url, body, **kwargs):
+        assert body == GROUP_SEARCH_ALERT_REQUEST
+        return GROUP_SEARCH_ALERT_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/grouped_alerts/_search", on_post)
+
+    api = cbcsdk_mock.api
+    grouped_alerts = api.select(GroupedAlert).set_time_range(range="-10d").add_criteria("type", "WATCHLIST").\
+        set_minimum_severity(1).sort_by("count", "DESC")
+    group_alert = grouped_alerts.first()
+
+    assert isinstance(group_alert, GroupedAlert)
+
+
+def test_group_alert_most_recent_alert(cbcsdk_mock):
+    """Test group alert search."""
+    def on_post(url, body, **kwargs):
+        assert body == GROUP_SEARCH_ALERT_REQUEST
+        return GROUP_SEARCH_ALERT_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/grouped_alerts/_search", on_post)
+
+    api = cbcsdk_mock.api
+    grouped_alerts = api.select(GroupedAlert).set_time_range(range="-10d").add_criteria("type", "WATCHLIST").\
+        set_minimum_severity(1).sort_by("count", "DESC")
+    first_grouped_alert = grouped_alerts.first()
+    most_recent_alert = first_grouped_alert.most_recent_alert_()
+
+    assert isinstance(most_recent_alert, WatchlistAlert)
+    assert most_recent_alert.to_json() == MOST_RECENT_ALERT
