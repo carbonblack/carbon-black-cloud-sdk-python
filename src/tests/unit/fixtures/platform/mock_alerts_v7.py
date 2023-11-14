@@ -586,3 +586,69 @@ GET_ALERT_WORKFLOW_INIT = {
     "type": "WATCHLIST",
     "workflow": {"status": "OPEN"}
 }
+
+GET_ALERT_OBFUSCATED_CMDLINE = {
+    "org_key": "ABCD1234",
+    "alert_url": "https://defense.conferdeploy.net/alerts?s[c][query_string]= \
+    id:52fa009d-e2d1-4118-8a8d-04f521ae66aa&orgKey=ABCD1234",
+    "id": "12ab345cd6-e2d1-4118-8a8d-04f521ae66aa", "type": "WATCHLIST",
+    "backend_timestamp": "2023-04-14T21:30:40.570Z", "user_update_timestamp": None,
+    "backend_update_timestamp": "2023-04-14T21:30:40.570Z",
+    "detection_timestamp": "2023-04-14T21:27:14.719Z",
+    "first_event_timestamp": "2023-04-14T21:21:42.193Z",
+    "last_event_timestamp": "2023-04-14T21:21:42.193Z",
+    "severity": 8,
+    "reason": "Process infdefaultinstall.exe was detected by the report\
+                   \"Defense Evasion - \" in 6 watchlists",
+    "reason_code": "05696200-88e6-3691-a1e3-8d9a64dbc24e:7828aec8-8502-3a43-ae68-41b5050dab5b",
+    "threat_id": "0569620088E6669121E38D9A64DBC24E", "primary_event_id": "-7RlZFHcSGWKSrF55B_4Ig-0",
+    "policy_applied": "NOT_APPLIED", "run_state": "RAN", "sensor_action": "ALLOW",
+    "workflow": {"change_timestamp": "2023-04-14T21:30:40.570Z", "changed_by_type": "SYSTEM",
+                 "changed_by": "ALERT_CREATION", "closure_reason": "NO_REASON", "status": "OPEN"},
+    "determination": None,
+    "tags": ["tag1", "tag2"], "alert_notes_present": False, "threat_notes_present": False,
+    "is_updated": False,
+    "device_id": 18118174, "device_name": "demo-machine", "device_uem_id": "",
+    "device_target_value": "LOW",
+    "device_policy": "123abcde-c21b-4d64-9e3e-53595ef9c7af", "device_policy_id": 1234567,
+    "device_os": "WINDOWS",
+    "device_os_version": "Windows 10 x64 SP: 1", "device_username": "demouser@demoorg.com",
+    "device_location": "UNKNOWN", "device_external_ip": "1.2.3.4", "mdr_alert": False,
+    "report_id": "oJFtoawGS92fVMXlELC1Ow-b4ee93fc-ec58-436a-a940-b4d33a613513",
+    "report_name": "Defense Evasion - Signed Binary Proxy Execution - InfDefaultInstall",
+    "report_description": "\n\nThreat:\nThis behavior may be abused by adversaries to execute malicious\
+                   files that could bypass application whitelisting and signature validation on systems.\n\nFalse \
+                   Positives:\nSome environments may legitimate use this, but should be rare.\n\nScore:\n85",
+    "report_tags": ["attack", "attackframework", "threathunting"],
+    "report_link": "https://attack.mitre.org/wiki/Technique/T1218",
+    "ioc_id": "b4ee93fc-ec58-436a-a940-b4d33a613513-0",
+    "ioc_hit": "((process_name:InfDefaultInstall.exe)) -enriched:true",
+    "watchlists": [{"id": "9x0timurQkqP7FBKX4XrUw", "name": "Carbon Black Advanced Threats"}],
+    "process_guid": "ABC12345-000309c2-00000478-00000000-1d6a1c1f2b02805", "process_pid": 10980,
+    "process_name": "powershell.exe",
+    "process_sha256": "1a2345cd88666a458f804e5d0fe925a9f55cf016733458c58c1980addc44cd774",
+    "process_md5": "12c34567894a49f13193513b0138f72a9", "process_effective_reputation": "LOCAL_WHITE",
+    "process_reputation": "NOT_LISTED",
+    "process_cmdline": "powershell.exe -encodedcommand VwByAGkAdABlAC0ATwB1AHQAcAB1AHQAIAAiAE4AbwAgAG0AYQB0AHQAZQByACAAaABvAHcAIAB0AGgAaQBuACAAeQBvAHUAIABzAGwAaQBjAGUAIABpAHQALAAgAGkAdAAnAHMAIABzAHQAaQBsAGwAIABiAGEAbABvAG4AZQB5AC4AIgA=",  # noqa: E501
+    "process_username": "DEMO\\DEMOUSER", "process_issuer": "Demo Code Signing CA - G2",
+    "process_publisher": "Demo Test Authority", "childproc_guid": "", "childproc_username": "",
+    "childproc_cmdline": "",
+    "ml_classification_final_verdict": "NOT_ANOMALOUS", "ml_classification_global_prevalence": "LOW",
+    "ml_classification_org_prevalence": "LOW"
+}
+
+ALERT_DEOBFUSCATE_CMDLINE_REQUEST = {
+    "input": "powershell.exe -encodedcommand VwByAGkAdABlAC0ATwB1AHQAcAB1AHQAIAAiAE4AbwAgAG0AYQB0AHQAZQByACAAaABvAHcAIAB0AGgAaQBuACAAeQBvAHUAIABzAGwAaQBjAGUAIABpAHQALAAgAGkAdAAnAHMAIABzAHQAaQBsAGwAIABiAGEAbABvAG4AZQB5AC4AIgA="  # noqa: E501
+}
+
+ALERT_DEOBFUSCATE_CMDLINE_RESPONSE = {
+    "original_code": "Write-Output \"No matter how thin you slice it, it's still baloney.\"\n",
+    "deobfuscated_code": "Write-Output \"No matter how thin you slice it, it's still baloney.\"\n",
+    "identities": [
+        "Write-Output"
+    ],
+    "strings": [
+        "No matter how thin you slice it, it's still baloney."
+    ],
+    "obfuscation_level": 0.0
+}
