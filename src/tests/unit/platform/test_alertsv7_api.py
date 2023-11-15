@@ -1929,7 +1929,7 @@ def test_group_alert_search_request(cbcsdk_mock):
 
 
 def test_group_alert_most_recent_alert(cbcsdk_mock):
-    """Test group alert search."""
+    """Test group alert search most_recent_alert_() returns the most recent alert."""
     def on_post(url, body, **kwargs):
         assert body == GROUP_SEARCH_ALERT_REQUEST
         return GROUP_SEARCH_ALERT_RESPONSE
@@ -1940,7 +1940,15 @@ def test_group_alert_most_recent_alert(cbcsdk_mock):
     grouped_alerts = api.select(GroupedAlert).set_time_range(range="-10d").add_criteria("type", "WATCHLIST").\
         set_minimum_severity(1).sort_by("count", "DESC")
     first_grouped_alert = grouped_alerts.first()
-    most_recent_alert = first_grouped_alert.most_recent_alert_()
+    most_recent_alert = first_grouped_alert.most_recent_alert_
 
     assert isinstance(most_recent_alert, WatchlistAlert)
     assert most_recent_alert.to_json() == MOST_RECENT_ALERT
+
+
+def test_group_alert_set_group_by(cbcsdk_mock):
+    """Test set_group_by() overrides the init THREAT_ID in the GroupAlertSearchQuery."""
+    api = cbcsdk_mock.api
+    grouped_alerts_query = api.select(GroupedAlert)
+    assert grouped_alerts_query._group_by == "THREAT_ID"
+    assert grouped_alerts_query.set_group_by("NOT_THREAT_ID")._group_by == "NOT_THREAT_ID"

@@ -952,6 +952,8 @@ class GroupedAlert(PlatformModel):
                 self._most_recent_alert = HostBasedFirewallAlert(cb, most_recent_alert["id"], most_recent_alert)
             elif most_recent_alert["type"] == "CONTAINER_RUNTIME":
                 self._most_recent_alert = ContainerRuntimeAlert(cb, most_recent_alert["id"], most_recent_alert)
+            else:
+                self._most_recent_alert = Alert(cb, most_recent_alert["id"], most_recent_alert)
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -965,8 +967,9 @@ class GroupedAlert(PlatformModel):
         Returns:
             GroupAlertSearchQuery: The query object for this alert type.
         """
-        return GroupedAlertSearchQuery(cls, cb).group_by("THREAT_ID")
+        return GroupedAlertSearchQuery(cls, cb)
 
+    @property
     def most_recent_alert_(self):
         """
         Returns the most recent alert for a given group alert.
@@ -1561,7 +1564,7 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
         super().__init__(*args, **kwargs)
         self._group_by = "THREAT_ID"
 
-    def group_by(self, field):
+    def set_group_by(self, field):
         """
         Sets the 'group_by' query body parameter, determining which field to group the alerts by.
 
