@@ -519,6 +519,20 @@ class Alert(PlatformModel):
         """
         return self.workflow
 
+    def deobfuscate_cmdline(self):
+        """
+        Deobfuscates the command line of the process pointed to by the alert and returns the deobfuscated result.
+
+        Required Permissions:
+            script.deobfuscation(EXECUTE)
+
+        Returns:
+             dict: A dict containing information about the obfuscated command line, including the deobfuscated result.
+        """
+        body = {"input": self.process_cmdline}
+        result = self._cb.post_object(f"/tau/v2/orgs/{self._cb.credentials.org_key}/reveal", body)
+        return result.json()
+
     def close(self, closure_reason=None, determination=None, note=None):
         """
         Closes this alert.
