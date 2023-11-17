@@ -44,7 +44,10 @@ from tests.unit.fixtures.platform.mock_alerts_v7 import (
     GET_NEW_ALERT_TYPE_RESP,
     GET_OPEN_WORKFLOW_JOB_RESP,
     GET_CLOSE_WORKFLOW_JOB_RESP,
-    GET_ALERT_WORKFLOW_INIT
+    GET_ALERT_WORKFLOW_INIT,
+    GET_ALERT_OBFUSCATED_CMDLINE,
+    ALERT_DEOBFUSCATE_CMDLINE_REQUEST,
+    ALERT_DEOBFUSCATE_CMDLINE_RESPONSE
 )
 from tests.unit.fixtures.platform.mock_process import (
     POST_PROCESS_VALIDATION_RESP,
@@ -1906,3 +1909,23 @@ def test_time_range_formatting(cbcsdk_mock, start, end, time_filter):
     api = cbcsdk_mock.api
     alert_query = api.select(Alert).set_time_range(start=start, end=end)
     assert alert_query._time_range == time_filter
+
+
+def test_alert_deobfuscate_cmdline(cbcsdk_mock):
+    """Test the deobfuscate_cmdline() method."""
+    def on_post_deobfuscate(url, body, **kwargs):
+        assert body == ALERT_DEOBFUSCATE_CMDLINE_REQUEST
+        return ALERT_DEOBFUSCATE_CMDLINE_RESPONSE
+
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
+                             GET_ALERT_OBFUSCATED_CMDLINE)
+    cbcsdk_mock.mock_request("POST", "/tau/v2/orgs/test/reveal", on_post_deobfuscate)
+
+    api = cbcsdk_mock.api
+    alert = api.select(Alert, "86123310980efd0b38111eba4bfa5e98aa30b19")
+    deobfuscation = alert.deobfuscate_cmdline()
+    assert len(deobfuscation['identities']) == 1
+    assert len(deobfuscation['strings']) == 1
+    assert deobfuscation['deobfuscated_code'] == \
+           "Write-Output \"No matter how thin you slice it, it's still baloney.\"\n"
