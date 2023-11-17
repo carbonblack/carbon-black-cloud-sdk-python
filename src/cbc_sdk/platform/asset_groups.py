@@ -75,7 +75,7 @@ class AssetGroup(MutableBaseModel):
         return AssetGroupQuery(cls, cb)
 
     @classmethod
-    def create_group(cls, cb, name, description, policy_id):
+    def create_group(cls, cb, name, description, policy_id, query=None):
         """
         Create a new asset group.
 
@@ -87,11 +87,13 @@ class AssetGroup(MutableBaseModel):
             name (str): Name for the new asset group.
             description (str): Description for the new asset group.
             policy_id (int): ID of the policy to be associated with this asset group.
+            query (str): Query string to be used to dynamically populate this group. Default is ``None``.
 
         Returns:
             AssetGroup: The new asset group.
         """
-        group_data = {"name": name, "description": description, "member_type": "DEVICE", "policy_id": policy_id}
+        group_data = {"name": name, "description": description, "member_type": "DEVICE",
+                      "query": "" if query is None else query, "policy_id": policy_id}
         group = AssetGroup(cb, None, group_data, False, True)
         group.save()
         return group
