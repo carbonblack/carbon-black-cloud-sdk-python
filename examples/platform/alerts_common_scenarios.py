@@ -25,7 +25,7 @@ import sys
 import time
 import json
 from cbc_sdk import CBCloudAPI
-from cbc_sdk.platform import Alert, WatchlistAlert
+from cbc_sdk.platform import Alert, WatchlistAlert, GroupedAlert
 from cbc_sdk.platform import Device
 
 # To see the http requests being made, and the structure of the search requests enable debug logging
@@ -208,6 +208,22 @@ def main():
     process = watchlist_alert.get_process()
     print("This is the process for the watchlist alert")
     print(process)
+
+    # Run a Grouped Alert Search to group our alerts by threat_id
+    # Start by specifying a GroupedAlert as the type of object to search
+    grouped_alert_search_query = api.select(GroupedAlert)
+    # then much like our AlertSearchQuery define the search query
+    grouped_alert_search_query = grouped_alert_search_query.set_time_range(range="-10d")\
+        .add_criteria("type", "WATCHLIST").set_minimum_severity(1)
+    # run the query to retrieve
+    grouped_alert_search_query.all()
+    # and iterate through our GroupAlert objects
+    print([group_alert for group_alert in grouped_alert_search_query])
+
+    # to retrieve only the first GroupAlert object
+    group_alert = grouped_alert_search_query.first()
+    # to view the most recent alert on the object
+    print(group_alert.most_recent_alert_)
 
 
 if __name__ == "__main__":
