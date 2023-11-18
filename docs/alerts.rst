@@ -15,6 +15,7 @@ Resources
 * `Alert Search Fields <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields/>`_ on Developer Network
 * Example script in `GitHub <https://github.com/carbonblack/carbon-black-cloud-sdk-python/tree/develop/examples/platform>`_
 * If you are updating from SDK version 1.4.3 or earlier, see the `alerts-migration`_ guide.
+* If you are updating from Notifications, see the `notification-migration`_ guide.
 
 .. note::
     In Alerts v7, and therefore SDK 1.5.0 onwards, Observed Alerts are not included; they are an Observation. The field ``category``
@@ -275,7 +276,8 @@ The workflow leverages the alert search structure to specify the alerts to close
     * Two common uses are to update one alert, or to update all alerts with a specific threat id.
     * Any search request can be used as the criteria to select alerts to update the alert status.
 
-    .. code-block:: python
+.. code-block:: python
+
     >>> # This query will select only the alert with the specified id
     >>> ALERT_ID = "id of the alert that you want to close"
     >>> alert_query = api.select(Alert).add_criteria("id", [ALERT_ID])
@@ -287,28 +289,32 @@ The workflow leverages the alert search structure to specify the alerts to close
     * The status can be ``OPEN``, ``IN PROGRESS`` or ``CLOSED`` (previously ``DISMISSED``).
     * You may include a Closure Reason.
 
-    .. code-block:: python
+.. code-block:: python
+
     >>> # by calling update on the alert_query, the a request to change the status
     >>> # for all alerts matching that criteria will be submitted
     >>> job = alert_query.update("CLOSED", "RESOLVED", "NONE", "Setting to closed for SDK demo")
 
 3. The immediate response confirms that the job was successfully submitted.
 
-    .. code-block:: python
-        >>> print("job.id = {}".format(job.id))
-        job.id = 1234567
+.. code-block:: python
+
+    >>> print("job.id = {}".format(job.id))
+    job.id = 1234567
 
 4. Use the :py:mod:`Job() cbc_sdk.platform.jobs.Job` class to determine when the update is complete.
 
     Use the Job object to wait until the Job has completed.  The python script will wait while
     the SDK polls to determine when the job is complete.
 
-    .. code-block:: python
+.. code-block:: python
+
     >>> completed_job = job.await_completion().result()
 
 5. Refresh the Alert Search to get the updated alert data into the SDK.
 
-    .. code-block:: python
+.. code-block:: python
+
     >>> alert.refresh()
     >>> print("Status = {}, Expecting CLOSED".format(alert.workflow["status"]))
 
@@ -319,39 +325,13 @@ Use the sequence of calls to update future alerts that have the same threat id. 
     with the alert closure; that is, you can use the dismiss future alerts call to close future occurrences and call an
     alert closure to close current open alerts that have the threat id.
 
-    .. code-block:: python
+.. code-block:: python
+
     >>> alert_threat_query = api.select(Alert).add_criteria("threat_id","CFED0B211ED09F8EC1C83D4F3FBF1709")
     >>> alert.dismiss_threat("threat remediation done", "testing dismiss_threat in the SDK")
     >>> # To undo the dismissal, call update
     >>> alert.update_threat("threat remediation un-done", "testing update_threat in the SDK")
 
-Migrating from Notifications to Alerts
---------------------------------------
-
-.. note::
-    The Notifications API is deprecated, and deactivation is planned for 31 October 2024.
-
-    For information about migrating from the API and alternative solutions, see
-    `IntegrationService notification v3 API Migration Guide <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/notification-migration/>`_
-
-Notifications work on a subscription-based principle and they require a SIEM authentication key.
-By using that key, you are subscribing to a certain criteria of alerts. As this is deprecated, new alert types
-cannot be retrieved from the notifications API.
-
-See `the official notes <https://developer.carbonblack.com/reference/carbon-black-cloud/cb-defense/latest/rest-api/#get-notifications>`_ in the Carbon Black API website.
-
-.. image:: _static/cbc_platform_notification_edit.png
-   :alt: Editing a notification in the CBC Platform
-   :align: center
-
-You can replicate the settings shown in the screenshot by running the following search on Alerts:
-
-.. code-block:: python
-    >>> from cbc_sdk import CBCloudAPI
-    >>> from cbc_sdk.platform import Alert
-    >>> alerts = api.select(Alert).set_minimum_severity(7).\
-    >>>     add_criteria("type", ["CB_ANALYTICS", "DEVICE_CONTROL"]).\
-    >>>     add_criteria("device_policy", "Standard")
 
 High Volume and Streaming Solution for Alerts
 ---------------------------------------------
