@@ -31,9 +31,8 @@ properties:
     description: Timestamp of the last (newest) alert in the group
   most_recent_alert:
     type: object
-    description: The most recent alert in the group. Follows the Alerts Schema. This is an example of what an alert in
-      the group looks like. Specific fields may vary between alert instances
-    $ref: ''#/../alert.yaml'
+    description: The most recent alert in the group. Follows the Alerts Schema and returns an :py:class:`Alert` object.
+      Specific fields vary between alert instances
   policy_applied:
     type: string
     description: APPLIED, when any of the alerts in the group had actions blocked by the sensor due to a policy.
