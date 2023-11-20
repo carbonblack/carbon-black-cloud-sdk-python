@@ -14,11 +14,15 @@ Use this guide to update from using ```get_notifications()```, which leverages t
     For more information about migrating from the API and alternative solutions, see
     `IntegrationService notification v3 API Migration Guide <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/notification-migration/>`_
 
+
 The key differences between Notifications and Alerts are:
 
 * In Notifications, the criteria that defines when a notification is sent is defined in the Carbon Black Cloud console. When using the Alerts v7 API, the criteria is part of the API request
+
 * Notifications work on a subscription-based principle and they require a SIEM authentication key.  By using that key, you are subscribing to a certain criteria of alerts.
+
 * As the API Notification API is deprecated, new alert types such as Intrusion Detection System Alerts cannot be retrieved from the Notifications API.
+
 * The Notifications endpoint is a read-once queue whereas the Alerts v7 is a search request. When calling the Alerts v7 API, the caller (your script) must manage state, keeping track of the timestamp of the last Alert retrieved and using that for the start timestamp on the next request. See the Alert Bulk Export guide for details on the polling algorithm.
 
 We recommend that customers evaluate the new fields that are available in Alerts v7 API and supported in SDK 1.5.0 onwards
