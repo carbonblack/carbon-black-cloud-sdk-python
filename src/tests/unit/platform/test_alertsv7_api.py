@@ -51,6 +51,7 @@ from tests.unit.fixtures.platform.mock_alerts_v7 import (
     ALERT_DEOBFUSCATE_CMDLINE_RESPONSE,
     GROUP_SEARCH_ALERT_RESPONSE,
     GROUP_SEARCH_ALERT_REQUEST,
+    GROUP_SEARCH_ALERT_REQUEST_OVERRIDE_GROUPBY,
     MOST_RECENT_ALERT
 )
 from tests.unit.fixtures.platform.mock_process import (
@@ -1985,10 +1986,25 @@ def test_group_alert_most_recent_alert(cbcsdk_mock):
 
 def test_group_alert_set_group_by(cbcsdk_mock):
     """Test set_group_by() overrides the init THREAT_ID in the GroupAlertSearchQuery."""
+    def on_post(url, body, **kwargs):
+        if body["group_by"]["field"] == "THREAT_ID":
+            # path on first call when set_group_by is defaulted to THREAT_ID
+            assert body == GROUP_SEARCH_ALERT_REQUEST
+            assert body["group_by"]["field"] == "THREAT_ID"
+        else:
+            # path on second call where group_by is overridden
+            assert body == GROUP_SEARCH_ALERT_REQUEST_OVERRIDE_GROUPBY
+            assert body["group_by"]["field"] == "NOT_THREAT_ID"
+        return GROUP_SEARCH_ALERT_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/grouped_alerts/_search", on_post)
+
     api = cbcsdk_mock.api
-    grouped_alerts_query = api.select(GroupedAlert)
-    assert grouped_alerts_query._group_by == "THREAT_ID"
-    assert grouped_alerts_query.set_group_by("NOT_THREAT_ID")._group_by == "NOT_THREAT_ID"
+    grouped_alerts = api.select(GroupedAlert).set_time_range(range="-10d").add_criteria("type", "WATCHLIST").\
+        set_minimum_severity(1).sort_by("count", "DESC")
+    grouped_alerts.first()
+    grouped_alerts = grouped_alerts.set_group_by("NOT_THREAT_ID")
+    grouped_alerts.first()
 
 
 def test_group_alert_bulk_dismiss_workflow(cbcsdk_mock):

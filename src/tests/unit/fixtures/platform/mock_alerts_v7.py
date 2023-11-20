@@ -1541,3 +1541,25 @@ MOST_RECENT_ALERT = {
     "childproc_username": "",
     "childproc_cmdline": ""
 }
+
+GROUP_SEARCH_ALERT_REQUEST_OVERRIDE_GROUPBY = {
+    "group_by": {
+        "field": "NOT_THREAT_ID"
+    },
+    "time_range": {
+        "range": "-10d"
+    },
+    "criteria": {
+        "type": [
+            "WATCHLIST"
+        ],
+        "minimum_severity": 1
+    },
+    "rows": 1,
+    "sort": [
+        {
+            "field": "count",
+            "order": "DESC"
+        }
+    ]
+}
