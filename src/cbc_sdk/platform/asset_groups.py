@@ -107,7 +107,8 @@ class AssetGroup(MutableBaseModel):
             name (str): Name for the new asset group.
             description (str): Description for the new asset group.
             policy_id (int): ID of the policy to be associated with this asset group.
-            query (str): Query string to be used to dynamically populate this group. Default is ``None``.
+            query (str): Query string to be used to dynamically populate this group. Default is ``None``,
+                which means devices _must_ be manually assigned to the group.
 
         Returns:
             AssetGroup: The new asset group.
