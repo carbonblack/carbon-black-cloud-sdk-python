@@ -7,9 +7,9 @@ Use this guide to update from using ```get_notifications()```, which leverages t
 ```/integrationServices/v3/notification``` API to using Alerts in SDK v1.5.0 or higher with Alerts v7 API.
 
 .. note::
-    The /integrationServices/v3/notificationf API is deprecated, and deactivation is planned for 31 October 2024.
+    The /integrationServices/v3/notification API is deprecated, and deactivation is planned for 31 October 2024.
 
-    The Access Level Type SIEM used to access the Notifications API is also deprecated, and deactivation is planned for 31 January 2025.
+    The Access Level Type ```SIEM``` used to access the Notifications API is also deprecated. Deactivation of the legacy access level type ```SIEM``` is planned for 31 January 2025.
 
     For more information about migrating from the API and alternative solutions, see
     `IntegrationService notification v3 API Migration Guide <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/notification-migration/>`_
@@ -69,5 +69,5 @@ An Alert contains a lot more information than a Notification, and most of the fi
 The other modification required is that where the Notifications was a read one queue, Alerts are retrieved using a search.
 An example script with the polling logic implemented is in the GitHub Repository, `alerts_bulk_export.py in GitHub Examples <https://github.com/carbonblack/carbon-black-cloud-sdk-python/tree/develop/examples/platform>`_.
 
-There is also an guide to `Alert Bulk Export <http://localhost:1313/reference/carbon-black-cloud/guides/alert-bulk-export/>`_
+There is also a guide to `Alert Bulk Export <http://localhost:1313/reference/carbon-black-cloud/guides/alert-bulk-export/>`_
 on the developer network with a detailed explanation of the logic.
