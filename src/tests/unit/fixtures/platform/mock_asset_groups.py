@@ -5,7 +5,8 @@ CREATE_AG_REQUEST = {
     "description": "Group Test Description",
     "member_type": "DEVICE",
     "name": "Group Test",
-    "policy_id": 7113785
+    "policy_id": 7113785,
+    "query": "os_version:Windows"
 }
 
 CREATE_AG_RESPONSE = {
@@ -18,6 +19,7 @@ CREATE_AG_RESPONSE = {
     "discovered": False,
     "create_time": "2022-11-09T06:27:30.734Z",
     "update_time": "2022-11-09T06:27:30.734Z",
+    "query": "os_version:Windows",
     "member_count": 0,
     "policy_id": 7113785,
     "policy_name": "Monitored"
@@ -33,6 +35,7 @@ EXISTING_AG_DATA = {
     "discovered": False,
     "create_time": "2022-11-09T06:27:30.734Z",
     "update_time": "2022-11-09T06:27:30.734Z",
+    "query": None,
     "member_count": 0,
     "policy_id": 8675309,
     "policy_name": "Jenny"
@@ -48,6 +51,7 @@ UPDATE_AG_REQUEST = {
     "discovered": False,
     "create_time": "2022-11-09T06:27:30.734Z",
     "update_time": "2022-11-09T06:27:30.734Z",
+    "query": None,
     "member_count": 0,
     "policy_id": 9001,
     "policy_name": "Jenny"
@@ -89,6 +93,7 @@ QUERY_RESPONSE = {
             "discovered": False,
             "create_time": "2022-09-05T13:12:31.848Z",
             "update_time": "2022-09-05T13:12:31.848Z",
+            "query": None,
             "member_count": 0,
             "policy_id": 7113785,
             "policy_name": "Monitored"

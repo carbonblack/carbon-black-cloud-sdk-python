@@ -11,7 +11,22 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-"""Asset groups implementation as part of Platform API"""
+"""
+The model and query classes for referencing asset groups.
+
+An *asset group* represents a group of devices (endpoints, VM workloads, and/or VDIs) that can have a single policy
+applied to it so the protections of all similar assets are synchronized with one another.  Policies carry a "position"
+value as one of their attributes, so that, between the policy attached directly to the device, and the policies
+attached to any asset groups the device is a member of, the one with the highest "position" is the one that applies to
+that device.  Devices may be added to an asset group either explicitly, or implicitly by specifying a query on the
+asset group, such that all devices matching that search criteria are considered part of the asset group.
+
+Typical usage example::
+
+    # assume "cb" is an instance of CBCloudAPI
+    query = cb.select(AssetGroup).where('name:"HQ Devices"')
+    group = query.first()
+"""
 
 from cbc_sdk.base import (MutableBaseModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin,
                           CriteriaBuilderSupportMixin, AsyncQueryMixin)
@@ -20,7 +35,12 @@ from cbc_sdk.platform.devices import DeviceSearchQuery
 
 
 class AssetGroup(MutableBaseModel):
-    """Represents an asset group within the organization."""
+    """
+    Represents an asset group within the current organization in the Carbon Black Cloud.
+
+    ``AssetGroup`` objects are typically located via a search (using ``AssetGroupQuery``) before they can be operated
+     on. They may also be created on the Carbon Black Cloud by using the ``create_group()`` class method.
+    """
     urlobject = "/asset_groups/v1beta/orgs/{0}/groups"
     urlobject_single = "/asset_groups/v1beta/orgs/{0}/groups/{1}"
     primary_key = "id"
@@ -28,10 +48,10 @@ class AssetGroup(MutableBaseModel):
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
         """
-        Initialize the AssetGroup object.
+        Initialize the ``AssetGroup`` object.
 
         Required Permissions:
-            gm.group-set (READ)
+            group-management(READ)
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
@@ -75,23 +95,34 @@ class AssetGroup(MutableBaseModel):
         return AssetGroupQuery(cls, cb)
 
     @classmethod
-    def create_group(cls, cb, name, description, policy_id):
+    def create_group(cls, cb, name, description, **kwargs):
         """
         Create a new asset group.
 
         Required Permissions:
-            gm.group-set (CREATE)
+            group-management(CREATE)
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
             name (str): Name for the new asset group.
             description (str): Description for the new asset group.
-            policy_id (int): ID of the policy to be associated with this asset group.
+            kwargs (dict): Keyword arguments, as defined below.
+
+        Keyword Args:
+            policy_id (int): ID of the policy to be associated with this asset group. Default is ``None``.
+            query (str): Query string to be used to dynamically populate this group. Default is ``None``,
+                which means devices _must_ be manually assigned to the group.
 
         Returns:
             AssetGroup: The new asset group.
         """
-        group_data = {"name": name, "description": description, "member_type": "DEVICE", "policy_id": policy_id}
+        group_data = {"name": name, "description": description, "member_type": "DEVICE"}
+        policy_id = kwargs.get("policy_id", None)
+        if policy_id:
+            group_data["policy_id"] = policy_id
+        query = kwargs.get("query", None)
+        if query:
+            group_data["query"] = query
         group = AssetGroup(cb, None, group_data, False, True)
         group.save()
         return group
@@ -99,10 +130,15 @@ class AssetGroup(MutableBaseModel):
 
 class AssetGroupQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin,
                       AsyncQueryMixin):
-    """Represents a query used to locate AssetGroup objects."""
+    """
+    Query object that is used to locate ``AssetGroup`` objects.
+
+    The ``AssetGroupQuery`` is constructed via SDK functions like the ``select()`` method on ``CBCloudAPI``.
+    The user would then add a query and/or criteria to it before iterating over the results.
+    """
     def __init__(self, doc_class, cb):
         """
-        Initialize the AssetGroupQuery.
+        Initialize the ``AssetGroupQuery``.
 
         Args:
             doc_class (class): The model class that will be returned by this query.
@@ -123,7 +159,7 @@ class AssetGroupQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
         Set the "discovered" flag in the search criteria.
 
         Args:
-            discovered (bool): True to locate only discovered asset groups, False to locate only undiscovered.
+            discovered (bool): ``True`` to locate only discovered asset groups, ``False`` to locate only undiscovered.
 
         Returns:
             AssetGroupQuery: This instance.
@@ -191,7 +227,7 @@ class AssetGroupQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
         Args:
             from_row (int): The row to start the query at.
             max_rows (int): The maximum number of rows to be returned.
-            add_sort (bool): If True(default), the sort criteria will be added as part of the request.
+            add_sort (bool): If ``True`` (default), the sort criteria will be added as part of the request.
 
         Returns:
             dict: The complete request body.
@@ -220,12 +256,7 @@ class AssetGroupQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
         return url
 
     def _count(self):
-        """
-        Returns the number of results from the run of this query.
-
-        Returns:
-            int: The number of results from the run of this query.
-        """
+        """Returns the number of results from the run of this query."""
         if self._count_valid:
             return self._total_results
 
@@ -242,6 +273,9 @@ class AssetGroupQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
     def _perform_query(self, from_row=1, max_rows=-1):
         """
         Performs the query and returns the results of the query in an iterable fashion.
+
+        Required Permissions:
+            group-management(READ)
 
         Args:
             from_row (int): The row to start the query at (default 1).
@@ -282,13 +316,13 @@ class AssetGroupQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
         Executed in the background to run an asynchronous query.
 
         Required Permissions:
-
+            group-management(READ)
 
         Args:
-            context (object): Not used; always None.
+            context (object): Not used; always ``None``.
 
         Returns:
-            list[AssetGroup]: Result of the async query, as a list of AssetGroup objects.
+            list[AssetGroup]: Result of the async query, as a list of ``AssetGroup`` objects.
         """
         url = self._build_url("/_search")
         request = self._build_request(0, -1)

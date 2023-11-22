@@ -54,13 +54,15 @@ def test_create_asset_group(cbcsdk_mock):
 
     cbcsdk_mock.mock_request('POST', '/asset_groups/v1beta/orgs/test/groups', on_post)
     api = cbcsdk_mock.api
-    group = AssetGroup.create_group(api, "Group Test", "Group Test Description", 7113785)
+    group = AssetGroup.create_group(api, "Group Test", "Group Test Description", policy_id=7113785,
+                                    query="os_version:Windows")
     assert posted
     assert group is not None
     assert group.id == '4b48a403-e371-4e3d-ae6c-8eb9080fe7ad'
     assert group.name == 'Group Test'
     assert group.description == 'Group Test Description'
     assert group.policy_id == 7113785
+    assert group.query == "os_version:Windows"
 
 
 def test_find_and_update_asset_group(cbcsdk_mock):
