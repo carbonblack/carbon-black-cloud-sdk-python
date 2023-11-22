@@ -21,7 +21,7 @@ attached to any asset groups the device is a member of, the one with the highest
 that device.  Devices may be added to an asset group either explicitly, or implicitly by specifying a query on the
 asset group, such that all devices matching that search criteria are considered part of the asset group.
 
-Typical usage example:
+Typical usage example::
 
     # assume "cb" is an instance of CBCloudAPI
     query = cb.select(AssetGroup).where('name:"HQ Devices"')
@@ -51,7 +51,7 @@ class AssetGroup(MutableBaseModel):
         Initialize the ``AssetGroup`` object.
 
         Required Permissions:
-            gm.group-set(READ)
+            group-management(READ)
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
@@ -95,26 +95,34 @@ class AssetGroup(MutableBaseModel):
         return AssetGroupQuery(cls, cb)
 
     @classmethod
-    def create_group(cls, cb, name, description, policy_id, query=None):
+    def create_group(cls, cb, name, description, **kwargs):
         """
         Create a new asset group.
 
         Required Permissions:
-            gm.group-set(CREATE)
+            group-management(CREATE)
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
             name (str): Name for the new asset group.
             description (str): Description for the new asset group.
-            policy_id (int): ID of the policy to be associated with this asset group.
+            kwargs (dict): Keyword arguments, as defined below.
+
+        Keyword Args:
+            policy_id (int): ID of the policy to be associated with this asset group. Default is ``None``.
             query (str): Query string to be used to dynamically populate this group. Default is ``None``,
                 which means devices _must_ be manually assigned to the group.
 
         Returns:
             AssetGroup: The new asset group.
         """
-        group_data = {"name": name, "description": description, "member_type": "DEVICE",
-                      "query": "" if query is None else query, "policy_id": policy_id}
+        group_data = {"name": name, "description": description, "member_type": "DEVICE"}
+        policy_id = kwargs.get("policy_id", None)
+        if policy_id:
+            group_data["policy_id"] = policy_id
+        query = kwargs.get("query", None)
+        if query:
+            group_data["query"] = query
         group = AssetGroup(cb, None, group_data, False, True)
         group.save()
         return group
