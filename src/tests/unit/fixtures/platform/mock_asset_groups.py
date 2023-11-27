@@ -77,7 +77,7 @@ QUERY_REQUEST = {
             "order": "ASC"
         }
     ],
-    "start": 1
+    "start": 0
 }
 
 QUERY_RESPONSE = {
