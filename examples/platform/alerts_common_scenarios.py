@@ -114,7 +114,7 @@ def main():
     # Alerts - org.alerts.close - EXECUTE:
     # Alerts - org.alerts.notes - CREATE, READ, UPDATE, DELETE
 
-    api = CBCloudAPI()
+    api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
 
     # workflow is in a separate method.
     alert_workflow(api)
