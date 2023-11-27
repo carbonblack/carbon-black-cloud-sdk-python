@@ -1993,3 +1993,29 @@ def test_group_alert_bulk_dismiss_workflow(cbcsdk_mock):
     group_alert_query = api.select(GroupedAlert).add_criteria("type", ["CB_ANALYTICS"])
     job = group_alert_query.close("OTHER", "TRUE_POSITIVE", "Note about the determination")
     assert isinstance(job, Job)
+
+
+def test_group_alert_to_get_alerts(cbcsdk_mock):
+    """Test the helper function get_alerts creates the proper request."""
+
+    def on_post(url, body, **kwargs):
+        assert body == GROUP_SEARCH_ALERT_REQUEST
+        return GROUP_SEARCH_ALERT_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/grouped_alerts/_search", on_post)
+
+    api = cbcsdk_mock.api
+    grouped_alerts = api.select(GroupedAlert).set_time_range(range="-10d").add_criteria("type", "WATCHLIST").\
+        set_minimum_severity(1).sort_by("count", "DESC")
+    group_alert = grouped_alerts.first()
+
+    alert_search_query = group_alert.get_alerts()
+    manual_alert_search_query = api.select(Alert).set_time_range(range="-10d").add_criteria("type", "WATCHLIST").\
+        set_minimum_severity(1).sort_by("count", "DESC").\
+        add_criteria("threat_id", group_alert.most_recent_alert["threat_id"])
+
+    # deleting instance of querybuilder for assertion check
+    delattr(alert_search_query, "_query_builder")
+    delattr(manual_alert_search_query, "_query_builder")
+
+    assert vars(alert_search_query) == vars(manual_alert_search_query)
