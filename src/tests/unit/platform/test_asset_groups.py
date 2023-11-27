@@ -52,7 +52,7 @@ def test_create_asset_group(cbcsdk_mock):
         posted = True
         return CREATE_AG_RESPONSE
 
-    cbcsdk_mock.mock_request('POST', '/asset_groups/v1beta/orgs/test/groups', on_post)
+    cbcsdk_mock.mock_request('POST', '/asset_groups/v1/orgs/test/groups', on_post)
     api = cbcsdk_mock.api
     group = AssetGroup.create_group(api, "Group Test", "Group Test Description", policy_id=7113785,
                                     query="os_version:Windows")
@@ -75,9 +75,9 @@ def test_find_and_update_asset_group(cbcsdk_mock):
         did_put = True
         return copy.deepcopy(body)
 
-    cbcsdk_mock.mock_request('GET', '/asset_groups/v1beta/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
                              copy.deepcopy(EXISTING_AG_DATA))
-    cbcsdk_mock.mock_request('PUT', '/asset_groups/v1beta/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
+    cbcsdk_mock.mock_request('PUT', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
                              on_put)
     api = cbcsdk_mock.api
     group = api.select(AssetGroup, 'db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16')
@@ -104,9 +104,9 @@ def test_find_and_delete_asset_group(cbcsdk_mock):
         did_delete = True
         return CBCSDKMock.StubResponse(None, scode=200)
 
-    cbcsdk_mock.mock_request('GET', '/asset_groups/v1beta/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
                              copy.deepcopy(EXISTING_AG_DATA))
-    cbcsdk_mock.mock_request('DELETE', '/asset_groups/v1beta/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
+    cbcsdk_mock.mock_request('DELETE', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
                              on_delete)
     api = cbcsdk_mock.api
     group = api.select(AssetGroup, 'db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16')
@@ -134,7 +134,7 @@ def test_query_with_all_options(cbcsdk_mock, name, polid):
         assert tbody == QUERY_REQUEST
         return QUERY_RESPONSE
 
-    cbcsdk_mock.mock_request('POST', '/asset_groups/v1beta/orgs/test/groups/_search', on_post)
+    cbcsdk_mock.mock_request('POST', '/asset_groups/v1/orgs/test/groups/_search', on_post)
     api = cbcsdk_mock.api
     query = api.select(AssetGroup).where("test").set_discovered(False).set_name(name).set_policy_id(polid)
     query.sort_by("name", "ASC")
@@ -157,7 +157,7 @@ def test_query_async(cbcsdk_mock):
         assert tbody == QUERY_REQUEST
         return QUERY_RESPONSE
 
-    cbcsdk_mock.mock_request('POST', '/asset_groups/v1beta/orgs/test/groups/_search', on_post)
+    cbcsdk_mock.mock_request('POST', '/asset_groups/v1/orgs/test/groups/_search', on_post)
     api = cbcsdk_mock.api
     query = api.select(AssetGroup).where("test").set_discovered(False).set_name("Group Test").set_policy_id(7113785)
     query.sort_by("name", "ASC")

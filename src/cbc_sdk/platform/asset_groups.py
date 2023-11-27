@@ -41,8 +41,8 @@ class AssetGroup(MutableBaseModel):
     ``AssetGroup`` objects are typically located via a search (using ``AssetGroupQuery``) before they can be operated
      on. They may also be created on the Carbon Black Cloud by using the ``create_group()`` class method.
     """
-    urlobject = "/asset_groups/v1beta/orgs/{0}/groups"
-    urlobject_single = "/asset_groups/v1beta/orgs/{0}/groups/{1}"
+    urlobject = "/asset_groups/v1/orgs/{0}/groups"
+    urlobject_single = "/asset_groups/v1/orgs/{0}/groups/{1}"
     primary_key = "id"
     swagger_meta_file = "platform/models/asset_group.yaml"
 
