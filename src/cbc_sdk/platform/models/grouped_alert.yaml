@@ -1,0 +1,50 @@
+type: object
+properties:
+  count:
+    type: integer
+    description: Count of individual alerts that are a part of the group
+  determination_values:
+    type: object
+    description: Map of determination (TRUE_POSITIVE, FALSE_POSITIVE, NONE) to the number of individual alerts in the
+      group with that determination. Determinations with no alerts are omitted.
+  ml_classification_final_verdicts:
+    type: object
+    description: Map of ML classification (ANOMALOUS, NOT_ANOMALOUS, NO_PREDICTION) to the number of individual alerts
+      in the group with that classification. Classifications with no alerts are omitted.
+  workflow_states:
+    type: object
+    description: Map of workflow state (OPEN, IN_PROGRESS, CLOSED) to the number of individual alerts in the group in
+      that state. States with no alerts are omitted.
+  device_count:
+    type: integer
+    description: Count of unique devices where this alert can be found
+  first_alert_timestamp:
+    type: string
+    format: date-time
+    description: Timestamp of the first (oldest) alert in the group
+  highest_severity:
+    type: integer
+    description: Highest severity score of all alerts in the group
+  last_alert_timestamp:
+    type: string
+    format: date-time
+    description: Timestamp of the last (newest) alert in the group
+  most_recent_alert:
+    type: object
+    description: The most recent alert in the group. Follows the Alerts Schema and returns an :py:class:`Alert` object.
+      Specific fields vary between alert instances
+  policy_applied:
+    type: string
+    description: APPLIED, when any of the alerts in the group had actions blocked by the sensor due to a policy.
+      NOT_APPLIED otherwise.
+  tags:
+    type: array
+    description: List of tags that have been applied to the threat ID
+    items:
+      type: string
+  threat_notes_present:
+    type: boolean
+    description: Whether there are threat-level notes available on this threat ID
+  workload_count:
+    type: integer
+    description: Count of unique Kubernetes workloads where this alert can be found

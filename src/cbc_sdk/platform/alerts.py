@@ -921,6 +921,65 @@ class IntrusionDetectionSystemAlert(Alert):
         return AlertSearchQuery(cls, cb).add_criteria("type", ["INTRUSION_DETECTION_SYSTEM"])
 
 
+class GroupedAlert(PlatformModel):
+    """Represents Grouped alerts."""
+    urlobject = "/api/alerts/v7/orgs/{0}/grouped_alerts"
+    swagger_meta_file = "platform/models/grouped_alert.yaml"
+
+    def __init__(self, cb, model_unique_id, initial_data=None):
+        """
+        Initialize the Grouped Alert object.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            model_unique_id (str): ID of the alert represented.
+            initial_data (dict): Initial data used to populate the alert.
+        """
+        super(GroupedAlert, self).__init__(cb, model_unique_id, initial_data)
+        self._most_recent_alert = None
+
+        most_recent_alert = initial_data["most_recent_alert"]
+        if "type" in most_recent_alert:
+            if most_recent_alert["type"] == "CB_ANALYTICS":
+                self._most_recent_alert = CBAnalyticsAlert(cb, most_recent_alert["id"], most_recent_alert)
+            elif most_recent_alert["type"] == "WATCHLIST":
+                self._most_recent_alert = WatchlistAlert(cb, most_recent_alert["id"], most_recent_alert)
+            elif most_recent_alert["type"] == "INTRUSION_DETECTION_SYSTEM":
+                self._most_recent_alert = IntrusionDetectionSystemAlert(cb, most_recent_alert["id"], most_recent_alert)
+            elif most_recent_alert["type"] == "DEVICE_CONTROL":
+                self._most_recent_alert = DeviceControlAlert(cb, most_recent_alert["id"], most_recent_alert)
+            elif most_recent_alert["type"] == "HOST_BASED_FIREWALL":
+                self._most_recent_alert = HostBasedFirewallAlert(cb, most_recent_alert["id"], most_recent_alert)
+            elif most_recent_alert["type"] == "CONTAINER_RUNTIME":
+                self._most_recent_alert = ContainerRuntimeAlert(cb, most_recent_alert["id"], most_recent_alert)
+            else:
+                self._most_recent_alert = Alert(cb, most_recent_alert["id"], most_recent_alert)
+
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
+        """
+        Returns the appropriate query object for this alert type.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            GroupAlertSearchQuery: The query object for this alert type.
+        """
+        return GroupedAlertSearchQuery(cls, cb)
+
+    @property
+    def most_recent_alert_(self):
+        """
+        Returns the most recent alert for a given group alert.
+
+        Returns:
+            Alert: the most recent alert in the Group Alert.
+        """
+        return self._most_recent_alert
+
+
 """Alert Queries"""
 
 
@@ -1496,3 +1555,66 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         else:
             self._exclusions["remote_is_private"] = is_private
         return self
+
+
+class GroupedAlertSearchQuery(AlertSearchQuery):
+    """Represents a query that is used to group Alert objects by a given field."""
+    def __init__(self, *args, **kwargs):
+        """Initialize the GroupAlertSearchQuery."""
+        super().__init__(*args, **kwargs)
+        self._group_by = "THREAT_ID"
+
+    def set_group_by(self, field):
+        """
+        Sets the 'group_by' query body parameter, determining which field to group the alerts by.
+
+        Args:
+            field (string): The field to group by
+        """
+        self._group_by = field
+        return self
+
+    def _perform_query(self, from_row=1, max_rows=-1):
+        """
+        Performs the query and returns the results of the query in an iterable fashion.
+
+        Args:
+            from_row (int): The row to start the query at (default 1).
+            max_rows (int): The maximum number of rows to be returned (default -1, meaning "all").
+
+        Returns:
+            Iterable: The iterated query.
+        """
+        url = self._build_url("/_search")
+        current = from_row
+        numrows = 0
+        still_querying = True
+        while still_querying:
+            request = self._build_request(current, max_rows)
+            request["group_by"] = {"field": self._group_by}
+            resp = self._cb.post_object(url, body=request)
+            result = resp.json()
+
+            self._total_results = result["num_found"]
+            self._group_by_total_count = result["group_by_total_count"]
+
+            # Prevent 500 Internal Server Error from retrieving behind MAX_RESULTS_LIMIT
+            if self._total_results > MAX_RESULTS_LIMIT:
+                self._total_results = MAX_RESULTS_LIMIT
+            self._count_valid = True
+
+            results = result.get("results", [])
+            for item in results:
+                grouped_alert = self._doc_class(self._cb, None, item)
+                yield grouped_alert
+                current += 1
+                numrows += 1
+
+                if max_rows > 0 and numrows == max_rows:
+                    still_querying = False
+                    break
+
+            from_row = current
+            if current >= self._total_results:
+                still_querying = False
+                break

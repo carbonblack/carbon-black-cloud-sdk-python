@@ -25,6 +25,7 @@ from cbc_sdk.platform import (
     HostBasedFirewallAlert,
     IntrusionDetectionSystemAlert,
     DeviceControlAlert,
+    GroupedAlert,
     Process,
     Job
 )
@@ -44,7 +45,11 @@ from tests.unit.fixtures.platform.mock_alerts_v7 import (
     GET_NEW_ALERT_TYPE_RESP,
     GET_OPEN_WORKFLOW_JOB_RESP,
     GET_CLOSE_WORKFLOW_JOB_RESP,
-    GET_ALERT_WORKFLOW_INIT
+    GET_ALERT_WORKFLOW_INIT,
+    GROUP_SEARCH_ALERT_RESPONSE,
+    GROUP_SEARCH_ALERT_REQUEST,
+    GROUP_SEARCH_ALERT_REQUEST_OVERRIDE_GROUPBY,
+    MOST_RECENT_ALERT
 )
 from tests.unit.fixtures.platform.mock_process import (
     POST_PROCESS_VALIDATION_RESP,
@@ -1906,3 +1911,85 @@ def test_time_range_formatting(cbcsdk_mock, start, end, time_filter):
     api = cbcsdk_mock.api
     alert_query = api.select(Alert).set_time_range(start=start, end=end)
     assert alert_query._time_range == time_filter
+
+
+def test_group_alert_search_request(cbcsdk_mock):
+    """Test group alert search."""
+    def on_post(url, body, **kwargs):
+        assert body == GROUP_SEARCH_ALERT_REQUEST
+        return GROUP_SEARCH_ALERT_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/grouped_alerts/_search", on_post)
+
+    api = cbcsdk_mock.api
+    grouped_alerts = api.select(GroupedAlert).set_time_range(range="-10d").add_criteria("type", "WATCHLIST").\
+        set_minimum_severity(1).sort_by("count", "DESC")
+    group_alert = grouped_alerts.first()
+
+    assert isinstance(group_alert, GroupedAlert)
+
+
+def test_group_alert_most_recent_alert(cbcsdk_mock):
+    """Test group alert search most_recent_alert_() returns the most recent alert."""
+    def on_post(url, body, **kwargs):
+        assert body == GROUP_SEARCH_ALERT_REQUEST
+        return GROUP_SEARCH_ALERT_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/grouped_alerts/_search", on_post)
+
+    api = cbcsdk_mock.api
+    grouped_alerts = api.select(GroupedAlert).set_time_range(range="-10d").add_criteria("type", "WATCHLIST").\
+        set_minimum_severity(1).sort_by("count", "DESC")
+    first_grouped_alert = grouped_alerts.first()
+    most_recent_alert = first_grouped_alert.most_recent_alert_
+
+    assert isinstance(most_recent_alert, WatchlistAlert)
+    assert most_recent_alert.to_json() == MOST_RECENT_ALERT
+
+
+def test_group_alert_set_group_by(cbcsdk_mock):
+    """Test set_group_by() overrides the init THREAT_ID in the GroupAlertSearchQuery."""
+    def on_post(url, body, **kwargs):
+        if body["group_by"]["field"] == "THREAT_ID":
+            # path on first call when set_group_by is defaulted to THREAT_ID
+            assert body == GROUP_SEARCH_ALERT_REQUEST
+            assert body["group_by"]["field"] == "THREAT_ID"
+        else:
+            # path on second call where group_by is overridden
+            assert body == GROUP_SEARCH_ALERT_REQUEST_OVERRIDE_GROUPBY
+            assert body["group_by"]["field"] == "NOT_THREAT_ID"
+        return GROUP_SEARCH_ALERT_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/grouped_alerts/_search", on_post)
+
+    api = cbcsdk_mock.api
+    grouped_alerts = api.select(GroupedAlert).set_time_range(range="-10d").add_criteria("type", "WATCHLIST").\
+        set_minimum_severity(1).sort_by("count", "DESC")
+    grouped_alerts.first()
+    grouped_alerts = grouped_alerts.set_group_by("NOT_THREAT_ID")
+    grouped_alerts.first()
+
+
+def test_group_alert_bulk_dismiss_workflow(cbcsdk_mock):
+    """Test closing a group alert job."""
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "criteria": {
+                "type": ["CB_ANALYTICS"]
+            },
+            "determination": "TRUE_POSITIVE",
+            "closure_reason": "OTHER",
+            "status": "CLOSED",
+            "note": "Note about the determination"
+        }
+        return {
+            "request_id": "666666"
+        }
+
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
+    cbcsdk_mock.mock_request("GET", "/jobs/v1/orgs/test/jobs/666666", GET_CLOSE_WORKFLOW_JOB_RESP)
+    api = cbcsdk_mock.api
+
+    group_alert_query = api.select(GroupedAlert).add_criteria("type", ["CB_ANALYTICS"])
+    job = group_alert_query.close("OTHER", "TRUE_POSITIVE", "Note about the determination")
+    assert isinstance(job, Job)
