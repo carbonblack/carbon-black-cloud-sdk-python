@@ -1929,3 +1929,17 @@ def test_alert_deobfuscate_cmdline(cbcsdk_mock):
     assert len(deobfuscation['strings']) == 1
     assert deobfuscation['deobfuscated_code'] == \
            "Write-Output \"No matter how thin you slice it, it's still baloney.\"\n"
+
+
+def test_alert_all(cbcsdk_mock):
+    """Test all() method returns list"""
+    def on_post(url, body, **kwargs):
+        return {"results": [{"id": "S0L0", "org_key": "test", "threat_id": "B0RG",
+                             "workflow": {"status": "OPEN"}}], "num_found": 1}
+
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/alerts/_search", on_post)
+    api = cbcsdk_mock.api
+    alert_query = api.select(Alert)
+    alert_list = alert_query.all()
+
+    assert isinstance(alert_list, list)
