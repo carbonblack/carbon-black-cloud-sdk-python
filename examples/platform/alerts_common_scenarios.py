@@ -114,7 +114,7 @@ def main():
     # Alerts - org.alerts.close - EXECUTE:
     # Alerts - org.alerts.notes - CREATE, READ, UPDATE, DELETE
 
-    api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
+    api = CBCloudAPI()
 
     # workflow is in a separate method.
     alert_workflow(api)
@@ -189,8 +189,9 @@ def main():
     # Contextual information around the Alert
     # Observations
     observation_list = alert.get_observations()
-    len(observation_list)  # force the query execution
-    print("There are {} related observations".format(len(observation_list)))
+    if observation_list is not None:
+        len(observation_list)  # force the query execution
+        print("There are {} related observations".format(len(observation_list)))
 
     # Which device was this alert on?
     device = api.select(Device, alert.device_id)
@@ -224,6 +225,10 @@ def main():
     group_alert = grouped_alert_search_query.first()
     # to view the most recent alert on the object
     print(group_alert.most_recent_alert_)
+
+    # to create the alert search query for a given group alert
+    alert_search_query = group_alert.get_alerts()
+    print([alert for alert in alert_search_query])
 
 
 if __name__ == "__main__":
