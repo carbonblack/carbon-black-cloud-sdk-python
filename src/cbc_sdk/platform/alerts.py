@@ -951,6 +951,7 @@ class GroupedAlert(PlatformModel):
         """
         super(GroupedAlert, self).__init__(cb, model_unique_id, initial_data)
         self._most_recent_alert = None
+        self._request = None
 
         most_recent_alert = initial_data["most_recent_alert"]
         if "type" in most_recent_alert:
@@ -992,6 +993,25 @@ class GroupedAlert(PlatformModel):
             Alert: the most recent alert in the Group Alert.
         """
         return self._most_recent_alert
+
+    def get_alerts(self):
+        """
+        Returns the Alert Search Query needed to pull all alerts for a given Group Alert.
+
+        Returns:
+            AlertSearchQuery: for all alerts associated with the calling group alert.
+        """
+        ignored_keys = ["_doc_class", "_cb", "_count_valid", "_total_results"]
+        alert_search_query = self._cb.select(Alert)
+        for key, value in vars(alert_search_query).items():
+            if hasattr(self._request, key) and key not in ignored_keys:
+                setattr(alert_search_query, key, self._request.__getattribute__(key))
+        key = "_time_range"
+        if hasattr(self._request, key):
+            setattr(alert_search_query, key, self._request.__getattribute__(key))
+
+        alert_search_query.add_criteria(self._request._group_by.lower(), self.most_recent_alert["threat_id"])
+        return alert_search_query
 
 
 """Alert Queries"""
@@ -1620,6 +1640,7 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
             results = result.get("results", [])
             for item in results:
                 grouped_alert = self._doc_class(self._cb, None, item)
+                grouped_alert._request = self
                 yield grouped_alert
                 current += 1
                 numrows += 1
