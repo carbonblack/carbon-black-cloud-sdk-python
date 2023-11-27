@@ -233,8 +233,13 @@ class AssetGroupQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
             dict: The complete request body.
         """
         # Fetch 100 rows per page (instead of 10 by default) for better performance
-        request = {"criteria": self._criteria, "query": self._query_builder._collapse(), "rows": 100}
-        if from_row > 0:
+        request = {"rows": 100}
+        if len(self._criteria) > 0:
+            request["criteria"] = self._criteria
+        query = self._query_builder._collapse()
+        if query:
+            request["query"] = query
+        if from_row >= 0:
             request["start"] = from_row
         if max_rows >= 0:
             request["rows"] = max_rows
@@ -270,7 +275,7 @@ class AssetGroupQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
 
         return self._total_results
 
-    def _perform_query(self, from_row=1, max_rows=-1):
+    def _perform_query(self, from_row=0, max_rows=-1):
         """
         Performs the query and returns the results of the query in an iterable fashion.
 
@@ -278,7 +283,7 @@ class AssetGroupQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
             group-management(READ)
 
         Args:
-            from_row (int): The row to start the query at (default 1).
+            from_row (int): The row to start the query at (default 0).
             max_rows (int): The maximum number of rows to be returned (default -1, meaning "all").
 
         Returns:
