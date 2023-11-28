@@ -19,7 +19,8 @@ from cbc_sdk.errors import ApiError
 from cbc_sdk.platform import AssetGroup
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_asset_groups import (CREATE_AG_REQUEST, CREATE_AG_RESPONSE, EXISTING_AG_DATA,
-                                                            UPDATE_AG_REQUEST, QUERY_REQUEST, QUERY_RESPONSE)
+                                                            UPDATE_AG_REQUEST, QUERY_REQUEST, QUERY_REQUEST_DEFAULT,
+                                                            QUERY_RESPONSE)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -130,15 +131,36 @@ def test_query_with_all_options(cbcsdk_mock, name, polid, groupid):
     def on_post(uri, body, **kwargs):
         tbody = copy.deepcopy(body)
         if 'start' not in tbody:
-            tbody['start'] = 1
+            tbody['start'] = 0
         assert tbody == QUERY_REQUEST
         return QUERY_RESPONSE
 
     cbcsdk_mock.mock_request('POST', '/asset_groups/v1/orgs/test/groups/_search', on_post)
     api = cbcsdk_mock.api
     query = api.select(AssetGroup).where("test").add_criteria("discovered", False).add_criteria("name", name)
-    query.add_criteria("policy_id", polid).add_criteria("group_id", groupid).sort_by("name", "ASC")
+    query.add_criteria("policy_id", polid).add_criteria("group_id", groupid).sort_by("name", "ASC").set_rows(42)
     assert query._count() == 1
+    output = list(query)
+    assert len(output) == 1
+    assert output[0].id == "9b8b8d84-4a44-4a94-81ec-1f8ef52d4430"
+    assert output[0].name == "Group Test"
+    assert output[0].description == "Group Test"
+    assert output[0].policy_id == 7113785
+
+
+def test_query_with_everything_default(cbcsdk_mock):
+    """Tests querying for asset groups with all default options."""
+
+    def on_post(uri, body, **kwargs):
+        tbody = copy.deepcopy(body)
+        if 'start' not in tbody:
+            tbody['start'] = 0
+        assert tbody == QUERY_REQUEST_DEFAULT
+        return QUERY_RESPONSE
+
+    cbcsdk_mock.mock_request('POST', '/asset_groups/v1/orgs/test/groups/_search', on_post)
+    api = cbcsdk_mock.api
+    query = api.select(AssetGroup)
     output = list(query)
     assert len(output) == 1
     assert output[0].id == "9b8b8d84-4a44-4a94-81ec-1f8ef52d4430"
@@ -153,7 +175,7 @@ def test_query_async(cbcsdk_mock):
     def on_post(uri, body, **kwargs):
         tbody = copy.deepcopy(body)
         if 'start' not in tbody:
-            tbody['start'] = 1
+            tbody['start'] = 0
         assert tbody == QUERY_REQUEST
         return QUERY_RESPONSE
 
@@ -161,7 +183,7 @@ def test_query_async(cbcsdk_mock):
     api = cbcsdk_mock.api
     query = api.select(AssetGroup).where("test").add_criteria("discovered", False).add_criteria("name", "Group Test")
     query.add_criteria("policy_id", 7113785).add_criteria("group_id", "9b8b8d84-4a44-4a94-81ec-1f8ef52d4430")
-    query.sort_by("name", "ASC")
+    query.sort_by("name", "ASC").set_rows(42)
     future = query.execute_async()
     output = future.result()
     assert len(output) == 1

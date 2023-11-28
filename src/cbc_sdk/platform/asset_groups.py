@@ -158,8 +158,22 @@ class AssetGroupQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
         self._query_builder = QueryBuilder()
         self._criteria = {}
         self._sortcriteria = {}
+        self._default_rows = 100
         self._count_valid = False
         self._total_results = 0
+
+    def set_rows(self, rows):
+        """
+        Sets the number of query rows to fetch in each batch from the server.
+
+        Args:
+             rows (int): The number of rows to be fetched fromt hes erver at a time. Default is 100.
+
+        Returns:
+            AssetGroupQuery: This instance.
+        """
+        self._default_rows = rows
+        return self
 
     def sort_by(self, key, direction="ASC"):
         """
@@ -192,8 +206,7 @@ class AssetGroupQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
         Returns:
             dict: The complete request body.
         """
-        # Fetch 100 rows per page (instead of 10 by default) for better performance
-        request = {"rows": 100}
+        request = {"rows": self._default_rows}
         if len(self._criteria) > 0:
             request["criteria"] = self._criteria
         query = self._query_builder._collapse()
