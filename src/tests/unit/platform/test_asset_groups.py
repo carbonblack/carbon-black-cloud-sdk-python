@@ -120,11 +120,11 @@ def test_find_and_delete_asset_group(cbcsdk_mock):
     assert did_delete
 
 
-@pytest.mark.parametrize("name, polid", [
-    ("Group Test", 7113785),
-    (["Group Test"], [7113785]),
+@pytest.mark.parametrize("name, polid, groupid", [
+    ("Group Test", 7113785, "9b8b8d84-4a44-4a94-81ec-1f8ef52d4430"),
+    (["Group Test"], [7113785], ["9b8b8d84-4a44-4a94-81ec-1f8ef52d4430"]),
 ])
-def test_query_with_all_options(cbcsdk_mock, name, polid):
+def test_query_with_all_options(cbcsdk_mock, name, polid, groupid):
     """Tests querying for asset groups with all options set."""
 
     def on_post(uri, body, **kwargs):
@@ -136,8 +136,8 @@ def test_query_with_all_options(cbcsdk_mock, name, polid):
 
     cbcsdk_mock.mock_request('POST', '/asset_groups/v1/orgs/test/groups/_search', on_post)
     api = cbcsdk_mock.api
-    query = api.select(AssetGroup).where("test").set_discovered(False).set_name(name).set_policy_id(polid)
-    query.sort_by("name", "ASC")
+    query = api.select(AssetGroup).where("test").add_criteria("discovered", False).add_criteria("name", name)
+    query.add_criteria("policy_id", polid).add_criteria("group_id", groupid).sort_by("name", "ASC")
     assert query._count() == 1
     output = list(query)
     assert len(output) == 1
@@ -159,7 +159,8 @@ def test_query_async(cbcsdk_mock):
 
     cbcsdk_mock.mock_request('POST', '/asset_groups/v1/orgs/test/groups/_search', on_post)
     api = cbcsdk_mock.api
-    query = api.select(AssetGroup).where("test").set_discovered(False).set_name("Group Test").set_policy_id(7113785)
+    query = api.select(AssetGroup).where("test").add_criteria("discovered", False).add_criteria("name", "Group Test")
+    query.add_criteria("policy_id", 7113785).add_criteria("group_id", "9b8b8d84-4a44-4a94-81ec-1f8ef52d4430")
     query.sort_by("name", "ASC")
     future = query.execute_async()
     output = future.result()
@@ -173,9 +174,5 @@ def test_query_async(cbcsdk_mock):
 def test_query_fail_criteria_set(cb):
     """Tests the failure of validation when setting criteria on a query."""
     query = cb.select(AssetGroup)
-    with pytest.raises(ApiError):
-        query.set_discovered("not a bool")
-    with pytest.raises(ApiError):
-        query.set_policy_id("not an int")
     with pytest.raises(ApiError):
         query.sort_by("name", "NOTADIRECTION")

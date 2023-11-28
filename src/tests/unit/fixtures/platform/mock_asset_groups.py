@@ -68,6 +68,9 @@ QUERY_REQUEST = {
         ],
         "discovered": [
             False
+        ],
+        "group_id": [
+            "9b8b8d84-4a44-4a94-81ec-1f8ef52d4430"
         ]
     },
     "rows": 100,
