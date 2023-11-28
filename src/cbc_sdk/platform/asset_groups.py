@@ -135,6 +135,13 @@ class AssetGroupQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
 
     The ``AssetGroupQuery`` is constructed via SDK functions like the ``select()`` method on ``CBCloudAPI``.
     The user would then add a query and/or criteria to it before iterating over the results.
+
+    The following criteria are supported on ``AssetGroupQuery`` via the standard ``add_criteria()`` method:
+
+    * ``discovered: bool`` - Whether the asset group has been discovered or not.
+    * ``name: str`` - The asset group name to be matched.
+    * ``policy_id: int`` - The policy ID to be matched, expressed as an integer.
+    * ``group_id: str`` - The asset group ID to be matched, expressed as a GUID.
     """
     def __init__(self, doc_class, cb):
         """
@@ -153,53 +160,6 @@ class AssetGroupQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
         self._sortcriteria = {}
         self._count_valid = False
         self._total_results = 0
-
-    def set_discovered(self, discovered):
-        """
-        Set the "discovered" flag in the search criteria.
-
-        Args:
-            discovered (bool): ``True`` to locate only discovered asset groups, ``False`` to locate only undiscovered.
-
-        Returns:
-            AssetGroupQuery: This instance.
-        """
-        if not isinstance(discovered, bool):
-            raise ApiError("discovered flag must be Boolean")
-        self._update_criteria("discovered", [discovered], True)
-        return self
-
-    def set_name(self, name):
-        """
-        Set the name(s) of asset groups to search for.
-
-        Args:
-            name (str|list[str]): Either a single string name or a list of string names.
-
-        Returns:
-            AssetGroupQuery: This instance.
-        """
-        self.update_criteria("name", name)
-        return self
-
-    def set_policy_id(self, policy_id):
-        """
-        Sets the policy ID(s) of asset groups to search for.
-
-        Args:
-            policy_id (int|list[int]): Either a single policy ID or a list of policy IDs.
-
-        Returns:
-            AssetGroupQuery: This instance.
-        """
-        if isinstance(policy_id, list):
-            real_policy_id = policy_id
-        elif isinstance(policy_id, int):
-            real_policy_id = [policy_id]
-        else:
-            raise ApiError("policy id must be int or list of ints")
-        self._update_criteria("policy_id", real_policy_id)
-        return self
 
     def sort_by(self, key, direction="ASC"):
         """
