@@ -471,8 +471,9 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         self.start = -1
 
     def set_start(self, start):
-        """ Sets ``start`` parameter to the search
-        
+        """
+        Set ``start`` parameter to the search
+
         Args:
             start (int): The ``start`` parameter of the search (row number)
         """
@@ -872,7 +873,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
             if self.start == -1:
                 request = self._build_request(len(output), -1)
             else:
-                request = self._build_request(self.start + len(output), self.max_rows-len(output))
+                request = self._build_request(self.start + len(output), self.max_rows - len(output))
             resp = self._cb.post_object(url, body=request)
             result = resp.json()
 
