@@ -7,7 +7,8 @@ from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_devices import (GET_DEVICE_RESP,
-                                                       POST_DEVICE_SEARCH_RESP)
+                                                       POST_DEVICE_SEARCH_RESP,
+                                                       POST_DEVICE_SEARCH_MULTI_RESP)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -38,6 +39,21 @@ def test_device_query_0(cbcsdk_mock):
     assert platform_device_select_with_id._model_unique_id == 98765
     assert platform_device_select_with_id.id == 98765
     assert isinstance(platform_device_select_with_id, Device)
+
+
+def test_device_query_start_0(cbcsdk_mock):
+    """Testing Device Querying with start=0"""
+    cbcsdk_mock.mock_request("POST", "/appservices/v6/orgs/test/devices/_search", POST_DEVICE_SEARCH_MULTI_RESP)
+    api = cbcsdk_mock.api
+    platform_device_select_with_start = api.select(Device).set_start(0).set_max_rows(3)
+    # These would not affect the output as we trust what backend returns
+    assert len(platform_device_select_with_start) == 3
+    device_1 = platform_device_select_with_start.all()[0]
+    device_2 = platform_device_select_with_start.all()[1]
+    device_3 = platform_device_select_with_start.all()[2]
+    assert device_1.id == 98765
+    assert device_2.id == 43210
+    assert device_3.id == 11111
 
 
 def test_device_query_with_where_and(cbcsdk_mock):
@@ -91,3 +107,30 @@ def test_device_max_rows(cbcsdk_mock):
 
     with pytest.raises(ApiError):
         query.set_max_rows(10001)
+
+
+def test_device_start(cbcsdk_mock):
+    """Testing Device Querying with .set_start"""
+    api = cbcsdk_mock.api
+    query = api.select(Device).set_start(10)
+    assert query.start == 10
+
+    with pytest.raises(ApiError):
+        query.set_start(-1)
+
+    with pytest.raises(ApiError):
+        query.set_start(10001)
+
+
+def test_device_invalid_pagination(cbcsdk_mock):
+    """Testing Device Querying with invalid start+max_rows"""
+    api = cbcsdk_mock.api
+    query = api.select(Device)
+
+    with pytest.raises(ApiError):
+        query.set_start(10)
+        query.set_max_rows(9991)
+
+    with pytest.raises(ApiError):
+        query.set_start(9991)
+        query.set_max_rows(10)

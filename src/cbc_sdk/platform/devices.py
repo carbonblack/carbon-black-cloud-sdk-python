@@ -793,7 +793,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         resp = self._cb.post_object(url, body=request)
         result = resp.json()
 
-        if self.max_rows < 0:
+        if self.max_rows < 0 and self.start < 0:
             self._total_results = result["num_found"]
         else:
             self._total_results = len(result["results"])
