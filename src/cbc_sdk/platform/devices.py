@@ -37,7 +37,7 @@ from cbc_sdk.workload import NSXRemediationJob
 import time
 
 
-""""Device Models"""
+"""Device Models"""
 
 
 class Device(PlatformModel):
@@ -468,6 +468,21 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         self._exclusions = {}
         self._sortcriteria = {}
         self.max_rows = -1
+        self.start = -1
+
+    def set_start(self, start):
+        """ Sets ``start`` parameter to the search
+        
+        Args:
+            start (int): The ``start`` parameter of the search (row number)
+        """
+        if start < 0 or start > 9999:
+            raise ApiError("Start must be between 0 and 9999")
+        if self.max_rows >= 0 and self.max_rows + start > 10000:
+            raise ApiError("Max rows + start must be less than 10000")
+
+        self.start = start
+        return self
 
     def _update_exclusions(self, key, newlist):
         """
@@ -707,6 +722,9 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         """
         if max_rows < 0 or max_rows > 10000:
             raise ApiError("Max rows must be between 0 and 10000")
+        if self.start >= 0 and self.start + max_rows > 10000:
+            raise ApiError("Max rows + start must be less than 10000")
+
         self.max_rows = max_rows
         return self
 
@@ -732,7 +750,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         query = self._query_builder._collapse()
         if query:
             request["query"] = query
-        if from_row > 1:
+        if from_row >= 1:
             request["start"] = from_row
         if max_rows >= 0:
             request["rows"] = max_rows
@@ -766,11 +784,18 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
             return self._total_results
 
         url = self._build_url("/_search")
-        request = self._build_request(0, -1)
+        if self.start == -1 and self.max_rows == -1:
+            request = self._build_request(0, -1)
+        else:
+            request = self._build_request(self.start, self.max_rows)
+
         resp = self._cb.post_object(url, body=request)
         result = resp.json()
 
-        self._total_results = result["num_found"]
+        if self.max_rows < 0:
+            self._total_results = result["num_found"]
+        else:
+            self._total_results = len(result["results"])
         self._count_valid = True
 
         return self._total_results
@@ -797,11 +822,18 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         numrows = 0
         still_querying = True
         while still_querying:
-            request = self._build_request(current, max_rows)
+            if self.start == -1 and self.max_rows == -1:
+                request = self._build_request(current, max_rows)
+            else:
+                request = self._build_request(self.start, self.max_rows)
+
             resp = self._cb.post_object(url, body=request)
             result = resp.json()
 
-            self._total_results = result["num_found"]
+            if self.max_rows < 0:
+                self._total_results = result["num_found"]
+            else:
+                self._total_results = len(result["results"])
             self._count_valid = True
 
             results = result.get("results", [])
@@ -837,7 +869,10 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         self._count_valid = False
         output = []
         while not self._count_valid or len(output) < self._total_results:
-            request = self._build_request(len(output), -1)
+            if self.start == -1:
+                request = self._build_request(len(output), -1)
+            else:
+                request = self._build_request(self.start + len(output), self.max_rows-len(output))
             resp = self._cb.post_object(url, body=request)
             result = resp.json()
 
@@ -941,7 +976,11 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         Returns:
             str: The JSON output from the request.
         """
-        request = {"action_type": action_type, "search": self._build_request(0, -1)}
+        if self.start == -1 and self.max_rows == -1:
+            request = {"action_type": action_type, "search": self._build_request(0, -1)}
+        else:
+            request = {"action_type": action_type, "search": self._build_request(self.start, self.max_rows)}
+
         if options:
             request["options"] = options
         return self._cb._raw_device_action(request)
