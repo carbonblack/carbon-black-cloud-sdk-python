@@ -68,16 +68,24 @@ QUERY_REQUEST = {
         ],
         "discovered": [
             False
+        ],
+        "group_id": [
+            "9b8b8d84-4a44-4a94-81ec-1f8ef52d4430"
         ]
     },
-    "rows": 100,
+    "rows": 42,
     "sort": [
         {
             "field": "name",
             "order": "ASC"
         }
     ],
-    "start": 1
+    "start": 0
+}
+
+QUERY_REQUEST_DEFAULT = {
+    "rows": 100,
+    "start": 0
 }
 
 QUERY_RESPONSE = {

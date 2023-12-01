@@ -41,8 +41,8 @@ class AssetGroup(MutableBaseModel):
     ``AssetGroup`` objects are typically located via a search (using ``AssetGroupQuery``) before they can be operated
      on. They may also be created on the Carbon Black Cloud by using the ``create_group()`` class method.
     """
-    urlobject = "/asset_groups/v1beta/orgs/{0}/groups"
-    urlobject_single = "/asset_groups/v1beta/orgs/{0}/groups/{1}"
+    urlobject = "/asset_groups/v1/orgs/{0}/groups"
+    urlobject_single = "/asset_groups/v1/orgs/{0}/groups/{1}"
     primary_key = "id"
     swagger_meta_file = "platform/models/asset_group.yaml"
 
@@ -135,6 +135,13 @@ class AssetGroupQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
 
     The ``AssetGroupQuery`` is constructed via SDK functions like the ``select()`` method on ``CBCloudAPI``.
     The user would then add a query and/or criteria to it before iterating over the results.
+
+    The following criteria are supported on ``AssetGroupQuery`` via the standard ``add_criteria()`` method:
+
+    * ``discovered: bool`` - Whether the asset group has been discovered or not.
+    * ``name: str`` - The asset group name to be matched.
+    * ``policy_id: int`` - The policy ID to be matched, expressed as an integer.
+    * ``group_id: str`` - The asset group ID to be matched, expressed as a GUID.
     """
     def __init__(self, doc_class, cb):
         """
@@ -151,54 +158,21 @@ class AssetGroupQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
         self._query_builder = QueryBuilder()
         self._criteria = {}
         self._sortcriteria = {}
+        self._default_rows = 100
         self._count_valid = False
         self._total_results = 0
 
-    def set_discovered(self, discovered):
+    def set_rows(self, rows):
         """
-        Set the "discovered" flag in the search criteria.
+        Sets the number of query rows to fetch in each batch from the server.
 
         Args:
-            discovered (bool): ``True`` to locate only discovered asset groups, ``False`` to locate only undiscovered.
+             rows (int): The number of rows to be fetched fromt hes erver at a time. Default is 100.
 
         Returns:
             AssetGroupQuery: This instance.
         """
-        if not isinstance(discovered, bool):
-            raise ApiError("discovered flag must be Boolean")
-        self._update_criteria("discovered", [discovered], True)
-        return self
-
-    def set_name(self, name):
-        """
-        Set the name(s) of asset groups to search for.
-
-        Args:
-            name (str|list[str]): Either a single string name or a list of string names.
-
-        Returns:
-            AssetGroupQuery: This instance.
-        """
-        self.update_criteria("name", name)
-        return self
-
-    def set_policy_id(self, policy_id):
-        """
-        Sets the policy ID(s) of asset groups to search for.
-
-        Args:
-            policy_id (int|list[int]): Either a single policy ID or a list of policy IDs.
-
-        Returns:
-            AssetGroupQuery: This instance.
-        """
-        if isinstance(policy_id, list):
-            real_policy_id = policy_id
-        elif isinstance(policy_id, int):
-            real_policy_id = [policy_id]
-        else:
-            raise ApiError("policy id must be int or list of ints")
-        self._update_criteria("policy_id", real_policy_id)
+        self._default_rows = rows
         return self
 
     def sort_by(self, key, direction="ASC"):
@@ -232,9 +206,13 @@ class AssetGroupQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
         Returns:
             dict: The complete request body.
         """
-        # Fetch 100 rows per page (instead of 10 by default) for better performance
-        request = {"criteria": self._criteria, "query": self._query_builder._collapse(), "rows": 100}
-        if from_row > 0:
+        request = {"rows": self._default_rows}
+        if len(self._criteria) > 0:
+            request["criteria"] = self._criteria
+        query = self._query_builder._collapse()
+        if query:
+            request["query"] = query
+        if from_row >= 0:
             request["start"] = from_row
         if max_rows >= 0:
             request["rows"] = max_rows
@@ -270,7 +248,7 @@ class AssetGroupQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
 
         return self._total_results
 
-    def _perform_query(self, from_row=1, max_rows=-1):
+    def _perform_query(self, from_row=0, max_rows=-1):
         """
         Performs the query and returns the results of the query in an iterable fashion.
 
@@ -278,7 +256,7 @@ class AssetGroupQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
             group-management(READ)
 
         Args:
-            from_row (int): The row to start the query at (default 1).
+            from_row (int): The row to start the query at (default 0).
             max_rows (int): The maximum number of rows to be returned (default -1, meaning "all").
 
         Returns:
