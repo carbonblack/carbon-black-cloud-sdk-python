@@ -1997,8 +1997,7 @@ def test_group_alert_bulk_dismiss_workflow(cbcsdk_mock):
 
 
 def test_group_alert_to_get_alert_search_query(cbcsdk_mock):
-    """Test the helper function get_alerts creates the proper request."""
-
+    """Test the helper function get_alert_search_query creates the proper request."""
     def on_post(url, body, **kwargs):
         assert body == GROUP_SEARCH_ALERT_REQUEST
         return GROUP_SEARCH_ALERT_RESPONSE
