@@ -980,7 +980,7 @@ class GroupedAlert(PlatformModel):
         """
         return self._most_recent_alert
 
-    def get_alerts(self):
+    def get_alert_search_query(self):
         """
         Returns the Alert Search Query needed to pull all alerts for a given Group Alert.
 
@@ -998,6 +998,15 @@ class GroupedAlert(PlatformModel):
 
         alert_search_query.add_criteria(self._request._group_by.lower(), self.most_recent_alert["threat_id"])
         return alert_search_query
+
+    def get_alerts(self):
+        """
+        Returns the all alerts for a given Group Alert.
+
+        Returns:
+            list: alerts associated with the calling group alert.
+        """
+        return self.get_alert_search_query().all()
 
 
 """Alert Queries"""
