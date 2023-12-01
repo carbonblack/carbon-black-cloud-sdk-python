@@ -1574,6 +1574,22 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
         self._group_by = field
         return self
 
+    def _build_request(self, from_row, max_rows, add_sort=True):
+        """
+        Creates the request body for an API call.
+
+        Args:
+            from_row (int): The row to start the query at.
+            max_rows (int): The maximum number of rows to be returned.
+            add_sort (bool): If True(default), the sort criteria will be added as part of the request.
+
+        Returns:
+            dict: The complete request body.
+        """
+        request = super()._build_request(from_row, max_rows, add_sort=True)
+        request["group_by"] = {"field": self._group_by}
+        return request
+
     def _perform_query(self, from_row=1, max_rows=-1):
         """
         Performs the query and returns the results of the query in an iterable fashion.
@@ -1618,3 +1634,30 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
             if current >= self._total_results:
                 still_querying = False
                 break
+
+    def close(self, closure_reason=None, determination=None, note=None, ):
+        """
+        Close all alerts matching the given query. The alerts will be left in a CLOSED state after this request.
+
+        Args:
+            closure_reason (str): the closure reason for this alert, either "NO_REASON", "RESOLVED", \
+            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", "OTHER"
+            determination (str): The determination status to set for the alert, either "TRUE_POSITIVE", \
+            "FALSE_POSITIVE", or "NONE"
+            note (str): The comment to set for the alert.
+
+        Returns:
+            Job: The Job object for the bulk workflow action.
+
+        Note:
+            - This is an asynchronus call that returns a Job. If you want to wait and block on the results
+              you can call await_completion() to get a Futre then result() on the future object to wait for
+              completion and get the results.
+
+        Example:
+            >>> grouped_alert_query = cb.select(GroupedAlert).set_minimum_severity(1)
+            >>> job = grouped_alert_query.close("RESOLVED", "FALSE_POSITIVE", "Normal behavior")
+            >>> completed_job = job.await_completion().result()
+        """
+        alert_query = self.get_alert_search_query()
+        return alert_query._update_status("CLOSED", closure_reason, note, determination)
