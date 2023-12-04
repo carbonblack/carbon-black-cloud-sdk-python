@@ -469,6 +469,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         self._sortcriteria = {}
         self.max_rows = -1
         self.start = -1
+        self.num_found = 0
 
     def set_start(self, start):
         """
@@ -798,6 +799,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         else:
             self._total_results = len(result["results"])
         self._count_valid = True
+        self.num_found = result["num_found"]
 
         return self._total_results
 
