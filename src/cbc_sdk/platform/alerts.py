@@ -1607,7 +1607,6 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
         still_querying = True
         while still_querying:
             request = self._build_request(current, max_rows)
-            request["group_by"] = {"field": self._group_by}
             resp = self._cb.post_object(url, body=request)
             result = resp.json()
 
@@ -1659,5 +1658,7 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
             >>> job = grouped_alert_query.close("RESOLVED", "FALSE_POSITIVE", "Normal behavior")
             >>> completed_job = job.await_completion().result()
         """
+        # Close operates on an Alert Query.  Get that from the Grouped Alert Query.
         alert_query = self.get_alert_search_query()
+        # Initiate the Close Alert job for the Alert Query.
         return alert_query._update_status("CLOSED", closure_reason, note, determination)
