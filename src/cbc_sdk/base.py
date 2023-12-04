@@ -1028,7 +1028,7 @@ class IterableQueryMixin:
         Returns:
             list: List of query items
         """
-        return self._perform_query()
+        return list(self._perform_query())
 
     def first(self):
         """
