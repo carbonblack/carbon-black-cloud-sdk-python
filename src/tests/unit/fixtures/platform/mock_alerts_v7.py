@@ -1497,3 +1497,94 @@ GROUP_SEARCH_ALERT_REQUEST_OVERRIDE_GROUPBY = {
         }
     ]
 }
+
+
+ALERT_SEARCH_RESPONSE = {
+    "results": [
+        {
+            "org_key": "ABC12345",
+            "alert_url": "test.io/alerts?s[c][query_string]=id:14b3238e-cff8-49bf-a1c0-d0c6587d41e4&orgKey=EWRTY2PK",
+            "id": "14b3238e-cff8-49bf-a1c0-d0c6587d41e4",
+            "type": "WATCHLIST",
+            "backend_timestamp": "2023-12-01T14:28:24.337Z",
+            "user_update_timestamp": None,
+            "backend_update_timestamp": "2023-12-01T14:28:24.337Z",
+            "detection_timestamp": "2023-12-01T14:25:18.539Z",
+            "first_event_timestamp": "2023-12-01T14:19:44.392Z",
+            "last_event_timestamp": "2023-12-01T14:19:44.392Z",
+            "severity": 1,
+            "reason": "Process cmd.exe was detected by the report \"scale and performance test report\" in watchlist "
+                      "\"perf_automation_feed_qrcialhx\"",
+            "reason_code": "5319dc28-4f8b-3a9f-84c6-e045c5e186ff:920e0ded-e95b-3d77-8eaa-e28bdaa133f2",
+            "threat_id": "5319DC284F8B2A9FC4C6E045C5E186FF",
+            "primary_event_id": "XWBgs6G8TOuqc4NzjvWHDg-0",
+            "policy_applied": "NOT_APPLIED",
+            "run_state": "RAN",
+            "sensor_action": "ALLOW",
+            "workflow": {
+                "change_timestamp": "2023-12-01T14:28:24.337Z",
+                "changed_by_type": "SYSTEM",
+                "changed_by": "ALERT_CREATION",
+                "closure_reason": "NO_REASON",
+                "status": "OPEN"
+            },
+            "determination": {
+                "change_timestamp": "2023-12-01T14:28:24.337Z",
+                "value": "NONE",
+                "changed_by_type": "SYSTEM",
+                "changed_by": "ALERT_CREATION"
+            },
+            "tags": None,
+            "alert_notes_present": False,
+            "threat_notes_present": False,
+            "asset_id": None,
+            "is_updated": False,
+            "device_id": 18118170,
+            "device_name": "test",
+            "device_uem_id": "",
+            "device_target_value": "LOW",
+            "device_policy": "Pscr SE Testing",
+            "device_policy_id": 465946,
+            "device_os": "WINDOWS",
+            "device_os_version": "Windows 10 x64 SP: 1",
+            "device_username": "test@carbonblack.com",
+            "device_location": "UNKNOWN",
+            "device_external_ip": "10.10.10.10",
+            "mdr_alert": False,
+            "mdr_alert_notes_present": False,
+            "mdr_threat_notes_present": False,
+            "report_id": "vnbrUmClRh2Mh8398QtJww-scale_perf_automation_report01_qrcialhx",
+            "report_name": "scale and performance test report",
+            "report_description": "scale and performance test description",
+            "report_tags": [],
+            "ioc_id": "scale_perf_automation_report01_ioc01_qrcialhx",
+            "ioc_hit": "process_name:cmd.exe",
+            "watchlists": [
+                {
+                    "id": "gSpaq0J9QB1qRY3lEdAw",
+                    "name": "perf_automation_feed_qrcialhx"
+                }
+            ],
+            "process_guid": "EWRTY2PK-0114761a-009367dc-00000000-19db1ded53e8000",
+            "process_pid": 9660380,
+            "process_name": "cmd.exe",
+            "process_sha256": "b1f11107d63211d73c04020c7390e2b3070750d45ac89ccbb06450ae6dcadd2f",
+            "process_md5": "40c8804dd11a4e54121172fe891c2e9a",
+            "process_effective_reputation": "LOCAL_WHITE",
+            "process_reputation": "NOT_LISTED",
+            "process_cmdline": "cmd.exe /c InfDefaultInstall.exe C:\\Users\\bit9qa\\Infdefaultinstall.inf",
+            "process_username": "NT AUTHORITY\\SYSTEM",
+            "process_issuer": [
+                "Moravec Code Signing CA - G2"
+            ],
+            "process_publisher": [
+                "Moravec Test Authority"
+            ],
+            "childproc_guid": "",
+            "childproc_username": "",
+            "childproc_cmdline": ""
+        }
+    ],
+    "num_found": 1236,
+    "num_available": 1236
+}
