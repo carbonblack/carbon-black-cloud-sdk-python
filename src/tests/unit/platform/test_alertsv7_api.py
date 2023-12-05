@@ -1970,26 +1970,81 @@ def test_group_alert_set_group_by(cbcsdk_mock):
     grouped_alerts.first()
 
 
-def test_group_alert_bulk_dismiss_workflow(cbcsdk_mock):
-    """Test closing a group alert job."""
+def test_group_alert_bulk_close_workflow(cbcsdk_mock):
+    """Test closing a group alert job. Will raise a not implemented exception"""
+    api = cbcsdk_mock.api
+    group_alert_query = api.select(GroupedAlert)
+    with pytest.raises(NotImplementedError):
+        group_alert_query.close("OTHER", "TRUE_POSITIVE", "Note about the determination")
+
+
+def test_grouped_alert_build_query(cbcsdk_mock):
+    """Test that grouped alert builds the query correctly when using len() to get the number of results."""
+
     def on_post(url, body, **kwargs):
         assert body == {
-            "criteria": {
-                "type": ["CB_ANALYTICS"]
+            "group_by": {
+                "field": "THREAT_ID"
             },
-            "determination": "TRUE_POSITIVE",
-            "closure_reason": "OTHER",
-            "status": "CLOSED",
-            "note": "Note about the determination"
+            "time_range": {
+                "range": "-10d"
+            },
+            "criteria": {
+                "type": [
+                    "WATCHLIST"
+                ],
+                "minimum_severity": 1
+            },
+            "rows": 1,
+            "sort": [
+                {
+                    "field": "count",
+                    "order": "DESC"
+                }
+            ]
         }
         return {
-            "request_id": "666666"
+            "num_found": 25,
+            "num_available": 25,
+            "results": [
+                {
+                    "count": 994,
+                    "workflow_states": {
+                        "CLOSED": 1,
+                        "OPEN": 993
+                    },
+                    "determination_values": {
+                        "NONE": 994
+                    },
+                    "ml_classification_final_verdicts": {
+                        "NOT_CLASSIFIED": 4,
+                        "NOT_ANOMALOUS": 982,
+                        "ANOMALOUS": 8
+                    },
+                    "first_alert_timestamp": "2023-11-21T21:24:37.756Z",
+                    "last_alert_timestamp": "2023-12-01T21:00:42.937Z",
+                    "highest_severity": 7,
+                    "policy_applied": "NOT_APPLIED",
+                    "threat_notes_present": False,
+                    "tags": [],
+                    "device_count": 10,
+                    "workload_count": 0,
+                    "most_recent_alert": {
+                        "org_key": "ABCD1234",
+                        "alert_url": "defense.conferdeploy.net/alerts?s[c]"
+                                     "[query_string]=id:9d7f0692-e9cc-4ecc-9983-b063f1455cab&orgKey=ABCD1234",
+                        "id": "9d7f0692-e9cc-4ecc-9983-b063f1455cab",
+                        "type": "WATCHLIST",
+                        "severity": 7,
+                    }
+                }
+            ],
+            "group_by_total_count": 6421
         }
 
-    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
-    cbcsdk_mock.mock_request("GET", "/jobs/v1/orgs/test/jobs/666666", GET_CLOSE_WORKFLOW_JOB_RESP)
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/grouped_alerts/_search", on_post)
     api = cbcsdk_mock.api
 
-    group_alert_query = api.select(GroupedAlert).add_criteria("type", ["CB_ANALYTICS"])
-    job = group_alert_query.close("OTHER", "TRUE_POSITIVE", "Note about the determination")
-    assert isinstance(job, Job)
+    grouped_alert_query = api.select(GroupedAlert).set_minimum_severity(1).set_time_range(range="-10d")\
+        .add_criteria("type", "WATCHLIST").set_rows(1).sort_by("count", "DESC")
+    assert(len(grouped_alert_query) == 25)
