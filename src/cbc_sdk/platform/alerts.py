@@ -1668,6 +1668,9 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
         """
         Closing all alerts matching a grouped alert query is not implemented.
 
+        Raises:
+            NotImplementedError: Close has not been implemented on GroupedAlertSearchQuery
+
         Note:
             - Closing all alerts in all groups returned by a ``GroupedAlertSearchQuery`` can be done by
             getting the ``AlertSearchQuery`` and using close() on it as shown in the following example.
