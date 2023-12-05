@@ -1970,29 +1970,12 @@ def test_group_alert_set_group_by(cbcsdk_mock):
     grouped_alerts.first()
 
 
-def test_group_alert_bulk_dismiss_workflow(cbcsdk_mock):
-    """Test closing a group alert job."""
-    def on_post(url, body, **kwargs):
-        assert body == {
-            "criteria": {
-                "type": ["CB_ANALYTICS"]
-            },
-            "determination": "TRUE_POSITIVE",
-            "closure_reason": "OTHER",
-            "status": "CLOSED",
-            "note": "Note about the determination"
-        }
-        return {
-            "request_id": "666666"
-        }
-
-    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/alerts/workflow", on_post)
-    cbcsdk_mock.mock_request("GET", "/jobs/v1/orgs/test/jobs/666666", GET_CLOSE_WORKFLOW_JOB_RESP)
+def test_group_alert_bulk_close_workflow(cbcsdk_mock):
+    """Test closing a group alert job. Will raise a not implemented exception"""
     api = cbcsdk_mock.api
-
-    group_alert_query = api.select(GroupedAlert).add_criteria("type", ["CB_ANALYTICS"])
-    job = group_alert_query.close("OTHER", "TRUE_POSITIVE", "Note about the determination")
-    assert isinstance(job, Job)
+    group_alert_query = api.select(GroupedAlert)
+    with pytest.raises(NotImplementedError):
+        group_alert_query.close("OTHER", "TRUE_POSITIVE", "Note about the determination")
 
 
 def test_grouped_alert_build_query(cbcsdk_mock):

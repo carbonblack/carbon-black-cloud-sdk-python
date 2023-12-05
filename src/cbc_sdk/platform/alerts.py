@@ -1586,7 +1586,8 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
         Returns:
             dict: The complete request body.
         """
-        request = super()._build_request(from_row, max_rows, add_sort=True)
+        # request = super()._build_request(from_row, max_rows, add_sort=True)
+        request = super(GroupedAlertSearchQuery, self)._build_request(from_row, max_rows, add_sort=True)
         request["group_by"] = {"field": self._group_by}
         return request
 
@@ -1636,29 +1637,14 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
 
     def close(self, closure_reason=None, determination=None, note=None, ):
         """
-        Close all alerts matching the given query. The alerts will be left in a CLOSED state after this request.
-
-        Args:
-            closure_reason (str): the closure reason for this alert, either "NO_REASON", "RESOLVED", \
-            "RESOLVED_BENIGN_KNOWN_GOOD", "DUPLICATE_CLEANUP", "OTHER"
-            determination (str): The determination status to set for the alert, either "TRUE_POSITIVE", \
-            "FALSE_POSITIVE", or "NONE"
-            note (str): The comment to set for the alert.
-
-        Returns:
-            Job: The Job object for the bulk workflow action.
+        Closing all alerts matching a grouped alert query is not implemented.
 
         Note:
-            - This is an asynchronus call that returns a Job. If you want to wait and block on the results
-              you can call await_completion() to get a Futre then result() on the future object to wait for
-              completion and get the results.
+            - Closing all alerts in all groups returned by a ``GroupedAlertSearchQuery`` can be done by
+            getting the ``AlertSearchQuery`` and using close() on it as shown in the following example.
 
         Example:
-            >>> grouped_alert_query = cb.select(GroupedAlert).set_minimum_severity(1)
-            >>> job = grouped_alert_query.close("RESOLVED", "FALSE_POSITIVE", "Normal behavior")
-            >>> completed_job = job.await_completion().result()
+            >>> alert_query = grouped_alert_query.get_alert_search_query()
+            >>> alert_query.close(closure_reason, note, determination)
         """
-        # Close operates on an Alert Query.  Get that from the Grouped Alert Query.
-        alert_query = self.get_alert_search_query()
-        # Initiate the Close Alert job for the Alert Query.
-        return alert_query._update_status("CLOSED", closure_reason, note, determination)
+        raise NotImplementedError("this method is not implemented")
