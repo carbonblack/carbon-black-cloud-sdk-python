@@ -1970,7 +1970,7 @@ def test_group_alert_set_group_by(cbcsdk_mock):
     grouped_alerts.first()
 
 
-def test_group_alert_bulk_close_workflow(cbcsdk_mock):
+def test_group_alert_bulk_dismiss_workflow(cbcsdk_mock):
     """Test closing a group alert job. Will raise a not implemented exception"""
     api = cbcsdk_mock.api
     group_alert_query = api.select(GroupedAlert)
