@@ -2048,7 +2048,8 @@ def test_grouped_alert_build_query(cbcsdk_mock):
 
     grouped_alert_query = api.select(GroupedAlert).set_minimum_severity(1).set_time_range(range="-10d")\
         .add_criteria("type", "WATCHLIST").set_rows(1).sort_by("count", "DESC")
-    assert(len(grouped_alert_query) == 25)
+    assert len(grouped_alert_query) == 25
+
 
 def test_group_alert_to_get_alert_search_query(cbcsdk_mock):
     """Test the helper function get_alert_search_query creates the proper request."""
