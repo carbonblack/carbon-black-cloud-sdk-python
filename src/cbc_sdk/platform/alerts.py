@@ -1574,6 +1574,22 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
         self._group_by = field
         return self
 
+    def _build_request(self, from_row, max_rows, add_sort=True):
+        """
+        Creates the request body for an API call.
+
+        Args:
+            from_row (int): The row to start the query at.
+            max_rows (int): The maximum number of rows to be returned.
+            add_sort (bool): If True(default), the sort criteria will be added as part of the request.
+
+        Returns:
+            dict: The complete request body.
+        """
+        request = super(GroupedAlertSearchQuery, self)._build_request(from_row, max_rows, add_sort=True)
+        request["group_by"] = {"field": self._group_by}
+        return request
+
     def _perform_query(self, from_row=1, max_rows=-1):
         """
         Performs the query and returns the results of the query in an iterable fashion.
@@ -1591,7 +1607,6 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
         still_querying = True
         while still_querying:
             request = self._build_request(current, max_rows)
-            request["group_by"] = {"field": self._group_by}
             resp = self._cb.post_object(url, body=request)
             result = resp.json()
 
@@ -1618,3 +1633,17 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
             if current >= self._total_results:
                 still_querying = False
                 break
+
+    def close(self, closure_reason=None, determination=None, note=None, ):
+        """
+        Closing all alerts matching a grouped alert query is not implemented.
+
+        Note:
+            - Closing all alerts in all groups returned by a ``GroupedAlertSearchQuery`` can be done by
+            getting the ``AlertSearchQuery`` and using close() on it as shown in the following example.
+
+        Example:
+            >>> alert_query = grouped_alert_query.get_alert_search_query()
+            >>> alert_query.close(closure_reason, note, determination)
+        """
+        raise NotImplementedError("this method is not implemented")
