@@ -230,6 +230,12 @@ def main():
     alert_search_query = group_alert.get_alerts()
     print([alert for alert in alert_search_query])
 
+    # to convert an AlertSearchQuery to a GroupAlertSearchQuery, will not preserve sort order
+    group_alert_search_query = alert_search_query.set_group_by("threat_id")
+
+    # to convert a GroupAlertSearchQuery to an AlertSearchQuery, will not preserve sort order
+    alert_search_query = group_alert_search_query.get_alert_search_query()
+
 
 if __name__ == "__main__":
     # Trap keyboard interrupts while running the script.
