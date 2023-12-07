@@ -2095,3 +2095,11 @@ def test_grouped_alert_build_query(cbcsdk_mock):
     grouped_alert_query = api.select(GroupedAlert).set_minimum_severity(1).set_time_range(range="-10d")\
         .add_criteria("type", "WATCHLIST").set_rows(1).sort_by("count", "DESC")
     assert len(grouped_alert_query) == 25
+
+
+def test_group_alert_bulk_update_workflow(cbcsdk_mock):
+    """Test updating a group alert job. Will raise a not implemented exception"""
+    api = cbcsdk_mock.api
+    group_alert_query = api.select(GroupedAlert)
+    with pytest.raises(NotImplementedError):
+        group_alert_query.update("OPEN", "OTHER", "TRUE_POSITIVE", "Note about the determination")
