@@ -1691,3 +1691,18 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
             >>> alert_query.close(closure_reason, note, determination)
         """
         raise NotImplementedError("this method is not implemented")
+
+    def update(self, status, closure_reason=None, determination=None, note=None):
+        """
+        Updating all alerts matching a grouped alert query is not implemented.
+
+        Note:
+            - Updating all alerts in all groups returned by a ``GroupedAlertSearchQuery`` can be done by
+            getting the ``AlertSearchQuery`` and using update() on it as shown in the following example.
+
+        Example:
+            >>> alert_query = grouped_alert_query.get_alert_search_query()
+            >>> job = alert_query.update("IN_PROGESS", "NO_REASON", "NONE", "Starting Investigation")
+            >>> completed_job = job.await_completion().result()
+        """
+        raise NotImplementedError("this method is not implemented")
