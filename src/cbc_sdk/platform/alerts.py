@@ -1000,8 +1000,11 @@ class GroupedAlert(PlatformModel):
 
         Returns:
             AlertSearchQuery: for all alerts associated with the calling group alert.
+
+        Note:
+            Does not preserve sort criterion
         """
-        ignored_keys = ["_doc_class", "_cb", "_count_valid", "_total_results"]
+        ignored_keys = ["_doc_class", "_cb", "_count_valid", "_total_results", "_sortcriteria", "_query_builder"]
         alert_search_query = self._cb.select(Alert)
         for key, value in vars(alert_search_query).items():
             if hasattr(self._request, key) and key not in ignored_keys:
@@ -1599,6 +1602,31 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             self._exclusions["remote_is_private"] = is_private
         return self
 
+    def set_group_by(self, field):
+        """
+        Converts the AlertSearchQuery to a GroupAlertSearchQuery grouped by the argument
+
+        Args:
+            field (string): The field to group by, defaults to "threat_id"
+
+        Returns:
+            AlertSearchQuery
+
+        Note:
+            Does not preserve sort criterion
+        """
+        ignored_keys = ["_doc_class", "_cb", "_count_valid", "_total_results", "_query_builder", "_sortcriteria"]
+        grouped_alert_search_query = self._cb.select(GroupedAlert)
+        for key, value in vars(grouped_alert_search_query).items():
+            if hasattr(self, key) and key not in ignored_keys:
+                setattr(grouped_alert_search_query, key, self.__getattribute__(key))
+        key = "_time_range"
+        if hasattr(self, key):
+            setattr(grouped_alert_search_query, key, self.__getattribute__(key))
+        grouped_alert_search_query.set_group_by(field)
+
+        return grouped_alert_search_query
+
 
 class GroupedAlertSearchQuery(AlertSearchQuery):
     """Represents a query that is used to group Alert objects by a given field."""
@@ -1632,6 +1660,25 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
         request = super(GroupedAlertSearchQuery, self)._build_request(from_row, max_rows, add_sort=True)
         request["group_by"] = {"field": self._group_by}
         return request
+
+    def get_alert_search_query(self):
+        """
+        Converts the GroupedAlertSearchQuery into a nongrouped AlertSearchQuery
+
+        Returns: AlertSearchQuery
+
+        Note: Does not preserve sort criterion
+        """
+        ignored_keys = ["_doc_class", "_cb", "_count_valid", "_total_results", "_query_builder", "_sortcriteria"]
+        alert_search_query = self._cb.select(Alert)
+        for key, value in vars(alert_search_query).items():
+            if hasattr(self, key) and key not in ignored_keys:
+                setattr(alert_search_query, key, self.__getattribute__(key))
+        key = "_time_range"
+        if hasattr(self, key):
+            setattr(alert_search_query, key, self.__getattribute__(key))
+
+        return alert_search_query
 
     def _perform_query(self, from_row=1, max_rows=-1):
         """
