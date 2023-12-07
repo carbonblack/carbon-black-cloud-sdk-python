@@ -1080,7 +1080,8 @@ class Policy(MutableBaseModel):
         Previews a change in the ranking of this policy, and determines how this will affect asset groups.
 
         Args:
-            new_rank (int): The new rank to give this policy.
+            new_rank (int): The new rank to give this policy.  Ranks are limited to values in the range [1.._N_],
+                            where _N_ is the total number of policies in the organization.
 
         Returns:
             list[PolicyRankChangePreview]: A list of objects containing data previewing the policy changes.
@@ -1260,7 +1261,8 @@ class Policy(MutableBaseModel):
             changes_list (list): The list of proposed changes in the ranking of policies.  Each change may be in
                 the form of a dict, in which case the "id" and "position" members are used to designate the policy ID
                 and the new position, or in the form of a list or tuple, in which case the first element specifies
-                the policy ID, and the second element specifies the new position.
+                the policy ID, and the second element specifies the new position.  In all cases, "position" values are
+                limited to values in the range [1.._N_], where _N_ is the total number of policies in the organization.
 
         Returns:
             list[PolicyRankChangePreview]: A list of objects containing data previewing the policy changes.
