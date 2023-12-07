@@ -1358,9 +1358,11 @@ class PolicyRule(MutableBaseModel):
 
 class PolicyRankChangePreview:
     """
-    Contains data previewing a change in the ranking of policies. Each one of these objects shows, for a given group
-    of assets, the current policy that is the "effective policy" for those assets, the new policy that will be the
-    "effective policy" for those assets, the number of assets affected, and which assets they are.
+    Contains data previewing a change in the ranking of policies.
+
+    Each one of these objects shows, for a given group of assets, the current policy that is the "effective policy"
+    for those assets, the new policy that will be the "effective policy" for those assets, the number of assets
+    affected, and which assets they are.
     """
     def __init__(self, cb, preview_data):
         """
@@ -1370,7 +1372,7 @@ class PolicyRankChangePreview:
             cb (BaseAPI): Reference to API object used to communicate with the server.
             preview_data (dict): Contains the preview data returned by the server API.
         """
-        self._cb = cb;
+        self._cb = cb
         self._preview_data = preview_data
 
     @property
@@ -1412,13 +1414,14 @@ class PolicyRankChangePreview:
     def asset_query(self):
         """
         A ``Device`` query which looks up the assets that are to be affected by the change in their effective policy.
-        The query can be modified with additional criteria or options before it is executed.
+
+        Once the query is created, it can be modified with additional criteria or options before it is executed.
         """
         return self._cb.select(Device).where(self._preview_data['asset_query'])
 
     @property
-    def assets(self):
-        """The list of assets (``Device`` objects) to be affected by the change in their effective policy."""
+    def assets(self):  # pragma: no cover
+        """The list of assets, i.e. ``Device`` objects, to be affected by the change in their effective policy."""
         return list(self.asset_query)
 
 

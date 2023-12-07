@@ -6,7 +6,7 @@ FULL_POLICY_1 = {
     "org_key": "test",
     "version": 2,
     "priority_level": "HIGH",
-    "position": -1,
+    "position": 3,
     "is_system": False,
     "description": "",
     "auto_deregister_inactive_vdi_interval_ms": 0,
@@ -313,7 +313,7 @@ SUMMARY_POLICY_1 = {
     "id": 65536,
     "name": "A Dummy Policy",
     "priority_level": "HIGH",
-    "position": -1,
+    "position": 3,
     "is_system": False,
     "description": "",
     "num_devices": 0
@@ -325,7 +325,7 @@ SUMMARY_POLICY_2 = {
     "name": "Forescout Policy",
     "description": "Initial Forescout policy, no protection turned on",
     "priority_level": "MEDIUM",
-    "position": -1,
+    "position": 4,
     "num_devices": 0
 }
 
@@ -335,7 +335,7 @@ SUMMARY_POLICY_3 = {
     "name": "Remediant AC Policy",
     "description": "Verifying AC capabilities ",
     "priority_level": "LOW",
-    "position": -1,
+    "position": 5,
     "num_devices": 0
 }
 
@@ -540,6 +540,7 @@ FULL_POLICY_2 = {
     "org_key": "test",
     "priority_level": "MEDIUM",
     "description": "Hoopy Frood",
+    "position": 2,
     "av_settings": {
         "avira_protection_cloud": {
             "enabled": False,
@@ -1539,6 +1540,7 @@ NEW_POLICY_RETURN_1 = {
     "name": "New Policy Name",
     "org_key": "test",
     "priority_level": "HIGH",
+    "position": 6,
     "version": 2,
     "is_system": False,
     "description": "Foobar",
@@ -1949,7 +1951,7 @@ FULL_POLICY_5 = {
     "name": "Crapco",
     "org_key": "test",
     "priority_level": "MEDIUM",
-    "position": -1,
+    "position": 5,
     "is_system": False,
     "description": "If you buy this, you'll buy ANYTHING!",
     "auto_deregister_inactive_vdi_interval_ms": 0,
@@ -2464,4 +2466,80 @@ FULL_POLICY_5 = {
         }
     ],
     "sensor_configs": []
+}
+
+PREVIEW_POLICY_CHANGES_REQUEST1 = {
+    "policies": [
+        {
+            "id": 10240,
+            "position": 1
+        }
+    ]
+}
+
+PREVIEW_POLICY_CHANGES_RESPONSE1 = {
+    "preview": [
+        {
+            "current_policy": {
+                "id": 70722,
+                "position": 2
+            },
+            "new_policy": {
+                "id": 10240,
+                "position": 1
+            },
+            "asset_count": 5,
+            "asset_query": "(-_exists_:ag_agg_key_dynamic AND ag_agg_key_manual:1790b51e683c8a20c2b2bbe3e41eacdc53e3632087bb5a3f2868588e99157b06 AND policy_override:false) OR (-_exists_:ag_agg_key_dynamic AND ag_agg_key_manual:aa8bd7e69c4ee45918bb126a17d90a1c8368b46f9bb5bf430cb0250c317cd1dc AND policy_override:false)"  # noqa: E501
+        },
+        {
+            "current_policy": {
+                "id": 142857,
+                "position": 1
+            },
+            "new_policy": {
+                "id": 10240,
+                "position": 1
+            },
+            "asset_count": 2,
+            "asset_query": "(ag_agg_key_manual:1790b51e683c8a20c2b2bbe3e41eacdc53e3632087bb5a3f2868588e99157b06 AND ag_agg_key_dynamic:51f32868cdd197b491093617b259ea2f4a93550b7c130636df8d48e94d37c4c8 AND policy_override:false)"  # noqa: E501
+        }
+    ]
+}
+
+PREVIEW_POLICY_CHANGES_REQUEST2 = {
+    "policies": [
+        {
+            "id": 65536,
+            "position": 1
+        }
+    ]
+}
+
+PREVIEW_POLICY_CHANGES_RESPONSE2 = {
+    "preview": [
+        {
+            "current_policy": {
+                "id": 1492,
+                "position": 2
+            },
+            "new_policy": {
+                "id": 65536,
+                "position": 1
+            },
+            "asset_count": 5,
+            "asset_query": "(-_exists_:ag_agg_key_dynamic AND ag_agg_key_manual:1790b51e683c8a20c2b2bbe3e41eacdc53e3632087bb5a3f2868588e99157b06 AND policy_override:false) OR (-_exists_:ag_agg_key_dynamic AND ag_agg_key_manual:aa8bd7e69c4ee45918bb126a17d90a1c8368b46f9bb5bf430cb0250c317cd1dc AND policy_override:false)"  # noqa: E501
+        },
+        {
+            "current_policy": {
+                "id": 74656,
+                "position": 1
+            },
+            "new_policy": {
+                "id": 65536,
+                "position": 1
+            },
+            "asset_count": 2,
+            "asset_query": "(ag_agg_key_manual:1790b51e683c8a20c2b2bbe3e41eacdc53e3632087bb5a3f2868588e99157b06 AND ag_agg_key_dynamic:51f32868cdd197b491093617b259ea2f4a93550b7c130636df8d48e94d37c4c8 AND policy_override:false)"  # noqa: E501
+        }
+    ]
 }
