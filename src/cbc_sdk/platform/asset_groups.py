@@ -94,6 +94,9 @@ class AssetGroup(MutableBaseModel):
         """
         return AssetGroupQuery(cls, cb)
 
+    def members(self):
+        ...
+
     @classmethod
     def create_group(cls, cb, name, description, **kwargs):
         """
