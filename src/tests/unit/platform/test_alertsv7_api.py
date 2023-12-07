@@ -27,7 +27,9 @@ from cbc_sdk.platform import (
     DeviceControlAlert,
     GroupedAlert,
     Process,
-    Job
+    Job,
+    AlertSearchQuery,
+    GroupedAlertSearchQuery
 )
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -1994,7 +1996,7 @@ def test_group_alert_to_get_alert_search_query(cbcsdk_mock):
 
     alert_search_query = group_alert.get_alert_search_query()
     manual_alert_search_query = api.select(Alert).set_time_range(range="-10d").add_criteria("type", "WATCHLIST").\
-        set_minimum_severity(1).sort_by("count", "DESC").\
+        set_minimum_severity(1).\
         add_criteria("threat_id", group_alert.most_recent_alert["threat_id"])
 
     # deleting instance of querybuilder for assertion check
@@ -2103,3 +2105,40 @@ def test_group_alert_bulk_update_workflow(cbcsdk_mock):
     group_alert_query = api.select(GroupedAlert)
     with pytest.raises(NotImplementedError):
         group_alert_query.update("OPEN", "OTHER", "TRUE_POSITIVE", "Note about the determination")
+
+
+def test_grouped_alert_search_query_to_alert_search_query(cbcsdk_mock):
+    """Test the helper function converts a grouped alert search query to an ungrouped query"""
+    api = cbcsdk_mock.api
+    expected_alert_search_query = api.select(Alert).set_time_range(range="-10d").add_criteria("type", "WATCHLIST").\
+        set_minimum_severity(1)
+
+    grouped_alerts_search_query = api.select(GroupedAlert).set_time_range(range="-10d").\
+        add_criteria("type", "WATCHLIST").set_minimum_severity(1).sort_by("count", "DESC")
+    alert_search_query = grouped_alerts_search_query.get_alert_search_query()
+
+    # deleting instance of querybuilder for assertion check
+    delattr(alert_search_query, "_query_builder")
+    delattr(expected_alert_search_query, "_query_builder")
+
+    assert isinstance(alert_search_query, AlertSearchQuery)
+    assert vars(alert_search_query) == vars(expected_alert_search_query)
+
+
+def test_alert_search_query_to_grouped_alert_search_query(cbcsdk_mock):
+    """Test the helper function converts an alert search query to a grouped query"""
+    api = cbcsdk_mock.api
+    expected_grouped_alert_search_query = api.select(GroupedAlert).set_time_range(range="-10d").\
+        add_criteria("type", "WATCHLIST").\
+        set_minimum_severity(1).set_group_by("threat_id")
+
+    alerts_search_query = api.select(Alert).set_time_range(range="-10d").\
+        add_criteria("type", "WATCHLIST").set_minimum_severity(1).sort_by("first_event_timestamp", "DESC")
+    grouped_alert_search_query = alerts_search_query.set_group_by("threat_id")
+
+    # deleting instance of querybuilder for assertion check
+    delattr(grouped_alert_search_query, "_query_builder")
+    delattr(expected_grouped_alert_search_query, "_query_builder")
+
+    assert isinstance(grouped_alert_search_query, GroupedAlertSearchQuery)
+    assert vars(grouped_alert_search_query) == vars(expected_grouped_alert_search_query)
