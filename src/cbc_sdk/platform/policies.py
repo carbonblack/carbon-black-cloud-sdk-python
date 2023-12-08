@@ -1033,7 +1033,7 @@ class Policy(MutableBaseModel):
         Returns:
             list[PolicyRankChangePreview]: A list of objects containing data previewing the policy changes.
         """
-        return Policy.preview_policy_changes(self._cb, [(self._model_unique_id, new_rank)])
+        return Policy.preview_policy_rank_changes(self._cb, [(self._model_unique_id, new_rank)])
 
     # --- BEGIN policy v1 compatibility methods ---
 
@@ -1198,9 +1198,21 @@ class Policy(MutableBaseModel):
         return Policy.PolicyBuilder(cb)
 
     @classmethod
-    def preview_policy_changes(cls, cb, changes_list):
+    def preview_policy_rank_changes(cls, cb, changes_list):
         """
         Previews changes in the ranking of policies, and determines how this will affect asset groups.
+
+        Example:
+
+            >>> cb = CBCloudAPI(profile='sample')
+            >>> changes = Policy.preview_policy_rank_changes(cb, [(667251, 1)])
+            >>> # also: changes = Policy.preview_policy_rank_changes(cb, [{"id": 667251, "position": 1}])
+            >>> len(changes)
+            2
+            >>> changes[0].current_policy_id
+            660578
+            >>> changes[0].new_policy_id
+            667251
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
