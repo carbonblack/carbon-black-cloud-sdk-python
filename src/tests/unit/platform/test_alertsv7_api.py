@@ -27,9 +27,7 @@ from cbc_sdk.platform import (
     DeviceControlAlert,
     GroupedAlert,
     Process,
-    Job,
-    AlertSearchQuery,
-    GroupedAlertSearchQuery
+    Job
 )
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -2121,7 +2119,8 @@ def test_grouped_alert_search_query_to_alert_search_query(cbcsdk_mock):
     delattr(alert_search_query, "_query_builder")
     delattr(expected_alert_search_query, "_query_builder")
 
-    assert isinstance(alert_search_query, AlertSearchQuery)
+    assert alert_search_query.__module__ == "cbc_sdk.platform.alerts" and type(alert_search_query).__name__ == \
+           "AlertSearchQuery"
     assert vars(alert_search_query) == vars(expected_alert_search_query)
 
 
@@ -2140,5 +2139,6 @@ def test_alert_search_query_to_grouped_alert_search_query(cbcsdk_mock):
     delattr(grouped_alert_search_query, "_query_builder")
     delattr(expected_grouped_alert_search_query, "_query_builder")
 
-    assert isinstance(grouped_alert_search_query, GroupedAlertSearchQuery)
+    assert grouped_alert_search_query.__module__ == "cbc_sdk.platform.alerts" and type(grouped_alert_search_query).\
+        __name__ == "GroupedAlertSearchQuery"
     assert vars(grouped_alert_search_query) == vars(expected_grouped_alert_search_query)

@@ -34,6 +34,7 @@ from backports._datetime_fromisoformat import datetime_fromisoformat
 """Alert Models"""
 
 MAX_RESULTS_LIMIT = 10000
+REQUEST_IGNORED_KEYS = ["_doc_class", "_cb", "_count_valid", "_total_results", "_query_builder", "_sortcriteria"]
 
 
 class Alert(PlatformModel):
@@ -990,14 +991,10 @@ class GroupedAlert(PlatformModel):
         Note:
             Does not preserve sort criterion
         """
-        ignored_keys = ["_doc_class", "_cb", "_count_valid", "_total_results", "_sortcriteria", "_query_builder"]
         alert_search_query = self._cb.select(Alert)
         for key, value in vars(alert_search_query).items():
-            if hasattr(self._request, key) and key not in ignored_keys:
+            if hasattr(self._request, key) and key not in REQUEST_IGNORED_KEYS:
                 setattr(alert_search_query, key, self._request.__getattribute__(key))
-        key = "_time_range"
-        if hasattr(self._request, key):
-            setattr(alert_search_query, key, self._request.__getattribute__(key))
 
         alert_search_query.add_criteria(self._request._group_by.lower(), self.most_recent_alert["threat_id"])
         return alert_search_query
@@ -1038,6 +1035,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         self._query_builder = QueryBuilder()
         self._criteria = {}
         self._time_filters = {}
+        self._time_range = {}
         self._exclusions = {}
         self._time_exclusion_filters = {}
         self._sortcriteria = {}
@@ -1120,7 +1118,6 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         else:
             # everything before this is only for backwards compatibility, once v6 deprecates all the other
             # checks can be removed
-            self._time_range = {}
             self._time_range = time_filter
         return self
 
@@ -1304,7 +1301,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             request["query"] = query
 
         request["rows"] = self._batch_size
-        if hasattr(self, "_time_range"):
+        if self._time_range != {}:
             request["time_range"] = self._time_range
         if from_row > 1:
             request["start"] = from_row
@@ -1601,14 +1598,10 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         Note:
             Does not preserve sort criterion
         """
-        ignored_keys = ["_doc_class", "_cb", "_count_valid", "_total_results", "_query_builder", "_sortcriteria"]
         grouped_alert_search_query = self._cb.select(GroupedAlert)
         for key, value in vars(grouped_alert_search_query).items():
-            if hasattr(self, key) and key not in ignored_keys:
+            if hasattr(self, key) and key not in REQUEST_IGNORED_KEYS:
                 setattr(grouped_alert_search_query, key, self.__getattribute__(key))
-        key = "_time_range"
-        if hasattr(self, key):
-            setattr(grouped_alert_search_query, key, self.__getattribute__(key))
         grouped_alert_search_query.set_group_by(field)
 
         return grouped_alert_search_query
@@ -1655,14 +1648,10 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
 
         Note: Does not preserve sort criterion
         """
-        ignored_keys = ["_doc_class", "_cb", "_count_valid", "_total_results", "_query_builder", "_sortcriteria"]
         alert_search_query = self._cb.select(Alert)
         for key, value in vars(alert_search_query).items():
-            if hasattr(self, key) and key not in ignored_keys:
+            if hasattr(self, key) and key not in REQUEST_IGNORED_KEYS:
                 setattr(alert_search_query, key, self.__getattribute__(key))
-        key = "_time_range"
-        if hasattr(self, key):
-            setattr(alert_search_query, key, self.__getattribute__(key))
 
         return alert_search_query
 
