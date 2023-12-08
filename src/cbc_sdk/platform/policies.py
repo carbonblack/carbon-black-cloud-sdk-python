@@ -1202,7 +1202,7 @@ class Policy(MutableBaseModel):
         """
         Previews changes in the ranking of policies, and determines how this will affect asset groups.
 
-        Example:
+        Example::
 
             >>> cb = CBCloudAPI(profile='sample')
             >>> changes = Policy.preview_policy_rank_changes(cb, [(667251, 1)])
