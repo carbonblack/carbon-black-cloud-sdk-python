@@ -552,15 +552,15 @@ def test_policy_builder_error_handling(cb):
     [10240, 1],
     (10240, 1)
 ])
-def test_preview_policy_changes(cbcsdk_mock, element):
-    """Tests the preview_policy_changes function on the Policy class."""
+def test_preview_policy_rank_changes(cbcsdk_mock, element):
+    """Tests the preview_policy_rank_changes function on the Policy class."""
     def on_post(uri, body, **kwargs):
         assert body == PREVIEW_POLICY_CHANGES_REQUEST1
         return PREVIEW_POLICY_CHANGES_RESPONSE1
 
     cbcsdk_mock.mock_request('POST', '/policy-assignment/v1/orgs/test/policies/preview', on_post)
     api = cbcsdk_mock.api
-    results = Policy.preview_policy_changes(api, [element])
+    results = Policy.preview_policy_rank_changes(api, [element])
     assert len(results) == 2
     assert results[0].current_policy_id == 70722
     assert results[0].current_policy_position == 2
@@ -602,7 +602,7 @@ def test_policy_rank_change_preview_helper_methods(cbcsdk_mock):
     cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536', FULL_POLICY_1)
     cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/1492', FULL_POLICY_5)
     api = cbcsdk_mock.api
-    preview = PolicyRankChangePreview(api, PREVIEW_POLICY_CHANGES_RESPONSE2['preview'][0])
+    preview = PolicyRankChangePreview(api, preview_policy_rank_changes_RESPONSE2['preview'][0])
     policy = preview.current_policy
     assert policy.id == 1492
     policy = preview.new_policy
