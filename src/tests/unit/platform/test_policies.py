@@ -602,7 +602,7 @@ def test_policy_rank_change_preview_helper_methods(cbcsdk_mock):
     cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536', FULL_POLICY_1)
     cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/1492', FULL_POLICY_5)
     api = cbcsdk_mock.api
-    preview = PolicyRankChangePreview(api, preview_policy_rank_changes_RESPONSE2['preview'][0])
+    preview = PolicyRankChangePreview(api, PREVIEW_POLICY_CHANGES_RESPONSE2['preview'][0])
     policy = preview.current_policy
     assert policy.id == 1492
     policy = preview.new_policy
