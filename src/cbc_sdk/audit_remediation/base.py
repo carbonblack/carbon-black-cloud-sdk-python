@@ -336,6 +336,15 @@ class Result(UnrefreshableModel):
         else:
             self._metrics = Result.Metrics(cb, initial_data=None)
 
+    def to_json(self):
+        """
+        Return a json object of the response.
+
+        Returns:
+            dict: The raw json Result.
+        """
+        return self._info
+
     @property
     def device_(self):
         """Returns the reified `Result.Device` for this result."""

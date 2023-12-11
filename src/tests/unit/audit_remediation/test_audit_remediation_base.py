@@ -18,7 +18,7 @@ from tests.unit.fixtures.audit_remediation.mock_runs import (GET_RUN_RESP, GET_R
                                                              ASYNC_BROKEN_1, ASYNC_BROKEN_2, ASYNC_BROKEN_3,
                                                              ASYNC_FACETING)
 from tests.unit.fixtures.platform.mock_jobs import JOB_DETAILS_1
-from tests.unit.fixtures.audit_remediation.mock_scroll import GET_SCROLL_RESULTS
+from tests.unit.fixtures.audit_remediation.mock_scroll import GET_SCROLL_RESULTS, SINGLE_RESULT
 
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -536,3 +536,16 @@ def test_result_scroll(cbcsdk_mock):
     assert len(results) == 200
 
     assert query.scroll(100) == []
+
+
+def test_result_to_json(cbcsdk_mock):
+    """Testing ResultQuery scroll"""
+    cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/runs/results/_scroll",
+                             GET_SCROLL_RESULTS(1, 1, 1))
+
+    api = cbcsdk_mock.api
+    query = api.select(Result).set_time_received(range="-3h")
+
+    results = query.scroll(1)
+
+    results[0].to_json() == SINGLE_RESULT
