@@ -1080,6 +1080,8 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         self._sort = {}
         self._batch_size = 100
         self._run_id = None
+        self.num_remaining = None
+        self._search_after = None
 
     def set_device_ids(self, device_ids):
         """
@@ -1197,7 +1199,7 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         Sets the run ID to query results for.
 
         Arguments:
-            run_id (int): The run ID to retrieve results for.
+            run_id (str): The run ID to retrieve results for.
 
         Returns:
             ResultQuery: ResultQuery object with specified run_id.
@@ -1206,6 +1208,34 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
             >>> cb.select(Result).run_id(my_run)
         """
         self._run_id = run_id
+        return self
+
+    def set_time_received(self, start=None, end=None, range=None):
+        """
+        Set the time received to query results for.
+
+        Note: If you are using scroll you may only specify range, or start and end. range supports max of 24hrs
+
+        Args:
+            start(str): Start time in ISO8601 UTC format
+            end(str): End time in ISO8601 UTC format
+            range(str): Relative time window using the following allowed time units y years, w weeks, d days, h hours,
+                m minutes, s seconds
+
+        Returns:
+            ResultQuery: ResultQuery object with specified time_received.
+        """
+        if (start or end) and range:
+            raise ApiError("You cannot specify both a fixed start/end timestamp and a range")
+
+        self._criteria["time_received"] = {}
+
+        if range:
+            self._criteria["time_received"]["range"] = range
+        else:
+            self._criteria["time_received"]["start"] = start
+            self._criteria["time_received"]["end"] = end
+
         return self
 
     def _build_request(self, start, rows):
@@ -1301,6 +1331,39 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
             if current >= self._total_results:
                 still_querying = False
                 break
+
+    def scroll(self, rows=10000):
+        """
+        Iteratively fetch results across Live Query Runs or paginate all results beyond the 10k search limits.
+
+        To fetch the next set of results repeatively call the scroll function until
+        `ResultQuery.num_remaining == 0` or no results are returned.
+
+        Args:
+            rows (int): The number of rows to fetch
+
+        Returns:
+            list[Result]: The list of results
+        """
+        url = f"/livequery/v1/orgs/{self._cb.credentials.org_key}/runs/results/_scroll"
+        request = self._build_request(0, rows)
+        del request["start"]
+
+        if self._search_after is not None:
+            request["search_after"] = self._search_after
+
+        resp = self._cb.post_object(url, body=request)
+        resp_json = resp.json()
+
+        # Capture latest state
+        self.num_remaining = resp_json["num_remaining"]
+        self._search_after = resp_json["search_after"]
+
+        results = []
+        for item in resp_json["results"]:
+            results.append(self._doc_class(self._cb, item))
+
+        return results
 
     def _init_async_query(self):
         """
@@ -1591,7 +1654,7 @@ class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Criter
         Sets the run ID to query results for.
 
         Arguments:
-            run_id (int): The run ID to retrieve results for.
+            run_id (str): The run ID to retrieve results for.
 
         Returns:
             FacetQuery: FacetQuery object with specified run_id.
