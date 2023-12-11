@@ -19,6 +19,7 @@ properties:
       - MISSION_CRITICAL
   position:
     type: integer
+    description: Relative priority of this policy within the organization. Lower values indicate higher priority.
   is_system:
     type: boolean
     description: Indicates that the policy was created by VMware

@@ -17,14 +17,18 @@ import logging
 import random
 from contextlib import ExitStack as does_not_raise
 from cbc_sdk.rest_api import CBCloudAPI
-from cbc_sdk.platform import Policy, PolicyRule, PolicyRuleConfig
+from cbc_sdk.platform import Policy, PolicyRule, PolicyRuleConfig, PolicyRankChangePreview
+from cbc_sdk.platform.devices import DeviceSearchQuery
 from cbc_sdk.errors import ApiError, InvalidObjectError, ServerError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_policies import (FULL_POLICY_1, SUMMARY_POLICY_1, SUMMARY_POLICY_2,
                                                         SUMMARY_POLICY_3, OLD_POLICY_1, FULL_POLICY_2, OLD_POLICY_2,
                                                         RULE_ADD_1, RULE_ADD_2, RULE_MODIFY_1, NEW_POLICY_CONSTRUCT_1,
                                                         NEW_POLICY_RETURN_1, BASIC_CONFIG_TEMPLATE_RETURN,
-                                                        BUILD_RULECONFIG_1)
+                                                        BUILD_RULECONFIG_1, PREVIEW_POLICY_CHANGES_REQUEST1,
+                                                        PREVIEW_POLICY_CHANGES_RESPONSE1,
+                                                        PREVIEW_POLICY_CHANGES_REQUEST2,
+                                                        PREVIEW_POLICY_CHANGES_RESPONSE2, FULL_POLICY_5)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -72,6 +76,7 @@ def test_policy_compatibility_aliases_write(cb):
     policy.policy = copy.deepcopy(OLD_POLICY_2)
     policy.description = "Hoopy Frood"
     policy.name = "default - S1"
+    policy.position = 2
     policy.priorityLevel = "MEDIUM"
     policy.version = 2
     new_policy_data = copy.deepcopy(policy._info)
@@ -540,3 +545,69 @@ def test_policy_builder_error_handling(cb):
         builder.set_on_demand_scan_schedule(["WEDNESDAY", "FRIDAY", "HELLDAY"], 0, 6)
     with pytest.raises(ApiError):
         builder.add_sensor_setting("LONG_RANGE", "true")
+
+
+@pytest.mark.parametrize("element", [
+    {"id": 10240, "position": 1},
+    [10240, 1],
+    (10240, 1)
+])
+def test_preview_policy_rank_changes(cbcsdk_mock, element):
+    """Tests the preview_policy_rank_changes function on the Policy class."""
+    def on_post(uri, body, **kwargs):
+        assert body == PREVIEW_POLICY_CHANGES_REQUEST1
+        return PREVIEW_POLICY_CHANGES_RESPONSE1
+
+    cbcsdk_mock.mock_request('POST', '/policy-assignment/v1/orgs/test/policies/preview', on_post)
+    api = cbcsdk_mock.api
+    results = Policy.preview_policy_rank_changes(api, [element])
+    assert len(results) == 2
+    assert results[0].current_policy_id == 70722
+    assert results[0].current_policy_position == 2
+    assert results[0].new_policy_id == 10240
+    assert results[0].new_policy_position == 1
+    assert results[0].asset_count == 5
+    assert results[1].current_policy_id == 142857
+    assert results[1].current_policy_position == 1
+    assert results[1].new_policy_id == 10240
+    assert results[1].new_policy_position == 1
+    assert results[1].asset_count == 2
+
+
+def test_preview_rank_change(cbcsdk_mock):
+    """Tests the preview_rank_change function on the policy class."""
+    def on_post(uri, body, **kwargs):
+        assert body == PREVIEW_POLICY_CHANGES_REQUEST2
+        return PREVIEW_POLICY_CHANGES_RESPONSE2
+
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536', FULL_POLICY_1)
+    cbcsdk_mock.mock_request('POST', '/policy-assignment/v1/orgs/test/policies/preview', on_post)
+    api = cbcsdk_mock.api
+    policy = api.select(Policy, 65536)
+    results = policy.preview_rank_change(1)
+    assert results[0].current_policy_id == 1492
+    assert results[0].current_policy_position == 2
+    assert results[0].new_policy_id == 65536
+    assert results[0].new_policy_position == 1
+    assert results[0].asset_count == 5
+    assert results[1].current_policy_id == 74656
+    assert results[1].current_policy_position == 1
+    assert results[1].new_policy_id == 65536
+    assert results[1].new_policy_position == 1
+    assert results[1].asset_count == 2
+
+
+def test_policy_rank_change_preview_helper_methods(cbcsdk_mock):
+    """Tests the helper methods on the PolicyRankChangePreview object."""
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536', FULL_POLICY_1)
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/1492', FULL_POLICY_5)
+    api = cbcsdk_mock.api
+    preview = PolicyRankChangePreview(api, PREVIEW_POLICY_CHANGES_RESPONSE2['preview'][0])
+    policy = preview.current_policy
+    assert policy.id == 1492
+    policy = preview.new_policy
+    assert policy.id == 65536
+    query = preview.asset_query
+    assert isinstance(query, DeviceSearchQuery)
+    request = query._build_request(-1, -1)
+    assert request['query'] == "(-_exists_:ag_agg_key_dynamic AND ag_agg_key_manual:1790b51e683c8a20c2b2bbe3e41eacdc53e3632087bb5a3f2868588e99157b06 AND policy_override:false) OR (-_exists_:ag_agg_key_dynamic AND ag_agg_key_manual:aa8bd7e69c4ee45918bb126a17d90a1c8368b46f9bb5bf430cb0250c317cd1dc AND policy_override:false)"  # noqa: E501
