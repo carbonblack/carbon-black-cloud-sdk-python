@@ -1210,6 +1210,22 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         self._run_id = run_id
         return self
 
+    def set_run_ids(self, run_ids):
+        """
+        Sets the run IDs to query results for.
+
+        Note:
+            Only supported for scroll
+
+        Arguments:
+            run_ids (list[str]): The run IDs to retrieve results for.
+
+        Returns:
+            ResultQuery: ResultQuery object with specified run_id.
+        """
+        self._criteria["run_id"] = run_ids
+        return self
+
     def set_time_received(self, start=None, end=None, range=None):
         """
         Set the time received to query results for.
@@ -1345,7 +1361,14 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         Returns:
             list[Result]: The list of results
         """
+        if self.num_remaining == 0:
+            return []
+
         url = f"/livequery/v1/orgs/{self._cb.credentials.org_key}/runs/results/_scroll"
+
+        # Sort by time_received enforced
+        self._sort = {}
+
         request = self._build_request(0, rows)
         del request["start"]
 

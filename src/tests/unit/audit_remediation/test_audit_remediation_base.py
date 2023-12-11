@@ -482,6 +482,29 @@ def test_run_async_faceting_query(cbcsdk_mock):
     assert len(result[0].values) == 4
 
 
+def test_result_set_run_ids(cbcsdk_mock):
+    """Testing set_run_ids"""
+    api = cbcsdk_mock.api
+    query = api.select(Result).set_run_ids(["abcdefghijklmnopqrstuvwxyz123456", "fckjyssfusuuutlkpocky82luvnl0sol"])
+    assert query._criteria["run_id"] == ["abcdefghijklmnopqrstuvwxyz123456", "fckjyssfusuuutlkpocky82luvnl0sol"]
+
+
+def test_result_set_time_received(cbcsdk_mock):
+    """Testing set_time_received"""
+    api = cbcsdk_mock.api
+    query = api.select(Result).set_time_received(range="-3h")
+    assert query._criteria["time_received"] == {"range": "-3h"}
+
+    query.set_time_received(start="2023-12-10T00:00:00.000Z", end="2023-12-11T00:00:00.000Z")
+    assert query._criteria["time_received"] == {
+        "start": "2023-12-10T00:00:00.000Z",
+        "end": "2023-12-11T00:00:00.000Z"
+    }
+
+    with pytest.raises(ApiError):
+        query.set_time_received(start="2023-12-10T00:00:00.000Z", end="2023-12-11T00:00:00.000Z", range="-3h")
+
+
 def test_result_scroll(cbcsdk_mock):
     """Testing ResultQuery scroll"""
     cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/runs/results/_scroll",
@@ -495,9 +518,21 @@ def test_result_scroll(cbcsdk_mock):
     assert query.num_remaining == 100
     assert query._search_after == "MTcwMjMyMTM2MDU3OSwyMT"
 
+    def on_post(url, body, **kwargs):
+        """Test 2nd scroll request"""
+        assert body == {
+            "criteria": {
+                "time_received": {"range": "-3h"}},
+            "rows": 100,
+            "search_after": "MTcwMjMyMTM2MDU3OSwyMT"
+        }
+        return GET_SCROLL_RESULTS(100, 200, 0)
+
     cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/runs/results/_scroll",
-                             GET_SCROLL_RESULTS(100, 200, 0))
+                             on_post)
 
     results.extend(query.scroll(100))
 
     assert len(results) == 200
+
+    assert query.scroll(100) == []
