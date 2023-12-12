@@ -29,6 +29,7 @@ Typical usage example::
 
 from cbc_sdk.errors import ApiError, ServerError, NonQueryableModel
 from cbc_sdk.platform import PlatformModel
+from cbc_sdk.platform.asset_groups import AssetGroup
 from cbc_sdk.platform.vulnerability_assessment import Vulnerability, VulnerabilityQuery
 from cbc_sdk.base import (UnrefreshableModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
                           CriteriaBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
@@ -51,6 +52,9 @@ class Device(PlatformModel):
     urlobject_single = "/appservices/v6/orgs/{0}/devices/{1}"
     primary_key = "id"
     swagger_meta_file = "platform/models/device.yaml"
+
+    """The valid values for the 'filter' parameter to get_asset_groups_for_devices()."""
+    VALID_ASSETGROUP_FILTERS = ("ALL", "DYNAMIC", "MANUAL")
 
     def __init__(self, cb, model_unique_id, initial_data=None):
         """
@@ -314,6 +318,87 @@ class Device(PlatformModel):
                 raise ApiError(f"NSX tag already set to {current}, cannot set another tag without clearing it")
             return None  # clearing tag is a no-op in this case
         return NSXRemediationJob.start_request(self._cb, self.id, tag, set_tag)
+
+    def get_asset_group_ids(self, **kwargs):
+        """
+        Finds the list of asset group IDs that this device is a member of.
+
+        Required Permissions:
+            group-management(READ)
+
+        Parameters:
+            **kwargs (dict): Keyword arguments as documented below.
+
+        Keyword Args:
+            filter (str): Can restrict the types of group membership returned by this method.  Values are "ALL"
+                          to return all groups, "DYNAMIC" to return only groups that each member belongs to via the
+                          asset group query, or "MANUAL" to return only groups that the members were manually added to.
+                          Default is "ALL".
+
+        Returns:
+            list[str]: A list of asset group IDs this device belongs to.
+        """
+        rc = Device.get_asset_groups_for_devices(self._cb, self, **kwargs)
+        return rc[str(self._model_unique_id)]
+
+    def get_asset_groups(self, **kwargs):
+        """
+        Finds the list of asset groups that this device is a member of.
+
+        Required Permissions:
+            group-management(READ)
+
+        Parameters:
+            **kwargs (dict): Keyword arguments as documented below.
+
+        Keyword Args:
+            filter (str): Can restrict the types of group membership returned by this method.  Values are "ALL"
+                          to return all groups, "DYNAMIC" to return only groups that each member belongs to via the
+                          asset group query, or "MANUAL" to return only groups that the members were manually added to.
+                          Default is "ALL".
+
+        Returns:
+            list[AssetGroup]: A list of asset groups this device belongs to.
+        """
+        rc = Device.get_asset_groups_for_devices(self._cb, self, **kwargs)
+        return [self._cb.select(AssetGroup, v) for v in rc[str(self._model_unique_id)]]
+
+    @classmethod
+    def get_asset_groups_for_devices(cls, cb, *args, **kwargs):
+        """
+        Given a list of devices, returns lists of asset groups that they are members of.
+
+        Required Permissions:
+            group-management(READ)
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            *args (list[Any]): The members to find the group membership of.  They may be specified as either
+                               ``Device`` objects, integers, or string objects that convert to integers.
+                               Any simple containers in this list (tuples, lists, sets) are "folded" into
+                               their respective member objects.
+            **kwargs (dict): Keyword arguments as documented below.
+
+        Keyword Args:
+            filter (str): Can restrict the types of group membership returned by this method.  Values are "ALL"
+                          to return all groups, "DYNAMIC" to return only groups that each member belongs to via the
+                          asset group query, or "MANUAL" to return only groups that the members were manually added to.
+                          Default is "ALL".
+
+        Returns:
+            dict: A dict containing member IDs as keys, and lists of group IDs as values.
+        """
+        filt = kwargs.get("filter", "ALL")
+        if filt not in Device.VALID_ASSETGROUP_FILTERS:
+            raise ApiError(f"Invalid filter value: {filt}")
+        members = AssetGroup._normalize_member_list(args)
+        if len(members) > 0:
+            postdata = {"external_member_ids" : members}
+            if filt != "ALL":
+                postdata["membership_type"] = [filt]
+            return cb.post_object(f"/asset_groups/v1/orgs/{cb.credentials.org_key}/members", postdata)
+        else:
+            return {}
 
 
 class DeviceFacet(UnrefreshableModel):

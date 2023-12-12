@@ -31,7 +31,7 @@ Typical usage example::
 from cbc_sdk.base import (MutableBaseModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin,
                           CriteriaBuilderSupportMixin, AsyncQueryMixin)
 from cbc_sdk.errors import ApiError
-from cbc_sdk.platform.devices import DeviceSearchQuery
+from cbc_sdk.platform.devices import Device, DeviceSearchQuery
 
 
 class AssetGroup(MutableBaseModel):
@@ -45,6 +45,9 @@ class AssetGroup(MutableBaseModel):
     urlobject_single = "/asset_groups/v1/orgs/{0}/groups/{1}"
     primary_key = "id"
     swagger_meta_file = "platform/models/asset_group.yaml"
+
+    """The valid values for the 'filter' parameter to list_members()."""
+    VALID_MEMBER_FILTERS = ("ALL", "DYNAMIC", "MANUAL")
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
         """
@@ -94,8 +97,134 @@ class AssetGroup(MutableBaseModel):
         """
         return AssetGroupQuery(cls, cb)
 
-    def members(self):
-        ...
+    def list_member_ids(self, **kwargs):
+        """
+        Gets a list of all member IDs in the group, optionally constrained by membership type.
+
+        Required Permissions:
+            group-management(READ)
+
+        Args:
+            **kwargs (dict): Keyword arguments as documented below.
+
+        Keyword Args:
+            rows (int): Maximum number of rows to retrieve from the server. The function may return fewer member IDs
+                        if filtering is applied to the output. Default is 20.
+            start (int): Starting row to retrieve from the server; used to implement pagination. Default is 0.
+            filter (str): Can restrict the types of members that are returned by this method.  Values are "ALL"
+                          to return all members, "DYNAMIC" to return only members that were added via the asset group
+                          query, or "MANUAL" to return only manually-added members.  Default is "ALL".
+
+        Returns:
+            list[int]: List of integer member IDs.
+        """
+        filt = kwargs.get("filter", "ALL")
+        if filt not in AssetGroup.VALID_MEMBER_FILTERS:
+            raise ApiError(f"invalid filter value: {filter}")
+        query_params = {}
+        for name in ("rows", "start"):
+            if name in kwargs:
+                query_params[name] = kwargs[name]
+        member_data = self._cb.get_object(self._build_api_request_uri() + "/members", query_params)
+        id_list = []
+        if filt == "ALL":
+            id_list = [int(m["external_member_id"]) for m in member_data["members"]]
+        elif filt == "DYNAMIC":
+            id_list = [int(m["external_member_id"]) for m in member_data["members"] if m["dynamic"]]
+        elif filt == "MANUAL":
+            id_list = [int(m["external_member_id"]) for m in member_data["members"] if m["manual"]]
+        return id_list
+
+    def list_members(self, **kwargs):
+        """
+        Gets a list of all member devices in the group, optionally constrained by membership type.
+
+        Required Permissions:
+            group-management(READ)
+
+        Args:
+            **kwargs (dict): Keyword arguments as documented below.
+
+        Keyword Args:
+            rows (int): Maximum number of rows to retrieve from the server. The function may return fewer member IDs
+                        if filtering is applied to the output. Default is 20.
+            start (int): Starting row to retrieve from the server; used to implement pagination. Default is 0.
+            filter (str): Can restrict the types of members that are returned by this method.  Values are "ALL"
+                          to return all members, "DYNAMIC" to return only members that were added via the asset group
+                          query, or "MANUAL" to return only manually-added members.  Default is "ALL".
+
+        Returns:
+            list[Device]: List of ``Device`` objects comprising the membership of the group.``
+        """
+        id_list = self.list_member_ids(**kwargs)
+        return [self._cb.select(Device, v) for v in id_list]
+
+    @staticmethod
+    def _normalize_member_list(member_list):
+        """
+        Internal method which normalizes the parameters from add_members() or remove_members() into a single
+        list of member IDs as strings.
+
+        The method accepts ``Device`` objects (gets their ID), integers (converts them to strings), and simple
+        containers (recursively folds their contents into the return list). Everything else gets converted to
+        an integer, then to a string, and any value errors result in the value being silently dropped.
+
+        Parameters:
+            member_list (list[Any]): List of members to be normalized.
+
+        Returns:
+            list[str]: The normalized member list.
+        """
+        return_list = []
+        for m in member_list:
+            if isinstance(m, Device):
+                return_list.append(str(m.id))
+            elif isinstance(m, int):
+                return_list.append(str(m))
+            elif isinstance(m, list) or isinstance(m, tuple) or isinstance(m, set):
+                return_list.extend(AssetGroup._normalize_member_list(m))
+            else:
+                try:
+                    return_list.append(str(int(m)))
+                except ValueError:
+                    pass
+        return return_list
+
+    def add_members(self, *args):
+        """
+        Adds additional members to this asset group.
+
+        Required Permissions:
+            group-management(CREATE)
+
+        Args:
+            *args (list[Any]): The members to be added to the group.  They may be specified as either
+                               ``Device`` objects, integers, or string objects that convert to integers.
+                               Any simple containers in this list (tuples, lists, sets) are "folded" into
+                               their respective member objects.
+        """
+        members = AssetGroup._normalize_member_list(args)
+        if len(members) > 0:
+            self._cb.post_object(self._build_api_request_uri() + "/members",
+                                 {"action": "CREATE", "external_member_ids": members})
+
+    def remove_members(self, *args):
+        """
+        Removes members from this asset group.
+
+        Required Permissions:
+            group-management(DELETE)
+
+        Args:
+            *args (list[Any]): The members to be removed from the group.  They may be specified as either
+                               ``Device`` objects, integers, or string objects that convert to integers.
+                               Any simple containers in this list (tuples, lists, sets) are "folded" into
+                               their respective member objects.
+        """
+        members = AssetGroup._normalize_member_list(args)
+        if len(members) > 0:
+            self._cb.post_object(self._build_api_request_uri() + "/members",
+                                 {"action": "REMOVE", "external_member_ids": members})
 
     @classmethod
     def create_group(cls, cb, name, description, **kwargs):
