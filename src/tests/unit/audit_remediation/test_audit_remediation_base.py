@@ -531,7 +531,7 @@ def test_result_scroll(cbcsdk_mock):
     cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/runs/results/_scroll",
                              on_post)
 
-    results.extend(query.scroll(100))
+    results.extend(query.scroll(20000))
 
     assert len(results) == 200
 

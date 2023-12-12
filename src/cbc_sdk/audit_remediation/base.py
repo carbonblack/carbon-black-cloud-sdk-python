@@ -1364,6 +1364,8 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         To fetch the next set of results repeatively call the scroll function until
         `ResultQuery.num_remaining == 0` or no results are returned.
 
+        Note: You must specify either a set_time_received or a set_run_ids on the query before using scroll
+
         Args:
             rows (int): The number of rows to fetch
 
@@ -1372,6 +1374,8 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         """
         if self.num_remaining == 0:
             return []
+        elif rows > 10000:
+            rows = 10000
 
         url = f"/livequery/v1/orgs/{self._cb.credentials.org_key}/runs/results/_scroll"
 
