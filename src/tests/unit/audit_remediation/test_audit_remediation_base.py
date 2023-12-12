@@ -523,7 +523,7 @@ def test_result_scroll(cbcsdk_mock):
         assert body == {
             "criteria": {
                 "time_received": {"range": "-3h"}},
-            "rows": 100,
+            "rows": 10000,
             "search_after": "MTcwMjMyMTM2MDU3OSwyMT"
         }
         return GET_SCROLL_RESULTS(100, 200, 0)
