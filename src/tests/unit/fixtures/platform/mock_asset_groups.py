@@ -108,3 +108,43 @@ QUERY_RESPONSE = {
         }
     ]
 }
+
+LIST_MEMBERS_RESPONSE1 = {
+    "num_found": 3,
+    "member_ids": [
+        "12345678",
+        "66760099",
+        "42691014"
+    ],
+    "members": [
+        {
+            "external_member_id": "12345678",
+            "dynamic": True,
+            "manual": False
+        },
+        {
+            "external_member_id": "66760099",
+            "dynamic": False,
+            "manual": True
+        },
+        {
+            "external_member_id": "42691014",
+            "dynamic": True,
+            "manual": False
+        }
+    ]
+}
+
+LIST_MEMBERS_RESPONSE2 = {
+    "num_found": 1,
+    "member_ids": [
+        "98765"
+    ],
+    "members": [
+        {
+            "external_member_id": "98765",
+            "dynamic": False,
+            "manual": True
+        }
+    ]
+}

@@ -177,6 +177,8 @@ class AssetGroup(MutableBaseModel):
         """
         return_list = []
         for m in member_list:
+            if m is None:
+                continue
             if isinstance(m, Device):
                 return_list.append(str(m.id))
             elif isinstance(m, int):

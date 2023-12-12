@@ -29,7 +29,6 @@ Typical usage example::
 
 from cbc_sdk.errors import ApiError, ServerError, NonQueryableModel
 from cbc_sdk.platform import PlatformModel
-from cbc_sdk.platform.asset_groups import AssetGroup
 from cbc_sdk.platform.vulnerability_assessment import Vulnerability, VulnerabilityQuery
 from cbc_sdk.base import (UnrefreshableModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
                           CriteriaBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
@@ -361,9 +360,42 @@ class Device(PlatformModel):
             list[AssetGroup]: A list of asset groups this device belongs to.
         """
         rc = Device.get_asset_groups_for_devices(self._cb, self, **kwargs)
-        return [self._cb.select(AssetGroup, v) for v in rc[str(self._model_unique_id)]]
+        return [self._cb.select("AssetGroup", v) for v in rc[str(self._model_unique_id)]]
 
     @classmethod
+    @staticmethod
+    def _normalize_member_list(member_list):
+        """
+        Internal method which normalizes the parameters from add_members() or remove_members() into a single
+        list of member IDs as strings.
+
+        The method accepts ``Device`` objects (gets their ID), integers (converts them to strings), and simple
+        containers (recursively folds their contents into the return list). Everything else gets converted to
+        an integer, then to a string, and any value errors result in the value being silently dropped.
+
+        Parameters:
+            member_list (list[Any]): List of members to be normalized.
+
+        Returns:
+            list[str]: The normalized member list.
+        """
+        return_list = []
+        for m in member_list:
+            if m is None:
+                continue
+            if isinstance(m, Device):
+                return_list.append(str(m.id))
+            elif isinstance(m, int):
+                return_list.append(str(m))
+            elif isinstance(m, list) or isinstance(m, tuple) or isinstance(m, set):
+                return_list.extend(Device._normalize_member_list(m))
+            else:
+                try:
+                    return_list.append(str(int(m)))
+                except ValueError:
+                    pass
+        return return_list
+
     def get_asset_groups_for_devices(cls, cb, *args, **kwargs):
         """
         Given a list of devices, returns lists of asset groups that they are members of.
@@ -391,7 +423,7 @@ class Device(PlatformModel):
         filt = kwargs.get("filter", "ALL")
         if filt not in Device.VALID_ASSETGROUP_FILTERS:
             raise ApiError(f"Invalid filter value: {filt}")
-        members = AssetGroup._normalize_member_list(args)
+        members = Device._normalize_member_list(args)
         if len(members) > 0:
             postdata = {"external_member_ids" : members}
             if filt != "ALL":
