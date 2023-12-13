@@ -373,6 +373,9 @@ class Device(PlatformModel):
         containers (recursively folds their contents into the return list). Everything else gets converted to
         an integer, then to a string, and any value errors result in the value being silently dropped.
 
+        (This method was originally on AssetGroups, but it's needed by get_asset_groups_for_devices as well, and
+        having it here avoids the problem of circular imports.)
+
         Parameters:
             member_list (list[Any]): List of members to be normalized.
 

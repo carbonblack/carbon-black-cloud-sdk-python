@@ -296,3 +296,19 @@ def test_add_members_with_device(cbcsdk_mock):
     group = api.select(AssetGroup, 'db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16')
     device = api.select(Device, 98765)
     group.add_members(device)
+
+
+def test_remove_members(cbcsdk_mock):
+    """Tests the remove_members API; it isn't as extensive because we already exercised the normalization."""
+    def on_post(url, body, **kwargs):
+        assert body['action'] == 'REMOVE'
+        assert body['external_member_ids'] == ["70717", "14920"]
+        return CBCSDKMock.StubResponse("", scode=204, json_parsable=False)
+
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
+                             copy.deepcopy(EXISTING_AG_DATA))
+    cbcsdk_mock.mock_request('POST', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16/members',
+                             on_post)
+    api = cbcsdk_mock.api
+    group = api.select(AssetGroup, 'db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16')
+    group.remove_members(70717, 14920)
