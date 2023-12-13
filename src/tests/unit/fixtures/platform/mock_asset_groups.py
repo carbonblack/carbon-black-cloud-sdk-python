@@ -1,4 +1,4 @@
-""""Mock responses for asset groups"""
+"""Mock responses for asset groups"""
 
 CREATE_AG_REQUEST = {
     "description": "Group Test Description",
