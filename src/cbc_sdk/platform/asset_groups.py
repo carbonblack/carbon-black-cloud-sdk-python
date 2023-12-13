@@ -159,39 +159,6 @@ class AssetGroup(MutableBaseModel):
         id_list = self.list_member_ids(**kwargs)
         return [self._cb.select(Device, v) for v in id_list]
 
-    @staticmethod
-    def _normalize_member_list(member_list):
-        """
-        Internal method which normalizes the parameters from add_members() or remove_members() into a single
-        list of member IDs as strings.
-
-        The method accepts ``Device`` objects (gets their ID), integers (converts them to strings), and simple
-        containers (recursively folds their contents into the return list). Everything else gets converted to
-        an integer, then to a string, and any value errors result in the value being silently dropped.
-
-        Parameters:
-            member_list (list[Any]): List of members to be normalized.
-
-        Returns:
-            list[str]: The normalized member list.
-        """
-        return_list = []
-        for m in member_list:
-            if m is None:
-                continue
-            if isinstance(m, Device):
-                return_list.append(str(m.id))
-            elif isinstance(m, int):
-                return_list.append(str(m))
-            elif isinstance(m, list) or isinstance(m, tuple) or isinstance(m, set):
-                return_list.extend(AssetGroup._normalize_member_list(m))
-            else:
-                try:
-                    return_list.append(str(int(m)))
-                except ValueError:
-                    pass
-        return return_list
-
     def add_members(self, *args):
         """
         Adds additional members to this asset group.
@@ -205,7 +172,7 @@ class AssetGroup(MutableBaseModel):
                                Any simple containers in this list (tuples, lists, sets) are "folded" into
                                their respective member objects.
         """
-        members = AssetGroup._normalize_member_list(args)
+        members = Device._normalize_member_list(args)
         if len(members) > 0:
             self._cb.post_object(self._build_api_request_uri() + "/members",
                                  {"action": "CREATE", "external_member_ids": members})
@@ -223,7 +190,7 @@ class AssetGroup(MutableBaseModel):
                                Any simple containers in this list (tuples, lists, sets) are "folded" into
                                their respective member objects.
         """
-        members = AssetGroup._normalize_member_list(args)
+        members = Device._normalize_member_list(args)
         if len(members) > 0:
             self._cb.post_object(self._build_api_request_uri() + "/members",
                                  {"action": "REMOVE", "external_member_ids": members})
