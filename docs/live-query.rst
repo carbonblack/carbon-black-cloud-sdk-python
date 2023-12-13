@@ -138,7 +138,7 @@ a time_received or a list of one or more Run ids
     num_remaining: 35
     >>> while result_query.num_remaining > 0:
     >>>     list_results.extend(result_query.scroll(10))
-    >>> print(f"total results: len(list_results)")
+    >>> print(f"total results: {len(list_results)}")
     total_results: 45
 
 Alternatively if you wanted to get all the results over multiple days for a single Run then use the Run's id
@@ -149,7 +149,7 @@ Alternatively if you wanted to get all the results over multiple days for a sing
     num_remaining: 62
     >>> while result_query.num_remaining > 0:
     >>>     list_results.extend(result_query.scroll(10))
-    >>> print(f"total results: len(list_results)")
+    >>> print(f"total results: {len(list_results)}")
     total_results: 72
 
 
