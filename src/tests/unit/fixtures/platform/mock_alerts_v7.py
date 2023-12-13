@@ -1588,3 +1588,101 @@ ALERT_SEARCH_RESPONSE = {
     "num_found": 1236,
     "num_available": 1236
 }
+
+GROUPED_ALERT_FACET_REQUEST = {
+    "group_by": {
+        "field": "THREAT_ID"
+    },
+    "terms": {
+        "fields": [
+            "type",
+            "THREAT_ID"
+        ],
+        "rows": 0
+    },
+    "criteria": {
+        "minimum_severity": 3
+    },
+    "exclusions": {
+        "type": [
+            "HOST_BASED_FIREWALL",
+            "CONTAINER_RUNTIME"
+        ]
+    },
+    "filter_values": True
+}
+
+GROUPED_ALERT_FACET_RESPONSE = {
+    "results": [
+        {
+            "field": "threat_id",
+            "values": [
+                {
+                    "total": 1,
+                    "id": "0f8d8b5eb2ccc09ad3d2c01c6b10af7e4279f58202e49cfad93d8fab7581d294",
+                    "name": "0f8d8b5eb2ccc09ad3d2c01c6b10af7e4279f58202e49cfad93d8fab7581d294"
+                },
+                {
+                    "total": 1,
+                    "id": "13C37200E1CE8F8F7DBE4C7647291BCB",
+                    "name": "13C37200E1CE8F8F7DBE4C7647291BCB"
+                },
+                {
+                    "total": 1,
+                    "id": "1B32B7CF7C3D40F117B46EC2E39530C9",
+                    "name": "1B32B7CF7C3D40F117B46EC2E39530C9"
+                },
+                {
+                    "total": 1,
+                    "id": "1ce583a1df38f9020253fbf6092f82fa",
+                    "name": "1ce583a1df38f9020253fbf6092f82fa"
+                },
+                {
+                    "total": 1,
+                    "id": "2ECAD3461EBF6E7E12F4C4DCB013667D",
+                    "name": "2ECAD3461EBF6E7E12F4C4DCB013667D"
+                },
+                {
+                    "total": 1,
+                    "id": "30CD659F716EB1174FAF3FD71438A04B",
+                    "name": "30CD659F716EB1174FAF3FD71438A04B"
+                },
+                {
+                    "total": 1,
+                    "id": "379dd07932c4bb76514e822056941023",
+                    "name": "379dd07932c4bb76514e822056941023"
+                },
+                {
+                    "total": 1,
+                    "id": "3a99805c53d208b55d1de91f385018b01a1861069e8a11c7d28b9b8e008ca47a",
+                    "name": "3a99805c53d208b55d1de91f385018b01a1861069e8a11c7d28b9b8e008ca47a"
+                },
+                {
+                    "total": 1,
+                    "id": "45DC740C4FA77899B555E08B99F539B1",
+                    "name": "45DC740C4FA77899B555E08B99F539B1"
+                },
+                {
+                    "total": 1,
+                    "id": "5098E61E1E31B6E95C9C1257A465B669",
+                    "name": "5098E61E1E31B6E95C9C1257A465B669"
+                }
+            ]
+        },
+        {
+            "field": "type",
+            "values": [
+                {
+                    "total": 13,
+                    "id": "WATCHLIST",
+                    "name": "WATCHLIST"
+                },
+                {
+                    "total": 13,
+                    "id": "CB_ANALYTICS",
+                    "name": "CB_ANALYTICS"
+                }
+            ]
+        }
+    ]
+}
