@@ -178,7 +178,6 @@ class FieldDescriptor(object):
         Returns:
             Any: Value of the field.
         """
-        breakpoint()
         if instance is not None:
             if self.att_name not in instance._info and not instance._full_init:
                 instance.refresh()
