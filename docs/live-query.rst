@@ -91,7 +91,7 @@ information for each.
 There is also a helper option to get the results:
     >>> results_by_helper = run.query_results()
 
-Other options
+Export results
 -------------
 It is possible to export the results in several formats including csv, zipped csv and streaming
 lines.  These options are documented in :meth:`cbc_sdk.audit_remediation.base.ResultQuery`
@@ -125,6 +125,34 @@ The sequence of calls are:
     >>> finished_job.get_output_as_file("/Users/myname/mydir/livequeryresults_async.csv")
 
 
+Scroll results
+--------------
+
+If you would like to ingest all the Live Query results whether that be from one Run or multiple Runs consider using the scroll option
+to fetch the latest results. The scroll option is limited to the last 24 hours for results across all Runs. You either need to specify
+a time_received or a list of one or more Run ids
+
+    >>> result_query = api.select(Result).set_time_received(range="-3h")
+    >>> list_results = result_query.scroll(10)
+    >>> print(f"num_remaining: {result_query.num_remaining}")
+    num_remaining: 35
+    >>> while result_query.num_remaining > 0:
+    >>>     list_results.extend(result_query.scroll(10))
+    >>> print(f"total results: {len(list_results)}")
+    total_results: 45
+
+Alternatively if you wanted to get all the results over multiple days for a single Run then use the Run's id
+
+    >>> result_query = api.select(Result).set_run_ids([run.id])
+    >>> list_results = result_query.scroll(10)
+    >>> print(f"num_remaining: {result_query.num_remaining}")
+    num_remaining: 62
+    >>> while result_query.num_remaining > 0:
+    >>>     list_results.extend(result_query.scroll(10))
+    >>> print(f"total results: {len(list_results)}")
+    total_results: 72
+
+
 Clean up
 ---------
 Since this is a tutorial we'll clean up when we're done by first stopping the run and then deleting it.
@@ -144,8 +172,8 @@ It will not be visible in the console and attempting to refresh the object will 
     >>> run.delete()
     True
 
-A footnote on scheduled runs (templates)
-----------------------------------------
+Scheduled runs (templates)
+--------------------------
 A template is a query that is scheduled to run periodically. It is likely easier to configured these using the Carbon Black
 Cloud console, but retrieving the result for import to another system may be useful.
 
@@ -171,7 +199,3 @@ A where clause can be added to limit the templates returned.  Each time the sche
     name =  CBC SDK Demo Template   id =  p7qtvxms0oaju46whcrfmyppa9fiqpn9
     Run id = huoobhistdtxxpzhmg52yns7wmsuvjyx, Run Status = ACTIVE, Run create time = 2022-01-19T21:00:00.000Z, Results Returned = 2333, Template Id = p7qtvxms0oaju46whcrfmyppa9fiqpn9
     Run id = bdygnd8jvpjdqjmatdsuqzopaxebquqb, Run Status = TIMED_OUT, Run create time = 2022-01-18T21:00:00.000Z, Results Returned = 2988, Template Id = p7qtvxms0oaju46whcrfmyppa9fiqpn9
-
-
-
-
