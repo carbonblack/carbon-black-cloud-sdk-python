@@ -362,7 +362,6 @@ class Device(PlatformModel):
         rc = Device.get_asset_groups_for_devices(self._cb, self, **kwargs)
         return [self._cb.select("AssetGroup", v) for v in rc[str(self._model_unique_id)]]
 
-    @classmethod
     @staticmethod
     def _normalize_member_list(member_list):
         """
@@ -399,6 +398,7 @@ class Device(PlatformModel):
                     pass
         return return_list
 
+    @classmethod
     def get_asset_groups_for_devices(cls, cb, *args, **kwargs):
         """
         Given a list of devices, returns lists of asset groups that they are members of.
@@ -408,10 +408,10 @@ class Device(PlatformModel):
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
-            *args (list[Any]): The members to find the group membership of.  They may be specified as either
-                               ``Device`` objects, integers, or string objects that convert to integers.
-                               Any simple containers in this list (tuples, lists, sets) are "folded" into
-                               their respective member objects.
+            args (list[Any]): The members to find the group membership of.  They may be specified as either
+                              ``Device`` objects, integers, or string objects that convert to integers.
+                              Any simple containers in this list (tuples, lists, sets) are "folded" into
+                              their respective member objects.
             **kwargs (dict): Keyword arguments as documented below.
 
         Keyword Args:
@@ -431,7 +431,8 @@ class Device(PlatformModel):
             postdata = {"external_member_ids" : members}
             if filt != "ALL":
                 postdata["membership_type"] = [filt]
-            return cb.post_object(f"/asset_groups/v1/orgs/{cb.credentials.org_key}/members", postdata)
+            rc = cb.post_object(f"/asset_groups/v1/orgs/{cb.credentials.org_key}/members", postdata)
+            return rc.json()
         else:
             return {}
 

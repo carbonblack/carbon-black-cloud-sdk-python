@@ -2,12 +2,15 @@
 
 import pytest
 import logging
-from cbc_sdk.platform import Device, DeviceSearchQuery
+import copy
+from cbc_sdk.platform import AssetGroup, Device, DeviceSearchQuery
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.platform.mock_devices import (GET_DEVICE_RESP,
-                                                       POST_DEVICE_SEARCH_RESP)
+from tests.unit.fixtures.platform.mock_asset_groups import EXISTING_AG_DATA, EXISTING_AG_DATA_2
+from tests.unit.fixtures.platform.mock_devices import (GET_DEVICE_RESP, POST_DEVICE_SEARCH_RESP,
+                                                       ASSET_GROUPS_RESPONSE_1, ASSET_GROUPS_RESPONSE_2,
+                                                       ASSET_GROUPS_RESPONSE_3, ASSET_GROUPS_RESPONSE_SINGLE)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -91,3 +94,69 @@ def test_device_max_rows(cbcsdk_mock):
 
     with pytest.raises(ApiError):
         query.set_max_rows(10001)
+
+
+@pytest.mark.parametrize("filt, response", [
+    ("ALL", ASSET_GROUPS_RESPONSE_1),
+    ("DYNAMIC", ASSET_GROUPS_RESPONSE_2),
+    ("MANUAL", ASSET_GROUPS_RESPONSE_3),
+])
+def test_get_asset_groups_for_devices(cbcsdk_mock, filt, response):
+    """Tests the test_get_asset_groups_for_devices function."""
+    def on_post(url, body, **kwargs):
+        assert body['external_member_ids'] == ["98765", "3031", "1777"]
+        if filt == "ALL":
+            assert 'membership_type' not in body
+        else:
+            assert body['membership_type'] == [filt]
+        return response
+
+    cbcsdk_mock.mock_request('POST', '/asset_groups/v1/orgs/test/members', on_post)
+    api = cbcsdk_mock.api
+    rc = Device.get_asset_groups_for_devices(api, 98765, "3031", 1777, filter=filt)
+    assert rc == response
+
+
+def test_get_asset_groups_for_devices_null_error_responses(cb):
+    """Tests the null and error responses from test_get_asset_groups_for_devices."""
+    assert Device.get_asset_groups_for_devices(cb, "bogus_device") == {}
+    with pytest.raises(ApiError):
+        Device.get_asset_groups_for_devices(cb, 98765, 1777, filter="BOGUS")
+
+
+def test_device_get_asset_group_ids(cbcsdk_mock):
+    """Tests the get_asset_group_ids Device function."""
+    def on_post(url, body, **kwargs):
+        assert body['external_member_ids'] == ["98765"]
+        assert 'membership_type' not in body
+        return ASSET_GROUPS_RESPONSE_SINGLE
+
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
+    cbcsdk_mock.mock_request('POST', '/asset_groups/v1/orgs/test/members', on_post)
+    api = cbcsdk_mock.api
+    device = api.select(Device, 98765)
+    assert device.get_asset_group_ids() == ["db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16",
+                                            "509f437f-6b9a-4b8e-996e-9183b35f9069"]
+
+
+def test_device_get_asset_groups(cbcsdk_mock):
+    """Tests the get_asset_groups Device function."""
+    def on_post(url, body, **kwargs):
+        assert body['external_member_ids'] == ["98765"]
+        assert 'membership_type' not in body
+        return ASSET_GROUPS_RESPONSE_SINGLE
+
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
+    cbcsdk_mock.mock_request('POST', '/asset_groups/v1/orgs/test/members', on_post)
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
+                             copy.deepcopy(EXISTING_AG_DATA))
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/509f437f-6b9a-4b8e-996e-9183b35f9069',
+                             copy.deepcopy(EXISTING_AG_DATA_2))
+    api = cbcsdk_mock.api
+    device = api.select(Device, 98765)
+    result = device.get_asset_groups()
+    assert len(result) == 2
+    assert isinstance(result[0], AssetGroup)
+    assert isinstance(result[1], AssetGroup)
+    assert result[0].id == "db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16"
+    assert result[1].id == "509f437f-6b9a-4b8e-996e-9183b35f9069"
