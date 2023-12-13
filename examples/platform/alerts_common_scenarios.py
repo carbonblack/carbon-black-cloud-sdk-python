@@ -236,6 +236,10 @@ def main():
     # to convert a GroupAlertSearchQuery to an AlertSearchQuery, will not preserve sort order
     alert_search_query = group_alert_search_query.get_alert_search_query()
 
+    # to create the facets on a grouped alert search query
+    grouped_alert_facets = group_alert_search_query.facets(["type", "THREAT_ID"], 0, True)
+    print(grouped_alert_facets)
+
 
 if __name__ == "__main__":
     # Trap keyboard interrupts while running the script.

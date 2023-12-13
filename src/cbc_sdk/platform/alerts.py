@@ -1627,6 +1627,8 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
         """Initialize the GroupAlertSearchQuery."""
         super().__init__(*args, **kwargs)
         self._group_by = "THREAT_ID"
+        self._fieldlist = []
+        self._filter_values = False
 
     def set_group_by(self, field):
         """
@@ -1652,6 +1654,13 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
         """
         request = super(GroupedAlertSearchQuery, self)._build_request(from_row, max_rows, add_sort=True)
         request["group_by"] = {"field": self._group_by}
+
+        # build GroupedAlert facet request
+        if self._fieldlist is not []:
+            del request['rows']
+            request["terms"] = {"fields": self._fieldlist, "rows": max_rows}
+            request["filter_values"] = self._filter_values
+
         return request
 
     def get_alert_search_query(self):
@@ -1742,3 +1751,38 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
             >>> completed_job = job.await_completion().result()
         """
         raise NotImplementedError("this method is not implemented")
+
+    def facets(self, fieldlist, max_rows=0, filter_values=False):
+        """
+        Return information about the facets for this alert by search, using the defined criteria.
+
+        Args:
+            fieldlist (list): List of facet field names.
+            max_rows (int): The maximum number of rows to return. 0 means return all rows.
+            filter_values (boolean): A flag to indicate whether any filters on a term should be applied to facet
+            calculation. When false (default), a filter on the term is ignored while calculating facets
+
+        Returns:
+            list: A list of facet information specified as dicts.
+            error: invalid enum
+
+        Raises:
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
+            ApiError: If the facet field is not valid
+        """
+        for field in fieldlist:
+            if field in GroupedAlertSearchQuery.DEPRECATED_FACET_FIELDS:
+                raise FunctionalityDecommissioned(
+                    "Field '{0}' does is not a valid facet name because it was deprecated in "
+                    "Alerts v7.".format(field))
+
+        self._fieldlist = fieldlist
+        self._filter_values = filter_values
+        request = self._build_request(0, max_rows, False)
+
+        url = self._build_url("/_facet")
+        resp = self._cb.post_object(url, body=request)
+        if resp.status_code == 400:
+            raise ApiError(resp.json())
+        result = resp.json()
+        return result.get("results", [])
