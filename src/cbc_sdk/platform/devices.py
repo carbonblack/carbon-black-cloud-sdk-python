@@ -365,8 +365,7 @@ class Device(PlatformModel):
     @staticmethod
     def _normalize_member_list(member_list):
         """
-        Internal method which normalizes the parameters from add_members() or remove_members() into a single
-        list of member IDs as strings.
+        Internal method which normalizes the parameters from add_members() or remove_members().
 
         The method accepts ``Device`` objects (gets their ID), integers (converts them to strings), and simple
         containers (recursively folds their contents into the return list). Everything else gets converted to
@@ -375,7 +374,7 @@ class Device(PlatformModel):
         (This method was originally on AssetGroups, but it's needed by get_asset_groups_for_devices as well, and
         having it here avoids the problem of circular imports.)
 
-        Parameters:
+        Args:
             member_list (list[Any]): List of members to be normalized.
 
         Returns:
@@ -407,12 +406,13 @@ class Device(PlatformModel):
             group-management(READ)
 
         Args:
+            cls (class): Class associated with the ``Device`` object.
             cb (BaseAPI): Reference to API object used to communicate with the server.
             args (list[Any]): The members to find the group membership of.  They may be specified as either
                               ``Device`` objects, integers, or string objects that convert to integers.
                               Any simple containers in this list (tuples, lists, sets) are "folded" into
                               their respective member objects.
-            **kwargs (dict): Keyword arguments as documented below.
+            kwargs (dict): Keyword arguments as documented below.
 
         Keyword Args:
             filter (str): Can restrict the types of group membership returned by this method.  Values are "ALL"
@@ -428,7 +428,7 @@ class Device(PlatformModel):
             raise ApiError(f"Invalid filter value: {filt}")
         members = Device._normalize_member_list(args)
         if len(members) > 0:
-            postdata = {"external_member_ids" : members}
+            postdata = {"external_member_ids": members}
             if filt != "ALL":
                 postdata["membership_type"] = [filt]
             rc = cb.post_object(f"/asset_groups/v1/orgs/{cb.credentials.org_key}/members", postdata)
