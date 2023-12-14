@@ -1642,7 +1642,7 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
         request["group_by"] = {"field": self._group_by}
 
         # build GroupedAlert facet request
-        if self._fieldlist is not []:
+        if self._fieldlist:
             del request['rows']
             request["terms"] = {"fields": self._fieldlist, "rows": max_rows}
             request["filter_values"] = self._filter_values
