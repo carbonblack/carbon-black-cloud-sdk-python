@@ -1613,8 +1613,6 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
         """Initialize the GroupAlertSearchQuery."""
         super().__init__(*args, **kwargs)
         self._group_by = "THREAT_ID"
-        self._fieldlist = []
-        self._filter_values = False
 
     def set_group_by(self, field):
         """
@@ -1640,12 +1638,6 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
         """
         request = super(GroupedAlertSearchQuery, self)._build_request(from_row, max_rows, add_sort=True)
         request["group_by"] = {"field": self._group_by}
-
-        # build GroupedAlert facet request
-        if self._fieldlist:
-            del request['rows']
-            request["terms"] = {"fields": self._fieldlist, "rows": max_rows}
-            request["filter_values"] = self._filter_values
 
         return request
 
@@ -1762,9 +1754,10 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
                     "Field '{0}' does is not a valid facet name because it was deprecated in "
                     "Alerts v7.".format(field))
 
-        self._fieldlist = fieldlist
-        self._filter_values = filter_values
         request = self._build_request(0, max_rows, False)
+        del request['rows']
+        request["terms"] = {"fields": fieldlist, "rows": max_rows}
+        request["filter_values"] = filter_values
 
         url = self._build_url("/_facet")
         resp = self._cb.post_object(url, body=request)
