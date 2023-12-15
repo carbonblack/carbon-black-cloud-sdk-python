@@ -318,87 +318,46 @@ class Device(PlatformModel):
             return None  # clearing tag is a no-op in this case
         return NSXRemediationJob.start_request(self._cb, self.id, tag, set_tag)
 
-    def get_asset_group_ids(self, **kwargs):
+    def get_asset_group_ids(self, membership="ALL"):
         """
         Finds the list of asset group IDs that this device is a member of.
 
         Required Permissions:
             group-management(READ)
 
-        Parameters:
-            **kwargs (dict): Keyword arguments as documented below.
-
-        Keyword Args:
-            filter (str): Can restrict the types of group membership returned by this method.  Values are "ALL"
-                          to return all groups, "DYNAMIC" to return only groups that each member belongs to via the
-                          asset group query, or "MANUAL" to return only groups that the members were manually added to.
-                          Default is "ALL".
+        Args:
+            membership (str): Can restrict the types of group membership returned by this method.  Values are "ALL"
+                              to return all groups, "DYNAMIC" to return only groups that each member belongs to via the
+                              asset group query, or "MANUAL" to return only groups that the members were manually
+                              added to. Default is "ALL".
 
         Returns:
             list[str]: A list of asset group IDs this device belongs to.
         """
-        rc = Device.get_asset_groups_for_devices(self._cb, self, **kwargs)
-        return rc[str(self._model_unique_id)]
+        rc = Device.get_asset_groups_for_devices(self._cb, self, membership)
+        return rc[self._model_unique_id]
 
-    def get_asset_groups(self, **kwargs):
+    def get_asset_groups(self, membership="ALL"):
         """
         Finds the list of asset groups that this device is a member of.
 
         Required Permissions:
             group-management(READ)
 
-        Parameters:
-            **kwargs (dict): Keyword arguments as documented below.
-
-        Keyword Args:
-            filter (str): Can restrict the types of group membership returned by this method.  Values are "ALL"
-                          to return all groups, "DYNAMIC" to return only groups that each member belongs to via the
-                          asset group query, or "MANUAL" to return only groups that the members were manually added to.
-                          Default is "ALL".
+        Args:
+            membership (str): Can restrict the types of group membership returned by this method.  Values are "ALL"
+                              to return all groups, "DYNAMIC" to return only groups that each member belongs to via the
+                              asset group query, or "MANUAL" to return only groups that the members were manually
+                              added to. Default is "ALL".
 
         Returns:
             list[AssetGroup]: A list of asset groups this device belongs to.
         """
-        rc = Device.get_asset_groups_for_devices(self._cb, self, **kwargs)
-        return [self._cb.select("AssetGroup", v) for v in rc[str(self._model_unique_id)]]
-
-    @staticmethod
-    def _normalize_member_list(member_list):
-        """
-        Internal method which normalizes the parameters from add_members() or remove_members().
-
-        The method accepts ``Device`` objects (gets their ID), integers (converts them to strings), and simple
-        containers (recursively folds their contents into the return list). Everything else gets converted to
-        an integer, then to a string, and any value errors result in the value being silently dropped.
-
-        (This method was originally on AssetGroups, but it's needed by get_asset_groups_for_devices as well, and
-        having it here avoids the problem of circular imports.)
-
-        Args:
-            member_list (list[Any]): List of members to be normalized.
-
-        Returns:
-            list[str]: The normalized member list.
-        """
-        return_list = []
-        for m in member_list:
-            if m is None:
-                continue
-            if isinstance(m, Device):
-                return_list.append(str(m.id))
-            elif isinstance(m, int):
-                return_list.append(str(m))
-            elif isinstance(m, list) or isinstance(m, tuple) or isinstance(m, set):
-                return_list.extend(Device._normalize_member_list(m))
-            else:
-                try:
-                    return_list.append(str(int(m)))
-                except ValueError:
-                    pass
-        return return_list
+        rc = Device.get_asset_groups_for_devices(self._cb, self, membership)
+        return [self._cb.select("AssetGroup", v) for v in rc[self._model_unique_id]]
 
     @classmethod
-    def get_asset_groups_for_devices(cls, cb, *args, **kwargs):
+    def get_asset_groups_for_devices(cls, cb, devices, membership="ALL"):
         """
         Given a list of devices, returns lists of asset groups that they are members of.
 
@@ -408,31 +367,36 @@ class Device(PlatformModel):
         Args:
             cls (class): Class associated with the ``Device`` object.
             cb (BaseAPI): Reference to API object used to communicate with the server.
-            args (list[Any]): The members to find the group membership of.  They may be specified as either
-                              ``Device`` objects, integers, or string objects that convert to integers.
-                              Any simple containers in this list (tuples, lists, sets) are "folded" into
-                              their respective member objects.
-            kwargs (dict): Keyword arguments as documented below.
-
-        Keyword Args:
-            filter (str): Can restrict the types of group membership returned by this method.  Values are "ALL"
-                          to return all groups, "DYNAMIC" to return only groups that each member belongs to via the
-                          asset group query, or "MANUAL" to return only groups that the members were manually added to.
-                          Default is "ALL".
+            devices (int, Device, or list): The devices to find the group membership of. This may be an integer
+                                            device ID, a ``Device`` object, or a list of either integers or
+                                            ``Device`` objects.
+            membership (str): Can restrict the types of group membership returned by this method.  Values are "ALL"
+                              to return all groups, "DYNAMIC" to return only groups that each member belongs to via the
+                              asset group query, or "MANUAL" to return only groups that the members were manually
+                              added to. Default is "ALL".
 
         Returns:
             dict: A dict containing member IDs as keys, and lists of group IDs as values.
         """
-        filt = kwargs.get("filter", "ALL")
-        if filt not in Device.VALID_ASSETGROUP_FILTERS:
-            raise ApiError(f"Invalid filter value: {filt}")
-        members = Device._normalize_member_list(args)
-        if len(members) > 0:
-            postdata = {"external_member_ids": members}
-            if filt != "ALL":
-                postdata["membership_type"] = [filt]
+        if membership not in Device.VALID_ASSETGROUP_FILTERS:
+            raise ApiError(f"Invalid filter value: {membership}")
+        device_ids = []
+        if isinstance(devices, int):
+            device_ids = [str(devices)]
+        elif isinstance(devices, Device):
+            device_ids = [str(devices.id)]
+        else:
+            for d in devices:
+                if isinstance(d, int):
+                    device_ids.append(str(d))
+                elif isinstance(d, Device):
+                    device_ids.append(str(d.id))
+        if len(device_ids) > 0:
+            postdata = {"external_member_ids": device_ids}
+            if membership != "ALL":
+                postdata["membership_type"] = [membership]
             rc = cb.post_object(f"/asset_groups/v1/orgs/{cb.credentials.org_key}/members", postdata)
-            return rc.json()
+            return {int(k): v for k, v in rc.json().items()}
         else:
             return {}
 

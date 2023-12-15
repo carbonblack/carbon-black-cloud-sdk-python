@@ -97,7 +97,7 @@ class AssetGroup(MutableBaseModel):
         """
         return AssetGroupQuery(cls, cb)
 
-    def list_member_ids(self, **kwargs):
+    def list_member_ids(self, rows=20, start=0):
         """
         Gets a list of all member IDs in the group, optionally constrained by membership type.
 
@@ -105,37 +105,22 @@ class AssetGroup(MutableBaseModel):
             group-management(READ)
 
         Args:
-            **kwargs (dict): Keyword arguments as documented below.
-
-        Keyword Args:
             rows (int): Maximum number of rows to retrieve from the server. The function may return fewer member IDs
                         if filtering is applied to the output. Default is 20.
             start (int): Starting row to retrieve from the server; used to implement pagination. Default is 0.
-            filter (str): Can restrict the types of members that are returned by this method.  Values are "ALL"
-                          to return all members, "DYNAMIC" to return only members that were added via the asset group
-                          query, or "MANUAL" to return only manually-added members.  Default is "ALL".
 
         Returns:
-            list[int]: List of integer member IDs.
+            list[dict]: List of dictionaries that contain the integer element ``external_member_id`` for the device ID,
+                        the boolean element ``dynamic`` which is ``True`` if the group member is there due to the
+                        group's dynamic query, and the boolean element ``manual`` which is ``True`` if the group member
+                        was manually added.  (It is possible for both ``dynamic`` and ``manual`` to be ``True``.)
         """
-        filt = kwargs.get("filter", "ALL")
-        if filt not in AssetGroup.VALID_MEMBER_FILTERS:
-            raise ApiError(f"invalid filter value: {filter}")
-        query_params = {}
-        for name in ("rows", "start"):
-            if name in kwargs:
-                query_params[name] = kwargs[name]
+        query_params = {"rows": rows, "start": start}
         member_data = self._cb.get_object(self._build_api_request_uri() + "/members", query_params)
-        id_list = []
-        if filt == "ALL":
-            id_list = [int(m["external_member_id"]) for m in member_data["members"]]
-        elif filt == "DYNAMIC":
-            id_list = [int(m["external_member_id"]) for m in member_data["members"] if m["dynamic"]]
-        elif filt == "MANUAL":
-            id_list = [int(m["external_member_id"]) for m in member_data["members"] if m["manual"]]
-        return id_list
+        return [{"external_member_id": int(m["external_member_id"]), "dynamic": m["dynamic"], "manual": m["manual"]}
+                for m in member_data["members"]]
 
-    def list_members(self, **kwargs):
+    def list_members(self, rows=20, start=0, membership="ALL"):
         """
         Gets a list of all member devices in the group, optionally constrained by membership type.
 
@@ -143,23 +128,27 @@ class AssetGroup(MutableBaseModel):
             group-management(READ)
 
         Args:
-            **kwargs (dict): Keyword arguments as documented below.
-
-        Keyword Args:
             rows (int): Maximum number of rows to retrieve from the server. The function may return fewer member IDs
                         if filtering is applied to the output. Default is 20.
             start (int): Starting row to retrieve from the server; used to implement pagination. Default is 0.
-            filter (str): Can restrict the types of members that are returned by this method.  Values are "ALL"
-                          to return all members, "DYNAMIC" to return only members that were added via the asset group
-                          query, or "MANUAL" to return only manually-added members.  Default is "ALL".
+            membership (str): Can restrict the types of members that are returned by this method.  Values are "ALL"
+                              to return all members, "DYNAMIC" to return only members that were added via the asset
+                              group query, or "MANUAL" to return only manually-added members.  Default is "ALL".
 
         Returns:
             list[Device]: List of ``Device`` objects comprising the membership of the group.``
         """
-        id_list = self.list_member_ids(**kwargs)
-        return [self._cb.select(Device, v) for v in id_list]
+        if membership not in AssetGroup.VALID_MEMBER_FILTERS:
+            raise ApiError(f"invalid filter value: {membership}")
+        id_list = self.list_member_ids(rows, start)
+        if membership == "ALL":
+            return [self._cb.select(Device, m["external_member_id"]) for m in id_list]
+        elif membership == "DYNAMIC":
+            return [self._cb.select(Device, m["external_member_id"]) for m in id_list if m["dynamic"]]
+        elif membership == "MANUAL":
+            return [self._cb.select(Device, m["external_member_id"]) for m in id_list if m["manual"]]
 
-    def add_members(self, *args):
+    def add_members(self, members):
         """
         Adds additional members to this asset group.
 
@@ -167,17 +156,25 @@ class AssetGroup(MutableBaseModel):
             group-management(CREATE)
 
         Args:
-            *args (list[Any]): The members to be added to the group.  They may be specified as either
-                               ``Device`` objects, integers, or string objects that convert to integers.
-                               Any simple containers in this list (tuples, lists, sets) are "folded" into
-                               their respective member objects.
+            members (int, Device, or list): The members to be added to the group. This may be an integer device ID,
+                                            a ``Device`` object, or a list of either integers or ``Device`` objects.
         """
-        members = Device._normalize_member_list(args)
-        if len(members) > 0:
+        member_ids = []
+        if isinstance(members, int):
+            member_ids = [str(members)]
+        elif isinstance(members, Device):
+            member_ids = [str(members.id)]
+        else:
+            for m in members:
+                if isinstance(m, int):
+                    member_ids.append(str(m))
+                elif isinstance(m, Device):
+                    member_ids.append(str(m.id))
+        if len(member_ids) > 0:
             self._cb.post_object(self._build_api_request_uri() + "/members",
-                                 {"action": "CREATE", "external_member_ids": members})
+                                 {"action": "CREATE", "external_member_ids": member_ids})
 
-    def remove_members(self, *args):
+    def remove_members(self, members):
         """
         Removes members from this asset group.
 
@@ -185,15 +182,23 @@ class AssetGroup(MutableBaseModel):
             group-management(DELETE)
 
         Args:
-            *args (list[Any]): The members to be removed from the group.  They may be specified as either
-                               ``Device`` objects, integers, or string objects that convert to integers.
-                               Any simple containers in this list (tuples, lists, sets) are "folded" into
-                               their respective member objects.
+            members (int, Device, or list): The members to be added to the group. This may be an integer device ID,
+                                            a ``Device`` object, or a list of either integers or ``Device`` objects.
         """
-        members = Device._normalize_member_list(args)
-        if len(members) > 0:
+        member_ids = []
+        if isinstance(members, int):
+            member_ids = [str(members)]
+        elif isinstance(members, Device):
+            member_ids = [str(members.id)]
+        else:
+            for m in members:
+                if isinstance(m, int):
+                    member_ids.append(str(m))
+                elif isinstance(m, Device):
+                    member_ids.append(str(m.id))
+        if len(member_ids) > 0:
             self._cb.post_object(self._build_api_request_uri() + "/members",
-                                 {"action": "REMOVE", "external_member_ids": members})
+                                 {"action": "REMOVE", "external_member_ids": member_ids})
 
     @classmethod
     def create_group(cls, cb, name, description, **kwargs):
