@@ -150,6 +150,24 @@ LIST_MEMBERS_RESPONSE1 = {
     ]
 }
 
+LIST_MEMBERS_OUTPUT1 = [
+    {
+        "external_member_id": 12345678,
+        "dynamic": True,
+        "manual": False
+    },
+    {
+        "external_member_id": 66760099,
+        "dynamic": False,
+        "manual": True
+    },
+    {
+        "external_member_id": 42691014,
+        "dynamic": True,
+        "manual": False
+    }
+]
+
 LIST_MEMBERS_RESPONSE2 = {
     "num_found": 1,
     "member_ids": [
