@@ -31,7 +31,7 @@ Typical usage example::
 from cbc_sdk.base import (MutableBaseModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin, IterableQueryMixin,
                           CriteriaBuilderSupportMixin, AsyncQueryMixin)
 from cbc_sdk.errors import ApiError
-from cbc_sdk.platform.devices import DeviceSearchQuery
+from cbc_sdk.platform.devices import Device, DeviceSearchQuery
 
 
 class AssetGroup(MutableBaseModel):
@@ -45,6 +45,9 @@ class AssetGroup(MutableBaseModel):
     urlobject_single = "/asset_groups/v1/orgs/{0}/groups/{1}"
     primary_key = "id"
     swagger_meta_file = "platform/models/asset_group.yaml"
+
+    """The valid values for the 'filter' parameter to list_members()."""
+    VALID_MEMBER_FILTERS = ("ALL", "DYNAMIC", "MANUAL")
 
     def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
         """
@@ -93,6 +96,109 @@ class AssetGroup(MutableBaseModel):
             AssetGroupQuery: The query object for the asset group type.
         """
         return AssetGroupQuery(cls, cb)
+
+    def list_member_ids(self, rows=20, start=0):
+        """
+        Gets a list of all member IDs in the group, optionally constrained by membership type.
+
+        Required Permissions:
+            group-management(READ)
+
+        Args:
+            rows (int): Maximum number of rows to retrieve from the server. The function may return fewer member IDs
+                        if filtering is applied to the output. Default is 20.
+            start (int): Starting row to retrieve from the server; used to implement pagination. Default is 0.
+
+        Returns:
+            list[dict]: List of dictionaries that contain the integer element ``external_member_id`` for the device ID,
+                        the boolean element ``dynamic`` which is ``True`` if the group member is there due to the
+                        group's dynamic query, and the boolean element ``manual`` which is ``True`` if the group member
+                        was manually added.  (It is possible for both ``dynamic`` and ``manual`` to be ``True``.)
+        """
+        query_params = {"rows": rows, "start": start}
+        member_data = self._cb.get_object(self._build_api_request_uri() + "/members", query_params)
+        return [{"external_member_id": int(m["external_member_id"]), "dynamic": m["dynamic"], "manual": m["manual"]}
+                for m in member_data["members"]]
+
+    def list_members(self, rows=20, start=0, membership="ALL"):
+        """
+        Gets a list of all member devices in the group, optionally constrained by membership type.
+
+        Required Permissions:
+            group-management(READ), devices(READ)
+
+        Args:
+            rows (int): Maximum number of rows to retrieve from the server. The function may return fewer member IDs
+                        if filtering is applied to the output. Default is 20.
+            start (int): Starting row to retrieve from the server; used to implement pagination. Default is 0.
+            membership (str): Can restrict the types of members that are returned by this method.  Values are "ALL"
+                              to return all members, "DYNAMIC" to return only members that were added via the asset
+                              group query, or "MANUAL" to return only manually-added members.  Default is "ALL".
+
+        Returns:
+            list[Device]: List of ``Device`` objects comprising the membership of the group.``
+        """
+        if membership not in AssetGroup.VALID_MEMBER_FILTERS:
+            raise ApiError(f"invalid filter value: {membership}")
+        id_list = self.list_member_ids(rows, start)
+        if membership == "ALL":
+            return [self._cb.select(Device, m["external_member_id"]) for m in id_list]
+        elif membership == "DYNAMIC":
+            return [self._cb.select(Device, m["external_member_id"]) for m in id_list if m["dynamic"]]
+        elif membership == "MANUAL":
+            return [self._cb.select(Device, m["external_member_id"]) for m in id_list if m["manual"]]
+
+    def add_members(self, members):
+        """
+        Adds additional members to this asset group.
+
+        Required Permissions:
+            group-management(CREATE)
+
+        Args:
+            members (int, Device, or list): The members to be added to the group. This may be an integer device ID,
+                                            a ``Device`` object, or a list of either integers or ``Device`` objects.
+        """
+        member_ids = []
+        if isinstance(members, int):
+            member_ids = [str(members)]
+        elif isinstance(members, Device):
+            member_ids = [str(members.id)]
+        else:
+            for m in members:
+                if isinstance(m, int):
+                    member_ids.append(str(m))
+                elif isinstance(m, Device):
+                    member_ids.append(str(m.id))
+        if len(member_ids) > 0:
+            self._cb.post_object(self._build_api_request_uri() + "/members",
+                                 {"action": "CREATE", "external_member_ids": member_ids})
+
+    def remove_members(self, members):
+        """
+        Removes members from this asset group.
+
+        Required Permissions:
+            group-management(DELETE)
+
+        Args:
+            members (int, Device, or list): The members to be removed from the group. This may be an integer device ID,
+                                            a ``Device`` object, or a list of either integers or ``Device`` objects.
+        """
+        member_ids = []
+        if isinstance(members, int):
+            member_ids = [str(members)]
+        elif isinstance(members, Device):
+            member_ids = [str(members.id)]
+        else:
+            for m in members:
+                if isinstance(m, int):
+                    member_ids.append(str(m))
+                elif isinstance(m, Device):
+                    member_ids.append(str(m.id))
+        if len(member_ids) > 0:
+            self._cb.post_object(self._build_api_request_uri() + "/members",
+                                 {"action": "REMOVE", "external_member_ids": member_ids})
 
     @classmethod
     def create_group(cls, cb, name, description, **kwargs):

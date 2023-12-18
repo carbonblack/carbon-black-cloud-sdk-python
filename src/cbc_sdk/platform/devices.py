@@ -52,6 +52,9 @@ class Device(PlatformModel):
     primary_key = "id"
     swagger_meta_file = "platform/models/device.yaml"
 
+    """The valid values for the 'filter' parameter to get_asset_groups_for_devices()."""
+    VALID_ASSETGROUP_FILTERS = ("ALL", "DYNAMIC", "MANUAL")
+
     def __init__(self, cb, model_unique_id, initial_data=None):
         """
         Initialize the ``Device`` object.
@@ -314,6 +317,88 @@ class Device(PlatformModel):
                 raise ApiError(f"NSX tag already set to {current}, cannot set another tag without clearing it")
             return None  # clearing tag is a no-op in this case
         return NSXRemediationJob.start_request(self._cb, self.id, tag, set_tag)
+
+    def get_asset_group_ids(self, membership="ALL"):
+        """
+        Finds the list of asset group IDs that this device is a member of.
+
+        Required Permissions:
+            group-management(READ)
+
+        Args:
+            membership (str): Can restrict the types of group membership returned by this method.  Values are "ALL"
+                              to return all groups, "DYNAMIC" to return only groups that each member belongs to via the
+                              asset group query, or "MANUAL" to return only groups that the members were manually
+                              added to. Default is "ALL".
+
+        Returns:
+            list[str]: A list of asset group IDs this device belongs to.
+        """
+        rc = Device.get_asset_groups_for_devices(self._cb, self, membership)
+        return rc[self._model_unique_id]
+
+    def get_asset_groups(self, membership="ALL"):
+        """
+        Finds the list of asset groups that this device is a member of.
+
+        Required Permissions:
+            group-management(READ)
+
+        Args:
+            membership (str): Can restrict the types of group membership returned by this method.  Values are "ALL"
+                              to return all groups, "DYNAMIC" to return only groups that each member belongs to via the
+                              asset group query, or "MANUAL" to return only groups that the members were manually
+                              added to. Default is "ALL".
+
+        Returns:
+            list[AssetGroup]: A list of asset groups this device belongs to.
+        """
+        rc = Device.get_asset_groups_for_devices(self._cb, self, membership)
+        return [self._cb.select("AssetGroup", v) for v in rc[self._model_unique_id]]
+
+    @classmethod
+    def get_asset_groups_for_devices(cls, cb, devices, membership="ALL"):
+        """
+        Given a list of devices, returns lists of asset groups that they are members of.
+
+        Required Permissions:
+            group-management(READ)
+
+        Args:
+            cls (class): Class associated with the ``Device`` object.
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            devices (int, Device, or list): The devices to find the group membership of. This may be an integer
+                                            device ID, a ``Device`` object, or a list of either integers or
+                                            ``Device`` objects.
+            membership (str): Can restrict the types of group membership returned by this method.  Values are "ALL"
+                              to return all groups, "DYNAMIC" to return only groups that each member belongs to via the
+                              asset group query, or "MANUAL" to return only groups that the members were manually
+                              added to. Default is "ALL".
+
+        Returns:
+            dict: A dict containing member IDs as keys, and lists of group IDs as values.
+        """
+        if membership not in Device.VALID_ASSETGROUP_FILTERS:
+            raise ApiError(f"Invalid filter value: {membership}")
+        device_ids = []
+        if isinstance(devices, int):
+            device_ids = [str(devices)]
+        elif isinstance(devices, Device):
+            device_ids = [str(devices.id)]
+        else:
+            for d in devices:
+                if isinstance(d, int):
+                    device_ids.append(str(d))
+                elif isinstance(d, Device):
+                    device_ids.append(str(d.id))
+        if len(device_ids) > 0:
+            postdata = {"external_member_ids": device_ids}
+            if membership != "ALL":
+                postdata["membership_type"] = [membership]
+            rc = cb.post_object(f"/asset_groups/v1/orgs/{cb.credentials.org_key}/members", postdata)
+            return {int(k): v for k, v in rc.json().items()}
+        else:
+            return {}
 
 
 class DeviceFacet(UnrefreshableModel):

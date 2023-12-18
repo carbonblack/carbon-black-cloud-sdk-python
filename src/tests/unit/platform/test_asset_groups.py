@@ -16,11 +16,13 @@ import logging
 import copy
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.errors import ApiError
-from cbc_sdk.platform import AssetGroup
+from cbc_sdk.platform import AssetGroup, Device
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_asset_groups import (CREATE_AG_REQUEST, CREATE_AG_RESPONSE, EXISTING_AG_DATA,
                                                             UPDATE_AG_REQUEST, QUERY_REQUEST, QUERY_REQUEST_DEFAULT,
-                                                            QUERY_RESPONSE)
+                                                            QUERY_RESPONSE, LIST_MEMBERS_RESPONSE1,
+                                                            LIST_MEMBERS_OUTPUT1, LIST_MEMBERS_RESPONSE2)
+from tests.unit.fixtures.platform.mock_devices import GET_DEVICE_RESP
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -198,3 +200,124 @@ def test_query_fail_criteria_set(cb):
     query = cb.select(AssetGroup)
     with pytest.raises(ApiError):
         query.sort_by("name", "NOTADIRECTION")
+
+
+def test_list_member_ids_basic(cbcsdk_mock):
+    """Tests the formatting of the 'list members' call with rows and start parameters, and the basic response."""
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
+                             copy.deepcopy(EXISTING_AG_DATA))
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16/members?rows=20&start=0',  # noqa: E501
+                             LIST_MEMBERS_RESPONSE1)
+    api = cbcsdk_mock.api
+    group = api.select(AssetGroup, 'db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16')
+    rc = group.list_member_ids(rows=20, start=0)
+    assert rc == LIST_MEMBERS_OUTPUT1
+
+
+def test_list_members(cbcsdk_mock):
+    """Tests the device return mechanism of list_members."""
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
+                             copy.deepcopy(EXISTING_AG_DATA))
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16/members?rows=20&start=0',  # noqa: E501
+                             LIST_MEMBERS_RESPONSE2)
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
+    api = cbcsdk_mock.api
+    group = api.select(AssetGroup, 'db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16')
+    rc = group.list_members()
+    assert len(rc) == 1
+    assert isinstance(rc[0], Device)
+    assert rc[0].id == 98765
+    rc = group.list_members(membership="MANUAL")
+    assert len(rc) == 1
+    assert isinstance(rc[0], Device)
+    assert rc[0].id == 98765
+    rc = group.list_members(membership="DYNAMIC")
+    assert len(rc) == 0
+
+
+def test_list_members_bogus_membership(cbcsdk_mock):
+    """Tests the error return from list_members."""
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
+                             copy.deepcopy(EXISTING_AG_DATA))
+    api = cbcsdk_mock.api
+    group = api.select(AssetGroup, 'db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16')
+    with pytest.raises(ApiError):
+        group.list_members(membership="BOGUS")
+
+
+@pytest.mark.parametrize("param, expected", [
+    (14760, ["14760"]),
+    ([16, 99], ["16", "99"]),
+])
+def test_add_members(cbcsdk_mock, param, expected):
+    """Tests the add_members API with various combinations of parameters."""
+    def on_post(url, body, **kwargs):
+        assert body['action'] == 'CREATE'
+        assert body['external_member_ids'] == expected
+        return CBCSDKMock.StubResponse("", scode=204, json_parsable=False)
+
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
+                             copy.deepcopy(EXISTING_AG_DATA))
+    cbcsdk_mock.mock_request('POST', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16/members',
+                             on_post)
+    api = cbcsdk_mock.api
+    group = api.select(AssetGroup, 'db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16')
+    group.add_members(param)
+
+
+def test_add_members_with_device(cbcsdk_mock):
+    """Tests the add_members API with a Device object."""
+    def on_post(url, body, **kwargs):
+        assert body['action'] == 'CREATE'
+        assert body['external_member_ids'] == ["98765"]
+        return CBCSDKMock.StubResponse("", scode=204, json_parsable=False)
+
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
+                             copy.deepcopy(EXISTING_AG_DATA))
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
+    cbcsdk_mock.mock_request('POST', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16/members',
+                             on_post)
+    api = cbcsdk_mock.api
+    group = api.select(AssetGroup, 'db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16')
+    device = api.select(Device, 98765)
+    group.add_members(device)
+    group.add_members([device])
+
+
+@pytest.mark.parametrize("param, expected", [
+    (14760, ["14760"]),
+    ([70717, 14920], ["70717", "14920"]),
+])
+def test_remove_members(cbcsdk_mock, param, expected):
+    """Tests the remove_members API."""
+    def on_post(url, body, **kwargs):
+        assert body['action'] == 'REMOVE'
+        assert body['external_member_ids'] == expected
+        return CBCSDKMock.StubResponse("", scode=204, json_parsable=False)
+
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
+                             copy.deepcopy(EXISTING_AG_DATA))
+    cbcsdk_mock.mock_request('POST', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16/members',
+                             on_post)
+    api = cbcsdk_mock.api
+    group = api.select(AssetGroup, 'db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16')
+    group.remove_members(param)
+
+
+def test_remove_members_with_device(cbcsdk_mock):
+    """Tests the remove_members API with a device parameter."""
+    def on_post(url, body, **kwargs):
+        assert body['action'] == 'REMOVE'
+        assert body['external_member_ids'] == ["98765"]
+        return CBCSDKMock.StubResponse("", scode=204, json_parsable=False)
+
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
+                             copy.deepcopy(EXISTING_AG_DATA))
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
+    cbcsdk_mock.mock_request('POST', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16/members',
+                             on_post)
+    api = cbcsdk_mock.api
+    group = api.select(AssetGroup, 'db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16')
+    device = api.select(Device, 98765)
+    group.remove_members(device)
+    group.remove_members([device])
