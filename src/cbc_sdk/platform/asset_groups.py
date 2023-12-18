@@ -125,7 +125,7 @@ class AssetGroup(MutableBaseModel):
         Gets a list of all member devices in the group, optionally constrained by membership type.
 
         Required Permissions:
-            group-management(READ)
+            group-management(READ), devices(READ)
 
         Args:
             rows (int): Maximum number of rows to retrieve from the server. The function may return fewer member IDs
@@ -182,7 +182,7 @@ class AssetGroup(MutableBaseModel):
             group-management(DELETE)
 
         Args:
-            members (int, Device, or list): The members to be added to the group. This may be an integer device ID,
+            members (int, Device, or list): The members to be removed from the group. This may be an integer device ID,
                                             a ``Device`` object, or a list of either integers or ``Device`` objects.
         """
         member_ids = []
