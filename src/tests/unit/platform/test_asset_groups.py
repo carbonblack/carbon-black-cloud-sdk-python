@@ -346,12 +346,4 @@ def test_get_statistics(cbcsdk_mock):
     api = cbcsdk_mock.api
     group = api.select(AssetGroup, 'db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16')
     rc = group.get_statistics()
-    sub = rc["unassigned_properties"]
-    assert len(sub) == 1
-    assert sub[0]["type"] == "POLICY"
-    sub = rc["intersections"]
-    assert len(sub) == 2
-    assert sub[0]["count"] == 2
-    assert sub[0]["group_id"] == "509f437f-6b9a-4b8e-996e-9183b35f9069"
-    assert sub[1]["count"] == 1
-    assert sub[1]["group_id"] == "8e0e3714-fece-4c76-9728-6ad2713cde72"
+    assert rc == GET_STATS_RESPONSE
