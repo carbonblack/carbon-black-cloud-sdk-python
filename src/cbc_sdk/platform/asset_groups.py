@@ -200,6 +200,27 @@ class AssetGroup(MutableBaseModel):
             self._cb.post_object(self._build_api_request_uri() + "/members",
                                  {"action": "REMOVE", "external_member_ids": member_ids})
 
+    def get_statistics(self):
+        """
+        For this group, return statistics about its group membership.
+
+        The statistics include how many of the group's members belong to other groups, and how many members
+        belong to groups without policy association.
+
+        See
+        `this page <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/asset-groups-api/#get-asset-group-stats>`  # noqa: E501 W505
+        for more details on the structure of the return value from this method.
+
+        Required Permissions:
+            group-management(READ)
+
+        Returns:
+             dict: A dict with two elements. The "intersections" element contains elements detailing which groups share
+                   members with this group, and which members they are.  The "unassigned_properties" element contains
+                   elements showing which members belong to groups without policy association.
+        """
+        return self._cb.get_object(self._build_api_request_uri() + "/membership_summary")
+
     @classmethod
     def create_group(cls, cb, name, description, **kwargs):
         """
@@ -232,6 +253,23 @@ class AssetGroup(MutableBaseModel):
         group = AssetGroup(cb, None, group_data, False, True)
         group.save()
         return group
+
+    @classmethod
+    def get_all_groups(cls, cb):
+        """
+        Retrieve all asset groups in the organization.
+
+        Required Permissions:
+            group-management(READ)
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+
+        Returns:
+            list[AssetGroup]: List of ``AssetGroup`` objects corresponding to the asset groups in the organization.
+        """
+        return_data = cb.get_object(AssetGroup.urlobject.format(cb.credentials.org_key))
+        return [AssetGroup(cb, v['id'], v, False, False) for v in return_data['results']]
 
 
 class AssetGroupQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin,
