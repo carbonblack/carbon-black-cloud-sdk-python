@@ -269,7 +269,7 @@ class AssetGroup(MutableBaseModel):
             list[AssetGroup]: List of ``AssetGroup`` objects corresponding to the asset groups in the organization.
         """
         return_data = cb.get_object(AssetGroup.urlobject.format(cb.credentials.org_key))
-        return [AssetGroup(cb, v['id'], v, False, False) for v in return_data['results']]
+        return [AssetGroup(cb, v['id'], v) for v in return_data['results']]
 
 
 class AssetGroupQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin,
