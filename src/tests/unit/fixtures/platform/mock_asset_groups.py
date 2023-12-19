@@ -181,3 +181,64 @@ LIST_MEMBERS_RESPONSE2 = {
         }
     ]
 }
+
+GET_ALL_RESPONSE = {
+    "num_found": 2,
+    "results": [
+        {
+            "id": "db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16",
+            "name": "Existing Group",
+            "description": "Some Description",
+            "org_key": "test",
+            "status": "OK",
+            "member_type": "DEVICE",
+            "discovered": False,
+            "create_time": "2022-11-09T06:27:30.734Z",
+            "update_time": "2022-11-09T06:27:30.734Z",
+            "member_count": 0,
+        },
+        {
+            "id": "509f437f-6b9a-4b8e-996e-9183b35f9069",
+            "name": "Another Group",
+            "description": "Some new description",
+            "org_key": "test",
+            "status": "OK",
+            "member_type": "DEVICE",
+            "discovered": False,
+            "create_time": "2022-11-09T06:27:30.734Z",
+            "update_time": "2022-11-09T06:27:30.734Z",
+            "member_count": 0,
+        }
+    ]
+}
+
+GET_STATS_RESPONSE = {
+    "intersections": [
+        {
+            "count": 2,
+            "ids": [
+                "12345678",
+                "66760099"
+            ],
+            "group_id": "509f437f-6b9a-4b8e-996e-9183b35f9069",
+            "group_name": "Another Group",
+            "group_description": "Some new description"
+        },
+        {
+            "count": 1,
+            "ids": [
+                "66760099"
+            ],
+            "group_id": "8e0e3714-fece-4c76-9728-6ad2713cde72",
+            "group_name": "Secure Access Group",
+            "group_description": "More secure than usual"
+        },
+    ],
+    "unassigned_properties": [
+        {
+            "type": "POLICY",
+            "count": 0,
+            "ids": []
+        }
+    ]
+}
