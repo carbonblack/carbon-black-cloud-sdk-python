@@ -144,38 +144,22 @@ def test_get_asset_groups_for_devices_null_and_error_responses(cb):
         Device.get_asset_groups_for_devices(cb, 98765, membership="BOGUS")
 
 
-@pytest.mark.parametrize("membership", [
-    "ALL",
-    "DYNAMIC",
-    "MANUAL"
+@pytest.mark.parametrize("membership, result", [
+    ("ALL", ["db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16", "509f437f-6b9a-4b8e-996e-9183b35f9069"]),
+    ("MANUAL", ["db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16"]),
+    ("DYNAMIC", ["509f437f-6b9a-4b8e-996e-9183b35f9069"])
 ])
-def test_device_get_asset_group_ids(cbcsdk_mock, membership):
+def test_device_get_asset_group_ids(cbcsdk_mock, membership, result):
     """Tests the get_asset_group_ids Device function."""
-    def on_post(url, body, **kwargs):
-        assert body['external_member_ids'] == ["98765"]
-        if membership == "ALL":
-            assert 'membership_type' not in body
-        else:
-            assert body['membership_type'] == [membership]
-        return ASSET_GROUPS_RESPONSE_SINGLE
-
     cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
-    cbcsdk_mock.mock_request('POST', '/asset_groups/v1/orgs/test/members', on_post)
     api = cbcsdk_mock.api
     device = api.select(Device, 98765)
-    assert device.get_asset_group_ids(membership=membership) == ["db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16",
-                                                                 "509f437f-6b9a-4b8e-996e-9183b35f9069"]
+    assert device.get_asset_group_ids(membership=membership) == result
 
 
 def test_device_get_asset_groups(cbcsdk_mock):
     """Tests the get_asset_groups Device function."""
-    def on_post(url, body, **kwargs):
-        assert body['external_member_ids'] == ["98765"]
-        assert 'membership_type' not in body
-        return ASSET_GROUPS_RESPONSE_SINGLE
-
     cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
-    cbcsdk_mock.mock_request('POST', '/asset_groups/v1/orgs/test/members', on_post)
     cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
                              copy.deepcopy(EXISTING_AG_DATA))
     cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/509f437f-6b9a-4b8e-996e-9183b35f9069',

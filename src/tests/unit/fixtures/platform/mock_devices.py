@@ -6,6 +6,18 @@ GET_DEVICE_RESP = {
     "ad_group_id": 0,
     "appliance_name": None,
     "appliance_uuid": None,
+    "asset_group": [
+        {
+            "id": "db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16",
+            "name": "Existing Group",
+            "membership_type": "MANUAL"
+        },
+        {
+            "id": "509f437f-6b9a-4b8e-996e-9183b35f9069",
+            "name": "Another Group",
+            "membership_type": "DYNAMIC"
+        }
+    ],
     "av_ave_version": "8.3.62.44",
     "av_engine": "4.13.0.207-ave.8.3.62.44:avpack.8.5.0.66:vdf.8.18.9.10 (20200826)",
     "av_last_scan_time": None,
@@ -92,6 +104,18 @@ GET_DEVICE_RESP_NO_VCENTER = {
     "ad_group_id": 0,
     "appliance_name": None,
     "appliance_uuid": None,
+    "asset_group": [
+        {
+            "id": "db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16",
+            "name": "Existing Group",
+            "membership_type": "MANUAL"
+        },
+        {
+            "id": "509f437f-6b9a-4b8e-996e-9183b35f9069",
+            "name": "Another Group",
+            "membership_type": "DYNAMIC"
+        }
+    ],
     "av_ave_version": "8.3.62.44",
     "av_engine": "4.13.0.207-ave.8.3.62.44:avpack.8.5.0.66:vdf.8.18.9.10 (20200826)",
     "av_last_scan_time": None,
@@ -180,6 +204,18 @@ POST_DEVICE_SEARCH_RESP = {
             "ad_group_id": 0,
             "appliance_name": None,
             "appliance_uuid": None,
+            "asset_group": [
+                {
+                    "id": "db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16",
+                    "name": "Existing Group",
+                    "membership_type": "MANUAL"
+                },
+                {
+                    "id": "509f437f-6b9a-4b8e-996e-9183b35f9069",
+                    "name": "Another Group",
+                    "membership_type": "DYNAMIC"
+                }
+            ],
             "av_ave_version": "8.3.62.44",
             "av_engine": "4.13.0.207-ave.8.3.62.44:avpack.8.5.0.66:vdf.8.18.9.10 (20200826)",
             "av_last_scan_time": None,

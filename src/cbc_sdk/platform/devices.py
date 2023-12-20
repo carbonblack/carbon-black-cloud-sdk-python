@@ -356,7 +356,7 @@ class Device(PlatformModel):
         Returns:
             list[AssetGroup]: A list of asset groups this device belongs to.
         """
-        return [self._cb.select("AssetGroup", g['id']) for g in self._info['asset_group']]
+        return [self._cb.select("AssetGroup", v) for v in self.get_asset_group_ids(membership)]
 
     def add_to_groups_by_id(self, group_ids):
         """
