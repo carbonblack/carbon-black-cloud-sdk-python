@@ -322,9 +322,6 @@ class Device(PlatformModel):
         """
         Finds the list of asset group IDs that this device is a member of.
 
-        Required Permissions:
-            group-management(READ)
-
         Args:
             membership (str): Can restrict the types of group membership returned by this method.  Values are "ALL"
                               to return all groups, "DYNAMIC" to return only groups that each member belongs to via the
@@ -334,8 +331,14 @@ class Device(PlatformModel):
         Returns:
             list[str]: A list of asset group IDs this device belongs to.
         """
-        rc = Device.get_asset_groups_for_devices(self._cb, self, membership)
-        return rc[self._model_unique_id]
+        if membership not in Device.VALID_ASSETGROUP_FILTERS:
+            raise ApiError(f"Invalid filter value: {membership}")
+        if membership == "ALL":
+            return [g['id'] for g in self._info['asset_group']]
+        elif membership == "MANUAL":
+            return [g['id'] for g in self._info['asset_group'] if g['membership_type'] == 'MANUAL']
+        elif membership == "DYNAMIC":
+            return [g['id'] for g in self._info['asset_group'] if g['membership_type'] == 'DYNAMIC']
 
     def get_asset_groups(self, membership="ALL"):
         """
@@ -353,8 +356,49 @@ class Device(PlatformModel):
         Returns:
             list[AssetGroup]: A list of asset groups this device belongs to.
         """
-        rc = Device.get_asset_groups_for_devices(self._cb, self, membership)
-        return [self._cb.select("AssetGroup", v) for v in rc[self._model_unique_id]]
+        return [self._cb.select("AssetGroup", g['id']) for g in self._info['asset_group']]
+
+    def add_to_groups_by_id(self, group_ids):
+        """
+        Given a list of asset group IDs, adds this device to each one as a member.
+
+        Args:
+            group_ids (list[str]): The list of group IDs to add this device to.
+        """
+        for group_id in group_ids:
+            url = f"/asset_groups/v1/orgs/{self._cb.credentials.org_key}/groups/{group_id}/members"
+            self._cb.post_object(url, {"action": "CREATE", "external_member_ids": [str(self._model_unique_id)]})
+
+    def add_to_groups(self, groups):
+        """
+        Given a list of asset groups, adds this device to each one as a member.
+
+        Args:
+            groups (list[AssetGroup]): The list of groups to add this device to.
+        """
+        for group in groups:
+            group.add_members(self)
+
+    def remove_from_groups_by_id(self, group_ids):
+        """
+        Given a list of asset group IDs, removes this device from each one as a member.
+
+        Args:
+            group_ids (list[str]): The list of group IDs to remove this device from.
+        """
+        for group_id in group_ids:
+            url = f"/asset_groups/v1/orgs/{self._cb.credentials.org_key}/groups/{group_id}/members"
+            self._cb.post_object(url, {"action": "REMOVE", "external_member_ids": [str(self._model_unique_id)]})
+
+    def remove_from_groups(self, groups):
+        """
+        Given a list of asset groups, removes this device from each one as a member.
+
+        Args:
+            groups (list[AssetGroup]): The list of groups to remove this device from.
+        """
+        for group in groups:
+            group.remove_members(self)
 
     @classmethod
     def get_asset_groups_for_devices(cls, cb, devices, membership="ALL"):
