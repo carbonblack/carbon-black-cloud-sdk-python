@@ -10,6 +10,24 @@ properties:
     type: integer
     format: int64
     description: Device's AD group
+  asset_group:
+    type: array
+    description: The asset groups that this device is a member of.
+    items:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The ID of the asset group the device belongs to.
+        name:
+          type: string
+          description: The name of the asset group the device belongs to.
+        membership_type:
+          type: string
+          description: The type of membership this device has in the asset group.
+          enum:
+            - DYNAMIC
+            - MANUAL
   av_ave_version:
     type: string
     description: AVE version (part of AV Version)
