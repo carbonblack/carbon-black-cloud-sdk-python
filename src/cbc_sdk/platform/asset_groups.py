@@ -208,7 +208,7 @@ class AssetGroup(MutableBaseModel):
         belong to groups without policy association.
 
         See
-        `this page <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/asset-groups-api/#get-asset-group-stats>`  # noqa: E501 W505
+        `this page <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/asset-groups-api/#get-asset-group-stats>`_
         for more details on the structure of the return value from this method.
 
         Required Permissions:
@@ -218,7 +218,7 @@ class AssetGroup(MutableBaseModel):
              dict: A dict with two elements. The "intersections" element contains elements detailing which groups share
                    members with this group, and which members they are.  The "unassigned_properties" element contains
                    elements showing which members belong to groups without policy association.
-        """
+        """    # noqa: E501 W505
         return self._cb.get_object(self._build_api_request_uri() + "/membership_summary")
 
     @classmethod
