@@ -21,7 +21,8 @@ from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_asset_groups import (CREATE_AG_REQUEST, CREATE_AG_RESPONSE, EXISTING_AG_DATA,
                                                             UPDATE_AG_REQUEST, QUERY_REQUEST, QUERY_REQUEST_DEFAULT,
                                                             QUERY_RESPONSE, LIST_MEMBERS_RESPONSE1,
-                                                            LIST_MEMBERS_OUTPUT1, LIST_MEMBERS_RESPONSE2)
+                                                            LIST_MEMBERS_OUTPUT1, LIST_MEMBERS_RESPONSE2,
+                                                            GET_ALL_RESPONSE, GET_STATS_RESPONSE)
 from tests.unit.fixtures.platform.mock_devices import GET_DEVICE_RESP
 
 
@@ -321,3 +322,28 @@ def test_remove_members_with_device(cbcsdk_mock):
     device = api.select(Device, 98765)
     group.remove_members(device)
     group.remove_members([device])
+
+
+def test_get_all_groups(cbcsdk_mock):
+    """Tests the get_all_groups class method."""
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups', copy.deepcopy(GET_ALL_RESPONSE))
+    api = cbcsdk_mock.api
+    rc = AssetGroup.get_all_groups(api)
+    assert len(rc) == 2
+    assert isinstance(rc[0], AssetGroup)
+    assert isinstance(rc[1], AssetGroup)
+    assert rc[0].id == "db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16"
+    assert rc[1].id == "509f437f-6b9a-4b8e-996e-9183b35f9069"
+
+
+def test_get_statistics(cbcsdk_mock):
+    """Tests the get_statistics method."""
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
+                             copy.deepcopy(EXISTING_AG_DATA))
+    cbcsdk_mock.mock_request('GET',
+                             '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16/membership_summary',  # noqa: E501
+                             GET_STATS_RESPONSE)
+    api = cbcsdk_mock.api
+    group = api.select(AssetGroup, 'db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16')
+    rc = group.get_statistics()
+    assert rc == GET_STATS_RESPONSE
