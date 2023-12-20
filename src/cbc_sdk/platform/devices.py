@@ -365,9 +365,12 @@ class Device(PlatformModel):
         Args:
             group_ids (list[str]): The list of group IDs to add this device to.
         """
-        for group_id in group_ids:
+        actual_group_ids = set(group_ids).difference(self.get_asset_group_ids("MANUAL"))
+        for group_id in actual_group_ids:
             url = f"/asset_groups/v1/orgs/{self._cb.credentials.org_key}/groups/{group_id}/members"
             self._cb.post_object(url, {"action": "CREATE", "external_member_ids": [str(self._model_unique_id)]})
+        if len(actual_group_ids) > 0:
+            self._refresh()
 
     def add_to_groups(self, groups):
         """
@@ -376,8 +379,12 @@ class Device(PlatformModel):
         Args:
             groups (list[AssetGroup]): The list of groups to add this device to.
         """
-        for group in groups:
+        existing_ids = self.get_asset_group_ids("MANUAL")
+        actual_groups = [g for g in groups if g.id not in existing_ids]
+        for group in actual_groups:
             group.add_members(self)
+        if len(actual_groups) > 0:
+            self._refresh()
 
     def remove_from_groups_by_id(self, group_ids):
         """
@@ -386,9 +393,12 @@ class Device(PlatformModel):
         Args:
             group_ids (list[str]): The list of group IDs to remove this device from.
         """
-        for group_id in group_ids:
+        actual_group_ids = set(group_ids).intersection(self.get_asset_group_ids("MANUAL"))
+        for group_id in actual_group_ids:
             url = f"/asset_groups/v1/orgs/{self._cb.credentials.org_key}/groups/{group_id}/members"
             self._cb.post_object(url, {"action": "REMOVE", "external_member_ids": [str(self._model_unique_id)]})
+        if len(actual_group_ids) > 0:
+            self._refresh()
 
     def remove_from_groups(self, groups):
         """
@@ -397,8 +407,12 @@ class Device(PlatformModel):
         Args:
             groups (list[AssetGroup]): The list of groups to remove this device from.
         """
-        for group in groups:
+        existing_ids = self.get_asset_group_ids("MANUAL")
+        actual_groups = [g for g in groups if g.id in existing_ids]
+        for group in actual_groups:
             group.remove_members(self)
+        if len(actual_groups) > 0:
+            self._refresh()
 
     @classmethod
     def get_asset_groups_for_devices(cls, cb, devices, membership="ALL"):

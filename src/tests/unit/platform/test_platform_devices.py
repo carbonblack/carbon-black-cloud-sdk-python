@@ -157,6 +157,15 @@ def test_device_get_asset_group_ids(cbcsdk_mock, membership, result):
     assert device.get_asset_group_ids(membership=membership) == result
 
 
+def test_device_get_asset_group_ids_bogus_value(cbcsdk_mock):
+    """Tests a bogus value passed to the membership parameter of the get_asset_group_ids Device function."""
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
+    api = cbcsdk_mock.api
+    device = api.select(Device, 98765)
+    with pytest.raises(ApiError):
+        device.get_asset_group_ids("BOGUS")
+
+
 def test_device_get_asset_groups(cbcsdk_mock):
     """Tests the get_asset_groups Device function."""
     cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
@@ -172,3 +181,75 @@ def test_device_get_asset_groups(cbcsdk_mock):
     assert isinstance(result[1], AssetGroup)
     assert result[0].id == "db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16"
     assert result[1].id == "509f437f-6b9a-4b8e-996e-9183b35f9069"
+
+
+def test_device_add_to_groups_by_id(cbcsdk_mock):
+    """Tests the add_to_groups_by_id Device function."""
+    def on_post(url, body, **kwargs):
+        assert body['action'] == 'CREATE'
+        assert body['external_member_ids'] == ["98765"]
+        return CBCSDKMock.StubResponse("", scode=204, json_parsable=False)
+
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
+    cbcsdk_mock.mock_request('POST', '/asset_groups/v1/orgs/test/groups/149cea01-2a13-4a0a-8ca9-cdf359a6378e/members',
+                             on_post)
+    api = cbcsdk_mock.api
+    device = api.select(Device, 98765)
+    device.add_to_groups_by_id(["db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16", "149cea01-2a13-4a0a-8ca9-cdf359a6378e"])
+
+
+def test_device_add_to_groups(cbcsdk_mock):
+    """Tests the add_to_groups Device function."""
+    def on_post(url, body, **kwargs):
+        assert body['action'] == 'CREATE'
+        assert body['external_member_ids'] == ["98765"]
+        return CBCSDKMock.StubResponse("", scode=204, json_parsable=False)
+
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
+                             copy.deepcopy(EXISTING_AG_DATA))
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/509f437f-6b9a-4b8e-996e-9183b35f9069',
+                             copy.deepcopy(EXISTING_AG_DATA_2))
+    cbcsdk_mock.mock_request('POST', '/asset_groups/v1/orgs/test/groups/509f437f-6b9a-4b8e-996e-9183b35f9069/members',
+                             on_post)
+    api = cbcsdk_mock.api
+    device = api.select(Device, 98765)
+    asset_group_1 = api.select(AssetGroup, "db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16")
+    asset_group_2 = api.select(AssetGroup, "509f437f-6b9a-4b8e-996e-9183b35f9069")
+    device.add_to_groups([asset_group_1, asset_group_2])
+
+
+def test_device_remove_from_groups_by_id(cbcsdk_mock):
+    """Tests the remove_from_groups_by_id Device function."""
+    def on_post(url, body, **kwargs):
+        assert body['action'] == 'REMOVE'
+        assert body['external_member_ids'] == ["98765"]
+        return CBCSDKMock.StubResponse("", scode=204, json_parsable=False)
+
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
+    cbcsdk_mock.mock_request('POST', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16/members',
+                             on_post)
+    api = cbcsdk_mock.api
+    device = api.select(Device, 98765)
+    device.remove_from_groups_by_id(["db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16", "149cea01-2a13-4a0a-8ca9-cdf359a6378e"])
+
+
+def test_device_remove_from_groups(cbcsdk_mock):
+    """Tests the remove_from_groups Device function."""
+    def on_post(url, body, **kwargs):
+        assert body['action'] == 'REMOVE'
+        assert body['external_member_ids'] == ["98765"]
+        return CBCSDKMock.StubResponse("", scode=204, json_parsable=False)
+
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
+                             copy.deepcopy(EXISTING_AG_DATA))
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/509f437f-6b9a-4b8e-996e-9183b35f9069',
+                             copy.deepcopy(EXISTING_AG_DATA_2))
+    cbcsdk_mock.mock_request('POST', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16/members',
+                             on_post)
+    api = cbcsdk_mock.api
+    device = api.select(Device, 98765)
+    asset_group_1 = api.select(AssetGroup, "db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16")
+    asset_group_2 = api.select(AssetGroup, "509f437f-6b9a-4b8e-996e-9183b35f9069")
+    device.remove_from_groups([asset_group_1, asset_group_2])
