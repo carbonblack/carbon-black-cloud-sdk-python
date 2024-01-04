@@ -39,46 +39,45 @@ def preview_policy_rank_change(api):
     # Start by finding the highest ranked policy
     print("\n\n Starting preview_policy_rank_change \n\n")
     all_policies = list(api.select(Policy).all())
-    policy_highest_rank = None
+    policy_top_rank = None
     policy_num_devices = 0
 
     for p in all_policies:
         tmp_policy_num_devices = len(api.select(Device).set_policy_ids([p.id]))
         if tmp_policy_num_devices > 0:
-            if policy_highest_rank is None:
-                policy_highest_rank = p
+            if policy_top_rank is None:
+                policy_top_rank = p
                 policy_num_devices = tmp_policy_num_devices
-            elif p.position < policy_highest_rank.position:
-                policy_highest_rank = p
+            elif p.position < policy_top_rank.position:
+                policy_top_rank = p
                 policy_num_devices = tmp_policy_num_devices
 
     print("Policy {} with id = {}, is at rank {} and the policy affects {} members".
-          format(policy_highest_rank.name, policy_highest_rank.id, policy_highest_rank.position, policy_num_devices))
+          format(policy_top_rank.name, policy_top_rank.id, policy_top_rank.position, policy_num_devices))
 
-    new_policy_position = policy_highest_rank.position + 1
+    new_policy_position = policy_top_rank.position + 1
 
     # preview what would change if the policy at rank 1 was moved to position 2
-    changes = Policy.preview_policy_rank_changes(api, [(policy_highest_rank.id, new_policy_position)])
+    changes = Policy.preview_policy_rank_changes(api, [(policy_top_rank.id, new_policy_position)])
     if len(changes) == 0:
         print("No changes to effective policy would occur.")
     else:
         print("There are {} changes that would result from moving Policy {} from position {} to position {}."
-              .format(len(changes), policy_highest_rank.name, policy_highest_rank.position, new_policy_position))
-    i = 1
-    for c in changes:
+              .format(len(changes), policy_top_rank.name, policy_top_rank.position, new_policy_position))
+
+    for i, c in enumerate(changes, 1):
         print("printing change number {}".format(i))
-        i = i + 1
-        current_rank_1_policy = api.select(Policy, c.current_policy_id)
-        future_rank_1_policy = api.select(Policy, c.new_policy_id)
+        current_top_rank_policy = api.select(Policy, c.current_policy_id)
+        future_top_rank_policy = api.select(Policy, c.new_policy_id)
         print("{} assets will be affected.".format(c.asset_count))
         print("The assets affected are:")
         assets_affected = c.asset_query.all()
         for a in assets_affected:
             print("Asset Name: {} - Asset Id {}".format(a.name, a.id))
         print("\n The currently effective policy for those assets is: name: {}, id: {}".
-              format(current_rank_1_policy.name, current_rank_1_policy.id))
+              format(current_top_rank_policy.name, current_top_rank_policy.id))
         print("\n The effective policy after the move would be: name: {}, id: {}".
-              format(future_rank_1_policy.name, future_rank_1_policy.id))
+              format(future_top_rank_policy.name, future_top_rank_policy.id))
     print("\n\n Finished preview_policy_rank_change \n\n")
 
 
@@ -125,11 +124,11 @@ def main():
     new_asset_group.query = "os.equals:WINDOWS"
     # Assign a policy.  All assets in the group may have this policy applied.  If an asset is in more than one group,
     # policy ranking determines which is the effective policy.
-    lowest_rank_policy = None
+    bottom_rank_policy = None
     for p in api.select(Policy).all():
-        if lowest_rank_policy is None or p.position > lowest_rank_policy.position:
-            lowest_rank_policy = p
-    new_asset_group.policy = lowest_rank_policy.id
+        if bottom_rank_policy is None or p.position > bottom_rank_policy.position:
+            bottom_rank_policy = p
+    new_asset_group.policy = bottom_rank_policy.id
     new_asset_group.save()
     print("\n\n new_asset_group {}".format(new_asset_group))
     # Clean up after ourselves and delete the asset group
@@ -139,7 +138,7 @@ def main():
     print("\n\n Second asset group with policy and query")
     second_name = "Second demo group"
     second_asset_group = AssetGroup.create_group(api, second_name, "Second group description",
-                                                 query="os.equals:MAC", policy_id=lowest_rank_policy.id)
+                                                 query="os.equals:MAC", policy_id=bottom_rank_policy.id)
     second_asset_group.refresh()
     while second_asset_group.status != "OK":
         print("waiting")
@@ -154,7 +153,7 @@ def main():
         # These are the assets that are now part of the dynamic asset group
         for d in ag.list_members():
             print("Device Name: {}, Id: {}".format(d.name, d.id))
-            if d.policy_id == lowest_rank_policy.id:
+            if d.policy_id == bottom_rank_policy.id:
                 print("The effective policy is from the asset group")
             else:
                 print("This asset group does not determine the effective policy The effective policy is {} - {}"
@@ -182,8 +181,6 @@ def main():
 
     print("The End")
 
-
-print("breakpoint")
 
 if __name__ == "__main__":
     # Trap keyboard interrupts while running the script.
