@@ -19,6 +19,7 @@ https://carbon-black-cloud-python-sdk.readthedocs.io
 """
 
 import sys
+import time
 from cbc_sdk import CBCloudAPI
 from cbc_sdk.platform import AssetGroup, Policy, Device
 
@@ -36,6 +37,7 @@ def preview_policy_rank_change(api):
     1 is the highest rank.
     """
     # Start by finding the highest ranked policy
+    print("\n\n Starting preview_policy_rank_change \n\n")
     all_policies = list(api.select(Policy).all())
     policy_highest_rank = None
     policy_num_devices = 0
@@ -77,11 +79,12 @@ def preview_policy_rank_change(api):
               format(current_rank_1_policy.name, current_rank_1_policy.id))
         print("\n The effective policy after the move would be: name: {}, id: {}".
               format(future_rank_1_policy.name, future_rank_1_policy.id))
+    print("\n\n Finished preview_policy_rank_change \n\n")
 
 
 def preview_asset_group_changes():
     """Show how to use the preview asset group function to understand the impact of changes such as changing a query"""
-    print("preview_asset_group_changes(): Coming Soon")
+    print("\n\n preview_asset_group_changes(): Coming Soon \n\n")
 
 
 def main():
@@ -102,7 +105,8 @@ def main():
     # Policies - Policies - org.policies - READ: For viewing policy information and pre-viewing the impact of changes
     #    to policy ranking and asset groups.
 
-    api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
+    # api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
+    api = CBCloudAPI(profile="ASSET_GROUP_DEV_01")
 
     # to get all asset groups, a static method is available on the AssetGroup class.
     # This is useful for listing the groups configured in your org
@@ -127,18 +131,34 @@ def main():
             lowest_rank_policy = p
     new_asset_group.policy = lowest_rank_policy.id
     new_asset_group.save()
-    print(new_asset_group)
+    print("\n\n new_asset_group {}".format(new_asset_group))
     # Clean up after ourselves and delete the asset group
     new_asset_group.delete()
 
     # An asset group can also be created with a query and / or a policy included
+    print("\n\n Second asset group with policy and query")
     second_name = "Second demo group"
     second_asset_group = AssetGroup.create_group(api, second_name, "Second group description",
                                                  query="os.equals:MAC", policy_id=lowest_rank_policy.id)
+    second_asset_group.refresh()
+    while second_asset_group.status != "OK":
+        print("waiting")
+        time.sleep(10)
+        second_asset_group.refresh()
+
     # Asset groups can be searched
     search_asset_group_query = api.select(AssetGroup).add_criteria("name", second_name).sort_by("name", "ASC")
     for ag in search_asset_group_query:
-        print("Asset group name = {}. It has {} members".format(ag.name, ag.member_count))
+        print("\n\nAsset group name = {}. It has {} members".format(ag.name, ag.member_count))
+        print("Policy assigned to the Asset Group is Name: {}, Id: {}".format(ag.policy_name, ag.policy_id))
+        # These are the assets that are now part of the dynamic asset group
+        for d in ag.list_members():
+            print("Device Name: {}, Id: {}".format(d.name, d.id))
+            if d.policy_id == lowest_rank_policy.id:
+                print("The effective policy is from the asset group")
+            else:
+                print("This asset group does not determine the effective policy The effective policy is {} - {}"
+                      .format(d.policy_id, d.policy_name))
 
     # Clean up after ourselves and delete the asset group
     second_asset_group.delete()
@@ -148,7 +168,7 @@ def main():
     third_asset_group = AssetGroup.create_group(api, second_name, "Manual Assignment Demo")
     third_asset_group.add_members(random_device)
     third_asset_group.refresh()
-    print(third_asset_group)
+    print("\n\nthird_asset_group {}".format(third_asset_group))
     # remove the device
     third_asset_group.remove_members(random_device)
     print(third_asset_group)
