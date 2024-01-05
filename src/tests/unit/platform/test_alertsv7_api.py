@@ -50,7 +50,9 @@ from tests.unit.fixtures.platform.mock_alerts_v7 import (
     GROUP_SEARCH_ALERT_REQUEST,
     GROUP_SEARCH_ALERT_REQUEST_OVERRIDE_GROUPBY,
     MOST_RECENT_ALERT,
-    ALERT_SEARCH_RESPONSE
+    ALERT_SEARCH_RESPONSE,
+    GROUPED_ALERT_FACET_REQUEST,
+    GROUPED_ALERT_FACET_RESPONSE
 )
 from tests.unit.fixtures.platform.mock_process import (
     POST_PROCESS_VALIDATION_RESP,
@@ -2142,3 +2144,19 @@ def test_alert_search_query_to_grouped_alert_search_query(cbcsdk_mock):
     assert grouped_alert_search_query.__module__ == "cbc_sdk.platform.alerts" and type(grouped_alert_search_query).\
         __name__ == "GroupedAlertSearchQuery"
     assert vars(grouped_alert_search_query) == vars(expected_grouped_alert_search_query)
+
+
+def test_query_grouped_alert_facets(cbcsdk_mock):
+    """Test a grouped alert facet query."""
+
+    def on_post(url, body, **kwargs):
+        assert body == GROUPED_ALERT_FACET_REQUEST
+        return GROUPED_ALERT_FACET_RESPONSE
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/grouped_alerts/_facet", on_post)
+    api = cbcsdk_mock.api
+
+    query = api.select(GroupedAlert).set_group_by("THREAT_ID").set_minimum_severity(3).\
+        add_exclusions("type", ["HOST_BASED_FIREWALL", "CONTAINER_RUNTIME"])
+    facets = query.facets(["type", "THREAT_ID"], 0, True)
+    assert facets == GROUPED_ALERT_FACET_RESPONSE["results"]
+    assert len(facets) == 2
