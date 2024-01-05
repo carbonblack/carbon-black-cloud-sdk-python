@@ -125,6 +125,7 @@ def main():
 
     # start by specifying Alert as the type of object to search
     alert_query = api.select(Alert)
+
     # add_criteria is used for all fields that are searchable arrays
     alert_query.add_criteria("device_os", "WINDOWS")
     # when the field is a single value, a set_xxx function is used.
@@ -239,6 +240,15 @@ def main():
     # to create the facets on a grouped alert search query
     grouped_alert_facets = group_alert_search_query.facets(["type", "THREAT_ID"], 0, True)
     print(grouped_alert_facets)
+
+    # to retrieve the threatnetwork metadata from an ids alert we first retrieve an ids alert
+    alert_query = api.select(Alert)
+    alert_query.add_criteria("type", "INTRUSION_DETECTION_SYSTEM")
+    ids_alert = alert_query.first()
+
+    # then just call the get_network_threat_metadata
+    network_threat_metadata = ids_alert.get_network_threat_metadata()
+    print(network_threat_metadata)
 
 
 if __name__ == "__main__":
