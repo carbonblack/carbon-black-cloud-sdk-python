@@ -253,7 +253,7 @@ def main():
 
     # to retrieve the Network Threat Metadata from an ids alert we first retrieve an ids alert
     alert_query = api.select(Alert)
-    alert_query.add_criteria("type", "INTRUSION_DETECTION_SYSTEM").set_time_range(range="-6M")
+    alert_query.add_criteria("type", "INTRUSION_DETECTION_SYSTEM")
     ids_alert = alert_query.first()
 
     # then just call the get_network_threat_metadata
