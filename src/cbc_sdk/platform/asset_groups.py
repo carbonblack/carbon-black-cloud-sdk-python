@@ -269,6 +269,82 @@ class AssetGroup(MutableBaseModel):
         return_data = cb.get_object(AssetGroup.urlobject.format(cb.credentials.org_key))
         return [AssetGroup(cb, v['id'], v) for v in return_data['results']]
 
+    @classmethod
+    def _preview_asset_group_member_change(cls, cb, action, members, groups):
+        """
+        Internal function which handles asset group change previews.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            action (str): The action to be passed to the server.
+            members (list): A list of either integer device IDs or ``Device`` objects.
+            groups (list): A list of either string asset group IDs or ``AssetGroup`` objects.
+
+        Returns:
+            list[AssetGroupChangePreview]: A list of ``AssetGroupChangePreview`` objects representing the assets
+                that change which policy is effective as the result of this operation.
+        """
+        member_list = []
+        for member in members:
+            if isinstance(member, Device):
+                member_list.append(member.id)
+            elif isinstance(member, int):
+                member_list.append(member)
+        group_list = []
+        for group in groups:
+            if isinstance(group, AssetGroup):
+                group_list.append(group.id)
+            elif isinstance(group, str):
+                member_list.append(group)
+        ret = cb.post_object(f"/policy-assignment/v1/orgs/{cb.credentials.org_key}/asset-groups/preview",
+                             {"action": action, "asset_ids": member_list, "asset_group_ids": group_list})
+        return [AssetGroupChangePreview(cb, p) for p in ret.json()["preview"]]
+
+    @classmethod
+    def preview_add_members_to_groups(cls, cb, members, groups):
+        """
+        Previews changes to the effective policies for devices which result from adding them to asset groups.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            members (list): The devices which will be added to new asset groups. Each entry in this list is either
+                an integer device ID or a ``Device`` object.
+            groups (list): The asset groups to which the devices will be added.  Each entry in this list is either
+                a string asset group ID or an ``AssetGroup`` object.
+
+        Returns:
+            list[AssetGroupChangePreview]: A list of ``AssetGroupChangePreview`` objects representing the assets
+                that change which policy is effective as the result of this operation.
+        """
+        return cls._preview_asset_group_member_change(cb, "ADD_MEMBERS", members, groups)
+
+    @classmethod
+    def preview_remove_members_from_groups(cls, cb, members, groups):
+        """
+        Previews changes to the effective policies for devices which result from removing them from asset groups.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            members (list): The devices which will be removed from asset groups. Each entry in this list is either
+                an integer device ID or a ``Device`` object.
+            groups (list): The asset groups from which the devices will be removed.  Each entry in this list is either
+                a string asset group ID or an ``AssetGroup`` object.
+
+        Returns:
+            list[AssetGroupChangePreview]: A list of ``AssetGroupChangePreview`` objects representing the assets
+                that change which policy is effective as the result of this operation.
+        """
+        return cls._preview_asset_group_member_change(cb, "REMOVE_MEMBERS", members, groups)
+
 
 class AssetGroupChangePreview:
     """
