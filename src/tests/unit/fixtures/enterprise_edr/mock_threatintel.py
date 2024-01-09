@@ -1266,6 +1266,21 @@ ADD_REPORTS_LIST = [
     "065fb68d-42a8-4b2e-8f91-17f925f54356"
 ]
 
+GET_WATCHLIST_OBJECT_RESP = {
+    "alerts_enabled": True,
+    "classifier": {
+        "key": "feed_id",
+        "value": "vnbrUmClRh2Mh8398QtJww"
+    },
+    "create_timestamp": 1657561064,
+    "description": "scale and performance automation test feed",
+    "id": "mnbvc098766HN60hatQMQ",
+    "last_update_timestamp": 1692286217,
+    "name": "AMSI Threat Intelligence",
+    "report_ids": None,
+    "tags_enabled": True
+}
+
 
 @pytest.fixture(scope="function")
 def get_watchlist_report():
