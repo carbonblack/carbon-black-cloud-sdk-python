@@ -29,8 +29,8 @@ from cbc_sdk.platform import Alert, WatchlistAlert, GroupedAlert
 from cbc_sdk.platform import Device
 
 # To see the http requests being made, and the structure of the search requests enable debug logging
-# import logging
-# logging.basicConfig(level=logging.DEBUG)
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 
 def alert_workflow(api):
@@ -115,11 +115,21 @@ def main():
     # Alerts - org.alerts.notes - CREATE, READ, UPDATE, DELETE
     # Alerts - ThreatMetadata - org.xdr.metadata - READ
 
-    api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
-
+    # api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
+    api = CBCloudAPI()
+    print("start check")
     # workflow is in a separate method.
-    alert_workflow(api)
+    # alert_workflow(api)
+    alert_query = api.select(Alert)
+    alert_query.set_time_range(range="-10d")
+    # rows default to 100, let's override that
+    alert_query.set_rows(1000)
+    # and I think that Watchlist alerts are really noisy, so I'm going to exclude them from the results
+    alert_query.add_criteria("type", "WATCHLIST")
+    alert = alert_query.first()
+    print("Alert id = {}".format(alert.id))
 
+    # x = alert.get_watchlist_objects()
     # To start, get some alerts that have a few interesting criteria set for selection.
     # All the fields that can be used are on the Developer Network
     # https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields/

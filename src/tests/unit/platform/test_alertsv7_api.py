@@ -1233,6 +1233,16 @@ def test_alert_subtype_watchlistalert_string_class(cbcsdk_mock):
     assert isinstance(alert, WatchlistAlert)
 
 
+def test_watchlistalert_getwatchlists(cbcsdk_mock):
+    """Test WatchlistAlert get_watchlist_objects()."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/f6af290d-6a7f-461c-a8af-cf0d24311105",
+                             GET_ALERT_v7_WATCHLIST_RESPONSE)
+    api = cbcsdk_mock.api
+    alert = api.select("WatchlistAlert", "f6af290d-6a7f-461c-a8af-cf0d24311105")
+    assert isinstance(alert, WatchlistAlert)
+
+
 def test_alert_subtype_devicecontrolalert_class(cbcsdk_mock):
     """Test DeviceControlAlert class instantiation."""
     cbcsdk_mock.mock_request("GET",

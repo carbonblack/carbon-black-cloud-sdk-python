@@ -806,6 +806,21 @@ class WatchlistAlert(Alert):
         """
         return AlertSearchQuery(cls, cb).add_criteria("type", ["WATCHLIST"])
 
+    def get_watchlist_objects(self):
+        """
+        Returns the list of associated watchlist objects for the associated watchlist alert.
+
+        Returns:
+            Watchlist (list): A list of watchlist objects.
+        """
+        watchlist_objects = []
+        for watchlist in self.get("watchlists"):
+            id = watchlist.get("id")
+            watchlist_query = self._cb.select("Watchlist").where("id:" + id)
+            results = watchlist_query.all()
+            watchlist_objects.append(results)
+        return watchlist_objects
+
 
 class CBAnalyticsAlert(Alert):
     """Represents CB Analytics alerts."""
