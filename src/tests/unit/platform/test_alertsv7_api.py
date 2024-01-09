@@ -1237,6 +1237,7 @@ def test_watchlistalert_getwatchlistobjects(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET",
                              "/api/alerts/v7/orgs/test/alerts/f6af290d-6a7f-461c-a8af-cf0d24311105",
                              GET_ALERT_v7_WATCHLIST_RESPONSE)
+<<<<<<< HEAD
     cbcsdk_mock.mock_request("GET",
                              "/threathunter/watchlistmgr/v3/orgs/test/watchlists/mnbvc098766HN60hatQMQ",
                              GET_WATCHLIST_OBJECT_RESP)
@@ -1247,7 +1248,7 @@ def test_watchlistalert_getwatchlistobjects(cbcsdk_mock):
     assert isinstance(watchlist_objects, list)
     assert watchlist_objects[0].__module__ == "cbc_sdk.enterprise_edr.threat_intelligence" and \
            type(watchlist_objects[0]).__name__ == "Watchlist"
-
+    
 
 def test_alert_subtype_devicecontrolalert_class(cbcsdk_mock):
     """Test DeviceControlAlert class instantiation."""
