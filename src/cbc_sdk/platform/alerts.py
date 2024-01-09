@@ -28,6 +28,7 @@ from cbc_sdk.platform.observations import Observation
 from cbc_sdk.platform.processes import AsyncProcessQuery, Process
 from cbc_sdk.platform.legacy_alerts import LegacyAlertSearchQueryCriterionMixin
 from cbc_sdk.platform.jobs import Job
+# from cbc_sdk.enterprise_edr.threat_intelligence import Watchlist, WatchlistQuery
 
 from backports._datetime_fromisoformat import datetime_fromisoformat
 
@@ -790,6 +791,21 @@ class WatchlistAlert(Alert):
             AlertSearchQuery: The query object for this alert type.
         """
         return AlertSearchQuery(cls, cb).add_criteria("type", ["WATCHLIST"])
+
+    def get_watchlist_objects(self):
+        """
+        Returns the list of associated watchlist objects for the associated watchlist alert.
+
+        Returns:
+            Watchlist (list): A list of watchlist objects.
+        """
+        watchlist_objects = []
+        for watchlist in self.get("watchlists"):
+            id = watchlist.get("id")
+            watchlist_query = self._cb.select("Watchlist").where("id:" + id)
+            results = watchlist_query.all()
+            watchlist_objects.append(results)
+        return watchlist_objects
 
 
 class CBAnalyticsAlert(Alert):
