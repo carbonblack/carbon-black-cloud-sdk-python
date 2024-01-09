@@ -28,7 +28,7 @@ from cbc_sdk.platform import AssetGroup, Policy, Device
 # logging.basicConfig(level=logging.DEBUG)
 
 
-def preview_policy_rank_change(api):
+def demo_preview_policy_rank_change(api):
     """Demonstrate previewing the changes to effective policies on assets if policy ranking is changed.
 
     Once Asset Groups have been created and policies assigned, the policy rank preview function can be used to determine
@@ -84,7 +84,7 @@ def preview_policy_rank_change(api):
     print("\n\n Finished preview_policy_rank_change \n\n")
 
 
-def preview_asset_group_changes():
+def demo_preview_asset_group_changes():
     """Show how to use the preview asset group function to understand the impact of changes such as changing a query"""
     print("\n\n preview_asset_group_changes(): Coming Soon \n\n")
 
@@ -107,8 +107,7 @@ def main():
     # Policies - Policies - org.policies - READ: For viewing policy information and pre-viewing the impact of changes
     #    to policy ranking and asset groups.
 
-    # api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
-    api = CBCloudAPI(profile="ASSET_GROUP_DEV_01")
+    api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
 
     # to get all asset groups, a static method is available on the AssetGroup class.
     # This is useful for listing the groups configured in your org
@@ -184,9 +183,9 @@ def main():
     second_asset_group.delete()
 
     # See the steps to select a policy and view what the impact of the change would be before applying the change.
-    preview_policy_rank_change(api)
+    demo_preview_policy_rank_change(api)
     # See the steps to view what the impact of a change to as asset group would be before applying the change.
-    preview_asset_group_changes()
+    demo_preview_asset_group_changes()
 
     print("The End")
 
