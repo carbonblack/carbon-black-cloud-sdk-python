@@ -222,7 +222,7 @@ class AssetGroup(MutableBaseModel):
         return self._cb.get_object(self._build_api_request_uri() + "/membership_summary")
 
     @classmethod
-    def create_group(cls, cb, name, description, **kwargs):
+    def create_group(cls, cb, name, description=None, policy_id=None, query=None):
         """
         Create a new asset group.
 
@@ -232,10 +232,7 @@ class AssetGroup(MutableBaseModel):
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
             name (str): Name for the new asset group.
-            description (str): Description for the new asset group.
-            kwargs (dict): Keyword arguments, as defined below.
-
-        Keyword Args:
+            description (str): Description for the new asset group. Default is ``None``.
             policy_id (int): ID of the policy to be associated with this asset group. Default is ``None``.
             query (str): Query string to be used to dynamically populate this group. Default is ``None``,
                 which means devices _must_ be manually assigned to the group.
@@ -243,11 +240,11 @@ class AssetGroup(MutableBaseModel):
         Returns:
             AssetGroup: The new asset group.
         """
-        group_data = {"name": name, "description": description, "member_type": "DEVICE"}
-        policy_id = kwargs.get("policy_id", None)
+        group_data = {"name": name, "member_type": "DEVICE"}
+        if description:
+            group_data["description"] = description
         if policy_id:
             group_data["policy_id"] = policy_id
-        query = kwargs.get("query", None)
         if query:
             group_data["query"] = query
         group = AssetGroup(cb, None, group_data, False, True)
