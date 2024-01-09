@@ -107,7 +107,8 @@ def main():
     # Policies - Policies - org.policies - READ: For viewing policy information and pre-viewing the impact of changes
     #    to policy ranking and asset groups.
 
-    api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
+    # api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
+    api = CBCloudAPI(profile="ASSET_GROUP_DEV_01")
 
     # to get all asset groups, a static method is available on the AssetGroup class.
     # This is useful for listing the groups configured in your org
@@ -151,7 +152,6 @@ def main():
         print("waiting")
         time.sleep(10)
         second_asset_group.refresh()
-
     # Asset groups can be searched
     search_asset_group_query = api.select(AssetGroup).add_criteria("name", second_name).sort_by("name", "ASC")
     for ag in search_asset_group_query:
@@ -166,10 +166,16 @@ def main():
                 print("This asset group does not determine the effective policy The effective policy is {} - {}"
                       .format(d.policy_id, d.policy_name))
 
-    # Assets can be assigned manually to an asset group, as well as via a query.
+    # Asset groups can have members from a query, and also direct (manual) assignement.
+    # Assign a device directly to the second asset group
     random_device = api.select(Device).first()
     second_asset_group.add_members(random_device)
     second_asset_group.refresh()
+    while second_asset_group.status != "OK":
+        print("waiting")
+        time.sleep(10)
+        second_asset_group.refresh()
+    # The number of assets in the group may not change, if the randomly selected one is already a member of that group.
     print("\n\nsecond_asset_group with device assigned {}".format(second_asset_group))
     # remove the device
     second_asset_group.remove_members(random_device)
