@@ -31,8 +31,8 @@ from cbc_sdk.platform import AssetGroup, Policy, Device
 def preview_policy_rank_change(api):
     """Demonstrate previewing the changes to effective policies on assets if policy ranking is changed.
 
-    Once Asset Groups have been created and policies assigned, the preview functions can be used to determine
-    the impact of changing asset groups or policy rankings.
+    Once Asset Groups have been created and policies assigned, the policy rank preview function can be used to determine
+    the impact of changing policy rankings.
     This example finds the policy in the highest rank that has assets affected, and then moves it one position lower.
     1 is the highest rank.
     """
@@ -52,12 +52,15 @@ def preview_policy_rank_change(api):
                 policy_top_rank = p
                 policy_num_devices = tmp_policy_num_devices
 
+    # This is the highest ranking policy that has devices associated.
+    # Since this is the highest ranked policy, it will be the effective policy for those assets.
     print("Policy {} with id = {}, is at rank {} and the policy affects {} members".
           format(policy_top_rank.name, policy_top_rank.id, policy_top_rank.position, policy_num_devices))
 
+    # We're going to preview the impacts of moving the policy one position down the ranking (1 is the top)
     new_policy_position = policy_top_rank.position + 1
 
-    # preview what would change if the policy at rank 1 was moved to position 2
+    # preview what would change if the policy at the top position moved down one rank.
     changes = Policy.preview_policy_rank_changes(api, [(policy_top_rank.id, new_policy_position)])
     if len(changes) == 0:
         print("No changes to effective policy would occur.")
@@ -104,8 +107,7 @@ def main():
     # Policies - Policies - org.policies - READ: For viewing policy information and pre-viewing the impact of changes
     #    to policy ranking and asset groups.
 
-    # api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
-    api = CBCloudAPI(profile="ASSET_GROUP_DEV_01")
+    api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
 
     # to get all asset groups, a static method is available on the AssetGroup class.
     # This is useful for listing the groups configured in your org
@@ -116,14 +118,15 @@ def main():
     # Create an asset group.  The only mandatory field is the Asset Group Name.
     # It can be created without a policy, which enables the use of group for visibility of specific assets
     # It can be created without a query, which enables manual assignment of assets to the group later
-    new_asset_group_name = "My Example Asset Group"
-    new_asset_group = AssetGroup.create_group(api, new_asset_group_name, "Demonstrating the SDK")
+    new_asset_group = AssetGroup.create_group(api, "My Example Asset Group", description="Demonstrating the SDK")
     print(new_asset_group)
 
     # Add a query.  All assets that match this criteria will be dynamically added to the group
     new_asset_group.query = "os.equals:WINDOWS"
     # Assign a policy.  All assets in the group may have this policy applied.  If an asset is in more than one group,
     # policy ranking determines which is the effective policy.
+    # Choosing the lowest ranked policy as this is the least likely to actually change the behaviour while experimenting
+    # with a script.
     bottom_rank_policy = None
     for p in api.select(Policy).all():
         if bottom_rank_policy is None or p.position > bottom_rank_policy.position:
@@ -140,6 +143,10 @@ def main():
     second_asset_group = AssetGroup.create_group(api, second_name, "Second group description",
                                                  query="os.equals:MAC", policy_id=bottom_rank_policy.id)
     second_asset_group.refresh()
+    # The system is asynchronous and eventually consistent. When writing automated scripts, use the status field to
+    # determine when the asset group membership has finished updating.
+    # OK indicates the membership evaluation is complete
+    # UPDATING indicates that group’s dynamic memberships are being re-evaluated
     while second_asset_group.status != "OK":
         print("waiting")
         time.sleep(10)
@@ -159,24 +166,20 @@ def main():
                 print("This asset group does not determine the effective policy The effective policy is {} - {}"
                       .format(d.policy_id, d.policy_name))
 
+    # Assets can be assigned manually to an asset group, as well as via a query.
+    random_device = api.select(Device).first()
+    second_asset_group.add_members(random_device)
+    second_asset_group.refresh()
+    print("\n\nsecond_asset_group with device assigned {}".format(second_asset_group))
+    # remove the device
+    second_asset_group.remove_members(random_device)
+    print(second_asset_group)
     # Clean up after ourselves and delete the asset group
     second_asset_group.delete()
 
-    # Assets can be assigned manually to an asset group rather than with a query
-    random_device = api.select(Device).first()
-    third_asset_group = AssetGroup.create_group(api, second_name, "Manual Assignment Demo")
-    third_asset_group.add_members(random_device)
-    third_asset_group.refresh()
-    print("\n\nthird_asset_group {}".format(third_asset_group))
-    # remove the device
-    third_asset_group.remove_members(random_device)
-    print(third_asset_group)
-    # Clean up after ourselves and delete the asset group
-    third_asset_group.delete()
-
-    # Show how the preview policy rank function can be used
+    # See the steps to select a policy and view what the impact of the change would be before applying the change.
     preview_policy_rank_change(api)
-    # Show how the preview asset group changes function can be used
+    # See the steps to view what the impact of a change to as asset group would be before applying the change.
     preview_asset_group_changes()
 
     print("The End")
