@@ -28,7 +28,7 @@ from cbc_sdk.platform.observations import Observation
 from cbc_sdk.platform.processes import AsyncProcessQuery, Process
 from cbc_sdk.platform.legacy_alerts import LegacyAlertSearchQueryCriterionMixin
 from cbc_sdk.platform.jobs import Job
-# from cbc_sdk.enterprise_edr.threat_intelligence import Watchlist, WatchlistQuery
+from cbc_sdk.enterprise_edr.threat_intelligence import Watchlist
 
 from backports._datetime_fromisoformat import datetime_fromisoformat
 
@@ -796,15 +796,17 @@ class WatchlistAlert(Alert):
         """
         Returns the list of associated watchlist objects for the associated watchlist alert.
 
+        Example:
+            >>> watchlist_alert = cb.select(Alert, "f643d11f-59ab-478f-92c3-4198ca9b8230")
+            >>> watchlist_objects = watchlist_alert.get_watchlist_objects()
+
         Returns:
             Watchlist (list): A list of watchlist objects.
         """
         watchlist_objects = []
         for watchlist in self.get("watchlists"):
-            id = watchlist.get("id")
-            watchlist_query = self._cb.select("Watchlist").where("id:" + id)
-            results = watchlist_query.all()
-            watchlist_objects.append(results)
+            watchlist_id = watchlist.get("id")
+            watchlist_objects.append(self._cb.select(Watchlist, watchlist_id))
         return watchlist_objects
 
 

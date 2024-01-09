@@ -29,8 +29,8 @@ from cbc_sdk.platform import Alert, WatchlistAlert, GroupedAlert
 from cbc_sdk.platform import Device
 
 # To see the http requests being made, and the structure of the search requests enable debug logging
-import logging
-logging.basicConfig(level=logging.DEBUG)
+# import logging
+# logging.basicConfig(level=logging.DEBUG)
 
 
 def alert_workflow(api):
@@ -114,21 +114,11 @@ def main():
     # Alerts - org.alerts.close - EXECUTE:
     # Alerts - org.alerts.notes - CREATE, READ, UPDATE, DELETE
 
-    # api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
-    api = CBCloudAPI()
-    print("start check")
-    # workflow is in a separate method.
-    # alert_workflow(api)
-    alert_query = api.select(Alert)
-    alert_query.set_time_range(range="-10d")
-    # rows default to 100, let's override that
-    alert_query.set_rows(1000)
-    # and I think that Watchlist alerts are really noisy, so I'm going to exclude them from the results
-    alert_query.add_criteria("type", "WATCHLIST")
-    alert = alert_query.first()
-    print("Alert id = {}".format(alert.id))
+    api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
 
-    # x = alert.get_watchlist_objects()
+    # workflow is in a separate method.
+    alert_workflow(api)
+
     # To start, get some alerts that have a few interesting criteria set for selection.
     # All the fields that can be used are on the Developer Network
     # https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields/
@@ -220,6 +210,15 @@ def main():
     print("This is the process for the watchlist alert")
     print(process)
 
+    # For watchlist alerts in particular sometimes we would like to know more obout the associated watchlists
+    print("This is the list of watchlist id name pairs for this alert:")
+    print(watchlist_alert.get("watchlists"))
+
+    watchlist_objects = watchlist_alert.get_watchlist_objects()
+    print("These objects are associated with this alerts watchlists:")
+    for object in watchlist_objects:
+        print(object)
+
     # Run a Grouped Alert Search to group our alerts by threat_id
     # Start by specifying a GroupedAlert as the type of object to search
     grouped_alert_search_query = api.select(GroupedAlert)
@@ -237,7 +236,7 @@ def main():
     print(group_alert.most_recent_alert_)
 
     # to create the alert search query for a given group alert
-    alert_search_query = group_alert.get_alerts()
+    alert_search_query = group_alert.get_alert_search_query()
     print([alert for alert in alert_search_query])
 
     # to convert an AlertSearchQuery to a GroupAlertSearchQuery, will not preserve sort order
