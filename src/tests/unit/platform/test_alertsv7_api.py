@@ -83,9 +83,8 @@ from tests.unit.fixtures.platform.mock_alert_v6_v7_compatibility import (
     GET_THREAT_HISTORY
 )
 
-from tests.unit.fixtures.platform.mock_network_threat_metadata import (
-    GET_NETWORK_THREAT_METADATA_RESP
-)
+from tests.unit.fixtures.platform.mock_network_threat_metadata import (GET_NETWORK_THREAT_METADATA_RESP)
+from tests.unit.fixtures.enterprise_edr.mock_threatintel import (GET_WATCHLIST_OBJECT_RESP)
 
 
 @pytest.fixture(scope="function")
@@ -1233,14 +1232,21 @@ def test_alert_subtype_watchlistalert_string_class(cbcsdk_mock):
     assert isinstance(alert, WatchlistAlert)
 
 
-def test_watchlistalert_getwatchlists(cbcsdk_mock):
+def test_watchlistalert_getwatchlistobjects(cbcsdk_mock):
     """Test WatchlistAlert get_watchlist_objects()."""
     cbcsdk_mock.mock_request("GET",
                              "/api/alerts/v7/orgs/test/alerts/f6af290d-6a7f-461c-a8af-cf0d24311105",
                              GET_ALERT_v7_WATCHLIST_RESPONSE)
+    cbcsdk_mock.mock_request("GET",
+                             "/threathunter/watchlistmgr/v3/orgs/test/watchlists/mnbvc098766HN60hatQMQ",
+                             GET_WATCHLIST_OBJECT_RESP)
+
     api = cbcsdk_mock.api
-    alert = api.select("WatchlistAlert", "f6af290d-6a7f-461c-a8af-cf0d24311105")
-    assert isinstance(alert, WatchlistAlert)
+    watchlist_alert = api.select("WatchlistAlert", "f6af290d-6a7f-461c-a8af-cf0d24311105")
+    watchlist_objects = watchlist_alert.get_watchlist_objects()
+    assert isinstance(watchlist_objects, list)
+    assert watchlist_objects[0].__module__ == "cbc_sdk.enterprise_edr.threat_intelligence" and \
+           type(watchlist_objects[0]).__name__ == "Watchlist"
 
 
 def test_alert_subtype_devicecontrolalert_class(cbcsdk_mock):
