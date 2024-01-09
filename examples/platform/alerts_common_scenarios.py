@@ -113,6 +113,7 @@ def main():
     # Device - device - READ: For Device Searches
     # Alerts - org.alerts.close - EXECUTE:
     # Alerts - org.alerts.notes - CREATE, READ, UPDATE, DELETE
+    # Alerts - ThreatMetadata - org.xdr.metadata - READ
 
     api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
 
@@ -131,7 +132,7 @@ def main():
     # when the field is a single value, a set_xxx function is used.
     alert_query.set_minimum_severity(3)
     # and limit the time to the last day
-    alert_query.set_time_range(range="-1d")
+    alert_query.set_time_range(range="-10d")
     # rows default to 100, let's override that
     alert_query.set_rows(1000)
     # and I think that Watchlist alerts are really noisy, so I'm going to exclude them from the results
@@ -250,9 +251,9 @@ def main():
     grouped_alert_facets = group_alert_search_query.facets(["type", "THREAT_ID"], 0, True)
     print(grouped_alert_facets)
 
-    # to retrieve the threatnetwork metadata from an ids alert we first retrieve an ids alert
+    # to retrieve the Network Threat Metadata from an ids alert we first retrieve an ids alert
     alert_query = api.select(Alert)
-    alert_query.add_criteria("type", "INTRUSION_DETECTION_SYSTEM")
+    alert_query.add_criteria("type", "INTRUSION_DETECTION_SYSTEM").set_time_range(range="-6M")
     ids_alert = alert_query.first()
 
     # then just call the get_network_threat_metadata
