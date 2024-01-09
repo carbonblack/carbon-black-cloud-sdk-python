@@ -27,7 +27,8 @@ from cbc_sdk.platform import (
     DeviceControlAlert,
     GroupedAlert,
     Process,
-    Job
+    Job,
+    NetworkThreatMetadata
 )
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -77,6 +78,10 @@ from tests.unit.fixtures.platform.mock_alert_v6_v7_compatibility import (
     GET_ALERT_v7_CONTAINER_RUNTIME_RESPONSE,
     GET_ALERT_HISTORY,
     GET_THREAT_HISTORY
+)
+
+from tests.unit.fixtures.platform.mock_network_threat_metadata import (
+    GET_NETWORK_THREAT_METADATA_RESP
 )
 
 
@@ -1303,6 +1308,26 @@ def test_alert_subtype_intrusiondetectionsystemalert_string_class(cbcsdk_mock):
     api = cbcsdk_mock.api
     alert = api.select("IntrusionDetectionSystemAlert", "ca316d99-a808-3779-8aab-62b2b6d9541c")
     assert isinstance(alert, IntrusionDetectionSystemAlert)
+
+
+def test_intrusiondetectionsystemalert_get_network_threat_metadata(cbcsdk_mock):
+    """Test IntrusionDetectionSystemAlert class as string instantiation."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/ca316d99-a808-3779-8aab-62b2b6d9541c",
+                             GET_ALERT_v7_INTRUSION_DETECTION_SYSTEM_RESPONSE)
+
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/threatmetadata/v1/orgs/test/detectors/4b98443a-ba0d-4ff5-b99e-e5e70432a214",
+        GET_NETWORK_THREAT_METADATA_RESP
+    )
+
+    api = cbcsdk_mock.api
+    alert = api.select("IntrusionDetectionSystemAlert", "ca316d99-a808-3779-8aab-62b2b6d9541c")
+    assert isinstance(alert, IntrusionDetectionSystemAlert)
+
+    network_threat_metadata = alert.get_network_threat_metadata()
+    assert isinstance(network_threat_metadata, NetworkThreatMetadata)
 
 
 def test_alert_subtype_invalid_string_class(cbcsdk_mock):

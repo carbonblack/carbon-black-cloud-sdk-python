@@ -113,6 +113,7 @@ def main():
     # Device - device - READ: For Device Searches
     # Alerts - org.alerts.close - EXECUTE:
     # Alerts - org.alerts.notes - CREATE, READ, UPDATE, DELETE
+    # Alerts - ThreatMetadata - org.xdr.metadata - READ
 
     api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
 
@@ -125,12 +126,13 @@ def main():
 
     # start by specifying Alert as the type of object to search
     alert_query = api.select(Alert)
+
     # add_criteria is used for all fields that are searchable arrays
     alert_query.add_criteria("device_os", "WINDOWS")
     # when the field is a single value, a set_xxx function is used.
     alert_query.set_minimum_severity(3)
     # and limit the time to the last day
-    alert_query.set_time_range(range="-1d")
+    alert_query.set_time_range(range="-10d")
     # rows default to 100, let's override that
     alert_query.set_rows(1000)
     # and I think that Watchlist alerts are really noisy, so I'm going to exclude them from the results
@@ -227,7 +229,7 @@ def main():
     print(group_alert.most_recent_alert_)
 
     # to create the alert search query for a given group alert
-    alert_search_query = group_alert.get_alerts()
+    alert_search_query = group_alert.get_alert_search_query()
     print([alert for alert in alert_search_query])
 
     # to convert an AlertSearchQuery to a GroupAlertSearchQuery, will not preserve sort order
@@ -239,6 +241,15 @@ def main():
     # to create the facets on a grouped alert search query
     grouped_alert_facets = group_alert_search_query.facets(["type", "THREAT_ID"], 0, True)
     print(grouped_alert_facets)
+
+    # to retrieve the Network Threat Metadata from an ids alert we first retrieve an ids alert
+    alert_query = api.select(Alert)
+    alert_query.add_criteria("type", "INTRUSION_DETECTION_SYSTEM").set_time_range(range="-6M")
+    ids_alert = alert_query.first()
+
+    # then just call the get_network_threat_metadata
+    network_threat_metadata = ids_alert.get_network_threat_metadata()
+    print(network_threat_metadata)
 
 
 if __name__ == "__main__":
