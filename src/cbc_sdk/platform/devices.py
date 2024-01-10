@@ -32,6 +32,7 @@ from cbc_sdk.platform import PlatformModel
 from cbc_sdk.platform.vulnerability_assessment import Vulnerability, VulnerabilityQuery
 from cbc_sdk.base import (UnrefreshableModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
                           CriteriaBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
+from cbc_sdk.platform.previewer import DevicePolicyChangePreview
 from cbc_sdk.workload import NSXRemediationJob
 
 import time
@@ -414,6 +415,35 @@ class Device(PlatformModel):
         if len(actual_groups) > 0:
             self._refresh()
 
+    def preview_add_policy_override(self, policy_id):
+        """
+        Previews changes to this device's effective policy which result from setting a policy override.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Args:
+            policy_id (int): The ID of the policy to be added to the device as an override.
+
+        Returns:
+            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
+                that change which policy is effective as the result of this operation.
+        """
+        return Device.preview_add_policy_override_for_devices(self._cb, policy_id, [self])
+
+    def preview_remove_policy_override(self):
+        """
+        Previews changes to this device's effective policy which result from removing its policy override.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Returns:
+            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
+                that change which policy is effective as the result of this operation.
+        """
+        return Device.preview_remove_policy_override_for_devices(self._cb, [self])
+
     @classmethod
     def get_asset_groups_for_devices(cls, cb, devices, membership="ALL"):
         """
@@ -457,6 +487,61 @@ class Device(PlatformModel):
             return {int(k): v for k, v in rc.json().items()}
         else:
             return {}
+
+    @classmethod
+    def preview_add_policy_override_for_devices(cls, cb, policy_id, devices):
+        """
+        Previews changes to the effective policies for devices which result from setting a policy override on them.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            policy_id (int): The ID of the policy to be added to the devices as an override.
+            devices (list): The devices which will have their policies overridden. Each entry in this list is either
+                an integer device ID or a ``Device`` object.
+
+        Returns:
+            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
+                that change which policy is effective as the result of this operation.
+        """
+        device_ids = []
+        for d in devices:
+            if isinstance(d, Device):
+                device_ids.append(d.id)
+            elif isinstance(d, int):
+                device_ids.append(d)
+        ret = cb.post_object(f"/policy-assignment/v1/orgs/{cb.credentials.org_key}/asset-groups/preview",
+                             {"action": "ADD_POLICY_OVERRIDE", "asset_ids": device_ids, "policy_id": policy_id})
+        return [DevicePolicyChangePreview(cb, p) for p in ret.json()["preview"]]
+
+    @classmethod
+    def preview_remove_policy_override_for_devices(cls, cb, devices):
+        """
+        Previews changes to the effective policies for devices which result from removing their policy override.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            devices (list): The devices which will have their policy overrides removed. Each entry in this list
+                is either an integer device ID or a ``Device`` object.
+
+        Returns:
+            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
+                that change which policy is effective as the result of this operation.
+        """
+        device_ids = []
+        for d in devices:
+            if isinstance(d, Device):
+                device_ids.append(d.id)
+            elif isinstance(d, int):
+                device_ids.append(d)
+        ret = cb.post_object(f"/policy-assignment/v1/orgs/{cb.credentials.org_key}/asset-groups/preview",
+                             {"action": "REMOVE_POLICY_OVERRIDE", "asset_ids": device_ids})
+        return [DevicePolicyChangePreview(cb, p) for p in ret.json()["preview"]]
 
 
 class DeviceFacet(UnrefreshableModel):
