@@ -32,7 +32,7 @@ from cbc_sdk.base import (MutableBaseModel, BaseQuery, QueryBuilder, QueryBuilde
                           CriteriaBuilderSupportMixin, AsyncQueryMixin)
 from cbc_sdk.errors import ApiError
 from cbc_sdk.platform.devices import Device, DeviceSearchQuery
-from cbc_sdk.platform.policies import Policy
+from cbc_sdk.platform.previewer import DevicePolicyChangePreview
 
 
 class AssetGroup(MutableBaseModel):
@@ -284,7 +284,7 @@ class AssetGroup(MutableBaseModel):
             groups (list): A list of either string asset group IDs or ``AssetGroup`` objects.
 
         Returns:
-            list[AssetGroupChangePreview]: A list of ``AssetGroupChangePreview`` objects representing the assets
+            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
                 that change which policy is effective as the result of this operation.
         """
         member_list = []
@@ -301,7 +301,7 @@ class AssetGroup(MutableBaseModel):
                 member_list.append(group)
         ret = cb.post_object(f"/policy-assignment/v1/orgs/{cb.credentials.org_key}/asset-groups/preview",
                              {"action": action, "asset_ids": member_list, "asset_group_ids": group_list})
-        return [AssetGroupChangePreview(cb, p) for p in ret.json()["preview"]]
+        return [DevicePolicyChangePreview(cb, p) for p in ret.json()["preview"]]
 
     @classmethod
     def preview_add_members_to_groups(cls, cb, members, groups):
@@ -319,7 +319,7 @@ class AssetGroup(MutableBaseModel):
                 a string asset group ID or an ``AssetGroup`` object.
 
         Returns:
-            list[AssetGroupChangePreview]: A list of ``AssetGroupChangePreview`` objects representing the assets
+            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
                 that change which policy is effective as the result of this operation.
         """
         return cls._preview_asset_group_member_change(cb, "ADD_MEMBERS", members, groups)
@@ -340,79 +340,10 @@ class AssetGroup(MutableBaseModel):
                 a string asset group ID or an ``AssetGroup`` object.
 
         Returns:
-            list[AssetGroupChangePreview]: A list of ``AssetGroupChangePreview`` objects representing the assets
+            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
                 that change which policy is effective as the result of this operation.
         """
         return cls._preview_asset_group_member_change(cb, "REMOVE_MEMBERS", members, groups)
-
-
-class AssetGroupChangePreview:
-    """
-    Contains data previewing a change in asset groups.
-
-    Each one of these objects shows, for a given group of assets, the current policy that is the "effective policy"
-    for those assets, the new policy that will be the "effective policy" for those assets, the number of assets
-    affected, and which assets they are.
-    """
-    def __init__(self, cb, preview_data):
-        """
-        Creates a new instance of ``AssetGroupChangePreview``.
-
-        Args:
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-            preview_data (dict): Contains the preview data returned by the server API.
-        """
-        self._cb = cb
-        self._preview_data = preview_data
-
-    @property
-    def current_policy_id(self):
-        """The ID of the policy that is the current "effective" policy for a group of assets."""
-        return self._preview_data['current_policy']['id']
-
-    @property
-    def current_policy(self):
-        """The ``Policy`` object that is the current "effective" policy for a group of assets."""
-        return self._cb.select(Policy, self._preview_data['current_policy']['id'])
-
-    @property
-    def current_policy_position(self):
-        """The position, or rank, of the policy that is the current "effective" policy for a group of assets."""
-        return self._preview_data['current_policy']['position']
-
-    @property
-    def new_policy_id(self):
-        """The ID of the policy that will become the new "effective" policy for a group of assets."""
-        return self._preview_data['new_policy']['id']
-
-    @property
-    def new_policy(self):
-        """The ``Policy`` object that will become the new "effective" policy for a group of assets."""
-        return self._cb.select(Policy, self._preview_data['new_policy']['id'])
-
-    @property
-    def new_policy_position(self):
-        """The position, or rank, of the policy that will become the new "effective" policy for a group of assets."""
-        return self._preview_data['new_policy']['position']
-
-    @property
-    def asset_count(self):
-        """The number of assets to be affected by the change in their effective policy."""
-        return self._preview_data['asset_count']
-
-    @property
-    def asset_query(self):
-        """
-        A ``Device`` query which looks up the assets that are to be affected by the change in their effective policy.
-
-        Once the query is created, it can be modified with additional criteria or options before it is executed.
-        """
-        return self._cb.select(Device).where(self._preview_data['asset_query'])
-
-    @property
-    def assets(self):  # pragma: no cover
-        """The list of assets, i.e. ``Device`` objects, to be affected by the change in their effective policy."""
-        return list(self.asset_query)
 
 
 class AssetGroupQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin,

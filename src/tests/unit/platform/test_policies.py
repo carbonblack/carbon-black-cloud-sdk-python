@@ -17,7 +17,7 @@ import logging
 import random
 from contextlib import ExitStack as does_not_raise
 from cbc_sdk.rest_api import CBCloudAPI
-from cbc_sdk.platform import Policy, PolicyRule, PolicyRuleConfig, PolicyRankChangePreview
+from cbc_sdk.platform import Policy, PolicyRule, PolicyRuleConfig, DevicePolicyChangePreview
 from cbc_sdk.platform.devices import DeviceSearchQuery
 from cbc_sdk.errors import ApiError, InvalidObjectError, ServerError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -597,12 +597,12 @@ def test_preview_rank_change(cbcsdk_mock):
     assert results[1].asset_count == 2
 
 
-def test_policy_rank_change_preview_helper_methods(cbcsdk_mock):
-    """Tests the helper methods on the PolicyRankChangePreview object."""
+def test_device_policy_change_preview_helper_methods(cbcsdk_mock):
+    """Tests the helper methods on the DevicePolicyChangePreview object."""
     cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536', FULL_POLICY_1)
     cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/1492', FULL_POLICY_5)
     api = cbcsdk_mock.api
-    preview = PolicyRankChangePreview(api, PREVIEW_POLICY_CHANGES_RESPONSE2['preview'][0])
+    preview = DevicePolicyChangePreview(api, PREVIEW_POLICY_CHANGES_RESPONSE2['preview'][0])
     policy = preview.current_policy
     assert policy.id == 1492
     policy = preview.new_policy
