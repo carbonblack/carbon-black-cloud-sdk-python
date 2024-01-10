@@ -445,6 +445,25 @@ class Device(PlatformModel):
         return Device.preview_remove_policy_override_for_devices(self._cb, [self])
 
     @classmethod
+    def _collect_devices(cls, devices):
+        """
+        Collects a list of devices as IDs.
+
+        Args:
+            devices (list): A list of items, each of which may be either integer device IDs or ``Device`` objects.
+
+        Returns:
+            list[int]: A list of integer device IDs.
+        """
+        device_ids = []
+        for d in devices:
+            if isinstance(d, Device):
+                device_ids.append(d.id)
+            elif isinstance(d, int):
+                device_ids.append(d)
+        return device_ids
+
+    @classmethod
     def get_asset_groups_for_devices(cls, cb, devices, membership="ALL"):
         """
         Given a list of devices, returns lists of asset groups that they are members of.
@@ -468,17 +487,12 @@ class Device(PlatformModel):
         """
         if membership not in Device.VALID_ASSETGROUP_FILTERS:
             raise ApiError(f"Invalid filter value: {membership}")
-        device_ids = []
         if isinstance(devices, int):
             device_ids = [str(devices)]
         elif isinstance(devices, Device):
             device_ids = [str(devices.id)]
         else:
-            for d in devices:
-                if isinstance(d, int):
-                    device_ids.append(str(d))
-                elif isinstance(d, Device):
-                    device_ids.append(str(d.id))
+            device_ids = Device._collect_devices(devices)
         if len(device_ids) > 0:
             postdata = {"external_member_ids": device_ids}
             if membership != "ALL":
@@ -506,14 +520,9 @@ class Device(PlatformModel):
             list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
                 that change which policy is effective as the result of this operation.
         """
-        device_ids = []
-        for d in devices:
-            if isinstance(d, Device):
-                device_ids.append(d.id)
-            elif isinstance(d, int):
-                device_ids.append(d)
         ret = cb.post_object(f"/policy-assignment/v1/orgs/{cb.credentials.org_key}/asset-groups/preview",
-                             {"action": "ADD_POLICY_OVERRIDE", "asset_ids": device_ids, "policy_id": policy_id})
+                             {"action": "ADD_POLICY_OVERRIDE", "asset_ids": Device._collect_devices(devices),
+                              "policy_id": policy_id})
         return [DevicePolicyChangePreview(cb, p) for p in ret.json()["preview"]]
 
     @classmethod
@@ -533,14 +542,8 @@ class Device(PlatformModel):
             list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
                 that change which policy is effective as the result of this operation.
         """
-        device_ids = []
-        for d in devices:
-            if isinstance(d, Device):
-                device_ids.append(d.id)
-            elif isinstance(d, int):
-                device_ids.append(d)
         ret = cb.post_object(f"/policy-assignment/v1/orgs/{cb.credentials.org_key}/asset-groups/preview",
-                             {"action": "REMOVE_POLICY_OVERRIDE", "asset_ids": device_ids})
+                             {"action": "REMOVE_POLICY_OVERRIDE", "asset_ids": Device._collect_devices(devices)})
         return [DevicePolicyChangePreview(cb, p) for p in ret.json()["preview"]]
 
 
