@@ -30,6 +30,7 @@ from cbc_sdk.platform import (
     Job,
     NetworkThreatMetadata
 )
+from cbc_sdk.enterprise_edr.threat_intelligence import Watchlist
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.mock_rest_api import ALERT_SEARCH_SUGGESTIONS_RESP
@@ -1250,9 +1251,8 @@ def test_watchlistalert_getwatchlistobjects(cbcsdk_mock):
     watchlist_alert = api.select("WatchlistAlert", "f6af290d-6a7f-461c-a8af-cf0d24311105")
     watchlist_objects = watchlist_alert.get_watchlist_objects()
     assert isinstance(watchlist_objects, list)
-    assert watchlist_objects[0].__module__ == "cbc_sdk.enterprise_edr.threat_intelligence" and \
-           type(watchlist_objects[0]).__name__ == "Watchlist"
-    
+    assert isinstance(watchlist_objects[0], Watchlist)
+
 
 def test_alert_subtype_devicecontrolalert_class(cbcsdk_mock):
     """Test DeviceControlAlert class instantiation."""

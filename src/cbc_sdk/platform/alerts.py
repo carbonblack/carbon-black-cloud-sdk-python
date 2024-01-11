@@ -28,7 +28,6 @@ from cbc_sdk.platform.observations import Observation
 from cbc_sdk.platform.processes import AsyncProcessQuery, Process
 from cbc_sdk.platform.legacy_alerts import LegacyAlertSearchQueryCriterionMixin
 from cbc_sdk.platform.jobs import Job
-from cbc_sdk.enterprise_edr.threat_intelligence import Watchlist
 from cbc_sdk.platform.network_threat_metadata import NetworkThreatMetadata
 from cbc_sdk.enterprise_edr.threat_intelligence import Watchlist
 
