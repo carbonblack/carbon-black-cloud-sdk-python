@@ -81,9 +81,6 @@ from tests.unit.fixtures.platform.mock_alert_v6_v7_compatibility import (
     GET_THREAT_HISTORY
 )
 
-from tests.unit.fixtures.enterprise_edr.mock_threatintel import (
-    GET_WATCHLIST_OBJECT_RESP
-)
 from tests.unit.fixtures.platform.mock_network_threat_metadata import (
     GET_NETWORK_THREAT_METADATA_RESP
 )
