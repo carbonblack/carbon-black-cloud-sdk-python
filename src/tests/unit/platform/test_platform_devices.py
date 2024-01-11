@@ -12,9 +12,12 @@ from tests.unit.fixtures.platform.mock_devices import (GET_DEVICE_RESP, POST_DEV
                                                        ASSET_GROUPS_RESPONSE_1, ASSET_GROUPS_OUTPUT_1,
                                                        ASSET_GROUPS_RESPONSE_2, ASSET_GROUPS_OUTPUT_2,
                                                        ASSET_GROUPS_RESPONSE_3, ASSET_GROUPS_OUTPUT_3,
-                                                       ASSET_GROUPS_RESPONSE_SINGLE, ASSET_GROUPS_OUTPUT_SINGLE)
+                                                       ASSET_GROUPS_RESPONSE_SINGLE, ASSET_GROUPS_OUTPUT_SINGLE,
+                                                       ADD_POLICY_OVERRIDE_REQUEST, ADD_POLICY_OVERRIDE_RESPONSE,
+                                                       REMOVE_POLICY_OVERRIDE_REQUEST, REMOVE_POLICY_OVERRIDE_RESPONSE)
 
-log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
+
+logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
 
 @pytest.fixture(scope="function")
@@ -253,3 +256,37 @@ def test_device_remove_from_groups(cbcsdk_mock):
     asset_group_1 = api.select(AssetGroup, "db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16")
     asset_group_2 = api.select(AssetGroup, "509f437f-6b9a-4b8e-996e-9183b35f9069")
     device.remove_from_groups([asset_group_1, asset_group_2])
+
+
+def test_preview_add_policy_override(cbcsdk_mock):
+    """Tests the preview_add_policy_override and preview_add_policy_override_for_devices functions"""
+    def on_post(url, body, **kwargs):
+        assert body == ADD_POLICY_OVERRIDE_REQUEST
+        return ADD_POLICY_OVERRIDE_RESPONSE
+
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
+    cbcsdk_mock.mock_request("POST", "/policy-assignment/v1/orgs/test/asset-groups/preview", on_post)
+    api = cbcsdk_mock.api
+    device = api.select(Device, 98765)
+    preview = device.preview_add_policy_override(1011)
+    assert len(preview) == 1
+    assert preview[0].current_policy_id == 11200
+    assert preview[0].new_policy_id == 1011
+    assert preview[0].asset_count == 1
+
+
+def test_preview_remove_policy_override(cbcsdk_mock):
+    """Tests the preview_remove_policy_override and preview_remove_policy_override_for_devices functions"""
+    def on_post(url, body, **kwargs):
+        assert body == REMOVE_POLICY_OVERRIDE_REQUEST
+        return REMOVE_POLICY_OVERRIDE_RESPONSE
+
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
+    cbcsdk_mock.mock_request("POST", "/policy-assignment/v1/orgs/test/asset-groups/preview", on_post)
+    api = cbcsdk_mock.api
+    device = api.select(Device, 98765)
+    preview = device.preview_remove_policy_override()
+    assert len(preview) == 1
+    assert preview[0].current_policy_id == 11200
+    assert preview[0].new_policy_id == 14760
+    assert preview[0].asset_count == 1

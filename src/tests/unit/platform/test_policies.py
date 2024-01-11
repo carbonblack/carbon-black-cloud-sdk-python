@@ -32,7 +32,8 @@ from tests.unit.fixtures.platform.mock_policies import (FULL_POLICY_1, SUMMARY_P
                                                         PREVIEW_POLICY_CHANGES_REQUEST1,
                                                         PREVIEW_POLICY_CHANGES_RESPONSE1,
                                                         PREVIEW_POLICY_CHANGES_REQUEST2,
-                                                        PREVIEW_POLICY_CHANGES_RESPONSE2, FULL_POLICY_5)
+                                                        PREVIEW_POLICY_CHANGES_RESPONSE2, FULL_POLICY_5,
+                                                        ADD_POLICY_OVERRIDE_REQUEST, ADD_POLICY_OVERRIDE_RESPONSE)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -656,3 +657,20 @@ def test_device_policy_change_preview_helper_methods(cbcsdk_mock):
     assert isinstance(query, DeviceSearchQuery)
     request = query._build_request(-1, -1)
     assert request['query'] == "(-_exists_:ag_agg_key_dynamic AND ag_agg_key_manual:1790b51e683c8a20c2b2bbe3e41eacdc53e3632087bb5a3f2868588e99157b06 AND policy_override:false) OR (-_exists_:ag_agg_key_dynamic AND ag_agg_key_manual:aa8bd7e69c4ee45918bb126a17d90a1c8368b46f9bb5bf430cb0250c317cd1dc AND policy_override:false)"  # noqa: E501
+
+
+def test_preview_add_policy_override(cbcsdk_mock):
+    """Tests the preview_add_policy_override method."""
+    def on_post(url, body, **kwargs):
+        assert body == ADD_POLICY_OVERRIDE_REQUEST
+        return ADD_POLICY_OVERRIDE_RESPONSE
+
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536', FULL_POLICY_1)
+    cbcsdk_mock.mock_request("POST", "/policy-assignment/v1/orgs/test/asset-groups/preview", on_post)
+    api = cbcsdk_mock.api
+    policy = api.select(Policy, 65536)
+    results = policy.preview_add_policy_override([123, 456, 789])
+    assert len(results) == 1
+    assert results[0].current_policy_id == 11200
+    assert results[0].new_policy_id == 65536
+    assert results[0].asset_count == 3

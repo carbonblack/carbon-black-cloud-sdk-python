@@ -568,7 +568,7 @@ class Policy(MutableBaseModel):
             new_policy["rule_configs"] = [copy.deepcopy(rcfg._info) for rcfg in self._new_rule_configs]
             return Policy(self._cb, None, new_policy, False, True)
 
-    def _subobject(self, name):
+    def _subobject(self, name):  # pragma: no cover
         """
         Returns the "subobject value" of the given attribute.
 

@@ -492,7 +492,7 @@ class Device(PlatformModel):
         elif isinstance(devices, Device):
             device_ids = [str(devices.id)]
         else:
-            device_ids = Device._collect_devices(devices)
+            device_ids = [str(v) for v in Device._collect_devices(devices)]
         if len(device_ids) > 0:
             postdata = {"external_member_ids": device_ids}
             if membership != "ALL":
