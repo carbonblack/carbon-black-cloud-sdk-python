@@ -315,9 +315,9 @@ The workflow leverages the alert search structure to specify the alerts to close
 
 6. You can dismiss future Alerts that have the same threat id.
 
-Use the sequence of calls to update future alerts that have the same threat id.  This sequence is usually used in conjunction with
-    with the alert closure; that is, you can use the dismiss future alerts call to close future occurrences and call an
-    alert closure to close current open alerts that have the threat id.
+    Use the sequence of calls to update future alerts that have the same threat id.  This sequence is usually used in
+    conjunction with with the alert closure; that is, you can use the dismiss future alerts call to close future
+    occurrences and call an alert closure to close current open alerts that have the threat id.
 
     .. code-block:: python
     >>> alert_threat_query = api.select(Alert).add_criteria("threat_id","CFED0B211ED09F8EC1C83D4F3FBF1709")
