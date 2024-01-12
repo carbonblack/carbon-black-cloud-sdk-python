@@ -108,6 +108,14 @@ RuleConfigs Module
    :inherited-members:
    :show-inheritance:
 
+Previewer Module
+--------------------------------------------
+
+.. automodule:: cbc_sdk.platform.previewer
+   :members:
+   :inherited-members:
+   :show-inheritance:
+
 Processes Module
 ----------------------------------
 
