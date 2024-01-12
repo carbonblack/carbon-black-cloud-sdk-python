@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2024. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -221,6 +221,40 @@ class AssetGroup(MutableBaseModel):
                    elements showing which members belong to groups without policy association.
         """    # noqa: E501 W505
         return self._cb.get_object(self._build_api_request_uri() + "/membership_summary")
+
+    def preview_add_members(self, devices):
+        """
+        Previews changes to the effective policies for devices which result from adding them to this asset group.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Args:
+            devices (list): The devices which will be added to this asset group. Each entry in this list is either
+                an integer device ID or a ``Device`` object.
+
+        Returns:
+            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
+                that change which policy is effective as the result of this operation.
+        """
+        return AssetGroup.preview_add_members_to_groups(self._cb, devices, [self])
+
+    def preview_remove_members(self, devices):
+        """
+        Previews changes to the effective policies for devices which result from removing them from this asset group.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Args:
+            devices (list): The devices which will be removed from this asset group. Each entry in this list is either
+                an integer device ID or a ``Device`` object.
+
+        Returns:
+            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
+                that change which policy is effective as the result of this operation.
+        """
+        return AssetGroup.preview_remove_members_from_groups(self._cb, devices, [self])
 
     def preview_save(self):
         """

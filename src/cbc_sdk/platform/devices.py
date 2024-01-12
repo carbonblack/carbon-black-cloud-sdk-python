@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2023. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2024. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
