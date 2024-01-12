@@ -42,14 +42,14 @@ def demo_preview_policy_rank_change(api):
     policy_top_rank = None
     policy_num_devices = 0
 
-    for p in all_policies:
-        tmp_policy_num_devices = len(api.select(Device).set_policy_ids([p.id]))
+    for policy in all_policies:
+        tmp_policy_num_devices = len(api.select(Device).set_policy_ids([policy.id]))
         if tmp_policy_num_devices > 0:
             if policy_top_rank is None:
-                policy_top_rank = p
+                policy_top_rank = policy
                 policy_num_devices = tmp_policy_num_devices
-            elif p.position < policy_top_rank.position:
-                policy_top_rank = p
+            elif policy.position < policy_top_rank.position:
+                policy_top_rank = policy
                 policy_num_devices = tmp_policy_num_devices
 
     # This is the highest ranking policy that has devices associated.
@@ -68,19 +68,17 @@ def demo_preview_policy_rank_change(api):
         print("There are {} changes that would result from moving Policy {} from position {} to position {}."
               .format(len(changes), policy_top_rank.name, policy_top_rank.position, new_policy_position))
 
-    for i, c in enumerate(changes, 1):
-        print("printing change number {}".format(i))
-        current_top_rank_policy = api.select(Policy, c.current_policy_id)
-        future_top_rank_policy = api.select(Policy, c.new_policy_id)
-        print("{} assets will be affected.".format(c.asset_count))
+    for change_counter, change in enumerate(changes, 1):
+        print("printing change number {}".format(change_counter))
+        print("{} assets will be affected.".format(change.asset_count))
         print("The assets affected are:")
-        assets_affected = c.asset_query.all()
-        for a in assets_affected:
-            print("Asset Name: {} - Asset Id {}".format(a.name, a.id))
+        assets_affected = change.asset_query.all()
+        for asset in assets_affected:
+            print("Asset Name: {} - Asset Id {}".format(asset.name, asset.id))
         print("\n The currently effective policy for those assets is: name: {}, id: {}".
-              format(current_top_rank_policy.name, current_top_rank_policy.id))
+              format(change.current_policy.name, change.current_policy.id))
         print("\n The effective policy after the move would be: name: {}, id: {}".
-              format(future_top_rank_policy.name, future_top_rank_policy.id))
+              format(change.new_policy.name, change.new_policy.id))
     print("\n\n Finished preview_policy_rank_change \n\n")
 
 
