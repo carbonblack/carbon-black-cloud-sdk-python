@@ -16,8 +16,10 @@
 
 class DevicePolicyChangePreview:
     """
-    Contains data previewing a change in device policies, via asset group memberships, policy rank changes,
-    device policy overrides, or other causes.
+    Contains data previewing a change in device policies.
+
+    Changes to policies may happen via asset group memberships, policy rank changes, device policy overrides,
+    or other causes.
 
     Each one of these objects shows, for a given group of assets, the current policy that is the "effective policy"
     for those assets, the new policy that will be the "effective policy" for those assets, the number of assets
