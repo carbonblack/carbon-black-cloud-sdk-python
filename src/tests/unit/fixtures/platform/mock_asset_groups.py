@@ -242,3 +242,24 @@ GET_STATS_RESPONSE = {
         }
     ]
 }
+
+PREVIEW_DELETE_REQUEST = {
+    "action": "ASSET_GROUPS_DELETE",
+    "asset_group_ids": ["db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16", "149cea01-2a13-4a0a-8ca9-cdf359a6378e"]
+}
+
+PREVIEW_NULL_RESPONSE = {
+    "preview": []
+}
+
+PREVIEW_ADD_MEMBERS_REQUEST = {
+    "action": "ADD_MEMBERS",
+    "asset_ids": [123, 456],
+    "asset_group_ids": ["db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16"]
+}
+
+PREVIEW_REMOVE_MEMBERS_REQUEST = {
+    "action": "REMOVE_MEMBERS",
+    "asset_ids": [123, 456],
+    "asset_group_ids": ["db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16"]
+}
