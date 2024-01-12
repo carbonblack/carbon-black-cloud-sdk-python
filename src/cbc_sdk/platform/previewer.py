@@ -11,7 +11,12 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-"""DevicePolicyChangePreview object"""
+"""This module contains the ``DevicePolicyChangePreview`` object.
+
+When methods on ``Device``, ``Policy``, or ``AssetGroup`` are called to "preview" changes in device policy,
+a list of these objects is returned.  Each object represents a change in "effective" policy on one or more
+devices.
+"""
 
 
 class DevicePolicyChangePreview:
