@@ -41,6 +41,18 @@ class DevicePolicyChangePreview:
         self._cb = cb
         self._preview_data = preview_data
 
+    def __str__(self):  # pragma: no cover
+        """
+        Returns a string representation of the object.
+        """
+        lines = [f"{self.__class__.__name__} object, bound to {self._cb.session.server}.", '-' * 79, '']
+        p = self._preview_data
+        lines.append(f"Current policy: #{p['current_policy']['id']} at rank {p['current_policy']['position']}")
+        lines.append(f"    New policy: #{p['new_policy']['id']} at rank {p['new_policy']['position']}")
+        lines.append(f"   Asset count: {p['asset_count']}")
+        lines.append(f"   Asset query: {p['asset_query']}")
+        return "\n".join(lines)
+
     @property
     def current_policy_id(self):
         """The ID of the policy that is the current "effective" policy for a group of assets."""
