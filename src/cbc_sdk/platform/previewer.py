@@ -42,9 +42,7 @@ class DevicePolicyChangePreview:
         self._preview_data = preview_data
 
     def __str__(self):  # pragma: no cover
-        """
-        Returns a string representation of the object.
-        """
+        """Returns a string representation of the object."""
         lines = [f"{self.__class__.__name__} object, bound to {self._cb.session.server}.", '-' * 79, '']
         p = self._preview_data
         lines.append(f"Current policy: #{p['current_policy']['id']} at rank {p['current_policy']['position']}")
