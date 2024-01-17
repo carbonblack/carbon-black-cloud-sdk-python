@@ -259,7 +259,7 @@ def test_device_remove_from_groups(cbcsdk_mock):
 
 
 def test_preview_add_policy_override(cbcsdk_mock):
-    """Tests the preview_add_policy_override and preview_add_policy_override_for_devices functions"""
+    """Tests the preview_add_policy_override_for_devices function"""
     def on_post(url, body, **kwargs):
         assert body == ADD_POLICY_OVERRIDE_REQUEST
         return ADD_POLICY_OVERRIDE_RESPONSE
@@ -268,7 +268,7 @@ def test_preview_add_policy_override(cbcsdk_mock):
     cbcsdk_mock.mock_request("POST", "/policy-assignment/v1/orgs/test/asset-groups/preview", on_post)
     api = cbcsdk_mock.api
     device = api.select(Device, 98765)
-    preview = device.preview_add_policy_override(1011)
+    preview = Device.preview_add_policy_override_for_devices(api, 1011, [device])
     assert len(preview) == 1
     assert preview[0].current_policy_id == 11200
     assert preview[0].new_policy_id == 1011
