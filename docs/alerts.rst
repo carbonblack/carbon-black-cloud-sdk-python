@@ -156,7 +156,7 @@ You can also read from a csv file by using values that match the profile names i
 Grouping Alerts
 ---------------
 
-The examples below show illustrate how to create and manipulate grouped alert objects. A Grouped Alert is a collections of alerts that share a common threat id. When grouping alerts by a threat id it allows greater context and insight surrounding the pervasiveness of a threat.
+The examples below illustrates how to create and manipulate grouped alert objects. A Grouped Alert is a collections of alerts that share a common threat id. When grouping alerts by a threat id it allows greater context and insight surrounding the pervasiveness of a threat.
 
 This first example retrieves all groupings of watchlist alerts from the past 10 days that have a minimum severity level of 3. If this feels familiar to basic alert retrieval, the only difference of note at this stage is that we select a GroupedAlert instead of an Alert.
 
@@ -187,6 +187,7 @@ It is also possible to create grouped facets from the group alert search query
     >>> grouped_alert_facets = group_alert_search_query.facets(["type", "THREAT_ID"], 0, True)
 
 Suppose instead of grouped alerts, you had been working with alerts and wanted to crossover to grouped alerts. Instead of building a new group alert query from scratch you can transform an alert search query into a grouped alert search query or vice versa!
+
     >>> from cbc_sdk import CBCloudAPI
     >>> from cbc_sdk.platform import Alert, GroupedAlert
     >>> api = CBCloudAPI(profile="sample")
