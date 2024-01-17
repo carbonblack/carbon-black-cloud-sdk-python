@@ -152,6 +152,50 @@ You can also read from a csv file by using values that match the profile names i
     >>> for alert in alerts:
     ...     print(alert.id, alert.device_os, alert.device_name, alert.category)
 
+Grouping Alerts
+---------------
+
+The examples below illustrates how to create and manipulate grouped alert objects. A Grouped Alert is a collections of alerts that share a common threat id. When grouping alerts by a threat id it allows greater context and insight surrounding the pervasiveness of a threat.
+
+This first example retrieves all groupings of watchlist alerts from the past 10 days that have a minimum severity level of 3. If this feels familiar to basic alert retrieval, the only difference of note at this stage is that we select a GroupedAlert instead of an Alert.
+
+    >>> from cbc_sdk import CBCloudAPI
+    >>> from cbc_sdk.platform import GroupedAlert
+    >>> api = CBCloudAPI(profile="sample")
+    >>> grouped_alert_search_query = api.select(GroupedAlert)
+    >>> grouped_alert_search_query = grouped_alert_search_query.set_time_range(range="-10d").add_criteria("type", "WATCHLIST").set_minimum_severity(3)
+    >>> grouped_alerts = grouped_alert_search_query.all()
+    >>> print(grouped_alerts.num_found, grouped_alerts.group_by_total_count)
+    21, 2287
+
+Also like Alerts, first() can be used on the query to retrieve the first grouping of alerts and study the metadata for a given threat id.
+
+    >>> first_alert_grouping = grouped_alert_search_query.first()
+    >>> print(first_alert_grouping.count, first_alert_grouping.highest_severity, first_alert_grouping.device_count, first_alert_grouping.workflow_states)
+    534 7  3 ("OPEN": 534)
+    >>> most_recent_alert = first_alert_grouping.most_recent_alert_)
+    >>> print(most_recent_alert.threat_id)
+
+It may be necessary to retrieve all of the alerts from a threat id grouping for further inspection, it is possible to directly retrieve the associated alert search query from a given grouped alert
+
+    >>> alert_search_query = group_alert.get_alert_search_query()
+    >>> alerts = alert_search_query.all()
+
+It is also possible to create grouped facets from the group alert search query
+
+    >>> grouped_alert_facets = group_alert_search_query.facets(["type", "THREAT_ID"], 0, True)
+
+Suppose instead of grouped alerts, you had been working with alerts and wanted to crossover to grouped alerts. Instead of building a new group alert query from scratch you can transform an alert search query into a grouped alert search query or vice versa!
+
+    >>> from cbc_sdk import CBCloudAPI
+    >>> from cbc_sdk.platform import Alert, GroupedAlert
+    >>> api = CBCloudAPI(profile="sample")
+    >>> alert_search_query = api.select(Alert)
+    >>> alert_search_query = grouped_alert_search_query.set_time_range(range="-10d").add_criteria("type", "WATCHLIST").set_minimum_severity(3)
+    >>> group_alert_search_query = alert_search_query.set_group_by()
+    >>> alert_search_query = group_alert_search_query.get_alert_search_query()
+.. note::
+    When transforming from one query type to another the sort order parameter is not preserved. If it is necessary, it will have to be added to the queries criteria manually.
 
 Retrieving Observations to Provide Context About an Alert
 ---------------------------------------------------------
@@ -315,9 +359,9 @@ The workflow leverages the alert search structure to specify the alerts to close
 
 6. You can dismiss future Alerts that have the same threat id.
 
-Use the sequence of calls to update future alerts that have the same threat id.  This sequence is usually used in conjunction with
-    with the alert closure; that is, you can use the dismiss future alerts call to close future occurrences and call an
-    alert closure to close current open alerts that have the threat id.
+    Use the sequence of calls to update future alerts that have the same threat id.  This sequence is usually used in
+    conjunction with with the alert closure; that is, you can use the dismiss future alerts call to close future
+    occurrences and call an alert closure to close current open alerts that have the threat id.
 
     .. code-block:: python
     >>> alert_threat_query = api.select(Alert).add_criteria("threat_id","CFED0B211ED09F8EC1C83D4F3FBF1709")
