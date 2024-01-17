@@ -778,7 +778,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         Return a json object of the response.
 
         Returns:
-            Any: The returned attribute value.
+            Any: The response dictionary representation.
         """
         return self._info
 
