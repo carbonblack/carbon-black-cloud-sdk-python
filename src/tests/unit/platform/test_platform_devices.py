@@ -91,3 +91,12 @@ def test_device_max_rows(cbcsdk_mock):
 
     with pytest.raises(ApiError):
         query.set_max_rows(10001)
+
+
+def test_device_tojson_inheritance(cbcsdk_mock):
+    """Testing Device tojson() with .select(Device, `device_id`)"""
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
+    api = cbcsdk_mock.api
+    platform_device_select_with_id = api.select(Device, 98765)
+    platform_device_select_with_id.refresh()
+    assert platform_device_select_with_id.to_json() == GET_DEVICE_RESP
