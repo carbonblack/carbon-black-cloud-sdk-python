@@ -415,22 +415,6 @@ class Device(PlatformModel):
         if len(actual_groups) > 0:
             self._refresh()
 
-    def preview_add_policy_override(self, policy_id):
-        """
-        Previews changes to this device's effective policy which result from setting a policy override.
-
-        Required Permissions:
-            org.policies (READ)
-
-        Args:
-            policy_id (int): The ID of the policy to be added to the device as an override.
-
-        Returns:
-            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
-                that change which policy is effective as the result of this operation.
-        """
-        return Device.preview_add_policy_override_for_devices(self._cb, policy_id, [self])
-
     def preview_remove_policy_override(self):
         """
         Previews changes to this device's effective policy which result from removing its policy override.
