@@ -773,6 +773,15 @@ class NewBaseModel(object, metaclass=CbMetaModel):
 
         return self._cb.select(join_cls, field_value)
 
+    def to_json(self):
+        """
+        Return a json object of the response.
+
+        Returns:
+            Any: The returned attribute value.
+        """
+        return self._info
+
 
 class UnrefreshableModel(NewBaseModel):
     """Represents a model that can't be refreshed, i.e. for which ``reset()`` is not a valid operation."""
