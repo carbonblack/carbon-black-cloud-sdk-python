@@ -1021,6 +1021,58 @@ class Policy(MutableBaseModel):
         else:
             raise ApiError(f"rule configuration '{rule_config_id}' not found in policy")
 
+    def set_data_collection(self, parameter, value):
+        """
+        Sets a data collection parameter value on any data collection rule configurations in the policy that have it.
+
+        As a safety check, this method also validates that the type of the existing value of that parameter is the
+        same as the type of the new value we want to set for that parameter.
+
+        Args:
+            parameter (str): The name of the parameter to set.
+            value (Any): The value of the parameter to set.
+
+        Raises:
+            ApiError: If the parameter setting operation failed.
+        """
+        rconf_blocks = [block for block in self.rule_configs
+                        if block['category'] == 'data_collection' and parameter in block['parameters']]
+        if len(rconf_blocks) > 0:
+            url = f"/policyservice/v1/orgs/{self._cb.credentials.org_key}/policies/{self.id}" \
+                  "/rule_configs/data_collection"
+            for rconf_block in rconf_blocks:
+                if type(rconf_block['parameters'][parameter]) is type(value):
+                    body = {"id": rconf_block['id'], "parameters": {parameter, value}}
+                    return_data = self._cb.put_object(url, body)
+                    fail_blocks = [block for block in return_data.json()['failed'] if block['id'] == rconf_block['id']]
+                    if len(fail_blocks) > 0:
+                        raise ApiError(fail_blocks[0]['message'])
+                    rconf_block['parameters'][parameter] = value
+
+    def set_xdr_collection(self, flag):
+        """
+        Sets XDR collection to be enabled or disabled on this policy.
+
+        Args:
+            flag (bool): ``True`` to enable XDR data collection, ``False`` to disable it.
+
+        Raises:
+            ApiError: If the parameter setting operation failed.
+        """
+        self.set_data_collection("enable_network_data_collection", flag)
+
+    def set_auth_event_collection(self, flag):
+        """
+        Sets auth event collection to be enabled or disabled on this policy.
+
+        Args:
+            flag (bool): ``True`` to enable auth event data collection, ``False`` to disable it.
+
+        Raises:
+            ApiError: If the parameter setting operation failed.
+        """
+        self.set_data_collection("enable_auth_events", flag)
+
     # --- BEGIN policy v1 compatibility methods ---
 
     @property
