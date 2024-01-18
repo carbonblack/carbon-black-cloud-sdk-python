@@ -56,6 +56,22 @@ EXISTING_AG_DATA_2 = {
     "policy_name": "MrsQueen"
 }
 
+EXISTING_AG_DATA_3 = {
+    "id": "16b0dd95-85a3-4f73-bcf4-9b666436c534",
+    "name": "BaronHarkonnen",
+    "description": "Bring in Feyd and Rabban",
+    "org_key": "test",
+    "status": "OK",
+    "member_type": "DEVICE",
+    "discovered": False,
+    "create_time": "2023-11-22T19:34:34.685Z",
+    "update_time": "2023-11-22T19:34:34.812Z",
+    "query": "os.equals:WINDOWS",
+    "member_count": 4,
+    "policy_id": 10191,
+    "policy_name": "BIFAR"
+}
+
 UPDATE_AG_REQUEST = {
     "id": "db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16",
     "name": "Renamed Group",
@@ -241,4 +257,60 @@ GET_STATS_RESPONSE = {
             "ids": []
         }
     ]
+}
+
+PREVIEW_DELETE_REQUEST = {
+    "action": "ASSET_GROUPS_DELETE",
+    "asset_group_ids": ["db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16", "149cea01-2a13-4a0a-8ca9-cdf359a6378e"]
+}
+
+PREVIEW_NULL_RESPONSE = {
+    "preview": []
+}
+
+PREVIEW_ADD_MEMBERS_REQUEST = {
+    "action": "ADD_MEMBERS",
+    "asset_ids": [123, 456],
+    "asset_group_ids": ["db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16"]
+}
+
+PREVIEW_REMOVE_MEMBERS_REQUEST = {
+    "action": "REMOVE_MEMBERS",
+    "asset_ids": [123, 456],
+    "asset_group_ids": ["db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16"]
+}
+
+PREVIEW_UPDATE_REQUEST_1 = {
+    "action": "ASSET_GROUPS_UPDATE",
+    "asset_group_ids": ["16b0dd95-85a3-4f73-bcf4-9b666436c534"],
+    "policy_id": 32768
+}
+
+PREVIEW_UPDATE_REQUEST_2 = {
+    "action": "ASSET_GROUPS_UPDATE",
+    "asset_group_ids": ["16b0dd95-85a3-4f73-bcf4-9b666436c534"],
+    "policy_id": None
+}
+
+PREVIEW_UPDATE_REQUEST_3 = {
+    "action": "ASSET_GROUPS_UPDATE",
+    "asset_group_ids": ["16b0dd95-85a3-4f73-bcf4-9b666436c534"],
+    "asset_group_query": "os: WINDOWS OR MACOS"
+}
+
+PREVIEW_UPDATE_REQUEST_4 = {
+    "action": "ASSET_GROUPS_UPDATE",
+    "asset_group_ids": ["16b0dd95-85a3-4f73-bcf4-9b666436c534"],
+    "asset_group_query": None
+}
+
+PREVIEW_DELETE_REQUEST_2 = {
+    "action": "ASSET_GROUPS_DELETE",
+    "asset_group_ids": ["db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16"]
+}
+
+PREVIEW_CREATE_REQUEST = {
+    "action": "ASSET_GROUPS_CREATE",
+    "asset_group_query": "os.equals:WINDOWS",
+    "policy_id": 123456
 }

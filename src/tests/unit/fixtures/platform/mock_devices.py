@@ -542,3 +542,54 @@ ASSET_GROUPS_OUTPUT_SINGLE = {
         "509f437f-6b9a-4b8e-996e-9183b35f9069"
     ]
 }
+
+ADD_POLICY_OVERRIDE_REQUEST = {
+    "action": "ADD_POLICY_OVERRIDE",
+    "asset_ids": [98765],
+    "policy_id": 1011
+}
+
+ADD_POLICY_OVERRIDE_RESPONSE = {
+    "preview": [
+        {
+            "current_policy": {
+                "id": 11200,
+                "position": 2
+            },
+            "new_policy": {
+                "id": 1011,
+                "position": 1
+            },
+            "asset_count": 1,
+            "asset_query": "(device_id: 98765)",
+            "assets_search_definition": {
+                "query": "(device_id: 98765)"
+            }
+        }
+    ]
+}
+
+REMOVE_POLICY_OVERRIDE_REQUEST = {
+    "action": "REMOVE_POLICY_OVERRIDE",
+    "asset_ids": [98765]
+}
+
+REMOVE_POLICY_OVERRIDE_RESPONSE = {
+    "preview": [
+        {
+            "current_policy": {
+                "id": 11200,
+                "position": 2
+            },
+            "new_policy": {
+                "id": 14760,
+                "position": 5
+            },
+            "asset_count": 1,
+            "asset_query": "(device_id: 98765)",
+            "assets_search_definition": {
+                "query": "(device_id: 98765)"
+            }
+        }
+    ]
+}

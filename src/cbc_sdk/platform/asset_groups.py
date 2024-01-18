@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2022. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2024. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -32,6 +32,7 @@ from cbc_sdk.base import (MutableBaseModel, BaseQuery, QueryBuilder, QueryBuilde
                           CriteriaBuilderSupportMixin, AsyncQueryMixin)
 from cbc_sdk.errors import ApiError
 from cbc_sdk.platform.devices import Device, DeviceSearchQuery
+from cbc_sdk.platform.previewer import DevicePolicyChangePreview
 
 
 class AssetGroup(MutableBaseModel):
@@ -221,6 +222,81 @@ class AssetGroup(MutableBaseModel):
         """    # noqa: E501 W505
         return self._cb.get_object(self._build_api_request_uri() + "/membership_summary")
 
+    def preview_add_members(self, devices):
+        """
+        Previews changes to the effective policies for devices which result from adding them to this asset group.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Args:
+            devices (list): The devices which will be added to this asset group. Each entry in this list is either
+                an integer device ID or a ``Device`` object.
+
+        Returns:
+            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
+                that change which policy is effective as the result of this operation.
+        """
+        return AssetGroup.preview_add_members_to_groups(self._cb, devices, [self])
+
+    def preview_remove_members(self, devices):
+        """
+        Previews changes to the effective policies for devices which result from removing them from this asset group.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Args:
+            devices (list): The devices which will be removed from this asset group. Each entry in this list is either
+                an integer device ID or a ``Device`` object.
+
+        Returns:
+            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
+                that change which policy is effective as the result of this operation.
+        """
+        return AssetGroup.preview_remove_members_from_groups(self._cb, devices, [self])
+
+    def preview_save(self):
+        """
+        Previews changes to the effective policies for devices which result from unsaved changes to this asset group.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Returns:
+            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
+                that change which policy is effective as the result of this operation.
+        """
+        policy_id = None
+        query = None
+        remove_policy_id = False
+        remove_query = False
+        if "policy_id" in self._dirty_attributes:
+            if self._info["policy_id"] is None:
+                remove_policy_id = True
+            else:
+                policy_id = self._info["policy_id"]
+        if "query" in self._dirty_attributes:
+            if self._info["query"] is None:
+                remove_query = True
+            else:
+                query = self._info["query"]
+        return AssetGroup.preview_update_asset_groups(self._cb, [self], policy_id=policy_id, query=query,
+                                                      remove_policy_id=remove_policy_id, remove_query=remove_query)
+
+    def preview_delete(self):
+        """
+        Previews changes to the effective policies for devices which result from this asset group being deleted.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Returns:
+            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
+                that change which policy is effective as the result of this operation.
+        """
+        return AssetGroup.preview_delete_asset_groups(self._cb, [self])
+
     @classmethod
     def create_group(cls, cb, name, description=None, policy_id=None, query=None):
         """
@@ -267,6 +343,172 @@ class AssetGroup(MutableBaseModel):
         """
         return_data = cb.get_object(AssetGroup.urlobject.format(cb.credentials.org_key))
         return [AssetGroup(cb, v['id'], v) for v in return_data['results']]
+
+    @classmethod
+    def _collect_groups(cls, groups):
+        """
+        Collects a list of asset groups as IDs.
+
+        Args:
+            groups (list): A list of items, each of which may be either string group IDs or ``AssetGroup`` objects.
+
+        Returns:
+            list[str]: A list of string group IDs.
+        """
+        group_list = []
+        for group in groups:
+            if isinstance(group, AssetGroup):
+                group_list.append(group.id)
+            elif isinstance(group, str):
+                group_list.append(group)
+        return group_list
+
+    @classmethod
+    def _preview_asset_group_member_change(cls, cb, action, members, groups):
+        """
+        Internal function which handles asset group change previews.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            action (str): The action to be passed to the server.
+            members (list): A list of either integer device IDs or ``Device`` objects.
+            groups (list): A list of either string asset group IDs or ``AssetGroup`` objects.
+
+        Returns:
+            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
+                that change which policy is effective as the result of this operation.
+        """
+        ret = cb.post_object(f"/policy-assignment/v1/orgs/{cb.credentials.org_key}/asset-groups/preview",
+                             {"action": action, "asset_ids": Device._collect_devices(members),
+                              "asset_group_ids": AssetGroup._collect_groups(groups)})
+        return [DevicePolicyChangePreview(cb, p) for p in ret.json()["preview"]]
+
+    @classmethod
+    def preview_add_members_to_groups(cls, cb, members, groups):
+        """
+        Previews changes to the effective policies for devices which result from adding them to asset groups.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            members (list): The devices which will be added to new asset groups. Each entry in this list is either
+                an integer device ID or a ``Device`` object.
+            groups (list): The asset groups to which the devices will be added.  Each entry in this list is either
+                a string asset group ID or an ``AssetGroup`` object.
+
+        Returns:
+            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
+                that change which policy is effective as the result of this operation.
+        """
+        return cls._preview_asset_group_member_change(cb, "ADD_MEMBERS", members, groups)
+
+    @classmethod
+    def preview_remove_members_from_groups(cls, cb, members, groups):
+        """
+        Previews changes to the effective policies for devices which result from removing them from asset groups.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            members (list): The devices which will be removed from asset groups. Each entry in this list is either
+                an integer device ID or a ``Device`` object.
+            groups (list): The asset groups from which the devices will be removed.  Each entry in this list is either
+                a string asset group ID or an ``AssetGroup`` object.
+
+        Returns:
+            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
+                that change which policy is effective as the result of this operation.
+        """
+        return cls._preview_asset_group_member_change(cb, "REMOVE_MEMBERS", members, groups)
+
+    @classmethod
+    def preview_create_asset_group(cls, cb, policy_id, query):
+        """
+        Previews changes to the effective policies for devices which result from creating a new asset group.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            policy_id (int): The ID of the policy to be added to the new asset group.
+            query (str): The query string to be used for the new asset group.
+
+        Returns:
+            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
+                that change which policy is effective as the result of this operation.
+        """
+        ret = cb.post_object(f"/policy-assignment/v1/orgs/{cb.credentials.org_key}/asset-groups/preview",
+                             {"action": "ASSET_GROUPS_CREATE", "asset_group_query": query, "policy_id": policy_id})
+        return [DevicePolicyChangePreview(cb, p) for p in ret.json()["preview"]]
+
+    @classmethod
+    def preview_update_asset_groups(cls, cb, groups, policy_id=None, query=None, remove_policy_id=False,
+                                    remove_query=False):
+        """
+        Previews changes to the effective policies for devices which result from changes to asset groups.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            groups (list): The asset groups which will be updated.  Each entry in this list is either
+                a string asset group ID or an ``AssetGroup`` object.
+            policy_id (int): If this is not ``None`` and ``remove_policy_id`` is ``False``, contains the ID of the
+                policy to be assigned to the specified groups. Default is ``None``.
+            query (str): If this is not ``None`` and ``remove_query`` is ``False``, contains the new query string
+                to be assigned to the specified groups. Default is ``None``.
+            remove_policy_id (bool): If this is ``True``, indicates that the specified groups will have their policy
+                ID removed entirely. Default is ``False``.
+            remove_query (bool):  If this is ``True``, indicates that the specified groups will have their query
+                strings removed entirely. Default is ``False``.
+
+        Returns:
+            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
+                that change which policy is effective as the result of this operation.
+        """
+        if not (remove_policy_id or remove_query) and policy_id is None and query is None:
+            return []
+        body = {"action": "ASSET_GROUPS_UPDATE", "asset_group_ids": AssetGroup._collect_groups(groups)}
+        if remove_policy_id:
+            body["policy_id"] = None
+        elif policy_id is not None:
+            body["policy_id"] = policy_id
+        if remove_query:
+            body["asset_group_query"] = None
+        elif query is not None:
+            body["asset_group_query"] = query
+        ret = cb.post_object(f"/policy-assignment/v1/orgs/{cb.credentials.org_key}/asset-groups/preview", body)
+        return [DevicePolicyChangePreview(cb, p) for p in ret.json()["preview"]]
+
+    @classmethod
+    def preview_delete_asset_groups(cls, cb, groups):
+        """
+        Previews changes to the effective policies for devices which result from deleting asset groups.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            groups (list): The asset groups which will be deleted.  Each entry in this list is either
+                a string asset group ID or an ``AssetGroup`` object.
+
+        Returns:
+            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
+                that change which policy is effective as the result of this operation.
+        """
+        ret = cb.post_object(f"/policy-assignment/v1/orgs/{cb.credentials.org_key}/asset-groups/preview",
+                             {"action": "ASSET_GROUPS_DELETE", "asset_group_ids": AssetGroup._collect_groups(groups)})
+        return [DevicePolicyChangePreview(cb, p) for p in ret.json()["preview"]]
 
 
 class AssetGroupQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, CriteriaBuilderSupportMixin,

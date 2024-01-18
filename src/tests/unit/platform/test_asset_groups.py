@@ -22,7 +22,13 @@ from tests.unit.fixtures.platform.mock_asset_groups import (CREATE_AG_REQUEST, C
                                                             UPDATE_AG_REQUEST, QUERY_REQUEST, QUERY_REQUEST_DEFAULT,
                                                             QUERY_RESPONSE, LIST_MEMBERS_RESPONSE1,
                                                             LIST_MEMBERS_OUTPUT1, LIST_MEMBERS_RESPONSE2,
-                                                            GET_ALL_RESPONSE, GET_STATS_RESPONSE)
+                                                            GET_ALL_RESPONSE, GET_STATS_RESPONSE,
+                                                            PREVIEW_DELETE_REQUEST, PREVIEW_NULL_RESPONSE,
+                                                            PREVIEW_ADD_MEMBERS_REQUEST, PREVIEW_REMOVE_MEMBERS_REQUEST,
+                                                            EXISTING_AG_DATA_3, PREVIEW_UPDATE_REQUEST_1,
+                                                            PREVIEW_UPDATE_REQUEST_2, PREVIEW_UPDATE_REQUEST_3,
+                                                            PREVIEW_UPDATE_REQUEST_4, PREVIEW_DELETE_REQUEST_2,
+                                                            PREVIEW_CREATE_REQUEST)
 from tests.unit.fixtures.platform.mock_devices import GET_DEVICE_RESP
 
 
@@ -347,3 +353,109 @@ def test_get_statistics(cbcsdk_mock):
     group = api.select(AssetGroup, 'db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16')
     rc = group.get_statistics()
     assert rc == GET_STATS_RESPONSE
+
+
+def test_preview_delete_asset_groups(cbcsdk_mock):
+    """Tests the preview_delete_asset_groups function."""
+    def on_post(url, body, **kwargs):
+        assert body == PREVIEW_DELETE_REQUEST
+        return PREVIEW_NULL_RESPONSE
+
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
+                             copy.deepcopy(EXISTING_AG_DATA))
+    cbcsdk_mock.mock_request("POST", "/policy-assignment/v1/orgs/test/asset-groups/preview", on_post)
+    api = cbcsdk_mock.api
+    group = api.select(AssetGroup, 'db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16')
+    rc = AssetGroup.preview_delete_asset_groups(api, [group, "149cea01-2a13-4a0a-8ca9-cdf359a6378e"])
+    assert len(rc) == 0
+
+
+def test_preview_add_members(cbcsdk_mock):
+    """Tests the preview_add_members and preview_add_members_to_groups functions."""
+    def on_post(url, body, **kwargs):
+        assert body == PREVIEW_ADD_MEMBERS_REQUEST
+        return PREVIEW_NULL_RESPONSE
+
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
+                             copy.deepcopy(EXISTING_AG_DATA))
+    cbcsdk_mock.mock_request("POST", "/policy-assignment/v1/orgs/test/asset-groups/preview", on_post)
+    api = cbcsdk_mock.api
+    group = api.select(AssetGroup, 'db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16')
+    rc = group.preview_add_members([123, 456])
+    assert len(rc) == 0
+
+
+def test_preview_remove_members(cbcsdk_mock):
+    """Tests the preview_remove_members and preview_remove_members_from_groups functions."""
+    def on_post(url, body, **kwargs):
+        assert body == PREVIEW_REMOVE_MEMBERS_REQUEST
+        return PREVIEW_NULL_RESPONSE
+
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
+                             copy.deepcopy(EXISTING_AG_DATA))
+    cbcsdk_mock.mock_request("POST", "/policy-assignment/v1/orgs/test/asset-groups/preview", on_post)
+    api = cbcsdk_mock.api
+    group = api.select(AssetGroup, 'db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16')
+    rc = group.preview_remove_members([123, 456])
+    assert len(rc) == 0
+
+
+@pytest.mark.parametrize("field, newvalue, expected_body", [
+    ("policy_id", 32768, PREVIEW_UPDATE_REQUEST_1),
+    ("policy_id", None, PREVIEW_UPDATE_REQUEST_2),
+    ("query", "os: WINDOWS OR MACOS", PREVIEW_UPDATE_REQUEST_3),
+    ("query", None, PREVIEW_UPDATE_REQUEST_4)
+])
+def test_preview_save(cbcsdk_mock, field, newvalue, expected_body):
+    """Tests the preview_save and preview_update_asset_groups functions."""
+    posted = False
+
+    def on_post(url, body, **kwargs):
+        assert body == expected_body
+        nonlocal posted
+        posted = True
+        return PREVIEW_NULL_RESPONSE
+
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/16b0dd95-85a3-4f73-bcf4-9b666436c534',
+                             copy.deepcopy(EXISTING_AG_DATA_3))
+    cbcsdk_mock.mock_request("POST", "/policy-assignment/v1/orgs/test/asset-groups/preview", on_post)
+    api = cbcsdk_mock.api
+    group = api.select(AssetGroup, '16b0dd95-85a3-4f73-bcf4-9b666436c534')
+    group._set(field, newvalue)
+    rc = group.preview_save()
+    assert len(rc) == 0
+    assert posted
+
+
+def test_preview_update_asset_groups_null_response(cb):
+    """Tests the null response from preview_update_asset_groups."""
+    rc = AssetGroup.preview_update_asset_groups(cb, ['db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
+                                                     '16b0dd95-85a3-4f73-bcf4-9b666436c534'])
+    assert len(rc) == 0
+
+
+def test_preview_delete(cbcsdk_mock):
+    """Tests the preview_delete function."""
+    def on_post(url, body, **kwargs):
+        assert body == PREVIEW_DELETE_REQUEST_2
+        return PREVIEW_NULL_RESPONSE
+
+    cbcsdk_mock.mock_request('GET', '/asset_groups/v1/orgs/test/groups/db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16',
+                             copy.deepcopy(EXISTING_AG_DATA))
+    cbcsdk_mock.mock_request("POST", "/policy-assignment/v1/orgs/test/asset-groups/preview", on_post)
+    api = cbcsdk_mock.api
+    group = api.select(AssetGroup, 'db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16')
+    rc = group.preview_delete()
+    assert len(rc) == 0
+
+
+def test_preview_create_asset_group(cbcsdk_mock):
+    """Tests the preview_create_asset_group function."""
+    def on_post(url, body, **kwargs):
+        assert body == PREVIEW_CREATE_REQUEST
+        return PREVIEW_NULL_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/policy-assignment/v1/orgs/test/asset-groups/preview", on_post)
+    api = cbcsdk_mock.api
+    rc = AssetGroup.preview_create_asset_group(api, 123456, "os.equals:WINDOWS")
+    assert len(rc) == 0
