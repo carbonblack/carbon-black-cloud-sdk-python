@@ -2543,3 +2543,29 @@ PREVIEW_POLICY_CHANGES_RESPONSE2 = {
         }
     ]
 }
+
+ADD_POLICY_OVERRIDE_REQUEST = {
+    "action": "ADD_POLICY_OVERRIDE",
+    "asset_ids": [123, 456, 789],
+    "policy_id": 65536
+}
+
+ADD_POLICY_OVERRIDE_RESPONSE = {
+    "preview": [
+        {
+            "current_policy": {
+                "id": 11200,
+                "position": 2
+            },
+            "new_policy": {
+                "id": 65536,
+                "position": 1
+            },
+            "asset_count": 3,
+            "asset_query": "(device_id: 123 OR 456 OR 789)",
+            "assets_search_definition": {
+                "query": "(device_id: 123 OR 456 OR 789)"
+            }
+        }
+    ]
+}
