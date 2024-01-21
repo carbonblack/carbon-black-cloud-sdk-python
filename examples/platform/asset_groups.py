@@ -24,8 +24,8 @@ from cbc_sdk import CBCloudAPI
 from cbc_sdk.platform import AssetGroup, Policy, Device
 
 # To see the http requests being made, and the structure of the search requests enable debug logging
-# import logging
-# logging.basicConfig(level=logging.DEBUG)
+import logging
+logging.basicConfig(level=logging.DEBUG)
 
 
 def demo_preview_policy_rank_change(api):
@@ -62,11 +62,61 @@ def demo_preview_policy_rank_change(api):
 
     # preview what would change if the policy at the top position moved down one rank.
     changes = Policy.preview_policy_rank_changes(api, [(policy_top_rank.id, new_policy_position)])
-    if len(changes) == 0:
-        print("No changes to effective policy would occur.")
+    print_changes(changes)
+    print("\n\n Finished preview_policy_rank_change \n\n")
+
+
+def demo_preview_asset_group_changes(api):
+    """Show how to use the preview asset group function to understand the impact of changes such as changing a query
+
+    Once Asset Groups have been created and policies assigned, the preview asset group changes function can be used to
+    identify the devices that would have their group membership or effective policy impacted.
+    """
+    print("\n\n Starting preview_asset_group_change \n\n")
+    # Get an asset group to work with
+    asset_group_1 = api.select(AssetGroup).first()
+    # Get the top and second ranked policies
+    top_policy = None
+    second_policy = None
+    for policy in api.select(Policy):
+        if policy.position == 1:
+            top_policy = policy
+        if policy.position == 2:
+            second_policy = policy
+
+    changes = None
+    # Preview the changes that would happen if the policy is changed to the top rank.
+    # In the case where it already has the top ranked policy, change it to the second ranked policy.
+    # Send in the exising query - not changing.
+    if asset_group_1.policy_id is None or asset_group_1.policy_id != top_policy.id:
+        changes = AssetGroup.preview_update_asset_groups(api, [asset_group_1], top_policy.id, asset_group_1.query)
     else:
-        print("There are {} changes that would result from moving Policy {} from position {} to position {}."
-              .format(len(changes), policy_top_rank.name, policy_top_rank.position, new_policy_position))
+        changes = AssetGroup.preview_update_asset_groups(api, [asset_group_1], second_policy.id, asset_group_1.query)
+    print("Changes from setting a new policy on the asset group")
+    print_changes(changes)
+
+    # Preview adding a member to a group.  Note that if the device is already in the group, there will be no changes
+    device = api.select(Device).first()
+    changes = AssetGroup.preview_add_members_to_groups(api, [device.id], [asset_group_1])
+    print("Changes from adding a device to the asset group")
+    print_changes(changes)
+
+    # Preview the changes to devices if a new asset group is created
+    changes = AssetGroup.preview_create_asset_group(api, top_policy.id, "os.equals:MAC")
+    print("Changes from creating a new asset group")
+    print_changes(changes)
+
+    changes = AssetGroup.preview_delete_asset_groups(api, [asset_group_1])
+    print("Changes from deleting an asset group")
+    print_changes(changes)
+
+
+def print_changes(changes):
+    """Iterate through the changes object and print the content with contextual information."""
+    if len(changes) == 0:
+        print("No changes would occur.")
+    else:
+        print("There are {} changes that would result from the proposed change".format(len(changes)))
 
     for change_counter, change in enumerate(changes, 1):
         print("printing change number {}".format(change_counter))
@@ -79,12 +129,7 @@ def demo_preview_policy_rank_change(api):
               format(change.current_policy.name, change.current_policy.id))
         print("\n The effective policy after the move would be: name: {}, id: {}".
               format(change.new_policy.name, change.new_policy.id))
-    print("\n\n Finished preview_policy_rank_change \n\n")
-
-
-def demo_preview_asset_group_changes():
-    """Show how to use the preview asset group function to understand the impact of changes such as changing a query"""
-    print("\n\n preview_asset_group_changes(): Coming Soon \n\n")
+    print("\n\n")
 
 
 def main():
@@ -180,10 +225,11 @@ def main():
     # Clean up after ourselves and delete the asset group
     second_asset_group.delete()
 
-    # See the steps to select a policy and view what the impact of the change would be before applying the change.
+    # Step into the method to see the steps to select a policy and preview the impact changing it's rank would have
     demo_preview_policy_rank_change(api)
-    # See the steps to view what the impact of a change to as asset group would be before applying the change.
-    demo_preview_asset_group_changes()
+    # Step into the method to see methods available to preview the impact changing things such as the assigned policy
+    # on an asset group or creating a new asset group would have.
+    demo_preview_asset_group_changes(api)
 
     print("The End")
 
