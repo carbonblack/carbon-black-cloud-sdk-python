@@ -1042,7 +1042,7 @@ class Policy(MutableBaseModel):
                   "/rule_configs/data_collection"
             for rconf_block in rconf_blocks:
                 if type(rconf_block['parameters'][parameter]) is type(value):
-                    body = {"id": rconf_block['id'], "parameters": {parameter, value}}
+                    body = {"id": rconf_block['id'], "parameters": {parameter: value}}
                     return_data = self._cb.put_object(url, body)
                     fail_blocks = [block for block in return_data.json()['failed'] if block['id'] == rconf_block['id']]
                     if len(fail_blocks) > 0:

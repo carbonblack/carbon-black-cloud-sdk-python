@@ -24,7 +24,10 @@ from tests.unit.fixtures.platform.mock_policies import (FULL_POLICY_1, SUMMARY_P
                                                         SUMMARY_POLICY_3, OLD_POLICY_1, FULL_POLICY_2, OLD_POLICY_2,
                                                         RULE_ADD_1, RULE_ADD_2, RULE_MODIFY_1, NEW_POLICY_CONSTRUCT_1,
                                                         NEW_POLICY_RETURN_1, BASIC_CONFIG_TEMPLATE_RETURN,
-                                                        BUILD_RULECONFIG_1)
+                                                        BUILD_RULECONFIG_1, SET_XDR_COLLECTION_REQUEST,
+                                                        SET_XDR_COLLECTION_RESPONSE, SET_AUTH_EVENT_COLLECTION_REQUEST,
+                                                        SET_AUTH_EVENT_COLLECTION_RESPONSE,
+                                                        SET_AUTH_EVENT_COLLECTION_RESPONSE_ERROR)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -540,3 +543,45 @@ def test_policy_builder_error_handling(cb):
         builder.set_on_demand_scan_schedule(["WEDNESDAY", "FRIDAY", "HELLDAY"], 0, 6)
     with pytest.raises(ApiError):
         builder.add_sensor_setting("LONG_RANGE", "true")
+
+
+def test_set_xdr_collection(cbcsdk_mock):
+    """Tests the set_xdr_collection method."""
+    def on_put(url, body, **kwargs):
+        assert body == SET_XDR_COLLECTION_REQUEST
+        return copy.deepcopy(SET_XDR_COLLECTION_RESPONSE)
+
+    cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/65536/rule_configs/data_collection', on_put)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+    policy.set_xdr_collection(True)
+    rconf = policy.data_collection_rule_configs['cc075469-8d1e-4056-84b6-0e6f437c4010']
+    assert rconf.get_parameter("enable_network_data_collection") is True
+
+
+def test_set_auth_event_collection(cbcsdk_mock):
+    """Tests the set_auth_event_collection method."""
+    def on_put(url, body, **kwargs):
+        assert body == SET_AUTH_EVENT_COLLECTION_REQUEST
+        return copy.deepcopy(SET_AUTH_EVENT_COLLECTION_RESPONSE)
+
+    cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/65536/rule_configs/data_collection', on_put)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+    policy.set_auth_event_collection(False)
+    rconf = policy.data_collection_rule_configs['91c919da-fb90-4e63-9eac-506255b0a0d0']
+    assert rconf.get_parameter("enable_auth_events") is False
+
+
+def test_set_auth_event_collection_error_handling(cbcsdk_mock):
+    """Tests the error handling in set_auth_event_collection (actually in set_data_collection)."""
+    def on_put(url, body, **kwargs):
+        assert body == SET_AUTH_EVENT_COLLECTION_REQUEST
+        return copy.deepcopy(SET_AUTH_EVENT_COLLECTION_RESPONSE_ERROR)
+
+    cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/65536/rule_configs/data_collection', on_put)
+    api = cbcsdk_mock.api
+    policy = Policy(api, 65536, copy.deepcopy(FULL_POLICY_1), False, True)
+    with pytest.raises(ApiError) as err:
+        policy.set_auth_event_collection(False)
+    assert err.value.args[0] == "Test error"
