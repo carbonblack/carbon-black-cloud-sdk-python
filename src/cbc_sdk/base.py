@@ -780,7 +780,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         Returns:
             Any: The response dictionary representation.
         """
-        return self._info
+        return copy.deepcopy(self._info)
 
 
 class UnrefreshableModel(NewBaseModel):
