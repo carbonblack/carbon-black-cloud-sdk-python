@@ -25,7 +25,7 @@ Asset Groups Module
 
 .. automodule:: cbc_sdk.platform.asset_groups
    :members:
-   :undoc-members:
+   :inherited-members:
    :show-inheritance:
 
 Audit Module
