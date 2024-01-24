@@ -240,7 +240,7 @@ class Process(UnrefreshableModel):
 
     def _retrieve_cb_info(self):
         """Retrieve the detailed information about this object."""
-        self._details_timeout = 0   # FIXPOINT
+        self._details_timeout = self._cb.credentials.default_timeout
         return self._get_detailed_results()._info
 
     @property
@@ -373,7 +373,8 @@ class Process(UnrefreshableModel):
             org.search.events(CREATE, READ)
 
         Args:
-            timeout (int): Event details request timeout in milliseconds.
+            timeout (int): Event details request timeout in milliseconds.  This value can never be greater than the
+                configured default timeout.  If this value is 0, the configured default timeout is used.
             async_mode (bool): ``True`` to request details in an asynchronous manner.
 
         Returns:
@@ -381,7 +382,10 @@ class Process(UnrefreshableModel):
                 retrieve the results.
             dict: If ``async_mode`` is ``False``.
         """
-        self._details_timeout = timeout  # FIXPOINT
+        if timeout <= 0:
+            self._details_timeout = self._cb.credentials.default_timeout
+        else:
+            self._details_timeout = min(timeout, self._cb.credentials.default_timeout)
         if not self.process_guid:
             raise ApiError("Trying to get process details on an invalid process_guid")
         if async_mode:
@@ -391,6 +395,7 @@ class Process(UnrefreshableModel):
 
     def _get_detailed_results(self):
         """Actual search details implementation"""
+        assert self._details_timeout > 0
         args = {"process_guids": [self.process_guid]}
         url = "/api/investigate/v2/orgs/{}/processes/detail_jobs".format(self._cb.credentials.org_key)
         query_start = self._cb.post_object(url, body=args)
@@ -411,7 +416,7 @@ class Process(UnrefreshableModel):
                 time.sleep(.5)
                 continue
             if searchers_completed < searchers_contacted:
-                if self._details_timeout != 0 and (time.time() * 1000) - submit_time > self._details_timeout:  # FIXPOINT
+                if (time.time() * 1000) - submit_time > self._details_timeout:
                     timed_out = True
                     break
             else:
@@ -617,7 +622,7 @@ class AsyncProcessQuery(Query):
         """
         super(AsyncProcessQuery, self).__init__(doc_class, cb)
         self._query_token = None
-        self._timeout = 0  # FIXPOINT
+        self._timeout = cb.credentials.default_timeout
         self._timed_out = False
 
     def timeout(self, msecs):
@@ -625,7 +630,8 @@ class AsyncProcessQuery(Query):
         Sets the timeout on a process query.
 
         Arguments:
-            msecs (int): Timeout duration, in milliseconds.
+            msecs (int): Timeout duration, in milliseconds.  This can never be greater than the configured default
+                timeout.  If this is 0, the configured default timeout is used.
 
         Returns:
             AsyncProcessQuery: The modified query object.
@@ -633,7 +639,10 @@ class AsyncProcessQuery(Query):
         Example:
             >>> cb.select(Process).where(process_name="foo.exe").timeout(5000)
         """
-        self._timeout = msecs
+        if msecs <= 0:
+            self._timeout = self._cb.credentials.default_timeout
+        else:
+            self._timeout = min(msecs, self._cb.credentials.default_timeout)
         return self
 
     def set_rows(self, rows):
@@ -684,6 +693,7 @@ class AsyncProcessQuery(Query):
         Required Permissions:
             org.search.events(CREATE, READ)
         """
+        assert self._timeout > 0
         if not self._query_token:
             self._submit()
 
@@ -699,7 +709,7 @@ class AsyncProcessQuery(Query):
         if searchers_contacted == 0:
             return True
         if searchers_completed < searchers_contacted:
-            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:  # FIXPOINT
+            if (time.time() * 1000) - self._submit_time > self._timeout:
                 self._timed_out = True
                 return False
             return True
@@ -846,7 +856,7 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         self._query_builder = QueryBuilder()
         self._query_token = None
         self._full_init = False
-        self._timeout = 0  # FIXPOINT
+        self._timeout = cb.credentials.default_timeout
         self._timed_out = False
         self._time_range = {}
 
@@ -855,7 +865,8 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         Sets the timeout on a process query.
 
         Arguments:
-            msecs (int): Timeout duration, in milliseconds.
+            msecs (int): Timeout duration, in milliseconds.  This can never be greater than the configured default
+                timeout.  If this value is 0, the configured default timeout is used.
 
         Returns:
             SummaryQuery: The modified query object.
@@ -863,7 +874,10 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         Example:
             >>> cb.select(Process).where(process_name="foo.exe").timeout(5000)
         """
-        self._timeout = msecs
+        if msecs <= 0:
+            self._timeout = self._cb.credentials.default_timeout
+        else:
+            self._timeout = min(msecs, self._cb.credentials.default_timeout)
         return self
 
     def set_time_range(self, start=None, end=None, window=None):
@@ -947,6 +961,7 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         Required Permissions:
             org.search.events(CREATE, READ)
         """
+        assert self._timeout > 0
         if not self._query_token:
             self._submit()
 
@@ -962,7 +977,7 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         if searchers_contacted == 0:
             return True
         if searchers_completed < searchers_contacted:
-            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:  # FIXPOINT
+            if (time.time() * 1000) - self._submit_time > self._timeout:
                 self._timed_out = True
                 return False
             return True

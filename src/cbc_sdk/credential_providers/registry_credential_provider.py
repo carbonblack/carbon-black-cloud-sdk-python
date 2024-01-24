@@ -162,6 +162,27 @@ class RegistryCredentialProvider(CredentialProvider):
             return val[0] != 0
         return None
 
+    def _read_int(self, key, value_name):
+        """
+        Read an integer value from the registry key specified.
+
+        Args:
+            key (PyHKEY): The key to read a value from.
+            value_name (str): The name of the value to be returned.
+
+        Returns:
+            int: The value read in. May return None if the value was not found.
+
+        Raises:
+            CredentialError: If there was an error reading the value, or if the value was of the wrong type.
+        """
+        val = self._read_value(key, value_name)
+        if val:
+            if val[1] != REG_DWORD:
+                raise CredentialError(f"value '{value_name}` is not of integer type")
+            return val[0]
+        return None
+
     def _read_credentials(self, key):
         """
         Read in a complete credentials set from a registry key.
@@ -179,6 +200,10 @@ class RegistryCredentialProvider(CredentialProvider):
         for cv in list(CredentialValue):
             if cv.requires_boolean_value():
                 value = self._read_bool(key, cv.name.lower())
+                if value is not None:
+                    input[cv] = value
+            elif cv.requires_integer_value():
+                value = self._read_int(key, cv.name.lower())
                 if value is not None:
                     input[cv] = value
             else:

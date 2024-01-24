@@ -39,6 +39,7 @@ class CredentialValue(Enum):
     CSP_OAUTH_APP_SECRET = auto()
     CSP_API_TOKEN = auto()
     CSP_URL_OVERRIDE = auto()
+    DEFAULT_TIMEOUT = auto()
 
     def requires_boolean_value(self):
         """
@@ -49,14 +50,29 @@ class CredentialValue(Enum):
         """
         return self in _bool_valued_credentials
 
+    def requires_integer_value(self):
+        """
+        Return whether or not this credential requires an integer value.
+
+        Returns:
+            bool: True if the credential requires an integer value, False if not.
+        """
+        return self in _int_valued_credentials
+
 
 # The credentials that have Boolean values
 _bool_valued_credentials = [CredentialValue.SSL_VERIFY, CredentialValue.SSL_VERIFY_HOSTNAME,
                             CredentialValue.SSL_FORCE_TLS_1_2, CredentialValue.IGNORE_SYSTEM_PROXY]
 
+# The credentials that have integer values
+_int_valued_credentials = [CredentialValue.DEFAULT_TIMEOUT]
+
 # The possible string values that translate to Boolean
 _bool_values = {"0": False, "no": False, "off": False, "false": False,
                 "1": True, "yes": True, "on": True, "true": True}
+
+# The maximum value that the default timeout may have under any circumstances.
+MAX_DEFAULT_TIMEOUT = 300000
 
 
 # === THE CREDENTIALS DATA OBJECT === #
@@ -89,7 +105,8 @@ class Credentials(object):
             CredentialValue.CSP_OAUTH_APP_ID: None,
             CredentialValue.CSP_OAUTH_APP_SECRET: None,
             CredentialValue.CSP_API_TOKEN: None,
-            CredentialValue.CSP_URL_OVERRIDE: "https://console.cloud.vmware.com"
+            CredentialValue.CSP_URL_OVERRIDE: "https://console.cloud.vmware.com",
+            CredentialValue.DEFAULT_TIMEOUT: MAX_DEFAULT_TIMEOUT
         }
         if values is not None:
             for k in list(CredentialValue):
@@ -97,6 +114,9 @@ class Credentials(object):
                     self._set_value(k, values[k])
                 elif k.name.lower() in values:
                     self._set_value(k, values[k.name.lower()])
+
+        if self.get_value(CredentialValue.DEFAULT_TIMEOUT) > MAX_DEFAULT_TIMEOUT:
+            self._set_value(CredentialValue.DEFAULT_TIMEOUT, MAX_DEFAULT_TIMEOUT)
 
         self._token_type = "UNKNOWN"
         if self.get_value(CredentialValue.TOKEN) is not None:
@@ -129,6 +149,16 @@ class Credentials(object):
                 self._values[key] = _bool_values[value.lower()]
             else:
                 raise CredentialError(f"Invalid boolean value '{value}' for credential '{key.name}'")
+        elif key.requires_integer_value():
+            if isinstance(value, int):
+                self._values[key] = value
+            elif isinstance(value, str):
+                try:
+                    self._values[key] = int(value)
+                except ValueError:
+                    raise CredentialError(f"Invalid integer value '{value}' for credential '{key.name}'")
+            else:
+                raise CredentialError(f"Invalid integer value '{value}' for credential '{key.name}'")
         else:
             self._values[key] = value
 
