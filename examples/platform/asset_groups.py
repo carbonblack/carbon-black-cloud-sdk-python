@@ -24,8 +24,8 @@ from cbc_sdk import CBCloudAPI
 from cbc_sdk.platform import AssetGroup, Policy, Device
 
 # To see the http requests being made, and the structure of the search requests enable debug logging
-import logging
-logging.basicConfig(level=logging.DEBUG)
+# import logging
+# logging.basicConfig(level=logging.DEBUG)
 
 
 def demo_preview_policy_rank_change(api):
@@ -150,7 +150,7 @@ def main():
     # Policies - Policies - org.policies - READ: For viewing policy information and pre-viewing the impact of changes
     #    to policy ranking and asset groups.
 
-    api = CBCloudAPI(profile="ASSET_GROUP_DEV_01")
+    api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
 
     # to get all asset groups, a static method is available on the AssetGroup class.
     # This is useful for listing the groups configured in your org
@@ -174,7 +174,7 @@ def main():
     for p in api.select(Policy).all():
         if bottom_rank_policy is None or p.position > bottom_rank_policy.position:
             bottom_rank_policy = p
-    new_asset_group.policy = bottom_rank_policy.id
+    new_asset_group.policy_id = bottom_rank_policy.id
     new_asset_group.save()
     print("\n\n new_asset_group {}".format(new_asset_group))
     # Clean up after ourselves and delete the asset group
