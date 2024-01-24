@@ -194,9 +194,15 @@ def test_async_timeout(cbcsdk_mock):
     """Testing AsyncProcessQuery.timeout()."""
     api = cbcsdk_mock.api
     async_query = api.select(Process).where("process_guid:someguid")
-    assert async_query._timeout == 0
+    assert async_query._timeout == 300000
     async_query.timeout(msecs=500)
     assert async_query._timeout == 500
+    async_query.timeout(msecs=999999)
+    assert async_query._timeout == 300000
+    async_query.timeout(msecs=700)
+    assert async_query._timeout == 700
+    async_query.timeout(msecs=0)
+    assert async_query._timeout == 300000
 
 
 def test_async_submit(cbcsdk_mock):
@@ -243,9 +249,15 @@ def test_async_facet_query_timeout(cbcsdk_mock):
     """Testing AsyncFacetQuery timeout()"""
     api = cbcsdk_mock.api
     facet_query = api.select(ProcessFacet).where("process_name:svchost.exe")
-    assert facet_query._timeout == 0
+    assert facet_query._timeout == 300000
     facet_query.timeout(5000)
     assert facet_query._timeout == 5000
+    facet_query.timeout(999999)
+    assert facet_query._timeout == 300000
+    facet_query.timeout(2000)
+    assert facet_query._timeout == 2000
+    facet_query.timeout(0)
+    assert facet_query._timeout == 300000
 
 
 def test_async_facet_limit(cbcsdk_mock):
