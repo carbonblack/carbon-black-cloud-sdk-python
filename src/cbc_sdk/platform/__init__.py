@@ -9,7 +9,7 @@ from cbc_sdk.platform.alerts import Alert as BaseAlert
 
 from cbc_sdk.platform.audit import AuditLog
 
-from cbc_sdk.platform.asset_groups import AssetGroup
+from cbc_sdk.platform.asset_groups import AssetGroup, AssetGroupQuery
 
 from cbc_sdk.platform.devices import Device, DeviceFacet, DeviceSearchQuery
 
