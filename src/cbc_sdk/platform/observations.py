@@ -457,7 +457,7 @@ class ObservationQuery(Query):
         """
         if msecs <= 0:
             self._timeout = self._cb.credentials.default_timeout
-        else
+        else:
             self._timeout = min(msecs, self._cb.credentials.default_timeout)
         return self
 
