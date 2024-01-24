@@ -150,7 +150,7 @@ def main():
     # Policies - Policies - org.policies - READ: For viewing policy information and pre-viewing the impact of changes
     #    to policy ranking and asset groups.
 
-    api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
+    api = CBCloudAPI(profile="ASSET_GROUP_DEV_01")
 
     # to get all asset groups, a static method is available on the AssetGroup class.
     # This is useful for listing the groups configured in your org
@@ -208,7 +208,7 @@ def main():
                 print("This asset group does not determine the effective policy The effective policy is {} - {}"
                       .format(d.policy_id, d.policy_name))
 
-    # Asset groups can have members from a query, and also direct (manual) assignement.
+    # Asset groups can have members from a query, and also direct (manual) assignment.
     # Assign a device directly to the second asset group
     random_device = api.select(Device).first()
     second_asset_group.add_members(random_device)
