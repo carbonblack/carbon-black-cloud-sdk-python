@@ -28,7 +28,6 @@ Asset Groups in your organization.
     There are 1 asset groups. This is the first: AssetGroup object, bound to https://defense.conferdeploy.net.
      Partially initialized. Use .refresh() to load all attributes
     -------------------------------------------------------------------------------
-
          create_time: 2024-01-24T04:38:26.930Z
          description: Windows No Policy
           discovered: False
@@ -76,7 +75,6 @@ a policy.
     >>> print(new_asset_group)
     AssetGroup object, bound to https://defense.conferdeploy.net.
     -------------------------------------------------------------------------------
-
          create_time: 2024-01-24T05:47:34.378Z
          description: Demonstrating the SDK
           discovered: False
@@ -127,8 +125,8 @@ finished updating.
 
 All attributes can also be provided to the create method:
 
-    >>> second_asset_group = AssetGroup.create_group(api, "Second example group", "Second group description",
-                                                     query = "os.equals:MAC", policy_id = 12345)
+    >>> second_asset_group = AssetGroup.create_group(api, "Second example group","Second group description",
+    ...                                              query = "os.equals:MAC", policy_id = 12345)
 
 The add_member() function is used to assign a device directly to the group. (Compared to dynamically added, when the
 device matches the query on the asset group.)
