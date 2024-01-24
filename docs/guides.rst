@@ -27,6 +27,7 @@ Feature Guides
 
    searching
    alerts
+   asset-groups
    audit-log
    developing-credential-providers
    device-control
@@ -44,6 +45,7 @@ Feature Guides
 
 * :doc:`searching` - Most operations in the SDK will require you to search for objects.
 * :doc:`alerts` - Work and manage different types of alerts such as CB Analytics Alert, Watchlist Alerts and Device Control Alerts.
+* :doc:`asset-groups` - Create and modify Asset Groups, and preview the impact changes to policy ranking or asset group definition will have.
 * :doc:`alerts-migration` - Update from SDK 1.4.3 or earlier to SDK 1.5.0 or later to get the benefits of the Alerts v7 API.
 * :doc:`audit-log` - Retrieve audit log events indicating various "system" events.
 * :doc:`device-control` - Control the blocking of USB devices on endpoints.
