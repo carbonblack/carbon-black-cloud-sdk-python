@@ -201,6 +201,16 @@ FULL_POLICY_1 = {
             }
         },
         {
+            "id": "cc075469-8d1e-4056-84b6-0e6f437c4010",
+            "name": "XDR",
+            "description": "Turns on XDR network data collection at the sensor",
+            "inherited_from": "",
+            "category": "data_collection",
+            "parameters": {
+                "enable_network_data_collection": False
+            }
+        },
+        {
             "id": "1f8a5e4b-34f2-4d31-9f8f-87c56facaec8",
             "name": "Advanced Scripting Prevention",
             "description": "Addresses malicious fileless and file-backed scripts that leverage native programs [...]",
@@ -2464,4 +2474,61 @@ FULL_POLICY_5 = {
         }
     ],
     "sensor_configs": []
+}
+
+SET_XDR_COLLECTION_REQUEST = {
+    "id": "cc075469-8d1e-4056-84b6-0e6f437c4010",
+    "parameters": {
+        "enable_network_data_collection": True
+    }
+}
+
+SET_XDR_COLLECTION_RESPONSE = {
+    "successful": [
+        {
+            "id": "cc075469-8d1e-4056-84b6-0e6f437c4010",
+            "name": "XDR",
+            "description": "Turns on XDR network data collection at the sensor",
+            "inherited_from": "",
+            "category": "data_collection",
+            "parameters": {
+                "enable_network_data_collection": True
+            }
+        }
+    ],
+    "failed": []
+}
+
+SET_AUTH_EVENT_COLLECTION_REQUEST = {
+    "id": "91c919da-fb90-4e63-9eac-506255b0a0d0",
+    "parameters": {
+        "enable_auth_events": False
+    }
+}
+
+SET_AUTH_EVENT_COLLECTION_RESPONSE = {
+    "successful": [
+        {
+            "id": "91c919da-fb90-4e63-9eac-506255b0a0d0",
+            "name": "Authentication Events",
+            "description": "Authentication Events",
+            "inherited_from": "",
+            "category": "data_collection",
+            "parameters": {
+                "enable_auth_events": False
+            }
+        }
+    ],
+    "failed": []
+}
+
+SET_AUTH_EVENT_COLLECTION_RESPONSE_ERROR = {
+    "successful": [],
+    "failed": [
+        {
+            "id": "91c919da-fb90-4e63-9eac-506255b0a0d0",
+            "error_code": "TESTING_ERROR",
+            "message": "Test error"
+        }
+    ]
 }
