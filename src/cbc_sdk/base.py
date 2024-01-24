@@ -2088,7 +2088,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
         # whether self._total_results is a valid value
         self._count_valid = False
         # seconds to wait for num_contacted == num_completed until timing out
-        self._timeout = 0
+        self._timeout = cb.credentials.default_timeout
         # whether the query timed-out
         self._timed_out = False
         # query body parameters
@@ -2105,16 +2105,19 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
         """Sets the timeout on an AsyncQuery. By default, there is no timeout.
 
         Arguments:
-            msecs (int): Timeout duration, in milliseconds.
+            msecs (int): Timeout duration, in milliseconds.  This value can never be greater than the configured
+                default timeout.  If this is 0, the configured default timeout value is used.
 
         Returns:
-            Query (AsyncQuery): The Query object with new milliseconds
-            parameter.
+            Query (AsyncQuery): The Query object with new milliseconds parameter.
 
         Example:
             >>> cb.select(ProcessFacet).where(process_name="foo.exe").timeout(5000)
         """
-        self._timeout = msecs
+        if msecs <= 0:
+            self._timeout = self._cb.credentials.default_timeout
+        else:
+            self._timeout = min(msecs, self._cb.credentials.default_timeout)
         return self
 
     def limit(self, limit):
@@ -2308,6 +2311,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
         self._submit_time = time.time() * 1000
 
     def _still_querying(self):
+        assert self._timeout > 0
         if not self._query_token:
             self._submit()
 
@@ -2320,7 +2324,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
         if searchers_contacted == 0:
             return True
         if searchers_completed < searchers_contacted:
-            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:
+            if (time.time() * 1000) - self._submit_time > self._timeout:
                 self._timed_out = True
                 return False
             return True
