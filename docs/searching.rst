@@ -346,6 +346,26 @@ search result weighted as per the criteria provided::
     >>> print(synchronous_result.ranges)
     [{'start': '2020-10-16T00:00:00Z', 'end': '2020-11-16T00:00:00Z', 'bucket_size': '+1DAY', 'field': 'device_timestamp', 'values': None}]
 
+Query Timeouts
+--------------
+
+Some search queries make use of a timeout value, specified in milliseconds, which may be specified wither through
+a ``timeout`` parameter to a method, or via a ``timeout()`` setter method on a query class.  These timeouts follow a
+specific set of rules.
+
+The *absolute maximum* timeout value is 300,000 milliseconds (5 minutes).  No search may have a timeout longer
+than this.
+
+An application may specify a *shorter* maximum timeout value for all searches by including it in the credentials,
+under the key name ``default_timeout``.  This default timeout value may not be greater than the absolute maximum
+timeout.  If this value is specified, no search may have a timeout longer than this value.
+
+This means that, for any given search, the timeout will be the *smallest* of these values:
+
+* The value specified via a parameter to the search, if one was specified.
+* The value configured in the credentials, if one is so configured.
+* The absolute maximum timeout value, as defined above.
+
 Search Suggestions
 ------------------
 
