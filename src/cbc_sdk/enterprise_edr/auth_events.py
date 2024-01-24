@@ -55,7 +55,7 @@ class AuthEvent(NewBaseModel):
             >>> events = cb.select(AuthEvent).where("auth_username:SYSTEM")
             >>> print(*events)
         """
-        self._details_timeout = 0
+        self._details_timeout = 0  # FIXPOINT
         self._info = None
         if model_unique_id is not None and initial_data is None:
             auth_events_future = (
@@ -121,7 +121,7 @@ class AuthEvent(NewBaseModel):
             >>> events = cb.select(AuthEvent).where(process_pid=2000)
             >>> print(events[0].get_details())
         """
-        self._details_timeout = timeout
+        self._details_timeout = timeout  # FIXPOINT
         if not self.event_id:
             raise ApiError(
                 "Trying to get auth_event details on an invalid auth_event_id"
@@ -137,7 +137,7 @@ class AuthEvent(NewBaseModel):
         obj = AuthEvent._helper_get_details(
             self._cb,
             event_ids=[self.event_id],
-            timeout=self._details_timeout,
+            timeout=self._details_timeout,  # FIXPOINT
         )
         if obj:
             self._info = deepcopy(obj._info)
@@ -189,7 +189,7 @@ class AuthEvent(NewBaseModel):
                 time.sleep(0.5)
                 continue
             if completed < contacted:
-                if timeout != 0 and (time.time() * 1000) - submit_time > timeout:
+                if timeout != 0 and (time.time() * 1000) - submit_time > timeout:  # FIXPOINT
                     timed_out = True
                     break
             else:
@@ -305,7 +305,7 @@ class AuthEvent(NewBaseModel):
             alert_id=alert_id,
             event_ids=event_ids,
             bulk=True,
-            timeout=timeout
+            timeout=timeout  # FIXPOINT
         )
 
 
@@ -520,7 +520,7 @@ class AuthEventQuery(Query):
         super(AuthEventQuery, self).__init__(doc_class, cb)
         self._default_args["rows"] = self._batch_size
         self._query_token = None
-        self._timeout = 0
+        self._timeout = 0  # FIXPOINT
         self._timed_out = False
 
     def or_(self, **kwargs):
@@ -574,7 +574,7 @@ class AuthEventQuery(Query):
             >>> events = cb.select(AuthEvent).where(process_name="chrome.exe").timeout(5000)
             >>> print(*events)
         """
-        self._timeout = msecs
+        self._timeout = msecs  # FIXPOINT
         return self
 
     def _submit(self):
@@ -613,7 +613,7 @@ class AuthEventQuery(Query):
         if contacted == 0:
             return True
         if completed < contacted:
-            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:
+            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:  # FIXPOINT
                 self._timed_out = True
                 return False
             return True

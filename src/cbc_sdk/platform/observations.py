@@ -51,7 +51,7 @@ class Observation(NewBaseModel):
             force_init (bool): True to force object initialization.
             full_doc (bool): False to mark the object as not fully initialized.
         """
-        self._details_timeout = 0
+        self._details_timeout = 0  # FIXPOINT
         self._info = None
         if model_unique_id is not None and initial_data is None:
             observations_future = (
@@ -118,7 +118,7 @@ class Observation(NewBaseModel):
             >>> observations = api.select(Observation).where(process_pid=2000)
             >>> observations[0].get_details()
         """
-        self._details_timeout = timeout
+        self._details_timeout = timeout  # FIXPOINT
         if not self.observation_id:
             raise ApiError(
                 "Trying to get observation details on an invalid observation_id"
@@ -135,7 +135,7 @@ class Observation(NewBaseModel):
         obj = Observation._helper_get_details(
             self._cb,
             observation_ids=[self.observation_id],
-            timeout=self._details_timeout,
+            timeout=self._details_timeout,  # FIXPOINT
         )
         if obj:
             self._info = deepcopy(obj._info)
@@ -186,7 +186,7 @@ class Observation(NewBaseModel):
                 time.sleep(0.5)
                 continue
             if completed < contacted:
-                if timeout != 0 and (time.time() * 1000) - submit_time > timeout:
+                if timeout != 0 and (time.time() * 1000) - submit_time > timeout:  # FIXPOINT
                     timed_out = True
                     break
             else:
@@ -288,7 +288,7 @@ class Observation(NewBaseModel):
             alert_id=alert_id,
             observation_ids=observation_ids,
             bulk=True,
-            timeout=timeout
+            timeout=timeout  # FIXPOINT
         )
 
 
@@ -408,7 +408,7 @@ class ObservationQuery(Query):
         super(ObservationQuery, self).__init__(doc_class, cb)
         self._default_args["rows"] = self._batch_size
         self._query_token = None
-        self._timeout = 0
+        self._timeout = 0  # FIXPOINT
         self._timed_out = False
 
     def or_(self, **kwargs):
@@ -453,7 +453,7 @@ class ObservationQuery(Query):
         Example:
             >>> cb.select(Observation).where(process_name="foo.exe").timeout(5000)
         """
-        self._timeout = msecs
+        self._timeout = msecs  # FIXPOINT
         return self
 
     def _submit(self):
@@ -492,7 +492,7 @@ class ObservationQuery(Query):
         if contacted == 0:
             return True
         if completed < contacted:
-            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:
+            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:  # FIXPOINT
                 self._timed_out = True
                 return False
             return True

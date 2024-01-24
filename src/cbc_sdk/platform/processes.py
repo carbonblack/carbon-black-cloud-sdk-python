@@ -240,7 +240,7 @@ class Process(UnrefreshableModel):
 
     def _retrieve_cb_info(self):
         """Retrieve the detailed information about this object."""
-        self._details_timeout = 0
+        self._details_timeout = 0   # FIXPOINT
         return self._get_detailed_results()._info
 
     @property
@@ -381,7 +381,7 @@ class Process(UnrefreshableModel):
                 retrieve the results.
             dict: If ``async_mode`` is ``False``.
         """
-        self._details_timeout = timeout
+        self._details_timeout = timeout  # FIXPOINT
         if not self.process_guid:
             raise ApiError("Trying to get process details on an invalid process_guid")
         if async_mode:
@@ -411,7 +411,7 @@ class Process(UnrefreshableModel):
                 time.sleep(.5)
                 continue
             if searchers_completed < searchers_contacted:
-                if self._details_timeout != 0 and (time.time() * 1000) - submit_time > self._details_timeout:
+                if self._details_timeout != 0 and (time.time() * 1000) - submit_time > self._details_timeout:  # FIXPOINT
                     timed_out = True
                     break
             else:
@@ -617,7 +617,7 @@ class AsyncProcessQuery(Query):
         """
         super(AsyncProcessQuery, self).__init__(doc_class, cb)
         self._query_token = None
-        self._timeout = 0
+        self._timeout = 0  # FIXPOINT
         self._timed_out = False
 
     def timeout(self, msecs):
@@ -699,7 +699,7 @@ class AsyncProcessQuery(Query):
         if searchers_contacted == 0:
             return True
         if searchers_completed < searchers_contacted:
-            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:
+            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:  # FIXPOINT
                 self._timed_out = True
                 return False
             return True
@@ -846,7 +846,7 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         self._query_builder = QueryBuilder()
         self._query_token = None
         self._full_init = False
-        self._timeout = 0
+        self._timeout = 0  # FIXPOINT
         self._timed_out = False
         self._time_range = {}
 
@@ -962,7 +962,7 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         if searchers_contacted == 0:
             return True
         if searchers_completed < searchers_contacted:
-            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:
+            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:  # FIXPOINT
                 self._timed_out = True
                 return False
             return True
