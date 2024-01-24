@@ -127,7 +127,7 @@ class Process(UnrefreshableModel):
                             if attr in self.SHOW_ATTR[top_level]['fields']:
                                 try:
                                     val = str(self._info[top_level][attr])
-                                except UnicodeDecodeError:
+                                except UnicodeDecodeError:  # pragma: no cover
                                     val = repr(self._info[top_level][attr])
                                 lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", attr, val))
                     else:
@@ -136,7 +136,7 @@ class Process(UnrefreshableModel):
                                 if attr in self.SHOW_ATTR[top_level]['fields']:
                                     try:
                                         val = str(item[attr])
-                                    except UnicodeDecodeError:
+                                    except UnicodeDecodeError:  # pragma: no cover
                                         val = repr(item[attr])
                                     lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", attr, val))
                             lines.append('')
@@ -193,7 +193,7 @@ class Process(UnrefreshableModel):
                 if attr in self.SHOW_ATTR['top']:
                     try:
                         val = str(self._info[attr])
-                    except UnicodeDecodeError:
+                    except UnicodeDecodeError:  # pragma: no cover
                         val = repr(self._info[attr])
                     lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", attr, val))
 
@@ -203,7 +203,7 @@ class Process(UnrefreshableModel):
                     if attr in self.SHOW_ATTR['children']:
                         try:
                             val = str(child[attr])
-                        except UnicodeDecodeError:
+                        except UnicodeDecodeError:  # pragma: no cover
                             val = repr(child[attr])
                         lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", attr, val))
                 lines.append('')
@@ -238,7 +238,7 @@ class Process(UnrefreshableModel):
         super(Process, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
                                       force_init=force_init, full_doc=full_doc)
 
-    def _retrieve_cb_info(self):
+    def _retrieve_cb_info(self):  # pragma: no cover
         """Retrieve the detailed information about this object."""
         self._details_timeout = self._cb.credentials.default_timeout
         return self._get_detailed_results()._info

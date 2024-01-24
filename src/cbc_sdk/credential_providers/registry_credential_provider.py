@@ -28,7 +28,7 @@ try:
     HKEY_LOCAL_MACHINE = winreg.HKEY_LOCAL_MACHINE
     OpenKey = winreg.OpenKey
     QueryValueEx = winreg.QueryValueEx
-except ModuleNotFoundError:
+except ModuleNotFoundError:  # pragma: no cover
     HKEY_CURRENT_USER = object()
     HKEY_LOCAL_MACHINE = object()
 
@@ -79,7 +79,7 @@ class RegistryCredentialProvider(CredentialProvider):
         """
         return HKEY_CURRENT_USER if self._userkey else HKEY_LOCAL_MACHINE
 
-    def _open_key(self, basekey, path):
+    def _open_key(self, basekey, path):  # pragma: no cover
         """
         Open a key for use.  This is a "test point" intended to be monkeypatched.
 
@@ -98,7 +98,7 @@ class RegistryCredentialProvider(CredentialProvider):
         except OSError as e:
             raise CredentialError(f"Unable to open registry subkey: {path}") from e
 
-    def _read_value(self, key, value_name):
+    def _read_value(self, key, value_name):  # pragma: no cover
         """
         Read a value from the registry key specified.  This is a "test point" intended to be monkeypatched.
 

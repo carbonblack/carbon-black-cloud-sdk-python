@@ -164,10 +164,10 @@ def test_read_int_exceptions(monkeypatch, mox):
     sut._read_value(stub_key, "Bravo").AndRaise(CredentialError("Unable to read"))
     mox.ReplayAll()
     with pytest.raises(CredentialError) as e1:
-        sut._read_bool(stub_key, "Alpha")
+        sut._read_int(stub_key, "Alpha")
     assert "not of integer type" in str(e1.value)
     with pytest.raises(CredentialError) as e2:
-        sut._read_bool(stub_key, "Bravo")
+        sut._read_int(stub_key, "Bravo")
     assert "Unable to read" in str(e2.value)
     mox.VerifyAll()
 

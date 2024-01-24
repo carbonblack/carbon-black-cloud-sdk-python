@@ -273,7 +273,7 @@ class Credentials(object):
 class CredentialProvider:
     """The interface implemented by a credential provider."""
 
-    def get_credentials(self, section=None):
+    def get_credentials(self, section=None):  # pragma: no cover
         """
         Return a Credentials object containing the configured credentials.
 
