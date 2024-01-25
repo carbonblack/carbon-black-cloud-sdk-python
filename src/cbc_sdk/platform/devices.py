@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2023. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2024. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -32,6 +32,7 @@ from cbc_sdk.platform import PlatformModel
 from cbc_sdk.platform.vulnerability_assessment import Vulnerability, VulnerabilityQuery
 from cbc_sdk.base import (UnrefreshableModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
                           CriteriaBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
+from cbc_sdk.platform.previewer import DevicePolicyChangePreview
 from cbc_sdk.workload import NSXRemediationJob
 
 import time
@@ -51,6 +52,9 @@ class Device(PlatformModel):
     urlobject_single = "/appservices/v6/orgs/{0}/devices/{1}"
     primary_key = "id"
     swagger_meta_file = "platform/models/device.yaml"
+
+    """The valid values for the 'filter' parameter to get_asset_groups_for_devices()."""
+    VALID_ASSETGROUP_FILTERS = ("ALL", "DYNAMIC", "MANUAL")
 
     def __init__(self, cb, model_unique_id, initial_data=None):
         """
@@ -314,6 +318,217 @@ class Device(PlatformModel):
                 raise ApiError(f"NSX tag already set to {current}, cannot set another tag without clearing it")
             return None  # clearing tag is a no-op in this case
         return NSXRemediationJob.start_request(self._cb, self.id, tag, set_tag)
+
+    def get_asset_group_ids(self, membership="ALL"):
+        """
+        Finds the list of asset group IDs that this device is a member of.
+
+        Args:
+            membership (str): Can restrict the types of group membership returned by this method.  Values are "ALL"
+                              to return all groups, "DYNAMIC" to return only groups that each member belongs to via the
+                              asset group query, or "MANUAL" to return only groups that the members were manually
+                              added to. Default is "ALL".
+
+        Returns:
+            list[str]: A list of asset group IDs this device belongs to.
+        """
+        if membership not in Device.VALID_ASSETGROUP_FILTERS:
+            raise ApiError(f"Invalid filter value: {membership}")
+        if membership == "ALL":
+            return [g['id'] for g in self._info['asset_group']]
+        elif membership == "MANUAL":
+            return [g['id'] for g in self._info['asset_group'] if g['membership_type'] == 'MANUAL']
+        elif membership == "DYNAMIC":
+            return [g['id'] for g in self._info['asset_group'] if g['membership_type'] == 'DYNAMIC']
+
+    def get_asset_groups(self, membership="ALL"):
+        """
+        Finds the list of asset groups that this device is a member of.
+
+        Required Permissions:
+            group-management(READ)
+
+        Args:
+            membership (str): Can restrict the types of group membership returned by this method.  Values are "ALL"
+                              to return all groups, "DYNAMIC" to return only groups that each member belongs to via the
+                              asset group query, or "MANUAL" to return only groups that the members were manually
+                              added to. Default is "ALL".
+
+        Returns:
+            list[AssetGroup]: A list of asset groups this device belongs to.
+        """
+        return [self._cb.select("AssetGroup", v) for v in self.get_asset_group_ids(membership)]
+
+    def add_to_groups_by_id(self, group_ids):
+        """
+        Given a list of asset group IDs, adds this device to each one as a member.
+
+        Args:
+            group_ids (list[str]): The list of group IDs to add this device to.
+        """
+        actual_group_ids = set(group_ids).difference(self.get_asset_group_ids("MANUAL"))
+        for group_id in actual_group_ids:
+            url = f"/asset_groups/v1/orgs/{self._cb.credentials.org_key}/groups/{group_id}/members"
+            self._cb.post_object(url, {"action": "CREATE", "external_member_ids": [str(self._model_unique_id)]})
+        if len(actual_group_ids) > 0:
+            self._refresh()
+
+    def add_to_groups(self, groups):
+        """
+        Given a list of asset groups, adds this device to each one as a member.
+
+        Args:
+            groups (list[AssetGroup]): The list of groups to add this device to.
+        """
+        existing_ids = self.get_asset_group_ids("MANUAL")
+        actual_groups = [g for g in groups if g.id not in existing_ids]
+        for group in actual_groups:
+            group.add_members(self)
+        if len(actual_groups) > 0:
+            self._refresh()
+
+    def remove_from_groups_by_id(self, group_ids):
+        """
+        Given a list of asset group IDs, removes this device from each one as a member.
+
+        Args:
+            group_ids (list[str]): The list of group IDs to remove this device from.
+        """
+        actual_group_ids = set(group_ids).intersection(self.get_asset_group_ids("MANUAL"))
+        for group_id in actual_group_ids:
+            url = f"/asset_groups/v1/orgs/{self._cb.credentials.org_key}/groups/{group_id}/members"
+            self._cb.post_object(url, {"action": "REMOVE", "external_member_ids": [str(self._model_unique_id)]})
+        if len(actual_group_ids) > 0:
+            self._refresh()
+
+    def remove_from_groups(self, groups):
+        """
+        Given a list of asset groups, removes this device from each one as a member.
+
+        Args:
+            groups (list[AssetGroup]): The list of groups to remove this device from.
+        """
+        existing_ids = self.get_asset_group_ids("MANUAL")
+        actual_groups = [g for g in groups if g.id in existing_ids]
+        for group in actual_groups:
+            group.remove_members(self)
+        if len(actual_groups) > 0:
+            self._refresh()
+
+    def preview_remove_policy_override(self):
+        """
+        Previews changes to this device's effective policy which result from removing its policy override.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Returns:
+            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
+                that change which policy is effective as the result of this operation.
+        """
+        return Device.preview_remove_policy_override_for_devices(self._cb, [self])
+
+    @classmethod
+    def _collect_devices(cls, devices):
+        """
+        Collects a list of devices as IDs.
+
+        Args:
+            devices (list): A list of items, each of which may be either integer device IDs or ``Device`` objects.
+
+        Returns:
+            list[int]: A list of integer device IDs.
+        """
+        device_ids = []
+        for d in devices:
+            if isinstance(d, Device):
+                device_ids.append(d.id)
+            elif isinstance(d, int):
+                device_ids.append(d)
+        return device_ids
+
+    @classmethod
+    def get_asset_groups_for_devices(cls, cb, devices, membership="ALL"):
+        """
+        Given a list of devices, returns lists of asset groups that they are members of.
+
+        Required Permissions:
+            group-management(READ)
+
+        Args:
+            cls (class): Class associated with the ``Device`` object.
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            devices (int, Device, or list): The devices to find the group membership of. This may be an integer
+                                            device ID, a ``Device`` object, or a list of either integers or
+                                            ``Device`` objects.
+            membership (str): Can restrict the types of group membership returned by this method.  Values are "ALL"
+                              to return all groups, "DYNAMIC" to return only groups that each member belongs to via the
+                              asset group query, or "MANUAL" to return only groups that the members were manually
+                              added to. Default is "ALL".
+
+        Returns:
+            dict: A dict containing member IDs as keys, and lists of group IDs as values.
+        """
+        if membership not in Device.VALID_ASSETGROUP_FILTERS:
+            raise ApiError(f"Invalid filter value: {membership}")
+        if isinstance(devices, int):
+            device_ids = [str(devices)]
+        elif isinstance(devices, Device):
+            device_ids = [str(devices.id)]
+        else:
+            device_ids = [str(v) for v in Device._collect_devices(devices)]
+        if len(device_ids) > 0:
+            postdata = {"external_member_ids": device_ids}
+            if membership != "ALL":
+                postdata["membership_type"] = [membership]
+            rc = cb.post_object(f"/asset_groups/v1/orgs/{cb.credentials.org_key}/members", postdata)
+            return {int(k): v for k, v in rc.json().items()}
+        else:
+            return {}
+
+    @classmethod
+    def preview_add_policy_override_for_devices(cls, cb, policy_id, devices):
+        """
+        Previews changes to the effective policies for devices which result from setting a policy override on them.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            policy_id (int): The ID of the policy to be added to the devices as an override.
+            devices (list): The devices which will have their policies overridden. Each entry in this list is either
+                an integer device ID or a ``Device`` object.
+
+        Returns:
+            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
+                that change which policy is effective as the result of this operation.
+        """
+        ret = cb.post_object(f"/policy-assignment/v1/orgs/{cb.credentials.org_key}/asset-groups/preview",
+                             {"action": "ADD_POLICY_OVERRIDE", "asset_ids": Device._collect_devices(devices),
+                              "policy_id": policy_id})
+        return [DevicePolicyChangePreview(cb, p) for p in ret.json()["preview"]]
+
+    @classmethod
+    def preview_remove_policy_override_for_devices(cls, cb, devices):
+        """
+        Previews changes to the effective policies for devices which result from removing their policy override.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            devices (list): The devices which will have their policy overrides removed. Each entry in this list
+                is either an integer device ID or a ``Device`` object.
+
+        Returns:
+            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
+                that change which policy is effective as the result of this operation.
+        """
+        ret = cb.post_object(f"/policy-assignment/v1/orgs/{cb.credentials.org_key}/asset-groups/preview",
+                             {"action": "REMOVE_POLICY_OVERRIDE", "asset_ids": Device._collect_devices(devices)})
+        return [DevicePolicyChangePreview(cb, p) for p in ret.json()["preview"]]
 
 
 class DeviceFacet(UnrefreshableModel):

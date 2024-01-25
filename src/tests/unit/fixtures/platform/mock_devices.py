@@ -6,6 +6,18 @@ GET_DEVICE_RESP = {
     "ad_group_id": 0,
     "appliance_name": None,
     "appliance_uuid": None,
+    "asset_group": [
+        {
+            "id": "db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16",
+            "name": "Existing Group",
+            "membership_type": "MANUAL"
+        },
+        {
+            "id": "509f437f-6b9a-4b8e-996e-9183b35f9069",
+            "name": "Another Group",
+            "membership_type": "DYNAMIC"
+        }
+    ],
     "av_ave_version": "8.3.62.44",
     "av_engine": "4.13.0.207-ave.8.3.62.44:avpack.8.5.0.66:vdf.8.18.9.10 (20200826)",
     "av_last_scan_time": None,
@@ -92,6 +104,18 @@ GET_DEVICE_RESP_NO_VCENTER = {
     "ad_group_id": 0,
     "appliance_name": None,
     "appliance_uuid": None,
+    "asset_group": [
+        {
+            "id": "db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16",
+            "name": "Existing Group",
+            "membership_type": "MANUAL"
+        },
+        {
+            "id": "509f437f-6b9a-4b8e-996e-9183b35f9069",
+            "name": "Another Group",
+            "membership_type": "DYNAMIC"
+        }
+    ],
     "av_ave_version": "8.3.62.44",
     "av_engine": "4.13.0.207-ave.8.3.62.44:avpack.8.5.0.66:vdf.8.18.9.10 (20200826)",
     "av_last_scan_time": None,
@@ -180,6 +204,18 @@ POST_DEVICE_SEARCH_RESP = {
             "ad_group_id": 0,
             "appliance_name": None,
             "appliance_uuid": None,
+            "asset_group": [
+                {
+                    "id": "db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16",
+                    "name": "Existing Group",
+                    "membership_type": "MANUAL"
+                },
+                {
+                    "id": "509f437f-6b9a-4b8e-996e-9183b35f9069",
+                    "name": "Another Group",
+                    "membership_type": "DYNAMIC"
+                }
+            ],
             "av_ave_version": "8.3.62.44",
             "av_engine": "4.13.0.207-ave.8.3.62.44:avpack.8.5.0.66:vdf.8.18.9.10 (20200826)",
             "av_last_scan_time": None,
@@ -407,6 +443,153 @@ FACET_INIT_7 = {
             "total": 2,
             "id": "65534",
             "name": "65534"
+        }
+    ]
+}
+
+ASSET_GROUPS_RESPONSE_1 = {
+    "98765": [
+        "db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16",
+        "509f437f-6b9a-4b8e-996e-9183b35f9069"
+    ],
+    "3031": [
+        "509f437f-6b9a-4b8e-996e-9183b35f9069",
+        "91366048-04dd-4034-baf0-b768128fe433",
+        "4f0a24f8-002b-4fe7-aaa6-6844bae2639e"
+    ],
+    "1777": [
+        "509f437f-6b9a-4b8e-996e-9183b35f9069",
+        "297b9b31-3737-4831-9dd1-cf47770df3e5"
+    ]
+}
+
+ASSET_GROUPS_OUTPUT_1 = {
+    98765: [
+        "db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16",
+        "509f437f-6b9a-4b8e-996e-9183b35f9069"
+    ],
+    3031: [
+        "509f437f-6b9a-4b8e-996e-9183b35f9069",
+        "91366048-04dd-4034-baf0-b768128fe433",
+        "4f0a24f8-002b-4fe7-aaa6-6844bae2639e"
+    ],
+    1777: [
+        "509f437f-6b9a-4b8e-996e-9183b35f9069",
+        "297b9b31-3737-4831-9dd1-cf47770df3e5"
+    ]
+}
+
+ASSET_GROUPS_RESPONSE_2 = {
+    "98765": [
+        "509f437f-6b9a-4b8e-996e-9183b35f9069"
+    ],
+    "3031": [
+        "509f437f-6b9a-4b8e-996e-9183b35f9069",
+    ],
+    "1777": [
+        "509f437f-6b9a-4b8e-996e-9183b35f9069",
+    ]
+}
+
+ASSET_GROUPS_OUTPUT_2 = {
+    98765: [
+        "509f437f-6b9a-4b8e-996e-9183b35f9069"
+    ],
+    3031: [
+        "509f437f-6b9a-4b8e-996e-9183b35f9069",
+    ],
+    1777: [
+        "509f437f-6b9a-4b8e-996e-9183b35f9069",
+    ]
+}
+
+ASSET_GROUPS_RESPONSE_3 = {
+    "98765": [
+        "db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16",
+    ],
+    "3031": [
+        "91366048-04dd-4034-baf0-b768128fe433",
+        "4f0a24f8-002b-4fe7-aaa6-6844bae2639e"
+    ],
+    "1777": [
+        "297b9b31-3737-4831-9dd1-cf47770df3e5"
+    ]
+}
+
+ASSET_GROUPS_OUTPUT_3 = {
+    98765: [
+        "db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16",
+    ],
+    3031: [
+        "91366048-04dd-4034-baf0-b768128fe433",
+        "4f0a24f8-002b-4fe7-aaa6-6844bae2639e"
+    ],
+    1777: [
+        "297b9b31-3737-4831-9dd1-cf47770df3e5"
+    ]
+}
+
+ASSET_GROUPS_RESPONSE_SINGLE = {
+    "98765": [
+        "db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16",
+        "509f437f-6b9a-4b8e-996e-9183b35f9069"
+    ]
+}
+
+ASSET_GROUPS_OUTPUT_SINGLE = {
+    98765: [
+        "db416fa2-d5f2-4fb5-8a5e-cd89f6ecda16",
+        "509f437f-6b9a-4b8e-996e-9183b35f9069"
+    ]
+}
+
+ADD_POLICY_OVERRIDE_REQUEST = {
+    "action": "ADD_POLICY_OVERRIDE",
+    "asset_ids": [98765],
+    "policy_id": 1011
+}
+
+ADD_POLICY_OVERRIDE_RESPONSE = {
+    "preview": [
+        {
+            "current_policy": {
+                "id": 11200,
+                "position": 2
+            },
+            "new_policy": {
+                "id": 1011,
+                "position": 1
+            },
+            "asset_count": 1,
+            "asset_query": "(device_id: 98765)",
+            "assets_search_definition": {
+                "query": "(device_id: 98765)"
+            }
+        }
+    ]
+}
+
+REMOVE_POLICY_OVERRIDE_REQUEST = {
+    "action": "REMOVE_POLICY_OVERRIDE",
+    "asset_ids": [98765]
+}
+
+REMOVE_POLICY_OVERRIDE_RESPONSE = {
+    "preview": [
+        {
+            "current_policy": {
+                "id": 11200,
+                "position": 2
+            },
+            "new_policy": {
+                "id": 14760,
+                "position": 5
+            },
+            "asset_count": 1,
+            "asset_query": "(device_id: 98765)",
+            "assets_search_definition": {
+                "query": "(device_id: 98765)"
+            }
         }
     ]
 }

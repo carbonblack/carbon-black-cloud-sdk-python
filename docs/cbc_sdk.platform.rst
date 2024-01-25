@@ -9,10 +9,21 @@ Base Module
    :inherited-members:
    :show-inheritance:
 
+Submodules
+----------
+
 Alerts Module
 -------------------------------
 
 .. automodule:: cbc_sdk.platform.alerts
+   :members:
+   :inherited-members:
+   :show-inheritance:
+
+Asset Groups Module
+-------------------------------------
+
+.. automodule:: cbc_sdk.platform.asset_groups
    :members:
    :inherited-members:
    :show-inheritance:
@@ -93,6 +104,14 @@ RuleConfigs Module
 --------------------------------------------
 
 .. automodule:: cbc_sdk.platform.policy_ruleconfigs
+   :members:
+   :inherited-members:
+   :show-inheritance:
+
+Previewer Module
+--------------------------------------------
+
+.. automodule:: cbc_sdk.platform.previewer
    :members:
    :inherited-members:
    :show-inheritance:
