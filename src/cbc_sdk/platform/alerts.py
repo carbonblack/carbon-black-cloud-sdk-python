@@ -802,7 +802,7 @@ class WatchlistAlert(Alert):
             >>> watchlist_objects = watchlist_alert.get_watchlist_objects()
 
         Returns:
-            Watchlist (list): A list of watchlist objects.
+            list[Watchlist]: A list of Watchlist objects.
         """
         watchlist_objects = []
         for watchlist in self.get("watchlists"):
