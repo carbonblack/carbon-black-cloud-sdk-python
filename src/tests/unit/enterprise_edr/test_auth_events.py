@@ -411,9 +411,15 @@ def test_auth_event_timeout(cbcsdk_mock):
     """Testing AuthEventQuery.timeout()."""
     api = cbcsdk_mock.api
     query = api.select(AuthEvent).where("event_id:some_id")
-    assert query._timeout == 0
+    assert query._timeout == 300000
     query.timeout(msecs=500)
     assert query._timeout == 500
+    query.timeout(msecs=999999)
+    assert query._timeout == 300000
+    query.timeout(msecs=700)
+    assert query._timeout == 700
+    query.timeout(msecs=0)
+    assert query._timeout == 300000
 
 
 def test_auth_event_timeout_error(cbcsdk_mock):
@@ -739,9 +745,15 @@ def test_auth_event_facet_timeout(cbcsdk_mock):
         .where("process_name:some_name")
         .add_facet_field("process_name")
     )
-    assert query._timeout == 0
+    assert query._timeout == 300000
     query.timeout(msecs=500)
     assert query._timeout == 500
+    query.timeout(msecs=999999)
+    assert query._timeout == 300000
+    query.timeout(msecs=700)
+    assert query._timeout == 700
+    query.timeout(msecs=0)
+    assert query._timeout == 300000
 
 
 def test_auth_event_facet_timeout_error(cbcsdk_mock):

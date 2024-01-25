@@ -418,7 +418,7 @@ class BaseAPI(object):
                 Uses the profile named 'default' when not specified.
             proxy_session (requests.session.Session): Proxy session to be used for cookie persistence, connection
                 pooling, and configuration.  Default is ``None`` (use the standard session).
-            timeout (float): The timeout to use for for API requests.  Default is ``None`` (no timeout).
+            timeout (float): The timeout to use for API request connections.  Default is ``None`` (no timeout).
             token (str): The API token to use when accessing the Carbon Black Cloud.
             url (str): The URL of the Carbon Black Cloud provider to use.
         """

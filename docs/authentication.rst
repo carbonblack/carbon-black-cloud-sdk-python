@@ -166,6 +166,8 @@ CBAPI, so older files can continue to be used.
 +-------------------------+---------+----------+
 |``integration``          |         | No       |
 +-------------------------+---------+----------+
+|``default_timeout``      | 300000  | No       |
++-------------------------+---------+----------+
 
 **X-AUTH-TOKEN** specific fields
 
@@ -194,13 +196,10 @@ CBAPI, so older files can continue to be used.
 +-------------------------+---------+----------+
 
 
-
-Individual profiles or sections are delimited in the file by placing their name within square brackets: ``[profile_name]``.  Within
-each section, individual credential values are supplied in a ``keyword=value`` format.
-
+Individual profiles or sections are delimited in the file by placing their name within square brackets:
+``[profile_name]``.  Within each section, individual credential values are supplied in a ``keyword=value`` format.
 
 Unrecognized keywords are ignored.
-
 
 By default, the CBC SDK looks for credentials files in the following locations:
 
@@ -267,6 +266,8 @@ be specified:
 +-------------------------+----------------+---------+----------+
 |``integration``          | ``REG_SZ``     |         | No       |
 +-------------------------+----------------+---------+----------+
+|``default_timeout``      | ``REG_DWORD``  | 300000  | No       |
++-------------------------+----------------+---------+----------+
 
 **X-AUTH-TOKEN** specific fields
 
@@ -323,22 +324,22 @@ Note the use of doubled backslashes to properly escape them under Python.
 With an External Credential Provider
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Credentials may also be supplied by writing a class that conforms to the ``CredentialProvider`` interface protocol.
-When creating :py:mod:`CBCloudAPI <cbc_sdk.rest_api.CBCloudAPI>`, pass a reference to a ``CredentialProvider`` object in the ``credential_provider`` keyword
-parameter. Then pass the name of the profile you want to retrieve from the provider object using the keyword parameter
-``profile``.
+When creating :py:mod:`CBCloudAPI <cbc_sdk.rest_api.CBCloudAPI>`, pass a reference to a ``CredentialProvider`` object
+in the ``credential_provider`` keyword parameter. Then pass the name of the profile you want to retrieve from the
+provider object using the keyword parameter ``profile``.
 
 **Example:**
 
     >>> provider = MyCredentialProvider()
     >>> cbc_api = CBCloudAPI(credential_provider=provider, profile='default')
 
-Details of writing a credential provider may be found in the :doc:`Developing a Custom Credential Provider <developing-credential-providers>`
-document.
+Details of writing a credential provider may be found in the
+:doc:`Developing a Custom Credential Provider <developing-credential-providers>` document.
 
 At Runtime
 ^^^^^^^^^^
-The credentials may be passed into the :py:mod:`CBCloudAPI <cbc_sdk.rest_api.CBCloudAPI>` object when it is created via the keyword parameters ``url``,
-``token``, ``org_key``, and (optionally) ``ssl_verify`` and ``integration_name``.
+The credentials may be passed into the :py:mod:`CBCloudAPI <cbc_sdk.rest_api.CBCloudAPI>` object when it is created
+via the keyword parameters ``url``, ``token``, ``org_key``, and (optionally) ``ssl_verify`` and ``integration_name``.
 
 **Example:**
 
@@ -348,7 +349,6 @@ The credentials may be passed into the :py:mod:`CBCloudAPI <cbc_sdk.rest_api.CBC
 The ``integration_name`` may be specified even if using another credential provider. If specified as a
 parameter, this overrides any integration name specified by means of the credential provider.
 
-
 With Environmental Variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The credentials may be supplied to CBC SDK via the environment variables ``CBC_URL``, ``CBC_TOKEN``, ``CBC_ORG_KEY``,
@@ -356,9 +356,8 @@ and ``CBC_SSL_VERIFY``. For backwards compatibility with CBAPI, the environment 
 ``CBAPI_TOKEN``, ``CBAPI_ORG_KEY``, and ``CBAPI_SSL_VERIFY`` may also be used; if both are specified, the newer
 ``CBC_xxx`` environment variables override their corresponding ``CBAPI_xxx`` equivalents. To use the environment
 variables, they must be set before the application is run (at least ``CBC_URL`` or ``CBAPI_URL``, and ``CBC_TOKEN`` or
-``CBAPI_TOKEN``), and the ``credential_file`` keyword parameter to :py:mod:`CBCloudAPI <cbc_sdk.rest_api.CBCloudAPI>` must be either ``None`` or left
-unspecified. (The ``profile`` keyword parameter will be ignored.)
-
+``CBAPI_TOKEN``), and the ``credential_file`` keyword parameter to :py:mod:`CBCloudAPI <cbc_sdk.rest_api.CBCloudAPI>`
+must be either ``None`` or left unspecified. (The ``profile`` keyword parameter will be ignored.)
 
 **N.B.:** Passing credentials via the environment can be insecure, and, if this method is used, a warning message to
 that effect will be generated in the log.
@@ -374,12 +373,14 @@ we are going to use JSON to store our other entries, the JSON is going to be sto
     CLI tool(``<SDK_ROOT>/bin/set-macos-keychain.py``) or by manually creating it.
     The tool can:
 
-        * Automatically import all of your profiles set in the ``credentials.cbc`` file. Or by setting a custom path to a file.
+        * Automatically import all of your profiles set in the ``credentials.cbc`` file. Or by setting a custom path
+          to a file.
         * Manually input the values of your credentials via prompt or by using system arguments.
 
     Find out how to use the script in its docstring or by using ``--help``.
 
-You can remove the keys that you won't be using or leave them empty. Reference our :ref:`Explanation of API Credential Components`.
+You can remove the keys that you won't be using or leave them empty. Reference our
+:ref:`Explanation of API Credential Components`.
 
 .. code-block:: javascript
 
@@ -393,7 +394,8 @@ You can remove the keys that you won't be using or leave them empty. Reference o
         "ssl_force_tls_1_2": true,
         "proxy": "<NAME_OF_THE_PROXY_HOST>",
         "ignore_system_proxy": true,
-        "integration": "<INTEGRATION_NAME>"
+        "integration": "<INTEGRATION_NAME>",
+        "default_timeout": 300000
     }
 
 .. note::
@@ -424,16 +426,19 @@ With Amazon Secrets Manger
 Configure the AWS credentials
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-A full and comprehensive guide configuring the files and credentials regarding AWS can be found in their `official documentation. <https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html>`_
+A full and comprehensive guide configuring the files and credentials regarding AWS can be found in their
+`official documentation. <https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html>`_
 
 Adding a secret to the AWS Secrets Manager
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-There is an official `guide for creating a secret <https://docs.aws.amazon.com/secretsmanager/latest/userguide/manage_create-basic-secret.html>`_ by AWS.
+There is an official
+`guide for creating a secret <https://docs.aws.amazon.com/secretsmanager/latest/userguide/manage_create-basic-secret.html>`_
+by AWS.
 
 .. note::
-    Add your secrets as a key/value pairs. In the :ref:`Explanation of API Credential Components` you can find full information on required fields and their purpose.
-
+    Add your secrets as a key/value pairs. In the :ref:`Explanation of API Credential Components` you can find full
+    information on required fields and their purpose.
 
 Using our credential provider for the SDK
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -450,7 +455,9 @@ the credential provider.
 AWS Single Sign-On Provider (SSO)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-If you wish to set the SSO provider follow this `tutorial <https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html#aws-single-sign-on-provider-sso>`_ for setting the config.
+If you wish to set the SSO provider follow this
+`tutorial <https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html#aws-single-sign-on-provider-sso>`_
+for setting the config.
 
 Then you can use the ``profile_name`` attribute in the ``AWSCredentialProvider`` like so:
 
@@ -504,6 +511,10 @@ or :ref:`with Windows Registry <With Windows Registry>`, the credentials include
 |                         | followed by the integration's version number.  Passed|         |          |
 |                         | as part of the ``User-Agent:`` HTTP header on all    |         |          |
 |                         | requests made by the SDK.                            |         |          |
++-------------------------+------------------------------------------------------+---------+----------+
+|``default_timeout``      | The default timeout for search queries, specified in |300000   | No       |
+|                         | milliseconds. This value may never be greater than   |         |          |
+|                         | the default of 300000 milliseconds.                  |         |          |
 +-------------------------+------------------------------------------------------+---------+----------+
 
 **X-AUTH-TOKEN** specific fields

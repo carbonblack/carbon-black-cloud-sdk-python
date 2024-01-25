@@ -104,7 +104,7 @@ class EnrichedEvent(UnrefreshableModel):
             force_init (bool): True to force object initialization.
             full_doc (bool): True to mark the object as fully initialized.
         """
-        self._details_timeout = 0
+        self._details_timeout = cb.credentials.default_timeout
         self._info = None
         if model_unique_id is not None and initial_data is None:
             enriched_event_future = cb.select(EnrichedEvent).where(event_id=model_unique_id).execute_async()
@@ -130,14 +130,18 @@ class EnrichedEvent(UnrefreshableModel):
         """Requests detailed results.
 
         Args:
-            timeout (int): Event details request timeout in milliseconds.
+            timeout (int): Event details request timeout in milliseconds.  This value can never be greater than
+                the configured default timeout.  If this value is 0, the configured default timeout is used.
             async_mode (bool): True to request details in an asynchronous manner.
 
         Note:
             - When using asynchronous mode, this method returns a python future.
               You can call result() on the future object to wait for completion and get the results.
         """
-        self._details_timeout = timeout
+        if timeout <= 0:
+            self._details_timeout = self._cb.credentials.default_timeout
+        else:
+            self._details_timeout = min(timeout, self._cb.credentials.default_timeout)
         if not self.event_id:
             raise ApiError("Trying to get event details on an invalid event_id")
         if async_mode:
@@ -147,6 +151,7 @@ class EnrichedEvent(UnrefreshableModel):
 
     def _get_detailed_results(self):
         """Actual search details implementation"""
+        assert self._details_timeout > 0
         args = {"event_ids": [self.event_id]}
         url = "/api/investigate/v2/orgs/{}/enriched_events/detail_jobs".format(self._cb.credentials.org_key)
         query_start = self._cb.post_object(url, body=args)
@@ -167,7 +172,7 @@ class EnrichedEvent(UnrefreshableModel):
                 time.sleep(.5)
                 continue
             if searchers_completed < searchers_contacted:
-                if self._details_timeout != 0 and (time.time() * 1000) - submit_time > self._details_timeout:
+                if (time.time() * 1000) - submit_time > self._details_timeout:
                     timed_out = True
                     break
             else:
@@ -337,7 +342,7 @@ class EnrichedEventQuery(BaseEventQuery):
         super(EnrichedEventQuery, self).__init__(doc_class, cb)
         self._default_args["rows"] = self._batch_size
         self._query_token = None
-        self._timeout = 0
+        self._timeout = cb.credentials.default_timeout
         self._timed_out = False
         self._aggregation = False
         self._aggregation_field = None
@@ -383,16 +388,19 @@ class EnrichedEventQuery(BaseEventQuery):
         """Sets the timeout on a event query.
 
         Arguments:
-            msecs (int): Timeout duration, in milliseconds.
+            msecs (int): Timeout duration, in milliseconds.  This value can cever be greater than the configured
+                default timeout.  If this value is 0, the configured default timeout is used.
 
         Returns:
-            Query (EnrichedEventQuery): The Query object with new milliseconds
-                parameter.
+            Query (EnrichedEventQuery): The Query object with new milliseconds parameter.
 
         Example:
             >>> cb.select(EnrichedEvent).where(process_name="foo.exe").timeout(5000)
         """
-        self._timeout = msecs
+        if msecs <= 0:
+            self._timeout = self._cb.credentials.default_timeout
+        else:
+            self._timeout = min(msecs, self._cb.credentials.default_timeout)
         return self
 
     def _submit(self):
@@ -412,6 +420,7 @@ class EnrichedEventQuery(BaseEventQuery):
         self._submit_time = time.time() * 1000
 
     def _still_querying(self):
+        assert self._timeout > 0
         if not self._query_token:
             self._submit()
 
@@ -429,7 +438,7 @@ class EnrichedEventQuery(BaseEventQuery):
         if searchers_contacted == 0:
             return True
         if searchers_completed < searchers_contacted:
-            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:
+            if (time.time() * 1000) - self._submit_time > self._timeout:
                 self._timed_out = True
                 return False
             return True

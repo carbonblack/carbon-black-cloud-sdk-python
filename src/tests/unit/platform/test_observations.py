@@ -444,9 +444,15 @@ def test_observations_timeout(cbcsdk_mock):
     )
     api = cbcsdk_mock.api
     query = api.select(Observation).where("observation_id:some_id")
-    assert query._timeout == 0
+    assert query._timeout == 300000
     query.timeout(msecs=500)
     assert query._timeout == 500
+    query.timeout(msecs=999999)
+    assert query._timeout == 300000
+    query.timeout(msecs=700)
+    assert query._timeout == 700
+    query.timeout(msecs=0)
+    assert query._timeout == 300000
 
 
 def test_observations_timeout_error(cbcsdk_mock):
@@ -813,9 +819,15 @@ def test_observation_facet_timeout(cbcsdk_mock):
         .where("process_name:some_name")
         .add_facet_field("process_name")
     )
-    assert query._timeout == 0
+    assert query._timeout == 300000
     query.timeout(msecs=500)
     assert query._timeout == 500
+    query.timeout(msecs=999999)
+    assert query._timeout == 300000
+    query.timeout(msecs=700)
+    assert query._timeout == 700
+    query.timeout(msecs=0)
+    assert query._timeout == 300000
 
 
 def test_observation_facet_timeout_error(cbcsdk_mock):
@@ -1216,16 +1228,16 @@ def test_observations_search_suggestions_api_error():
         Observation.search_suggestions("", "device_id", 10)
 
 
-def test_bulk_get_details_api_error():
-    """Tests bulk_get_details - no CBCloudAPI arg"""
+def test_bulk_get_details_api_error(cb):
+    """Tests bulk_get_details"""
     with pytest.raises(ApiError):
-        Observation.bulk_get_details("", alert_id="xx")
+        Observation.bulk_get_details(cb, alert_id="xx")
 
 
-def test_helper_get_details_api_error():
-    """Tests _helper_get_details - no CBCloudAPI arg"""
+def test_helper_get_details_api_error(cb):
+    """Tests _helper_get_details"""
     with pytest.raises(ApiError):
-        Observation._helper_get_details("", alert_id="xx")
+        Observation._helper_get_details(cb, alert_id="xx")
 
 
 def test_bulk_get_details_neither(cbcsdk_mock):
