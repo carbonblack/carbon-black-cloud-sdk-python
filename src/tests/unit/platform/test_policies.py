@@ -593,6 +593,7 @@ def test_set_auth_event_collection_error_handling(cbcsdk_mock):
         policy.set_auth_event_collection(False)
     assert err.value.args[0] == "Test error"
 
+
 @pytest.mark.parametrize("element", [
     {"id": 10240, "position": 1},
     [10240, 1],
