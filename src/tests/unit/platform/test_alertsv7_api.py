@@ -88,7 +88,6 @@ from tests.unit.fixtures.platform.mock_network_threat_metadata import (GET_NETWO
 from tests.unit.fixtures.enterprise_edr.mock_threatintel import (GET_WATCHLIST_OBJECT_RESP)
 
 
-
 @pytest.fixture(scope="function")
 def cb():
     """Create CBCloudAPI singleton"""
