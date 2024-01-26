@@ -114,6 +114,7 @@ def main():
     # Alerts - org.alerts.close - EXECUTE:
     # Alerts - org.alerts.notes - CREATE, READ, UPDATE, DELETE
     # Alerts - ThreatMetadata - org.xdr.metadata - READ
+    # Background tasks - Status - jobs.status - READ: To get the job status when closing alerts
 
     api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
 
