@@ -614,6 +614,8 @@ class DeviceFacet(UnrefreshableModel):
                 query.set_auto_scaling_group_name([self.id])
             elif self._outer.field == "virtual_private_cloud_id":
                 query.set_virtual_private_cloud_id([self.id])
+            elif self._outer.field == "deployment_type":
+                query.set_deployment_type([self.id])
             return query
 
     @classmethod
@@ -666,7 +668,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
     VALID_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "MISSION_CRITICAL"]
     VALID_DEPLOYMENT_TYPES = ["ENDPOINT", "WORKLOAD", "VDI", "AWS", "AZURE", "GCP"]
     VALID_FACET_FIELDS = ["policy_id", "status", "os", "ad_group_id", "cloud_provider_account_id",
-                          "auto_scaling_group_name", "virtual_private_cloud_id"]
+                          "auto_scaling_group_name", "virtual_private_cloud_id", "deployment_type"]
 
     def __init__(self, doc_class, cb):
         """
