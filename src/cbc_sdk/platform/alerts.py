@@ -1749,7 +1749,7 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
                 still_querying = False
                 break
 
-    def close(self, closure_reason=None, determination=None, note=None, ):
+    def close(self, closure_reason=None, determination=None, note=None):
         """
         Closing all alerts matching a grouped alert query is not implemented.
 
@@ -1759,7 +1759,7 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
 
         Example:
             >>> alert_query = grouped_alert_query.get_alert_search_query()
-            >>> alert_query.close(closure_reason, note, determination)
+            >>> alert_query.close(closure_reason, determination, note)
         """
         raise NotImplementedError("this method is not implemented")
 

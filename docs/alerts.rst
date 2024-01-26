@@ -174,7 +174,7 @@ Also like Alerts, first() can be used on the query to retrieve the first groupin
     >>> first_alert_grouping = grouped_alert_search_query.first()
     >>> print(first_alert_grouping.count, first_alert_grouping.highest_severity, first_alert_grouping.device_count, first_alert_grouping.workflow_states)
     534 7  3 ("OPEN": 534)
-    >>> most_recent_alert = first_alert_grouping.most_recent_alert_)
+    >>> most_recent_alert = first_alert_grouping.most_recent_alert_
     >>> print(most_recent_alert.threat_id)
 
 It may be necessary to retrieve all of the alerts from a threat id grouping for further inspection, it is possible to directly retrieve the associated alert search query from a given grouped alert
@@ -192,8 +192,8 @@ Suppose instead of grouped alerts, you had been working with alerts and wanted t
     >>> from cbc_sdk.platform import Alert, GroupedAlert
     >>> api = CBCloudAPI(profile="sample")
     >>> alert_search_query = api.select(Alert)
-    >>> alert_search_query = grouped_alert_search_query.set_time_range(range="-10d").add_criteria("type", "WATCHLIST").set_minimum_severity(3)
-    >>> group_alert_search_query = alert_search_query.set_group_by()
+    >>> alert_search_query = alert_search_query.set_time_range(range="-10d").add_criteria("type", "WATCHLIST").set_minimum_severity(3)
+    >>> group_alert_search_query = alert_search_query.set_group_by("threat_id")
     >>> alert_search_query = group_alert_search_query.get_alert_search_query()
 .. note::
     When transforming from one query type to another the sort order parameter is not preserved. If it is necessary, it will have to be added to the queries criteria manually.
