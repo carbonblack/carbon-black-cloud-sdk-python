@@ -1,0 +1,45 @@
+type: object
+properties:
+  id:
+    type: string
+    description: The asset group identifier.
+  name:
+    type: string
+    description: The asset group name.
+  description:
+    type: string
+    description: The asset group description.
+  org_key:
+    type: string
+    description: The organization key of the owning organization.
+  status:
+    type: string
+    description: Status of the group.
+  member_type:
+    type: string
+    description: The type of objects this asset group contains.
+    enum:
+      - DEVICE
+  discovered:
+    type: boolean
+    description: Whether this group has been discovered.
+  create_time:
+    type: string
+    format: date-time
+    description: Date and time the group was created.
+  update_time:
+    type: string
+    format: date-time
+    description: Date and time the group was last updated.
+  member_count:
+    type: integer
+    description: Number of members in this group.
+  policy_id:
+    type: integer
+    description: ID of the policy associated with this group.
+  policy_name:
+    type: string
+    description: Name of the policy associated with this group.
+  query:
+    type: string
+    description: Search query used to determine which assets are included in the group membership.

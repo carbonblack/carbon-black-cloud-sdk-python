@@ -137,6 +137,41 @@ def test_read_bool_exceptions(monkeypatch, mox):
     mox.VerifyAll()
 
 
+@pytest.mark.parametrize('key, return_val, check_val', [
+    ('Alpha', (0, REG_DWORD), 0),
+    ('Bravo', (5, REG_DWORD), 5),
+    ('Charlie', None, None)
+])
+def test_read_int(monkeypatch, mox, key, return_val, check_val):
+    """Test reading integer values from the registry."""
+    monkeypatch.setattr(sys, "platform", "win32")
+    sut = RegistryCredentialProvider()
+    mox.StubOutWithMock(sut, '_read_value')
+    stub_key = StubKeyObject()
+    sut._read_value(stub_key, key).AndReturn(return_val)
+    mox.ReplayAll()
+    assert sut._read_int(stub_key, key) == check_val
+    mox.VerifyAll()
+
+
+def test_read_int_exceptions(monkeypatch, mox):
+    """Test reading integer values from the registry, in ways that generate exceptions."""
+    monkeypatch.setattr(sys, "platform", "win32")
+    sut = RegistryCredentialProvider()
+    mox.StubOutWithMock(sut, '_read_value')
+    stub_key = StubKeyObject()
+    sut._read_value(stub_key, "Alpha").AndReturn(("!Funky!Stuff!", REG_SZ))
+    sut._read_value(stub_key, "Bravo").AndRaise(CredentialError("Unable to read"))
+    mox.ReplayAll()
+    with pytest.raises(CredentialError) as e1:
+        sut._read_int(stub_key, "Alpha")
+    assert "not of integer type" in str(e1.value)
+    with pytest.raises(CredentialError) as e2:
+        sut._read_int(stub_key, "Bravo")
+    assert "Unable to read" in str(e2.value)
+    mox.VerifyAll()
+
+
 def test_read_credentials(monkeypatch, mox):
     """Test reading an entire Credentials object from the registry."""
     monkeypatch.setattr(sys, "platform", "win32")
@@ -157,6 +192,7 @@ def test_read_credentials(monkeypatch, mox):
     sut._read_value(stub_key, "csp_oauth_app_secret").AndReturn(("SECRET", REG_SZ))
     sut._read_value(stub_key, "csp_api_token").AndReturn(("API TOKEN", REG_SZ))
     sut._read_value(stub_key, "csp_url_override").AndReturn(("http://csp.com", REG_SZ))
+    sut._read_value(stub_key, "default_timeout").AndReturn((256000, REG_DWORD))
     mox.ReplayAll()
     creds = sut._read_credentials(stub_key)
     mox.VerifyAll()
@@ -174,6 +210,7 @@ def test_read_credentials(monkeypatch, mox):
     assert creds.csp_oauth_app_secret == "SECRET"
     assert creds.csp_api_token == "API TOKEN"
     assert creds.csp_url_override == "http://csp.com"
+    assert creds.default_timeout == 256000
 
 
 def test_read_credentials_defaults(monkeypatch, mox):
@@ -196,6 +233,7 @@ def test_read_credentials_defaults(monkeypatch, mox):
     sut._read_value(stub_key, "csp_oauth_app_secret").AndReturn(None)
     sut._read_value(stub_key, "csp_api_token").AndReturn(None)
     sut._read_value(stub_key, "csp_url_override").AndReturn(None)
+    sut._read_value(stub_key, "default_timeout").AndReturn(None)
     mox.ReplayAll()
     creds = sut._read_credentials(stub_key)
     mox.VerifyAll()
@@ -239,6 +277,7 @@ def test_get_credentials(monkeypatch, mox):
     sut._read_value(key2, "csp_oauth_app_secret").AndReturn(("SECRET", REG_SZ))
     sut._read_value(key2, "csp_api_token").AndReturn(("API-TOKEN", REG_SZ))
     sut._read_value(key2, "csp_url_override").AndReturn(("http://csp.com", REG_SZ))
+    sut._read_value(key2, "default_timeout").AndReturn((256000, REG_DWORD))
     mox.ReplayAll()
     creds = sut.get_credentials('default')
     assert creds.url == "http://example.com"
@@ -255,6 +294,7 @@ def test_get_credentials(monkeypatch, mox):
     assert creds.csp_oauth_app_secret == "SECRET"
     assert creds.csp_api_token == "API-TOKEN"
     assert creds.csp_url_override == "http://csp.com"
+    assert creds.default_timeout == 256000
     creds2 = sut.get_credentials('default')
     assert creds2 is creds
     mox.VerifyAll()

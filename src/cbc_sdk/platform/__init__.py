@@ -9,6 +9,8 @@ from cbc_sdk.platform.alerts import Alert as BaseAlert
 
 from cbc_sdk.platform.audit import AuditLog
 
+from cbc_sdk.platform.asset_groups import AssetGroup
+
 from cbc_sdk.platform.devices import Device, DeviceFacet, DeviceSearchQuery
 
 from cbc_sdk.platform.events import Event, EventFacet
@@ -16,6 +18,8 @@ from cbc_sdk.platform.events import Event, EventFacet
 from cbc_sdk.platform.policies import Policy, PolicyRule
 
 from cbc_sdk.platform.policy_ruleconfigs import PolicyRuleConfig
+
+from cbc_sdk.platform.previewer import DevicePolicyChangePreview
 
 from cbc_sdk.platform.processes import (Process, ProcessFacet,
                                         AsyncProcessQuery, SummaryQuery)

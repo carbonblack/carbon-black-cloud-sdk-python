@@ -269,6 +269,20 @@ def test_summary_select_set_time_range_failures(cbcsdk_mock):
     assert 'Window must be a string.' in ex.value.message
 
 
+def test_summary_query_timeout(cb):
+    """Tests the timeout setting on SummaryQuery."""
+    query = cb.select(Process.Summary).where("process_guid:WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00")
+    assert query._timeout == 300000
+    query.timeout(500)
+    assert query._timeout == 500
+    query.timeout(999999)
+    assert query._timeout == 300000
+    query.timeout(700)
+    assert query._timeout == 700
+    query.timeout(0)
+    assert query._timeout == 300000
+
+
 def test_process_deobfuscate_cmdline(cbcsdk_mock):
     """Test the deobfuscate_cmdline() method."""
     def on_validation_post(url, body, **kwargs):

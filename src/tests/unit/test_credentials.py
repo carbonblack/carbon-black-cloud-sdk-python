@@ -31,6 +31,7 @@ def test_credential_default_values():
     assert creds.proxy is None
     assert not creds.ignore_system_proxy
     assert creds.integration is None
+    assert creds.default_timeout == 300000
     with pytest.raises(AttributeError):
         assert creds.notexist is None
 
@@ -40,10 +41,11 @@ def test_credential_default_values():
       CredentialValue.ORG_KEY: "A1B2C3D4", CredentialValue.SSL_VERIFY: False,
       CredentialValue.SSL_VERIFY_HOSTNAME: False, CredentialValue.SSL_CERT_FILE: "foo.certs",
       CredentialValue.SSL_FORCE_TLS_1_2: True, CredentialValue.PROXY: "proxy.example",
-      CredentialValue.IGNORE_SYSTEM_PROXY: True, CredentialValue.INTEGRATION: 'Bronski'}, ),
+      CredentialValue.IGNORE_SYSTEM_PROXY: True, CredentialValue.INTEGRATION: 'Bronski',
+      CredentialValue.DEFAULT_TIMEOUT: 200000}, ),
     ({"url": "http://example.com", "token": "ABCDEFGH", "org_key": "A1B2C3D4", "ssl_verify": "false",
       "ssl_verify_hostname": "no", "ssl_cert_file": "foo.certs", "ssl_force_tls_1_2": "1",
-      "proxy": "proxy.example", "ignore_system_proxy": "on", "integration": 'Bronski'}, )
+      "proxy": "proxy.example", "ignore_system_proxy": "on", "integration": 'Bronski', "default_timeout": "200000"}, )
 ])
 def test_credential_dict_value_load(input_dict):
     """Test loading credentials from a dict, and also access through both attributes and get_value."""
@@ -58,6 +60,7 @@ def test_credential_dict_value_load(input_dict):
     assert creds.proxy == "proxy.example"
     assert creds.ignore_system_proxy
     assert creds.integration == 'Bronski'
+    assert creds.default_timeout == 200000
     assert creds.get_value(CredentialValue.URL) == "http://example.com"
     assert creds.get_value(CredentialValue.TOKEN) == "ABCDEFGH"
     assert creds.get_value(CredentialValue.ORG_KEY) == "A1B2C3D4"
@@ -68,11 +71,12 @@ def test_credential_dict_value_load(input_dict):
     assert creds.get_value(CredentialValue.PROXY) == "proxy.example"
     assert creds.get_value(CredentialValue.IGNORE_SYSTEM_PROXY)
     assert creds.get_value(CredentialValue.INTEGRATION) == 'Bronski'
+    assert creds.get_value(CredentialValue.DEFAULT_TIMEOUT) == 200000
 
 
 def test_credential_partial_loads():
     """Test that we can have credentials with some values from dict and some default."""
-    init_dict = {"url": "http://example.com", "ssl_verify": 0}
+    init_dict = {"url": "http://example.com", "ssl_verify": 0, "default_timeout": 999999}
     creds = Credentials(init_dict)
     assert creds.url == "http://example.com"
     assert creds.token is None
@@ -84,6 +88,7 @@ def test_credential_partial_loads():
     assert creds.proxy is None
     assert not creds.ignore_system_proxy
     assert creds.integration is None
+    assert creds.default_timeout == 300000
 
 
 def test_credential_boolean_parsing_failure():
@@ -98,10 +103,11 @@ def test_credential_boolean_parsing_failure():
       CredentialValue.ORG_KEY: "A1B2C3D4", CredentialValue.SSL_VERIFY: False,
       CredentialValue.SSL_VERIFY_HOSTNAME: False, CredentialValue.SSL_CERT_FILE: "foo.certs",
       CredentialValue.SSL_FORCE_TLS_1_2: True, CredentialValue.PROXY: "proxy.example",
-      CredentialValue.IGNORE_SYSTEM_PROXY: True, CredentialValue.INTEGRATION: 'Bronski'}, ),
+      CredentialValue.IGNORE_SYSTEM_PROXY: True, CredentialValue.INTEGRATION: 'Bronski',
+      CredentialValue.DEFAULT_TIMEOUT: 200000}, ),
     ({"url": "http://example.com", "token": "ABCDEFGH", "org_key": "A1B2C3D4", "ssl_verify": "false",
       "ssl_verify_hostname": "no", "ssl_cert_file": "foo.certs", "ssl_force_tls_1_2": "1",
-      "proxy": "proxy.example", "ignore_system_proxy": "on", "integration": 'Bronski'}, )
+      "proxy": "proxy.example", "ignore_system_proxy": "on", "integration": 'Bronski', "default_timeout": 200000}, )
 ])
 def test_credential_get_dict(input_dict):
     """Tests if we get the correct dictionary."""
@@ -115,6 +121,7 @@ def test_credential_get_dict(input_dict):
     assert creds["ssl_force_tls_1_2"]
     assert creds["proxy"] == "proxy.example"
     assert creds["ignore_system_proxy"]
+    assert creds["default_timeout"] == 200000
 
 
 def test_get_token_api_key():

@@ -30,14 +30,7 @@ class Observation(NewBaseModel):
     validation_url = "/api/investigate/v2/orgs/{}/observations/search_validation"
     swagger_meta_file = "platform/models/observation.yaml"
 
-    def __init__(
-        self,
-        cb,
-        model_unique_id=None,
-        initial_data=None,
-        force_init=False,
-        full_doc=False,
-    ):
+    def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
         """
         Initialize the Observation object.
 
@@ -51,7 +44,7 @@ class Observation(NewBaseModel):
             force_init (bool): True to force object initialization.
             full_doc (bool): False to mark the object as not fully initialized.
         """
-        self._details_timeout = 0
+        self._details_timeout = cb.credentials.default_timeout
         self._info = None
         if model_unique_id is not None and initial_data is None:
             observations_future = (
@@ -101,7 +94,8 @@ class Observation(NewBaseModel):
         """Requests detailed results.
 
         Args:
-            timeout (int): Observations details request timeout in milliseconds.
+            timeout (int): Observations details request timeout in milliseconds.  This may never be greater than the
+                configured default timeout.  If this value is 0, the configured default timeout is used.
             async_mode (bool): True to request details in an asynchronous manner.
 
         Returns:
@@ -118,7 +112,10 @@ class Observation(NewBaseModel):
             >>> observations = api.select(Observation).where(process_pid=2000)
             >>> observations[0].get_details()
         """
-        self._details_timeout = timeout
+        if timeout <= 0:
+            self._details_timeout = self._cb.credentials.default_timeout
+        else:
+            self._details_timeout = min(timeout, self._cb.credentials.default_timeout)
         if not self.observation_id:
             raise ApiError(
                 "Trying to get observation details on an invalid observation_id"
@@ -150,7 +147,8 @@ class Observation(NewBaseModel):
             alert_id (str):  An alert id to fetch associated observations
             observation_ids (list): A list of observation ids to fetch
             bulk (bool): Whether it is a bulk request
-            timeout (int): Observations details request timeout in milliseconds.
+            timeout (int): Observations details request timeout in milliseconds.  This may never be greater than
+                the configured default timeout.  If this value is 0, the configured default timeout is used.
 
         Returns:
             Observation or list(Observation): if it is a bulk operation a list, otherwise Observation
@@ -158,6 +156,8 @@ class Observation(NewBaseModel):
         Raises:
             ApiError: if cb is not instance of CBCloudAPI
         """
+        if timeout <= 0 or timeout > cb.credentials.default_timeout:
+            timeout = cb.credentials.default_timeout
         if cb.__class__.__name__ != "CBCloudAPI":
             raise ApiError("cb argument should be instance of CBCloudAPI.")
         if (alert_id and observation_ids) or not (alert_id or observation_ids):
@@ -186,7 +186,7 @@ class Observation(NewBaseModel):
                 time.sleep(0.5)
                 continue
             if completed < contacted:
-                if timeout != 0 and (time.time() * 1000) - submit_time > timeout:
+                if (time.time() * 1000) - submit_time > timeout:
                     timed_out = True
                     break
             else:
@@ -273,7 +273,8 @@ class Observation(NewBaseModel):
             cb (CBCloudAPI): A reference to the CBCloudAPI object.
             alert_id (str):  An alert id to fetch associated observations
             observation_ids (list): A list of observation ids to fetch
-            timeout (int): Observations details request timeout in milliseconds.
+            timeout (int): Observations details request timeout in milliseconds.  This may never be greater than
+                the configured default timeout.  If this value is 0, the configured default timeout is used.
 
         Returns:
             list: list of Observations
@@ -408,7 +409,7 @@ class ObservationQuery(Query):
         super(ObservationQuery, self).__init__(doc_class, cb)
         self._default_args["rows"] = self._batch_size
         self._query_token = None
-        self._timeout = 0
+        self._timeout = cb.credentials.default_timeout
         self._timed_out = False
 
     def or_(self, **kwargs):
@@ -441,19 +442,23 @@ class ObservationQuery(Query):
         return self
 
     def timeout(self, msecs):
-        """Sets the timeout on a observation query.
+        """
+        Sets the timeout on a observation query.
 
         Arguments:
-            msecs (int): Timeout duration, in milliseconds.
+            msecs (int): Timeout duration, in milliseconds.  This may never be greater than the configured default
+                timeout.  If this value is 0, the configured default timeout is used.
 
         Returns:
-            Query (ObservationQuery): The Query object with new milliseconds
-                parameter.
+            Query (ObservationQuery): The Query object with new milliseconds parameter.
 
         Example:
             >>> cb.select(Observation).where(process_name="foo.exe").timeout(5000)
         """
-        self._timeout = msecs
+        if msecs <= 0:
+            self._timeout = self._cb.credentials.default_timeout
+        else:
+            self._timeout = min(msecs, self._cb.credentials.default_timeout)
         return self
 
     def _submit(self):
@@ -475,6 +480,7 @@ class ObservationQuery(Query):
 
     def _still_querying(self):
         """Check whether there are still records to be collected."""
+        assert self._timeout > 0
         if not self._query_token:
             self._submit()
 
@@ -492,7 +498,7 @@ class ObservationQuery(Query):
         if contacted == 0:
             return True
         if completed < contacted:
-            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:
+            if (time.time() * 1000) - self._submit_time > self._timeout:
                 self._timed_out = True
                 return False
             return True

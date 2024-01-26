@@ -68,7 +68,7 @@ class CBCloudAPI(BaseAPI):
             proxy_session (requests.session.Session): Proxy session to be used for cookie persistence, connection
                 pooling, and configuration.  Default is ``None`` (use the standard session).
             thread_pool_count (int): The number of threads to create for asynchronous queries. Defaults to 3.
-            timeout (float): The timeout to use for for API requests.  Default is ``None`` (no timeout).
+            timeout (float): The timeout to use for for API connection requests.  Default is ``None`` (no timeout).
             token (str): The API token to use when accessing the Carbon Black Cloud.
             url (str): The URL of the Carbon Black Cloud provider to use.
         """

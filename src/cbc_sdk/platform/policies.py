@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2023. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2020-2024. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -16,8 +16,10 @@ import copy
 import json
 from types import MappingProxyType
 from cbc_sdk.base import MutableBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
+from cbc_sdk.platform.devices import Device
 from cbc_sdk.platform.policy_ruleconfigs import (PolicyRuleConfig, CorePreventionRuleConfig,
                                                  HostBasedFirewallRuleConfig, DataCollectionRuleConfig)
+from cbc_sdk.platform.previewer import DevicePolicyChangePreview
 from cbc_sdk.errors import ApiError, ServerError, InvalidObjectError
 
 
@@ -566,7 +568,7 @@ class Policy(MutableBaseModel):
             new_policy["rule_configs"] = [copy.deepcopy(rcfg._info) for rcfg in self._new_rule_configs]
             return Policy(self._cb, None, new_policy, False, True)
 
-    def _subobject(self, name):
+    def _subobject(self, name):  # pragma: no cover
         """
         Returns the "subobject value" of the given attribute.
 
@@ -1021,6 +1023,89 @@ class Policy(MutableBaseModel):
         else:
             raise ApiError(f"rule configuration '{rule_config_id}' not found in policy")
 
+    def set_data_collection(self, parameter, value):
+        """
+        Sets a data collection parameter value on any data collection rule configurations in the policy that have it.
+
+        As a safety check, this method also validates that the type of the existing value of that parameter is the
+        same as the type of the new value we want to set for that parameter.
+
+        Args:
+            parameter (str): The name of the parameter to set.
+            value (Any): The value of the parameter to set.
+
+        Raises:
+            ApiError: If the parameter setting operation failed.
+        """
+        rconf_blocks = [block for block in self.rule_configs
+                        if block['category'] == 'data_collection' and parameter in block['parameters']]
+        if len(rconf_blocks) > 0:
+            url = f"/policyservice/v1/orgs/{self._cb.credentials.org_key}/policies/{self.id}" \
+                  "/rule_configs/data_collection"
+            for rconf_block in rconf_blocks:
+                if type(rconf_block['parameters'][parameter]) is type(value):
+                    body = {"id": rconf_block['id'], "parameters": {parameter: value}}
+                    return_data = self._cb.put_object(url, body)
+                    fail_blocks = [block for block in return_data.json()['failed'] if block['id'] == rconf_block['id']]
+                    if len(fail_blocks) > 0:
+                        raise ApiError(fail_blocks[0]['message'])
+                    rconf_block['parameters'][parameter] = value
+
+    def set_xdr_collection(self, flag):
+        """
+        Sets XDR collection to be enabled or disabled on this policy.
+
+        Args:
+            flag (bool): ``True`` to enable XDR data collection, ``False`` to disable it.
+
+        Raises:
+            ApiError: If the parameter setting operation failed.
+        """
+        self.set_data_collection("enable_network_data_collection", flag)
+
+    def set_auth_event_collection(self, flag):
+        """
+        Sets auth event collection to be enabled or disabled on this policy.
+
+        Args:
+            flag (bool): ``True`` to enable auth event data collection, ``False`` to disable it.
+
+        Raises:
+            ApiError: If the parameter setting operation failed.
+        """
+        self.set_data_collection("enable_auth_events", flag)
+
+    def preview_rank_change(self, new_rank):
+        """
+        Previews a change in the ranking of this policy, and determines how this will affect asset groups.
+
+        Args:
+            new_rank (int): The new rank to give this policy.  Ranks are limited to values in the range [1.._N_],
+                            where _N_ is the total number of policies in the organization.
+
+        Returns:
+            list[DevicePolicyChangePreview]: A list of objects containing data previewing the policy changes.
+        """
+        return Policy.preview_policy_rank_changes(self._cb, [(self._model_unique_id, new_rank)])
+
+    def preview_add_policy_override(self, devices):
+        """
+        Previews changes to the effective policies for devices which result from setting this policy override on them.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            devices (list): The devices which will have their policies overridden. Each entry in this list is either
+                an integer device ID or a ``Device`` object.
+
+        Returns:
+            list[DevicePolicyChangePreview]: A list of ``DevicePolicyChangePreview`` objects representing the assets
+                that change which policy is effective as the result of this operation.
+        """
+        return Device.preview_add_policy_override_for_devices(self._cb, self._model_unique_id, devices)
+
     # --- BEGIN policy v1 compatibility methods ---
 
     @property
@@ -1182,6 +1267,44 @@ class Policy(MutableBaseModel):
             PolicyBuilder: The new policy builder object.
         """
         return Policy.PolicyBuilder(cb)
+
+    @classmethod
+    def preview_policy_rank_changes(cls, cb, changes_list):
+        """
+        Previews changes in the ranking of policies, and determines how this will affect asset groups.
+
+        Example::
+
+            >>> cb = CBCloudAPI(profile='sample')
+            >>> changes = Policy.preview_policy_rank_changes(cb, [(667251, 1)])
+            >>> # also: changes = Policy.preview_policy_rank_changes(cb, [{"id": 667251, "position": 1}])
+            >>> len(changes)
+            2
+            >>> changes[0].current_policy_id
+            660578
+            >>> changes[0].new_policy_id
+            667251
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            changes_list (list): The list of proposed changes in the ranking of policies.  Each change may be in
+                the form of a dict, in which case the "id" and "position" members are used to designate the policy ID
+                and the new position, or in the form of a list or tuple, in which case the first element specifies
+                the policy ID, and the second element specifies the new position.  In all cases, "position" values are
+                limited to values in the range [1.._N_], where _N_ is the total number of policies in the organization.
+
+        Returns:
+            list[DevicePolicyChangePreview]: A list of objects containing data previewing the policy changes.
+        """
+        submit_list = []
+        for change in changes_list:
+            if isinstance(change, dict):
+                submit_list.append({"id": change["id"], "position": change["position"]})
+            elif isinstance(change, list) or isinstance(change, tuple):
+                submit_list.append({"id": change[0], "position": change[1]})
+        ret = cb.post_object(f"/policy-assignment/v1/orgs/{cb.credentials.org_key}/policies/preview",
+                             {"policies": submit_list})
+        return [DevicePolicyChangePreview(cb, p) for p in ret.json()["preview"]]
 
 
 class PolicyRule(MutableBaseModel):

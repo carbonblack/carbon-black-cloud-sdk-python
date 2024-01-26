@@ -1185,6 +1185,16 @@ DATA_COLLECTION_RETURNS = {
             "parameters": {
                 "enable_auth_events": True
             }
+        },
+        {
+            "id": "cc075469-8d1e-4056-84b6-0e6f437c4010",
+            "name": "XDR",
+            "description": "Turns on XDR network data collection at the sensor",
+            "inherited_from": "",
+            "category": "data_collection",
+            "parameters": {
+                "enable_network_data_collection": False
+            }
         }
     ]
 }
