@@ -593,3 +593,13 @@ REMOVE_POLICY_OVERRIDE_RESPONSE = {
         }
     ]
 }
+
+
+def GET_SCROLL_DEVICES(rows, num_found, num_remaining):
+    """Generate results response based on num_remaining"""
+    return {
+        "org_key": "test",
+        "num_found": num_found,
+        "search_after": "MTcwMjMyMTM2MDU3OSwyMT" if num_remaining > 0 else "",
+        "results": [GET_DEVICE_RESP for _ in range(rows)]
+    }

@@ -682,6 +682,9 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         self._time_filter = {}
         self._exclusions = {}
         self._sortcriteria = {}
+        self._search_after = None
+        self.num_remaining = None
+        self.num_found = None
         self.max_rows = -1
 
     def _update_exclusions(self, key, newlist):
@@ -1141,6 +1144,59 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
             query_params["sort_order"] = self._sortcriteria["order"]
         url = self._build_url("/_search/download")
         return self._cb.get_raw_data(url, query_params)
+
+    def scroll(self, rows=10000):
+        """
+        Iteratively paginate all Devices beyond the 10k max search limits.
+
+        To fetch the next set of Devices repeatively call the scroll function until
+        `DeviceSearchQuery.num_remaining == 0` or no results are returned.
+
+        Args:
+            rows (int): The number of rows to fetch
+
+        Returns:
+            list[Result]: The list of results
+        """
+        if self.num_remaining == 0:
+            return []
+        elif rows > 10000:
+            rows = 10000
+
+        url = f"/appservices/v6/orgs/{self._cb.credentials.org_key}/devices/_scroll"
+
+        # Sort by last_contact_time enforced
+        self._sort = {}
+
+        request = self._build_request(0, rows)
+
+        if self._search_after is not None:
+            request["search_after"] = self._search_after
+
+        resp = self._cb.post_object(url, body=request)
+        resp_json = resp.json()
+
+        # Calculate num_remaining until backend provides in response
+        if self._search_after is None:
+            self.num_remaining = resp_json["num_found"] - len(resp_json["results"])
+            self.num_found = resp_json["num_found"]
+        elif self.num_found != resp_json["num_found"]:
+            diff = resp_json["num_found"] - self.num_found
+            self.num_remaining = self.num_remaining - len(resp_json["results"]) + diff
+        else:
+            self.num_remaining = self.num_remaining - len(resp_json["results"])
+
+        if self.num_remaining < 0:
+            self.num_remaining = 0
+
+        # Capture latest state
+        self._search_after = resp_json["search_after"]
+
+        results = []
+        for item in resp_json["results"]:
+            results.append(self._doc_class(self._cb, item["id"], item))
+
+        return results
 
     def _bulk_device_action(self, action_type, options=None):
         """

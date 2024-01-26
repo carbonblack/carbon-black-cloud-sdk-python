@@ -17,7 +17,8 @@ from cbc_sdk.platform import Device, DeviceFacet
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_devices import (FACET_RESPONSE, FACET_INIT_1, FACET_INIT_2, FACET_INIT_3,
-                                                       FACET_INIT_4, FACET_INIT_5, FACET_INIT_6, FACET_INIT_7)
+                                                       FACET_INIT_4, FACET_INIT_5, FACET_INIT_6, FACET_INIT_7,
+                                                       GET_SCROLL_DEVICES)
 
 
 @pytest.fixture(scope="function")
@@ -377,3 +378,37 @@ def test_query_deployment_type(cbcsdk_mock):
     query = api.select(Device).set_deployment_type(["ENDPOINT"])
     d = query.one()
     assert d.deployment_type[0] in ["ENDPOINT", "WORKLOAD"]
+
+
+def test_device_scroll(cbcsdk_mock):
+    """Testing DeviceSearchQuery scroll"""
+    cbcsdk_mock.mock_request("POST", "/appservices/v6/orgs/test/devices/_scroll",
+                             GET_SCROLL_DEVICES(100, 200, 100))
+
+    api = cbcsdk_mock.api
+    query = api.select(Device).set_deployment_type(["ENDPOINT"])
+
+    results = query.scroll(100)
+
+    assert query.num_remaining == 100
+    assert query._search_after == "MTcwMjMyMTM2MDU3OSwyMT"
+
+    def on_post(url, body, **kwargs):
+        """Test 2nd scroll request"""
+        assert body == {
+            "criteria": {
+                "deployment_type": ["ENDPOINT"]
+            },
+            "rows": 10000,
+            "search_after": "MTcwMjMyMTM2MDU3OSwyMT"
+        }
+        return GET_SCROLL_DEVICES(100, 200, 0)
+
+    cbcsdk_mock.mock_request("POST", "/appservices/v6/orgs/test/devices/_scroll",
+                             on_post)
+
+    results.extend(query.scroll(20000))
+
+    assert len(results) == 200
+
+    assert query.scroll(100) == []
