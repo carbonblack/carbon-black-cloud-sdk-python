@@ -13,12 +13,12 @@
 
 import pytest
 from cbc_sdk.errors import ApiError, ServerError
-from cbc_sdk.platform import Device, DeviceFacet
+from cbc_sdk.platform import Device, DeviceFacet, Job
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_devices import (FACET_RESPONSE, FACET_INIT_1, FACET_INIT_2, FACET_INIT_3,
                                                        FACET_INIT_4, FACET_INIT_5, FACET_INIT_6, FACET_INIT_7,
-                                                       GET_SCROLL_DEVICES)
+                                                       GET_SCROLL_DEVICES, EXPORT_JOB_REDIRECT)
 
 
 @pytest.fixture(scope="function")
@@ -412,3 +412,24 @@ def test_device_scroll(cbcsdk_mock):
     assert len(results) == 200
 
     assert query.scroll(100) == []
+
+
+def test_device_export(cbcsdk_mock):
+    """Test the export functionality of the DeviceSearchQuery."""
+    api = cbcsdk_mock.api
+    cbcsdk_mock.mock_request("GET", "/jobs/v1/orgs/test/jobs/11608915", EXPORT_JOB_REDIRECT)
+
+    def post_validate(url, body, **kwargs):
+        nonlocal api
+        assert body['format'] == "CSV"
+
+        # CBC Backend uses 303 Redirect which has been mocked out with follow up API call
+        return api.get_object("/jobs/v1/orgs/test/jobs/11608915")
+
+    cbcsdk_mock.mock_request("POST", "/appservices/v6/orgs/test/devices/_export", post_validate)
+
+    query = api.select(Device).set_status(["ACTIVE"])
+    job = query.export()
+    assert job
+    assert isinstance(job, Job)
+    assert job.id == 11608915

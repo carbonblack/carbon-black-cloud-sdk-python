@@ -603,3 +603,17 @@ def GET_SCROLL_DEVICES(rows, num_found, num_remaining):
         "search_after": "MTcwMjMyMTM2MDU3OSwyMT" if num_remaining > 0 else "",
         "results": [GET_DEVICE_RESP for _ in range(rows)]
     }
+
+
+EXPORT_JOB_REDIRECT = {
+    "id": 11608915,
+    "type": "ENDPOINTS",
+    "job_parameters": {
+        "job_parameters": None
+    },
+    "connector_id": "ABCD1234",
+    "org_key": "test",
+    "status": "IN_PROGRESS",
+    "create_time": "2024-01-26T18:18:39.962319Z",
+    "last_update_time": "2024-01-26T18:18:40.140353Z"
+}

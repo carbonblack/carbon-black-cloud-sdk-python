@@ -29,13 +29,17 @@ Typical usage example::
 
 from cbc_sdk.errors import ApiError, ServerError, NonQueryableModel
 from cbc_sdk.platform import PlatformModel
+from cbc_sdk.platform.jobs import Job
 from cbc_sdk.platform.vulnerability_assessment import Vulnerability, VulnerabilityQuery
 from cbc_sdk.base import (UnrefreshableModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
                           CriteriaBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
 from cbc_sdk.platform.previewer import DevicePolicyChangePreview
 from cbc_sdk.workload import NSXRemediationJob
 
+import logging
 import time
+
+log = logging.getLogger(__name__)
 
 
 """"Device Models"""
@@ -1111,6 +1115,9 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         """
         Uses the query parameters that have been set to download all device listings in CSV format.
 
+        Deprecated:
+            Use DeviceSearchQuery.export for increased export capabilities and limits
+
         Example:
             >>> cb.select(Device).set_status(["ALL"]).download()
 
@@ -1123,6 +1130,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         Raises:
             ApiError: If status values have not been set before calling this function.
         """
+        log.warning("DeviceSearchQuery.download is deprecated, use DeviceSearchQuery.export instead")
         tmp = self._criteria.get("status", [])
         if not tmp:
             raise ApiError("at least one status must be specified to download")
@@ -1145,6 +1153,26 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         url = self._build_url("/_search/download")
         return self._cb.get_raw_data(url, query_params)
 
+    def export(self):
+        """
+        Starts the process of exporting Devices from the organization in CSV format.
+
+        Example:
+            >>> cb.select(Device).set_status(["ACTIVE"]).export()
+
+        Required Permissions:
+            device(READ)
+
+        Returns:
+            Job: The asynchronous job that will provide the export output when the server has prepared it.
+        """
+        request = self._build_request(0, -1)
+        request["format"] = "CSV"
+        url = self._build_url("/_export")
+        resp = self._cb.post_object(url, body=request)
+        result = resp.json()
+        return Job(self._cb, result["id"], result)
+
     def scroll(self, rows=10000):
         """
         Iteratively paginate all Devices beyond the 10k max search limits.
@@ -1152,18 +1180,24 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         To fetch the next set of Devices repeatively call the scroll function until
         `DeviceSearchQuery.num_remaining == 0` or no results are returned.
 
+        Example:
+            >>> cb.select(Device).set_status(["ACTIVE"]).scroll(100)
+
+        Required Permissions:
+            device(READ)
+
         Args:
             rows (int): The number of rows to fetch
 
         Returns:
-            list[Result]: The list of results
+            list[Device]: The list of results
         """
         if self.num_remaining == 0:
             return []
         elif rows > 10000:
             rows = 10000
 
-        url = f"/appservices/v6/orgs/{self._cb.credentials.org_key}/devices/_scroll"
+        url = self._build_url("/_scroll")
 
         # Sort by last_contact_time enforced
         self._sort = {}
