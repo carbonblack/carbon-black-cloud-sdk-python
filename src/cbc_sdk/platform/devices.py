@@ -29,13 +29,17 @@ Typical usage example::
 
 from cbc_sdk.errors import ApiError, ServerError, NonQueryableModel
 from cbc_sdk.platform import PlatformModel
+from cbc_sdk.platform.jobs import Job
 from cbc_sdk.platform.vulnerability_assessment import Vulnerability, VulnerabilityQuery
 from cbc_sdk.base import (UnrefreshableModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
                           CriteriaBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
 from cbc_sdk.platform.previewer import DevicePolicyChangePreview
 from cbc_sdk.workload import NSXRemediationJob
 
+import logging
 import time
+
+log = logging.getLogger(__name__)
 
 
 """"Device Models"""
@@ -682,6 +686,9 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         self._time_filter = {}
         self._exclusions = {}
         self._sortcriteria = {}
+        self._search_after = None
+        self.num_remaining = None
+        self.num_found = None
         self.max_rows = -1
 
     def _update_exclusions(self, key, newlist):
@@ -1108,6 +1115,9 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         """
         Uses the query parameters that have been set to download all device listings in CSV format.
 
+        Deprecated:
+            Use DeviceSearchQuery.export for increased export capabilities and limits
+
         Example:
             >>> cb.select(Device).set_status(["ALL"]).download()
 
@@ -1120,6 +1130,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         Raises:
             ApiError: If status values have not been set before calling this function.
         """
+        log.warning("DeviceSearchQuery.download is deprecated, use DeviceSearchQuery.export instead")
         tmp = self._criteria.get("status", [])
         if not tmp:
             raise ApiError("at least one status must be specified to download")
@@ -1141,6 +1152,85 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
             query_params["sort_order"] = self._sortcriteria["order"]
         url = self._build_url("/_search/download")
         return self._cb.get_raw_data(url, query_params)
+
+    def export(self):
+        """
+        Starts the process of exporting Devices from the organization in CSV format.
+
+        Example:
+            >>> cb.select(Device).set_status(["ACTIVE"]).export()
+
+        Required Permissions:
+            device(READ)
+
+        Returns:
+            Job: The asynchronous job that will provide the export output when the server has prepared it.
+        """
+        request = self._build_request(0, -1)
+        request["format"] = "CSV"
+        url = self._build_url("/_export")
+        resp = self._cb.post_object(url, body=request)
+        result = resp.json()
+        return Job(self._cb, result["id"], result)
+
+    def scroll(self, rows=10000):
+        """
+        Iteratively paginate all Devices beyond the 10k max search limits.
+
+        To fetch the next set of Devices repeatively call the scroll function until
+        `DeviceSearchQuery.num_remaining == 0` or no results are returned.
+
+        Example:
+            >>> cb.select(Device).set_status(["ACTIVE"]).scroll(100)
+
+        Required Permissions:
+            device(READ)
+
+        Args:
+            rows (int): The number of rows to fetch
+
+        Returns:
+            list[Device]: The list of results
+        """
+        if self.num_remaining == 0:
+            return []
+        elif rows > 10000:
+            rows = 10000
+
+        url = self._build_url("/_scroll")
+
+        # Sort by last_contact_time enforced
+        self._sort = {}
+
+        request = self._build_request(0, rows)
+
+        if self._search_after is not None:
+            request["search_after"] = self._search_after
+
+        resp = self._cb.post_object(url, body=request)
+        resp_json = resp.json()
+
+        # Calculate num_remaining until backend provides in response
+        if self._search_after is None:
+            self.num_remaining = resp_json["num_found"] - len(resp_json["results"])
+            self.num_found = resp_json["num_found"]
+        elif self.num_found != resp_json["num_found"]:
+            diff = resp_json["num_found"] - self.num_found
+            self.num_remaining = self.num_remaining - len(resp_json["results"]) + diff
+        else:
+            self.num_remaining = self.num_remaining - len(resp_json["results"])
+
+        if self.num_remaining < 0:
+            self.num_remaining = 0
+
+        # Capture latest state
+        self._search_after = resp_json["search_after"]
+
+        results = []
+        for item in resp_json["results"]:
+            results.append(self._doc_class(self._cb, item["id"], item))
+
+        return results
 
     def _bulk_device_action(self, action_type, options=None):
         """
