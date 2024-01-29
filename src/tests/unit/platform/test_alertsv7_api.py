@@ -25,9 +25,12 @@ from cbc_sdk.platform import (
     HostBasedFirewallAlert,
     IntrusionDetectionSystemAlert,
     DeviceControlAlert,
+    GroupedAlert,
     Process,
-    Job
+    Job,
+    NetworkThreatMetadata
 )
+from cbc_sdk.enterprise_edr.threat_intelligence import Watchlist
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.mock_rest_api import ALERT_SEARCH_SUGGESTIONS_RESP
@@ -47,7 +50,14 @@ from tests.unit.fixtures.platform.mock_alerts_v7 import (
     GET_ALERT_WORKFLOW_INIT,
     GET_ALERT_OBFUSCATED_CMDLINE,
     ALERT_DEOBFUSCATE_CMDLINE_REQUEST,
-    ALERT_DEOBFUSCATE_CMDLINE_RESPONSE
+    ALERT_DEOBFUSCATE_CMDLINE_RESPONSE,
+    GROUP_SEARCH_ALERT_RESPONSE,
+    GROUP_SEARCH_ALERT_REQUEST,
+    GROUP_SEARCH_ALERT_REQUEST_OVERRIDE_GROUPBY,
+    MOST_RECENT_ALERT,
+    ALERT_SEARCH_RESPONSE,
+    GROUPED_ALERT_FACET_REQUEST,
+    GROUPED_ALERT_FACET_RESPONSE
 )
 from tests.unit.fixtures.platform.mock_process import (
     POST_PROCESS_VALIDATION_RESP,
@@ -73,6 +83,9 @@ from tests.unit.fixtures.platform.mock_alert_v6_v7_compatibility import (
     GET_ALERT_HISTORY,
     GET_THREAT_HISTORY
 )
+
+from tests.unit.fixtures.platform.mock_network_threat_metadata import (GET_NETWORK_THREAT_METADATA_RESP)
+from tests.unit.fixtures.enterprise_edr.mock_threatintel import (GET_WATCHLIST_OBJECT_RESP)
 
 
 @pytest.fixture(scope="function")
@@ -1220,6 +1233,22 @@ def test_alert_subtype_watchlistalert_string_class(cbcsdk_mock):
     assert isinstance(alert, WatchlistAlert)
 
 
+def test_watchlistalert_getwatchlistobjects(cbcsdk_mock):
+    """Test WatchlistAlert get_watchlist_objects()."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/f6af290d-6a7f-461c-a8af-cf0d24311105",
+                             GET_ALERT_v7_WATCHLIST_RESPONSE)
+    cbcsdk_mock.mock_request("GET",
+                             "/threathunter/watchlistmgr/v3/orgs/test/watchlists/mnbvc098766HN60hatQMQ",
+                             GET_WATCHLIST_OBJECT_RESP)
+
+    api = cbcsdk_mock.api
+    watchlist_alert = api.select("WatchlistAlert", "f6af290d-6a7f-461c-a8af-cf0d24311105")
+    watchlist_objects = watchlist_alert.get_watchlist_objects()
+    assert isinstance(watchlist_objects, list)
+    assert isinstance(watchlist_objects[0], Watchlist)
+
+
 def test_alert_subtype_devicecontrolalert_class(cbcsdk_mock):
     """Test DeviceControlAlert class instantiation."""
     cbcsdk_mock.mock_request("GET",
@@ -1298,6 +1327,26 @@ def test_alert_subtype_intrusiondetectionsystemalert_string_class(cbcsdk_mock):
     api = cbcsdk_mock.api
     alert = api.select("IntrusionDetectionSystemAlert", "ca316d99-a808-3779-8aab-62b2b6d9541c")
     assert isinstance(alert, IntrusionDetectionSystemAlert)
+
+
+def test_intrusiondetectionsystemalert_get_network_threat_metadata(cbcsdk_mock):
+    """Test IntrusionDetectionSystemAlert class as string instantiation."""
+    cbcsdk_mock.mock_request("GET",
+                             "/api/alerts/v7/orgs/test/alerts/ca316d99-a808-3779-8aab-62b2b6d9541c",
+                             GET_ALERT_v7_INTRUSION_DETECTION_SYSTEM_RESPONSE)
+
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/threatmetadata/v1/orgs/test/detectors/4b98443a-ba0d-4ff5-b99e-e5e70432a214",
+        GET_NETWORK_THREAT_METADATA_RESP
+    )
+
+    api = cbcsdk_mock.api
+    alert = api.select("IntrusionDetectionSystemAlert", "ca316d99-a808-3779-8aab-62b2b6d9541c")
+    assert isinstance(alert, IntrusionDetectionSystemAlert)
+
+    network_threat_metadata = alert.get_network_threat_metadata()
+    assert isinstance(network_threat_metadata, NetworkThreatMetadata)
 
 
 def test_alert_subtype_invalid_string_class(cbcsdk_mock):
@@ -1943,3 +1992,249 @@ def test_alert_all(cbcsdk_mock):
     alert_list = alert_query.all()
 
     assert isinstance(alert_list, list)
+
+
+def test_group_alert_search_request(cbcsdk_mock):
+    """Test group alert search."""
+    def on_post(url, body, **kwargs):
+        assert body == GROUP_SEARCH_ALERT_REQUEST
+        return GROUP_SEARCH_ALERT_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/grouped_alerts/_search", on_post)
+
+    api = cbcsdk_mock.api
+    grouped_alerts = api.select(GroupedAlert).set_time_range(range="-10d").add_criteria("type", "WATCHLIST").\
+        set_minimum_severity(1).sort_by("count", "DESC")
+    group_alert = grouped_alerts.first()
+
+    assert isinstance(group_alert, GroupedAlert)
+
+
+def test_group_alert_most_recent_alert(cbcsdk_mock):
+    """Test group alert search most_recent_alert_() returns the most recent alert."""
+    def on_post(url, body, **kwargs):
+        assert body == GROUP_SEARCH_ALERT_REQUEST
+        return GROUP_SEARCH_ALERT_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/grouped_alerts/_search", on_post)
+
+    api = cbcsdk_mock.api
+    grouped_alerts = api.select(GroupedAlert).set_time_range(range="-10d").add_criteria("type", "WATCHLIST").\
+        set_minimum_severity(1).sort_by("count", "DESC")
+    first_grouped_alert = grouped_alerts.first()
+    most_recent_alert = first_grouped_alert.most_recent_alert_
+
+    assert isinstance(most_recent_alert, WatchlistAlert)
+    assert most_recent_alert.to_json() == MOST_RECENT_ALERT
+
+
+def test_group_alert_set_group_by(cbcsdk_mock):
+    """Test set_group_by() overrides the init THREAT_ID in the GroupAlertSearchQuery."""
+    def on_post(url, body, **kwargs):
+        if body["group_by"]["field"] == "THREAT_ID":
+            # path on first call when set_group_by is defaulted to THREAT_ID
+            assert body == GROUP_SEARCH_ALERT_REQUEST
+            assert body["group_by"]["field"] == "THREAT_ID"
+        else:
+            # path on second call where group_by is overridden
+            assert body == GROUP_SEARCH_ALERT_REQUEST_OVERRIDE_GROUPBY
+            assert body["group_by"]["field"] == "NOT_THREAT_ID"
+        return GROUP_SEARCH_ALERT_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/grouped_alerts/_search", on_post)
+
+    api = cbcsdk_mock.api
+    grouped_alerts = api.select(GroupedAlert).set_time_range(range="-10d").add_criteria("type", "WATCHLIST").\
+        set_minimum_severity(1).sort_by("count", "DESC")
+    grouped_alerts.first()
+    grouped_alerts = grouped_alerts.set_group_by("NOT_THREAT_ID")
+    grouped_alerts.first()
+
+
+def test_group_alert_bulk_close_workflow(cbcsdk_mock):
+    """Test closing a group alert job. Will raise a not implemented exception"""
+    api = cbcsdk_mock.api
+    group_alert_query = api.select(GroupedAlert)
+    with pytest.raises(NotImplementedError):
+        group_alert_query.close("OTHER", "TRUE_POSITIVE", "Note about the determination")
+
+
+def test_group_alert_to_get_alert_search_query(cbcsdk_mock):
+    """Test the helper function get_alert_search_query creates the proper request."""
+    def on_post(url, body, **kwargs):
+        assert body == GROUP_SEARCH_ALERT_REQUEST
+        return GROUP_SEARCH_ALERT_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/grouped_alerts/_search", on_post)
+
+    api = cbcsdk_mock.api
+    grouped_alerts = api.select(GroupedAlert).set_time_range(range="-10d").add_criteria("type", "WATCHLIST").\
+        set_minimum_severity(1).sort_by("count", "DESC")
+    group_alert = grouped_alerts.first()
+
+    alert_search_query = group_alert.get_alert_search_query()
+    manual_alert_search_query = api.select(Alert).set_time_range(range="-10d").add_criteria("type", "WATCHLIST").\
+        set_minimum_severity(1).\
+        add_criteria("threat_id", group_alert.most_recent_alert["threat_id"])
+
+    # deleting instance of querybuilder for assertion check
+    delattr(alert_search_query, "_query_builder")
+    delattr(manual_alert_search_query, "_query_builder")
+
+    assert vars(alert_search_query) == vars(manual_alert_search_query)
+
+
+def test_group_alert_to_get_alerts(cbcsdk_mock):
+    """Test the helper function get_alerts creates the proper request."""
+    def on_post(url, body, **kwargs):
+        assert body == GROUP_SEARCH_ALERT_REQUEST
+        return GROUP_SEARCH_ALERT_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/grouped_alerts/_search", on_post)
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/alerts/_search", ALERT_SEARCH_RESPONSE)
+
+    api = cbcsdk_mock.api
+    grouped_alerts = api.select(GroupedAlert).set_time_range(range="-10d").add_criteria("type", "WATCHLIST").\
+        set_minimum_severity(1).sort_by("count", "DESC")
+    group_alert = grouped_alerts.first()
+    alerts = group_alert.get_alerts()
+    alert = alerts[0]
+
+    assert isinstance(alerts, list)
+    assert alert.get("type") == "WATCHLIST"
+    assert alert.get("threat_id") == group_alert.most_recent_alert.get("threat_id")
+
+
+def test_grouped_alert_build_query(cbcsdk_mock):
+    """Test that grouped alert builds the query correctly when using len() to get the number of results."""
+
+    def on_post(url, body, **kwargs):
+        assert body == {
+            "group_by": {
+                "field": "THREAT_ID"
+            },
+            "time_range": {
+                "range": "-10d"
+            },
+            "criteria": {
+                "type": [
+                    "WATCHLIST"
+                ],
+                "minimum_severity": 1
+            },
+            "rows": 1,
+            "sort": [
+                {
+                    "field": "count",
+                    "order": "DESC"
+                }
+            ]
+        }
+        return {
+            "num_found": 25,
+            "num_available": 25,
+            "results": [
+                {
+                    "count": 994,
+                    "workflow_states": {
+                        "CLOSED": 1,
+                        "OPEN": 993
+                    },
+                    "determination_values": {
+                        "NONE": 994
+                    },
+                    "ml_classification_final_verdicts": {
+                        "NOT_CLASSIFIED": 4,
+                        "NOT_ANOMALOUS": 982,
+                        "ANOMALOUS": 8
+                    },
+                    "first_alert_timestamp": "2023-11-21T21:24:37.756Z",
+                    "last_alert_timestamp": "2023-12-01T21:00:42.937Z",
+                    "highest_severity": 7,
+                    "policy_applied": "NOT_APPLIED",
+                    "threat_notes_present": False,
+                    "tags": [],
+                    "device_count": 10,
+                    "workload_count": 0,
+                    "most_recent_alert": {
+                        "org_key": "ABCD1234",
+                        "alert_url": "defense.conferdeploy.net/alerts?s[c]"
+                                     "[query_string]=id:9d7f0692-e9cc-4ecc-9983-b063f1455cab&orgKey=ABCD1234",
+                        "id": "9d7f0692-e9cc-4ecc-9983-b063f1455cab",
+                        "type": "WATCHLIST",
+                        "severity": 7,
+                    }
+                }
+            ],
+            "group_by_total_count": 6421
+        }
+
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/grouped_alerts/_search", on_post)
+    api = cbcsdk_mock.api
+
+    grouped_alert_query = api.select(GroupedAlert).set_minimum_severity(1).set_time_range(range="-10d")\
+        .add_criteria("type", "WATCHLIST").set_rows(1).sort_by("count", "DESC")
+    assert len(grouped_alert_query) == 25
+
+
+def test_group_alert_bulk_update_workflow(cbcsdk_mock):
+    """Test updating a group alert job. Will raise a not implemented exception"""
+    api = cbcsdk_mock.api
+    group_alert_query = api.select(GroupedAlert)
+    with pytest.raises(NotImplementedError):
+        group_alert_query.update("OPEN", "OTHER", "TRUE_POSITIVE", "Note about the determination")
+
+
+def test_grouped_alert_search_query_to_alert_search_query(cbcsdk_mock):
+    """Test the helper function converts a grouped alert search query to an ungrouped query"""
+    api = cbcsdk_mock.api
+    expected_alert_search_query = api.select(Alert).set_time_range(range="-10d").add_criteria("type", "WATCHLIST").\
+        set_minimum_severity(1)
+
+    grouped_alerts_search_query = api.select(GroupedAlert).set_time_range(range="-10d").\
+        add_criteria("type", "WATCHLIST").set_minimum_severity(1).sort_by("count", "DESC")
+    alert_search_query = grouped_alerts_search_query.get_alert_search_query()
+
+    # deleting instance of querybuilder for assertion check
+    delattr(alert_search_query, "_query_builder")
+    delattr(expected_alert_search_query, "_query_builder")
+
+    assert alert_search_query.__module__ == "cbc_sdk.platform.alerts" and type(alert_search_query).__name__ == \
+           "AlertSearchQuery"
+    assert vars(alert_search_query) == vars(expected_alert_search_query)
+
+
+def test_alert_search_query_to_grouped_alert_search_query(cbcsdk_mock):
+    """Test the helper function converts an alert search query to a grouped query"""
+    api = cbcsdk_mock.api
+    expected_grouped_alert_search_query = api.select(GroupedAlert).set_time_range(range="-10d").\
+        add_criteria("type", "WATCHLIST").\
+        set_minimum_severity(1).set_group_by("threat_id")
+
+    alerts_search_query = api.select(Alert).set_time_range(range="-10d").\
+        add_criteria("type", "WATCHLIST").set_minimum_severity(1).sort_by("first_event_timestamp", "DESC")
+    grouped_alert_search_query = alerts_search_query.set_group_by("threat_id")
+
+    # deleting instance of querybuilder for assertion check
+    delattr(grouped_alert_search_query, "_query_builder")
+    delattr(expected_grouped_alert_search_query, "_query_builder")
+
+    assert grouped_alert_search_query.__module__ == "cbc_sdk.platform.alerts" and type(grouped_alert_search_query).\
+        __name__ == "GroupedAlertSearchQuery"
+    assert vars(grouped_alert_search_query) == vars(expected_grouped_alert_search_query)
+
+
+def test_query_grouped_alert_facets(cbcsdk_mock):
+    """Test a grouped alert facet query."""
+
+    def on_post(url, body, **kwargs):
+        assert body == GROUPED_ALERT_FACET_REQUEST
+        return GROUPED_ALERT_FACET_RESPONSE
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/grouped_alerts/_facet", on_post)
+    api = cbcsdk_mock.api
+
+    query = api.select(GroupedAlert).set_group_by("THREAT_ID").set_minimum_severity(3).\
+        add_exclusions("type", ["HOST_BASED_FIREWALL", "CONTAINER_RUNTIME"])
+    facets = query.facets(["type", "THREAT_ID"], 0, True)
+    assert facets == GROUPED_ALERT_FACET_RESPONSE["results"]
+    assert len(facets) == 2

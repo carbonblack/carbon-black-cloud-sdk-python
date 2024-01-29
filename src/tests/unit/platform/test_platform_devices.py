@@ -290,3 +290,12 @@ def test_preview_remove_policy_override(cbcsdk_mock):
     assert preview[0].current_policy_id == 11200
     assert preview[0].new_policy_id == 14760
     assert preview[0].asset_count == 1
+
+
+def test_device_tojson_inheritance(cbcsdk_mock):
+    """Testing Device tojson() with .select(Device, `device_id`)"""
+    cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
+    api = cbcsdk_mock.api
+    platform_device_select_with_id = api.select(Device, 98765)
+    platform_device_select_with_id.refresh()
+    assert platform_device_select_with_id.to_json() == GET_DEVICE_RESP

@@ -544,3 +544,12 @@ def test_str_attr_line(cb):
     assert rendering[4] == '               [1]: [_TestBaseModel object]:'
     assert rendering[5] == '                    id: 128'
     assert rendering[6] == ''
+
+
+def test_to_json(cbcsdk_mock):
+    """Test _retrieve_cb_info method of NewBaseModel"""
+    api = cbcsdk_mock.api
+    cbcsdk_mock.mock_request("GET", "/testing_only/v1/stubobjects/30241", STUBOBJECT_GET_RESP)
+    stub = StubObject(api, 30241)
+    stub.refresh()
+    assert stub.to_json() == STUBOBJECT_GET_RESP

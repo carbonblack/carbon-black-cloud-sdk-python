@@ -25,7 +25,7 @@ import sys
 import time
 import json
 from cbc_sdk import CBCloudAPI
-from cbc_sdk.platform import Alert, WatchlistAlert
+from cbc_sdk.platform import Alert, WatchlistAlert, GroupedAlert
 from cbc_sdk.platform import Device
 
 # To see the http requests being made, and the structure of the search requests enable debug logging
@@ -113,6 +113,8 @@ def main():
     # Device - device - READ: For Device Searches
     # Alerts - org.alerts.close - EXECUTE:
     # Alerts - org.alerts.notes - CREATE, READ, UPDATE, DELETE
+    # Alerts - ThreatMetadata - org.xdr.metadata - READ
+    # Background tasks - Status - jobs.status - READ: To get the job status when closing alerts
 
     api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
 
@@ -125,12 +127,13 @@ def main():
 
     # start by specifying Alert as the type of object to search
     alert_query = api.select(Alert)
+
     # add_criteria is used for all fields that are searchable arrays
     alert_query.add_criteria("device_os", "WINDOWS")
     # when the field is a single value, a set_xxx function is used.
     alert_query.set_minimum_severity(3)
     # and limit the time to the last day
-    alert_query.set_time_range(range="-1d")
+    alert_query.set_time_range(range="-10d")
     # rows default to 100, let's override that
     alert_query.set_rows(1000)
     # and I think that Watchlist alerts are really noisy, so I'm going to exclude them from the results
@@ -189,8 +192,9 @@ def main():
     # Contextual information around the Alert
     # Observations
     observation_list = alert.get_observations()
-    len(observation_list)  # force the query execution
-    print("There are {} related observations".format(len(observation_list)))
+    if observation_list is not None:
+        len(observation_list)  # force the query execution
+        print("There are {} related observations".format(len(observation_list)))
 
     # Which device was this alert on?
     device = api.select(Device, alert.device_id)
@@ -208,6 +212,54 @@ def main():
     process = watchlist_alert.get_process()
     print("This is the process for the watchlist alert")
     print(process)
+
+    # For watchlist alerts in particular sometimes we would like to know more obout the associated watchlists
+    print("This is the list of watchlist id name pairs for this alert:")
+    print(watchlist_alert.get("watchlists"))
+
+    watchlist_objects = watchlist_alert.get_watchlist_objects()
+    print("These objects are associated with this alerts watchlists:")
+    for object in watchlist_objects:
+        print(object)
+
+    # Run a Grouped Alert Search to group our alerts by threat_id
+    # Start by specifying a GroupedAlert as the type of object to search
+    grouped_alert_search_query = api.select(GroupedAlert)
+    # then much like our AlertSearchQuery define the search query
+    grouped_alert_search_query = grouped_alert_search_query.set_time_range(range="-10d")\
+        .add_criteria("type", "WATCHLIST").set_minimum_severity(1)
+    # run the query to retrieve
+    grouped_alert_search_query.all()
+    # and iterate through our GroupAlert objects
+    print([group_alert for group_alert in grouped_alert_search_query])
+
+    # to retrieve only the first GroupAlert object
+    group_alert = grouped_alert_search_query.first()
+    # to view the most recent alert on the object
+    print(group_alert.most_recent_alert_)
+
+    # to create the alert search query for a given group alert
+    alert_search_query = group_alert.get_alert_search_query()
+    print([alert for alert in alert_search_query])
+
+    # to convert an AlertSearchQuery to a GroupAlertSearchQuery, will not preserve sort order
+    group_alert_search_query = alert_search_query.set_group_by("threat_id")
+
+    # to convert a GroupAlertSearchQuery to an AlertSearchQuery, will not preserve sort order
+    alert_search_query = group_alert_search_query.get_alert_search_query()
+
+    # to create the facets on a grouped alert search query
+    grouped_alert_facets = group_alert_search_query.facets(["type", "THREAT_ID"], 0, True)
+    print(grouped_alert_facets)
+
+    # to retrieve the Network Threat Metadata from an ids alert we first retrieve an ids alert
+    alert_query = api.select(Alert)
+    alert_query.add_criteria("type", "INTRUSION_DETECTION_SYSTEM").set_time_range(range="-6M")
+    ids_alert = alert_query.first()
+
+    # then just call the get_network_threat_metadata
+    network_threat_metadata = ids_alert.get_network_threat_metadata()
+    print(network_threat_metadata)
 
 
 if __name__ == "__main__":

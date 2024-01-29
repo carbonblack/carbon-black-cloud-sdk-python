@@ -59,9 +59,9 @@ To receive the actual differential data, use the ``.count_only()`` method, as fe
         older_run_not_responded_devices: [list:1 item]:
                                          [0]: 17331059
 
-You can also access a dictionary representation of the response with the ``._info`` property.
+You can also access a dictionary representation of the response with the ``.to_json()`` method.
 
-    >>> print(run._info)
+    >>> print(run.to_json())
     {'diff_processed_time': 0.037,
      'diff_results': [{'added_count': 1,
                        'change_count': 1,
@@ -111,7 +111,7 @@ To use this method, append it to the rest of the Differential object query or co
     >>> query = cb.select(Differential).newer_run_id('jcdqsju4utpaayj5dh5r2llzffeolg0u').older_run_id('yhbg3wcea9y1l4asiltky5tupkgauzas')
     >>> actual_changes = query.count_only(False).set_device_ids([12345])
     >>> run = actual_changes.submit()
-    >>> print(run._info)
+    >>> print(run.to_json())
         {'diff_processed_time': 0.039,
          'diff_results': [{'added_count': 1,
                            'change_count': 1,
