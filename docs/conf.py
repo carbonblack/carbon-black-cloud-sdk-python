@@ -23,7 +23,7 @@ copyright = '2020-2023 VMware Carbon Black'
 author = 'Developer Relations'
 
 # The full version, including alpha/beta/rc tags
-release = '1.5.0'
+release = '1.5.1'
 
 
 # -- General configuration ---------------------------------------------------

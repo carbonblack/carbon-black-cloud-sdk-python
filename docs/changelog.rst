@@ -1,5 +1,44 @@
 Changelog
 ================================
+CBC SDK 1.5.1 - Released TBD
+-----------------------------------------
+
+New Features:
+
+* Asset Groups - Added management of asset groups:
+
+  * Create, delete, and update asset groups (either with manual or dynamic membership)
+  * Retrieve asset groups by ID
+  * Search for asset groups, retrieve list of all asset groups
+  * Add/remove members, get all members in a group
+  * Get statistics for a group
+  * Helper functions for ``Device`` to retrieve and maintain group membership
+  * Preview changes to effective policy for device(s) as a result of a number of different potential changes
+  * Full documentation and new Guide page
+
+* Alerts v7 Enhancements - Added additional functionality to Alerts v7 as implemented in version 1.5.0:
+
+  * Search Grouped Alerts, including faceting and retrieval of all alerts for a group
+  * Get list of watchlists on an alert
+  * Network threat metadata helper function
+  * Full update to Alerts guide in documentation
+
+* Command line deobfuscation added to Processes, Alerts, and Observations, allowing visualization of PowerShell
+  command lines that have been deliberately obfuscated by attackers.
+* New ``scroll()`` method added to Live Query search results.
+* New helper methods added to ``Policy`` to enable or disable XDR data collection and auth event data collection.
+* New ``export()`` and ``scroll()`` methods added to ``DeviceSearchQuery``.
+
+Updates:
+
+* Python 3.7 has been re-added as "unofficially" supported, since certain integrations that use the SDK still use it.
+* Added ``deployment_type`` as part of the facets available in ``DeviceSearchQuery``.
+
+Bug Fixes:
+
+* Search jobs that allow setting a timeout now default that timeout to 5 minutes.  The timeout may be lowered
+  from that point, but *never* raised beyond it.  This eliminates a problem of "hung" searches.
+
 CBC SDK 1.5.0 - Released October 24, 2023
 -----------------------------------------
 
