@@ -24,7 +24,7 @@ Asset Groups in your organization.
     >>> from cbc_sdk.platform import AssetGroup
     >>> api = CBCloudAPI(profile='sample')
     >>> all_asset_groups = AssetGroup.get_all_groups(api)
-    >>> print("There are {} asset groups. First group: {}".format(len(all_asset_groups), all_asset_groups.first()))
+    >>> print("There are {} asset groups. First group: {}".format(len(all_asset_groups), all_asset_groups[0]))
     There are 1 asset groups. This is the first: AssetGroup object, bound to https://defense.conferdeploy.net.
      Partially initialized. Use .refresh() to load all attributes
     -------------------------------------------------------------------------------
@@ -60,7 +60,7 @@ Summary information for each asset group is printed, and then the devices in tha
     Device Name: DemoDevice, Id: 2468642
     Device Name: SDKDemo, Id: 1357975
     Device Name: AnotherDemoMachine, Id: 19283746
-    ... truncated ...
+        ...truncated ...
 
 Create an Asset Group
 ---------------------
@@ -99,10 +99,12 @@ finished updating.
 * ``OK`` indicates the membership evaluation is complete
 * ``UPDATING`` indicates that group’s dynamic memberships are being re-evaluated
 
+    >>> import time
     >>> while new_asset_group.status != "OK":
     >>>     print("waiting")
     >>>     time.sleep(5)
     >>>     new_asset_group.refresh()
+    >>>
     >>> print("new_asset_group {}".format(new_asset_group))
     new_asset_group, bound to https://defense.conferdeploy.net.
      Last refreshed at Tue Jan 23 22:47:47 2024
@@ -131,6 +133,7 @@ All attributes can also be provided to the create method:
 The add_member() function is used to assign a device directly to the group. (Compared to dynamically added, when the
 device matches the query on the asset group.)
 
+    >>> from cbc_sdk.platform import Device
     >>> random_device = api.select(Device).first()
     >>> second_asset_group.add_members(random_device)
 
@@ -156,11 +159,13 @@ The preview method is a static class method on Policy, since it is a policy chan
 The result is a :py:mod:`DevicePolicyChangePreview() <cbc_sdk.platform.previewer.DevicePolicyChangePreview>` class,
 which contains information about all the device that would have a change in effective policy.
 
+    >>> from cbc_sdk.platform import Policy
     >>> api = CBCloudAPI(profile='sample')
     >>> policy_id = 1234
     >>> # to get a policy that exists in your org: policy_id = api.select(Policy).first().id
     >>> new_policy_position = 1
     >>> changes = Policy.preview_policy_rank_changes(api, [(policy_id, new_policy_position)])
+    >>> print(changes[0])
     DevicePolicyChangePreview object, bound to https://defense.conferdeploy.net.
     -------------------------------------------------------------------------------
     Current policy: #98765 at rank 7
@@ -196,7 +201,6 @@ A new policy is assigned and the existing query is not changed.
 
     >>> asset_group = api.select(AssetGroup).first()
     >>> policy_id = api.select(Policy).first()
-    >>> new_policy_position = 1
     >>> api = CBCloudAPI(profile='sample')
     >>> changes = AssetGroup.preview_update_asset_groups(api, [asset_group], policy_id, asset_group.query)
     >>> print("There are {} changes that would result from the proposed change. The first change:".format(len(changes)))
