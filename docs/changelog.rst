@@ -1,6 +1,6 @@
 Changelog
 ================================
-CBC SDK 1.5.1 - Released TBD
+CBC SDK 1.5.1 - Released January 30, 2024
 -----------------------------------------
 
 New Features:
@@ -40,10 +40,10 @@ Bug Fixes:
   from that point, but *never* raised beyond it.  This eliminates a problem of "hung" searches.
 
 Documentation:
-* ReadTheDocs generation has been improved to show the inherited methods.  There are some helper functions on
-SearchQuery classes such as add_criteria() inherited from CriteriaBuilderSupportMixin and first() inherited from
-IterableQueryMixin.
 
+* ReadTheDocs generation has been improved to show the inherited methods.  There are some helper functions on
+  ``SearchQuery`` classes such as ``add_criteria()`` inherited from ``CriteriaBuilderSupportMixin`` and ``first()``
+  inherited from ``IterableQueryMixin``.
 
 CBC SDK 1.5.0 - Released October 24, 2023
 -----------------------------------------
