@@ -104,7 +104,9 @@ finished updating.
     >>>     print("waiting")
     >>>     time.sleep(5)
     >>>     new_asset_group.refresh()
-    >>>
+
+Then print the new asset:
+
     >>> print("new_asset_group {}".format(new_asset_group))
     new_asset_group, bound to https://defense.conferdeploy.net.
      Last refreshed at Tue Jan 23 22:47:47 2024
@@ -200,7 +202,7 @@ Here we're working with a random asset group and policy, using the ``first()`` f
 A new policy is assigned and the existing query is not changed.
 
     >>> asset_group = api.select(AssetGroup).first()
-    >>> policy_id = api.select(Policy).first()
+    >>> policy_id = api.select(Policy).first().id
     >>> api = CBCloudAPI(profile='sample')
     >>> changes = AssetGroup.preview_update_asset_groups(api, [asset_group], policy_id, asset_group.query)
     >>> print("There are {} changes that would result from the proposed change. The first change:".format(len(changes)))
