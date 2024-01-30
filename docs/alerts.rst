@@ -166,8 +166,7 @@ This first example retrieves all groupings of watchlist alerts from the past 10 
     >>> grouped_alert_search_query = api.select(GroupedAlert)
     >>> grouped_alert_search_query = grouped_alert_search_query.set_time_range(range="-10d").add_criteria("type", "WATCHLIST").set_minimum_severity(3)
     >>> # trigger the search to execute:
-    >>> grouped_alert = grouped_alert_search_query.first()
-    >>> print(grouped_alerts.num_found, grouped_alerts.group_by_total_count)
+    >>> grouped_alert = grouped_alert_search_query.first()    >>> print(grouped_alerts.num_found, grouped_alerts.group_by_total_count)
     >>> print("Number of groups: {}, Total alerts in all groups {}".format(grouped_alert_search_query._total_results, grouped_alert_search_query._group_by_total_count))
 
 Also like Alerts, first() can be used on the query to retrieve the first grouping of alerts and study the metadata for a given threat id.
