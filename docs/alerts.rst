@@ -165,9 +165,10 @@ This first example retrieves all groupings of watchlist alerts from the past 10 
     >>> api = CBCloudAPI(profile="sample")
     >>> grouped_alert_search_query = api.select(GroupedAlert)
     >>> grouped_alert_search_query = grouped_alert_search_query.set_time_range(range="-10d").add_criteria("type", "WATCHLIST").set_minimum_severity(3)
-    >>> grouped_alerts = grouped_alert_search_query.all()
+    >>> # trigger the search to execute:
+    >>> grouped_alert = grouped_alert_search_query.first()
     >>> print(grouped_alerts.num_found, grouped_alerts.group_by_total_count)
-    21, 2287
+    >>> print("Number of groups: {}, Total alerts in all groups {}".format(grouped_alert_search_query._total_results, grouped_alert_search_query._group_by_total_count))
 
 Also like Alerts, first() can be used on the query to retrieve the first grouping of alerts and study the metadata for a given threat id.
 
@@ -179,7 +180,7 @@ Also like Alerts, first() can be used on the query to retrieve the first groupin
 
 It may be necessary to retrieve all of the alerts from a threat id grouping for further inspection, it is possible to directly retrieve the associated alert search query from a given grouped alert
 
-    >>> alert_search_query = group_alert.get_alert_search_query()
+    >>> alert_search_query = most_recent_alert.get_alert_search_query()
     >>> alerts = alert_search_query.all()
 
 It is also possible to create grouped facets from the group alert search query
