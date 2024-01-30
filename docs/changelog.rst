@@ -33,6 +33,9 @@ Updates:
 
 * Python 3.7 has been re-added as "unofficially" supported, since certain integrations that use the SDK still use it.
 * Added ``deployment_type`` as part of the facets available in ``DeviceSearchQuery``.
+* ReadTheDocs generation has been improved to show the inherited methods.  There are some helper functions on
+SearchQuery classes such as add_criteria() inherited from CriteriaBuilderSupportMixin and first() inherited from
+IterableQueryMixin.
 
 Bug Fixes:
 
