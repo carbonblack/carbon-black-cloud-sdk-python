@@ -2987,3 +2987,17 @@ GET_FACET_SEARCH_RESULTS_RESP_NOT_COMPLETE = {
     "contacted": 10,
     "completed": 2
 }
+
+PROCESS_OBFUSCATED_CMDLINE = "powershell.exe -encodedcommand VwByAGkAdABlAC0ATwB1AHQAcAB1AHQAIAAiAE4AbwAgAG0AYQB0AHQAZQByACAAaABvAHcAIAB0AGgAaQBuACAAeQBvAHUAIABzAGwAaQBjAGUAIABpAHQALAAgAGkAdAAnAHMAIABzAHQAaQBsAGwAIABiAGEAbABvAG4AZQB5AC4AIgA="  # noqa: E501
+
+PROCESS_DEOBFUSCATE_CMDLINE_RESPONSE = {
+    "original_code": "Write-Output \"No matter how thin you slice it, it's still baloney.\"\n",
+    "deobfuscated_code": "Write-Output \"No matter how thin you slice it, it's still baloney.\"\n",
+    "identities": [
+        "Write-Output"
+    ],
+    "strings": [
+        "No matter how thin you slice it, it's still baloney."
+    ],
+    "obfuscation_level": 0.0
+}

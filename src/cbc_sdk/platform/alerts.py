@@ -28,12 +28,15 @@ from cbc_sdk.platform.observations import Observation
 from cbc_sdk.platform.processes import AsyncProcessQuery, Process
 from cbc_sdk.platform.legacy_alerts import LegacyAlertSearchQueryCriterionMixin
 from cbc_sdk.platform.jobs import Job
+from cbc_sdk.platform.network_threat_metadata import NetworkThreatMetadata
+from cbc_sdk.enterprise_edr.threat_intelligence import Watchlist
 
 from backports._datetime_fromisoformat import datetime_fromisoformat
 
 """Alert Models"""
 
 MAX_RESULTS_LIMIT = 10000
+REQUEST_IGNORED_KEYS = ["_doc_class", "_cb", "_count_valid", "_total_results", "_query_builder", "_sortcriteria"]
 
 
 class Alert(PlatformModel):
@@ -519,6 +522,20 @@ class Alert(PlatformModel):
         """
         return self.workflow
 
+    def deobfuscate_cmdline(self):
+        """
+        Deobfuscates the command line of the process pointed to by the alert and returns the deobfuscated result.
+
+        Required Permissions:
+            script.deobfuscation(EXECUTE)
+
+        Returns:
+             dict: A dict containing information about the obfuscated command line, including the deobfuscated result.
+        """
+        body = {"input": self.process_cmdline}
+        result = self._cb.post_object(f"/tau/v2/orgs/{self._cb.credentials.org_key}/reveal", body)
+        return result.json()
+
     def close(self, closure_reason=None, determination=None, note=None):
         """
         Closes this alert.
@@ -790,6 +807,23 @@ class WatchlistAlert(Alert):
         """
         return AlertSearchQuery(cls, cb).add_criteria("type", ["WATCHLIST"])
 
+    def get_watchlist_objects(self):
+        """
+        Returns the list of associated watchlist objects for the associated watchlist alert.
+
+        Example:
+            >>> watchlist_alert = cb.select(Alert, "f643d11f-59ab-478f-92c3-4198ca9b8230")
+            >>> watchlist_objects = watchlist_alert.get_watchlist_objects()
+
+        Returns:
+            list[Watchlist]: A list of Watchlist objects.
+        """
+        watchlist_objects = []
+        for watchlist in self.get("watchlists"):
+            watchlist_id = watchlist.get("id")
+            watchlist_objects.append(self._cb.select(Watchlist, watchlist_id))
+        return watchlist_objects
+
 
 class CBAnalyticsAlert(Alert):
     """Represents CB Analytics alerts."""
@@ -920,6 +954,108 @@ class IntrusionDetectionSystemAlert(Alert):
         """
         return AlertSearchQuery(cls, cb).add_criteria("type", ["INTRUSION_DETECTION_SYSTEM"])
 
+    def get_network_threat_metadata(self):
+        """
+        The NetworkThreatMetadata associated with this IDS alert if it exists.
+
+        Example:
+            >>> alert_threat_metadata = ids_alert.get_network_threat_metadata()
+
+        Returns:
+            NetworkThreatMetadata: The NetworkThreatMetadata associated with this IDS alert.
+        """
+        tms_rule_id = self.get("tms_rule_id")
+        if tms_rule_id:
+            return self._cb.select(NetworkThreatMetadata, tms_rule_id)
+        return None
+
+
+class GroupedAlert(PlatformModel):
+    """Represents Grouped alerts."""
+    urlobject = "/api/alerts/v7/orgs/{0}/grouped_alerts"
+    swagger_meta_file = "platform/models/grouped_alert.yaml"
+
+    def __init__(self, cb, model_unique_id, initial_data=None):
+        """
+        Initialize the Grouped Alert object.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            model_unique_id (str): ID of the alert represented.
+            initial_data (dict): Initial data used to populate the alert.
+        """
+        super(GroupedAlert, self).__init__(cb, model_unique_id, initial_data)
+        self._most_recent_alert = None
+        self._request = None
+
+        most_recent_alert = initial_data["most_recent_alert"]
+        if "type" in most_recent_alert:
+            if most_recent_alert["type"] == "CB_ANALYTICS":
+                self._most_recent_alert = CBAnalyticsAlert(cb, most_recent_alert["id"], most_recent_alert)
+            elif most_recent_alert["type"] == "WATCHLIST":
+                self._most_recent_alert = WatchlistAlert(cb, most_recent_alert["id"], most_recent_alert)
+            elif most_recent_alert["type"] == "INTRUSION_DETECTION_SYSTEM":
+                self._most_recent_alert = IntrusionDetectionSystemAlert(cb, most_recent_alert["id"], most_recent_alert)
+            elif most_recent_alert["type"] == "DEVICE_CONTROL":
+                self._most_recent_alert = DeviceControlAlert(cb, most_recent_alert["id"], most_recent_alert)
+            elif most_recent_alert["type"] == "HOST_BASED_FIREWALL":
+                self._most_recent_alert = HostBasedFirewallAlert(cb, most_recent_alert["id"], most_recent_alert)
+            elif most_recent_alert["type"] == "CONTAINER_RUNTIME":
+                self._most_recent_alert = ContainerRuntimeAlert(cb, most_recent_alert["id"], most_recent_alert)
+            else:
+                self._most_recent_alert = Alert(cb, most_recent_alert["id"], most_recent_alert)
+
+    @classmethod
+    def _query_implementation(cls, cb, **kwargs):
+        """
+        Returns the appropriate query object for this alert type.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            **kwargs (dict): Not used, retained for compatibility.
+
+        Returns:
+            GroupAlertSearchQuery: The query object for this alert type.
+        """
+        return GroupedAlertSearchQuery(cls, cb)
+
+    @property
+    def most_recent_alert_(self):
+        """
+        Returns the most recent alert for a given group alert.
+
+        Returns:
+            Alert: the most recent alert in the Group Alert.
+        """
+        return self._most_recent_alert
+
+    def get_alert_search_query(self):
+        """
+        Returns the Alert Search Query needed to pull all alerts for a given Group Alert.
+
+        Returns:
+            AlertSearchQuery: for all alerts associated with the calling group alert.
+
+        Note:
+            Does not preserve sort criterion
+        """
+        alert_search_query = self._cb.select(Alert)
+        for key, value in vars(alert_search_query).items():
+            if hasattr(self._request, key) and key not in REQUEST_IGNORED_KEYS:
+                setattr(alert_search_query, key, self._request.__getattribute__(key))
+
+        alert_search_query.add_criteria(self._request._group_by.lower(), self.most_recent_alert["threat_id"])
+        return alert_search_query
+
+    def get_alerts(self):
+        """
+        Returns the all alerts for a given Group Alert.
+
+        Returns:
+            list: alerts associated with the calling group alert.
+        """
+        return self.get_alert_search_query().all()
+
 
 """Alert Queries"""
 
@@ -947,6 +1083,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         self._query_builder = QueryBuilder()
         self._criteria = {}
         self._time_filters = {}
+        self._time_range = {}
         self._exclusions = {}
         self._time_exclusion_filters = {}
         self._sortcriteria = {}
@@ -1029,7 +1166,6 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         else:
             # everything before this is only for backwards compatibility, once v6 deprecates all the other
             # checks can be removed
-            self._time_range = {}
             self._time_range = time_filter
         return self
 
@@ -1213,7 +1349,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             request["query"] = query
 
         request["rows"] = self._batch_size
-        if hasattr(self, "_time_range"):
+        if self._time_range != {}:
             request["time_range"] = self._time_range
         if from_row > 1:
             request["start"] = from_row
@@ -1496,3 +1632,184 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         else:
             self._exclusions["remote_is_private"] = is_private
         return self
+
+    def set_group_by(self, field):
+        """
+        Converts the AlertSearchQuery to a GroupAlertSearchQuery grouped by the argument
+
+        Args:
+            field (string): The field to group by, defaults to "threat_id"
+
+        Returns:
+            AlertSearchQuery
+
+        Note:
+            Does not preserve sort criterion
+        """
+        grouped_alert_search_query = self._cb.select(GroupedAlert)
+        for key, value in vars(grouped_alert_search_query).items():
+            if hasattr(self, key) and key not in REQUEST_IGNORED_KEYS:
+                setattr(grouped_alert_search_query, key, self.__getattribute__(key))
+        grouped_alert_search_query.set_group_by(field)
+
+        return grouped_alert_search_query
+
+
+class GroupedAlertSearchQuery(AlertSearchQuery):
+    """Represents a query that is used to group Alert objects by a given field."""
+    def __init__(self, *args, **kwargs):
+        """Initialize the GroupAlertSearchQuery."""
+        super().__init__(*args, **kwargs)
+        self._group_by = "THREAT_ID"
+
+    def set_group_by(self, field):
+        """
+        Sets the 'group_by' query body parameter, determining which field to group the alerts by.
+
+        Args:
+            field (string): The field to group by
+        """
+        self._group_by = field
+        return self
+
+    def _build_request(self, from_row, max_rows, add_sort=True):
+        """
+        Creates the request body for an API call.
+
+        Args:
+            from_row (int): The row to start the query at.
+            max_rows (int): The maximum number of rows to be returned.
+            add_sort (bool): If True(default), the sort criteria will be added as part of the request.
+
+        Returns:
+            dict: The complete request body.
+        """
+        request = super(GroupedAlertSearchQuery, self)._build_request(from_row, max_rows, add_sort=True)
+        request["group_by"] = {"field": self._group_by}
+
+        return request
+
+    def get_alert_search_query(self):
+        """
+        Converts the GroupedAlertSearchQuery into a nongrouped AlertSearchQuery
+
+        Returns: AlertSearchQuery
+
+        Note: Does not preserve sort criterion
+        """
+        alert_search_query = self._cb.select(Alert)
+        for key, value in vars(alert_search_query).items():
+            if hasattr(self, key) and key not in REQUEST_IGNORED_KEYS:
+                setattr(alert_search_query, key, self.__getattribute__(key))
+
+        return alert_search_query
+
+    def _perform_query(self, from_row=1, max_rows=-1):
+        """
+        Performs the query and returns the results of the query in an iterable fashion.
+
+        Args:
+            from_row (int): The row to start the query at (default 1).
+            max_rows (int): The maximum number of rows to be returned (default -1, meaning "all").
+
+        Returns:
+            Iterable: The iterated query.
+        """
+        url = self._build_url("/_search")
+        current = from_row
+        numrows = 0
+        still_querying = True
+        while still_querying:
+            request = self._build_request(current, max_rows)
+            resp = self._cb.post_object(url, body=request)
+            result = resp.json()
+
+            self._total_results = result["num_found"]
+            self._group_by_total_count = result["group_by_total_count"]
+
+            # Prevent 500 Internal Server Error from retrieving behind MAX_RESULTS_LIMIT
+            if self._total_results > MAX_RESULTS_LIMIT:
+                self._total_results = MAX_RESULTS_LIMIT
+            self._count_valid = True
+
+            results = result.get("results", [])
+            for item in results:
+                grouped_alert = self._doc_class(self._cb, None, item)
+                grouped_alert._request = self
+                yield grouped_alert
+                current += 1
+                numrows += 1
+
+                if max_rows > 0 and numrows == max_rows:
+                    still_querying = False
+                    break
+
+            from_row = current
+            if current >= self._total_results:
+                still_querying = False
+                break
+
+    def close(self, closure_reason=None, determination=None, note=None):
+        """
+        Closing all alerts matching a grouped alert query is not implemented.
+
+        Note:
+            - Closing all alerts in all groups returned by a ``GroupedAlertSearchQuery`` can be done by
+            getting the ``AlertSearchQuery`` and using close() on it as shown in the following example.
+
+        Example:
+            >>> alert_query = grouped_alert_query.get_alert_search_query()
+            >>> alert_query.close(closure_reason, determination, note)
+        """
+        raise NotImplementedError("this method is not implemented")
+
+    def update(self, status, closure_reason=None, determination=None, note=None):
+        """
+        Updating all alerts matching a grouped alert query is not implemented.
+
+        Note:
+            - Updating all alerts in all groups returned by a ``GroupedAlertSearchQuery`` can be done by
+            getting the ``AlertSearchQuery`` and using update() on it as shown in the following example.
+
+        Example:
+            >>> alert_query = grouped_alert_query.get_alert_search_query()
+            >>> job = alert_query.update("IN_PROGESS", "NO_REASON", "NONE", "Starting Investigation")
+            >>> completed_job = job.await_completion().result()
+        """
+        raise NotImplementedError("this method is not implemented")
+
+    def facets(self, fieldlist, max_rows=0, filter_values=False):
+        """
+        Return information about the facets for this alert by search, using the defined criteria.
+
+        Args:
+            fieldlist (list): List of facet field names.
+            max_rows (int): The maximum number of rows to return. 0 means return all rows.
+            filter_values (boolean): A flag to indicate whether any filters on a term should be applied to facet
+            calculation. When false (default), a filter on the term is ignored while calculating facets
+
+        Returns:
+            list: A list of facet information specified as dicts.
+            error: invalid enum
+
+        Raises:
+            FunctionalityDecommissioned: If the requested attribute is no longer available.
+            ApiError: If the facet field is not valid
+        """
+        for field in fieldlist:
+            if field in GroupedAlertSearchQuery.DEPRECATED_FACET_FIELDS:
+                raise FunctionalityDecommissioned(
+                    "Field '{0}' does is not a valid facet name because it was deprecated in "
+                    "Alerts v7.".format(field))
+
+        request = self._build_request(0, max_rows, False)
+        del request['rows']
+        request["terms"] = {"fields": fieldlist, "rows": max_rows}
+        request["filter_values"] = filter_values
+
+        url = self._build_url("/_facet")
+        resp = self._cb.post_object(url, body=request)
+        if resp.status_code == 400:
+            raise ApiError(resp.json())
+        result = resp.json()
+        return result.get("results", [])

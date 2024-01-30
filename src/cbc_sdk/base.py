@@ -60,9 +60,9 @@ def construct_include(loader, node):
     with open(filename, 'rb') as f:
         if extension in ('yaml', 'yml'):
             return yaml.load(f, SwaggerLoader)
-        elif extension in ('json', ):
+        elif extension in ('json', ):  # pragma: no cover
             return json.load(f)
-        else:
+        else:  # pragma: no cover
             return ''.join(f.readlines())
 
 
@@ -97,7 +97,7 @@ class CbMetaModel(type):
 
         class_docstr = clsdict.get('__doc__', None)
         if not class_docstr:
-            class_docstr = f"Represents a {name} object in the Carbon Black Cloud."
+            class_docstr = f"Represents a {name} object in the Carbon Black Cloud."  # pragma: no cover
         need_header = True
         for field_name, field_info in iter(model_data.get("properties", {}).items()):
             docstring = field_info.get("description", None)
@@ -235,7 +235,7 @@ class ObjectFieldDescriptor(FieldDescriptor):
         return ret or {}
 
 
-class IsoDateTimeFieldDescriptor(FieldDescriptor):
+class IsoDateTimeFieldDescriptor(FieldDescriptor):  # pragma: no cover
     """Field descriptor for fields of 'iso-date-time' type."""
     def __init__(self, field_name):
         """
@@ -272,7 +272,7 @@ class IsoDateTimeFieldDescriptor(FieldDescriptor):
         super(IsoDateTimeFieldDescriptor, self).__set__(instance, parsed_date)
 
 
-class EpochDateTimeFieldDescriptor(FieldDescriptor):
+class EpochDateTimeFieldDescriptor(FieldDescriptor):  # pragma: no cover
     """Field descriptor for fields of 'epoch-ms-date-time' type."""
     def __init__(self, field_name, multiplier=1.0):
         """
@@ -318,7 +318,7 @@ class EpochDateTimeFieldDescriptor(FieldDescriptor):
         super(EpochDateTimeFieldDescriptor, self).__set__(instance, new_value)
 
 
-class ForeignKeyFieldDescriptor(FieldDescriptor):
+class ForeignKeyFieldDescriptor(FieldDescriptor):  # pragma: no cover
     """Field descriptor for fields that are foreign keys."""
     def __init__(self, field_name, join_model, join_field=None):
         """
@@ -364,7 +364,7 @@ class ForeignKeyFieldDescriptor(FieldDescriptor):
             setattr(self, self.join_field, value)
 
 
-class BinaryFieldDescriptor(FieldDescriptor):
+class BinaryFieldDescriptor(FieldDescriptor):  # pragma: no cover
     """Field descriptor for fields of 'byte' type."""
     def __get__(self, instance, instance_type=None):
         """
@@ -502,11 +502,11 @@ class NewBaseModel(object, metaclass=CbMetaModel):
             return self._info[item]
 
         # if we're still here, let's load the object if we haven't done so already.
-        if not self._full_init:
+        if not self._full_init:  # pragma: no cover
             self._refresh()
 
         # try one more time.
-        if item in self._info:
+        if item in self._info:  # pragma: no cover
             return self._info[item]
         else:
             raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
@@ -541,7 +541,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         """
         return getattr(self, attrname, default_val)
 
-    def _set(self, attrname, new_value):
+    def _set(self, attrname, new_value):  # pragma: no cover
         pass
 
     def refresh(self):
@@ -582,7 +582,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         if self._model_unique_id is not None:
             return "<%s.%s: id %s> @ %s" % (self.__class__.__module__, self.__class__.__name__, self._model_unique_id,
                                             self._cb.session.server)
-        else:
+        else:  # pragma: no cover
             return "<%s.%s object at %s> @ %s" % (self.__class__.__module__, self.__class__.__name__, hex(id(self)),
                                                   self._cb.session.server)
 
@@ -618,7 +618,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
         """
         try:
             string_value = str(value)
-        except UnicodeDecodeError:
+        except UnicodeDecodeError:  # pragma: no cover
             string_value = repr(value)
         if len(string_value) > NewBaseModel.MAX_VALUE_WIDTH:
             string_value = string_value[:NewBaseModel.MAX_VALUE_WIDTH - 3] + "..."
@@ -762,7 +762,7 @@ class NewBaseModel(object, metaclass=CbMetaModel):
 
         return "\n".join(lines)
 
-    def _join(self, join_cls, field_name):
+    def _join(self, join_cls, field_name):  # pragma: no cover
         try:
             field_value = getattr(self, field_name)
         except AttributeError:
@@ -773,11 +773,20 @@ class NewBaseModel(object, metaclass=CbMetaModel):
 
         return self._cb.select(join_cls, field_value)
 
+    def to_json(self):
+        """
+        Return a json object of the response.
+
+        Returns:
+            Any: The response dictionary representation.
+        """
+        return copy.deepcopy(self._info)
+
 
 class UnrefreshableModel(NewBaseModel):
     """Represents a model that can't be refreshed, i.e. for which ``reset()`` is not a valid operation."""
 
-    def refresh(self):
+    def refresh(self):  # pragma: no cover
         """Reload this object from the server."""
         raise ApiError("refresh() called on an unrefreshable model")
 
@@ -802,7 +811,7 @@ class MutableBaseModel(NewBaseModel):
             return propobj.fset(self, val)
 
         if not attrname.startswith("_") and attrname not in self.__class__._valid_fields:
-            if attrname in self._info:
+            if attrname in self._info:  # pragma: no cover
                 log.warning("Changing field not included in Swagger definition: {0:s}".format(attrname))
                 self._set(attrname, val)
             else:
@@ -1028,7 +1037,7 @@ class IterableQueryMixin:
         Returns:
             list: List of query items
         """
-        return self._perform_query()
+        return list(self._perform_query())
 
     def first(self):
         """
@@ -1656,7 +1665,7 @@ class CriteriaBuilderSupportMixin:
             >>> query = api.select(Alert).add_criteria("type", "CB_ANALYTIC")
         """
         if not isinstance(newlist, list):
-            if not isinstance(newlist, str) and not isinstance(newlist, int):
+            if not isinstance(newlist, str) and not isinstance(newlist, int) and not isinstance(newlist, bool):
                 raise ApiError("Criteria value(s) must be a string, int or list of strings or ints. "
                                f"{newlist} is a {type(newlist)}.")
             self._update_criteria(key, [newlist], overwrite=True)
@@ -2087,8 +2096,8 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
         self._query_token = None
         # whether self._total_results is a valid value
         self._count_valid = False
-        # seconds to wait for num_contacted == num_completed until timing out
-        self._timeout = 0
+        # milliseconds to wait for num_contacted == num_completed until timing out
+        self._timeout = cb.credentials.default_timeout
         # whether the query timed-out
         self._timed_out = False
         # query body parameters
@@ -2102,19 +2111,23 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
         self._default_args = {}
 
     def timeout(self, msecs):
-        """Sets the timeout on an AsyncQuery. By default, there is no timeout.
+        """
+        Sets the timeout on an AsyncQuery.
 
         Arguments:
-            msecs (int): Timeout duration, in milliseconds.
+            msecs (int): Timeout duration, in milliseconds.  This value can never be greater than the configured
+                default timeout.  If this is 0, the configured default timeout value is used.
 
         Returns:
-            Query (AsyncQuery): The Query object with new milliseconds
-            parameter.
+            Query (AsyncQuery): The Query object with new milliseconds parameter.
 
         Example:
             >>> cb.select(ProcessFacet).where(process_name="foo.exe").timeout(5000)
         """
-        self._timeout = msecs
+        if msecs <= 0:
+            self._timeout = self._cb.credentials.default_timeout
+        else:
+            self._timeout = min(msecs, self._cb.credentials.default_timeout)
         return self
 
     def limit(self, limit):
@@ -2308,6 +2321,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
         self._submit_time = time.time() * 1000
 
     def _still_querying(self):
+        assert self._timeout > 0
         if not self._query_token:
             self._submit()
 
@@ -2320,7 +2334,7 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
         if searchers_contacted == 0:
             return True
         if searchers_completed < searchers_contacted:
-            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:
+            if (time.time() * 1000) - self._submit_time > self._timeout:
                 self._timed_out = True
                 return False
             return True

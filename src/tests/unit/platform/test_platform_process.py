@@ -38,7 +38,9 @@ from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_SUMMARY_RESP,
                                                        EXPECTED_PROCESS_RANGES_FACETS,
                                                        GET_PROCESS_TREE_STR,
                                                        GET_PROCESS_SUMMARY_STR,
-                                                       GET_PROCESS_DETAILS_JOB_RESULTS_RESP_ZERO)
+                                                       GET_PROCESS_DETAILS_JOB_RESULTS_RESP_ZERO,
+                                                       PROCESS_OBFUSCATED_CMDLINE,
+                                                       PROCESS_DEOBFUSCATE_CMDLINE_RESPONSE)
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
 
@@ -265,6 +267,56 @@ def test_summary_select_set_time_range_failures(cbcsdk_mock):
     with pytest.raises(ApiError) as ex:
         summary.set_time_range(window=20)
     assert 'Window must be a string.' in ex.value.message
+
+
+def test_summary_query_timeout(cb):
+    """Tests the timeout setting on SummaryQuery."""
+    query = cb.select(Process.Summary).where("process_guid:WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00")
+    assert query._timeout == 300000
+    query.timeout(500)
+    assert query._timeout == 500
+    query.timeout(999999)
+    assert query._timeout == 300000
+    query.timeout(700)
+    assert query._timeout == 700
+    query.timeout(0)
+    assert query._timeout == 300000
+
+
+def test_process_deobfuscate_cmdline(cbcsdk_mock):
+    """Test the deobfuscate_cmdline() method."""
+    def on_validation_post(url, body, **kwargs):
+        assert body == {"query": "process_guid:WNEXFKQ7\\-0002b226\\-000015bd\\-00000000\\-1d6225bbba74c00"}
+        return POST_PROCESS_VALIDATION_RESP
+
+    def on_post_deobfuscate(url, body, **kwargs):
+        assert body == {"input": PROCESS_OBFUSCATED_CMDLINE}
+        return PROCESS_DEOBFUSCATE_CMDLINE_RESPONSE
+
+    # mock the search validation
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
+    # mock the POST of a search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=0"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=500"),
+                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
+    cbcsdk_mock.mock_request("POST", "/tau/v2/orgs/test/reveal", on_post_deobfuscate)
+
+    api = cbcsdk_mock.api
+    process = api.select(Process, 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00')
+    # poke the command line so we have something to deobfuscate
+    process._info['process_cmdline'] = [PROCESS_OBFUSCATED_CMDLINE]
+    deobfuscation = process.deobfuscate_cmdline()
+    assert len(deobfuscation['identities']) == 1
+    assert len(deobfuscation['strings']) == 1
+    assert deobfuscation['deobfuscated_code'] == \
+        "Write-Output \"No matter how thin you slice it, it's still baloney.\"\n"
 
 
 def test_process_events(cbcsdk_mock):
@@ -506,6 +558,17 @@ def test_process_start_rows(cbcsdk_mock):
                        }
     assert process_q_params == expected_params
     assert process._batch_size == 102
+
+
+def test_process_search_set_rows_failure(cbcsdk_mock):
+    """Test what happens when we set rows to something nonsensical."""
+    api = cbcsdk_mock.api
+    process = api.select(Process).where("event_type:modload").add_criteria("device_id", [1234]).add_exclusions(
+        "crossproc_effective_reputation", ["REP_WHITE"])
+    with pytest.raises(ApiError):
+        process.set_rows('Bogus')
+    with pytest.raises(ApiError):
+        process.set_rows(65536)
 
 
 def test_process_sort(cbcsdk_mock):

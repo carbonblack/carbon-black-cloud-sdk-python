@@ -29,14 +29,7 @@ class AuthEvent(NewBaseModel):
     validation_url = "/api/investigate/v2/orgs/{}/auth_events/search_validation"
     swagger_meta_file = "enterprise_edr/models/auth_events.yaml"
 
-    def __init__(
-        self,
-        cb,
-        model_unique_id=None,
-        initial_data=None,
-        force_init=False,
-        full_doc=False,
-    ):
+    def __init__(self, cb, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
         """
         Initialize the AuthEvent object.
 
@@ -55,7 +48,7 @@ class AuthEvent(NewBaseModel):
             >>> events = cb.select(AuthEvent).where("auth_username:SYSTEM")
             >>> print(*events)
         """
-        self._details_timeout = 0
+        self._details_timeout = cb.credentials.default_timeout
         self._info = None
         if model_unique_id is not None and initial_data is None:
             auth_events_future = (
@@ -105,7 +98,8 @@ class AuthEvent(NewBaseModel):
         """Requests detailed results.
 
         Args:
-            timeout (int): AuthEvent details request timeout in milliseconds.
+            timeout (int): AuthEvent details request timeout in milliseconds.  This can never be greater than the
+                configured default timeout.  If this is 0, the configured default timeout is used.
             async_mode (bool): True to request details in an asynchronous manner.
 
         Returns:
@@ -121,7 +115,10 @@ class AuthEvent(NewBaseModel):
             >>> events = cb.select(AuthEvent).where(process_pid=2000)
             >>> print(events[0].get_details())
         """
-        self._details_timeout = timeout
+        if timeout <= 0 or timeout > self._cb.credentials.default_timeout:
+            self._details_timeout = self._cb.credentials.default_timeout
+        else:
+            self._details_timeout = timeout
         if not self.event_id:
             raise ApiError(
                 "Trying to get auth_event details on an invalid auth_event_id"
@@ -153,7 +150,8 @@ class AuthEvent(NewBaseModel):
             alert_id (str):  An alert id to fetch associated auth_events
             event_ids (list): A list of auth_event ids to fetch
             bulk (bool): Whether it is a bulk request
-            timeout (int): AuthEvents details request timeout in milliseconds.
+            timeout (int): AuthEvents details request timeout in milliseconds.  This can never be greater than the
+                configured default timeout.  If this value is 0, the configured default timeout is used.
 
         Returns:
             AuthEvent or list(AuthEvent): if it is a bulk operation a list, otherwise AuthEvent
@@ -161,6 +159,8 @@ class AuthEvent(NewBaseModel):
         Raises:
             ApiError: if cb is not instance of CBCloudAPI
         """
+        if timeout <= 0 or timeout > cb.credentials.default_timeout:
+            timeout = cb.credentials.default_timeout
         if cb.__class__.__name__ != "CBCloudAPI":
             raise ApiError("cb argument should be instance of CBCloudAPI.")
         if (alert_id and event_ids) or not (alert_id or event_ids):
@@ -189,7 +189,7 @@ class AuthEvent(NewBaseModel):
                 time.sleep(0.5)
                 continue
             if completed < contacted:
-                if timeout != 0 and (time.time() * 1000) - submit_time > timeout:
+                if (time.time() * 1000) - submit_time > timeout:
                     timed_out = True
                     break
             else:
@@ -282,7 +282,8 @@ class AuthEvent(NewBaseModel):
             cb (CBCloudAPI): A reference to the CBCloudAPI object.
             alert_id (str):  An alert id to fetch associated events
             event_ids (list): A list of event ids to fetch
-            timeout (int): AuthEvent details request timeout in milliseconds.
+            timeout (int): AuthEvent details request timeout in milliseconds.  This can never be greater than the
+                configured default timeout.  If this value is 0, the configured default timeout is used.
 
         Returns:
             list: list of Auth Events
@@ -520,7 +521,7 @@ class AuthEventQuery(Query):
         super(AuthEventQuery, self).__init__(doc_class, cb)
         self._default_args["rows"] = self._batch_size
         self._query_token = None
-        self._timeout = 0
+        self._timeout = cb.credentials.default_timeout
         self._timed_out = False
 
     def or_(self, **kwargs):
@@ -563,18 +564,21 @@ class AuthEventQuery(Query):
         """Sets the timeout on a Auth Event query.
 
         Arguments:
-            msecs (int): Timeout duration, in milliseconds.
+            msecs (int): Timeout duration, in milliseconds.  This value can never be greater than the configured
+                default timeout.  If this value is 0, the configured default timeout is used.
 
         Returns:
-            Query (AuthEventQuery): The Query object with new milliseconds
-                parameter.
+            Query (AuthEventQuery): The Query object with new milliseconds parameter.
 
         Example:
             >>> cb = CBCloudAPI(profile="example_profile")
             >>> events = cb.select(AuthEvent).where(process_name="chrome.exe").timeout(5000)
             >>> print(*events)
         """
-        self._timeout = msecs
+        if msecs <= 0:
+            self._timeout = self._cb.credentials.default_timeout
+        else:
+            self._timeout = min(msecs, self._cb.credentials.default_timeout)
         return self
 
     def _submit(self):
@@ -596,6 +600,7 @@ class AuthEventQuery(Query):
 
     def _still_querying(self):
         """Check whether there are still records to be collected."""
+        assert self._timeout > 0
         if not self._query_token:
             self._submit()
 
@@ -613,7 +618,7 @@ class AuthEventQuery(Query):
         if contacted == 0:
             return True
         if completed < contacted:
-            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:
+            if (time.time() * 1000) - self._submit_time > self._timeout:
                 self._timed_out = True
                 return False
             return True

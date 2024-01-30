@@ -15,6 +15,7 @@ Resources
 * `Alert Search Fields <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields/>`_ on Developer Network
 * Example script in `GitHub <https://github.com/carbonblack/carbon-black-cloud-sdk-python/tree/develop/examples/platform>`_
 * If you are updating from SDK version 1.4.3 or earlier, see the `alerts-migration`_ guide.
+* If you are updating from Notifications, see the `notification-migration`_ guide.
 
 .. note::
     In Alerts v7, and therefore SDK 1.5.0 onwards, Observed Alerts are not included; they are an Observation. The field ``category``
@@ -106,13 +107,13 @@ For example, the following snippet returns all types:
 
 .. code-block:: python
 
-    >>> alerts = cb.select(Alert).set_types([])
+    >>> alerts = api.select(Alert).set_types([])
 
 It is equivalent to:
 
 .. code-block:: python
 
-    >>> alerts = cb.select(Alert)
+    >>> alerts = api.select(Alert)
 
 .. tip::
     More information about the ``solrq`` can be found in
@@ -152,6 +153,51 @@ You can also read from a csv file by using values that match the profile names i
     >>> for alert in alerts:
     ...     print(alert.id, alert.device_os, alert.device_name, alert.category)
 
+Grouping Alerts
+---------------
+
+The examples below illustrates how to create and manipulate grouped alert objects. A Grouped Alert is a collections of alerts that share a common threat id. When grouping alerts by a threat id it allows greater context and insight surrounding the pervasiveness of a threat.
+
+This first example retrieves all groupings of watchlist alerts from the past 10 days that have a minimum severity level of 3. If this feels familiar to basic alert retrieval, the only difference of note at this stage is that we select a GroupedAlert instead of an Alert.
+
+    >>> from cbc_sdk import CBCloudAPI
+    >>> from cbc_sdk.platform import GroupedAlert
+    >>> api = CBCloudAPI(profile="sample")
+    >>> grouped_alert_search_query = api.select(GroupedAlert)
+    >>> grouped_alert_search_query = grouped_alert_search_query.set_time_range(range="-10d").add_criteria("type", "WATCHLIST").set_minimum_severity(3)
+    >>> # trigger the search to execute:
+    >>> grouped_alert = grouped_alert_search_query.first()
+    >>> print("Number of groups: {}, Total alerts in all groups {}".format(grouped_alert_search_query._total_results, grouped_alert_search_query._group_by_total_count))
+    Number of groups: 19, Total alerts in all groups 2454
+
+Also like Alerts, first() can be used on the query to retrieve the first grouping of alerts and study the metadata for a given threat id.
+
+    >>> first_alert_grouping = grouped_alert_search_query.first()
+    >>> print(first_alert_grouping.count, first_alert_grouping.highest_severity, first_alert_grouping.device_count, first_alert_grouping.workflow_states)
+    534 7  3 ("OPEN": 534)
+    >>> most_recent_alert = first_alert_grouping.most_recent_alert_
+    >>> print(most_recent_alert.threat_id)
+
+It may be necessary to retrieve all of the alerts from a threat id grouping for further inspection, it is possible to directly retrieve the associated alert search query from a given grouped alert
+
+    >>> alert_search_query = first_alert_grouping.get_alert_search_query()
+    >>> alerts = alert_search_query.all()
+
+It is also possible to create grouped facets from the group alert search query
+
+    >>> grouped_alert_facets = grouped_alert_search_query.facets(["type", "THREAT_ID"], 0, True)
+
+Suppose instead of grouped alerts, you had been working with alerts and wanted to crossover to grouped alerts. Instead of building a new group alert query from scratch you can transform an alert search query into a grouped alert search query or vice versa!
+
+    >>> from cbc_sdk import CBCloudAPI
+    >>> from cbc_sdk.platform import Alert, GroupedAlert
+    >>> api = CBCloudAPI(profile="sample")
+    >>> alert_search_query = api.select(Alert)
+    >>> alert_search_query = alert_search_query.set_time_range(range="-10d").add_criteria("type", "WATCHLIST").set_minimum_severity(3)
+    >>> group_alert_search_query = alert_search_query.set_group_by("threat_id")
+    >>> alert_search_query = group_alert_search_query.get_alert_search_query()
+.. note::
+    When transforming from one query type to another the sort order parameter is not preserved. If it is necessary, it will have to be added to the queries criteria manually.
 
 Retrieving Observations to Provide Context About an Alert
 ---------------------------------------------------------
@@ -275,7 +321,8 @@ The workflow leverages the alert search structure to specify the alerts to close
     * Two common uses are to update one alert, or to update all alerts with a specific threat id.
     * Any search request can be used as the criteria to select alerts to update the alert status.
 
-    .. code-block:: python
+.. code-block:: python
+
     >>> # This query will select only the alert with the specified id
     >>> ALERT_ID = "id of the alert that you want to close"
     >>> alert_query = api.select(Alert).add_criteria("id", [ALERT_ID])
@@ -287,71 +334,49 @@ The workflow leverages the alert search structure to specify the alerts to close
     * The status can be ``OPEN``, ``IN PROGRESS`` or ``CLOSED`` (previously ``DISMISSED``).
     * You may include a Closure Reason.
 
-    .. code-block:: python
+.. code-block:: python
+
     >>> # by calling update on the alert_query, the a request to change the status
     >>> # for all alerts matching that criteria will be submitted
     >>> job = alert_query.update("CLOSED", "RESOLVED", "NONE", "Setting to closed for SDK demo")
 
 3. The immediate response confirms that the job was successfully submitted.
 
-    .. code-block:: python
-        >>> print("job.id = {}".format(job.id))
-        job.id = 1234567
+.. code-block:: python
+
+    >>> print("job.id = {}".format(job.id))
+    job.id = 1234567
 
 4. Use the :py:mod:`Job() cbc_sdk.platform.jobs.Job` class to determine when the update is complete.
 
     Use the Job object to wait until the Job has completed.  The python script will wait while
     the SDK polls to determine when the job is complete.
 
-    .. code-block:: python
+.. code-block:: python
+
     >>> completed_job = job.await_completion().result()
 
 5. Refresh the Alert Search to get the updated alert data into the SDK.
 
-    .. code-block:: python
+.. code-block:: python
+
     >>> alert.refresh()
     >>> print("Status = {}, Expecting CLOSED".format(alert.workflow["status"]))
 
 
 6. You can dismiss future Alerts that have the same threat id.
 
-Use the sequence of calls to update future alerts that have the same threat id.  This sequence is usually used in conjunction with
-    with the alert closure; that is, you can use the dismiss future alerts call to close future occurrences and call an
-    alert closure to close current open alerts that have the threat id.
+    Use the sequence of calls to update future alerts that have the same threat id.  This sequence is usually used in
+    conjunction with with the alert closure; that is, you can use the dismiss future alerts call to close future
+    occurrences and call an alert closure to close current open alerts that have the threat id.
 
-    .. code-block:: python
+.. code-block:: python
+
     >>> alert_threat_query = api.select(Alert).add_criteria("threat_id","CFED0B211ED09F8EC1C83D4F3FBF1709")
     >>> alert.dismiss_threat("threat remediation done", "testing dismiss_threat in the SDK")
     >>> # To undo the dismissal, call update
     >>> alert.update_threat("threat remediation un-done", "testing update_threat in the SDK")
 
-Migrating from Notifications to Alerts
---------------------------------------
-
-.. note::
-    The Notifications API is deprecated, and deactivation is planned for 31 October 2024.
-
-    For information about migrating from the API and alternative solutions, see
-    `IntegrationService notification v3 API Migration Guide <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/notification-migration/>`_
-
-Notifications work on a subscription-based principle and they require a SIEM authentication key.
-By using that key, you are subscribing to a certain criteria of alerts. As this is deprecated, new alert types
-cannot be retrieved from the notifications API.
-
-See `the official notes <https://developer.carbonblack.com/reference/carbon-black-cloud/cb-defense/latest/rest-api/#get-notifications>`_ in the Carbon Black API website.
-
-.. image:: _static/cbc_platform_notification_edit.png
-   :alt: Editing a notification in the CBC Platform
-   :align: center
-
-You can replicate the settings shown in the screenshot by running the following search on Alerts:
-
-.. code-block:: python
-    >>> from cbc_sdk import CBCloudAPI
-    >>> from cbc_sdk.platform import Alert
-    >>> alerts = api.select(Alert).set_minimum_severity(7).\
-    >>>     add_criteria("type", ["CB_ANALYTICS", "DEVICE_CONTROL"]).\
-    >>>     add_criteria("device_policy", "Standard")
 
 High Volume and Streaming Solution for Alerts
 ---------------------------------------------

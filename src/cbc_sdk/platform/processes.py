@@ -55,10 +55,10 @@ class Process(UnrefreshableModel):
     ``AsyncProcessQuery``.
 
     Examples:
-        # use the Process GUID directly
+        >>> # use the Process GUID directly
         >>> process = api.select(Process, "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb")
 
-        # use the Process GUID in a where() clause
+        >>> # use the Process GUID in a where() clause
         >>> process_query = api.select(Process).where(process_guid=
         ...    "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb")
         >>> process_query_results = list(process_query)
@@ -127,7 +127,7 @@ class Process(UnrefreshableModel):
                             if attr in self.SHOW_ATTR[top_level]['fields']:
                                 try:
                                     val = str(self._info[top_level][attr])
-                                except UnicodeDecodeError:
+                                except UnicodeDecodeError:  # pragma: no cover
                                     val = repr(self._info[top_level][attr])
                                 lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", attr, val))
                     else:
@@ -136,7 +136,7 @@ class Process(UnrefreshableModel):
                                 if attr in self.SHOW_ATTR[top_level]['fields']:
                                     try:
                                         val = str(item[attr])
-                                    except UnicodeDecodeError:
+                                    except UnicodeDecodeError:  # pragma: no cover
                                         val = repr(item[attr])
                                     lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", attr, val))
                             lines.append('')
@@ -193,7 +193,7 @@ class Process(UnrefreshableModel):
                 if attr in self.SHOW_ATTR['top']:
                     try:
                         val = str(self._info[attr])
-                    except UnicodeDecodeError:
+                    except UnicodeDecodeError:  # pragma: no cover
                         val = repr(self._info[attr])
                     lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", attr, val))
 
@@ -203,7 +203,7 @@ class Process(UnrefreshableModel):
                     if attr in self.SHOW_ATTR['children']:
                         try:
                             val = str(child[attr])
-                        except UnicodeDecodeError:
+                        except UnicodeDecodeError:  # pragma: no cover
                             val = repr(child[attr])
                         lines.append(u"{0:s} {1:>20s}: {2:s}".format("    ", attr, val))
                 lines.append('')
@@ -237,6 +237,11 @@ class Process(UnrefreshableModel):
                 initial_data = result[0]
         super(Process, self).__init__(cb, model_unique_id=model_unique_id, initial_data=initial_data,
                                       force_init=force_init, full_doc=full_doc)
+
+    def _retrieve_cb_info(self):  # pragma: no cover
+        """Retrieve the detailed information about this object."""
+        self._details_timeout = self._cb.credentials.default_timeout
+        return self._get_detailed_results()._info
 
     @property
     def summary(self):
@@ -316,6 +321,22 @@ class Process(UnrefreshableModel):
         else:
             return None
 
+    def deobfuscate_cmdline(self):
+        """
+        Deobfuscates the command line of the process and returns the deobfuscated result.
+
+        Required Permissions:
+            script.deobfuscation(EXECUTE)
+
+        Returns:
+             dict: A dict containing information about the obfuscated command line, including the deobfuscated result.
+        """
+        body = {"input": self.process_cmdline[0]}
+        if not body['input']:
+            body['input'] = self.get_details()['process_cmdline'][0]
+        result = self._cb.post_object(f"/tau/v2/orgs/{self._cb.credentials.org_key}/reveal", body)
+        return result.json()
+
     def events(self, **kwargs):
         """
         Returns a query for events associated with this process's process GUID.
@@ -352,7 +373,8 @@ class Process(UnrefreshableModel):
             org.search.events(CREATE, READ)
 
         Args:
-            timeout (int): Event details request timeout in milliseconds.
+            timeout (int): Event details request timeout in milliseconds.  This value can never be greater than the
+                configured default timeout.  If this value is 0, the configured default timeout is used.
             async_mode (bool): ``True`` to request details in an asynchronous manner.
 
         Returns:
@@ -360,7 +382,10 @@ class Process(UnrefreshableModel):
                 retrieve the results.
             dict: If ``async_mode`` is ``False``.
         """
-        self._details_timeout = timeout
+        if timeout <= 0:
+            self._details_timeout = self._cb.credentials.default_timeout
+        else:
+            self._details_timeout = min(timeout, self._cb.credentials.default_timeout)
         if not self.process_guid:
             raise ApiError("Trying to get process details on an invalid process_guid")
         if async_mode:
@@ -370,6 +395,7 @@ class Process(UnrefreshableModel):
 
     def _get_detailed_results(self):
         """Actual search details implementation"""
+        assert self._details_timeout > 0
         args = {"process_guids": [self.process_guid]}
         url = "/api/investigate/v2/orgs/{}/processes/detail_jobs".format(self._cb.credentials.org_key)
         query_start = self._cb.post_object(url, body=args)
@@ -390,7 +416,7 @@ class Process(UnrefreshableModel):
                 time.sleep(.5)
                 continue
             if searchers_completed < searchers_contacted:
-                if self._details_timeout != 0 and (time.time() * 1000) - submit_time > self._details_timeout:
+                if (time.time() * 1000) - submit_time > self._details_timeout:
                     timed_out = True
                     break
             else:
@@ -596,7 +622,7 @@ class AsyncProcessQuery(Query):
         """
         super(AsyncProcessQuery, self).__init__(doc_class, cb)
         self._query_token = None
-        self._timeout = 0
+        self._timeout = cb.credentials.default_timeout
         self._timed_out = False
 
     def timeout(self, msecs):
@@ -604,7 +630,8 @@ class AsyncProcessQuery(Query):
         Sets the timeout on a process query.
 
         Arguments:
-            msecs (int): Timeout duration, in milliseconds.
+            msecs (int): Timeout duration, in milliseconds.  This can never be greater than the configured default
+                timeout.  If this is 0, the configured default timeout is used.
 
         Returns:
             AsyncProcessQuery: The modified query object.
@@ -612,7 +639,10 @@ class AsyncProcessQuery(Query):
         Example:
             >>> cb.select(Process).where(process_name="foo.exe").timeout(5000)
         """
-        self._timeout = msecs
+        if msecs <= 0:
+            self._timeout = self._cb.credentials.default_timeout
+        else:
+            self._timeout = min(msecs, self._cb.credentials.default_timeout)
         return self
 
     def set_rows(self, rows):
@@ -663,6 +693,7 @@ class AsyncProcessQuery(Query):
         Required Permissions:
             org.search.events(CREATE, READ)
         """
+        assert self._timeout > 0
         if not self._query_token:
             self._submit()
 
@@ -678,7 +709,7 @@ class AsyncProcessQuery(Query):
         if searchers_contacted == 0:
             return True
         if searchers_completed < searchers_contacted:
-            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:
+            if (time.time() * 1000) - self._submit_time > self._timeout:
                 self._timed_out = True
                 return False
             return True
@@ -825,7 +856,7 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         self._query_builder = QueryBuilder()
         self._query_token = None
         self._full_init = False
-        self._timeout = 0
+        self._timeout = cb.credentials.default_timeout
         self._timed_out = False
         self._time_range = {}
 
@@ -834,7 +865,8 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         Sets the timeout on a process query.
 
         Arguments:
-            msecs (int): Timeout duration, in milliseconds.
+            msecs (int): Timeout duration, in milliseconds.  This can never be greater than the configured default
+                timeout.  If this value is 0, the configured default timeout is used.
 
         Returns:
             SummaryQuery: The modified query object.
@@ -842,7 +874,10 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         Example:
             >>> cb.select(Process).where(process_name="foo.exe").timeout(5000)
         """
-        self._timeout = msecs
+        if msecs <= 0:
+            self._timeout = self._cb.credentials.default_timeout
+        else:
+            self._timeout = min(msecs, self._cb.credentials.default_timeout)
         return self
 
     def set_time_range(self, start=None, end=None, window=None):
@@ -926,6 +961,7 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         Required Permissions:
             org.search.events(CREATE, READ)
         """
+        assert self._timeout > 0
         if not self._query_token:
             self._submit()
 
@@ -941,7 +977,7 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
         if searchers_contacted == 0:
             return True
         if searchers_completed < searchers_contacted:
-            if self._timeout != 0 and (time.time() * 1000) - self._submit_time > self._timeout:
+            if (time.time() * 1000) - self._submit_time > self._timeout:
                 self._timed_out = True
                 return False
             return True

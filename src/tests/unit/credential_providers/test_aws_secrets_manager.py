@@ -52,7 +52,8 @@ def test_aws_getting_credentials(monkeypatch):
         'csp_api_token': None,
         'csp_oauth_app_id': None,
         'csp_oauth_app_secret': None,
-        'csp_url_override': 'https://console.cloud.vmware.com'
+        'csp_url_override': 'https://console.cloud.vmware.com',
+        'default_timeout': 256000
     }
 
     monkeypatch.setattr(Session, "client", ClientMock)

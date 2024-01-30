@@ -18,6 +18,9 @@ from tests.unit.fixtures.platform.mock_observations import (
     GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_0,
     GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_ZERO_COMP,
     GET_OBSERVATIONS_DETAIL_JOB_RESULTS_RESP,
+    GET_OBSERVATIONS_DETAIL_JOB_RESULTS_FOR_DEOBFUSCATE,
+    OBS_DEOBFUSCATE_CMDLINE_REQUEST,
+    OBS_DEOBFUSCATE_CMDLINE_RESPONSE,
     GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP,
     GET_OBSERVATIONS_SEARCH_JOB_RESULTS_NO_RULE_ID_RESP,
     POST_OBSERVATIONS_FACET_SEARCH_JOB_RESP,
@@ -441,9 +444,15 @@ def test_observations_timeout(cbcsdk_mock):
     )
     api = cbcsdk_mock.api
     query = api.select(Observation).where("observation_id:some_id")
-    assert query._timeout == 0
+    assert query._timeout == 300000
     query.timeout(msecs=500)
     assert query._timeout == 500
+    query.timeout(msecs=999999)
+    assert query._timeout == 300000
+    query.timeout(msecs=700)
+    assert query._timeout == 700
+    query.timeout(msecs=0)
+    assert query._timeout == 300000
 
 
 def test_observations_timeout_error(cbcsdk_mock):
@@ -662,6 +671,30 @@ def test_observations_still_querying2(cbcsdk_mock):
     assert obs_list._still_querying() is True
 
 
+def test_observation_deobfuscate_cmdline(cbcsdk_mock):
+    """Test the deobfuscate_cmdline() function."""
+    def on_post_deobfuscate(url, body, **kwargs):
+        assert body == OBS_DEOBFUSCATE_CMDLINE_REQUEST
+        return OBS_DEOBFUSCATE_CMDLINE_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/observations/detail_jobs",
+                             POST_OBSERVATIONS_SEARCH_JOB_RESP)
+    cbcsdk_mock.mock_request(
+        "GET",
+        "/api/investigate/v2/orgs/test/observations/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",
+        GET_OBSERVATIONS_DETAIL_JOB_RESULTS_FOR_DEOBFUSCATE)
+    cbcsdk_mock.mock_request("POST", "/tau/v2/orgs/test/reveal", on_post_deobfuscate)
+
+    api = cbcsdk_mock.api
+    obs = Observation(api, initial_data={"observation_id": "test"})
+    observation = obs._get_detailed_results()
+    deobfuscation = observation.deobfuscate_cmdline()
+    assert len(deobfuscation['identities']) == 1
+    assert len(deobfuscation['strings']) == 1
+    assert deobfuscation['deobfuscated_code'] == \
+           "Write-Output \"No matter how thin you slice it, it's still baloney.\"\n"
+
+
 # --------------------- ObservationFacet --------------------------------------
 
 
@@ -786,9 +819,15 @@ def test_observation_facet_timeout(cbcsdk_mock):
         .where("process_name:some_name")
         .add_facet_field("process_name")
     )
-    assert query._timeout == 0
+    assert query._timeout == 300000
     query.timeout(msecs=500)
     assert query._timeout == 500
+    query.timeout(msecs=999999)
+    assert query._timeout == 300000
+    query.timeout(msecs=700)
+    assert query._timeout == 700
+    query.timeout(msecs=0)
+    assert query._timeout == 300000
 
 
 def test_observation_facet_timeout_error(cbcsdk_mock):
@@ -1189,16 +1228,16 @@ def test_observations_search_suggestions_api_error():
         Observation.search_suggestions("", "device_id", 10)
 
 
-def test_bulk_get_details_api_error():
-    """Tests bulk_get_details - no CBCloudAPI arg"""
+def test_bulk_get_details_api_error(cb):
+    """Tests bulk_get_details"""
     with pytest.raises(ApiError):
-        Observation.bulk_get_details("", alert_id="xx")
+        Observation.bulk_get_details(cb, alert_id="xx")
 
 
-def test_helper_get_details_api_error():
-    """Tests _helper_get_details - no CBCloudAPI arg"""
+def test_helper_get_details_api_error(cb):
+    """Tests _helper_get_details"""
     with pytest.raises(ApiError):
-        Observation._helper_get_details("", alert_id="xx")
+        Observation._helper_get_details(cb, alert_id="xx")
 
 
 def test_bulk_get_details_neither(cbcsdk_mock):

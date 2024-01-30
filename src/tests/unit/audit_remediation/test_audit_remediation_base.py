@@ -18,6 +18,7 @@ from tests.unit.fixtures.audit_remediation.mock_runs import (GET_RUN_RESP, GET_R
                                                              ASYNC_BROKEN_1, ASYNC_BROKEN_2, ASYNC_BROKEN_3,
                                                              ASYNC_FACETING)
 from tests.unit.fixtures.platform.mock_jobs import JOB_DETAILS_1
+from tests.unit.fixtures.audit_remediation.mock_scroll import GET_SCROLL_RESULTS, SINGLE_RESULT
 
 
 log = logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -123,7 +124,8 @@ def test_result_query_criteria(cbcsdk_mock):
 def test_result_query_update_criteria(cbcsdk_mock):
     """Testing the public update_criteria() function accessing private _update_criteria()."""
     api = cbcsdk_mock.api
-    query = api.select(Result).run_id(2).update_criteria("my.key.dot.notation", ["criteria_val_1"])
+    query = api.select(Result).run_id("qcu6wghci1oqfrsgvcrrm1o71bzcy7cx") \
+                              .update_criteria("my.key.dot.notation", ["criteria_val_1"])
     query = query.update_criteria("my.key.dot.notation", ["criteria_val_2"])
     assert query._build_request(start=0, rows=100) == {"criteria": {
         "my.key.dot.notation": ["criteria_val_1", "criteria_val_2"]
@@ -151,8 +153,8 @@ def test_facet_query_criteria(cbcsdk_mock):
 def test_result_facet_query_update_criteria(cbcsdk_mock):
     """Testing the public update_criteria() function accessing private _update_criteria()."""
     api = cbcsdk_mock.api
-    query = api.select(ResultFacet).run_id(2).update_criteria("my.key.dot.notation",
-                                                              ["criteria_val_1", "criteria_val_2"])
+    query = api.select(ResultFacet).run_id("qcu6wghci1oqfrsgvcrrm1o71bzcy7cx") \
+                                   .update_criteria("my.key.dot.notation", ["criteria_val_1", "criteria_val_2"])
     assert query._build_request(rows=100) == {"criteria": {
         "my.key.dot.notation": ["criteria_val_1", "criteria_val_2"]
     }, "terms": {"fields": [], "rows": 100}}
@@ -478,3 +480,72 @@ def test_run_async_faceting_query(cbcsdk_mock):
     assert len(result) == 1
     assert result[0].field == 'fields.version'
     assert len(result[0].values) == 4
+
+
+def test_result_set_run_ids(cbcsdk_mock):
+    """Testing set_run_ids"""
+    api = cbcsdk_mock.api
+    query = api.select(Result).set_run_ids(["abcdefghijklmnopqrstuvwxyz123456", "fckjyssfusuuutlkpocky82luvnl0sol"])
+    assert query._criteria["run_id"] == ["abcdefghijklmnopqrstuvwxyz123456", "fckjyssfusuuutlkpocky82luvnl0sol"]
+
+
+def test_result_set_time_received(cbcsdk_mock):
+    """Testing set_time_received"""
+    api = cbcsdk_mock.api
+    query = api.select(Result).set_time_received(range="-3h")
+    assert query._criteria["time_received"] == {"range": "-3h"}
+
+    query.set_time_received(start="2023-12-10T00:00:00.000Z", end="2023-12-11T00:00:00.000Z")
+    assert query._criteria["time_received"] == {
+        "start": "2023-12-10T00:00:00.000Z",
+        "end": "2023-12-11T00:00:00.000Z"
+    }
+
+    with pytest.raises(ApiError):
+        query.set_time_received(start="2023-12-10T00:00:00.000Z", end="2023-12-11T00:00:00.000Z", range="-3h")
+
+
+def test_result_scroll(cbcsdk_mock):
+    """Testing ResultQuery scroll"""
+    cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/runs/results/_scroll",
+                             GET_SCROLL_RESULTS(100, 200, 100))
+
+    api = cbcsdk_mock.api
+    query = api.select(Result).set_time_received(range="-3h")
+
+    results = query.scroll(100)
+
+    assert query.num_remaining == 100
+    assert query._search_after == "MTcwMjMyMTM2MDU3OSwyMT"
+
+    def on_post(url, body, **kwargs):
+        """Test 2nd scroll request"""
+        assert body == {
+            "criteria": {
+                "time_received": {"range": "-3h"}},
+            "rows": 10000,
+            "search_after": "MTcwMjMyMTM2MDU3OSwyMT"
+        }
+        return GET_SCROLL_RESULTS(100, 200, 0)
+
+    cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/runs/results/_scroll",
+                             on_post)
+
+    results.extend(query.scroll(20000))
+
+    assert len(results) == 200
+
+    assert query.scroll(100) == []
+
+
+def test_result_to_json(cbcsdk_mock):
+    """Testing ResultQuery scroll"""
+    cbcsdk_mock.mock_request("POST", "/livequery/v1/orgs/test/runs/results/_scroll",
+                             GET_SCROLL_RESULTS(1, 1, 1))
+
+    api = cbcsdk_mock.api
+    query = api.select(Result).set_time_received(range="-3h")
+
+    results = query.scroll(1)
+
+    results[0].to_json() == SINGLE_RESULT
