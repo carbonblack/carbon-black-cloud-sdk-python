@@ -33,14 +33,17 @@ Updates:
 
 * Python 3.7 has been re-added as "unofficially" supported, since certain integrations that use the SDK still use it.
 * Added ``deployment_type`` as part of the facets available in ``DeviceSearchQuery``.
-* ReadTheDocs generation has been improved to show the inherited methods.  There are some helper functions on
-SearchQuery classes such as add_criteria() inherited from CriteriaBuilderSupportMixin and first() inherited from
-IterableQueryMixin.
 
 Bug Fixes:
 
 * Search jobs that allow setting a timeout now default that timeout to 5 minutes.  The timeout may be lowered
   from that point, but *never* raised beyond it.  This eliminates a problem of "hung" searches.
+
+Documentation:
+* ReadTheDocs generation has been improved to show the inherited methods.  There are some helper functions on
+SearchQuery classes such as add_criteria() inherited from CriteriaBuilderSupportMixin and first() inherited from
+IterableQueryMixin.
+
 
 CBC SDK 1.5.0 - Released October 24, 2023
 -----------------------------------------
