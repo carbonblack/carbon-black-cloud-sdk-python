@@ -1223,3 +1223,201 @@ DATA_COLLECTION_UPDATE_RETURNS_1 = {
     ],
     "failed": []
 }
+
+BYPASS_RULE_CONFIGS = {
+    "results": [
+        {
+            "id": "1664f2e6-645f-4d6e-98ec-0c80485cbe0f",
+            "name": "Event Reporting Exclusions",
+            "description": "Allows customers to exclude specific processes from reporting events to CBC",
+            "inherited_from": "psc:region",
+            "category": "bypass",
+            "parameters": {}
+        },
+        {
+            "id": "1c03d653-eca4-4adc-81a1-04b17b6cbffc",
+            "name": "Event Reporting and Sensor Operation Exclusions",
+            "description": "Allows customers to exclude specific processes and process events from reporting to CBC",
+            "inherited_from": "psc:region",
+            "category": "bypass",
+            "parameters": {},
+            "exclusions": {
+                "windows": [
+                    {
+                        "id": 8090,
+                        "criteria": [
+                            {
+                                "id": 13426,
+                                "type": "initiator_process",
+                                "attributes": [
+                                    {
+                                        "id": 93774,
+                                        "name": "process_name",
+                                        "values": [
+                                            "**\\explorer.exe"
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "id": 13427,
+                                "type": "operation",
+                                "attributes": [
+                                    {
+                                        "id": 93775,
+                                        "name": "operation_type",
+                                        "values": [
+                                            "ALL"
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "comments": "",
+                        "type": "ENDPOINT_STANDARD_PROCESS_BYPASS",
+                        "apply_to_descendent_processes": True,
+                        "created_by": "ABCD1234",
+                        "created_at": "2024-01-27T13:29:44.839Z",
+                        "modified_by": "ABCD1234",
+                        "modified_at": "2024-01-27T13:29:44.839Z"
+                    }
+                ]
+            }
+        }
+    ]
+}
+
+BYPASS_RULE_CONFIGS_UPDATE = {
+    "id": "1c03d653-eca4-4adc-81a1-04b17b6cbffc",
+    "name": "Event Reporting and Sensor Operation Exclusions",
+    "description": "Allows customers to exclude specific processes and process events from reporting to CBC",
+    "inherited_from": "psc:region",
+    "category": "bypass",
+    "parameters": {},
+    "exclusions": {
+        "windows": [
+            {
+                "criteria": [
+                    {
+                        "type": "initiator_process",
+                        "attributes": [
+                            {
+                                "name": "process_name",
+                                "values": [
+                                    "**\\explorer.exe"
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "type": "operation",
+                        "attributes": [
+                            {
+                                "name": "operation_type",
+                                "values": [
+                                    "ALL"
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "comments": "",
+                "apply_to_descendent_processes": True,
+                "type": "ENDPOINT_STANDARD_PROCESS_BYPASS"
+            }
+        ]
+    }
+}
+
+BYPASS_RULE_CONFIGS_UPDATE_REQUEST = {
+    "id": "1c03d653-eca4-4adc-81a1-04b17b6cbffc",
+    "exclusions": {
+        "windows": [
+            {
+                "criteria": [
+                    {
+                        "type": "initiator_process",
+                        "attributes": [
+                            {
+                                "name": "process_name",
+                                "values": [
+                                    "**\\explorer.exe"
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        "type": "operation",
+                        "attributes": [
+                            {
+                                "name": "operation_type",
+                                "values": [
+                                    "ALL"
+                                ]
+                            }
+                        ]
+                    }
+                ],
+                "comments": "",
+                "apply_to_descendent_processes": True,
+                "type": "ENDPOINT_STANDARD_PROCESS_BYPASS"
+            }
+        ]
+    }
+}
+
+BYPASS_RULE_CONFIGS_UPDATE_RESPONSE = {
+    "successful": [
+        {
+            "id": "1c03d653-eca4-4adc-81a1-04b17b6cbffc",
+            "name": "Event Reporting and Sensor Operation Exclusions",
+            "description": "Allows customers to exclude specific processes and process events from reporting to CBC",
+            "inherited_from": "psc:region",
+            "category": "bypass",
+            "parameters": {},
+            "exclusions": {
+                "windows": [
+                    {
+                        "id": 8090,
+                        "criteria": [
+                            {
+                                "id": 13426,
+                                "type": "initiator_process",
+                                "attributes": [
+                                    {
+                                        "id": 93774,
+                                        "name": "process_name",
+                                        "values": [
+                                            "**\\explorer.exe"
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "id": 13427,
+                                "type": "operation",
+                                "attributes": [
+                                    {
+                                        "id": 93775,
+                                        "name": "operation_type",
+                                        "values": [
+                                            "ALL"
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "comments": "",
+                        "type": "ENDPOINT_STANDARD_PROCESS_BYPASS",
+                        "apply_to_descendent_processes": True,
+                        "created_by": "ABCDEFD",
+                        "created_at": "2024-01-27T13:29:44.839Z",
+                        "modified_by": "ABCDEFD",
+                        "modified_at": "2024-01-27T13:29:44.839Z"
+                    }
+                ]
+            }
+        }
+    ],
+    "failed": []
+}

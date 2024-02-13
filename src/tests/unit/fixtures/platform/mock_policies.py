@@ -315,6 +315,64 @@ FULL_POLICY_1 = {
                 },
                 "enable_host_based_firewall": False
             }
+        },
+        {
+            "id": "1664f2e6-645f-4d6e-98ec-0c80485cbe0f",
+            "name": "Event Reporting Exclusions",
+            "description": "Allows customers to exclude specific processes from reporting events to CBC",
+            "inherited_from": "psc:region",
+            "category": "bypass",
+            "parameters": {}
+        },
+        {
+            "id": "1c03d653-eca4-4adc-81a1-04b17b6cbffc",
+            "name": "Event Reporting and Sensor Operation Exclusions",
+            "description": "Allows customers to exclude specific processes and process events from reporting to CBC",
+            "inherited_from": "psc:region",
+            "category": "bypass",
+            "parameters": {},
+            "exclusions": {
+                "windows": [
+                    {
+                        "id": 8090,
+                        "criteria": [
+                            {
+                                "id": 13426,
+                                "type": "initiator_process",
+                                "attributes": [
+                                    {
+                                        "id": 93774,
+                                        "name": "process_name",
+                                        "values": [
+                                            "**\\explorer.exe"
+                                        ]
+                                    }
+                                ]
+                            },
+                            {
+                                "id": 13427,
+                                "type": "operation",
+                                "attributes": [
+                                    {
+                                        "id": 93775,
+                                        "name": "operation_type",
+                                        "values": [
+                                            "ALL"
+                                        ]
+                                    }
+                                ]
+                            }
+                        ],
+                        "comments": "",
+                        "type": "ENDPOINT_STANDARD_PROCESS_BYPASS",
+                        "apply_to_descendent_processes": True,
+                        "created_by": "ABCD1234",
+                        "created_at": "2024-01-27T13:29:44.839Z",
+                        "modified_by": "ABCD1234",
+                        "modified_at": "2024-01-27T13:29:44.839Z"
+                    }
+                ]
+            }
         }
     ]
 }
@@ -1739,21 +1797,106 @@ TEMPLATE_RETURN_BOGUS_TYPE = {
 POLICY_CONFIG_PRESENTATION = {
     "configs": [
         {
-            "id": "91c919da-fb90-4e63-9eac-506255b0a0d0",
-            "name": "Authentication Events",
-            "description": "Authentication Events",
+            "id": "cc075469-8d1e-4056-84b6-0e6f437c4010",
+            "name": "XDR",
+            "description": "Turns on XDR network data collection at the sensor",
             "presentation": {
                 "category": "data_collection"
             },
             "parameters": []
         },
         {
+            "id": "91c919da-fb90-4e63-9eac-506255b0a0d0",
+            "name": "Authentication Events",
+            "description": "Turns on Windows authentication events at the sensor",
+            "presentation": {
+                "category": "data_collection"
+            },
+            "parameters": []
+        },
+        {
+            "id": "1c03d653-eca4-4adc-81a1-04b17b6cbffc",
+            "name": "Event Reporting and Sensor Operation Exclusions",
+            "description": "Allows customers to exclude specific processes and process events from reporting to CBC",
+            "presentation": {
+                "name": "process_exclusion.name",
+                "category": "bypass",
+                "description": [
+                    "process_exclusion.description"
+                ],
+                "platforms": [
+                    {
+                        "platform": "WINDOWS",
+                        "exclusions": {
+                            "criteria": [
+                                "initiator_process",
+                                "operations"
+                            ],
+                            "additional_attributes": [
+                                "type",
+                                "inheritence"
+                            ]
+                        }
+                    }
+                ]
+            },
+            "parameters": []
+        },
+        {
+            "id": "0aa2b31a-f938-4cf9-acee-7cf7b810eb79",
+            "name": "Background Scan",
+            "description": "This rapid config handles DRE rules and sensor settings associated with Background Scan",
+            "presentation": {
+                "category": "sensor_settings"
+            },
+            "parameters": []
+        },
+        {
+            "id": "1664f2e6-645f-4d6e-98ec-0c80485cbe0f",
+            "name": "Event Reporting Exclusions",
+            "description": "Allows customers to exclude specific processes from reporting events to CBC",
+            "presentation": {
+                "name": "event_reporting_exclusion.name",
+                "category": "bypass",
+                "description": [
+                    "event_reporting_exclusion.description"
+                ],
+                "platforms": [
+                    {
+                        "platform": "WINDOWS",
+                        "exclusions": {
+                            "criteria": [
+                                "initiator_process",
+                                "operations"
+                            ],
+                            "additional_attributes": [
+                                "type",
+                                "inheritence"
+                            ]
+                        }
+                    }
+                ]
+            },
+            "parameters": []
+        },
+        {
+            "id": "df181779-f623-415d-879e-91c40246535d",
+            "name": "Host Based Firewall",
+            "description": "These are the Host based Firewall Rules which will be executed by the sensor."
+            " The Definition will be part of Main Policies.",
+            "presentation": {
+                "category": "hbfw"
+            },
+            "parameters": []
+        },
+        {
             "id": "1f8a5e4b-34f2-4d31-9f8f-87c56facaec8",
             "name": "Advanced Scripting Prevention",
-            "description": "Addresses malicious fileless and file-backed scripts that leverage native programs [...]",
+            "description": "Addresses malicious fileless and file-backed scripts that leverage native programs"
+            " and common scripting languages.",
             "presentation": {
                 "name": "amsi.name",
-                "category": "core_prevention",
+                "category": "core-prevention",
                 "description": [
                     "amsi.description"
                 ],
@@ -1794,10 +1937,11 @@ POLICY_CONFIG_PRESENTATION = {
         {
             "id": "ac67fa14-f6be-4df9-93f2-6de0dbd96061",
             "name": "Credential Theft",
-            "description": "Addresses threat actors obtaining credentials and relies on detecting the malicious [...]",
+            "description": "Addresses threat actors obtaining credentials and relies on detecting the malicious use of"
+            " TTPs/behaviors that indicate such activity.",
             "presentation": {
                 "name": "cred_theft.name",
-                "category": "core_prevention",
+                "category": "core-prevention",
                 "description": [
                     "cred_theft.description"
                 ],
@@ -1836,21 +1980,23 @@ POLICY_CONFIG_PRESENTATION = {
             ]
         },
         {
-            "id": "df181779-f623-415d-879e-91c40246535d",
-            "name": "Host Based Firewall",
-            "description": "These are the Host based Firewall Rules which will be executed by the sensor. [...].",
+            "id": "491dd777-5a76-4f58-88bf-d29926d12778",
+            "name": "Prevalent Module Exclusions",
+            "description": "Collects events created when a process loads a common library. Enabling this will increase"
+            " the number of events reported for expected process behavior.",
             "presentation": {
-                "category": "hbfw"
+                "category": "data_collection"
             },
             "parameters": []
         },
         {
             "id": "c4ed61b3-d5aa-41a9-814f-0f277451532b",
             "name": "Carbon Black Threat Intel",
-            "description": "Addresses common and pervasive TTPs used for malicious activity as well as [...]",
+            "description": "Addresses common and pervasive TTPs used for malicious activity as well as living off the"
+            " land TTPs/behaviors detected by Carbon Black’s Threat Analysis Unit.",
             "presentation": {
                 "name": "cbti.name",
-                "category": "core_prevention",
+                "category": "core-prevention",
                 "description": [
                     "cbti.description"
                 ],
@@ -1891,10 +2037,12 @@ POLICY_CONFIG_PRESENTATION = {
         {
             "id": "88b19232-7ebb-48ef-a198-2a75a282de5d",
             "name": "Privilege Escalation",
-            "description": "Addresses behaviors that indicate a threat actor has gained elevated access via [...]",
+            "description": "Addresses behaviors that indicate a threat actor has gained elevated access via a bug or"
+            " misconfiguration within an operating system, and leverages the detection of TTPs/behaviors to prevent"
+            " such activity.",
             "presentation": {
                 "name": "privesc.name",
-                "category": "core_prevention",
+                "category": "core-prevention",
                 "description": [
                     "privesc.description"
                 ],
@@ -1904,6 +2052,97 @@ POLICY_CONFIG_PRESENTATION = {
                         "header": "privesc.windows.heading",
                         "subHeader": [
                             "privesc.windows.sub_heading"
+                        ],
+                        "actions": [
+                            {
+                                "component": "assignment-mode-selector",
+                                "parameter": "WindowsAssignmentMode"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "parameters": [
+                {
+                    "default": "BLOCK",
+                    "name": "WindowsAssignmentMode",
+                    "description": "Used to change assignment mode to PREVENT or BLOCK",
+                    "recommended": "BLOCK",
+                    "validations": [
+                        {
+                            "type": "enum",
+                            "values": [
+                                "REPORT",
+                                "BLOCK"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "97a03cc2-5796-4864-b16d-790d06bea20d",
+            "name": "Defense Evasion",
+            "description": "Addresses common TTPs/behaviors that threat actors use to avoid detection such as"
+            " uninstalling or disabling security software, obfuscating or encrypting data/scripts and abusing"
+            " trusted processes to hide and disguise their malicious activity.",
+            "presentation": {
+                "name": "defense_evasion.name",
+                "category": "core-prevention",
+                "description": [
+                    "defense_evasion.description"
+                ],
+                "platforms": [
+                    {
+                        "platform": "WINDOWS",
+                        "header": "defense_evasion.windows.heading",
+                        "subHeader": [
+                            "defense_evasion.windows.sub_heading"
+                        ],
+                        "actions": [
+                            {
+                                "component": "assignment-mode-selector",
+                                "parameter": "WindowsAssignmentMode"
+                            }
+                        ]
+                    }
+                ]
+            },
+            "parameters": [
+                {
+                    "default": "BLOCK",
+                    "name": "WindowsAssignmentMode",
+                    "description": "Used to change assignment mode to PREVENT or BLOCK",
+                    "recommended": "BLOCK",
+                    "validations": [
+                        {
+                            "type": "enum",
+                            "values": [
+                                "REPORT",
+                                "BLOCK"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "id": "8a16234c-9848-473a-a803-f0f0ffaf5f29",
+            "name": "Persistence",
+            "description": "Addresses common TTPs/behaviors that threat actors use to retain access to systems across"
+            " restarts, changed credentials, and other interruptions that could cut off their access.",
+            "presentation": {
+                "name": "persistence.name",
+                "category": "core-prevention",
+                "description": [
+                    "persistence.description"
+                ],
+                "platforms": [
+                    {
+                        "platform": "WINDOWS",
+                        "header": "persistence.windows.heading",
+                        "subHeader": [
+                            "persistence.windows.sub_heading"
                         ],
                         "actions": [
                             {

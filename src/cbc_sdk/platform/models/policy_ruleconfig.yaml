@@ -18,3 +18,6 @@ properties:
   parameters:
     type: object
     description: The parameters associated with this rule config
+  exclusions:
+    type: object
+    description: The exclusions associated with this rule config

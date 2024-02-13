@@ -263,8 +263,10 @@ class CorePreventionRuleConfig(PolicyRuleConfig):
     def _update_ruleconfig(self):
         """Perform the internal update of the rule configuration object."""
         url = self.urlobject_single.format(self._cb.credentials.org_key, self._parent._model_unique_id)
-        body = [{"id": self.id, "parameters": self.parameters}]
-        self._cb.put_object(url, body)
+        body = {"id": self.id, "parameters": self.parameters}
+        if "exclusions" in self._info:
+            body["exclusions"] = self.exclusions
+        self._cb.put_object(url, [body])
 
     def _delete_ruleconfig(self):
         """Perform the internal delete of the rule configuration object."""
@@ -292,6 +294,15 @@ class CorePreventionRuleConfig(PolicyRuleConfig):
             raise ApiError(f"invalid assignment mode: {mode}")
         self.set_parameter("WindowsAssignmentMode", mode)
 
+    def replace_exclusions(self, exclusions):
+        """
+        Replaces all the exclusions for a bypasss rule configuration
+
+        Args:
+           exclusions(dict): The entire exclusion set to be replaced
+        """
+        self._info['exclusions'] = exclusions
+
 
 class HostBasedFirewallRuleConfig(PolicyRuleConfig):
     """Represents a host-based firewall rule configuration in the policy."""
@@ -301,7 +312,7 @@ class HostBasedFirewallRuleConfig(PolicyRuleConfig):
 
     def __init__(self, cb, parent, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
         """
-        Initialize the CorePreventionRuleConfig object.
+        Initialize the HostBasedFirewallRuleConfig object.
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
@@ -643,7 +654,7 @@ class DataCollectionRuleConfig(PolicyRuleConfig):
     To update a DataCollectionRuleConfig, change the values of its property fields, then call its save() method.  This
     requires the org.policies(UPDATE) permission.
 
-    To delete an existing CorePreventionRuleConfig, call its delete() method. This requires the org.policies(DELETE)
+    To delete an existing DataCollectionRuleConfig, call its delete() method. This requires the org.policies(DELETE)
     permission.
     """
     urlobject_single = "/policyservice/v1/orgs/{0}/policies/{1}/rule_configs/data_collection"
@@ -651,7 +662,7 @@ class DataCollectionRuleConfig(PolicyRuleConfig):
 
     def __init__(self, cb, parent, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
         """
-        Initialize the CorePreventionRuleConfig object.
+        Initialize the DataCollectionRuleConfig object.
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
@@ -696,3 +707,94 @@ class DataCollectionRuleConfig(PolicyRuleConfig):
         """Perform the internal delete of the rule configuration object."""
         url = self.urlobject_single.format(self._cb.credentials.org_key, self._parent._model_unique_id) + f"/{self.id}"
         self._cb.delete_object(url)
+
+
+class BypassRuleConfig(PolicyRuleConfig):
+    """
+    Represents a bypass rule configuration in the policy.
+
+    Create one of these objects, associating it with a Policy, and set its properties, then call its save() method to
+    add the rule configuration to the policy. This requires the org.policies(UPDATE) permission.
+
+    To update a BypassRuleConfig, change the values of its property fields, then call its save() method.  This
+    requires the org.policies(UPDATE) permission.
+
+    To delete an existing BypassRuleConfig, call its delete() method. This requires the org.policies(DELETE)
+    permission.
+    """
+    urlobject_single = "/policyservice/v1/orgs/{0}/policies/{1}/rule_configs/bypass"
+    swagger_meta_file = "platform/models/policy_ruleconfig.yaml"
+
+    def __init__(self, cb, parent, model_unique_id=None, initial_data=None, force_init=False, full_doc=False):
+        """
+        Initialize the BypassRuleConfig object.
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+            parent (Policy): The "parent" policy of this rule configuration.
+            model_unique_id (str): ID of the rule configuration.
+            initial_data (dict): Initial data used to populate the rule configuration.
+            force_init (bool): If True, forces the object to be refreshed after constructing.  Default False.
+            full_doc (bool): If True, object is considered "fully" initialized. Default False.
+        """
+        super(BypassRuleConfig, self).__init__(cb, parent, model_unique_id, initial_data, force_init, full_doc)
+
+    def _refresh(self):
+        """
+        Refreshes the rule configuration object from the server.
+
+        Required Permissions:
+            org.policies (READ)
+
+        Returns:
+            bool: True if the refresh was successful.
+
+        Raises:
+            InvalidObjectError: If the object is unparented or its ID is invalid.
+        """
+        url = self.urlobject_single.format(self._cb.credentials.org_key, self._parent._model_unique_id)
+        return_data = self._cb.get_object(url)
+        ruleconfig_data = [d for d in return_data.get("results", []) if d.get("id", "") == self._model_unique_id]
+        if ruleconfig_data:
+            self._info = ruleconfig_data[0]
+            self._mark_changed(False)
+        else:
+            raise InvalidObjectError(f"invalid data collection ID: {self._model_unique_id}")
+        return True
+
+    def _update_ruleconfig(self):
+        """Perform the internal update of the rule configuration object."""
+        url = self.urlobject_single.format(self._cb.credentials.org_key, self._parent._model_unique_id)
+        body = {"id": self.id}
+        if "exclusions" in self._info:
+            body["exclusions"] = self.exclusions
+
+        self._cb.put_object(url, body)
+
+    def _delete_ruleconfig(self):
+        """Perform the internal delete of the rule configuration object."""
+        url = self.urlobject_single.format(self._cb.credentials.org_key, self._parent._model_unique_id)
+        self._cb.delete_object(url)
+
+    def replace_exclusions(self, exclusions):
+        """
+        Replaces all the exclusions for a bypasss rule configuration
+
+        Args:
+           exclusions(dict): The entire exclusion set to be replaced
+        """
+        self._mark_changed(True)
+        self._info['exclusions'] = exclusions
+
+    @property
+    def parameter_names(self):
+        """Not Supported"""
+        raise Exception("Not Suppported")
+
+    def get_parameter(self, name, default_value=None):
+        """Not Supported"""
+        raise Exception("Not Suppported")
+
+    def set_parameter(self, name, value):
+        """Not Supported"""
+        raise Exception("Not Suppported")
