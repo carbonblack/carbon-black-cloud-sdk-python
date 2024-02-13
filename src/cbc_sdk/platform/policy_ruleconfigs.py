@@ -301,6 +301,7 @@ class CorePreventionRuleConfig(PolicyRuleConfig):
         Args:
            exclusions(dict): The entire exclusion set to be replaced
         """
+        self._mark_changed(True)
         self._info['exclusions'] = exclusions
 
 
