@@ -148,7 +148,6 @@ class BackoffHandler:
             else:
                 self._pausetime = self._initial
 
-
     def __enter__(self):
         """
         Called at entry of the context specified by this object.
