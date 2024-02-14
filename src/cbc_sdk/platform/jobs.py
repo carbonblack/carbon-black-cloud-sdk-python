@@ -18,6 +18,7 @@ import logging
 import time
 from cbc_sdk.base import NewBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
 from cbc_sdk.errors import ObjectNotFoundError, ServerError
+from cbc_sdk.utils import BackoffHandler
 
 
 log = logging.getLogger(__name__)
@@ -85,33 +86,42 @@ class Job(NewBaseModel):
         self._info['progress'] = resp
         return resp['num_total'], resp['num_completed'], resp.get('message', None)
 
-    def _await_completion(self):
+    def _await_completion(self, timeout=0):
         """
         Waits for this job to complete by examining the progress data.
 
         Required Permissions:
             jobs.status(READ)
 
+        Args:
+            timeout (int): The timeout for this wait in milliseconds. If this is 0, the default value will be used.
+
         Returns:
             Job: This object.
+
+        Raises:
+            TimeoutError: If the wait times out.
         """
-        progress_data = (1, 0, '')
-        do_sleep = False
-        errorcount = 0
-        while progress_data[1] < progress_data[0]:
-            if do_sleep:
-                time.sleep(0.5)
-            try:
-                progress_data = self.get_progress()
-            except (ServerError, ObjectNotFoundError):
-                errorcount += 1
-                if errorcount == 3:
-                    raise
-                progress_data = (1, 0, '')
-            do_sleep = True
+        backoff = BackoffHandler(self._cb, timeout=timeout)
+        with backoff as b:
+            progress_data = (1, 0, '')
+            errorcount = 0
+            last_nc = 0
+            while progress_data[1] < progress_data[0]:
+                b.pause()
+                try:
+                    progress_data = self.get_progress()
+                    if progress_data[1] > last_nc:
+                        last_nc = progress_data[1]
+                        b.reset()
+                except (ServerError, ObjectNotFoundError):
+                    errorcount += 1
+                    if errorcount == 3:
+                        raise
+                    progress_data = (1, 0, '')
         return self
 
-    def await_completion(self):
+    def await_completion(self, timeout=0):
         """
         Create a Python Future to check for job completion and return results when available.
 
@@ -121,11 +131,14 @@ class Job(NewBaseModel):
         Required Permissions:
             jobs.status(READ)
 
+        Args:
+            timeout (int): The timeout for this wait in milliseconds. If this is 0, the default value will be used.
+
         Returns:
             Future: A future which can be used to wait for this job's completion. When complete, the result of the
                     Future will be this object.
         """
-        return self._cb._async_submit(lambda arg, kwarg: arg[0]._await_completion(), self)
+        return self._cb._async_submit(lambda arg, kwarg: arg[0]._await_completion(timeout), self)
 
     def get_output_as_stream(self, output):
         """
