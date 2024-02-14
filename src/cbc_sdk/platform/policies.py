@@ -18,7 +18,8 @@ from types import MappingProxyType
 from cbc_sdk.base import MutableBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
 from cbc_sdk.platform.devices import Device
 from cbc_sdk.platform.policy_ruleconfigs import (PolicyRuleConfig, CorePreventionRuleConfig,
-                                                 HostBasedFirewallRuleConfig, DataCollectionRuleConfig)
+                                                 HostBasedFirewallRuleConfig, DataCollectionRuleConfig,
+                                                 BypassRuleConfig)
 from cbc_sdk.platform.previewer import DevicePolicyChangePreview
 from cbc_sdk.errors import ApiError, ServerError, InvalidObjectError
 
@@ -26,7 +27,8 @@ from cbc_sdk.errors import ApiError, ServerError, InvalidObjectError
 SPECIFIC_RULECONFIGS = MappingProxyType({
     "core_prevention": CorePreventionRuleConfig,
     "host_based_firewall": HostBasedFirewallRuleConfig,
-    "data_collection": DataCollectionRuleConfig
+    "data_collection": DataCollectionRuleConfig,
+    "bypass": BypassRuleConfig
 })
 
 
@@ -695,6 +697,28 @@ class Policy(MutableBaseModel):
             list: A list of PolicyRuleConfig objects.
         """
         return [rconf for rconf in self.object_rule_configs.values()]
+
+    @property
+    def bypass_rule_configs(self):
+        """
+        Returns a dictionary of bypass rule configuration IDs and objects for this Policy.
+
+        Returns:
+            dict: A dictionary with bypass rule configuration IDs as keys and BypassRuleConfig objects
+                  as values.
+        """
+        return {key: rconf for (key, rconf) in self.object_rule_configs.items()
+                if isinstance(rconf, BypassRuleConfig)}
+
+    @property
+    def bypass_rule_configs_list(self):
+        """
+        Returns a list of bypass rule configuration objects for this Policy.
+
+        Returns:
+            list: A list of BypassRuleConfig objects.
+        """
+        return [rconf for rconf in self.object_rule_configs.values() if isinstance(rconf, BypassRuleConfig)]
 
     @property
     def core_prevention_rule_configs(self):

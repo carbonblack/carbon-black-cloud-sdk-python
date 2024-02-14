@@ -18,7 +18,7 @@ from contextlib import ExitStack as does_not_raise
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.platform import Policy, PolicyRuleConfig
 from cbc_sdk.platform.policy_ruleconfigs import (CorePreventionRuleConfig, HostBasedFirewallRuleConfig,
-                                                 DataCollectionRuleConfig)
+                                                 DataCollectionRuleConfig, BypassRuleConfig)
 from cbc_sdk.errors import ApiError, InvalidObjectError, ServerError
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_policies import (FULL_POLICY_1, BASIC_CONFIG_TEMPLATE_RETURN,
@@ -41,7 +41,11 @@ from tests.unit.fixtures.platform.mock_policy_ruleconfigs import (CORE_PREVENTIO
                                                                   HBFW_EXPORT_RULE_CONFIGS_RESPONSE,
                                                                   HBFW_EXPORT_RULE_CONFIGS_RESPONSE_CSV,
                                                                   DATA_COLLECTION_RETURNS, DATA_COLLECTION_UPDATE_1,
-                                                                  DATA_COLLECTION_UPDATE_RETURNS_1)
+                                                                  DATA_COLLECTION_UPDATE_RETURNS_1,
+                                                                  BYPASS_RULE_CONFIGS,
+                                                                  BYPASS_RULE_CONFIGS_UPDATE,
+                                                                  BYPASS_RULE_CONFIGS_UPDATE_REQUEST,
+                                                                  BYPASS_RULE_CONFIGS_UPDATE_RESPONSE)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -218,10 +222,13 @@ def test_rule_config_initialization_matches_categories(policy):
             assert isinstance(cfg, HostBasedFirewallRuleConfig)
         elif cfg.category == "data_collection":
             assert isinstance(cfg, DataCollectionRuleConfig)
+        elif cfg.category == "bypass":
+            assert isinstance(cfg, BypassRuleConfig)
         else:
             assert not isinstance(cfg, CorePreventionRuleConfig)
             assert not isinstance(cfg, HostBasedFirewallRuleConfig)
             assert not isinstance(cfg, DataCollectionRuleConfig)
+            assert not isinstance(cfg, BypassRuleConfig)
 
 
 def test_core_prevention_refresh(cbcsdk_mock, policy):
@@ -750,5 +757,72 @@ def test_data_collection_delete(cbcsdk_mock, policy):
                                        '/91c919da-fb90-4e63-9eac-506255b0a0d0', on_delete)
     rule_config = policy.data_collection_rule_configs['91c919da-fb90-4e63-9eac-506255b0a0d0']
     assert rule_config.name == 'Authentication Events'
+    rule_config.delete()
+    assert delete_called
+
+
+def test_bypass_refresh(cbcsdk_mock, policy):
+    """Tests the refresh operation for a BypassRuleConfig."""
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/rule_configs/bypass',
+                             BYPASS_RULE_CONFIGS)
+    for rule_config in policy.bypass_rule_configs_list:
+        rule_config.refresh()
+
+
+def test_bypass_update_and_save(cbcsdk_mock, policy):
+    """Tests updating the bypass data and saving it."""
+    put_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal put_called
+        assert body == BYPASS_RULE_CONFIGS_UPDATE_REQUEST
+        put_called = True
+        return copy.deepcopy(BYPASS_RULE_CONFIGS_UPDATE_RESPONSE)
+
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/configs/presentation',
+                             POLICY_CONFIG_PRESENTATION)
+    cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/65536/rule_configs/bypass', on_put)
+    rule_config = policy.bypass_rule_configs['1c03d653-eca4-4adc-81a1-04b17b6cbffc']
+    assert rule_config.name == 'Event Reporting and Sensor Operation Exclusions'
+    rule_config.replace_exclusions(BYPASS_RULE_CONFIGS_UPDATE_REQUEST["exclusions"])
+
+    rule_config.save()
+    assert put_called
+
+
+def test_bypass_update_via_replace(cbcsdk_mock, policy):
+    """Tests updating the bypass data and saving it via replace_rule_config."""
+    put_called = False
+
+    def on_put(url, body, **kwargs):
+        nonlocal put_called
+        assert body == BYPASS_RULE_CONFIGS_UPDATE_REQUEST
+        put_called = True
+        return copy.deepcopy(BYPASS_RULE_CONFIGS_UPDATE_RESPONSE)
+
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/configs/presentation',
+                             POLICY_CONFIG_PRESENTATION)
+    cbcsdk_mock.mock_request('PUT', '/policyservice/v1/orgs/test/policies/65536/rule_configs/bypass', on_put)
+    rule_config = policy.bypass_rule_configs['1c03d653-eca4-4adc-81a1-04b17b6cbffc']
+    assert rule_config.name == 'Event Reporting and Sensor Operation Exclusions'
+
+    policy.replace_rule_config('1c03d653-eca4-4adc-81a1-04b17b6cbffc', BYPASS_RULE_CONFIGS_UPDATE)
+    assert put_called
+
+
+def test_bypass_delete(cbcsdk_mock, policy):
+    """Tests delete of bypass rules."""
+    delete_called = False
+
+    def on_delete(url, body):
+        nonlocal delete_called
+        delete_called = True
+        return CBCSDKMock.StubResponse(None, scode=204)
+
+    cbcsdk_mock.mock_request('GET', '/policyservice/v1/orgs/test/policies/65536/configs/presentation',
+                             POLICY_CONFIG_PRESENTATION)
+    cbcsdk_mock.mock_request('DELETE', '/policyservice/v1/orgs/test/policies/65536/rule_configs/bypass', on_delete)
+    rule_config = policy.bypass_rule_configs['1664f2e6-645f-4d6e-98ec-0c80485cbe0f']
+    assert rule_config.name == 'Event Reporting Exclusions'
     rule_config.delete()
     assert delete_called
