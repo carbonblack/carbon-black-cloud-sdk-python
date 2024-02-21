@@ -165,8 +165,7 @@ def test_device_get_asset_group_ids_bogus_value(cbcsdk_mock):
     cbcsdk_mock.mock_request("GET", "/appservices/v6/orgs/test/devices/98765", GET_DEVICE_RESP)
     api = cbcsdk_mock.api
     device = api.select(Device, 98765)
-    with pytest.raises(ApiError):
-        device.get_asset_group_ids("BOGUS")
+    assert device.get_asset_group_ids("BOGUS") is None
 
 
 def test_device_get_asset_groups(cbcsdk_mock):

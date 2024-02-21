@@ -281,7 +281,6 @@ def test_query_basealert_invalid_create_time_combinations(cb):
 @pytest.mark.parametrize("method, arg", [
     ("set_device_ids", ["Bogus"]),
     ("set_device_names", [42]),
-    ("set_device_os", ["TI994A"]),
     ("set_device_os_versions", [8808]),
     ("set_device_username", [-1]),
     ("set_alert_ids", [9001]),
@@ -291,7 +290,6 @@ def test_query_basealert_invalid_create_time_combinations(cb):
     ("set_process_names", [7071]),
     ("set_process_sha256", [123456789]),
     ("set_tags", [-1]),
-    ("set_target_priorities", ["DOGWASH"]),
     ("set_threat_ids", [4096]),
     ("set_types", ["ERBOSOFT"]),
     ("set_workflows", ["IN_LIMBO"])

@@ -32,7 +32,8 @@ from cbc_sdk.platform import PlatformModel
 from cbc_sdk.platform.jobs import Job
 from cbc_sdk.platform.vulnerability_assessment import Vulnerability, VulnerabilityQuery
 from cbc_sdk.base import (UnrefreshableModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
-                          CriteriaBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin)
+                          CriteriaBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin,
+                          ExclusionBuilderSupportMixin)
 from cbc_sdk.platform.previewer import DevicePolicyChangePreview
 from cbc_sdk.workload import NSXRemediationJob
 
@@ -260,15 +261,10 @@ class Device(PlatformModel):
         Returns:
             dict: Summary of the vulnerabilities for this device.
         """
-        VALID_CATEGORY = ["OS", "APP"]
-
         query_params = {}
-
         url = '/vulnerability/assessment/api/v1/orgs/{}'
 
-        if category and category not in VALID_CATEGORY:
-            raise ApiError("Invalid category provided")
-        elif category:
+        if category:
             query_params["category"] = category
 
         req_url = url.format(self._cb.credentials.org_key) + '/devices/{}/vulnerabilities/summary'.format(self.id)
@@ -336,8 +332,6 @@ class Device(PlatformModel):
         Returns:
             list[str]: A list of asset group IDs this device belongs to.
         """
-        if membership not in Device.VALID_ASSETGROUP_FILTERS:
-            raise ApiError(f"Invalid filter value: {membership}")
         if membership == "ALL":
             return [g['id'] for g in self._info['asset_group']]
         elif membership == "MANUAL":
@@ -473,8 +467,6 @@ class Device(PlatformModel):
         Returns:
             dict: A dict containing member IDs as keys, and lists of group IDs as values.
         """
-        if membership not in Device.VALID_ASSETGROUP_FILTERS:
-            raise ApiError(f"Invalid filter value: {membership}")
         if isinstance(devices, int):
             device_ids = [str(devices)]
         elif isinstance(devices, Device):
@@ -651,62 +643,8 @@ class DeviceFacet(UnrefreshableModel):
 
 ############################################
 # Device Queries
-
-class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
-                        IterableQueryMixin, AsyncQueryMixin):
-    """
-    Query object that is used to locate ``Device`` objects.
-
-    The ``DeviceSearchQuery`` is constructed via SDK functions like the ``select()`` method on ``CBCloudAPI``.
-    The user would then add a query and/or criteria to it before iterating over the results.
-    """
-    VALID_OS = ["WINDOWS", "ANDROID", "MAC", "IOS", "LINUX", "OTHER"]
-    VALID_STATUSES = ["PENDING", "REGISTERED", "UNINSTALLED", "DEREGISTERED",
-                      "ACTIVE", "INACTIVE", "ERROR", "ALL", "BYPASS_ON",
-                      "BYPASS", "QUARANTINE", "SENSOR_OUTOFDATE",
-                      "DELETED", "LIVE"]
-    VALID_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "MISSION_CRITICAL"]
-    VALID_DEPLOYMENT_TYPES = ["ENDPOINT", "WORKLOAD", "VDI", "AWS", "AZURE", "GCP"]
-    VALID_FACET_FIELDS = ["policy_id", "status", "os", "ad_group_id", "cloud_provider_account_id",
-                          "auto_scaling_group_name", "virtual_private_cloud_id", "deployment_type"]
-
-    def __init__(self, doc_class, cb):
-        """
-        Initialize the ``DeviceSearchQuery``.
-
-        Args:
-            doc_class (class): The model class that will be returned by this query.
-            cb (BaseAPI): Reference to API object used to communicate with the server.
-        """
-        self._doc_class = doc_class
-        self._cb = cb
-        self._count_valid = False
-        super(DeviceSearchQuery, self).__init__()
-
-        self._query_builder = QueryBuilder()
-        self._criteria = {}
-        self._time_filter = {}
-        self._exclusions = {}
-        self._sortcriteria = {}
-        self._search_after = None
-        self.num_remaining = None
-        self.num_found = None
-        self.max_rows = -1
-
-    def _update_exclusions(self, key, newlist):
-        """
-        Updates the exclusion criteria being collected for a query.
-
-        Assumes the specified criteria item is defined as a list; the list passed in will be set as the value for this
-        criteria item, or appended to the existing one if there is one.
-
-        Args:
-            key (str): The key for the criteria item to be set.
-            newlist (list): List of values to be set for the criteria item.
-        """
-        oldlist = self._exclusions.get(key, [])
-        self._exclusions[key] = oldlist + newlist
-
+class LegacyDeviceSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
+    """Old setter methods to build DeviceSearchQuery criteria. Use add_criteria instead."""
     def set_ad_group_ids(self, ad_group_ids):
         """
         Restricts the devices that this query is performed on to the specified AD group IDs.
@@ -778,8 +716,6 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         Returns:
             DeviceSearchQuery: This instance.
         """
-        if not all((osval in DeviceSearchQuery.VALID_OS) for osval in operating_systems):
-            raise ApiError("One or more invalid operating systems")
         self._update_criteria("os", operating_systems)
         return self
 
@@ -810,8 +746,6 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         Returns:
             DeviceSearchQuery: This instance.
         """
-        if not all((stat in DeviceSearchQuery.VALID_STATUSES) for stat in statuses):
-            raise ApiError("One or more invalid status values")
         self._update_criteria("status", statuses)
         return self
 
@@ -826,8 +760,6 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         Returns:
             DeviceSearchQuery: This instance.
         """
-        if not all((prio in DeviceSearchQuery.VALID_PRIORITIES) for prio in target_priorities):
-            raise ApiError("One or more invalid target priority values")
         self._update_criteria("target_priority", target_priorities)
         return self
 
@@ -870,6 +802,24 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         self._update_criteria("virtual_private_cloud_id", cloud_ids)
         return self
 
+    def set_deployment_type(self, deployment_type):
+        """
+        Restricts the devices that this query is performed on to the specified deployment types.
+
+        Args:
+            deployment_type (list): List of deployment types to restrict search to. Valid values in this list are
+            "ENDPOINT", "WORKLOAD", "VDI", "AWS", "AZURE", "GCP"
+
+        Returns:
+            DeviceSearchQuery: This instance.
+        """
+        self._update_criteria("deployment_type", deployment_type)
+        return self
+
+
+class LegacyDeviceSearchQueryExclusionMixin(ExclusionBuilderSupportMixin):
+    """Old setter methods to build DeviceSearchQuery exclusions. Use add_exclusions instead."""
+
     def set_exclude_sensor_versions(self, sensor_versions):
         """
         Restricts the devices that this query is performed on to exclude specified sensor versions.
@@ -884,6 +834,40 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
             raise ApiError("One or more invalid sensor versions")
         self._update_exclusions("sensor_version", sensor_versions)
         return self
+
+
+class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, LegacyDeviceSearchQueryCriterionMixin,
+                        CriteriaBuilderSupportMixin, LegacyDeviceSearchQueryExclusionMixin,
+                        ExclusionBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin):
+    """
+    Query object that is used to locate ``Device`` objects.
+
+    The ``DeviceSearchQuery`` is constructed via SDK functions like the ``select()`` method on ``CBCloudAPI``.
+    The user would then add a query and/or criteria to it before iterating over the results.
+    """
+
+    def __init__(self, doc_class, cb):
+        """
+        Initialize the ``DeviceSearchQuery``.
+
+        Args:
+            doc_class (class): The model class that will be returned by this query.
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+        """
+        self._doc_class = doc_class
+        self._cb = cb
+        self._count_valid = False
+        super(DeviceSearchQuery, self).__init__()
+
+        self._query_builder = QueryBuilder()
+        self._criteria = {}
+        self._time_filter = {}
+        self._exclusions = {}
+        self._sortcriteria = {}
+        self._search_after = None
+        self.num_remaining = None
+        self.num_found = None
+        self.max_rows = -1
 
     def sort_by(self, key, direction="ASC"):
         """
@@ -902,21 +886,6 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         if direction not in CriteriaBuilderSupportMixin.VALID_DIRECTIONS:
             raise ApiError("invalid sort direction specified")
         self._sortcriteria = {"field": key, "order": direction}
-        return self
-
-    def set_deployment_type(self, deployment_type):
-        """
-        Restricts the devices that this query is performed on to the specified deployment types.
-
-        Args:
-            deployment_type (list): List of deployment types to restrict search to.
-
-        Returns:
-            DeviceSearchQuery: This instance.
-        """
-        if not all((type in DeviceSearchQuery.VALID_DEPLOYMENT_TYPES) for type in deployment_type):
-            raise ApiError("invalid deployment_type specified")
-        self._update_criteria("deployment_type", deployment_type)
         return self
 
     def set_max_rows(self, max_rows):
@@ -1097,8 +1066,6 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         """
         if not fieldlist:
             raise ApiError("At least one term field must be specified")
-        if not all((field in DeviceSearchQuery.VALID_FACET_FIELDS) for field in fieldlist):
-            raise ApiError("One or more invalid term field names")
         request = self._build_request(-1, -1)
         if 'rows' in request:
             del request['rows']
