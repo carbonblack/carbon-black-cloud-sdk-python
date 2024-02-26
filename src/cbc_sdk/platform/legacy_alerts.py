@@ -14,7 +14,6 @@
 """Model and Query Classes for Legacy Alerts and Workflows used Alert API v6 and SDK 1.4.3 or earlier"""
 
 from cbc_sdk.errors import ApiError, FunctionalityDecommissioned
-from cbc_sdk.platform.devices import DeviceSearchQuery
 from cbc_sdk.base import CriteriaBuilderSupportMixin
 import logging
 
@@ -161,8 +160,6 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         Returns:
             AlertSearchQuery: This instance.
         """
-        if not all((osval in DeviceSearchQuery.VALID_OS) for osval in device_os):
-            raise ApiError("One or more invalid operating systems")
         self._update_criteria("device_os", device_os)
         return self
 
@@ -384,8 +381,6 @@ class LegacyAlertSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         Returns:
             AlertSearchQuery: This instance.
         """
-        if not all((prio in DeviceSearchQuery.VALID_PRIORITIES) for prio in priorities):
-            raise ApiError("One or more invalid priority values")
         self._update_criteria("device_target_value", priorities)
         return self
 

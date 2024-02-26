@@ -212,9 +212,6 @@ def test_query_device_invalid_last_contact_time_combinations(cb):
 @pytest.mark.parametrize("method, arg", [
     ("set_ad_group_ids", ["Bogus"]),
     ("set_policy_ids", ["Bogus"]),
-    ("set_os", ["COMMODORE_64"]),
-    ("set_status", ["Bogus"]),
-    ("set_target_priorities", ["Bogus"]),
     ("set_exclude_sensor_versions", [12703])
 ])
 def test_query_device_invalid_criteria_values(cb, method, arg):
@@ -240,8 +237,6 @@ def test_query_device_facet(cbcsdk_mock):
     assert len(facets) == 1
     assert facets[0].field == 'policy_id'
     assert len(facets[0].values_) == 10
-    with pytest.raises(ApiError):
-        query.facets(['notexist'])
     with pytest.raises(ApiError):
         query.facets([])
 
@@ -365,7 +360,7 @@ def test_query_device_do_update_sensor_version(cbcsdk_mock):
 
 
 def test_query_deployment_type(cbcsdk_mock):
-    """Test deployment type query with correct and incorrect params."""
+    """Test deployment type query with params."""
     def on_query(url, body, **kwargs):
         assert body == {"rows": 2,
                         "criteria": {"deployment_type": ["ENDPOINT"]}}
@@ -373,8 +368,6 @@ def test_query_deployment_type(cbcsdk_mock):
 
     cbcsdk_mock.mock_request('POST', "/appservices/v6/orgs/test/devices/_search", on_query)
     api = cbcsdk_mock.api
-    with pytest.raises(ApiError):
-        api.select(Device).set_deployment_type(["BOGUS"])
     query = api.select(Device).set_deployment_type(["ENDPOINT"])
     d = query.one()
     assert d.deployment_type[0] in ["ENDPOINT", "WORKLOAD"]
