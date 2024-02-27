@@ -22,7 +22,7 @@ new sensor version.
 Typical usage example::
 
     # assume "cb" is an instance of CBCloudAPI
-    query = cb.select(Device).where(os="WINDOWS").set_policy_ids([142857])
+    query = cb.select(Device).where(os="WINDOWS").add_criteria("policy_id", [142857])
     for device in query:
         device.quarantine(True)
 """
@@ -562,6 +562,10 @@ class DeviceFacet(UnrefreshableModel):
         *Faceting* is a search technique that categorizes search results according to common attributes. This allows
         users to explore and discover information within a dataset, in this case, the set of devices.
         """
+
+        FIELDS_INTEGER = ("policy_id", "ad_group_id")
+        FIELDS_UPPER = ("os", )
+
         def __init__(self, cb, outer, model_unique_id, initial_data):
             """
             Initialize the ``DeviceFacetValue`` object.
@@ -591,24 +595,13 @@ class DeviceFacet(UnrefreshableModel):
                 DeviceQuery: A new ``DeviceQuery`` set with the criteria, which may have additional criteria added
                     to it.
             """
-            query = self._cb.select(Device)
-            if self._outer.field == 'policy_id':
-                query.set_policy_ids([int(self.id)])
-            elif self._outer.field == 'status':
-                query.set_status([self.id])
-            elif self._outer.field == 'os':
-                query.set_os([self.id.upper()])
-            elif self._outer.field == 'ad_group_id':
-                query.set_ad_group_ids([int(self.id)])
-            elif self._outer.field == "cloud_provider_account_id":
-                query.set_cloud_provider_account_id([self.id])
-            elif self._outer.field == "auto_scaling_group_name":
-                query.set_auto_scaling_group_name([self.id])
-            elif self._outer.field == "virtual_private_cloud_id":
-                query.set_virtual_private_cloud_id([self.id])
-            elif self._outer.field == "deployment_type":
-                query.set_deployment_type([self.id])
-            return query
+            if self._outer.field in self.FIELDS_INTEGER:
+                cvalue = int(self.id)
+            elif self._outer.field in self.FIELDS_UPPER:
+                cvalue = self.id.upper()
+            else:
+                cvalue = self.id
+            return self._cb.select(Device).add_criteria(self._outer.field, [cvalue])
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -643,6 +636,7 @@ class DeviceFacet(UnrefreshableModel):
 
 ############################################
 # Device Queries
+
 class LegacyDeviceSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     """Old setter methods to build DeviceSearchQuery criteria. Use add_criteria instead."""
     def set_ad_group_ids(self, ad_group_ids):
@@ -838,7 +832,7 @@ class LegacyDeviceSearchQueryExclusionMixin(ExclusionBuilderSupportMixin):
 
 class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, LegacyDeviceSearchQueryCriterionMixin,
                         CriteriaBuilderSupportMixin, LegacyDeviceSearchQueryExclusionMixin,
-                        ExclusionBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin):
+                        LegacyDeviceSearchQueryExclusionMixin, IterableQueryMixin, AsyncQueryMixin):
     """
     Query object that is used to locate ``Device`` objects.
 
@@ -1056,9 +1050,8 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, LegacyDeviceSearchQ
             device(READ)
 
         Args:
-            fieldlist (list[str]): List of facet field names. Valid names are "policy_id", "status", "os",
-                                   "ad_group_id", "cloud_provider_account_id", "auto_scaling_group_name",
-                                   and "virtual_private_cloud_id".
+            fieldlist (list[str]): List of facet field names. Any field used in criteria may be specified here, except
+                for "base_device", "deployment_type", "id", "last_contact_time", "target_priority:, and "vm_uuid".
             max_rows (int): The maximum number of rows to return. 0 means return all rows.
 
         Returns:
