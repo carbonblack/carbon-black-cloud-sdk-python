@@ -1472,6 +1472,6 @@ def test_process_missing_property(cbcsdk_mock):
     api = cbcsdk_mock.api
     guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
     process = api.select(Process, guid)
-    
+
     with pytest.raises(AttributeError):
         process.invalid_property

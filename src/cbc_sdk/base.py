@@ -794,6 +794,7 @@ class UnrefreshableModel(NewBaseModel):
         """Override protected refresh"""
         pass
 
+
 class MutableBaseModel(NewBaseModel):
     """Base model for objects that can have properties changed and then saved back to the server."""
     _new_object_http_method = "POST"

@@ -217,7 +217,8 @@ class EventQuery(Query):
             self._total_segments = result.get("total_segments", 0)
             self._processed_segments = result.get("processed_segments", 0)
             self._count_valid = True
-            if self._processed_segments != self._total_segments and len(result.get('results', [])) != self._total_results:
+            if self._processed_segments != self._total_segments \
+                    and len(result.get('results', [])) != self._total_results:
                 retry_counter = 0 if self._processed_segments > last_processed_segments else retry_counter + 1
                 last_processed_segments = max(last_processed_segments, self._processed_segments)
                 if retry_counter == MAX_EVENT_SEARCH_RETRIES:
