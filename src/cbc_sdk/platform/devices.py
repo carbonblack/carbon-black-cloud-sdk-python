@@ -643,6 +643,9 @@ class LegacyDeviceSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the devices that this query is performed on to the specified AD group IDs.
 
+        Deprecated:
+            Use ``add_criteria("ad_group_id", ad_group_ids)`` instead.
+
         Args:
             ad_group_ids (list): List of AD group IDs to restrict the search to.
 
@@ -657,6 +660,9 @@ class LegacyDeviceSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_device_ids(self, device_ids):
         """
         Restricts the devices that this query is performed on to the specified device IDs.
+
+        Deprecated:
+            Use ``add_criteria("device_id", device_ids)`` instead.
 
         Args:
             device_ids (list): List of device IDs to restrict the search to.
@@ -703,6 +709,9 @@ class LegacyDeviceSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the devices that this query is performed on to the specified operating systems.
 
+        Deprecated:
+            Use ``add_criteria("os", operating_systems)`` instead.
+
         Args:
             operating_systems (list): List of operating systems to restrict search to.  Valid values in this list are
                                       "WINDOWS", "ANDROID", "MAC", "IOS", "LINUX", and "OTHER".
@@ -716,6 +725,9 @@ class LegacyDeviceSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_policy_ids(self, policy_ids):
         """
         Restricts the devices that this query is performed on to the specified policy IDs.
+
+        Deprecated:
+            Use ``add_criteria("policy_id", policy_ids)`` instead.
 
         Args:
             policy_ids (list): List of policy IDs to restrict the search to.
@@ -732,6 +744,9 @@ class LegacyDeviceSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the devices that this query is performed on to the specified status values.
 
+        Deprecated:
+            Use ``add_criteria("status", statuses)`` instead.
+
         Args:
             statuses (list): List of statuses to restrict search to.  Valid values in this list are "PENDING",
                              "REGISTERED", "UNINSTALLED", "DEREGISTERED", "ACTIVE", "INACTIVE", "ERROR", "ALL",
@@ -747,6 +762,9 @@ class LegacyDeviceSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the devices that this query is performed on to the specified target priority values.
 
+        Deprecated:
+            Use ``add_criteria("target_priority", target_priorities)`` instead.
+
         Args:
             target_priorities (list): List of priorities to restrict search to.  Valid values in this list are "LOW",
                                       "MEDIUM", "HIGH", and "MISSION_CRITICAL".
@@ -761,6 +779,9 @@ class LegacyDeviceSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the devices that this query is performed on to the specified cloud provider account IDs.
 
+        Deprecated:
+            Use ``add_criteria("cloud_provider_account_id", account_ids)`` instead.
+
         Args:
             account_ids (list): List of account IDs to restrict search to.
 
@@ -773,6 +794,9 @@ class LegacyDeviceSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_auto_scaling_group_name(self, group_names):
         """
         Restricts the devices that this query is performed on to the specified auto scaling group names.
+
+        Deprecated:
+            Use ``add_criteria("auto_scaling_group_name", group_names)`` instead.
 
         Args:
             group_names (list): List of group names to restrict search to.
@@ -787,6 +811,9 @@ class LegacyDeviceSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the devices that this query is performed on to the specified virtual private cloud IDs.
 
+        Deprecated:
+            Use ``add_criteria("virtual_private_cloud_id", cloud_ids)`` instead.
+
         Args:
             cloud_ids (list): List of cloud IDs to restrict search to.
 
@@ -799,6 +826,9 @@ class LegacyDeviceSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_deployment_type(self, deployment_type):
         """
         Restricts the devices that this query is performed on to the specified deployment types.
+
+        Deprecated:
+            Use ``add_criteria("deployment_type", deployment_type)`` instead.
 
         Args:
             deployment_type (list): List of deployment types to restrict search to. Valid values in this list are
@@ -817,6 +847,9 @@ class LegacyDeviceSearchQueryExclusionMixin(ExclusionBuilderSupportMixin):
     def set_exclude_sensor_versions(self, sensor_versions):
         """
         Restricts the devices that this query is performed on to exclude specified sensor versions.
+
+        Deprecated:
+            Use ``add_exclusion("sensor_version", sensor_versions)`` instead.
 
         Args:
             sensor_versions (list): List of sensor versions to be excluded.
