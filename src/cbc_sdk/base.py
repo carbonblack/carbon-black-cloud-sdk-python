@@ -790,6 +790,10 @@ class UnrefreshableModel(NewBaseModel):
         """Reload this object from the server."""
         raise ApiError("refresh() called on an unrefreshable model")
 
+    def _refresh(self):
+        """Override protected refresh"""
+        pass
+
 
 class MutableBaseModel(NewBaseModel):
     """Base model for objects that can have properties changed and then saved back to the server."""
