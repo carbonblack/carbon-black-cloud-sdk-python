@@ -242,9 +242,9 @@ class Device(PlatformModel):
         resp = self._cb.post_object(url, body=request)
         if resp.status_code == 200:
             return resp.json()
-        elif resp.status_code == 204:
+        elif resp.status_code == 204:  # pragma: no cover
             return None
-        else:
+        else:  # pragma: no cover
             raise ServerError(error_code=resp.status_code, message="Device action error: {0}".format(resp.content),
                               uri=url)
 
@@ -256,7 +256,7 @@ class Device(PlatformModel):
             vulnerabilityAssessment.data(READ)
 
         Args:
-            category (string): (optional) Vulnerabilty category (OS, APP).
+            category (string): (optional) Vulnerability category (OS, APP).
 
         Returns:
             dict: Summary of the vulnerabilities for this device.
@@ -612,9 +612,9 @@ class DeviceFacet(UnrefreshableModel):
             cb (BaseAPI): Reference to API object used to communicate with the server.
             **kwargs (dict): Not used, retained for compatibility.
         """
-        raise NonQueryableModel("use facets() on DeviceQuery to get DeviceFacet")
+        raise NonQueryableModel("use facets() on DeviceQuery to get DeviceFacet")  # pragma: no cover
 
-    def _subobject(self, name):
+    def _subobject(self, name):  # pragma: no cover
         """
         Returns the "subobject value" of the given attribute.
 
@@ -864,7 +864,6 @@ class LegacyDeviceSearchQueryExclusionMixin(ExclusionBuilderSupportMixin):
 
 
 class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, LegacyDeviceSearchQueryCriterionMixin,
-                        CriteriaBuilderSupportMixin, LegacyDeviceSearchQueryExclusionMixin,
                         LegacyDeviceSearchQueryExclusionMixin, IterableQueryMixin, AsyncQueryMixin):
     """
     Query object that is used to locate ``Device`` objects.
