@@ -22,7 +22,7 @@ new sensor version.
 Typical usage example::
 
     # assume "cb" is an instance of CBCloudAPI
-    query = cb.select(Device).where(os="WINDOWS").set_policy_ids([142857])
+    query = cb.select(Device).where(os="WINDOWS").add_criteria("policy_id", [142857])
     for device in query:
         device.quarantine(True)
 """
@@ -242,9 +242,9 @@ class Device(PlatformModel):
         resp = self._cb.post_object(url, body=request)
         if resp.status_code == 200:
             return resp.json()
-        elif resp.status_code == 204:
+        elif resp.status_code == 204:  # pragma: no cover
             return None
-        else:
+        else:  # pragma: no cover
             raise ServerError(error_code=resp.status_code, message="Device action error: {0}".format(resp.content),
                               uri=url)
 
@@ -256,7 +256,7 @@ class Device(PlatformModel):
             vulnerabilityAssessment.data(READ)
 
         Args:
-            category (string): (optional) Vulnerabilty category (OS, APP).
+            category (string): (optional) Vulnerability category (OS, APP).
 
         Returns:
             dict: Summary of the vulnerabilities for this device.
@@ -562,6 +562,10 @@ class DeviceFacet(UnrefreshableModel):
         *Faceting* is a search technique that categorizes search results according to common attributes. This allows
         users to explore and discover information within a dataset, in this case, the set of devices.
         """
+
+        FIELDS_INTEGER = ("policy_id", "ad_group_id")
+        FIELDS_UPPER = ("os", )
+
         def __init__(self, cb, outer, model_unique_id, initial_data):
             """
             Initialize the ``DeviceFacetValue`` object.
@@ -591,24 +595,13 @@ class DeviceFacet(UnrefreshableModel):
                 DeviceQuery: A new ``DeviceQuery`` set with the criteria, which may have additional criteria added
                     to it.
             """
-            query = self._cb.select(Device)
-            if self._outer.field == 'policy_id':
-                query.set_policy_ids([int(self.id)])
-            elif self._outer.field == 'status':
-                query.set_status([self.id])
-            elif self._outer.field == 'os':
-                query.set_os([self.id.upper()])
-            elif self._outer.field == 'ad_group_id':
-                query.set_ad_group_ids([int(self.id)])
-            elif self._outer.field == "cloud_provider_account_id":
-                query.set_cloud_provider_account_id([self.id])
-            elif self._outer.field == "auto_scaling_group_name":
-                query.set_auto_scaling_group_name([self.id])
-            elif self._outer.field == "virtual_private_cloud_id":
-                query.set_virtual_private_cloud_id([self.id])
-            elif self._outer.field == "deployment_type":
-                query.set_deployment_type([self.id])
-            return query
+            if self._outer.field in self.FIELDS_INTEGER:
+                cvalue = int(self.id)
+            elif self._outer.field in self.FIELDS_UPPER:
+                cvalue = self.id.upper()
+            else:
+                cvalue = self.id
+            return self._cb.select(Device).add_criteria(self._outer.field, [cvalue])
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -619,9 +612,9 @@ class DeviceFacet(UnrefreshableModel):
             cb (BaseAPI): Reference to API object used to communicate with the server.
             **kwargs (dict): Not used, retained for compatibility.
         """
-        raise NonQueryableModel("use facets() on DeviceQuery to get DeviceFacet")
+        raise NonQueryableModel("use facets() on DeviceQuery to get DeviceFacet")  # pragma: no cover
 
-    def _subobject(self, name):
+    def _subobject(self, name):  # pragma: no cover
         """
         Returns the "subobject value" of the given attribute.
 
@@ -643,11 +636,15 @@ class DeviceFacet(UnrefreshableModel):
 
 ############################################
 # Device Queries
+
 class LegacyDeviceSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     """Old setter methods to build DeviceSearchQuery criteria. Use add_criteria instead."""
     def set_ad_group_ids(self, ad_group_ids):
         """
         Restricts the devices that this query is performed on to the specified AD group IDs.
+
+        Deprecated:
+            Use ``add_criteria("ad_group_id", ad_group_ids)`` instead.
 
         Args:
             ad_group_ids (list): List of AD group IDs to restrict the search to.
@@ -663,6 +660,9 @@ class LegacyDeviceSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_device_ids(self, device_ids):
         """
         Restricts the devices that this query is performed on to the specified device IDs.
+
+        Deprecated:
+            Use ``add_criteria("device_id", device_ids)`` instead.
 
         Args:
             device_ids (list): List of device IDs to restrict the search to.
@@ -709,6 +709,9 @@ class LegacyDeviceSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the devices that this query is performed on to the specified operating systems.
 
+        Deprecated:
+            Use ``add_criteria("os", operating_systems)`` instead.
+
         Args:
             operating_systems (list): List of operating systems to restrict search to.  Valid values in this list are
                                       "WINDOWS", "ANDROID", "MAC", "IOS", "LINUX", and "OTHER".
@@ -722,6 +725,9 @@ class LegacyDeviceSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_policy_ids(self, policy_ids):
         """
         Restricts the devices that this query is performed on to the specified policy IDs.
+
+        Deprecated:
+            Use ``add_criteria("policy_id", policy_ids)`` instead.
 
         Args:
             policy_ids (list): List of policy IDs to restrict the search to.
@@ -738,6 +744,9 @@ class LegacyDeviceSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the devices that this query is performed on to the specified status values.
 
+        Deprecated:
+            Use ``add_criteria("status", statuses)`` instead.
+
         Args:
             statuses (list): List of statuses to restrict search to.  Valid values in this list are "PENDING",
                              "REGISTERED", "UNINSTALLED", "DEREGISTERED", "ACTIVE", "INACTIVE", "ERROR", "ALL",
@@ -753,6 +762,9 @@ class LegacyDeviceSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the devices that this query is performed on to the specified target priority values.
 
+        Deprecated:
+            Use ``add_criteria("target_priority", target_priorities)`` instead.
+
         Args:
             target_priorities (list): List of priorities to restrict search to.  Valid values in this list are "LOW",
                                       "MEDIUM", "HIGH", and "MISSION_CRITICAL".
@@ -767,6 +779,9 @@ class LegacyDeviceSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the devices that this query is performed on to the specified cloud provider account IDs.
 
+        Deprecated:
+            Use ``add_criteria("cloud_provider_account_id", account_ids)`` instead.
+
         Args:
             account_ids (list): List of account IDs to restrict search to.
 
@@ -779,6 +794,9 @@ class LegacyDeviceSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_auto_scaling_group_name(self, group_names):
         """
         Restricts the devices that this query is performed on to the specified auto scaling group names.
+
+        Deprecated:
+            Use ``add_criteria("auto_scaling_group_name", group_names)`` instead.
 
         Args:
             group_names (list): List of group names to restrict search to.
@@ -793,6 +811,9 @@ class LegacyDeviceSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
         """
         Restricts the devices that this query is performed on to the specified virtual private cloud IDs.
 
+        Deprecated:
+            Use ``add_criteria("virtual_private_cloud_id", cloud_ids)`` instead.
+
         Args:
             cloud_ids (list): List of cloud IDs to restrict search to.
 
@@ -805,6 +826,9 @@ class LegacyDeviceSearchQueryCriterionMixin(CriteriaBuilderSupportMixin):
     def set_deployment_type(self, deployment_type):
         """
         Restricts the devices that this query is performed on to the specified deployment types.
+
+        Deprecated:
+            Use ``add_criteria("deployment_type", deployment_type)`` instead.
 
         Args:
             deployment_type (list): List of deployment types to restrict search to. Valid values in this list are
@@ -824,6 +848,9 @@ class LegacyDeviceSearchQueryExclusionMixin(ExclusionBuilderSupportMixin):
         """
         Restricts the devices that this query is performed on to exclude specified sensor versions.
 
+        Deprecated:
+            Use ``add_exclusion("sensor_version", sensor_versions)`` instead.
+
         Args:
             sensor_versions (list): List of sensor versions to be excluded.
 
@@ -837,8 +864,7 @@ class LegacyDeviceSearchQueryExclusionMixin(ExclusionBuilderSupportMixin):
 
 
 class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, LegacyDeviceSearchQueryCriterionMixin,
-                        CriteriaBuilderSupportMixin, LegacyDeviceSearchQueryExclusionMixin,
-                        ExclusionBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin):
+                        LegacyDeviceSearchQueryExclusionMixin, IterableQueryMixin, AsyncQueryMixin):
     """
     Query object that is used to locate ``Device`` objects.
 
@@ -1056,9 +1082,8 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, LegacyDeviceSearchQ
             device(READ)
 
         Args:
-            fieldlist (list[str]): List of facet field names. Valid names are "policy_id", "status", "os",
-                                   "ad_group_id", "cloud_provider_account_id", "auto_scaling_group_name",
-                                   and "virtual_private_cloud_id".
+            fieldlist (list[str]): List of facet field names. Any field used in criteria may be specified here, except
+                for "base_device", "deployment_type", "id", "last_contact_time", "target_priority:, and "vm_uuid".
             max_rows (int): The maximum number of rows to return. 0 means return all rows.
 
         Returns:
