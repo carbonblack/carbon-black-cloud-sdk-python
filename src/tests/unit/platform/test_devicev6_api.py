@@ -434,5 +434,3 @@ def test_device_export(cbcsdk_mock):
     assert isinstance(job, Job)
     assert job.id == 11608915
     assert job._wait_status
-
-
