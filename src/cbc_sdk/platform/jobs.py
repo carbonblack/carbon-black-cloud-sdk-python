@@ -17,7 +17,7 @@ import io
 import logging
 import time
 from cbc_sdk.base import NewBaseModel, BaseQuery, IterableQueryMixin, AsyncQueryMixin
-from cbc_sdk.errors import ObjectNotFoundError, ServerError
+from cbc_sdk.errors import ObjectNotFoundError, ServerError, ApiError
 from cbc_sdk.utils import BackoffHandler
 
 
@@ -31,7 +31,7 @@ class Job(NewBaseModel):
     primary_key = "id"
     swagger_meta_file = "platform/models/job.yaml"
 
-    def __init__(self, cb, model_unique_id, initial_data=None):
+    def __init__(self, cb, model_unique_id, initial_data=None, **kwargs):
         """
         Initialize the Job object.
 
@@ -39,8 +39,16 @@ class Job(NewBaseModel):
             cb (BaseAPI): Reference to API object used to communicate with the server.
             model_unique_id (int): ID of the job.
             initial_data (dict): Initial data used to populate the job.
+            kwargs (dict): Additional keyword arguments.
+
+        Keyword Args:
+            wait_status (bool): If ``True``, causes the job to wait on change in status instead of relying on the
+                progress API call (workaround for server issue). Default is ``False``.
         """
         super(Job, self).__init__(cb, model_unique_id, initial_data)
+        self._wait_status = False
+        if kwargs.get("wait_status", None):
+            self._wait_status = True
         if model_unique_id is not None and initial_data is None:
             self._refresh()
         else:
@@ -104,21 +112,38 @@ class Job(NewBaseModel):
         """
         backoff = BackoffHandler(self._cb, timeout=timeout)
         with backoff as b:
-            progress_data = (1, 0, '')
             errorcount = 0
-            last_nc = 0
-            while progress_data[1] < progress_data[0]:
-                b.pause()
-                try:
-                    progress_data = self.get_progress()
-                    if progress_data[1] > last_nc:
-                        last_nc = progress_data[1]
-                        b.reset()
-                except (ServerError, ObjectNotFoundError):
-                    errorcount += 1
-                    if errorcount == 3:
-                        raise
-                    progress_data = (1, 0, '')
+            if self._wait_status:
+                status = ""
+                while status not in ("FAILED", "COMPLETED"):
+                    b.pause()
+                    try:
+                        self._refresh()
+                        if self.status != status:
+                            status = self.status
+                            b.reset()
+                    except (ServerError, ObjectNotFoundError):
+                        errorcount += 1
+                        if errorcount == 3:
+                            raise
+                        status = ""
+                if status == "FAILED":
+                    raise ApiError(f"Job {self.id} reports failure")
+            else:
+                progress_data = (1, 0, '')
+                last_nc = 0
+                while progress_data[1] < progress_data[0]:
+                    b.pause()
+                    try:
+                        progress_data = self.get_progress()
+                        if progress_data[1] > last_nc:
+                            last_nc = progress_data[1]
+                            b.reset()
+                    except (ServerError, ObjectNotFoundError):
+                        errorcount += 1
+                        if errorcount == 3:
+                            raise
+                        progress_data = (1, 0, '')
         return self
 
     def await_completion(self, timeout=0):
