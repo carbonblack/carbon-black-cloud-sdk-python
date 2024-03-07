@@ -1173,7 +1173,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
         url = self._build_url("/_export")
         resp = self._cb.post_object(url, body=request)
         result = resp.json()
-        return Job(self._cb, result["id"], result, wait_status=True)
+        return Job(self._cb, result["id"], result)
 
     def scroll(self, rows=10000):
         """

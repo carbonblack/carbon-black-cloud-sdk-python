@@ -31,7 +31,9 @@ class Job(NewBaseModel):
     primary_key = "id"
     swagger_meta_file = "platform/models/job.yaml"
 
-    def __init__(self, cb, model_unique_id, initial_data=None, **kwargs):
+    JOB_TYPES_WAITING_ON_STATUS = ('ENDPOINTS', )
+
+    def __init__(self, cb, model_unique_id, initial_data=None):
         """
         Initialize the Job object.
 
@@ -39,7 +41,6 @@ class Job(NewBaseModel):
             cb (BaseAPI): Reference to API object used to communicate with the server.
             model_unique_id (int): ID of the job.
             initial_data (dict): Initial data used to populate the job.
-            kwargs (dict): Additional keyword arguments.
 
         Keyword Args:
             wait_status (bool): If ``True``, causes the job to wait on change in status instead of relying on the
@@ -47,12 +48,12 @@ class Job(NewBaseModel):
         """
         super(Job, self).__init__(cb, model_unique_id, initial_data)
         self._wait_status = False
-        if kwargs.get("wait_status", None):
-            self._wait_status = True
         if model_unique_id is not None and initial_data is None:
             self._refresh()
         else:
             self._full_init = True
+        if self._info['type'] in self.JOB_TYPES_WAITING_ON_STATUS:
+            self._wait_status = True
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
