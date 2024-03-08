@@ -11,6 +11,7 @@
 
 """Credentials provider that reads the credentials from a file."""
 
+import codecs
 import configparser
 import logging
 import os
@@ -112,6 +113,31 @@ class FileCredentialProvider(CredentialProvider):
                 log.warning("Security warning: " + failmsg)
             return True
 
+    @staticmethod
+    def _get_encoding(file):
+        """
+        Detects which encoding a file is in.
+
+        Args:
+            file (Path): The file to be tested.
+
+        Returns:
+            str: The (possibly-guessed) encoding for the file.
+        """
+        try:
+            with open(file, "rb") as f:
+                prefix = bytearray(f.read(5))
+                if prefix.startswith(codecs.BOM_UTF8):
+                    return "utf_8_sig"
+                if prefix.startswith(codecs.BOM_UTF16_LE):
+                    return "utf_16_le"
+                if prefix.startswith(codecs.BOM_UTF16_BE):
+                    return "utf_16_be"
+                return "utf_8"
+        except OSError:
+            log.warning(f"unable to read encoding of file {file}, assuming utf_8 encoding")
+            return "utf_8"
+
     def get_credentials(self, section=None):
         """
         Return a Credentials object containing the configured credentials.
@@ -132,14 +158,14 @@ class FileCredentialProvider(CredentialProvider):
             cred_files = [p for p in self._search_path if self._security_check(p)]
             if not cred_files:
                 raise CredentialError(f"Unable to locate credential file(s) from {self._search_path}")
-            raw_cred_files = [str(p) for p in cred_files]  # needed to support 3.6.0 correctly & for error message
             try:
                 parser = configparser.ConfigParser()
-                parser.read(raw_cred_files)
+                for file in cred_files:
+                    parser.read(str(file), encoding=self._get_encoding(file))
                 for sect in parser.sections():
                     new_creds[sect] = Credentials({name: value for (name, value) in parser.items(sect)})
             except configparser.Error as e:
-                raise CredentialError(f"Unable to read credential file(s) {raw_cred_files}") from e
+                raise CredentialError(f"Unable to read credential file(s) {cred_files}") from e
             self._cached_credentials = new_creds
         if section in self._cached_credentials:
             return self._cached_credentials[section]
