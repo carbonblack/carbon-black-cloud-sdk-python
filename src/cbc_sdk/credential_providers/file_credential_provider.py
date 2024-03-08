@@ -65,7 +65,7 @@ class FileCredentialProvider(CredentialProvider):
         Returns:
             os.stat_result: The resulting status.
         """
-        return path.stat()
+        return path.stat()  # pragma: no cover
 
     def _security_check(self, path):
         """
@@ -161,6 +161,7 @@ class FileCredentialProvider(CredentialProvider):
             try:
                 parser = configparser.ConfigParser()
                 for file in cred_files:
+                    # use string as filename parameter to maintain compatibility
                     parser.read(str(file), encoding=self._get_encoding(file))
                 for sect in parser.sections():
                     new_creds[sect] = Credentials({name: value for (name, value) in parser.items(sect)})
