@@ -134,7 +134,7 @@ class FileCredentialProvider(CredentialProvider):
                 if prefix.startswith(codecs.BOM_UTF16_BE):
                     return "utf_16_be"
                 return "utf_8"
-        except OSError:
+        except OSError:  # pragma: no cover
             log.warning(f"unable to read encoding of file {file}, assuming utf_8 encoding")
             return "utf_8"
 
@@ -161,8 +161,16 @@ class FileCredentialProvider(CredentialProvider):
             try:
                 parser = configparser.ConfigParser()
                 for file in cred_files:
-                    # use string as filename parameter to maintain compatibility
-                    parser.read(str(file), encoding=self._get_encoding(file))
+                    encoding = self._get_encoding(file)
+                    if encoding.startswith("utf_16"):
+                        with open(file, 'rt', encoding=encoding) as f:
+                            # skip the BOM at the start of the file, because that seems to break ConfigParser
+                            ch = f.read(1)
+                            assert ch == "\ufeff"
+                            parser.read_file(f, source=str(file))
+                    else:
+                        # use string as filename parameter to maintain compatibility
+                        parser.read(str(file), encoding=encoding)
                 for sect in parser.sections():
                     new_creds[sect] = Credentials({name: value for (name, value) in parser.items(sect)})
             except configparser.Error as e:
