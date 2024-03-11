@@ -127,9 +127,15 @@ def test_security_check_unix(fileuid, filemode, parentuid, parentmode, warned, p
         assert last_failmsg.endswith(suffix)
 
 
-def test_read_single_file():
+@pytest.mark.parametrize("filename", [
+    "config_valid.cbc",
+    "config_valid_utf8sig.cbc",
+    "config_valid_utf16be.cbc",
+    "config_valid_utf16le.cbc"
+])
+def test_read_single_file(filename):
     """Test the basic reading of multiple credential sets from a single file."""
-    sut = FileCredentialProvider(path_of("config_valid.cbc"))
+    sut = FileCredentialProvider(path_of(filename))
     creds = sut.get_credentials("default")
     assert creds.url == "http://example.com"
     assert creds.token == "ABCDEFGH"
@@ -192,3 +198,11 @@ def test_file_with_parsing_error():
     sut = FileCredentialProvider(path_of("config_parseerror.cbc"))
     with pytest.raises(CredentialError):
         sut.get_credentials("default")
+
+
+def test_no_search_path_error():
+    """Tests that an error is thrown if no files can be found in the search path."""
+    sut = FileCredentialProvider()
+    sut._search_path = []
+    with pytest.raises(CredentialError):
+        sut.get_credentials()

@@ -1,0 +1,15 @@
+﻿[default]
+url=http://example.com
+token=ABCDEFGH
+org_key=A1B2C3D4
+ssl_verify=false
+ssl_verify_hostname=no
+ssl_cert_file=foo.certs
+ssl_force_tls_1_2=1
+proxy=proxy.example
+ignore_system_proxy=on
+integration=Covax
+
+[partial]
+url=http://example.com
+ssl_verify=False
