@@ -3,7 +3,7 @@ Devices
 
 *Devices*, also known as *endpoints*, are at the heart of Carbon Black Cloud's functionality.  Each device has a
 Carbon Black Cloud sensor installed on it, which communicates with Carbon Black analytics and the Carbon Black Cloud
-console.
+back end.
 
 Using the Carbon Black Cloud SDK, you can search for devices with a wide range of criteria, filtering on many different
 fields.  You can also perform actions on individual devices, such as setting quarantine status, setting bypass status,
@@ -56,10 +56,11 @@ that have been previously returned.  This snippet illustrates the technique::
     # assume "api" is your CBCloudAPI reference
     query = api.select(Device)
     # add search terms and/or criteria to the query (not shown here)
+    query.scroll()  # fetch the first batch of items - 10,000 is default
     for d in query:
         do_something_with_device(d)  # whatever you need for each device
     while query.num_remaining > 0:
-        query.scroll()  # default is 10,000 devices at a time
+        query.scroll()  # fetch next batch
         for d in query:
             do_something_with_device(d)
 
@@ -96,8 +97,9 @@ Setting bypass on the results of a device search::
 Quarantine
 ++++++++++
 
-A device that has been *quarantined* has its outbound traffic limited, and all inbound traffic to it stopped.  This
-would be used on any device determined to be interacting badly.
+A device that has been *quarantined* has its outbound traffic limited, and all inbound traffic to it stopped, except
+for communication ith the Carbon Black Cloud back end.  This would be used on any device determined to be interacting
+badly.
 
 Setting quarantine on a single device::
 
@@ -121,11 +123,8 @@ Background Scan
 +++++++++++++++
 
 Enabling *background scan* causes a one-time inventory scan on the device to identify any malware files already present
-there.  The background scan is of the type specified in the device's policy, if that policy has background scans
-enabled, or a standard background scan if it does not.
-
-Disabling background scan causes any background scan currently running on the device to be temporarily suspended; it
-will restart when background scan is enabled again, or when the endpoint restarts.
+there.  Disabling background scan causes any background scan currently running on the device to be temporarily
+suspended; it will restart when background scan is enabled again, or when the endpoint restarts.
 
 Enabling background scan on a single device::
 
