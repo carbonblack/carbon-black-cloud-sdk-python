@@ -56,12 +56,12 @@ that have been previously returned.  This snippet illustrates the technique::
     # assume "api" is your CBCloudAPI reference
     query = api.select(Device)
     # add search terms and/or criteria to the query (not shown here)
-    query.scroll()  # fetch the first batch of items - 10,000 is default
-    for d in query:
+    devicelist = query.scroll()  # fetch the first batch of items - 10,000 is default
+    for d in devicelist:
         do_something_with_device(d)  # whatever you need for each device
     while query.num_remaining > 0:
-        query.scroll()  # fetch next batch
-        for d in query:
+        devicelist = query.scroll()  # fetch next batch
+        for d in devicelist:
             do_something_with_device(d)
 
 Device Actions
