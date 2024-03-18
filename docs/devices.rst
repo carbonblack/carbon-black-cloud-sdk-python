@@ -98,8 +98,8 @@ Quarantine
 ++++++++++
 
 A device that has been *quarantined* has its outbound traffic limited, and all inbound traffic to it stopped, except
-for communication ith the Carbon Black Cloud back end.  This would be used on any device determined to be interacting
-badly.
+for communication with the Carbon Black Cloud back end.  This would be used on any device determined to be interacting
+maliciously.
 
 Setting quarantine on a single device::
 
