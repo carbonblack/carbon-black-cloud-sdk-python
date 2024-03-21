@@ -55,7 +55,8 @@ class Process(UnrefreshableModel):
     ``AsyncProcessQuery``.
 
     Processes have many fields, too many to list here; for a complete list of available fields, visit
-    `the Search Fields page <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/platform-search-fields/>`_
+    `the Search Fields page
+    <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/platform-search-fields/>`_
     on the Carbon Black Developer Network, and filter on the ``PROCESS`` route.
 
     Examples:
