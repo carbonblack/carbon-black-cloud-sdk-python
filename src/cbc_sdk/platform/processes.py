@@ -54,6 +54,11 @@ class Process(UnrefreshableModel):
     Objects of this type are retrieved through queries to the Carbon Black Cloud server, such as via
     ``AsyncProcessQuery``.
 
+    Processes have many fields, too many to list here; for a complete list of available fields, visit
+    `the Search Fields page
+    <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/platform-search-fields/>`_
+    on the Carbon Black Developer Network, and filter on the ``PROCESS`` route.
+
     Examples:
         >>> # use the Process GUID directly
         >>> process = api.select(Process, "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb")
