@@ -46,6 +46,27 @@ The results of a search query can also be exported::
     >>> csv_report = job.get_output_as_string()
     >>> # can also get the output as a file or as enumerated lines of text
 
+Faceting
+++++++++
+
+Facet search queries return statistical information indicating the relative weighting of the requested values as per
+the specified criteria.  Device queries support faceting::
+
+    >>> from cbc_sdk import CBCloudAPI
+    >>> api = CBCloudAPI(profile='sample')
+    >>> from cbc_sdk.platform import Device
+    >>> query = api.select(Device).where("os:WINDOWS")
+    >>> query.add_criteria('target_priority', ['LOW']).add_criteria('virtualization_provider', ['VirtualBox'])
+    >>> facets = query.facets(['policy_id'])
+    >>> for value in facets[0].values_:
+    ...    print(f"Policy ID {value.id}: {value.total} device(s)")
+    Policy ID 8801: 4 device(s)
+    Policy ID 81664: 3 device(s)
+    Policy ID 82804: 1 device(s)
+
+Note that you can facet on multiple fields by passing more than one field name to the ``facets()`` call. It returns
+one ``DeviceFacet`` object per field name, each of which may contain multiple ``DeviceFacetValue`` objects.
+
 Search Scrolling
 ++++++++++++++++
 
