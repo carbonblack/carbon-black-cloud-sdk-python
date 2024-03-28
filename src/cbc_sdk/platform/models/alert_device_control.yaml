@@ -1,4 +1,6 @@
 type: object
+x-options:
+  - nodocstring
 properties:
   alert_notes_present:
     type: boolean
