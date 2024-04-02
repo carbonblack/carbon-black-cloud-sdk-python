@@ -41,10 +41,6 @@ class Job(NewBaseModel):
             cb (BaseAPI): Reference to API object used to communicate with the server.
             model_unique_id (int): ID of the job.
             initial_data (dict): Initial data used to populate the job.
-
-        Keyword Args:
-            wait_status (bool): If ``True``, causes the job to wait on change in status instead of relying on the
-                progress API call (workaround for server issue). Default is ``False``.
         """
         super(Job, self).__init__(cb, model_unique_id, initial_data)
         self._wait_status = False
@@ -70,7 +66,12 @@ class Job(NewBaseModel):
         return JobQuery(cls, cb)
 
     def _refresh(self):
-        """Reload this object from the server."""
+        """
+        Reload this object from the server.
+
+        Required Permissions:
+            jobs.status (READ)
+        """
         url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id)
         resp = self._cb.get_object(url)
         self._info = resp
@@ -83,7 +84,7 @@ class Job(NewBaseModel):
         Get and return the current progress information for the job.
 
         Required Permissions:
-            jobs.status(READ)
+            jobs.status (READ)
 
         Returns:
             int: Total number of items to be operated on by this job.
@@ -100,7 +101,7 @@ class Job(NewBaseModel):
         Waits for this job to complete by examining the progress data.
 
         Required Permissions:
-            jobs.status(READ)
+            jobs.status (READ)
 
         Args:
             timeout (int): The timeout for this wait in milliseconds. If this is 0, the default value will be used.
@@ -149,20 +150,20 @@ class Job(NewBaseModel):
 
     def await_completion(self, timeout=0):
         """
-        Create a Python Future to check for job completion and return results when available.
+        Create a Python ``Future`` to check for job completion and return results when available.
 
-        Returns a Future object which can be used to await results that are ready to fetch. This function call
+        Returns a ``Future`` object which can be used to await results that are ready to fetch. This function call
         does not block.
 
         Required Permissions:
-            jobs.status(READ)
+            jobs.status (READ)
 
         Args:
             timeout (int): The timeout for this wait in milliseconds. If this is 0, the default value will be used.
 
         Returns:
-            Future: A future which can be used to wait for this job's completion. When complete, the result of the
-                    Future will be this object.
+            Future: A ``Future`` which can be used to wait for this job's completion. When complete, the result of the
+                    ``Future`` will be this object.
         """
         return self._cb._async_submit(lambda arg, kwarg: arg[0]._await_completion(timeout), self)
 
@@ -171,7 +172,7 @@ class Job(NewBaseModel):
         Export the results from the job, writing the results to the given stream.
 
         Required Permissions:
-            jobs.status(READ)
+            jobs.status (READ)
 
         Args:
             output (RawIOBase): Stream to write the CSV data from the request to.
@@ -184,7 +185,7 @@ class Job(NewBaseModel):
         Export the results from the job, returning the results as a string.
 
         Required Permissions:
-            jobs.status(READ)
+            jobs.status (READ)
 
         Returns:
             str: The results from the job.
@@ -198,7 +199,7 @@ class Job(NewBaseModel):
         Export the results from the job, writing the results to the given file.
 
         Required Permissions:
-            jobs.status(READ)
+            jobs.status (READ)
 
         Args:
             filename (str): Name of the file to write the results to.
@@ -214,7 +215,7 @@ class Job(NewBaseModel):
         CSV.  If a job outputs structured text like JSON or XML, this method should not be used.
 
         Required Permissions:
-            jobs.status(READ)
+            jobs.status (READ)
 
         Returns:
             iterable: An iterable that can be used to get each line of text in turn as a string.
