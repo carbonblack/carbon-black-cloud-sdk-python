@@ -65,6 +65,10 @@ class Alert(PlatformModel):
 
     ``Alert`` objects are typically located through a search (using ``AlertSearchQuery``) before they can be
     operated on.
+
+    The complete list of alert fields is too large to be reproduced here; please see the list of available fields
+    for each alert type on `the Developer Network
+    <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields>`_.
     """
     REMAPPED_ALERTS_V6_TO_V7 = {
         "alert_classification.user_feedback": "determination_value",
@@ -628,7 +632,7 @@ class Alert(PlatformModel):
             >>> alert.refresh()
         """
         job = self._cb.select(Alert).add_criteria("id", [self.get("id")]) \
-                                    ._update_status("CLOSED", closure_reason, note, determination)
+            ._update_status("CLOSED", closure_reason, note, determination)
 
         self._last_refresh_time = time.time()
         return job
@@ -663,7 +667,7 @@ class Alert(PlatformModel):
             >>> alert.refresh()
         """
         job = self._cb.select(Alert).add_criteria("id", [self.get("id")]) \
-                                    ._update_status(status, closure_reason, note, determination)
+            ._update_status(status, closure_reason, note, determination)
 
         self._last_refresh_time = time.time()
         return job
@@ -871,6 +875,10 @@ class Alert(PlatformModel):
 class WatchlistAlert(Alert):
     """
     A specialization of the base ``Alert`` class that represents a watchlist alert.
+
+    The complete list of alert fields is too large to be reproduced here; please see the list of available fields
+    for each alert type on `the Developer Network
+    <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields>`_.
     """
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
     type = ["WATCHLIST"]
@@ -911,6 +919,10 @@ class WatchlistAlert(Alert):
 class CBAnalyticsAlert(Alert):
     """
     A specialization of the base ``Alert`` class that represents a CB Analytics alert.
+
+    The complete list of alert fields is too large to be reproduced here; please see the list of available fields
+    for each alert type on `the Developer Network
+    <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields>`_.
     """
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
     type = ["CB_ANALYTICS"]
@@ -960,6 +972,10 @@ class CBAnalyticsAlert(Alert):
 class DeviceControlAlert(Alert):
     """
     A specialization of the base ``Alert`` class that represents a Device Control alert.
+
+    The complete list of alert fields is too large to be reproduced here; please see the list of available fields
+    for each alert type on `the Developer Network
+    <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields>`_.
     """
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
     swagger_meta_file = "platform/models/alert_device_control.yaml"
@@ -982,6 +998,10 @@ class DeviceControlAlert(Alert):
 class ContainerRuntimeAlert(Alert):
     """
     A specialization of the base ``Alert`` class that represents a Container Runtime alert.
+
+    The complete list of alert fields is too large to be reproduced here; please see the list of available fields
+    for each alert type on `the Developer Network
+    <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields>`_.
     """
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
     swagger_meta_file = "platform/models/alert_container_runtime.yaml"
@@ -1005,6 +1025,10 @@ class ContainerRuntimeAlert(Alert):
 class HostBasedFirewallAlert(Alert):
     """
     A specialization of the base ``Alert`` class that represents a host-based firewall alert.
+
+    The complete list of alert fields is too large to be reproduced here; please see the list of available fields
+    for each alert type on `the Developer Network
+    <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields>`_.
     """
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
     swagger_meta_file = "platform/models/alert_host_based_firewall.yaml"
@@ -1028,6 +1052,10 @@ class HostBasedFirewallAlert(Alert):
 class IntrusionDetectionSystemAlert(Alert):
     """
     A specialization of the base ``Alert`` class that represents an intrusion detection system alert.
+
+    The complete list of alert fields is too large to be reproduced here; please see the list of available fields
+    for each alert type on `the Developer Network
+    <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields>`_.
     """
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
     swagger_meta_file = "platform/models/alert_intrusion_detection_system.yaml"
@@ -1781,6 +1809,7 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
     This query is constructed by using the ``select()`` method on ``CBCloudAPI`` to create an ``AlertSearchQuery,``
     then using that query's ``set_group_by()`` method to specify grouping.
     """
+
     def __init__(self, *args, **kwargs):
         """Initialize the GroupAlertSearchQuery."""
         super().__init__(*args, **kwargs)
