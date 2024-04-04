@@ -363,9 +363,7 @@ class Alert(PlatformModel):
         return resp_json.get("tags", [])
 
     class Note(PlatformModel):
-        """
-        Represents a note placed on an alert.
-        """
+        """Represents a note placed on an alert."""
         REMAPPED_NOTES_V6_TO_V7 = {
             "create_time": "create_timestamp",
         }
@@ -1093,8 +1091,9 @@ class IntrusionDetectionSystemAlert(Alert):
 
 class GroupedAlert(PlatformModel):
     """
-    Represents alerts that have been grouped together based on a common characteristic, to allow viewing of similar
-    alerts across multiple endpoints.
+    Represents alerts that have been grouped together based on a common characteristic.
+
+    This allows viewing of similar alerts across multiple endpoints.
     """
     urlobject = "/api/alerts/v7/orgs/{0}/grouped_alerts"
     swagger_meta_file = "platform/models/grouped_alert.yaml"
