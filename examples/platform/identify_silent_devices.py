@@ -39,7 +39,8 @@ def main():
 
     device_query = cb.select(Device).set_last_contact_time(range=f"-{args.window}d").set_status(["ACTIVE"])
     if args.os:
-        device_query.add_criteria("os", args.os)
+        for sublist in args.os:
+            device_query.add_criteria("os", sublist)
     devices = list(device_query)
     print(f"{len(devices)} device(s) have checked in during the last {args.window} day(s)")
 
