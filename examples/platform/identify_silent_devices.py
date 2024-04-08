@@ -11,11 +11,12 @@
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
 """
-This script identifies silent devices in the current organization.  A "silent device" is one which has checked in
-with the Carbon Black Cloud Server during a recent period of time, the "checkin window," but has not sent any
-events within a certain period of time, the "event threshold."  The script allows configuration of the checkin window
-(in days) and the event threshold (in minutes), as well as specifying to only report on devices running selected
-operating systems.
+This script identifies silent devices in the current organization.
+
+A "silent device" is one which has checked in with the Carbon Black Cloud Server during a recent period of time,
+the "checkin window," but has not sent any events within a certain period of time, the "event threshold."  The script
+allows configuration of the checkin window (in days) and the event threshold (in minutes), as well as specifying to
+only report on devices running selected operating systems.
 """
 
 import sys
