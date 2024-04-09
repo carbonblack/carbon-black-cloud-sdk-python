@@ -206,7 +206,7 @@ class Alert(PlatformModel):
     urlobject_single = "/api/alerts/v7/orgs/{0}/alerts/{1}"
     threat_urlobject_single = "/api/alerts/v7/orgs/{0}/threats/{1}"
     primary_key = "id"
-    swagger_meta_file = "platform/models/alert.yaml"
+    # swagger_meta_file = "platform/models/alert.yaml"
 
     def __init__(self, cb, model_unique_id, initial_data=None):
         """
@@ -796,7 +796,7 @@ class Alert(PlatformModel):
                     "Alerts v7. In SDK 1.5.0 the".format(item, self.__class__.__name__))
 
             item = Alert.REMAPPED_ALERTS_V6_TO_V7.get(item, item)
-            if self.get("type") == "CONTAINER_RUNTIME":
+            if self._info.get('type', None) == "CONTAINER_RUNTIME":
                 item = Alert.REMAPPED_CONTAINER_ALERTS_V6_TO_V7.get(original_item, item)
             return super(Alert, self).__getattr__(item)
         except AttributeError:
