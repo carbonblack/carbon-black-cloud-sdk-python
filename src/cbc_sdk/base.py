@@ -89,28 +89,24 @@ class CbMetaModel(type):
             model_data = yaml.load(
                 open(os.path.join(mcs.model_base_directory, swagger_meta_file), 'rb').read(), SwaggerLoader)
 
-        options = model_data.get('x-options', [])
+        # clsdict["__doc__"] = "Represents a %s object in the Carbon Black server.\n\n" % (name,)
+        # for field_name, field_info in iter(model_data.get("properties", {}).items()):
+        #    docstring = field_info.get("description", None)
+        #    if docstring:
+        #        clsdict["__doc__"] += ":ivar %s: %s\n" % (field_name, docstring)
 
-        if 'nodocstring' not in options:
-
-            # clsdict["__doc__"] = "Represents a %s object in the Carbon Black server.\n\n" % (name,)
-            # for field_name, field_info in iter(model_data.get("properties", {}).items()):
-            #    docstring = field_info.get("description", None)
-            #    if docstring:
-            #        clsdict["__doc__"] += ":ivar %s: %s\n" % (field_name, docstring)
-
-            class_docstr = clsdict.get('__doc__', None)
-            if not class_docstr:
-                class_docstr = f"Represents a {name} object in the Carbon Black Cloud."  # pragma: no cover
-            need_header = True
-            for field_name, field_info in iter(model_data.get("properties", {}).items()):
-                docstring = field_info.get("description", None)
-                if docstring:
-                    if need_header:
-                        class_docstr += "\n\nParameters:"
-                        need_header = False
-                    class_docstr += f"\n    {field_name}: {docstring}"
-            clsdict['__doc__'] = class_docstr
+        class_docstr = clsdict.get('__doc__', None)
+        if not class_docstr:
+            class_docstr = f"Represents a {name} object in the Carbon Black Cloud."  # pragma: no cover
+        need_header = True
+        for field_name, field_info in iter(model_data.get("properties", {}).items()):
+            docstring = field_info.get("description", None)
+            if docstring:
+                if need_header:
+                    class_docstr += "\n\nParameters:"
+                    need_header = False
+                class_docstr += f"\n    {field_name}: {docstring}"
+        clsdict['__doc__'] = class_docstr
 
         foreign_keys = clsdict.pop("foreign_keys", {})
 
