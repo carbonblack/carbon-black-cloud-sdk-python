@@ -206,7 +206,6 @@ class Alert(PlatformModel):
     urlobject_single = "/api/alerts/v7/orgs/{0}/alerts/{1}"
     threat_urlobject_single = "/api/alerts/v7/orgs/{0}/threats/{1}"
     primary_key = "id"
-    # swagger_meta_file = "platform/models/alert.yaml"
 
     def __init__(self, cb, model_unique_id, initial_data=None):
         """
@@ -790,7 +789,8 @@ class Alert(PlatformModel):
                 raise FunctionalityDecommissioned(
                     "Attribute '{0}' does not exist in object '{1}' because it was deprecated in "
                     "Alerts v7. In SDK 1.5.0 the".format(item, self.__class__.__name__))
-            if item in Alert.DEPRECATED_FIELDS_NOT_IN_V7_CONTAINER_ONLY and self.type == "CONTAINER_RUNTIME":
+            if (item in Alert.DEPRECATED_FIELDS_NOT_IN_V7_CONTAINER_ONLY
+                    and self._info.get('type', None) == "CONTAINER_RUNTIME"):
                 raise FunctionalityDecommissioned(
                     "Attribute '{0}' does not exist in object '{1}' because it was deprecated in "
                     "Alerts v7. In SDK 1.5.0 the".format(item, self.__class__.__name__))
@@ -880,7 +880,6 @@ class WatchlistAlert(Alert):
     """
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
     type = ["WATCHLIST"]
-    swagger_meta_file = "platform/models/alert_watchlist.yaml"
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -908,7 +907,7 @@ class WatchlistAlert(Alert):
             list[Watchlist]: A list of Watchlist objects.
         """
         watchlist_objects = []
-        for watchlist in self.get("watchlists"):
+        for watchlist in self._info.get("watchlists"):
             watchlist_id = watchlist.get("id")
             watchlist_objects.append(self._cb.select(Watchlist, watchlist_id))
         return watchlist_objects
@@ -924,7 +923,6 @@ class CBAnalyticsAlert(Alert):
     """
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
     type = ["CB_ANALYTICS"]
-    swagger_meta_file = "platform/models/alert_cb_analytic.yaml"
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -976,7 +974,6 @@ class DeviceControlAlert(Alert):
     <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields>`_.
     """
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
-    swagger_meta_file = "platform/models/alert_device_control.yaml"
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -1002,7 +999,6 @@ class ContainerRuntimeAlert(Alert):
     <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields>`_.
     """
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
-    swagger_meta_file = "platform/models/alert_container_runtime.yaml"
     type = ["CONTAINER_RUNTIME"]
 
     @classmethod
@@ -1029,7 +1025,6 @@ class HostBasedFirewallAlert(Alert):
     <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields>`_.
     """
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
-    swagger_meta_file = "platform/models/alert_host_based_firewall.yaml"
     type = ["HOST_BASED_FIREWALL"]
 
     @classmethod
@@ -1056,7 +1051,6 @@ class IntrusionDetectionSystemAlert(Alert):
     <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/alert-search-fields>`_.
     """
     urlobject = "/api/alerts/v7/orgs/{0}/alerts"
-    swagger_meta_file = "platform/models/alert_intrusion_detection_system.yaml"
     type = ["INTRUSION_DETECTION_SYSTEM"]
 
     @classmethod
