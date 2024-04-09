@@ -281,8 +281,13 @@ class EventFacetQuery(FacetQuery):
             args["process_guid"] = q
         return args
 
-    def _perform_query(self):
-        return self.results
+    def _perform_query(self, from_row=0, max_rows=-1):
+        if max_rows > 0:
+            return self.results[from_row:from_row + max_rows]
+        elif from_row > 0:
+            return self.results[from_row:]
+        else:
+            return self.results
 
     def _submit(self):
         args = self._get_query_parameters()

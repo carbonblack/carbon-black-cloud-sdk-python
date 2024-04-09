@@ -1392,21 +1392,21 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
 
         return self._total_results
 
-    def _perform_query(self, from_row=1, max_rows=-1):
+    def _perform_query(self, from_row=0, max_rows=-1):
         """
         Performs the query and returns the results of the query in an iterable fashion.
 
         Alerts v6 API uses base 1 instead of 0.
 
         Args:
-            from_row (int): The row to start the query at (default 1).
+            from_row (int): The row to start the query at (default 0).
             max_rows (int): The maximum number of rows to be returned (default -1, meaning "all").
 
         Returns:
             Iterable: The iterated query.
         """
         url = self._build_url("/_search")
-        current = from_row
+        current = from_row + 1
         numrows = 0
         still_querying = True
         while still_querying:
@@ -1449,7 +1449,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
                     still_querying = False
                     break
 
-            from_row = current
+            from_row = current - 1
             if current >= self._total_results:
                 still_querying = False
                 break
@@ -1704,19 +1704,19 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
 
         return alert_search_query
 
-    def _perform_query(self, from_row=1, max_rows=-1):
+    def _perform_query(self, from_row=0, max_rows=-1):
         """
         Performs the query and returns the results of the query in an iterable fashion.
 
         Args:
-            from_row (int): The row to start the query at (default 1).
+            from_row (int): The row to start the query at (default 0).
             max_rows (int): The maximum number of rows to be returned (default -1, meaning "all").
 
         Returns:
             Iterable: The iterated query.
         """
         url = self._build_url("/_search")
-        current = from_row
+        current = from_row + 1
         numrows = 0
         still_querying = True
         while still_querying:
@@ -1744,7 +1744,7 @@ class GroupedAlertSearchQuery(AlertSearchQuery):
                     still_querying = False
                     break
 
-            from_row = current
+            from_row = current - 1
             if current >= self._total_results:
                 still_querying = False
                 break
