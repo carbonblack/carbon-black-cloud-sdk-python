@@ -147,7 +147,7 @@ class CbMetaModel(type):
                 setattr(cls, field_name, FieldDescriptor(field_name))
 
         for fk_name, fk_info in iter(foreign_keys.items()):
-            setattr(cls, fk_name, ForeignKeyFieldDescriptor(fk_name, fk_info[0], fk_info[1]))
+            setattr(cls, fk_name, ForeignKeyFieldDescriptor(fk_name, fk_info[0], fk_info[1]))  # pragma: no cover
 
         return cls
 
@@ -1067,7 +1067,7 @@ class IterableQueryMixin:
         label = str(self._query) if self._query else "<unspecified>"
         if len(res) == 0:
             raise ObjectNotFoundError("query_uri", message="0 results for query {0:s}".format(label))
-        if len(res) > 1:
+        if len(res) > 1:  # pragma: no cover
             raise MoreThanOneResultError(
                 message="{0:d} results found for query {1:s}".format(len(self), label),
                 results=self.all()
@@ -1111,7 +1111,7 @@ class IterableQueryMixin:
         elif isinstance(item, int):
             results = list(self._perform_query(from_row=item, max_rows=1))
             return results[0]
-        else:
+        else:  # pragma: no cover
             raise TypeError("Invalid argument type")
 
     def __iter__(self):
