@@ -1,0 +1,27 @@
+type: object
+properties:
+  actor_ip:
+    type: string
+    description: IP address of the entity that caused the creation of this audit log
+  actor:
+    type: string
+    description: Name of the entity that caused the creation of this audit log
+  create_time:
+    type: string
+    format: date-time
+    description: Timestamp when this audit log was created in ISO-8601 string format
+  description:
+    type: string
+    description: Text description of this audit log
+  flagged:
+    type: boolean
+    description: Whether the audit has been flagged
+  org_key:
+    type: string
+    description: Organization key
+  request_url:
+    type: string
+    description: URL of the request that caused the creation of this audit log
+  verbose:
+    type: boolean
+    description: Whether the audit has been marked verbose
