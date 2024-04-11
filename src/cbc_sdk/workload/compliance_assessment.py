@@ -13,9 +13,9 @@
 
 """Model and Query Classes for Compliance Assessment API"""
 
-from cbc_sdk.base import (NewBaseModel, BaseQuery, QueryBuilder, CriteriaBuilderSupportMixin,
+from cbc_sdk.base import (BaseQuery, QueryBuilder, CriteriaBuilderSupportMixin,
                           IterableQueryMixin, AsyncQueryMixin, UnrefreshableModel)
-from cbc_sdk.errors import ApiError, MoreThanOneResultError, ObjectNotFoundError
+from cbc_sdk.errors import ApiError
 import logging
 
 log = logging.getLogger(__name__)
@@ -23,10 +23,8 @@ log = logging.getLogger(__name__)
 """ Compliance models """
 
 
-class ComplianceBenchmark(NewBaseModel):
-    """
-    Class representing Compliance Benchmarks.
-    """
+class ComplianceBenchmark(UnrefreshableModel):
+    """Class representing Compliance Benchmarks."""
     urlobject = '/compliance/assessment/api/v1/orgs/{}/benchmark_sets/'
     swagger_meta_file = "workload/models/compliance.yaml"
     primary_key = "benchmark_set_id"
@@ -46,21 +44,11 @@ class ComplianceBenchmark(NewBaseModel):
         super(ComplianceBenchmark, self).__init__(cb, model_unique_id, initial_data)
 
         if model_unique_id is not None and initial_data is None:
-            self._refresh()
+            benchmark = cb.select(ComplianceBenchmark).add_criteria("id", [model_unique_id]).first()
+            if benchmark is None:
+                raise ApiError(f"Benchmark {model_unique_id} not found")
+            self._info = benchmark._info
         self._full_init = True
-
-    def _refresh(self):
-        """
-        Refresh the ComplianceBenchmark instance by making a GET request to get the benchmark.
-
-        Returns:
-            bool: True if the refresh is successful, else False.
-        """
-        url = self.urlobject_single.format(self._cb.credentials.org_key, self._model_unique_id)
-        resp = self._cb.get_object(url)
-        self._info = resp
-        self._last_refresh_time = time.time()
-        return True
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -75,10 +63,21 @@ class ComplianceBenchmark(NewBaseModel):
         """
         return ComplianceBenchmarkQuery(cls, cb)
 
+    def get_benchmark_set_summary(self):
+        """
+        Fetches the compliance summary for the current benchmark set.
+
+        Returns:
+            dict: The benchmark compliance summary
+        """
+        url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/compliance/summary"
+        results = self._cb.get_object(url).json()
+        return results
+
     @staticmethod
     def get_compliance_schedule(cb):
         """
-        Gets the compliance scan schedule and timezone for the organization associated with the specified CBCloudAPI instance.
+        Gets the compliance scan schedule and timezone configured for the Organization.
 
         Args:
             cb (CBCloudAPI): An instance of CBCloudAPI representing the Carbon Black Cloud API.
@@ -87,7 +86,7 @@ class ComplianceBenchmark(NewBaseModel):
             ApiError: If cb is not an instance of CBCloudAPI.
 
         Returns:
-            The JSON response from the Carbon Black Cloud API as a Python dictionary.
+            dict: The configured organization settings for Compliance Assessment.
 
         Example:
             >>> cb = CBCloudAPI(profile="example_profile")
@@ -95,128 +94,115 @@ class ComplianceBenchmark(NewBaseModel):
             >>> print(schedule)
         """
         if cb.__class__.__name__ != "CBCloudAPI":
-            message = "cb argument should be instance of CBCloudAPI."
-            message += "\nExample:\ncb = CBCloudAPI(profile='example_profile')"
-            message += "\nComplianceBenchmark.get_compliance_schedule(cb)"
-            raise ApiError(message)
+            raise ApiError("cb argument should be instance of CBCloudAPI")
 
         url = f"/compliance/assessment/api/v1/orgs/{cb.credentials.org_key}/settings"
 
-        return cb.get_object(url)
+        return cb.get_object(url).json()
 
     @staticmethod
     def set_compliance_schedule(cb, scan_schedule, scan_timezone):
         """
-        Sets the compliance scan schedule and timezone for the organization associated with the specified CBCloudAPI instance.
+        Sets the compliance scan schedule and timezone for the organization.
 
         Args:
             cb (CBCloudAPI): An instance of CBCloudAPI representing the Carbon Black Cloud API.
-            scan_schedule (str): The scan schedule, specified in RFC 5545 format. Example: "RRULE:FREQ=DAILY;BYHOUR=17;BYMINUTE=30;BYSECOND=0".
-            scan_timezone (str): The timezone in which the scan will run, specified as a timezone string. Example: "UTC".
+            scan_schedule (str): The scan schedule, specified in RFC 5545 format.
+                Example: "RRULE:FREQ=DAILY;BYHOUR=17;BYMINUTE=30;BYSECOND=0".
+            scan_timezone (str): The timezone in which the scan will run,
+                specified as a timezone string. Example: "UTC".
 
         Raises:
             ApiError: If cb is not an instance of CBCloudAPI, or if scan_schedule or scan_timezone are not provided.
 
         Returns:
-            The JSON response from the Carbon Black Cloud API as a Python dictionary.
+            dict: The configured organization settings for Compliance Assessment.
 
         Example:
             >>> cb = CBCloudAPI(profile="example_profile")
-            >>> schedule = ComplianceBenchmark.set_compliance_schedule(cb, scan_schedule="RRULE:FREQ=DAILY;BYHOUR=17;BYMINUTE=30;BYSECOND=0", scan_timezone="UTC")
+            >>> schedule = ComplianceBenchmark.set_compliance_schedule(cb,
+                                scan_schedule="RRULE:FREQ=DAILY;BYHOUR=17;BYMINUTE=30;BYSECOND=0",
+                                scan_timezone="UTC")
             >>> print(schedule)
         """
         if cb.__class__.__name__ != "CBCloudAPI":
-            message = "cb argument should be instance of CBCloudAPI."
-            message += "\nExample:\ncb = CBCloudAPI(profile='example_profile')"
-            message += "\nComplianceBenchmark.set_compliance_schedule(cb, scan_schedule='RRULE:FREQ=DAILY;BYHOUR=17;BYMINUTE=30;BYSECOND=0', scan_timezone='UTC')"
-            raise ApiError(message)
+            raise ApiError("cb argument should be instance of CBCloudAPI")
         if not scan_schedule or not scan_timezone or scan_schedule == "" or scan_timezone == "":
-            raise ApiError(
-                "scan_schedule and scan_timezone are required. http://developer.carbonblack.com/reference/carbon-black-cloud/cb-liveops/latest/livequery-api/#recurrence-rules")
+            raise ApiError("scan_schedule and scan_timezone are required")
 
         args = {"scan_schedule": scan_schedule, "scan_timezone": scan_timezone}
         url = f"/compliance/assessment/api/v1/orgs/{cb.credentials.org_key}/settings"
 
         return cb.put_object(url, body=args).json()
 
-    def search_rules(self, rule_id=None):
+    def get_sections(self):
+        """
+        Get Sections of the Benchmark Set.
+
+        Returns:
+            list[dict]: List of sections within the Benchmark Set.
+
+        Example:
+            >>> cb = CBCloudAPI(profile="example_profile")
+            >>> benchmark = cb.select(ComplianceBenchmark).first()
+            >>> for section in benchmark.get_sections():
+            ...     print(section.section_name, section.section_id)
+        """
+        url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/sections"
+        results = self._cb.get_object(url).json()
+        return results
+
+    def get_rules(self, rule_id=None):
         """
         Fetches compliance rules associated with the benchmark set.
 
         Args:
             rule_id (str, optional): The rule ID to fetch a specific rule. Defaults to None.
 
-        Yields:
-            ComplianceBenchmark: A Compliance object representing a compliance rule.
+        Returns:
+            [dict]: List of Benchmark Rules
 
         Example:
             >>> cb = CBCloudAPI(profile="example_profile")
-            >>> benchmark_sets = cb.select(ComplianceBenchmark)
-            >>> # To return all rules within a benchmark set, leave search_rules empty.
-            >>> rules = list(benchmark_sets[0].search_rules())
-            >>> print(*rules)
-            >>> # To return a single rule document, add the rule ID.
-            >>> rule = list(benchmark_sets.search_rules('00869D86-6E61-4D7D-A0A3-6F5CDE2E5753'))
-            >>> print(rule)
+            >>> benchmark_set = cb.select(ComplianceBenchmark).first()
+            >>> # To return all rules within a benchmark set, leave get_rules empty.
+            >>> rules = benchmark_set.get_rules()
         """
         if rule_id is not None:
             self._rule_id = rule_id
             url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/rules/{rule_id}"
-            result = self._cb.get_object(url)
-            yield ComplianceBenchmark(self._cb, initial_data=result)
-            return
+            return [self._cb.get_object(url)]
 
         url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/rules/_search"
         current = 0
-        max_rows = 80000
+        rules = []
         while True:
-            # request = self._build_request(current, max_rows)
-            resp = self._cb.post_object(url, body={})  # FIXME fix the body
+            resp = self._cb.post_object(url, body={
+                "rows": 10000,
+                "start": current,
+                "sort": [
+                    {
+                        "field": "section_name",
+                        "order": "DESC"
+                    }
+                ]
+            })
             result = resp.json()
 
-            self._total_results = result["num_found"]
-            self._count_valid = True
+            rules.extend(result.get("results", []))
+            current += len(result)
 
-            results = result.get("results", [])
-            for item in results:
-                yield ComplianceBenchmark(self._cb, initial_data=item)
-
-            current += len(results)
-            if max_rows > 0 and current >= max_rows:
+            if current >= result["num_found"]:
                 break
 
-            if current >= self._total_results:
-                break
-
-    def get_set_sections(self):
-        """
-        Get Sections of the Benchmark Set.
-
-        Returns:
-            generator of ComplianceBenchmark: A generator yielding Compliance instances
-                                           for each section in the benchmark set.
-
-        Example:
-            >>> cb = CBCloudAPI(profile="example_profile")
-            >>> benchmark = cb.select(ComplianceBenchmark).set_benchmark_set_id('benchmark123')
-            >>> for section in benchmark.get_benchmark_set_sections():
-            ...     print(section.section_name, section.section_id)
-        """
-        url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/sections"
-        results = self._cb.get_object(url)
-        for item in results:
-            yield ComplianceBenchmark(self._cb, initial_data=item)
+        return rules
 
     def execute_action(self, action, device_ids=None):
         """
-        Execute a specified action on devices within on a Benchmark Set, or specific devives
-        within a Benchmark Set only.
+        Execute a specified action for the Benchmark Set for all devices or a specified subset.
 
         Args:
-            action (str): The action to be executed. Available:
-                'ENABLE': Enable the object.
-                'DISABLE': Disable the object.
-                'REASSESS': Reassess the object.
+            action (str): The action to be executed. Options: ENABLE, DISABLE, REASSESS
 
             device_ids (str or list, optional): IDs of devices on which the action will be executed.
                 If specified as a string, only one device will be targeted. If specified as a list,
@@ -236,42 +222,99 @@ class ComplianceBenchmark(NewBaseModel):
         ACTIONS = ('ENABLE', 'DISABLE', 'REASSESS')
 
         if action.upper() not in ACTIONS:
-            message = (
-                f"\nAction type is required."
-                f"\nAvailable action types: {', '.join(ACTIONS)}"
-                f"\nExample:\nbenchmark_sets = cb.select(ComplianceBenchmark)"
-                f"\nbenchmark_sets[0].execute_action('REASSESS')"
-            )
-            raise ApiError(message)
+            raise ApiError("Action is not supported. Options: ENABLE, DISABLE, REASSESS")
 
-        args = {"action": action}
+        args = {"action": action.upper()}
         if device_ids:
             args['device_ids'] = [device_ids] if isinstance(device_ids, str) else device_ids
 
         url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/actions"
         return self._cb.post_object(url, body=args).json()
 
-    def get_benchmark_set_summary(self):
+    def get_device_compliance(self, query=""):
         """
-        Fetches the compliance summary for the current benchmark set.
+        Fetches devices compliance associated with the benchmark set.
 
-        This method constructs the URL for the compliance summary of the benchmark set associated with the current instance,
-        fetches the summary data using the Carbon Black API, and yields Compliance objects for each item in the summary.
+        Args:
+            query (str, optional): The query to filter results.
 
         Returns:
-            generator of ComplianceBenchmark: A generator yielding Compliance objects, each representing a summary item.
+            [dict]: List of Device Compliances
+
+        Example:
+            >>> cb = CBCloudAPI(profile="example_profile")
+            >>> benchmark_set = cb.select(ComplianceBenchmark).first()
+            >>> rules = benchmark_set.get_device_compliance()
         """
-        url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/compliance/summary"
-        results = self._cb.get_object(url)
-        for item in results:
-            yield ComplianceBenchmark(self._cb, initial_data=item)
+        url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/compliance/devices/_search"
+        current = 0
+        device_compliances = []
+        while True:
+            resp = self._cb.post_object(url, body={
+                "query": query,
+                "rows": 10000,
+                "start": current,
+                "sort": [
+                    {
+                        "field": "device_name",
+                        "order": "DESC"
+                    }
+                ]
+            })
+            result = resp.json()
+
+            device_compliances.extend(result.get("results", []))
+            current += len(result)
+
+            if current >= result["num_found"]:
+                break
+
+        return device_compliances
+
+    def get_rule_compliance(self, query=""):
+        """
+        Fetches rule compliance associated with the benchmark set.
+
+        Args:
+            query (str, optional): The query to filter results.
+
+        Returns:
+            [dict]: List of Rule Compliances
+
+        Example:
+            >>> cb = CBCloudAPI(profile="example_profile")
+            >>> benchmark_set = cb.select(ComplianceBenchmark).first()
+            >>> rules = benchmark_set.get_rule_compliance()
+        """
+        url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/compliance/rules/_search"
+        current = 0
+        rule_compliances = []
+        while True:
+            resp = self._cb.post_object(url, body={
+                "query": query,
+                "rows": 10000,
+                "start": current,
+                "sort": [
+                    {
+                        "field": "device_name",
+                        "order": "DESC"
+                    }
+                ]
+            })
+            result = resp.json()
+
+            rule_compliances.extend(result.get("results", []))
+            current += len(result)
+
+            if current >= result["num_found"]:
+                break
+
+        return rule_compliances
 
 
 class ComplianceBenchmarkQuery(BaseQuery, CriteriaBuilderSupportMixin,
                                IterableQueryMixin, AsyncQueryMixin):
-    """
-    A class representing a query for Compliance Benchmark.
-    """
+    """A class representing a query for Compliance Benchmark."""
 
     def __init__(self, doc_class, cb):
         """
@@ -297,37 +340,31 @@ class ComplianceBenchmarkQuery(BaseQuery, CriteriaBuilderSupportMixin,
         self._benchmark_set_id = None
         self._rule_id = None
 
-    def add_criteria(self, key, value, operator='EQUALS'):
+    def sort_by(self, key, direction='ASC'):
         """
-        Add a criteria to the query.
+        Sets the sorting behavior on a query's results.
 
-        Args:
-            key (str): The key for the criteria.
-            value: The value for the criteria.
-            operator (str, optional): The operator for the criteria. Defaults to 'EQUALS'.
+        Arguments:
+            key (str): The key in the schema to sort by.
+            direction (str): The sort order, either "ASC" or "DESC".
 
         Returns:
-            ComplianceBenchmarkQuery: The current instance with the updated criteria.
+            Query: The query with sorting parameters.
+
+        Raises:
+            ApiError: If an invalid sort direction is specified.
+
+        Example:
+            To sort by a field in descending order:
+
+            >>> cb = CBCloudAPI(profile="example_profile")
+            >>> benchmark_sets = cb.select(ComplianceBenchmark).sort_by("name", direction="DESC")
+            >>> print(*benchmark_sets)
         """
-        self._update_criteria(key, value, operator)
+        if direction.upper() not in ('ASC', 'DESC'):
+            raise ApiError('invalid sort direction specified')
+        self._sortcriteria = {'field': key, 'order': direction}
         return self
-
-    def _update_criteria(self, key, value, operator, overwrite=False):
-        """
-        Update the criteria for the query.
-
-        Args:
-            key (str): The key for the criteria.
-            value: The value for the criteria.
-            operator (str): The operator for the criteria.
-            overwrite (bool, optional): Whether to overwrite existing criteria with the same key.
-                                        Defaults to False.
-
-        Returns:
-            None
-        """
-        if self._criteria.get(key, None) is None or overwrite:
-            self._criteria[key] = dict(value=value, operator=operator)
 
     def _build_request(self, from_row, max_rows, add_sort=True):
         """
@@ -402,10 +439,7 @@ class ComplianceBenchmarkQuery(BaseQuery, CriteriaBuilderSupportMixin,
         numrows = 0
         while True:
             request = self._build_request(current, max_rows)
-            if self._benchmark_set_id and self._rule_id:
-                resp = self._cb.get_object(url)
-            else:
-                resp = self._cb.post_object(url, body=request)
+            resp = self._cb.post_object(url, body=request)
             result = resp.json()
 
             self._total_results = result["num_found"]
@@ -418,10 +452,10 @@ class ComplianceBenchmarkQuery(BaseQuery, CriteriaBuilderSupportMixin,
                 numrows += 1
 
                 if max_rows > 0 and numrows == max_rows:
-                    return
+                    break
 
             if current >= self._total_results:
-                return
+                break
 
     def _run_async_query(self, context):
         """
@@ -434,32 +468,16 @@ class ComplianceBenchmarkQuery(BaseQuery, CriteriaBuilderSupportMixin,
             dict: The JSON response containing the query results.
         """
         url = self._build_url("_search")
-        request = self._build_request(0, -1)
-        return self._cb.post_object(url, body=request).json()
+        output = []
+        while not self._count_valid or len(output) < self._total_results:
+            request = self._build_request(len(output), -1)
+            resp = self._cb.post_object(url, body=request)
+            result = resp.json()
 
-    def sort_by(self, key, direction='ASC'):
-        """
-        Set the sort criteria for the search.
+            if not self._count_valid:
+                self._total_results = result["num_found"]
+                self._count_valid = True
 
-        Args:
-            key (str): The field to sort by.
-            direction (str, optional): The sort direction. Defaults to "ASC".
-                Valid values are "ASC" (ascending) and "DESC" (descending).
-
-        Returns:
-            self: The current instance with the updated sort criteria.
-
-        Raises:
-            ApiError: If an invalid sort direction is specified.
-
-        Example:
-            To sort by a field in descending order:
-
-            >>> cb = CBCloudAPI(profile="example_profile")
-            >>> benchmark_sets = cb.select(ComplianceBenchmark).sort_by("name", direction="DESC")
-            >>> print(*benchmark_sets)
-        """
-        if direction.upper() not in ('ASC', 'DESC', 'asc', 'desc'):
-            raise ApiError('invalid sort direction specified')
-        self._sortcriteria = {'field': key, 'order': direction}
-        return self
+            results = result.get("results", [])
+            output += [self._doc_class(self._cb, item["id"], item) for item in results]
+        return output
