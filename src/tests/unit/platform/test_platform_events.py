@@ -100,7 +100,7 @@ def test_event_query_select_with_where(cbcsdk_mock):
 
     # test .where(process_guid=...)
     events = api.select(Event).where(process_guid=guid)
-    results = [res for res in events._perform_query(numrows=10)]
+    results = [res for res in events._perform_query(max_rows=10)]
     assert len(results) == 10
     first_event = results[0]
     assert first_event.process_guid == guid
@@ -117,7 +117,7 @@ def test_event_query_select_with_where(cbcsdk_mock):
                              EVENT_SEARCH_VALIDATION_RESP)
 
     events = api.select(Event).where('process_guid:J7G6DTLN-006633e3-00000334-00000000-1d677bedfbb1c2e')
-    results = [res for res in events._perform_query(numrows=10)]
+    results = [res for res in events._perform_query(max_rows=10)]
     first_event = results[0]
     assert first_event.process_guid == guid
 
@@ -125,7 +125,7 @@ def test_event_query_select_with_where(cbcsdk_mock):
     assert len(results) == 10
 
     # test ._perform_query(numrows)
-    results = [result for result in events._perform_query(numrows=100)]
+    results = [result for result in events._perform_query(max_rows=100)]
     assert len(results) == 100
     first_result = results[0]
     assert first_result.process_guid == guid

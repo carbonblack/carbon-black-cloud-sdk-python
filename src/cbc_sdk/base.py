@@ -147,7 +147,7 @@ class CbMetaModel(type):
                 setattr(cls, field_name, FieldDescriptor(field_name))
 
         for fk_name, fk_info in iter(foreign_keys.items()):
-            setattr(cls, fk_name, ForeignKeyFieldDescriptor(fk_name, fk_info[0], fk_info[1]))
+            setattr(cls, fk_name, ForeignKeyFieldDescriptor(fk_name, fk_info[0], fk_info[1]))  # pragma: no cover
 
         return cls
 
@@ -1026,7 +1026,7 @@ class BaseQuery(object):
     def _clone(self):
         return self.__class__(self._query)
 
-    def _perform_query(self):
+    def _perform_query(self, from_row=0, max_rows=-1):
         # This has the effect of generating an empty iterator.
         yield from ()
 
@@ -1050,10 +1050,7 @@ class IterableQueryMixin:
         Returns:
             obj: First query item
         """
-        res = self[:1]
-        if res is None or not len(res):
-            return None
-        return res[0]
+        return self.__getitem__(0)
 
     def one(self):
         """
@@ -1066,13 +1063,11 @@ class IterableQueryMixin:
             MoreThanOneResultError: If the query returns more than one item
             ObjectNotFoundError: If the query returns zero items
         """
-        res = self[:2]
-        if res is None:
-            return None
+        res = list(self._perform_query(from_row=0, max_rows=2))
         label = str(self._query) if self._query else "<unspecified>"
         if len(res) == 0:
             raise ObjectNotFoundError("query_uri", message="0 results for query {0:s}".format(label))
-        if len(res) > 1:
+        if len(res) > 1:  # pragma: no cover
             raise MoreThanOneResultError(
                 message="{0:d} results found for query {1:s}".format(len(self), label),
                 results=self.all()
@@ -1115,8 +1110,8 @@ class IterableQueryMixin:
             return [results[ii] for ii in range(*item.indices(len(results)))]
         elif isinstance(item, int):
             results = list(self._perform_query(from_row=item, max_rows=1))
-            return results[item]
-        else:
+            return results[0]
+        else:  # pragma: no cover
             raise TypeError("Invalid argument type")
 
     def __iter__(self):
@@ -1262,9 +1257,15 @@ class SimpleQuery(BaseQuery, IterableQueryMixin):
             raise ApiError("Cannot have multiple 'where' clauses")
         return self.where(new_query)
 
-    def _perform_query(self):
-        for item in self.results:
+    def _perform_query(self, from_row=0, max_rows=-1):
+        returned_rows = 0
+        for index, item in enumerate(self.results):
+            if index < from_row:
+                continue
             yield item
+            returned_rows += 1
+            if 0 < max_rows <= returned_rows:
+                break
 
     def sort(self, new_sort):
         """
@@ -1373,8 +1374,8 @@ class PaginatedQuery(BaseQuery, IterableQueryMixin):
         else:
             raise TypeError("invalid type")
 
-    def _perform_query(self, start=0, numrows=0):
-        for item in self._search(start=start, rows=numrows):
+    def _perform_query(self, from_row=0, max_rows=0):
+        for item in self._search(start=from_row, rows=max_rows):
             yield self._doc_class._new_object(self._cb, item)
 
     def batch_size(self, new_batch_size):
@@ -2412,8 +2413,13 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
         result = self._cb.get_object(result_url, query_parameters=query_parameters)
         return self._doc_class(self._cb, model_unique_id=self._query_token, initial_data=result)
 
-    def _perform_query(self):
-        return self.results
+    def _perform_query(self, from_row=0, max_rows=-1):
+        if max_rows > 0:
+            return self.results[from_row:from_row + max_rows]
+        elif from_row > 0:
+            return self.results[from_row:]
+        else:
+            return self.results
 
     @property
     def results(self):

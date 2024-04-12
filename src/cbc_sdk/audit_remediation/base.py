@@ -1000,13 +1000,13 @@ class RunHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
 
         return self._total_results
 
-    def _perform_query(self, start=0, rows=0):
+    def _perform_query(self, from_row=0, max_rows=0):
         """
         Performs the query and returns the results of the query in an iterable fashion.
 
         Args:
-            start (int): The row to start the query at (default 0).
-            rows (int): The maximum number of rows to be returned (default 0, meaning "all").
+            from_row (int): The row to start the query at (default 0).
+            max_rows (int): The maximum number of rows to be returned (default 0, meaning "all").
 
         Returns:
             Iterable: The iterated query.
@@ -1014,11 +1014,11 @@ class RunHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
         url = self._doc_class.urlobject_history.format(
             self._cb.credentials.org_key
         )
-        current = start
+        current = from_row
         numrows = 0
         still_querying = True
         while still_querying:
-            request = self._build_request(start, rows)
+            request = self._build_request(from_row, max_rows)
             resp = self._cb.post_object(url, body=request)
             result = resp.json()
 
@@ -1031,11 +1031,11 @@ class RunHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, C
                 current += 1
                 numrows += 1
 
-                if rows and numrows == rows:
+                if max_rows and numrows == max_rows:
                     still_querying = False
                     break
 
-            start = current
+            from_row = current
             if current >= self._total_results:
                 still_querying = False
                 break
@@ -1312,13 +1312,13 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
 
         return self._total_results
 
-    def _perform_query(self, start=0, rows=0):
+    def _perform_query(self, from_row=0, max_rows=0):
         """
         Performs the query and returns the results of the query in an iterable fashion.
 
         Args:
-            start (int): The row to start the query at (default 0).
-            rows (int): The maximum number of rows to be returned (default 0, meaning "all").
+            from_row (int): The row to start the query at (default 0).
+            max_rows (int): The maximum number of rows to be returned (default 0, meaning "all").
 
         Returns:
             Iterable: The iterated query.
@@ -1329,11 +1329,11 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
         url = self._doc_class.urlobject.format(
             self._cb.credentials.org_key, self._run_id
         )
-        current = start
+        current = from_row
         numrows = 0
         still_querying = True
         while still_querying:
-            request = self._build_request(start, rows)
+            request = self._build_request(from_row, max_rows)
             resp = self._cb.post_object(url, body=request)
             result = resp.json()
 
@@ -1348,11 +1348,11 @@ class ResultQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Crite
                 current += 1
                 numrows += 1
 
-                if rows and numrows == rows:
+                if max_rows and numrows == max_rows:
                     still_querying = False
                     break
 
-            start = current
+            from_row = current
             if current >= self._total_results:
                 still_querying = False
                 break
@@ -1722,12 +1722,13 @@ class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Criter
             request["criteria"] = self._criteria
         return request
 
-    def _perform_query(self, rows=0):
+    def _perform_query(self, from_row=0, max_rows=0):
         """
         Performs the query and returns the results of the query in an iterable fashion.
 
         Args:
-            rows (int): The maximum number of rows to be returned (default 0, meaning "all").
+            from_row (int): Not used, inserted for compatibility.
+            max_rows (int): The maximum number of rows to be returned (default 0, meaning "all").
 
         Returns:
             Iterable: The iterated query.
@@ -1738,7 +1739,7 @@ class FacetQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, Criter
         url = self._doc_class.urlobject.format(
             self._cb.credentials.org_key, self._run_id
         )
-        request = self._build_request(rows)
+        request = self._build_request(max_rows)
         resp = self._cb.post_object(url, body=request)
         result = resp.json()
         results = result.get("terms", [])
@@ -1857,13 +1858,13 @@ class TemplateHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
 
         return self._total_results
 
-    def _perform_query(self, start=0, rows=0):
+    def _perform_query(self, from_row=0, max_rows=0):
         """
         Performs the query and returns the results of the query in an iterable fashion.
 
         Args:
-            start (int): The row to start the query at (default 0).
-            rows (int): The maximum number of rows to be returned (default 0, meaning "all").
+            from_row (int): The row to start the query at (default 0).
+            max_rows (int): The maximum number of rows to be returned (default 0, meaning "all").
 
         Returns:
             Iterable: The iterated query.
@@ -1871,11 +1872,11 @@ class TemplateHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
         url = self._doc_class.urlobject_history.format(
             self._cb.credentials.org_key
         )
-        current = start
+        current = from_row
         numrows = 0
         still_querying = True
         while still_querying:
-            request = self._build_request(start, rows)
+            request = self._build_request(from_row, max_rows)
             resp = self._cb.post_object(url, body=request)
             result = resp.json()
 
@@ -1888,11 +1889,11 @@ class TemplateHistoryQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMix
                 current += 1
                 numrows += 1
 
-                if rows and numrows == rows:
+                if max_rows and numrows == max_rows:
                     still_querying = False
                     break
 
-            start = current
+            from_row = current
             if current >= self._total_results:
                 still_querying = False
                 break
