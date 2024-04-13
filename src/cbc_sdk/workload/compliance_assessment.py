@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 class ComplianceBenchmark(UnrefreshableModel):
     """Class representing Compliance Benchmarks."""
     urlobject = '/compliance/assessment/api/v1/orgs/{}/benchmark_sets/'
-    swagger_meta_file = "workload/models/compliance.yaml"
+    swagger_meta_file = "workload/models/compliance_benchmark.yaml"
     primary_key = "benchmark_set_id"
 
     def __init__(self, cb, initial_data, model_unique_id=None):
@@ -197,6 +197,32 @@ class ComplianceBenchmark(UnrefreshableModel):
 
         return rules
 
+    def update_rules(self, rule_ids, enabled):
+        """
+        Update compliance rules associated with the benchmark set.
+
+        Args:
+            rule_ids (list[str]): The rule IDs to update their enabled/disabled status.
+            enabled (bool): Whether the rule is enabled or disabled.
+
+        Returns:
+            [dict]: List of Updated Benchmark Rules
+
+        Example:
+            >>> cb = CBCloudAPI(profile="example_profile")
+            >>> benchmark_set = cb.select(ComplianceBenchmark).first()
+            >>> # To return all rules within a benchmark set, leave get_rules empty.
+            >>> rules = benchmark_set.update_rules(["2A65B63E-89D9-4844-8290-5042FDF2A27B"], True)
+        """
+        request = []
+        for rule_id in rule_ids:
+            request.append({
+                "rule_id": rule_id,
+                "enabled": enabled
+            })
+        url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/rules"
+        return self._cb.post_object(url, body=request).json()
+
     def execute_action(self, action, device_ids=None):
         """
         Execute a specified action for the Benchmark Set for all devices or a specified subset.
@@ -231,11 +257,135 @@ class ComplianceBenchmark(UnrefreshableModel):
         url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/actions"
         return self._cb.post_object(url, body=args).json()
 
-    def get_device_compliance(self, query=""):
+    # API Not supported
+    #
+    # def get_device_compliances(self, query=""):
+    #     """
+    #     Fetches devices compliance summaries associated with the benchmark set.
+    #
+    #     Args:
+    #         query (str, optional): The query to filter results.
+    #
+    #     Returns:
+    #         [dict]: List of Device Compliances
+    #
+    #     Example:
+    #         >>> cb = CBCloudAPI(profile="example_profile")
+    #         >>> benchmark_set = cb.select(ComplianceBenchmark).first()
+    #         >>> rules = benchmark_set.get_device_compliance()
+    #     """
+    #     url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/compliance/devices/_search"
+    #     current = 0
+    #     device_compliances = []
+    #     while True:
+    #         resp = self._cb.post_object(url, body={
+    #             "query": query,
+    #             "rows": 10000,
+    #             "start": current,
+    #             "sort": [
+    #                 {
+    #                     "field": "device_name",
+    #                     "order": "DESC"
+    #                 }
+    #             ]
+    #         })
+    #         result = resp.json()
+    #
+    #         device_compliances.extend(result.get("results", []))
+    #         current += len(result)
+    #
+    #         if current >= result["num_found"]:
+    #             break
+    #
+    #     return device_compliances
+
+    def get_rule_compliances(self, query=""):
         """
-        Fetches devices compliance associated with the benchmark set.
+        Fetches rule compliance summaries associated with the benchmark set.
 
         Args:
+            query (str, optional): The query to filter results.
+
+        Returns:
+            [dict]: List of Rule Compliances
+
+        Example:
+            >>> cb = CBCloudAPI(profile="example_profile")
+            >>> benchmark_set = cb.select(ComplianceBenchmark).first()
+            >>> rules = benchmark_set.get_rule_compliance()
+        """
+        url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/compliance/rules/_search"
+        current = 0
+        rule_compliances = []
+        while True:
+            resp = self._cb.post_object(url, body={
+                "query": query,
+                "rows": 10000,
+                "start": current,
+                "sort": [
+                    {
+                        "field": "section_name",
+                        "order": "DESC"
+                    }
+                ]
+            })
+            result = resp.json()
+
+            rule_compliances.extend(result.get("results", []))
+            current += len(result)
+
+            if current >= result["num_found"]:
+                break
+
+        return rule_compliances
+
+    def get_device_rule_compliances(self, device_id, query=""):
+        """
+        Fetches rule compliances for specific device.
+
+        Args:
+            device_id (int): Device id to fetch benchmark rule compliance
+            query (str, optional): The query to filter results.
+
+        Returns:
+            [dict]: List of Rule Compliances
+
+        Example:
+            >>> cb = CBCloudAPI(profile="example_profile")
+            >>> benchmark_set = cb.select(ComplianceBenchmark).first()
+            >>> rules = benchmark_set.get_device_rule_compliance(123)
+        """
+        url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/compliance/devices{device_id}/_search"
+        current = 0
+        rule_compliances = []
+        while True:
+            resp = self._cb.post_object(url, body={
+                "query": query,
+                "rows": 10000,
+                "start": current,
+                "sort": [
+                    {
+                        "field": "section_name",
+                        "order": "DESC"
+                    }
+                ]
+            })
+            result = resp.json()
+
+            rule_compliances.extend(result.get("results", []))
+            current += len(result)
+
+            if current >= result["num_found"]:
+                break
+
+        return rule_compliances
+
+    def get_rule_compliance_devices(self, rule_id, query=""):
+        """
+        Fetches device compliances for a specific rule.
+
+        Args:
+            rule_id (str): Rule id to fetch device compliances
             query (str, optional): The query to filter results.
 
         Returns:
@@ -244,9 +394,11 @@ class ComplianceBenchmark(UnrefreshableModel):
         Example:
             >>> cb = CBCloudAPI(profile="example_profile")
             >>> benchmark_set = cb.select(ComplianceBenchmark).first()
-            >>> rules = benchmark_set.get_device_compliance()
+            >>> rules = benchmark_set.get_rule_compliance_devices("BCCAAACA-F0BE-4C0F-BE0A-A09FC1641EE2")
         """
-        url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/compliance/devices/_search"
+        url = self.urlobject.format(self._cb.credentials.org_key) + \
+            f"{self.id}/compliance/rules/{rule_id}/devices/_search"
+
         current = 0
         device_compliances = []
         while True:
@@ -270,46 +422,6 @@ class ComplianceBenchmark(UnrefreshableModel):
                 break
 
         return device_compliances
-
-    def get_rule_compliance(self, query=""):
-        """
-        Fetches rule compliance associated with the benchmark set.
-
-        Args:
-            query (str, optional): The query to filter results.
-
-        Returns:
-            [dict]: List of Rule Compliances
-
-        Example:
-            >>> cb = CBCloudAPI(profile="example_profile")
-            >>> benchmark_set = cb.select(ComplianceBenchmark).first()
-            >>> rules = benchmark_set.get_rule_compliance()
-        """
-        url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/compliance/rules/_search"
-        current = 0
-        rule_compliances = []
-        while True:
-            resp = self._cb.post_object(url, body={
-                "query": query,
-                "rows": 10000,
-                "start": current,
-                "sort": [
-                    {
-                        "field": "device_name",
-                        "order": "DESC"
-                    }
-                ]
-            })
-            result = resp.json()
-
-            rule_compliances.extend(result.get("results", []))
-            current += len(result)
-
-            if current >= result["num_found"]:
-                break
-
-        return rule_compliances
 
 
 class ComplianceBenchmarkQuery(BaseQuery, CriteriaBuilderSupportMixin,
