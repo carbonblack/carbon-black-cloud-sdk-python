@@ -2,12 +2,12 @@ Compliance Benchmarks
 ======
 
 CIS benchmarks are configuration guidelines published by the Center for Internet Security.
- The CIS Benchmark enable configuration and retrieval of Benchmark Sets and Rules in Carbon Black Cloud, and
- retrieval of the results from scans performed using these Rules.
+The CIS Benchmark enable configuration and retrieval of Benchmark Sets and Rules in Carbon Black Cloud, and
+retrieval of the results from scans performed using these Rules.
 
-For more information on CIS Benchmarks, see the `Center for Internet Security <https://www.cisecurity.org/cis-benchmarks/>`.
- CIS benchmarks contain over 100 configuration guidelines created by a global community of cybersecurity experts to safeguard
- various systems against attacks targeting configuration vulnerabilities.
+For more information on CIS Benchmarks, see the `Center for Internet Security <https://www.cisecurity.org/cis-benchmarks>`_.
+CIS benchmarks contain over 100 configuration guidelines created by a global community of cybersecurity experts to safeguard
+various systems against attacks targeting configuration vulnerabilities.
 
 You can use all the operations shown in the API, such as retrieving, filtering, reaccessing and enabling/disabling the benchmark rules.
 You can locate the full list of operations and attributes in the  :py:mod:`ComplianceBenchmark() <cbc_sdk.workload.compliance_assessment.ComplianceBenchmark>` class.
