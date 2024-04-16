@@ -13,7 +13,7 @@
 
 """Model and Query Classes for Compliance Assessment API"""
 
-from cbc_sdk.base import (BaseQuery, QueryBuilder, CriteriaBuilderSupportMixin,
+from cbc_sdk.base import (BaseQuery, QueryBuilder, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
                           IterableQueryMixin, AsyncQueryMixin, UnrefreshableModel)
 from cbc_sdk.errors import ApiError
 import logging
@@ -27,9 +27,9 @@ class ComplianceBenchmark(UnrefreshableModel):
     """Class representing Compliance Benchmarks."""
     urlobject = '/compliance/assessment/api/v1/orgs/{}/benchmark_sets/'
     swagger_meta_file = "workload/models/compliance_benchmark.yaml"
-    primary_key = "benchmark_set_id"
+    primary_key = "id"
 
-    def __init__(self, cb, initial_data, model_unique_id=None):
+    def __init__(self, cb, model_unique_id, initial_data=None):
         """
         Initialize a ComplianceBenchmark instance.
 
@@ -71,7 +71,7 @@ class ComplianceBenchmark(UnrefreshableModel):
             dict: The benchmark compliance summary
         """
         url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/compliance/summary"
-        results = self._cb.get_object(url).json()
+        results = self._cb.get_object(url)
         return results
 
     @staticmethod
@@ -98,7 +98,7 @@ class ComplianceBenchmark(UnrefreshableModel):
 
         url = f"/compliance/assessment/api/v1/orgs/{cb.credentials.org_key}/settings"
 
-        return cb.get_object(url).json()
+        return cb.get_object(url)
 
     @staticmethod
     def set_compliance_schedule(cb, scan_schedule, scan_timezone):
@@ -149,7 +149,7 @@ class ComplianceBenchmark(UnrefreshableModel):
             ...     print(section.section_name, section.section_id)
         """
         url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/sections"
-        results = self._cb.get_object(url).json()
+        results = self._cb.get_object(url)
         return results
 
     def get_rules(self, rule_id=None):
@@ -190,8 +190,7 @@ class ComplianceBenchmark(UnrefreshableModel):
             result = resp.json()
 
             rules.extend(result.get("results", []))
-            current += len(result)
-
+            current = len(rules)
             if current >= result["num_found"]:
                 break
 
@@ -221,7 +220,7 @@ class ComplianceBenchmark(UnrefreshableModel):
                 "enabled": enabled
             })
         url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/rules"
-        return self._cb.post_object(url, body=request).json()
+        return self._cb.put_object(url, body=request).json()
 
     def execute_action(self, action, device_ids=None):
         """
@@ -251,10 +250,13 @@ class ComplianceBenchmark(UnrefreshableModel):
             raise ApiError("Action is not supported. Options: ENABLE, DISABLE, REASSESS")
 
         args = {"action": action.upper()}
+        url = ""
         if device_ids:
             args['device_ids'] = [device_ids] if isinstance(device_ids, str) else device_ids
+            url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/compliance/device_actions"
+        else:
+            url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/actions"
 
-        url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/actions"
         return self._cb.post_object(url, body=args).json()
 
     # API Not supported
@@ -292,7 +294,7 @@ class ComplianceBenchmark(UnrefreshableModel):
     #         result = resp.json()
     #
     #         device_compliances.extend(result.get("results", []))
-    #         current += len(result)
+    #         current = len(device_compliances)
     #
     #         if current >= result["num_found"]:
     #             break
@@ -332,7 +334,7 @@ class ComplianceBenchmark(UnrefreshableModel):
             result = resp.json()
 
             rule_compliances.extend(result.get("results", []))
-            current += len(result)
+            current = len(rule_compliances)
 
             if current >= result["num_found"]:
                 break
@@ -355,7 +357,9 @@ class ComplianceBenchmark(UnrefreshableModel):
             >>> benchmark_set = cb.select(ComplianceBenchmark).first()
             >>> rules = benchmark_set.get_device_rule_compliance(123)
         """
-        url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/compliance/devices{device_id}/_search"
+        url = self.urlobject.format(self._cb.credentials.org_key)
+        url += f"{self.id}/compliance/devices/{device_id}/rules/_search"
+
         current = 0
         rule_compliances = []
         while True:
@@ -373,7 +377,7 @@ class ComplianceBenchmark(UnrefreshableModel):
             result = resp.json()
 
             rule_compliances.extend(result.get("results", []))
-            current += len(result)
+            current = len(rule_compliances)
 
             if current >= result["num_found"]:
                 break
@@ -416,7 +420,7 @@ class ComplianceBenchmark(UnrefreshableModel):
             result = resp.json()
 
             device_compliances.extend(result.get("results", []))
-            current += len(result)
+            current = len(device_compliances)
 
             if current >= result["num_found"]:
                 break
@@ -424,7 +428,7 @@ class ComplianceBenchmark(UnrefreshableModel):
         return device_compliances
 
 
-class ComplianceBenchmarkQuery(BaseQuery, CriteriaBuilderSupportMixin,
+class ComplianceBenchmarkQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
                                IterableQueryMixin, AsyncQueryMixin):
     """A class representing a query for Compliance Benchmark."""
 
@@ -559,7 +563,7 @@ class ComplianceBenchmarkQuery(BaseQuery, CriteriaBuilderSupportMixin,
 
             results = result.get("results", [])
             for item in results:
-                yield self._doc_class(self._cb, initial_data=item)
+                yield self._doc_class(self._cb, item[self._doc_class.primary_key], initial_data=item)
                 current += 1
                 numrows += 1
 
@@ -591,5 +595,5 @@ class ComplianceBenchmarkQuery(BaseQuery, CriteriaBuilderSupportMixin,
                 self._count_valid = True
 
             results = result.get("results", [])
-            output += [self._doc_class(self._cb, item["id"], item) for item in results]
+            output += [self._doc_class(self._cb, item[self._doc_class.primary_key], item) for item in results]
         return output
