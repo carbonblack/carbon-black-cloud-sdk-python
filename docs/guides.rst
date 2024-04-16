@@ -29,6 +29,7 @@ Feature Guides
    alerts
    asset-groups
    audit-log
+   compliance
    developing-credential-providers
    devices
    device-control
@@ -49,6 +50,7 @@ Feature Guides
 * :doc:`asset-groups` - Create and modify Asset Groups, and preview the impact changes to policy ranking or asset group definition will have.
 * :doc:`alerts-migration` - Update from SDK 1.4.3 or earlier to SDK 1.5.0 or later to get the benefits of the Alerts v7 API.
 * :doc:`audit-log` - Retrieve audit log events indicating various "system" events.
+* :doc:`compliance` - Search and validate Compliance Benchmarks.
 * :doc:`devices` - Search for, get information about, and act on endpoints.
 * :doc:`device-control` - Control the blocking of USB devices on endpoints.
 * :doc:`differential-analysis` - Provides the ability to compare and understand the changes between two Live Query runs
