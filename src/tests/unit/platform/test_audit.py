@@ -19,7 +19,6 @@ from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_audit import (AUDITLOGS_RESP, AUDIT_SEARCH_REQUEST, AUDIT_SEARCH_RESPONSE,
                                                      AUDIT_EXPORT_REQUEST, MOCK_AUDIT_EXPORT_JOB)
 
-
 @pytest.fixture(scope="function")
 def cb():
     """Create CBCloudAPI singleton"""

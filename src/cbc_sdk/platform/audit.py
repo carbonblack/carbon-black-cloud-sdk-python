@@ -21,7 +21,6 @@ from cbc_sdk.errors import ApiError
 
 from backports._datetime_fromisoformat import datetime_fromisoformat
 
-
 """Model Class"""
 
 
@@ -39,7 +38,7 @@ class AuditLogRecord(UnrefreshableModel):
             model_unique_id (int): Not used.
             initial_data (dict): Initial data to fill in the audit log record details.
         """
-        super(AuditLogRecord, self).__init__(cb, model_unique_id, initial_data)
+        super(AuditLogRecord, self).__init__(cb, model_unique_id, initial_data, force_init=False, full_doc=True)
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -89,6 +88,7 @@ class AuditLogRecordQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSu
     * ``request_url`` - URL of the request that caused the creation of this audit log.
     * ``description`` - Text description of this audit log.
     """
+
     def __init__(self, doc_class, cb):
         """
         Initialize the ``AuditLogRecordQuery``.
@@ -112,13 +112,13 @@ class AuditLogRecordQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSu
         self.max_rows = -1
 
     @staticmethod
-    def _create_valid_time_filter(self, kwargs):
+    def _create_valid_time_filter(kwargs):
         """
         Verifies that an alert criteria key has the timerange functionality
 
         Args:
             kwargs (dict): Used to specify start= for start time, end= for end time, and range= for range. Values are
-                either timestamp ISO 8601 strings or datetime objects for start and end time. For range the time range
+                either timestamp ISO 8601 strings or datetime objects for start and end time. For range, the time range
                 to execute the result search, ending on the current time. Should be in the form "-2w",
                 where y=year, w=week, d=day, h=hour, m=minute, s=second.
 
@@ -241,7 +241,7 @@ class AuditLogRecordQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSu
             request['criteria'] = self._criteria
         if self._exclusions:
             request['exclusions'] = self._exclusions
-        query = self._query_builder.collapse()
+        query = self._query_builder._collapse()
         if query:
             request['query'] = query
         if max_rows > 0:
