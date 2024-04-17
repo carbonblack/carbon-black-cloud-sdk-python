@@ -12,7 +12,7 @@
 """Tests for the audit logs APIs."""
 
 import pytest
-import copy
+from cbc_sdk.errors import ApiError
 from cbc_sdk.rest_api import CBCloudAPI
 from cbc_sdk.platform import AuditLog, AuditLogRecord
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
@@ -63,15 +63,56 @@ def test_search_audit_logs_with_all_bells_and_whistles(cbcsdk_mock):
     query.add_exclusions("description", ["BLORT"]).add_boolean_criteria("flagged", False, exclude=True)
     query.add_boolean_criteria("verbose", True, exclude=True)
     query.add_time_criteria(range="-5d", exclude=True).sort_by("actor_ip", "ASC")
-    l = list(query)
-    assert len(l) == 5
-    assert l[0].actor == "DEFGHIJKLM"
-    assert l[0].actor_ip == "192.168.0.5"
-    assert l[1].actor == "BELTALOWDA"
-    assert l[1].actor_ip == "192.168.3.5"
-    assert l[2].actor == "BELTALOWDA"
-    assert l[2].actor_ip == "192.168.3.8"
-    assert l[3].actor == "BELTALOWDA"
-    assert l[3].actor_ip == "192.168.3.11"
-    assert l[4].actor == "BELTALOWDA"
-    assert l[4].actor_ip == "192.168.3.14"
+    result_list = list(query)
+    assert len(result_list) == 5
+    assert query._count() == 5
+    assert result_list[0].actor == "DEFGHIJKLM"
+    assert result_list[0].actor_ip == "192.168.0.5"
+    assert result_list[1].actor == "BELTALOWDA"
+    assert result_list[1].actor_ip == "192.168.3.5"
+    assert result_list[2].actor == "BELTALOWDA"
+    assert result_list[2].actor_ip == "192.168.3.8"
+    assert result_list[3].actor == "BELTALOWDA"
+    assert result_list[3].actor_ip == "192.168.3.11"
+    assert result_list[4].actor == "BELTALOWDA"
+    assert result_list[4].actor_ip == "192.168.3.14"
+
+
+def test_criteria_errors(cb):
+    """Tests error handling in the criteria-setting functions on the query object."""
+    query = cb.select(AuditLogRecord)
+    with pytest.raises(ApiError):
+        query.add_time_criteria(start="2024-03-01T00:00:00", end="2024-03-31T22:00:00", range="-5d")
+    with pytest.raises(ApiError):
+        query.add_time_criteria(start="2024-03-01T00:00:00")
+    with pytest.raises(ApiError):
+        query.add_time_criteria(end="2024-03-31T22:00:00")
+    with pytest.raises(ApiError):
+        query.add_time_criteria(start="2024-03-01T00:00:00", range="-5d")
+    with pytest.raises(ApiError):
+        query.add_time_criteria(end="2024-03-31T22:00:00", range="-5d")
+    with pytest.raises(ApiError):
+        query.add_time_criteria(start="BOGUS", end="2024-03-31T22:00:00")
+    with pytest.raises(ApiError):
+        query.sort_by("actor_ip", "BOGUS")
+
+
+def test_async_search_audit_logs(cbcsdk_mock):
+    """Tests async query of audit logs."""
+    cbcsdk_mock.mock_request("POST", "/audit_log/v1/orgs/test/logs/_search", AUDIT_SEARCH_RESPONSE)
+    api = cbcsdk_mock.api
+    query = api.select(AuditLogRecord)
+    future = query.execute_async()
+    result_list = future.result()
+    assert isinstance(result_list, list)
+    assert len(result_list) == 5
+    assert result_list[0].actor == "DEFGHIJKLM"
+    assert result_list[0].actor_ip == "192.168.0.5"
+    assert result_list[1].actor == "BELTALOWDA"
+    assert result_list[1].actor_ip == "192.168.3.5"
+    assert result_list[2].actor == "BELTALOWDA"
+    assert result_list[2].actor_ip == "192.168.3.8"
+    assert result_list[3].actor == "BELTALOWDA"
+    assert result_list[3].actor_ip == "192.168.3.11"
+    assert result_list[4].actor == "BELTALOWDA"
+    assert result_list[4].actor_ip == "192.168.3.14"
