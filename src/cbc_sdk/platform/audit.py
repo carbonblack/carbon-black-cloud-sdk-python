@@ -24,32 +24,32 @@ from backports._datetime_fromisoformat import datetime_fromisoformat
 """Model Class"""
 
 
-class AuditLogRecord(UnrefreshableModel):
+class AuditLog(UnrefreshableModel):
     """Model class which represents audit log events. Mostly for future implementation."""
     urlobject = "/audit_log/v1/orgs/{0}/logs"
-    swagger_meta_file = "platform/models/audit_log_record.yaml"
+    swagger_meta_file = "platform/models/audit_log.yaml"
 
     def __init__(self, cb, model_unique_id, initial_data=None):
         """
-        Creates a new ``AuditLogRecord``.
+        Creates a new ``AuditLog``.
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
             model_unique_id (int): Not used.
             initial_data (dict): Initial data to fill in the audit log record details.
         """
-        super(AuditLogRecord, self).__init__(cb, model_unique_id, initial_data, force_init=False, full_doc=True)
+        super(AuditLog, self).__init__(cb, model_unique_id, initial_data, force_init=False, full_doc=True)
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
         """
-        Returns the appropriate query object for the ``AuditLogRecord`` type.
+        Returns the appropriate query object for the ``AuditLog`` type.
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
             **kwargs (dict): Not used, retained for compatibility.
         """
-        return AuditLogRecordQuery(cls, cb)
+        return AuditLogQuery(cls, cb)
 
     @staticmethod
     def get_auditlogs(cb):
@@ -72,12 +72,12 @@ class AuditLogRecord(UnrefreshableModel):
 """Query Class"""
 
 
-class AuditLogRecordQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
-                          ExclusionBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin):
+class AuditLogQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportMixin,
+                    ExclusionBuilderSupportMixin, IterableQueryMixin, AsyncQueryMixin):
     """
-    Query object that is used to locate ``AuditLogRecord`` objects.
+    Query object that is used to locate ``AuditLog`` objects.
 
-    The ``AuditLogRecordQuery`` is constructed via SDK functions like the ``select()`` method on ``CBCloudAPI``.
+    The ``AuditLogQuery`` is constructed via SDK functions like the ``select()`` method on ``CBCloudAPI``.
     The user would then add a query and/or criteria to it before iterating over the results.
 
     The following criteria may be added to the query via the standard ``add_criteria()`` method, or added to query
@@ -91,7 +91,7 @@ class AuditLogRecordQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSu
 
     def __init__(self, doc_class, cb):
         """
-        Initialize the ``AuditLogRecordQuery``.
+        Initialize the ``AuditLogQuery``.
 
         Args:
             doc_class (class): The model class that will be returned by this query.
@@ -100,7 +100,7 @@ class AuditLogRecordQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSu
         self._doc_class = doc_class
         self._cb = cb
         self._count_valid = False
-        super(AuditLogRecordQuery, self).__init__()
+        super(AuditLogQuery, self).__init__()
 
         self._query_builder = QueryBuilder()
         self._criteria = {}
@@ -175,7 +175,7 @@ class AuditLogRecordQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSu
                 applied to search criteria.  Default ``False.``
 
         Returns:
-            AuditLogRecordQuery: This instance.
+            AuditLogQuery: This instance.
 
         Raises:
             ApiError: If the argument format is incorrect.
@@ -198,7 +198,7 @@ class AuditLogRecordQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSu
                 applied to search criteria.  Default ``False.``
 
         Returns:
-            AuditLogRecordQuery: This instance.
+            AuditLogQuery: This instance.
         """
         if exclude:
             self._exclusions[criteria_name] = value
@@ -211,14 +211,14 @@ class AuditLogRecordQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSu
         Sets the sorting behavior on a query's results.
 
         Example:
-            >>> cb.select(AuditLogRecord).sort_by("name")
+            >>> cb.select(AuditLog).sort_by("name")
 
         Args:
             key (str): The key in the schema to sort by.
             direction (str): The sort order, either "ASC" or "DESC".
 
         Returns:
-            AuditLogRecordQuery: This instance.
+            AuditLogQuery: This instance.
         """
         if direction not in CriteriaBuilderSupportMixin.VALID_DIRECTIONS:
             raise ApiError("invalid sort direction specified")
@@ -294,7 +294,7 @@ class AuditLogRecordQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSu
             max_rows (int): The maximum number of rows to be returned (default -1, meaning "all").
 
         Yields:
-            AuditLogRecord: The audit log records resulting from the search.
+            AuditLog: The audit log records resulting from the search.
         """
         url = self._build_url("/_search")
         current = from_row
@@ -331,7 +331,7 @@ class AuditLogRecordQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSu
             context (object): Not used.
 
         Returns:
-            list[AuditLogRecord]: The results of the query.
+            list[AuditLog]: The results of the query.
         """
         url = self._build_url("/_search")
         request = self._build_request(0, -1)

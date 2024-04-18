@@ -8,9 +8,7 @@ from cbc_sdk.platform.alerts import (Alert, WatchlistAlert, CBAnalyticsAlert, De
 
 from cbc_sdk.platform.alerts import Alert as BaseAlert
 
-from cbc_sdk.platform.audit import AuditLogRecord
-
-from cbc_sdk.platform.audit import AuditLogRecord as AuditLog
+from cbc_sdk.platform.audit import AuditLog
 
 from cbc_sdk.platform.asset_groups import AssetGroup
 
