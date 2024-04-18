@@ -14,7 +14,7 @@
 import pytest
 from cbc_sdk.errors import ApiError
 from cbc_sdk.rest_api import CBCloudAPI
-from cbc_sdk.platform import AuditLog, AuditLogRecord
+from cbc_sdk.platform import AuditLog
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_audit import AUDITLOGS_RESP, AUDIT_SEARCH_REQUEST, AUDIT_SEARCH_RESPONSE
 
@@ -53,7 +53,7 @@ def test_search_audit_logs_with_all_bells_and_whistles(cbcsdk_mock):
 
     cbcsdk_mock.mock_request("POST", "/audit_log/v1/orgs/test/logs/_search", on_post)
     api = cbcsdk_mock.api
-    query = api.select(AuditLogRecord).where("description:FOO").add_criteria("actor_ip", ["10.29.99.1"])
+    query = api.select(AuditLog).where("description:FOO").add_criteria("actor_ip", ["10.29.99.1"])
     query.add_criteria("actor", ["ABCDEFGHIJ"]).add_criteria("request_url", ["https://inclusiveladyship.com"])
     query.add_criteria("description", ["FOOBAR"]).add_boolean_criteria("flagged", True)
     query.add_boolean_criteria("verbose", False)
@@ -80,7 +80,7 @@ def test_search_audit_logs_with_all_bells_and_whistles(cbcsdk_mock):
 
 def test_criteria_errors(cb):
     """Tests error handling in the criteria-setting functions on the query object."""
-    query = cb.select(AuditLogRecord)
+    query = cb.select(AuditLog)
     with pytest.raises(ApiError):
         query.add_time_criteria(start="2024-03-01T00:00:00", end="2024-03-31T22:00:00", range="-5d")
     with pytest.raises(ApiError):
@@ -101,7 +101,7 @@ def test_async_search_audit_logs(cbcsdk_mock):
     """Tests async query of audit logs."""
     cbcsdk_mock.mock_request("POST", "/audit_log/v1/orgs/test/logs/_search", AUDIT_SEARCH_RESPONSE)
     api = cbcsdk_mock.api
-    query = api.select(AuditLogRecord)
+    query = api.select(AuditLog)
     future = query.execute_async()
     result_list = future.result()
     assert isinstance(result_list, list)
