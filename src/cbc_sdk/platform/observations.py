@@ -269,6 +269,9 @@ class Observation(NewBaseModel):
     def bulk_get_details(cb, alert_id=None, observation_ids=None, timeout=0):
         """Bulk get details
 
+        Required Permissions:
+            org.search.events (READ, CREATE)
+
         Args:
             cb (CBCloudAPI): A reference to the CBCloudAPI object.
             alert_id (str):  An alert id to fetch associated observations
