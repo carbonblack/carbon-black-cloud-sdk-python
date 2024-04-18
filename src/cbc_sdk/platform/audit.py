@@ -11,7 +11,15 @@
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
 
-"""Model and Query Classes for Platform Auditing"""
+"""
+Model and query classes for platform audit logs.
+
+``AuditLog`` can be used to monitor your Carbon Black Cloud organization for actions performed by Carbon Black Cloud
+console users and API keys. Audit logs are recorded for most CREATE, UPDATE and DELETE actions as well as a few READ
+actions. Audit logs will include a description of the action and indicate the actor who performed the action along
+with their IP to help determine if the User/API key are from an expected source.
+
+"""
 
 import datetime
 from cbc_sdk.base import (UnrefreshableModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
@@ -25,13 +33,18 @@ from backports._datetime_fromisoformat import datetime_fromisoformat
 
 
 class AuditLog(UnrefreshableModel):
-    """Model class which represents audit log events. Mostly for future implementation."""
+    """
+    The model class which represents individual audit log entries.
+
+    Each entry includes the actor performing the action, the IP address of the actor, a description, and a request URL
+    where available.
+    """
     urlobject = "/audit_log/v1/orgs/{0}/logs"
     swagger_meta_file = "platform/models/audit_log.yaml"
 
     def __init__(self, cb, model_unique_id, initial_data=None):
         """
-        Creates a new ``AuditLog``.
+        Creates a new ``AuditLog`` object.
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
@@ -114,7 +127,7 @@ class AuditLogQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportM
     @staticmethod
     def _create_valid_time_filter(kwargs):
         """
-        Verifies that an alert criteria key has the timerange functionality
+        Creates the time range used for a "create_time" criteria value.
 
         Args:
             kwargs (dict): Used to specify start= for start time, end= for end time, and range= for range. Values are
@@ -155,7 +168,7 @@ class AuditLogQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportM
 
     def add_time_criteria(self, **kwargs):
         """
-        Adds a ``create_time`` criteria value to either criteria or exclusions.
+        Adds a ``create_time`` value to either criteria or exclusions.
 
         Args:
             kwargs (dict): Keyword arguments to this method.
@@ -269,6 +282,9 @@ class AuditLogQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportM
         """
         Returns the number of results from the run of this query.
 
+        Required Permissions:
+            org.audits (READ)
+
         Returns:
             int: The number of results from the run of this query.
         """
@@ -288,6 +304,9 @@ class AuditLogQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportM
     def _perform_query(self, from_row=0, max_rows=-1):
         """
         Performs the query and returns the results of the query in an iterable fashion.
+
+        Required Permissions:
+            org.audits (READ)
 
         Args:
             from_row (int): The row to start the query at (default 0).
