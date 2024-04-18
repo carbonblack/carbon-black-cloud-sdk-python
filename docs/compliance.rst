@@ -62,9 +62,9 @@ By using the following the example, you can get and set the benchmark assessment
     >>> from cbc_sdk import CBCloudAPI
     >>> from cbc_sdk.workload import ComplianceBenchmark
     >>> api = CBCloudAPI(profile='sample')
+    >>> ComplianceBenchmark.set_compliance_schedule(api, "RRULE:FREQ=DAILY;BYHOUR=17;BYMINUTE=30;BYSECOND=0", "UTC")
     >>> schedule = ComplianceBenchmark.get_compliance_schedule(api)
     >>> print(schedule)
-    >>> ComplianceBenchmark.set_compliance_schedule(api, "RRULE:FREQ=DAILY;BYHOUR=17;BYMINUTE=30;BYSECOND=0", "UTC")
     {
         "scan_schedule": "FREQ=WEEKLY;BYDAY=TU;BYHOUR=11;BYMINUTE=30;BYSECOND=0",
         "scan_timezone": "UTC"

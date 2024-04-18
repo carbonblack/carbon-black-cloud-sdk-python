@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-
 # *******************************************************
-# Copyright (c) VMware, Inc. 2021-2023. All Rights Reserved.
+# Copyright (c) VMware, Inc. 2021-2024. All Rights Reserved.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -67,6 +66,9 @@ class ComplianceBenchmark(UnrefreshableModel):
         """
         Fetches the compliance summary for the current benchmark set.
 
+        Required Permissions:
+            complianceAssessment.data(READ)
+
         Returns:
             dict: The benchmark compliance summary
         """
@@ -81,6 +83,9 @@ class ComplianceBenchmark(UnrefreshableModel):
 
         Args:
             cb (CBCloudAPI): An instance of CBCloudAPI representing the Carbon Black Cloud API.
+
+        Required Permissions:
+            complianceAssessment.data(READ)
 
         Raises:
             ApiError: If cb is not an instance of CBCloudAPI.
@@ -104,6 +109,9 @@ class ComplianceBenchmark(UnrefreshableModel):
     def set_compliance_schedule(cb, scan_schedule, scan_timezone):
         """
         Sets the compliance scan schedule and timezone for the organization.
+
+        Required Permissions:
+            complianceAssessment.data(UPDATE)
 
         Args:
             cb (CBCloudAPI): An instance of CBCloudAPI representing the Carbon Black Cloud API.
@@ -139,6 +147,9 @@ class ComplianceBenchmark(UnrefreshableModel):
         """
         Get Sections of the Benchmark Set.
 
+        Required Permissions:
+            complianceAssessment.data(READ)
+
         Returns:
             list[dict]: List of sections within the Benchmark Set.
 
@@ -155,6 +166,9 @@ class ComplianceBenchmark(UnrefreshableModel):
     def get_rules(self, rule_id=None):
         """
         Fetches compliance rules associated with the benchmark set.
+
+        Required Permissions:
+            complianceAssessment.data(READ)
 
         Args:
             rule_id (str, optional): The rule ID to fetch a specific rule. Defaults to None.
@@ -200,6 +214,9 @@ class ComplianceBenchmark(UnrefreshableModel):
         """
         Update compliance rules associated with the benchmark set.
 
+        Required Permissions:
+            complianceAssessment.data(UPDATE)
+
         Args:
             rule_ids (list[str]): The rule IDs to update their enabled/disabled status.
             enabled (bool): Whether the rule is enabled or disabled.
@@ -225,6 +242,9 @@ class ComplianceBenchmark(UnrefreshableModel):
     def execute_action(self, action, device_ids=None):
         """
         Execute a specified action for the Benchmark Set for all devices or a specified subset.
+
+        Required Permissions:
+            complianceAssessment.data(EXECUTE)
 
         Args:
             action (str): The action to be executed. Options: ENABLE, DISABLE, REASSESS
@@ -305,6 +325,9 @@ class ComplianceBenchmark(UnrefreshableModel):
         """
         Fetches rule compliance summaries associated with the benchmark set.
 
+        Required Permissions:
+            complianceAssessment.data(READ)
+
         Args:
             query (str, optional): The query to filter results.
 
@@ -344,6 +367,9 @@ class ComplianceBenchmark(UnrefreshableModel):
     def get_device_rule_compliances(self, device_id, query=""):
         """
         Fetches rule compliances for specific device.
+
+        Required Permissions:
+            complianceAssessment.data(READ)
 
         Args:
             device_id (int): Device id to fetch benchmark rule compliance
@@ -387,6 +413,9 @@ class ComplianceBenchmark(UnrefreshableModel):
     def get_rule_compliance_devices(self, rule_id, query=""):
         """
         Fetches device compliances for a specific rule.
+
+        Required Permissions:
+            complianceAssessment.data(READ)
 
         Args:
             rule_id (str): Rule id to fetch device compliances
