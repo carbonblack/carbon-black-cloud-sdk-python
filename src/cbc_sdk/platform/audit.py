@@ -69,6 +69,9 @@ class AuditLog(UnrefreshableModel):
         """
         Retrieve queued audit logs from the Carbon Black Cloud server.
 
+        Deprecated:
+            This method uses an outdated API. Use ``get_queued_auditlogs()`` instead.
+
         Required Permissions:
             org.audits (READ)
 
@@ -80,6 +83,23 @@ class AuditLog(UnrefreshableModel):
         """
         res = cb.get_object("/integrationServices/v3/auditlogs")
         return res.get("notifications", [])
+
+    @staticmethod
+    def get_queued_auditlogs(cb):
+        """
+        Retrieve queued audit logs from the Carbon Black Cloud server.
+
+        Required Permissions:
+            org.audits (READ)
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+
+        Returns:
+            list[AuditLog]: List of objects representing the audit logs, or an empty list if none available.
+        """
+        res = cb.get_object(AuditLog.urlobject.format(cb.credentials.org_key) + "/queue")
+        return [AuditLog(cb, -1, data) for data in res.get("results", [])]
 
 
 """Query Class"""
