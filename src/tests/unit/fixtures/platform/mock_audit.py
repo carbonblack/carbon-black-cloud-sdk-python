@@ -105,6 +105,8 @@ AUDIT_SEARCH_RESPONSE = {
             "actor": "DEFGHIJKLM",
             "request_url": None,
             "description": "Connector DEFGHIJKLM logged in successfully",
+            "flagged": False,
+            "verbose": False,
             "create_time": "2024-04-17T19:18:37.480Z"
         },
         {
@@ -113,6 +115,8 @@ AUDIT_SEARCH_RESPONSE = {
             "actor": "BELTALOWDA",
             "request_url": None,
             "description": "Updated report, 'MCRN threat feed'",
+            "flagged": False,
+            "verbose": False,
             "create_time": "2024-04-17T19:13:01.528Z"
         },
         {
@@ -121,6 +125,8 @@ AUDIT_SEARCH_RESPONSE = {
             "actor": "BELTALOWDA",
             "request_url": None,
             "description": "Updated report, 'Reported by DOP'",
+            "flagged": False,
+            "verbose": False,
             "create_time": "2024-04-17T19:13:01.042Z"
         },
         {
@@ -129,6 +135,8 @@ AUDIT_SEARCH_RESPONSE = {
             "actor": "BELTALOWDA",
             "request_url": None,
             "description": "Updated report, 'Reported by Mao-Kwikowski'",
+            "flagged": False,
+            "verbose": False,
             "create_time": "2024-04-17T19:13:00.235Z"
         },
         {
@@ -137,6 +145,8 @@ AUDIT_SEARCH_RESPONSE = {
             "actor": "BELTALOWDA",
             "request_url": None,
             "description": "Updated report, 'Malware SSL Certificate Fingerprint'",
+            "flagged": False,
+            "verbose": False,
             "create_time": "2024-04-17T19:12:59.693Z"
         }
     ]
