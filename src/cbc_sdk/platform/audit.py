@@ -98,7 +98,7 @@ class AuditLog(UnrefreshableModel):
         Returns:
             list[AuditLog]: List of objects representing the audit logs, or an empty list if none available.
         """
-        res = cb.get_object(AuditLog.urlobject.format(cb.credentials.org_key) + "/queue")
+        res = cb.get_object(AuditLog.urlobject.format(cb.credentials.org_key) + "/_queue")
         return [AuditLog(cb, -1, data) for data in res.get("results", [])]
 
 
