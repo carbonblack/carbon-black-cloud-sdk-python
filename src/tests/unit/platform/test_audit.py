@@ -44,6 +44,16 @@ def test_get_auditlogs(cbcsdk_mock):
     assert len(result) == 5
 
 
+def test_get_queued_auditlogs(cbcsdk_mock):
+    """Tests the get_queued_auditlogs function."""
+    cbcsdk_mock.mock_request("GET", "/audit_log/v1/orgs/test/logs/_queue", AUDIT_SEARCH_RESPONSE)
+    api = cbcsdk_mock.api
+    result = AuditLog.get_queued_auditlogs(api)
+    assert len(result) == 5
+    for v in result:
+        assert isinstance(v, AuditLog)
+
+
 def test_search_audit_logs_with_all_bells_and_whistles(cbcsdk_mock):
     """Tests the generation and execution of a search request."""
 
