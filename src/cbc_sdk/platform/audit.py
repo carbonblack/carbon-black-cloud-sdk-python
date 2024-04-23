@@ -408,4 +408,4 @@ class AuditLogQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportM
         result = resp.json()
         if "job_id" in result:
             return Job(self._cb, result["job_id"])
-        return None
+        return None  # pragma: no cover
