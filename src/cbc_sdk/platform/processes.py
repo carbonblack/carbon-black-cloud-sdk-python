@@ -667,6 +667,17 @@ class AsyncProcessQuery(Query):
         self._batch_size = rows
         return self
 
+    def set_collapse_field(self, field):
+        """
+        Sets the 'collapse_field' query parameter, which queries the file name depending on field
+        Args:
+            field (list): query parameters to get file details.
+        """
+        if not isinstance(field, list):
+            raise ApiError(f"Field must be list. {field} is a {type(field)}.")
+        self._collapse_field = field
+        return self
+
     def _submit(self):
         """
         Submits the query to the server.

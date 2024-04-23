@@ -1870,6 +1870,7 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
         self._time_range = {}
         self._fields = ["*"]
         self._default_args = {}
+        self._collapse_field = []
 
     def _add_exclusions(self, key, newlist):
         """
@@ -1973,6 +1974,8 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
         if 'process_guid:' in args.get('query', ''):
             q = args['query'].split('process_guid:', 1)[1].split(' ', 1)[0]
             args["process_guid"] = q
+        if self._collapse_field:
+            args['collapse_field'] = self._collapse_field
 
         if args.get("sort", None) is not None and args.get("fields", None) is None:
             # Add default fields if only sort is specified
