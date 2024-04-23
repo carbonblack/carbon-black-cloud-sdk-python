@@ -151,3 +151,20 @@ AUDIT_SEARCH_RESPONSE = {
         }
     ]
 }
+
+AUDIT_EXPORT_REQUEST = {
+    "query": "description:FOO",
+    "format": "csv"
+}
+
+MOCK_AUDIT_EXPORT_JOB = {
+    "id": 4805565,
+    "type": "EXTERNAL",
+    "job_parameters": {
+        "job_parameters": None
+    },
+    "org_key": "test",
+    "status": "COMPLETED",
+    "create_time": "2023-02-02T23:16:25.625583Z",
+    "last_update_time": "2023-02-02T23:16:29.079184Z"
+}
