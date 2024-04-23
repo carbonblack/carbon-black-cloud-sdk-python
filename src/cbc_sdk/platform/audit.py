@@ -189,6 +189,11 @@ class AuditLogQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportM
         """
         Adds a ``create_time`` value to either criteria or exclusions.
 
+        Examples:
+            >>> query_specify_start_and_end = api.select(AuditLog).
+            ...     add_time_criteria(start="2023-10-20T20:34:07Z", end="2023-10-30T20:34:07Z")
+            >>> query_specify_exclude_range = api.select(AuditLog).add_time_criteria(range='-3d', exclude=True)
+
         Args:
             kwargs (dict): Keyword arguments to this method.
 
