@@ -48,7 +48,6 @@ class AuditLog(UnrefreshableModel):
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
-            model_unique_id (int): Not used.
             initial_data (dict): Initial data to fill in the audit log record details.
         """
         super(AuditLog, self).__init__(cb, -1, initial_data, force_init=False, full_doc=True)
