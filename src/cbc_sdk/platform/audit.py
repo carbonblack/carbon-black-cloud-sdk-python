@@ -382,3 +382,6 @@ class AuditLogQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportM
         result = resp.json()
         results = result.get("results", [])
         return [self._doc_class(self._cb, item) for item in results]
+
+    def export(self):
+        pass
