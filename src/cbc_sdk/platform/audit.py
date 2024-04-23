@@ -42,7 +42,7 @@ class AuditLog(UnrefreshableModel):
     urlobject = "/audit_log/v1/orgs/{0}/logs"
     swagger_meta_file = "platform/models/audit_log.yaml"
 
-    def __init__(self, cb, model_unique_id, initial_data=None):
+    def __init__(self, cb, initial_data=None):
         """
         Creates a new ``AuditLog`` object.
 
@@ -51,7 +51,7 @@ class AuditLog(UnrefreshableModel):
             model_unique_id (int): Not used.
             initial_data (dict): Initial data to fill in the audit log record details.
         """
-        super(AuditLog, self).__init__(cb, model_unique_id, initial_data, force_init=False, full_doc=True)
+        super(AuditLog, self).__init__(cb, -1, initial_data, force_init=False, full_doc=True)
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -99,7 +99,7 @@ class AuditLog(UnrefreshableModel):
             list[AuditLog]: List of objects representing the audit logs, or an empty list if none available.
         """
         res = cb.get_object(AuditLog.urlobject.format(cb.credentials.org_key) + "/_queue")
-        return [AuditLog(cb, -1, data) for data in res.get("results", [])]
+        return [AuditLog(cb, data) for data in res.get("results", [])]
 
 
 """Query Class"""
@@ -349,7 +349,7 @@ class AuditLogQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportM
 
             results = result.get("results", [])
             for item in results:
-                yield self._doc_class(self._cb, 0, item)
+                yield self._doc_class(self._cb, item)
                 current += 1
                 numrows += 1
 
@@ -377,4 +377,4 @@ class AuditLogQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportM
         resp = self._cb.post_object(url, body=request)
         result = resp.json()
         results = result.get("results", [])
-        return [self._doc_class(self._cb, 0, item) for item in results]
+        return [self._doc_class(self._cb, item) for item in results]
