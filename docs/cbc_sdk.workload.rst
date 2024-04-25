@@ -1,6 +1,14 @@
 Workload Package
 *****************
 
+CIS Benchmarks
+-----------------------------------------
+
+.. automodule:: cbc_sdk.workload.compliance_assessment
+   :members:
+   :inherited-members:
+   :show-inheritance:
+
 NSX Remediation Module
 -----------------------------------------
 
