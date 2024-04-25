@@ -11,8 +11,7 @@ from cbc_sdk.errors import ServerError, ApiError
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_jobs import (FIND_ALL_JOBS_RESP, JOB_DETAILS_1, JOB_DETAILS_2, PROGRESS_1,
-                                                    PROGRESS_2, AWAIT_COMPLETION_PROGRESS,
-                                                    AWAIT_COMPLETION_DETAILS_PROGRESS_1,
+                                                    PROGRESS_2, AWAIT_COMPLETION_DETAILS_PROGRESS_1,
                                                     AWAIT_COMPLETION_DETAILS_PROGRESS_2)
 
 
@@ -101,7 +100,7 @@ def test_load_job_and_get_progress(cbcsdk_mock, jobid, total, completed, msg, lo
 
 
 def test_job_await_completion(cbcsdk_mock):
-    """Test that await_completion() functions if _wait_status is set."""
+    """Test that await_completion() functions."""
     pr_index = 0
 
     def on_details(url, query_params, default):
