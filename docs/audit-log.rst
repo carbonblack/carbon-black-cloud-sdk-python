@@ -8,8 +8,8 @@ In the Carbon Black Cloud, *audit logs* are records of various organization-wide
 * Creation of connectors
 * LiveResponse events
 
-The Audit Log API allows these records to be retrieved as objects, sorted by time in ascending order
-(oldest records come first).
+The Audit Log API allows these records to be retrieved as objects, either by getting the most recent audit logs, or
+through a flexible search API.
 
 <!-- this is queue behavior, apply o specific queue section -->
 The API call returns only *new* audit log records that have been added since
