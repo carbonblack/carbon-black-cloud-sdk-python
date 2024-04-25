@@ -393,6 +393,11 @@ class AuditLogQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportM
         The actual results are retrieved by waiting for the resulting job to complete, then calling one of the methods
         on ``Job`` to retrieve the results.
 
+        Example:
+            >>> audit_log_query = cb.select(AuditLog).add_time_criteria(range="-1d")
+            >>> audit_log_export_job = audit_log_query.export(format="csv")
+            >>> results = audit_log_export_job.await_completion().result()
+
         Args:
             format (str): Format in which to return results, either "csv" or "json".  Default is "csv".
 
