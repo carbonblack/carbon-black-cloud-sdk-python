@@ -26,7 +26,8 @@ from tests.unit.fixtures.workload.mock_compliance import (SEARCH_COMPLIANCE_BENC
                                                           GET_RULE,
                                                           RULE_COMPLIANCES,
                                                           DEVICE_SPECIFIC_RULE_COMPLIANCE,
-                                                          RULE_COMPLIANCE_DEVICE_SEARCH)
+                                                          RULE_COMPLIANCE_DEVICE_SEARCH,
+                                                          DEVICE_COMPLIANCES)
 
 
 logging.basicConfig(format="%(asctime)s %(levelname)s:%(message)s", level=logging.DEBUG, filename="log.txt")
@@ -218,6 +219,21 @@ def test_execute_action(cbcsdk_mock):
 
     assert benchmark.execute_action("REASSESS")["status_code"] == "SUCCESS"
     assert benchmark.execute_action("REASSESS", [1])["status_code"] == "SUCCESS"
+
+
+def test_get_device_compliances(cbcsdk_mock):
+    """Test get_device_compliances"""
+    cbcsdk_mock.mock_request("POST", "/compliance/assessment/api/v1/orgs/test/benchmark_sets/_search",
+                             SEARCH_COMPLIANCE_BENCHMARKS)
+    cbcsdk_mock.mock_request("POST", "/compliance/assessment/api/v1/orgs/test/benchmark_sets/"
+                             "eee5e491-9c31-4a38-84d8-50c9163ef559/compliance/devices/_search",
+                             DEVICE_COMPLIANCES)
+
+    api = cbcsdk_mock.api
+    benchmark = api.select(ComplianceBenchmark, "eee5e491-9c31-4a38-84d8-50c9163ef559")
+    assert benchmark.name == "CIS Compliance - Microsoft Windows Server"
+
+    assert benchmark.get_device_compliances("Remote Assistance") == DEVICE_COMPLIANCES["results"]
 
 
 def test_get_rule_compliances(cbcsdk_mock):

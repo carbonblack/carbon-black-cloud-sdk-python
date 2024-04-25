@@ -86,3 +86,29 @@ By using the following the example, you can reasses a benchmark
     >>> benchmark.execute_action("REASSESS")
     >>> # Execute for a specific set of devices
     >>> benchmark.execute_action("REASSESS", [ 1, 2, 3 ])
+
+
+Device Compliance Summary
+---------------
+
+By using the following the example, you can fetch the compliance percentage for each device assessed by the Compliance Benchmark
+
+.. code-block:: python
+
+    >>> from cbc_sdk import CBCloudAPI
+    >>> from cbc_sdk.workload import ComplianceBenchmark
+    >>> api = CBCloudAPI(profile='sample')
+    >>> benchmark = api.select(ComplianceBenchmark).first()
+    >>> summaries = benchmark.get_device_compliances()
+    >>> print(summaries[0])
+    {
+        "device_id": 39074613,
+        "device_name": "Example\\Win2022",
+        "os_version": "Windows Server 2022 x64",
+        "compliance_percentage": 93,
+        "last_assess_time": "2024-04-16T00:00:00.014765Z",
+        "excluded_on": None,
+        "excluded_by": None,
+        "reason": None,
+        "deployment_type": "WORKLOAD"
+    }

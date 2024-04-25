@@ -229,3 +229,20 @@ RULE_COMPLIANCE_DEVICE_SEARCH = {
         }
     ]
 }
+
+DEVICE_COMPLIANCES = {
+    "num_found": 1,
+    "results": [
+        {
+            "device_id": 39074613,
+            "device_name": "Example\\Win2022",
+            "os_version": "Windows Server 2022 x64",
+            "compliance_percentage": 93,
+            "last_assess_time": "2024-04-16T00:00:00.014765Z",
+            "excluded_on": None,
+            "excluded_by": None,
+            "reason": None,
+            "deployment_type": "WORKLOAD"
+        }
+    ]
+}

@@ -62,19 +62,21 @@ class ComplianceBenchmark(UnrefreshableModel):
         """
         return ComplianceBenchmarkQuery(cls, cb)
 
-    def get_benchmark_set_summary(self):
-        """
-        Fetches the compliance summary for the current benchmark set.
+    # API Not Supported
+    #
+    # def get_benchmark_set_summary(self):
+    #     """
+    #     Fetches the compliance summary for the current benchmark set.
 
-        Required Permissions:
-            complianceAssessment.data(READ)
+    #     Required Permissions:
+    #         complianceAssessment.data(READ)
 
-        Returns:
-            dict: The benchmark compliance summary
-        """
-        url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/compliance/summary"
-        results = self._cb.get_object(url)
-        return results
+    #     Returns:
+    #         dict: The benchmark compliance summary
+    #     """
+    #     url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/compliance/summary"
+    #     results = self._cb.get_object(url)
+    #     return results
 
     @staticmethod
     def get_compliance_schedule(cb):
@@ -279,47 +281,45 @@ class ComplianceBenchmark(UnrefreshableModel):
 
         return self._cb.post_object(url, body=args).json()
 
-    # API Not supported
-    #
-    # def get_device_compliances(self, query=""):
-    #     """
-    #     Fetches devices compliance summaries associated with the benchmark set.
-    #
-    #     Args:
-    #         query (str, optional): The query to filter results.
-    #
-    #     Returns:
-    #         [dict]: List of Device Compliances
-    #
-    #     Example:
-    #         >>> cb = CBCloudAPI(profile="example_profile")
-    #         >>> benchmark_set = cb.select(ComplianceBenchmark).first()
-    #         >>> rules = benchmark_set.get_device_compliance()
-    #     """
-    #     url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/compliance/devices/_search"
-    #     current = 0
-    #     device_compliances = []
-    #     while True:
-    #         resp = self._cb.post_object(url, body={
-    #             "query": query,
-    #             "rows": 10000,
-    #             "start": current,
-    #             "sort": [
-    #                 {
-    #                     "field": "device_name",
-    #                     "order": "DESC"
-    #                 }
-    #             ]
-    #         })
-    #         result = resp.json()
-    #
-    #         device_compliances.extend(result.get("results", []))
-    #         current = len(device_compliances)
-    #
-    #         if current >= result["num_found"]:
-    #             break
-    #
-    #     return device_compliances
+    def get_device_compliances(self, query=""):
+        """
+        Fetches devices compliance summaries associated with the benchmark set.
+
+        Args:
+            query (str, optional): The query to filter results.
+
+        Returns:
+            [dict]: List of Device Compliances
+
+        Example:
+            >>> cb = CBCloudAPI(profile="example_profile")
+            >>> benchmark_set = cb.select(ComplianceBenchmark).first()
+            >>> rules = benchmark_set.get_device_compliance()
+        """
+        url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/compliance/devices/_search"
+        current = 0
+        device_compliances = []
+        while True:
+            resp = self._cb.post_object(url, body={
+                "query": query,
+                "rows": 10000,
+                "start": current,
+                "sort": [
+                    {
+                        "field": "device_name",
+                        "order": "DESC"
+                    }
+                ]
+            })
+            result = resp.json()
+
+            device_compliances.extend(result.get("results", []))
+            current = len(device_compliances)
+
+            if current >= result["num_found"]:
+                break
+
+        return device_compliances
 
     def get_rule_compliances(self, query=""):
         """
