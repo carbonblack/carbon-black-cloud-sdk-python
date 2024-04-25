@@ -285,6 +285,9 @@ class ComplianceBenchmark(UnrefreshableModel):
         """
         Fetches devices compliance summaries associated with the benchmark set.
 
+        Required Permissions:
+            complianceAssessment.data(READ)
+
         Args:
             query (str, optional): The query to filter results.
 
@@ -294,7 +297,7 @@ class ComplianceBenchmark(UnrefreshableModel):
         Example:
             >>> cb = CBCloudAPI(profile="example_profile")
             >>> benchmark_set = cb.select(ComplianceBenchmark).first()
-            >>> rules = benchmark_set.get_device_compliance()
+            >>> device_compliances = benchmark_set.get_device_compliance()
         """
         url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/compliance/devices/_search"
         current = 0
