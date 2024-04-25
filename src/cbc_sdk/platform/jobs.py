@@ -31,8 +31,6 @@ class Job(NewBaseModel):
     primary_key = "id"
     swagger_meta_file = "platform/models/job.yaml"
 
-    JOB_TYPES_WAITING_ON_STATUS = ('ENDPOINTS', )
-
     def __init__(self, cb, model_unique_id, initial_data=None):
         """
         Initialize the Job object.
@@ -43,13 +41,10 @@ class Job(NewBaseModel):
             initial_data (dict): Initial data used to populate the job.
         """
         super(Job, self).__init__(cb, model_unique_id, initial_data)
-        self._wait_status = False
         if model_unique_id is not None and initial_data is None:
             self._refresh()
         else:
             self._full_init = True
-        if self._info['type'] in self.JOB_TYPES_WAITING_ON_STATUS:
-            self._wait_status = True
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -115,37 +110,21 @@ class Job(NewBaseModel):
         backoff = BackoffHandler(self._cb, timeout=timeout)
         with backoff as b:
             errorcount = 0
-            if self._wait_status:
-                status = ""
-                while status not in ("FAILED", "COMPLETED"):
-                    b.pause()
-                    try:
-                        self._refresh()
-                        if self.status != status:
-                            status = self.status
-                            b.reset()
-                    except (ServerError, ObjectNotFoundError):
-                        errorcount += 1
-                        if errorcount == 3:
-                            raise
-                        status = ""
-                if status == "FAILED":
-                    raise ApiError(f"Job {self.id} reports failure")
-            else:
-                progress_data = (1, 0, '')
-                last_nc = 0
-                while progress_data[1] < progress_data[0]:
-                    b.pause()
-                    try:
-                        progress_data = self.get_progress()
-                        if progress_data[1] > last_nc:
-                            last_nc = progress_data[1]
-                            b.reset()
-                    except (ServerError, ObjectNotFoundError):
-                        errorcount += 1
-                        if errorcount == 3:
-                            raise
-                        progress_data = (1, 0, '')
+            status = ""
+            while status not in ("FAILED", "COMPLETED"):
+                b.pause()
+                try:
+                    self._refresh()
+                    if self.status != status:
+                        status = self.status
+                        b.reset()
+                except (ServerError, ObjectNotFoundError):
+                    errorcount += 1
+                    if errorcount == 3:
+                        raise
+                    status = ""
+            if status == "FAILED":
+                raise ApiError(f"Job {self.id} reports failure")
         return self
 
     def await_completion(self, timeout=0):
