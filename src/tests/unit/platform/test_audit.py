@@ -14,9 +14,10 @@
 import pytest
 from cbc_sdk.errors import ApiError
 from cbc_sdk.rest_api import CBCloudAPI
-from cbc_sdk.platform import AuditLog
+from cbc_sdk.platform import AuditLog, Job
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.platform.mock_audit import AUDITLOGS_RESP, AUDIT_SEARCH_REQUEST, AUDIT_SEARCH_RESPONSE
+from tests.unit.fixtures.platform.mock_audit import (AUDITLOGS_RESP, AUDIT_SEARCH_REQUEST, AUDIT_SEARCH_RESPONSE,
+                                                     AUDIT_EXPORT_REQUEST, MOCK_AUDIT_EXPORT_JOB)
 
 
 @pytest.fixture(scope="function")
@@ -126,3 +127,25 @@ def test_async_search_audit_logs(cbcsdk_mock):
     assert result_list[3].actor_ip == "192.168.3.11"
     assert result_list[4].actor == "BELTALOWDA"
     assert result_list[4].actor_ip == "192.168.3.14"
+
+
+def test_export_audit_logs(cbcsdk_mock):
+    """Tests the basic functionality of the export() function."""
+    def on_post(url, body, **kwargs):
+        assert body == AUDIT_EXPORT_REQUEST
+        return {"job_id": 4805565}
+
+    cbcsdk_mock.mock_request("POST", "/audit_log/v1/orgs/test/logs/_export", on_post)
+    cbcsdk_mock.mock_request("GET", "/jobs/v1/orgs/test/jobs/4805565", MOCK_AUDIT_EXPORT_JOB)
+    api = cbcsdk_mock.api
+    query = api.select(AuditLog).where("description:FOO")
+    job = query.export()
+    assert isinstance(job, Job)
+    assert job.id == 4805565
+
+
+def test_export_bad_format(cb):
+    """Tests calling export() with a bad format name."""
+    query = cb.select(AuditLog)
+    with pytest.raises(ApiError):
+        query.export("bogusformat")

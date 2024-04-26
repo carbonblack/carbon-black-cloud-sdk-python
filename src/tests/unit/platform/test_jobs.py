@@ -11,8 +11,7 @@ from cbc_sdk.errors import ServerError, ApiError
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_jobs import (FIND_ALL_JOBS_RESP, JOB_DETAILS_1, JOB_DETAILS_2, PROGRESS_1,
-                                                    PROGRESS_2, AWAIT_COMPLETION_PROGRESS,
-                                                    AWAIT_COMPLETION_DETAILS_PROGRESS_1,
+                                                    PROGRESS_2, AWAIT_COMPLETION_DETAILS_PROGRESS_1,
                                                     AWAIT_COMPLETION_DETAILS_PROGRESS_2)
 
 
@@ -101,47 +100,7 @@ def test_load_job_and_get_progress(cbcsdk_mock, jobid, total, completed, msg, lo
 
 
 def test_job_await_completion(cbcsdk_mock):
-    """Test the functionality of await_completion()."""
-    first_time = True
-    pr_index = 0
-
-    def on_progress(url, query_params, default):
-        nonlocal first_time, pr_index
-        if first_time:
-            first_time = False
-            raise ServerError(400, "Not yet")
-        assert pr_index < len(AWAIT_COMPLETION_PROGRESS), "Too many progress calls made"
-        return_value = AWAIT_COMPLETION_PROGRESS[pr_index]
-        pr_index += 1
-        return return_value
-
-    cbcsdk_mock.mock_request('GET', '/jobs/v1/orgs/test/jobs/12345', JOB_DETAILS_1)
-    cbcsdk_mock.mock_request('GET', '/jobs/v1/orgs/test/jobs/12345/progress', on_progress)
-    api = cbcsdk_mock.api
-    job = api.select(Job, 12345)
-    future = job.await_completion()
-    result = future.result()
-    assert result is job
-    assert first_time is False
-    assert pr_index == len(AWAIT_COMPLETION_PROGRESS)
-
-
-def test_job_await_completion_error(cbcsdk_mock):
-    """Test that await_completion() throws a ServerError if it gets too many ServerErrors internally."""
-    def on_progress(url, query_params, default):
-        raise ServerError(400, "Ain't happening")
-
-    cbcsdk_mock.mock_request('GET', '/jobs/v1/orgs/test/jobs/12345', JOB_DETAILS_1)
-    cbcsdk_mock.mock_request('GET', '/jobs/v1/orgs/test/jobs/12345/progress', on_progress)
-    api = cbcsdk_mock.api
-    job = api.select(Job, 12345)
-    future = job.await_completion()
-    with pytest.raises(ServerError):
-        future.result()
-
-
-def test_job_await_completion_status(cbcsdk_mock):
-    """Test that await_completion() functions if _wait_status is set."""
+    """Test that await_completion() functions."""
     pr_index = 0
 
     def on_details(url, query_params, default):
@@ -162,7 +121,7 @@ def test_job_await_completion_status(cbcsdk_mock):
     assert pr_index == len(AWAIT_COMPLETION_DETAILS_PROGRESS_1)
 
 
-def test_job_await_completion_status_error(cbcsdk_mock):
+def test_job_await_completion_error(cbcsdk_mock):
     """Test that await_completion() throws a ServerError if it gets too many ServerErrors internally."""
     first_time = True
 
@@ -184,7 +143,7 @@ def test_job_await_completion_status_error(cbcsdk_mock):
         future.result()
 
 
-def test_job_await_completion_status_failure(cbcsdk_mock):
+def test_job_await_completion_failure(cbcsdk_mock):
     """Test that await_completion() throws an ApiError if it gets a FAILURE response."""
     pr_index = 0
 
