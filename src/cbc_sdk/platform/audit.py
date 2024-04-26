@@ -26,8 +26,10 @@ from cbc_sdk.base import (UnrefreshableModel, BaseQuery, QueryBuilder, QueryBuil
                           CriteriaBuilderSupportMixin, ExclusionBuilderSupportMixin, IterableQueryMixin,
                           AsyncQueryMixin)
 from cbc_sdk.errors import ApiError
+from cbc_sdk.platform.jobs import Job
 
 from backports._datetime_fromisoformat import datetime_fromisoformat
+
 
 """Model Class"""
 
@@ -42,16 +44,15 @@ class AuditLog(UnrefreshableModel):
     urlobject = "/audit_log/v1/orgs/{0}/logs"
     swagger_meta_file = "platform/models/audit_log.yaml"
 
-    def __init__(self, cb, model_unique_id, initial_data=None):
+    def __init__(self, cb, initial_data=None):
         """
         Creates a new ``AuditLog`` object.
 
         Args:
             cb (BaseAPI): Reference to API object used to communicate with the server.
-            model_unique_id (int): Not used.
             initial_data (dict): Initial data to fill in the audit log record details.
         """
-        super(AuditLog, self).__init__(cb, model_unique_id, initial_data, force_init=False, full_doc=True)
+        super(AuditLog, self).__init__(cb, -1, initial_data, force_init=False, full_doc=True)
 
     @classmethod
     def _query_implementation(cls, cb, **kwargs):
@@ -69,6 +70,9 @@ class AuditLog(UnrefreshableModel):
         """
         Retrieve queued audit logs from the Carbon Black Cloud server.
 
+        Deprecated:
+            This method uses an outdated API. Use ``get_queued_auditlogs()`` instead.
+
         Required Permissions:
             org.audits (READ)
 
@@ -80,6 +84,23 @@ class AuditLog(UnrefreshableModel):
         """
         res = cb.get_object("/integrationServices/v3/auditlogs")
         return res.get("notifications", [])
+
+    @staticmethod
+    def get_queued_auditlogs(cb):
+        """
+        Retrieve queued audit logs from the Carbon Black Cloud server.
+
+        Required Permissions:
+            org.audits (READ)
+
+        Args:
+            cb (BaseAPI): Reference to API object used to communicate with the server.
+
+        Returns:
+            list[AuditLog]: List of objects representing the audit logs, or an empty list if none available.
+        """
+        res = cb.get_object(AuditLog.urlobject.format(cb.credentials.org_key) + "/_queue")
+        return [AuditLog(cb, data) for data in res.get("results", [])]
 
 
 """Query Class"""
@@ -101,6 +122,7 @@ class AuditLogQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportM
     * ``request_url`` - URL of the request that caused the creation of this audit log.
     * ``description`` - Text description of this audit log.
     """
+    VALID_EXPORT_FORMATS = ("csv", "json")
 
     def __init__(self, doc_class, cb):
         """
@@ -169,6 +191,11 @@ class AuditLogQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportM
     def add_time_criteria(self, **kwargs):
         """
         Adds a ``create_time`` value to either criteria or exclusions.
+
+        Examples:
+            >>> query_specify_start_and_end = api.select(AuditLog).
+            ...     add_time_criteria(start="2023-10-20T20:34:07Z", end="2023-10-30T20:34:07Z")
+            >>> query_specify_exclude_range = api.select(AuditLog).add_time_criteria(range='-3d', exclude=True)
 
         Args:
             kwargs (dict): Keyword arguments to this method.
@@ -329,7 +356,7 @@ class AuditLogQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportM
 
             results = result.get("results", [])
             for item in results:
-                yield self._doc_class(self._cb, 0, item)
+                yield self._doc_class(self._cb, item)
                 current += 1
                 numrows += 1
 
@@ -357,4 +384,33 @@ class AuditLogQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportM
         resp = self._cb.post_object(url, body=request)
         result = resp.json()
         results = result.get("results", [])
-        return [self._doc_class(self._cb, 0, item) for item in results]
+        return [self._doc_class(self._cb, item) for item in results]
+
+    def export(self, format="csv"):
+        """
+        Export audit logs using the Job service.
+
+        The actual results are retrieved by waiting for the resulting job to complete, then calling one of the methods
+        on ``Job`` to retrieve the results.
+
+        Example:
+            >>> audit_log_query = cb.select(AuditLog).add_time_criteria(range="-1d")
+            >>> audit_log_export_job = audit_log_query.export(format="csv")
+            >>> results = audit_log_export_job.await_completion().result()
+
+        Args:
+            format (str): Format in which to return results, either "csv" or "json".  Default is "csv".
+
+        Returns:
+            Job: The object representing the export job.
+        """
+        if format not in AuditLogQuery.VALID_EXPORT_FORMATS:
+            raise ApiError(f"invalid export format '{format}'")
+        url = self._build_url("/_export")
+        request = self._build_request(0, -1)
+        request["format"] = format
+        resp = self._cb.post_object(url, body=request)
+        result = resp.json()
+        if "job_id" in result:
+            return Job(self._cb, result["job_id"])
+        return None  # pragma: no cover
