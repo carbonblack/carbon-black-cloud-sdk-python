@@ -42,7 +42,7 @@ Searching for Audit Log Events
 Audit log events may be searched for in a manner similar to other objects within the SDK::
 
     # assume "api" contains our CBCloudAPI reference as above
-    >>> query = api.select(AuditLog).where("description:login")
+    >>> query = api.select(AuditLog).where("description:Logged in")
     >>> query.sort_by("create_time")
     >>> for event in query:
     ...     print(f"{event.create_time}: {event.actor} {event.description}")
@@ -55,7 +55,7 @@ Exporting Audit Log Events
 Any search query may also be used to export audit log data, in either CSV or JSON format::
 
     # assume "api" contains our CBCloudAPI reference as above
-    >>> query = api.select(AuditLog).where("description:login")
+    >>> query = api.select(AuditLog).where("description:Logged in")
     >>> query.sort_by("create_time")
     >>> job = query.export("csv")
     >>> result = job.await_completion().result()
