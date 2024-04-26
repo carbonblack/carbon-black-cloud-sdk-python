@@ -669,7 +669,8 @@ class AsyncProcessQuery(Query):
 
     def set_collapse_field(self, field):
         """
-        Sets the 'collapse_field' query parameter, which queries the file name depending on field
+        Sets the 'collapse_field' query parameter, which queries the file name depending on field.
+
         Args:
             field (list): query parameters to get file details.
         """

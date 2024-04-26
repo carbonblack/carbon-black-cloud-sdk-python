@@ -815,6 +815,7 @@ def test_process_query_start_rows(cbcsdk_mock):
     assert process_q_params == expected_params
     assert process._batch_size == 102
 
+
 def test_process_query_collapse_field(cbcsdk_mock):
     """Testing AsyncProcessQuery.set_collapse_field()"""
     api = cbcsdk_mock.api
@@ -834,6 +835,7 @@ def test_process_query_collapse_field(cbcsdk_mock):
                        "collapse_field": ["process_sha256"]
                        }
     assert process_q_params == expected_params
+
 
 def test_process_sort_by(cbcsdk_mock):
     """Testing AsyncProcessQuery.sort_by()."""
