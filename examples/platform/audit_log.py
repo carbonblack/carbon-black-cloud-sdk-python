@@ -12,11 +12,17 @@
 
 """Example script which collects audit logs
 
-The Audit log API provides a read-once queue so no search parameters are requied.
-The command line takes the command (get_audit_logs), the total time to run for in seconds and
-the polling period, also in seconds.  This command will run for 180 seconds (3 minutes) polling for new audit
-logs every 30 seconds.
-> python examples/platform/audit_log.py --profile DEMO_PROFILE get_audit_logs -r 180 -p 30
+This script demonstrates how to use Audit Logs in the SDK and the three different APIs.
+    * Search
+    * Export
+    * Queue
+
+    This example has minimal command line parsing in order to reduce complexity and focus on the SDK functions.
+    Review the Authentication section of the Read the Docs for information about Authentication in the SDK
+    https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/authentication/
+
+    This command line will use "DEMO PROFILE" from the credentials file and poll every 30 seconds for three minutes.
+    > python examples/platform/audit_log.py --profile DEMO_PROFILE get_audit_logs -r 180 -p 30
 """
 
 import sys
@@ -36,7 +42,8 @@ def deprecated_get_audit_logs(cb, args):
     for equivalent functionality using an updated API signature.
     """
     print("The AuditLog.get_auditlogs() method is deprecated.")
-    print("You should have a look at the new example script and change to a new method.")
+    print("You should have a look at and change to a new method.")
+    print("Field names have changed from CamelCase to snake_case.")
     poll_interval = args.poll_interval
     run_period = args.run_period
 
@@ -52,7 +59,7 @@ def deprecated_get_audit_logs(cb, args):
         time.sleep(poll_interval)
         run_period = run_period - poll_interval
 
-    print("Run time completed")
+    print("deprecated_get_audit_logs completed")
 
 
 def get_audit_logs_from_queue(cb, args):
@@ -60,6 +67,7 @@ def get_audit_logs_from_queue(cb, args):
 
     Uses the queue endpoint.
     """
+    print("Starting get_audit_logs_from_queue")
     poll_interval = args.poll_interval
     run_period = args.run_period
 
@@ -74,36 +82,58 @@ def get_audit_logs_from_queue(cb, args):
         time.sleep(poll_interval)
         run_period = run_period - poll_interval
 
-    print("Run time completed")
+    print("get_audit_logs_from_queue completed")
 
 
-def search_audit_logs(cb, args):
-    """Does one request for audit logs exercising search criteria. Uses the /_search endpoint."""
+def search_audit_logs(cb):
+    """Shows requests for audit logs exercising search criteria. Uses the /_search endpoint."""
+    print("Starting search_audit_logs")
     # add_time_criteria can stake a start and end time, or a range
     # add_time_criteria(start="2024-04-23T09:00:00Z", end="2024-04-23T10:40:00Z")
     audit_log_records = cb.select(AuditLog).add_time_criteria(range="-3d").add_boolean_criteria("verbose", True)\
-        .add_criteria("description", ["Connector (App)"])
+        .add_criteria("description", ["logged in"])
+    print("Found {} alert records".format(len(audit_log_records)))
+
+    # Instead of the criteria function, a lucene style query can be used in a where clause for comparable behaviour
+    # to the search on the Audit Log page of the Carbon Black Cloud console.
+    audit_log_records = cb.select(AuditLog).add_time_criteria(range="-3d").where("description:login")
     print("Found {} alert records".format(len(audit_log_records)))
 
     for a in audit_log_records:
         print("{}".format(a))
 
-    print("End of search results.")
+    print("search_audit_logs completed")
+
+
+def export_audit_logs(cb):
+    """Does one request for audit logs exercising search criteria and then exports via the Job Service.
+
+    Uses the /_export endpoint.
+    """
+    print("Starting export_audit_logs")
+    audit_log_query = cb.select(AuditLog).add_time_criteria(range="-1d")
+    audit_log_export_job = audit_log_query.export(format="csv")
+    results = audit_log_export_job.await_completion().result()
+    print(results)
+    results = audit_log_export_job.get_output_as_string()
+    print(results)
+
+    print("Async Export in json format")
+    audit_log_export_job = cb.select(AuditLog).add_time_criteria(range="-1d").export(format="json")
+    results = audit_log_export_job.get_output_as_file("/my/home/directory/audit_results.json")
+    print("export_audit_logs complete")
 
 
 def main():
-    """Main function for Audit Logs example script."""
-    """This script demonstrates how to use Audit Logs in the SDK and the three different APIs.
+    """Main function for Audit Logs example script.
+
+    This script demonstrates how to use Audit Logs in the SDK and the three different APIs.
         * Search
         * Export
         * Queue
 
-        This example does not use command line parsing in order to reduce complexity and focus on the SDK functions.
-        Review the Authentication section of the Read the Docs for information about Authentication in the SDK
-        https://carbon-black-cloud-python-sdk.readthedocs.io/en/latest/authentication/
-
-        This is written for clarity of explanation, not perfect coding practices.
-        """
+    This is written for clarity of explanation, not perfect coding practices.
+    """
     # CBCloudAPI is the connection to the cloud.  It holds the credentials for connectivity.
     # To execute this script, the profile must have an API key with the following permissions.
     # If you are restricted in the actions you're allowed to perform, expect a 403 response for missing permissions.
@@ -123,9 +153,11 @@ def main():
     args = parser.parse_args()
     cb = get_cb_cloud_object(args)
 
-    search_audit_logs(cb, args)
+    export_audit_logs(cb)
+    search_audit_logs(cb)
     get_audit_logs_from_queue(cb, args)
     deprecated_get_audit_logs(cb, args)
+    print("The End")
 
 
 if __name__ == "__main__":
