@@ -62,22 +62,6 @@ class ComplianceBenchmark(UnrefreshableModel):
         """
         return ComplianceBenchmarkQuery(cls, cb)
 
-    # API Not Supported
-    #
-    # def get_benchmark_set_summary(self):
-    #     """
-    #     Fetches the compliance summary for the current benchmark set.
-
-    #     Required Permissions:
-    #         complianceAssessment.data(READ)
-
-    #     Returns:
-    #         dict: The benchmark compliance summary
-    #     """
-    #     url = self.urlobject.format(self._cb.credentials.org_key) + f"{self.id}/compliance/summary"
-    #     results = self._cb.get_object(url)
-    #     return results
-
     @staticmethod
     def get_compliance_schedule(cb):
         """
