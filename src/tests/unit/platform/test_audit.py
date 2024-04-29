@@ -12,10 +12,12 @@
 """Tests for the audit logs APIs."""
 
 import pytest
+from cbc_sdk.errors import ApiError
 from cbc_sdk.rest_api import CBCloudAPI
-from cbc_sdk.platform.audit import AuditLog
+from cbc_sdk.platform import AuditLog, Job
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
-from tests.unit.fixtures.platform.mock_audit import AUDITLOGS_RESP
+from tests.unit.fixtures.platform.mock_audit import (AUDITLOGS_RESP, AUDIT_SEARCH_REQUEST, AUDIT_SEARCH_RESPONSE,
+                                                     AUDIT_EXPORT_REQUEST, MOCK_AUDIT_EXPORT_JOB)
 
 
 @pytest.fixture(scope="function")
@@ -35,15 +37,115 @@ def cbcsdk_mock(monkeypatch, cb):
 # ==================================== UNIT TESTS BELOW ====================================
 
 
-def test_no_create_object_for_now(cb):
-    """Validates that we can't create an AuditLog object. Remove when we have a better implementation."""
-    with pytest.raises(NotImplementedError):
-        AuditLog(cb, 0)
-
-
 def test_get_auditlogs(cbcsdk_mock):
     """Tests getting audit logs."""
     cbcsdk_mock.mock_request("GET", "/integrationServices/v3/auditlogs", AUDITLOGS_RESP)
     api = cbcsdk_mock.api
     result = AuditLog.get_auditlogs(api)
     assert len(result) == 5
+
+
+def test_get_queued_auditlogs(cbcsdk_mock):
+    """Tests the get_queued_auditlogs function."""
+    cbcsdk_mock.mock_request("GET", "/audit_log/v1/orgs/test/logs/_queue", AUDIT_SEARCH_RESPONSE)
+    api = cbcsdk_mock.api
+    result = AuditLog.get_queued_auditlogs(api)
+    assert len(result) == 5
+    for v in result:
+        assert isinstance(v, AuditLog)
+
+
+def test_search_audit_logs_with_all_bells_and_whistles(cbcsdk_mock):
+    """Tests the generation and execution of a search request."""
+
+    def on_post(url, body, **kwargs):
+        assert body == AUDIT_SEARCH_REQUEST
+        return AUDIT_SEARCH_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/audit_log/v1/orgs/test/logs/_search", on_post)
+    api = cbcsdk_mock.api
+    query = api.select(AuditLog).where("description:FOO").add_criteria("actor_ip", ["10.29.99.1"])
+    query.add_criteria("actor", ["ABCDEFGHIJ"]).add_criteria("request_url", ["https://inclusiveladyship.com"])
+    query.add_criteria("description", ["FOOBAR"]).add_boolean_criteria("flagged", True)
+    query.add_boolean_criteria("verbose", False)
+    query.add_time_criteria(start="2024-03-01T00:00:00", end="2024-03-31T22:00:00")
+    query.add_exclusions("actor_ip", ["10.29.99.254"]).add_exclusions("actor", ["JIHGFEDCBA"])
+    query.add_exclusions("request_url", ["https://links.inclusiveladyship.com"])
+    query.add_exclusions("description", ["BLORT"]).add_boolean_criteria("flagged", False, exclude=True)
+    query.add_boolean_criteria("verbose", True, exclude=True)
+    query.add_time_criteria(range="-5d", exclude=True).sort_by("actor_ip", "ASC")
+    result_list = list(query)
+    assert len(result_list) == 5
+    assert query._count() == 5
+    assert result_list[0].actor == "DEFGHIJKLM"
+    assert result_list[0].actor_ip == "192.168.0.5"
+    assert result_list[1].actor == "BELTALOWDA"
+    assert result_list[1].actor_ip == "192.168.3.5"
+    assert result_list[2].actor == "BELTALOWDA"
+    assert result_list[2].actor_ip == "192.168.3.8"
+    assert result_list[3].actor == "BELTALOWDA"
+    assert result_list[3].actor_ip == "192.168.3.11"
+    assert result_list[4].actor == "BELTALOWDA"
+    assert result_list[4].actor_ip == "192.168.3.14"
+
+
+def test_criteria_errors(cb):
+    """Tests error handling in the criteria-setting functions on the query object."""
+    query = cb.select(AuditLog)
+    with pytest.raises(ApiError):
+        query.add_time_criteria(start="2024-03-01T00:00:00", end="2024-03-31T22:00:00", range="-5d")
+    with pytest.raises(ApiError):
+        query.add_time_criteria(start="2024-03-01T00:00:00")
+    with pytest.raises(ApiError):
+        query.add_time_criteria(end="2024-03-31T22:00:00")
+    with pytest.raises(ApiError):
+        query.add_time_criteria(start="2024-03-01T00:00:00", range="-5d")
+    with pytest.raises(ApiError):
+        query.add_time_criteria(end="2024-03-31T22:00:00", range="-5d")
+    with pytest.raises(ApiError):
+        query.add_time_criteria(start="BOGUS", end="2024-03-31T22:00:00")
+    with pytest.raises(ApiError):
+        query.sort_by("actor_ip", "BOGUS")
+
+
+def test_async_search_audit_logs(cbcsdk_mock):
+    """Tests async query of audit logs."""
+    cbcsdk_mock.mock_request("POST", "/audit_log/v1/orgs/test/logs/_search", AUDIT_SEARCH_RESPONSE)
+    api = cbcsdk_mock.api
+    query = api.select(AuditLog)
+    future = query.execute_async()
+    result_list = future.result()
+    assert isinstance(result_list, list)
+    assert len(result_list) == 5
+    assert result_list[0].actor == "DEFGHIJKLM"
+    assert result_list[0].actor_ip == "192.168.0.5"
+    assert result_list[1].actor == "BELTALOWDA"
+    assert result_list[1].actor_ip == "192.168.3.5"
+    assert result_list[2].actor == "BELTALOWDA"
+    assert result_list[2].actor_ip == "192.168.3.8"
+    assert result_list[3].actor == "BELTALOWDA"
+    assert result_list[3].actor_ip == "192.168.3.11"
+    assert result_list[4].actor == "BELTALOWDA"
+    assert result_list[4].actor_ip == "192.168.3.14"
+
+
+def test_export_audit_logs(cbcsdk_mock):
+    """Tests the basic functionality of the export() function."""
+    def on_post(url, body, **kwargs):
+        assert body == AUDIT_EXPORT_REQUEST
+        return {"job_id": 4805565}
+
+    cbcsdk_mock.mock_request("POST", "/audit_log/v1/orgs/test/logs/_export", on_post)
+    cbcsdk_mock.mock_request("GET", "/jobs/v1/orgs/test/jobs/4805565", MOCK_AUDIT_EXPORT_JOB)
+    api = cbcsdk_mock.api
+    query = api.select(AuditLog).where("description:FOO")
+    job = query.export()
+    assert isinstance(job, Job)
+    assert job.id == 4805565
+
+
+def test_export_bad_format(cb):
+    """Tests calling export() with a bad format name."""
+    query = cb.select(AuditLog)
+    with pytest.raises(ApiError):
+        query.export("bogusformat")
