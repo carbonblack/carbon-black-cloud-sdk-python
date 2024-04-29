@@ -1,5 +1,43 @@
 Changelog
 ================================
+CBC SDK 1.5.2 - Released TBD
+-----------------------------------------
+
+New Features:
+
+* Enhanced Audit Log support with search and export capabilities
+* CIS Benchmarking:
+
+  * Schedule compliance scans
+  * Search, create, update, and delete benchmark sets
+  * Search and modify benchmark rules within a benchmark set
+  * Search and export device summaries for benchmark sets
+  * Enable, disable, and trigger reassessment on benchmark sets or individual devices
+  * Search benchmark set summaries
+  * Search and export device compliance summaries
+  * Search and export rule compliance summaries
+  * Search rule results for devices
+  * Get and acknowledge compliance bundle version updates, show differences, get rule info
+
+Updates:
+
+* Added `collapse_field` parameter for process searches
+* Added an exponential backoff for polling of Job completion status
+* Added rule configurations for event reporting and sensor operation exclusions
+
+Bug Fixes:
+
+* Fixed implementation of iterable queries for consistency across the SDK
+* Fixed parsing of credential files that are encoded in UTF-16
+* Fixed processing of Job so that it doesn't rely on an API call that doesn't give proper answers
+* Fixed missing properties in Process
+
+Documentation:
+
+* Fixed documentation for Alert and Process to include links to the Developer Network field descriptions
+* New example script for identifying devices that have checked in but have not sent any events
+* Added guide page for Devices including searching and actions
+
 CBC SDK 1.5.1 - Released January 30, 2024
 -----------------------------------------
 
