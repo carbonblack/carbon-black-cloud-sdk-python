@@ -1,0 +1,53 @@
+type: object
+properties:
+  id:
+    type: string
+    description: Unique identifier for the benchmark set.
+  name:
+    type: string
+    description: Name of the benchmark set.
+  version:
+    type: string
+    description: Version of the benchmark set.
+  os_family:
+    type: string
+    description: Operating system family associated with the benchmark set (e.g., WINDOWS_SERVER).
+  enabled:
+    type: boolean
+    description: Indicates whether the benchmark set is enabled or not.
+  type:
+    type: string
+    description: Type of the benchmark set (e.g., Custom).
+  supported_os_info:
+    type: array
+    description: Array of supported operating system information.
+    items:
+      type: object
+      properties:
+        os_metadata_id:
+          type: string
+          description: Unique identifier for the OS metadata.
+        os_type:
+          type: string
+          description: Type of the operating system (e.g., WINDOWS).
+        os_name:
+          type: string
+          description: Name of the operating system.
+        cis_version:
+          type: string
+          description: CIS (Center for Internet Security) version associated with the OS.
+  created_by:
+    type: string
+    description: Name of the user who created the benchmark set.
+  updated_by:
+    type: string
+    description: Email of the user who last updated the benchmark set.
+  create_time:
+    type: string
+    description: Timestamp indicating when the benchmark set was created (in ISO 8601 format).
+  update_time:
+    type: string
+    description: Timestamp indicating when the benchmark set was last updated (in ISO 8601 format).
+  release_time:
+    type: string
+    description: Timestamp indicating when the benchmark set was released (in ISO 8601 format).

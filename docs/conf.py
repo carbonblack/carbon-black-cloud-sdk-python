@@ -19,11 +19,11 @@ sys.path.insert(0, os.path.abspath('.'))
 # -- Project information -----------------------------------------------------
 
 project = 'Carbon Black Cloud Python SDK'
-copyright = '2020-2023 VMware Carbon Black'
+copyright = '2020-2024 VMware Carbon Black'
 author = 'Developer Relations'
 
 # The full version, including alpha/beta/rc tags
-release = '1.5.1'
+release = '1.5.2'
 
 
 # -- General configuration ---------------------------------------------------

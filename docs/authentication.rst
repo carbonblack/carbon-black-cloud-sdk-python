@@ -3,7 +3,6 @@
 Authentication
 ==============
 
-
 Carbon Black Cloud APIs require authentication to secure your data.
 
 There are several methods for authentication listed below. Every method requires
@@ -51,9 +50,6 @@ Store the credential with a profile name, and reference the profile when creatin
   ...     lr_session.close()
 
 For more examples on Live Response, check :doc:`live-response`
-
-
-
 
 Authentication Methods
 ----------------------
@@ -117,8 +113,9 @@ Authentication Methods
 With a File
 ^^^^^^^^^^^
 Credentials may be supplied in a file that resembles a Windows ``.INI`` file in structure, which allows for
-multiple "profiles" or sets of credentials to be supplied in a single file.  The file format is backwards compatible with
-CBAPI, so older files can continue to be used.
+multiple "profiles" or sets of credentials to be supplied in a single file.  The file format is backwards compatible
+with CBAPI, so older files can continue to be used.  The file must be encoded as UTF-8, or as UTF-16 using either
+big-endian or little-endian format.
 
 **Example of a credentials file containing two profiles**
 

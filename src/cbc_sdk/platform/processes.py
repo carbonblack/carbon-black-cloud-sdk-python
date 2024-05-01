@@ -54,6 +54,11 @@ class Process(UnrefreshableModel):
     Objects of this type are retrieved through queries to the Carbon Black Cloud server, such as via
     ``AsyncProcessQuery``.
 
+    Processes have many fields, too many to list here; for a complete list of available fields, visit
+    `the Search Fields page
+    <https://developer.carbonblack.com/reference/carbon-black-cloud/platform/latest/platform-search-fields/>`_
+    on the Carbon Black Developer Network, and filter on the ``PROCESS`` route.
+
     Examples:
         >>> # use the Process GUID directly
         >>> process = api.select(Process, "WNEXFKQ7-00050603-0000066c-00000000-1d6c9acb43e29bb")
@@ -662,6 +667,18 @@ class AsyncProcessQuery(Query):
         self._batch_size = rows
         return self
 
+    def set_collapse_field(self, field):
+        """
+        Sets the 'collapse_field' query parameter, which queries the file name depending on field.
+
+        Args:
+            field (list): query parameters to get file details.
+        """
+        if not isinstance(field, list):
+            raise ApiError(f"Field must be list. {field} is a {type(field)}.")
+        self._collapse_field = field
+        return self
+
     def _submit(self):
         """
         Submits the query to the server.
@@ -1023,15 +1040,28 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
             else:
                 raise ApiError(f"Failed to get Process Tree: {result['exception']}")
 
-    def _perform_query(self):
+    def _perform_query(self, from_row=0, max_rows=-1):
         """
         Iterate over the results of the query.
 
         Required Permissions:
             org.search.events(CREATE, READ)
+
+        Args:
+            from_row (int): Row to start iterating from (default 0).
+            max_rows(int): Number of rows to enumerate (default -1, meaning "all rows").
+
+        Yields:
+            Process.Summary or Process.Tree: The enumerated results.
         """
-        for item in self.results:
+        returned_rows = 0
+        for ndx, item in enumerate(self.results):
+            if ndx < from_row:
+                continue
             yield item
+            returned_rows += 1
+            if 0 < max_rows <= returned_rows:
+                break
 
     @property
     def results(self):

@@ -816,6 +816,27 @@ def test_process_query_start_rows(cbcsdk_mock):
     assert process._batch_size == 102
 
 
+def test_process_query_collapse_field(cbcsdk_mock):
+    """Testing AsyncProcessQuery.set_collapse_field()"""
+    api = cbcsdk_mock.api
+    # use the update methods
+    process = api.select(Process).where("event_type:modload").add_criteria("device_id", [1234]).add_exclusions(
+        "crossproc_effective_reputation", ["REP_WHITE"])
+    process = process.set_collapse_field(["process_sha256"])
+
+    process_q_params = process._get_query_parameters()
+    expected_params = {"query": "event_type:modload",
+                       "criteria": {
+                           "device_id": [1234]
+                       },
+                       "exclusions": {
+                           "crossproc_effective_reputation": ["REP_WHITE"]
+                       },
+                       "collapse_field": ["process_sha256"]
+                       }
+    assert process_q_params == expected_params
+
+
 def test_process_sort_by(cbcsdk_mock):
     """Testing AsyncProcessQuery.sort_by()."""
     api = cbcsdk_mock.api
@@ -1448,3 +1469,30 @@ def test_tree_select(cbcsdk_mock):
 
     procTree = api.select(Process.Tree, "WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00")
     assert procTree is not None
+
+
+def test_process_missing_property(cbcsdk_mock):
+    """Testing Process missing property"""
+    def on_validation_post(url, body, **kwargs):
+        assert body == {"query": "process_guid:WNEXFKQ7\\-0002b226\\-000015bd\\-00000000\\-1d6225bbba74c00"}
+        return POST_PROCESS_VALIDATION_RESP
+
+    # mock the search validation
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation", on_validation_post)
+    # mock the POST of a search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to check search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=0"),
+                             GET_PROCESS_SEARCH_JOB_RESP)
+    # mock the GET to get search results
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/search_jobs/"
+                                     "2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=500"),
+                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP)
+    api = cbcsdk_mock.api
+    guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
+    process = api.select(Process, guid)
+
+    with pytest.raises(AttributeError):
+        process.invalid_property

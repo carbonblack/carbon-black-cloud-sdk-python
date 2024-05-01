@@ -999,25 +999,22 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
 
         return self._total_results
 
-    def _perform_query(self, from_row=1, max_rows=-1):
+    def _perform_query(self, from_row=0, max_rows=-1):
         """
         Performs the query and returns the results of the query in an iterable fashion.
-
-        Note:
-            Device v6 API uses base 1 instead of 0.
 
         Required Permissions:
             device(READ)
 
         Args:
-            from_row (int): The row to start the query at (default 1).
+            from_row (int): The row to start the query at (default 0).
             max_rows (int): The maximum number of rows to be returned (default -1, meaning "all").
 
         Yields:
             Device: The individual devices which match the query.
         """
         url = self._build_url("/_search")
-        current = from_row
+        current = from_row + 1
         numrows = 0
         still_querying = True
         while still_querying:
@@ -1038,7 +1035,7 @@ class DeviceSearchQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupp
                     still_querying = False
                     break
 
-            from_row = current
+            from_row = current - 1
             if current >= self._total_results:
                 still_querying = False
                 break

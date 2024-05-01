@@ -8,45 +8,58 @@ In the Carbon Black Cloud, *audit logs* are records of various organization-wide
 * Creation of connectors
 * LiveResponse events
 
-The Audit Log API allows these records to be retrieved in JSON format, sorted by time in ascending order
-(oldest records come first). The API call returns only *new* audit log records that have been added since
-the last time the call was made using the same API Key ID. Once records have been returned, they are *cleared*
-and will not be included in future responses.
-
-When reading audit log records using a *new* API key, the queue for reading audit logs will begin three days
-earlier. This may lead to duplicate data if audit log records were previously read with a different API key.
-
-.. note::
-    Future versions of the Carbon Black Cloud and this SDK will support a more flexible API for finding and retrieving
-    audit log records.  This Guide will be rewritten to cover this when it is incorporated into the SDK.
+The Audit Log API allows these records to be retrieved as objects, either by getting the most recent audit logs, or
+through a flexible search API.
 
 API Permissions
 ---------------
 
-To call this API function, use a custom API key created with a role containing the ``READ`` permission on
+To call the Audit Log APIs, use a custom API key created with a role containing the ``READ`` permission on
 ``org.audits``.
 
-Example of API Usage
---------------------
+Retrieving Queued Audit Log Events
+----------------------------------
 
-.. code-block:: python
+The Carbon Black Cloud maintains a queue of audit log events for each API key, which is initialized with the last three
+days of audit logs when the API key is created.  This demonstrates how to read audit log events from the queue::
 
-    import time
-    from cbc_sdk import CBCloudAPI
-    from cbc_sdk.platform import AuditLog
+    >>> from cbc_sdk import CBCloudAPI
+    >>> from cbc_sdk.platform import AuditLog
+    >>> api = CBCloudAPI(profile='sample')
+    >>> events = AuditLog.get_queued_auditlogs(api)
+    >>> for event in events:
+    ...     print(f"{event.create_time}: {event.actor} {event.description}")
 
-    cb = CBCloudAPI(profile='yourprofile')
-    running = True
+Once audit log events have been retrieved from the queue, they are "cleared" and will not be included in future
+responses to a ``get_queued_auditlogs()`` call.
 
-    while running:
-        events_list = AuditLog.get_auditlogs(cb)
-        for event in events_list:
-            print(f"Event {event['eventId']}:")
-            for (k, v) in event.items():
-                print(f"\t{k}: {v}")
-        # omitted: decide whether running should be set to False
-        if running:
-            time.sleep(5)
+.. note::
+    Reading queued audit log events using *different* API keys may lead to duplicate data.
 
+Searching for Audit Log Events
+------------------------------
 
-Check out the example script ``audit_log.py`` in the examples/platform directory on `GitHub <https://github.com/carbonblack/carbon-black-cloud-sdk-python>`_.
+Audit log events may be searched for in a manner similar to other objects within the SDK::
+
+    # assume "api" contains our CBCloudAPI reference as above
+    >>> query = api.select(AuditLog).where("description:Logged in")
+    >>> query.sort_by("create_time")
+    >>> for event in query:
+    ...     print(f"{event.create_time}: {event.actor} {event.description}")
+
+See also the :ref:`searching-guide` guide page for a more detailed discussion of searching.
+
+Exporting Audit Log Events
+--------------------------
+
+Any search query may also be used to export audit log data, in either CSV or JSON format::
+
+    # assume "api" contains our CBCloudAPI reference as above
+    >>> query = api.select(AuditLog).where("description:Logged in")
+    >>> query.sort_by("create_time")
+    >>> job = query.export("csv")
+    >>> result = job.await_completion().result()
+    >>> print(result)
+
+Note that the ``export()`` call returns a ``Job`` object, as exports can take some time to complete.  The results may
+be obtained from the ``Job`` when the export process is completed.

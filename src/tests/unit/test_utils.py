@@ -11,9 +11,12 @@
 
 """Test code for the utility functions"""
 
-# import pytest
+import pytest
+import time
 from datetime import datetime
-from cbc_sdk.utils import convert_from_cb, convert_to_cb
+from cbc_sdk.utils import convert_from_cb, convert_to_cb, BackoffHandler
+from cbc_sdk.errors import TimeoutError
+from cbc_sdk.connection import BaseAPI
 
 
 # ==================================== Unit TESTS BELOW ====================================
@@ -46,3 +49,45 @@ def test_convert_to_cb():
     t = datetime(2020, 3, 11, 18, 34, 11, 123456)
     s = convert_to_cb(t)
     assert s == "2020-03-11 18:34:11.123456"
+
+
+def test_backoff_handler_operation():
+    """Test the operation of the BackoffHandler."""
+    cb = BaseAPI(integration_name='test1', url='https://example.com', token='ABCDEFGHIJKLM', org_key='A1B2C3D4')
+    sut = BackoffHandler(cb, threshold=0.5)
+    assert sut.timeout == 300000
+    assert sut._initial == 0.1
+    assert sut._multiplier == 2.0
+    assert sut._threshold == 0.5
+    with sut as b:
+        assert b._pausetime == 0.0
+        b.pause()
+        assert b._pausetime == 0.1
+        b.pause()
+        assert b._pausetime == 0.2
+        b.pause()
+        assert b._pausetime == 0.4
+        b.pause()
+        assert b._pausetime == 0.5
+        b.reset()
+        assert b._pausetime == 0.1
+        b.pause()
+        assert b._pausetime == 0.2
+        b.reset(True)
+        assert b._pausetime == 0.0
+
+
+def test_backoff_handler_timeouts():
+    """Test the raising of TimeoutError by the BackoffHandler."""
+    cb = BaseAPI(integration_name='test1', url='https://example.com', token='ABCDEFGHIJKLM', org_key='A1B2C3D4')
+    sut = BackoffHandler(cb, timeout=10)
+    with sut as b:
+        time.sleep(0.1)
+        with pytest.raises(TimeoutError):
+            b.pause()
+    sut.timeout = 250
+    with sut as b:
+        b.pause()   # no pause
+        b.pause()   # pauses 0.1 sec
+        with pytest.raises(TimeoutError):
+            b.pause()

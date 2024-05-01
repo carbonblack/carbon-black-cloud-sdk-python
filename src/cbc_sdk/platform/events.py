@@ -217,7 +217,8 @@ class EventQuery(Query):
             self._total_segments = result.get("total_segments", 0)
             self._processed_segments = result.get("processed_segments", 0)
             self._count_valid = True
-            if self._processed_segments != self._total_segments:
+            if self._processed_segments != self._total_segments \
+                    and len(result.get('results', [])) != self._total_results:
                 retry_counter = 0 if self._processed_segments > last_processed_segments else retry_counter + 1
                 last_processed_segments = max(last_processed_segments, self._processed_segments)
                 if retry_counter == MAX_EVENT_SEARCH_RETRIES:
@@ -280,8 +281,13 @@ class EventFacetQuery(FacetQuery):
             args["process_guid"] = q
         return args
 
-    def _perform_query(self):
-        return self.results
+    def _perform_query(self, from_row=0, max_rows=-1):
+        if max_rows > 0:
+            return self.results[from_row:from_row + max_rows]
+        elif from_row > 0:
+            return self.results[from_row:]
+        else:
+            return self.results
 
     def _submit(self):
         args = self._get_query_parameters()

@@ -1,4 +1,5 @@
 """Tests for the Job object of the CBC SDK"""
+import copy
 
 import pytest
 import logging
@@ -6,11 +7,12 @@ import io
 import os
 from tempfile import mkstemp
 from cbc_sdk.platform import Job
-from cbc_sdk.errors import ServerError
+from cbc_sdk.errors import ServerError, ApiError
 from cbc_sdk.rest_api import CBCloudAPI
 from tests.unit.fixtures.CBCSDKMock import CBCSDKMock
 from tests.unit.fixtures.platform.mock_jobs import (FIND_ALL_JOBS_RESP, JOB_DETAILS_1, JOB_DETAILS_2, PROGRESS_1,
-                                                    PROGRESS_2, AWAIT_COMPLETION_PROGRESS)
+                                                    PROGRESS_2, AWAIT_COMPLETION_DETAILS_PROGRESS_1,
+                                                    AWAIT_COMPLETION_DETAILS_PROGRESS_2)
 
 
 logging.basicConfig(format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG, filename='log.txt')
@@ -98,43 +100,69 @@ def test_load_job_and_get_progress(cbcsdk_mock, jobid, total, completed, msg, lo
 
 
 def test_job_await_completion(cbcsdk_mock):
-    """Test the functionality of await_completion()."""
-    first_time = True
+    """Test that await_completion() functions."""
     pr_index = 0
 
-    def on_progress(url, query_params, default):
-        nonlocal first_time, pr_index
-        if first_time:
-            first_time = False
-            raise ServerError(400, "Not yet")
-        assert pr_index < len(AWAIT_COMPLETION_PROGRESS), "Too many progress calls made"
-        return_value = AWAIT_COMPLETION_PROGRESS[pr_index]
+    def on_details(url, query_params, default):
+        nonlocal pr_index
+        assert pr_index < len(AWAIT_COMPLETION_DETAILS_PROGRESS_1), "Too many status calls made"
+        return_value = copy.deepcopy(JOB_DETAILS_1)
+        return_value['status'] = AWAIT_COMPLETION_DETAILS_PROGRESS_1[pr_index]
         pr_index += 1
         return return_value
 
-    cbcsdk_mock.mock_request('GET', '/jobs/v1/orgs/test/jobs/12345', JOB_DETAILS_1)
-    cbcsdk_mock.mock_request('GET', '/jobs/v1/orgs/test/jobs/12345/progress', on_progress)
+    cbcsdk_mock.mock_request('GET', '/jobs/v1/orgs/test/jobs/12345', on_details)
     api = cbcsdk_mock.api
     job = api.select(Job, 12345)
+    job._wait_status = True
     future = job.await_completion()
     result = future.result()
     assert result is job
-    assert first_time is False
-    assert pr_index == len(AWAIT_COMPLETION_PROGRESS)
+    assert pr_index == len(AWAIT_COMPLETION_DETAILS_PROGRESS_1)
 
 
 def test_job_await_completion_error(cbcsdk_mock):
     """Test that await_completion() throws a ServerError if it gets too many ServerErrors internally."""
-    def on_progress(url, query_params, default):
+    first_time = True
+
+    def on_details(url, query_params, default):
+        nonlocal first_time
+        if first_time:
+            first_time = False
+            return_value = copy.deepcopy(JOB_DETAILS_1)
+            return_value['status'] = "CREATED"
+            return return_value
         raise ServerError(400, "Ain't happening")
 
-    cbcsdk_mock.mock_request('GET', '/jobs/v1/orgs/test/jobs/12345', JOB_DETAILS_1)
-    cbcsdk_mock.mock_request('GET', '/jobs/v1/orgs/test/jobs/12345/progress', on_progress)
+    cbcsdk_mock.mock_request('GET', '/jobs/v1/orgs/test/jobs/12345', on_details)
     api = cbcsdk_mock.api
     job = api.select(Job, 12345)
+    job._wait_status = True
     future = job.await_completion()
     with pytest.raises(ServerError):
         future.result()
+
+
+def test_job_await_completion_failure(cbcsdk_mock):
+    """Test that await_completion() throws an ApiError if it gets a FAILURE response."""
+    pr_index = 0
+
+    def on_details(url, query_params, default):
+        nonlocal pr_index
+        assert pr_index < len(AWAIT_COMPLETION_DETAILS_PROGRESS_2), "Too many status calls made"
+        return_value = copy.deepcopy(JOB_DETAILS_1)
+        return_value['status'] = AWAIT_COMPLETION_DETAILS_PROGRESS_2[pr_index]
+        pr_index += 1
+        return return_value
+
+    cbcsdk_mock.mock_request('GET', '/jobs/v1/orgs/test/jobs/12345', on_details)
+    api = cbcsdk_mock.api
+    job = api.select(Job, 12345)
+    job._wait_status = True
+    future = job.await_completion()
+    with pytest.raises(ApiError):
+        future.result()
+    assert pr_index == len(AWAIT_COMPLETION_DETAILS_PROGRESS_2)
 
 
 def test_job_output_export_string(cbcsdk_mock):
