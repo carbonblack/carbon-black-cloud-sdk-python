@@ -1752,3 +1752,61 @@ GROUPED_ALERT_FACET_RESPONSE = {
         }
     ]
 }
+
+ALERT_EXPORT_ALL_DEFAULT_VALUES_REQUEST = {
+    "format": "CSV"
+}
+
+ALERT_EXPORT_TIME_RANGE_CRITERIA_EXCLUSIONS_DEFAULT_FIELDS_REQUEST = {
+    "time_range": {
+        "range": "-1d"
+    },
+    "criteria": {
+        "minimum_severity": 2,
+        "type": [
+            "WATCHLIST"
+        ]
+    },
+    "exclusions": {
+        "alert_origin": [
+            "MDR_THREAT_HUNT"
+        ]
+    },
+    "format": "CSV"
+}
+
+
+ALERT_EXPORT_TIME_RANGE_CRITERIA_EXCLUSIONS_SPECIFIED_FIELDS_REQUEST = {
+    "time_range": {
+        "range": "-1d"
+    },
+    "criteria": {
+        "minimum_severity": 2,
+        "type": [
+            "WATCHLIST"
+        ]
+    },
+    "exclusions": {
+        "alert_origin": [
+            "MDR_THREAT_HUNT"
+        ]
+    },
+    "fields": [
+        "id",
+        "type"
+    ],
+    "format": "CSV"
+}
+
+ALERT_EXPORT_QUERY_SPECIFIED_FIELDS_REQUEST = {
+    "query": "type:CB_ANALYTIC",
+    "fields": [
+        "id",
+        "type"
+    ],
+    "format": "CSV"
+}
+
+ALERT_EXPORT_JOB_RESPONSE = {
+    "job_id": "12345678"
+}

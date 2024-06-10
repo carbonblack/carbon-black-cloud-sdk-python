@@ -1209,6 +1209,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         self._exclusions = {}
         self._time_exclusion_filters = {}
         self._sortcriteria = {}
+        self._export_fields = {}
         self._bulkupdate_url = "/api/alerts/v7/orgs/{0}/alerts/workflow"
         self._count_valid = False
         self._total_results = 0
@@ -1447,7 +1448,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         self._sortcriteria = {"field": key, "order": direction}
         return self
 
-    def _build_request(self, from_row, max_rows, add_sort=True):
+    def _build_request(self, from_row, max_rows, add_sort=True, add_rows=True):
         """
         Creates the request body for an API call.
 
@@ -1470,7 +1471,8 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         if query:
             request["query"] = query
 
-        request["rows"] = self._batch_size
+        if add_rows:
+            request["rows"] = self._batch_size
         if self._time_range != {}:
             request["time_range"] = self._time_range
         if from_row > 1:
@@ -1793,6 +1795,43 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         grouped_alert_search_query.set_group_by(field)
 
         return grouped_alert_search_query
+
+    def export(self):
+        """
+        Starts the process of exporting Alerts from the organization in CSV format.
+
+        Example:
+            >>> cb.select(Alert).add_criteria("type", ["CB_ANALYTIC", "WATCHLIST"]).export()
+
+        Required Permissions:
+            org.alerts (READ)
+
+        Returns:
+            Job: The asynchronous job that will provide the export output when the server has prepared it.
+        """
+        request = self._build_request(0, -1, add_rows=False)
+        request["format"] = "CSV"
+        if self._export_fields != {}:
+            request["fields"] = self._export_fields
+        url = self._build_url("/_export")
+        resp = self._cb.post_object(url, body=request)
+        result = resp.json()
+        return Job(self._cb, result["job_id"], result)
+
+    def set_export_fields(self, fields):
+        """
+        Sets the fields to be returned in the response of an alert export.
+
+        Args:
+            fields (str or list[str]): Field or list of fields to be returned.
+        """
+        if not isinstance(fields, list):
+            if not isinstance(fields, str):
+                raise ApiError(f"Fields must be a string or list of strings. {fields} is a {type(fields)}.")
+            self._export_fields = [fields]
+        else:
+            self._export_fields = fields
+        return self
 
 
 class GroupedAlertSearchQuery(AlertSearchQuery):
