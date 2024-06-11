@@ -119,6 +119,29 @@ It is equivalent to:
     More information about the ``solrq`` can be found in
     their `documentation <https://solrq.readthedocs.io/en/latest/index.html>`_.
 
+Export Alerts in CSV format
+---------------------------
+
+Up to 25,000 alerts can be exported in a csv file.
+
+This is an asynchronous process in Carbon Black Cloud and to use the APIs directly, three calls are required;
+start the job, check status until it completes, then download the results.  The SDK wraps these calls and simplifies
+the code needed.
+
+Modify the following example with criteria to meet your needs.
+
+.. code-block:: python
+
+    >>> from cbc_sdk import CBCloudAPI
+    >>> from cbc_sdk.platform import Alert
+    >>> api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
+    >>> alert_query = api.select(Alert).add_criteria("device_os", "WINDOWS").set_minimum_severity(3)\
+    ... .set_time_range(range="-10d")
+    >>> job = alert_query.export()
+    >>> job.await_completion().result()
+    >>> csv_report = job.get_output_as_string()
+    >>> print(csv_report)
+
 Retrieving Alerts for Multiple Organizations
 --------------------------------------------
 

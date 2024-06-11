@@ -119,7 +119,7 @@ def main():
     api = CBCloudAPI(profile="YOUR_PROFILE_HERE")
 
     # workflow is in a separate method.
-    # alert_workflow(api)
+    alert_workflow(api)
 
     # To start, get some alerts that have a few interesting criteria set for selection.
     # All the fields that can be used are on the Developer Network

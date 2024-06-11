@@ -1800,11 +1800,19 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
         """
         Starts the process of exporting Alerts from the organization in CSV format.
 
+        This starts an asynchronous job.  Wait for completion of the job and
+        then use one of the get results methods on the Job.
+
+
         Example:
-            >>> cb.select(Alert).add_criteria("type", ["CB_ANALYTIC", "WATCHLIST"]).export()
+            >>> job = cb.select(Alert).add_criteria("type", ["CB_ANALYTIC", "WATCHLIST"]).export()
+            >>> job.await_completion().result()
+            >>> csv_report = job.get_output_as_string()
+
 
         Required Permissions:
             org.alerts (READ)
+            jobs.status (READ) to get the results
 
         Returns:
             Job: The asynchronous job that will provide the export output when the server has prepared it.
