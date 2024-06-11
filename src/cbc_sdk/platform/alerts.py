@@ -1796,19 +1796,20 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
 
         return grouped_alert_search_query
 
-    def export(self):
+    def export(self, output_format="CSV"):
         """
         Starts the process of exporting Alerts from the organization in CSV format.
 
         This starts an asynchronous job.  Wait for completion of the job and
         then use one of the get results methods on the Job.
 
+        Args:
+            output_format (string): The format to export the results in. Only "CSV" is valid.
 
         Example:
             >>> job = cb.select(Alert).add_criteria("type", ["CB_ANALYTIC", "WATCHLIST"]).export()
             >>> job.await_completion().result()
             >>> csv_report = job.get_output_as_string()
-
 
         Required Permissions:
             org.alerts (READ)
@@ -1818,7 +1819,7 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             Job: The asynchronous job that will provide the export output when the server has prepared it.
         """
         request = self._build_request(0, -1, add_rows=False)
-        request["format"] = "CSV"
+        request["format"] = output_format
         if self._export_fields != {}:
             request["fields"] = self._export_fields
         url = self._build_url("/_export")

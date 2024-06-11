@@ -2312,3 +2312,19 @@ def test_alert_query_and_specified_fields(cbcsdk_mock):
     job = alert_query.export()
     assert isinstance(job, Job)
     assert job.id == 12345678
+
+
+def test_specify_export_format(cbcsdk_mock):
+    """Test a csv export with time range, criteria, exclusions, default fields"""
+
+    def on_post(url, body, **kwargs):
+        assert body == ALERT_EXPORT_QUERY_SPECIFIED_FIELDS_REQUEST
+        return ALERT_EXPORT_JOB_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/alerts/_export", on_post)
+    api = cbcsdk_mock.api
+
+    alert_query = api.select(Alert).where("type:CB_ANALYTIC").set_export_fields(["id", "type"])
+    job = alert_query.export("CSV")
+    assert isinstance(job, Job)
+    assert job.id == 12345678
