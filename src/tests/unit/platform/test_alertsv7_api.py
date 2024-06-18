@@ -57,7 +57,12 @@ from tests.unit.fixtures.platform.mock_alerts_v7 import (
     MOST_RECENT_ALERT,
     ALERT_SEARCH_RESPONSE,
     GROUPED_ALERT_FACET_REQUEST,
-    GROUPED_ALERT_FACET_RESPONSE
+    GROUPED_ALERT_FACET_RESPONSE,
+    ALERT_EXPORT_ALL_DEFAULT_VALUES_REQUEST,
+    ALERT_EXPORT_TIME_RANGE_CRITERIA_EXCLUSIONS_DEFAULT_FIELDS_REQUEST,
+    ALERT_EXPORT_TIME_RANGE_CRITERIA_EXCLUSIONS_SPECIFIED_FIELDS_REQUEST,
+    ALERT_EXPORT_QUERY_SPECIFIED_FIELDS_REQUEST,
+    ALERT_EXPORT_JOB_RESPONSE
 )
 from tests.unit.fixtures.platform.mock_process import (
     POST_PROCESS_VALIDATION_RESP,
@@ -2238,3 +2243,88 @@ def test_query_grouped_alert_facets(cbcsdk_mock):
     facets = query.facets(["type", "THREAT_ID"], 0, True)
     assert facets == GROUPED_ALERT_FACET_RESPONSE["results"]
     assert len(facets) == 2
+
+
+def test_alert_export_no_body(cbcsdk_mock):
+    """Test a csv export with all defaults (no criteria, exclusions etc)"""
+    def on_post(url, body, **kwargs):
+        assert body == ALERT_EXPORT_ALL_DEFAULT_VALUES_REQUEST
+        return ALERT_EXPORT_JOB_RESPONSE
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/alerts/_export", on_post)
+    api = cbcsdk_mock.api
+
+    alert_query = api.select(Alert)
+    job = alert_query.export()
+    assert isinstance(job, Job)
+    assert job.id == 12345678
+
+
+def test_alert_export_time_range_criteria_exclusions_default_fields(cbcsdk_mock):
+    """Test a csv export with time range, criteria, exclusions, default fields"""
+
+    def on_post(url, body, **kwargs):
+        assert body == ALERT_EXPORT_TIME_RANGE_CRITERIA_EXCLUSIONS_DEFAULT_FIELDS_REQUEST
+        return ALERT_EXPORT_JOB_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/alerts/_export", on_post)
+    api = cbcsdk_mock.api
+
+    alert_query = api.select(Alert).set_time_range(range="-1d")\
+        .set_minimum_severity(2)\
+        .add_criteria("type", ["WATCHLIST"])\
+        .add_exclusions("alert_origin", ["MDR_THREAT_HUNT"])
+    job = alert_query.export()
+    assert isinstance(job, Job)
+    assert job.id == 12345678
+
+
+def test_alert_export_time_range_criteria_exclusions_specified_fields(cbcsdk_mock):
+    """Test a csv export with time range, criteria, exclusions, default fields"""
+
+    def on_post(url, body, **kwargs):
+        assert body == ALERT_EXPORT_TIME_RANGE_CRITERIA_EXCLUSIONS_SPECIFIED_FIELDS_REQUEST
+        return ALERT_EXPORT_JOB_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/alerts/_export", on_post)
+    api = cbcsdk_mock.api
+
+    alert_query = api.select(Alert).set_time_range(range="-1d") \
+        .set_minimum_severity(2) \
+        .add_criteria("type", ["WATCHLIST"]) \
+        .add_exclusions("alert_origin", ["MDR_THREAT_HUNT"])\
+        .set_export_fields(["id", "type"])
+    job = alert_query.export()
+    assert isinstance(job, Job)
+    assert job.id == 12345678
+
+
+def test_alert_query_and_specified_fields(cbcsdk_mock):
+    """Test a csv export with time range, criteria, exclusions, default fields"""
+
+    def on_post(url, body, **kwargs):
+        assert body == ALERT_EXPORT_QUERY_SPECIFIED_FIELDS_REQUEST
+        return ALERT_EXPORT_JOB_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/alerts/_export", on_post)
+    api = cbcsdk_mock.api
+
+    alert_query = api.select(Alert).where("type:CB_ANALYTIC").set_export_fields(["id", "type"])
+    job = alert_query.export()
+    assert isinstance(job, Job)
+    assert job.id == 12345678
+
+
+def test_specify_export_format(cbcsdk_mock):
+    """Test a csv export with time range, criteria, exclusions, default fields"""
+
+    def on_post(url, body, **kwargs):
+        assert body == ALERT_EXPORT_QUERY_SPECIFIED_FIELDS_REQUEST
+        return ALERT_EXPORT_JOB_RESPONSE
+
+    cbcsdk_mock.mock_request("POST", "/api/alerts/v7/orgs/test/alerts/_export", on_post)
+    api = cbcsdk_mock.api
+
+    alert_query = api.select(Alert).where("type:CB_ANALYTIC").set_export_fields(["id", "type"])
+    job = alert_query.export("CSV")
+    assert isinstance(job, Job)
+    assert job.id == 12345678

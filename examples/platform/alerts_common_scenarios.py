@@ -161,6 +161,12 @@ def main():
     # Including, iterating through the results (for alert in alert_query: ...), first() and one() methods
     print("{} Alerts were returned".format(len(alert_query)))
 
+    # Up to 25,000 Alerts can also be exported to a CSV.  This reuses the alert_query object set up for the search.
+    job = alert_query.export()
+    job.await_completion().result()
+    csv_report = job.get_output_as_string()
+    print(csv_report)
+
     # Get a single alert to work with.  This could be in an iterator
     alert = alert_query.first()
     # here's the ID of the alert.  Use this to follow along in the console
