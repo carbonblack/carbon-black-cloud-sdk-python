@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) VMware, Inc. 2020-2023. All Rights Reserved.
+# Copyright (c) Broadcom, Inc. 2020-2024. All Rights Reserved. Carbon Black.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -10,6 +10,7 @@
 # * EXPRESS OR IMPLIED. THE AUTHOR SPECIFICALLY DISCLAIMS ANY IMPLIED
 # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
 # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
+
 """Exceptions that are thrown by CBC SDK operations."""
 
 

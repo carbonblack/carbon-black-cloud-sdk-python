@@ -1,4 +1,4 @@
-"""VMware Carbon Black Cloud Python SDK"""
+"""Carbon Black Cloud Python SDK"""
 
 from setuptools import setup
 import sys
@@ -56,9 +56,9 @@ setup(
     version=read('VERSION'),
     url='https://github.com/carbonblack/carbon-black-cloud-sdk-python',
     license='MIT',
-    author='VMware Carbon Black',
+    author='Carbon Black',
     author_email='cb-developer-network@vmware.com',
-    description='VMware Carbon Black Cloud Python SDK',
+    description='Carbon Black Cloud Python SDK',
     long_description=read('README.md'),
     long_description_content_type='text/markdown',
     packages=packages,

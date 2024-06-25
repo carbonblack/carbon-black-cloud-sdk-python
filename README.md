@@ -1,4 +1,4 @@
-# VMware Carbon Black Cloud Python SDK
+# Carbon Black Cloud Python SDK
 
 **Latest Version:** 1.5.2
 <br>
