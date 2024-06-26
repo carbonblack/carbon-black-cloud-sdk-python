@@ -23,7 +23,7 @@ copyright = '2020-2024 Broadcom Inc. - Carbon Black'
 author = 'Developer Relations'
 
 # The full version, including alpha/beta/rc tags
-release = '1.5.2'
+release = '1.5.3'
 
 
 # -- General configuration ---------------------------------------------------
