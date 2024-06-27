@@ -1,3 +1,14 @@
+# *******************************************************
+# Copyright (c) Broadcom, Inc. 2020-2024. All Rights Reserved. Carbon Black.
+# SPDX-License-Identifier: MIT
+# *******************************************************
+# *
+# * DISCLAIMER. THIS PROGRAM IS PROVIDED TO YOU "AS IS" WITHOUT
+# * WARRANTIES OR CONDITIONS OF ANY KIND, WHETHER ORAL OR WRITTEN,
+# * EXPRESS OR IMPLIED. THE AUTHOR SPECIFICALLY DISCLAIMS ANY IMPLIED
+# * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
+# * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
+
 """Mock responses for Auth Events queries."""
 
 POST_AUTH_EVENT_SEARCH_JOB_RESP = {"job_id": "62be5c2c-d080-4ce6-b4f3-7c519cc2b41c-sqs"}

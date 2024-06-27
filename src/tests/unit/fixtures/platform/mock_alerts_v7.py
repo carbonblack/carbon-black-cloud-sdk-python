@@ -1,3 +1,14 @@
+# *******************************************************
+# Copyright (c) Broadcom, Inc. 2020-2024. All Rights Reserved. Carbon Black.
+# SPDX-License-Identifier: MIT
+# *******************************************************
+# *
+# * DISCLAIMER. THIS PROGRAM IS PROVIDED TO YOU "AS IS" WITHOUT
+# * WARRANTIES OR CONDITIONS OF ANY KIND, WHETHER ORAL OR WRITTEN,
+# * EXPRESS OR IMPLIED. THE AUTHOR SPECIFICALLY DISCLAIMS ANY IMPLIED
+# * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
+# * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
+
 """Mock responses for alert queries."""
 
 GET_ALERT_RESP = {"org_key": "ABCD1234",
@@ -1751,4 +1762,62 @@ GROUPED_ALERT_FACET_RESPONSE = {
             ]
         }
     ]
+}
+
+ALERT_EXPORT_ALL_DEFAULT_VALUES_REQUEST = {
+    "format": "CSV"
+}
+
+ALERT_EXPORT_TIME_RANGE_CRITERIA_EXCLUSIONS_DEFAULT_FIELDS_REQUEST = {
+    "time_range": {
+        "range": "-1d"
+    },
+    "criteria": {
+        "minimum_severity": 2,
+        "type": [
+            "WATCHLIST"
+        ]
+    },
+    "exclusions": {
+        "alert_origin": [
+            "MDR_THREAT_HUNT"
+        ]
+    },
+    "format": "CSV"
+}
+
+
+ALERT_EXPORT_TIME_RANGE_CRITERIA_EXCLUSIONS_SPECIFIED_FIELDS_REQUEST = {
+    "time_range": {
+        "range": "-1d"
+    },
+    "criteria": {
+        "minimum_severity": 2,
+        "type": [
+            "WATCHLIST"
+        ]
+    },
+    "exclusions": {
+        "alert_origin": [
+            "MDR_THREAT_HUNT"
+        ]
+    },
+    "fields": [
+        "id",
+        "type"
+    ],
+    "format": "CSV"
+}
+
+ALERT_EXPORT_QUERY_SPECIFIED_FIELDS_REQUEST = {
+    "query": "type:CB_ANALYTIC",
+    "fields": [
+        "id",
+        "type"
+    ],
+    "format": "CSV"
+}
+
+ALERT_EXPORT_JOB_RESPONSE = {
+    "job_id": "12345678"
 }

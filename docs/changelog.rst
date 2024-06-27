@@ -1,5 +1,31 @@
+..
+    # *******************************************************
+    # Copyright (c) Broadcom, Inc. 2020-2024. All Rights Reserved. Carbon Black.
+    # SPDX-License-Identifier: MIT
+    # *******************************************************
+    # *
+    # * DISCLAIMER. THIS PROGRAM IS PROVIDED TO YOU "AS IS" WITHOUT
+    # * WARRANTIES OR CONDITIONS OF ANY KIND, WHETHER ORAL OR WRITTEN,
+    # * EXPRESS OR IMPLIED. THE AUTHOR SPECIFICALLY DISCLAIMS ANY IMPLIED
+    # * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
+    # * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
+
 Changelog
-================================
+=========
+
+CBC SDK 1.5.3 - Released June 27, 2024
+--------------------------------------
+
+New Features:
+
+* Export Alerts in CSV format (``Alert.export()``).
+
+Documentation:
+
+* Updated code copyright dates and noted the ownership by Broadcom.
+* Removed the Threat Intelligence example; it's been superseded by the
+  `Carbon Black Cloud Threat Intelligence Connector <https://github.com/carbonblack/carbon-black-cloud-threat-intelligence-connector>`_.
+
 CBC SDK 1.5.2 - Released May 1, 2024
 ------------------------------------
 

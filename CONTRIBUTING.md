@@ -1,7 +1,7 @@
 # Contributing
 
 We rely on pull requests to keep this project maintained. By participating in this project, you
-agree to abide by the VMware [code of conduct](CODE-OF-CONDUCT.md).
+agree to abide by the project [code of conduct](CODE-OF-CONDUCT.md).
 
 ## Setup 
 

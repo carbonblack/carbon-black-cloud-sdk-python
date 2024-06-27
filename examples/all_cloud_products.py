@@ -1,3 +1,14 @@
+# *******************************************************
+# Copyright (c) Broadcom, Inc. 2020-2024. All Rights Reserved. Carbon Black.
+# SPDX-License-Identifier: MIT
+# *******************************************************
+# *
+# * DISCLAIMER. THIS PROGRAM IS PROVIDED TO YOU "AS IS" WITHOUT
+# * WARRANTIES OR CONDITIONS OF ANY KIND, WHETHER ORAL OR WRITTEN,
+# * EXPRESS OR IMPLIED. THE AUTHOR SPECIFICALLY DISCLAIMS ANY IMPLIED
+# * WARRANTIES OR CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY,
+# * NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE.
+
 """Example for Developer Meetup October 22 covering most cloud products.
 
 Example uses research from the Carbon Black Cloud Threat Analysis Unit (TAU).
