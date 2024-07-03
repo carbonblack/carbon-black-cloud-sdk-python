@@ -34,6 +34,7 @@ Typical usage example::
 
 import time
 import datetime
+import sys
 
 from cbc_sdk.errors import ApiError, ObjectNotFoundError, NonQueryableModel, FunctionalityDecommissioned
 from cbc_sdk.platform import PlatformModel
@@ -51,7 +52,9 @@ from cbc_sdk.platform.jobs import Job
 from cbc_sdk.platform.network_threat_metadata import NetworkThreatMetadata
 from cbc_sdk.enterprise_edr.threat_intelligence import Watchlist
 
-from backports._datetime_fromisoformat import datetime_fromisoformat
+if sys.version_info < (3, 11):
+    from backports._datetime_fromisoformat import MonkeyPatch
+    MonkeyPatch.patch_fromisoformat()
 
 """Alert Models"""
 
@@ -1388,9 +1391,9 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             etime = kwargs["end"]
             try:
                 if isinstance(stime, str):
-                    stime = datetime_fromisoformat(stime)
+                    stime = datetime.fromisoformat(stime)
                 if isinstance(etime, str):
-                    etime = datetime_fromisoformat(etime)
+                    etime = datetime.fromisoformat(etime)
                 if isinstance(stime, datetime.datetime) and isinstance(etime, datetime.datetime):
                     time_filter = {"start": stime.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                                    "end": etime.strftime("%Y-%m-%dT%H:%M:%S.%fZ")}
