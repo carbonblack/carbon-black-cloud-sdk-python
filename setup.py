@@ -25,7 +25,6 @@ install_requires = [
     'jsonschema',
     "keyring;platform_system=='Darwin'",
     'boto3',
-    'backports-datetime-fromisoformat==2.0.1'
 ]
 
 extras_require = {
@@ -44,6 +43,8 @@ extras_require = {
 
 if sys.version_info < (3, 0):
     install_requires.extend(['futures'])
+if sys.version_info < (3, 11):
+    install_requires.extend(['backports-datetime-fromisoformat==2.0.1'])
 
 
 def read(fname):
