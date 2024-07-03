@@ -22,13 +22,17 @@ with their IP to help determine if the User/API key are from an expected source.
 """
 
 import datetime
+import sys
+
 from cbc_sdk.base import (UnrefreshableModel, BaseQuery, QueryBuilder, QueryBuilderSupportMixin,
                           CriteriaBuilderSupportMixin, ExclusionBuilderSupportMixin, IterableQueryMixin,
                           AsyncQueryMixin)
 from cbc_sdk.errors import ApiError
 from cbc_sdk.platform.jobs import Job
 
-from backports._datetime_fromisoformat import datetime_fromisoformat
+if sys.version_info < (3, 11):
+    from backports._datetime_fromisoformat import MonkeyPatch
+    MonkeyPatch.patch_fromisoformat()
 
 
 """Model Class"""
@@ -171,9 +175,9 @@ class AuditLogQuery(BaseQuery, QueryBuilderSupportMixin, CriteriaBuilderSupportM
             etime = kwargs["end"]
             try:
                 if isinstance(stime, str):
-                    stime = datetime_fromisoformat(stime)
+                    stime = datetime.fromisoformat(stime)
                 if isinstance(etime, str):
-                    etime = datetime_fromisoformat(etime)
+                    etime = datetime.fromisoformat(etime)
                 if isinstance(stime, datetime.datetime) and isinstance(etime, datetime.datetime):
                     time_filter = {"start": stime.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                                    "end": etime.strftime("%Y-%m-%dT%H:%M:%S.%fZ")}
