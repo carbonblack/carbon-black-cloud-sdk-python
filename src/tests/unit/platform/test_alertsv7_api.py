@@ -142,9 +142,9 @@ def test_query_alert_with_all_bells_and_whistles(cbcsdk_mock):
         .add_criteria("device_target_value", ["HIGH"]).add_criteria("threat_id", ["B0RG"]) \
         .add_criteria("workflow_status", ["OPEN"]).sort_by("name", "DESC")
     a = query.one()
-    assert a.id == "S0L0"
-    assert a.org_key == "test"
-    assert a.threat_id == "B0RG"
+    assert a["id"] == "S0L0"
+    assert a["org_key"] == "test"
+    assert a["threat_id"] == "B0RG"
     assert a.workflow["status"] == "OPEN"
 
 
