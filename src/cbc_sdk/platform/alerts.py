@@ -474,9 +474,13 @@ class Alert(PlatformModel):
             try:
                 return super(Alert.Note, self).__getattribute__(Alert.Note.REMAPPED_NOTES_V6_TO_V7.get(item, item))
             except AttributeError:
-                raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
-                                                                                  item))
-                # fall through to the rest of the logic...
+                pass
+
+            # try looking up via self._info, if we already have it.
+            if item in self._info:
+                return self._info[item]
+            else:
+                raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__, item))
 
         def __getattr__(self, item):
             """
@@ -495,9 +499,13 @@ class Alert(PlatformModel):
                 item = Alert.Note.REMAPPED_NOTES_V6_TO_V7.get(item, item)
                 return super(Alert.Note, self).__getattr__(Alert.Note.REMAPPED_NOTES_V6_TO_V7.get(item, item))
             except AttributeError:
-                raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
-                                                                                  item))
-                # fall through to the rest of the logic...
+                pass
+
+            # try looking up via self._info, if we already have it.
+            if item in self._info:
+                return self._info[item]
+            else:
+                raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__, item))
 
     def notes_(self, threat_note=False):
         """
@@ -765,9 +773,13 @@ class Alert(PlatformModel):
         try:
             return super(Alert, self).__getattribute__(Alert.REMAPPED_ALERTS_V6_TO_V7.get(item, item))
         except AttributeError:
-            raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
-                                                                              item))
-            # fall through to the rest of the logic...
+            pass
+
+        # try looking up via self._info, if we already have it.
+        if item in self._info:
+            return self._info[item]
+        else:
+            raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__, item))
 
     def __getattr__(self, item):
         """
