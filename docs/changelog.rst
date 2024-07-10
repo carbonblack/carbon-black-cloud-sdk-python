@@ -13,6 +13,14 @@
 Changelog
 =========
 
+CBC SDK 1.5.4 - Released July 10, 2024
+--------------------------------------
+
+Bug Fixes:
+
+* Fixed dependency on backports-datetime-fromisoformat for Python 3.11 and later.
+* Fixed a bug affecting the ability to access alert attributes with array syntax.
+
 CBC SDK 1.5.3 - Released June 27, 2024
 --------------------------------------
 

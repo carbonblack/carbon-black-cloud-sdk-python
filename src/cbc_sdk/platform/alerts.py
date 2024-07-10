@@ -34,6 +34,7 @@ Typical usage example::
 
 import time
 import datetime
+import sys
 
 from cbc_sdk.errors import ApiError, ObjectNotFoundError, NonQueryableModel, FunctionalityDecommissioned
 from cbc_sdk.platform import PlatformModel
@@ -51,7 +52,8 @@ from cbc_sdk.platform.jobs import Job
 from cbc_sdk.platform.network_threat_metadata import NetworkThreatMetadata
 from cbc_sdk.enterprise_edr.threat_intelligence import Watchlist
 
-from backports._datetime_fromisoformat import datetime_fromisoformat
+if sys.version_info < (3, 11):
+    from backports._datetime_fromisoformat import datetime_fromisoformat
 
 """Alert Models"""
 
@@ -474,9 +476,13 @@ class Alert(PlatformModel):
             try:
                 return super(Alert.Note, self).__getattribute__(Alert.Note.REMAPPED_NOTES_V6_TO_V7.get(item, item))
             except AttributeError:
-                raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
-                                                                                  item))
-                # fall through to the rest of the logic...
+                pass
+
+            # try looking up via self._info, if we already have it.
+            if item in self._info:
+                return self._info[item]
+            else:
+                raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__, item))
 
         def __getattr__(self, item):
             """
@@ -495,9 +501,13 @@ class Alert(PlatformModel):
                 item = Alert.Note.REMAPPED_NOTES_V6_TO_V7.get(item, item)
                 return super(Alert.Note, self).__getattr__(Alert.Note.REMAPPED_NOTES_V6_TO_V7.get(item, item))
             except AttributeError:
-                raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
-                                                                                  item))
-                # fall through to the rest of the logic...
+                pass
+
+            # try looking up via self._info, if we already have it.
+            if item in self._info:
+                return self._info[item]
+            else:
+                raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__, item))
 
     def notes_(self, threat_note=False):
         """
@@ -765,9 +775,13 @@ class Alert(PlatformModel):
         try:
             return super(Alert, self).__getattribute__(Alert.REMAPPED_ALERTS_V6_TO_V7.get(item, item))
         except AttributeError:
-            raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__,
-                                                                              item))
-            # fall through to the rest of the logic...
+            pass
+
+        # try looking up via self._info, if we already have it.
+        if item in self._info:
+            return self._info[item]
+        else:
+            raise AttributeError("'{0}' object has no attribute '{1}'".format(self.__class__.__name__, item))
 
     def __getattr__(self, item):
         """
@@ -1388,9 +1402,15 @@ class AlertSearchQuery(BaseQuery, QueryBuilderSupportMixin, IterableQueryMixin, 
             etime = kwargs["end"]
             try:
                 if isinstance(stime, str):
-                    stime = datetime_fromisoformat(stime)
+                    if sys.version_info < (3, 11):
+                        stime = datetime_fromisoformat(stime)
+                    else:
+                        stime = datetime.datetime.fromisoformat(stime)
                 if isinstance(etime, str):
-                    etime = datetime_fromisoformat(etime)
+                    if sys.version_info < (3, 11):
+                        etime = datetime_fromisoformat(etime)
+                    else:
+                        etime = datetime.datetime.fromisoformat(etime)
                 if isinstance(stime, datetime.datetime) and isinstance(etime, datetime.datetime):
                     time_filter = {"start": stime.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                                    "end": etime.strftime("%Y-%m-%dT%H:%M:%S.%fZ")}
