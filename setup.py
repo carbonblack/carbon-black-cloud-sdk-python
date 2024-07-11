@@ -24,7 +24,7 @@ install_requires = [
     'jsonschema',
     "keyring;platform_system=='Darwin'",
     'boto3',
-    "backports-datetime-fromisoformat==2.0.1 ; python_version < '3.11"
+    "backports-datetime-fromisoformat==2.0.1; python_version < '3.11'",
 ]
 
 extras_require = {
