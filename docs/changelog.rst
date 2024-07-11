@@ -13,7 +13,7 @@
 Changelog
 =========
 
-CBC SDK 1.5.4 - Released TBD
+CBC SDK 1.5.5 - Released July 11, 2024
 --------------------------------------
 
 Bug fixes:
