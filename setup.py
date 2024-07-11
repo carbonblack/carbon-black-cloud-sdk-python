@@ -1,7 +1,6 @@
 """Carbon Black Cloud Python SDK"""
 
 from setuptools import setup
-import sys
 import os
 
 packages = [
@@ -25,6 +24,7 @@ install_requires = [
     'jsonschema',
     "keyring;platform_system=='Darwin'",
     'boto3',
+    "backports-datetime-fromisoformat==2.0.1 ; python_version < '3.11"
 ]
 
 extras_require = {
@@ -40,11 +40,6 @@ extras_require = {
         'requests-mock==1.10.0'
     ]
 }
-
-if sys.version_info < (3, 0):
-    install_requires.extend(['futures'])
-if sys.version_info < (3, 11):
-    install_requires.extend(['backports-datetime-fromisoformat==2.0.1'])
 
 
 def read(fname):
