@@ -465,7 +465,7 @@ def test_get_file(cbcsdk_mock, connection_mock):
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
                              GET_FILE_COMMAND_RESP)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/7',
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/0',
                              GET_FILE_END_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
@@ -480,7 +480,7 @@ def test_get_file_cancelled(cbcsdk_mock, connection_mock):
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
                              GET_FILE_COMMAND_RESP)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/7',
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/0',
                              GET_FILE_CANCELLED_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
@@ -497,7 +497,7 @@ def test_get_file_cancelled_async(cbcsdk_mock, connection_mock):
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
                              GET_FILE_COMMAND_RESP)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/7',
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/0',
                              GET_FILE_CANCELLED_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
@@ -515,13 +515,13 @@ def test_get_file_async(cbcsdk_mock, connection_mock):
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
                              GET_FILE_COMMAND_RESP)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/7',
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/0',
                              GET_FILE_END_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
     with manager.request_session(2468) as session:
         command_id, _ = session.get_file('c:\\\\test.txt', async_mode=True)
-        assert command_id == 7
+        assert command_id == 0
 
 
 def test_get_raw_file_async(cbcsdk_mock, connection_mock):
@@ -531,13 +531,13 @@ def test_get_raw_file_async(cbcsdk_mock, connection_mock):
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
                              GET_FILE_COMMAND_RESP)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/7',
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/0',
                              GET_FILE_END_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
     with manager.request_session(2468) as session:
         command_id, _ = session.get_raw_file('c:\\\\test.txt', async_mode=True)
-        assert command_id == 7
+        assert command_id == 0
 
 
 def test_command_status(cbcsdk_mock):
@@ -1596,7 +1596,7 @@ def test_get_file_job(cbcsdk_mock, connection_mock):
     cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/devices/2468', DEVICE_RESPONSE)
     cbcsdk_mock.mock_request('POST', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands',
                              GET_FILE_COMMAND_RESP)
-    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/7',
+    cbcsdk_mock.mock_request('GET', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468/commands/0',
                              GET_FILE_END_RESP)
     cbcsdk_mock.mock_request('DELETE', '/appservices/v6/orgs/test/liveresponse/sessions/1:2468', None)
     manager = LiveResponseSessionManager(cbcsdk_mock.api)
