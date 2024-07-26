@@ -13,6 +13,13 @@
 Changelog
 =========
 
+CBC SDK 1.5.6 - Released July 26, 2024
+--------------------------------------
+
+Bug Fixes:
+
+* Fixed a failure of large file transfers with the Live Response API.
+
 CBC SDK 1.5.5 - Released July 11, 2024
 --------------------------------------
 

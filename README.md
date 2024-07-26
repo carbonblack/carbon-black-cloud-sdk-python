@@ -1,8 +1,8 @@
 # Carbon Black Cloud Python SDK
 
-**Latest Version:** 1.5.5
+**Latest Version:** 1.5.6
 <br>
-**Release Date:** July 11, 2024
+**Release Date:** July 26, 2024
 
 [![Coverage Status](https://coveralls.io/repos/github/carbonblack/carbon-black-cloud-sdk-python/badge.svg?t=Id6Baf)](https://coveralls.io/github/carbonblack/carbon-black-cloud-sdk-python)
 [![Codeship Status for carbonblack/carbon-black-cloud-sdk-python](https://app.codeship.com/projects/9e55a370-a772-0138-aae4-129773225755/status?branch=develop)](https://app.codeship.com/projects/402767)
