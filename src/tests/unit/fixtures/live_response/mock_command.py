@@ -125,7 +125,7 @@ GET_FILE_COMMAND_RESP = {
         "count": 0,
         "file_id": "f0245f97-67dd-42c4-9548-b35dca12f185"
     },
-    "id": 7,
+    "id": 0,
     "name": "get file",
     "result_code": 0,
     "result_desc": "",

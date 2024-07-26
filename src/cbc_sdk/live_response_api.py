@@ -211,7 +211,7 @@ class CbLRSessionBase(object):
             object: Contains the data of the file.
         """
         file_id, command_id = self._submit_get_file(file_name)
-        if file_id and command_id:
+        if file_id is not None and command_id is not None:
             if async_mode:
                 return command_id, self._async_submit(lambda arg, kwarg: self._get_raw_file(command_id,
                                                                                             file_id,
