@@ -1981,18 +1981,18 @@ class Query(PaginatedQuery, QueryBuilderSupportMixin, IterableQueryMixin, AsyncQ
 
         url = self._doc_class.validation_url.format(self._cb.credentials.org_key)
 
-        if args.get('query', False):
-            args['q'] = args['query']
+        if args.get('q', False):
+            args['query'] = args['q']
 
         # v2 search sort key does not work with v1 validation
         sort = args.pop('sort', None)
 
-        validated = self._cb.get_object(url, query_parameters=args)
+        validated = self._cb.post_object(url, body=args)
 
         # Re-add sort
         args["sort"] = sort
 
-        if not validated.get("valid"):
+        if not validated.json().get("valid"):
             raise ApiError("Invalid query: {}: {}".format(args, validated["invalid_message"]))
 
     def _search(self, start=0, rows=0):
