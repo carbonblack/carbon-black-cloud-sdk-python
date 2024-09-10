@@ -2595,6 +2595,11 @@ GET_PROCESS_DETAILS_JOB_STATUS_IN_PROGRESS_RESP = {
     'completed': 8
 }
 
+GET_PROCESS_DETAILS_JOB_STATUS_RESP_ZERO_CONTACTED = {
+    'contacted': 0,
+    'completed': 0
+}
+
 GET_PROCESS_DETAILS_JOB_RESULTS_RESP = {
     'contacted': 16,
     'completed': 16,

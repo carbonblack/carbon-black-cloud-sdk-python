@@ -225,6 +225,15 @@ GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING = {
 }
 
 
+GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_ZERO_CONTACTED = {
+    "num_found": 0,
+    "num_available": 0,
+    "contacted": 0,
+    "completed": 0,
+    "results": [],
+}
+
+
 GET_OBSERVATIONS_DETAIL_JOB_RESULTS_RESP = {
     "approximate_unaggregated": 2,
     "completed": 4,
@@ -556,6 +565,15 @@ GET_OBSERVATIONS_FACET_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING = {
     "terms": [],
     "num_found": 0,
     "contacted": 34,
+    "completed": 0,
+}
+
+
+GET_OBSERVATIONS_FACET_SEARCH_JOB_RESULTS_RESP_ZERO_CONTACTED = {
+    "ranges": [],
+    "terms": [],
+    "num_found": 0,
+    "contacted": 0,
     "completed": 0,
 }
 

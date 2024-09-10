@@ -168,10 +168,7 @@ class EnrichedEvent(UnrefreshableModel):
             searchers_contacted = result.get("contacted", 0)
             searchers_completed = result.get("completed", 0)
             log.debug("contacted = {}, completed = {}".format(searchers_contacted, searchers_completed))
-            if searchers_contacted == 0:
-                time.sleep(.5)
-                continue
-            if searchers_completed < searchers_contacted:
+            if searchers_contacted == 0 or searchers_completed < searchers_contacted:
                 if (time.time() * 1000) - submit_time > self._details_timeout:
                     timed_out = True
                     break
@@ -435,9 +432,7 @@ class EnrichedEventQuery(BaseEventQuery):
         searchers_contacted = result.get("contacted", 0)
         searchers_completed = result.get("completed", 0)
         log.debug("contacted = {}, completed = {}".format(searchers_contacted, searchers_completed))
-        if searchers_contacted == 0:
-            return True
-        if searchers_completed < searchers_contacted:
+        if searchers_contacted == 0 or searchers_completed < searchers_contacted:
             if (time.time() * 1000) - self._submit_time > self._timeout:
                 self._timed_out = True
                 return False
