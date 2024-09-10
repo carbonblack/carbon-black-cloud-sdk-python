@@ -43,6 +43,7 @@ from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_SUMMARY_RESP,
                                                        GET_PROCESS_SEARCH_PARENT_JOB_RESULTS_RESP,
                                                        POST_PROCESS_DETAILS_JOB_RESP,
                                                        GET_PROCESS_DETAILS_JOB_STATUS_IN_PROGRESS_RESP,
+                                                       GET_PROCESS_DETAILS_JOB_STATUS_RESP_ZERO_CONTACTED,
                                                        GET_PROCESS_DETAILS_JOB_RESULTS_RESP,
                                                        GET_FACET_SEARCH_RESULTS_RESP,
                                                        EXPECTED_PROCESS_FACETS,
@@ -1291,13 +1292,17 @@ def test_process_get_details_async(cbcsdk_mock):
     assert 10222 in results['process_pid']
 
 
-def test_process_get_details_timeout(cbcsdk_mock):
+@pytest.mark.parametrize('search_job_results', [
+    pytest.param(GET_PROCESS_DETAILS_JOB_STATUS_IN_PROGRESS_RESP, id='still-querying'),
+    pytest.param(GET_PROCESS_DETAILS_JOB_STATUS_RESP_ZERO_CONTACTED, id='zero-contacted'),
+])
+def test_process_get_details_timeout(cbcsdk_mock, search_job_results):
     """Test the timeout of a get_details request."""
     cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/detail_jobs",
                              POST_PROCESS_DETAILS_JOB_RESP)
     cbcsdk_mock.mock_request("GET",
                              "/api/investigate/v2/orgs/test/processes/detail_jobs/ccc47a52-9a61-4c77-8652-8a03dc187b98/results",  # noqa: E501
-                             GET_PROCESS_DETAILS_JOB_STATUS_IN_PROGRESS_RESP)
+                             search_job_results)
     api = cbcsdk_mock.api
     process = Process(api, '80dab519-3b5f-4502-afad-da87cd58a4c3',
                       {'process_guid': '80dab519-3b5f-4502-afad-da87cd58a4c3'})

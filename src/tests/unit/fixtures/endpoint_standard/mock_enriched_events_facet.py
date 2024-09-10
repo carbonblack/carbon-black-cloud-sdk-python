@@ -72,3 +72,11 @@ GET_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING = {
     'contacted': 34,
     'completed': 0
 }
+
+GET_ENRICHED_EVENTS_FACET_SEARCH_JOB_RESULTS_RESP_ZERO_CONTACTED = {
+    'ranges': [],
+    'terms': [],
+    'num_found': 0,
+    'contacted': 0,
+    'completed': 0
+}

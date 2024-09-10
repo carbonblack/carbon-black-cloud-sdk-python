@@ -137,6 +137,14 @@ GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING = {
     "results": [],
 }
 
+GET_ENRICHED_EVENTS_SEARCH_JOB_RESULTS_RESP_ZERO_CONTACTED = {
+    "num_found": 0,
+    "num_available": 0,
+    "contacted": 0,
+    "completed": 0,
+    "results": [],
+}
+
 GET_ENRICHED_EVENTS_AGG_JOB_RESULTS_RESP_1 = {
     "results": [
         {

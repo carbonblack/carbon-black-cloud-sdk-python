@@ -26,6 +26,7 @@ from tests.unit.fixtures.platform.mock_observations import (
     POST_OBSERVATIONS_SEARCH_JOB_RESP,
     GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_2,
     GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING,
+    GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_ZERO_CONTACTED,
     GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_0,
     GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_ZERO_COMP,
     GET_OBSERVATIONS_DETAIL_JOB_RESULTS_RESP,
@@ -38,6 +39,7 @@ from tests.unit.fixtures.platform.mock_observations import (
     GET_OBSERVATIONS_FACET_SEARCH_JOB_RESULTS_RESP_1,
     GET_OBSERVATIONS_FACET_SEARCH_JOB_RESULTS_RESP_2,
     GET_OBSERVATIONS_FACET_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING,
+    GET_OBSERVATIONS_FACET_SEARCH_JOB_RESULTS_RESP_ZERO_CONTACTED,
     GET_OBSERVATIONS_GROUPED_RESULTS_RESP,
     OBSERVATIONS_SEARCH_VALIDATIONS_RESP,
     OBSERVATIONS_SEARCH_SUGGESTIONS_RESP,
@@ -238,7 +240,11 @@ def test_observations_details_only(cbcsdk_mock):
     assert results._info["process_pid"][0] == 2000
 
 
-def test_observations_details_timeout(cbcsdk_mock):
+@pytest.mark.parametrize('search_job_results', [
+    pytest.param(GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_ZERO_COMP, id='still-querying'),
+    pytest.param(GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_ZERO_CONTACTED, id='zero-contacted'),
+])
+def test_observations_details_timeout(cbcsdk_mock, search_job_results):
     """Testing Observation get_details() timeout handling"""
     cbcsdk_mock.mock_request(
         "POST",
@@ -248,7 +254,7 @@ def test_observations_details_timeout(cbcsdk_mock):
     cbcsdk_mock.mock_request(
         "GET",
         "/api/investigate/v2/orgs/test/observations/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
-        GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_ZERO_COMP,
+        search_job_results,
     )
 
     api = cbcsdk_mock.api
@@ -466,7 +472,11 @@ def test_observations_timeout(cbcsdk_mock):
     assert query._timeout == 300000
 
 
-def test_observations_timeout_error(cbcsdk_mock):
+@pytest.mark.parametrize('search_job_results', [
+    pytest.param(GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING, id='still-querying'),
+    pytest.param(GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_ZERO_CONTACTED, id='zero-contacted'),
+])
+def test_observations_timeout_error(cbcsdk_mock, search_job_results):
     """Testing that a timeout in Observation querying throws a TimeoutError correctly"""
     cbcsdk_mock.mock_request(
         "GET",
@@ -481,7 +491,7 @@ def test_observations_timeout_error(cbcsdk_mock):
     cbcsdk_mock.mock_request(
         "GET",
         "/api/investigate/v2/orgs/test/observations/search_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
-        GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING,
+        search_job_results,
     )
 
     api = cbcsdk_mock.api
@@ -841,7 +851,11 @@ def test_observation_facet_timeout(cbcsdk_mock):
     assert query._timeout == 300000
 
 
-def test_observation_facet_timeout_error(cbcsdk_mock):
+@pytest.mark.parametrize('search_job_results', [
+    pytest.param(GET_OBSERVATIONS_FACET_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING, id='still-querying'),
+    pytest.param(GET_OBSERVATIONS_FACET_SEARCH_JOB_RESULTS_RESP_ZERO_CONTACTED, id='zero-contacted'),
+])
+def test_observation_facet_timeout_error(cbcsdk_mock, search_job_results):
     """Testing that a timeout in ObservationQuery throws the right TimeoutError."""
     cbcsdk_mock.mock_request(
         "POST",
@@ -851,7 +865,7 @@ def test_observation_facet_timeout_error(cbcsdk_mock):
     cbcsdk_mock.mock_request(
         "GET",
         "/api/investigate/v2/orgs/test/observations/facet_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",  # noqa: E501
-        GET_OBSERVATIONS_FACET_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING,
+        search_job_results,
     )
 
     api = cbcsdk_mock.api

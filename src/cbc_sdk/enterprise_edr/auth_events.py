@@ -185,10 +185,7 @@ class AuthEvent(NewBaseModel):
             completed = result.get("completed", 0)
             log.debug("contacted = {}, completed = {}".format(contacted, completed))
 
-            if contacted == 0:
-                time.sleep(0.5)
-                continue
-            if completed < contacted:
+            if contacted == 0 or completed < contacted:
                 if (time.time() * 1000) - submit_time > timeout:
                     timed_out = True
                     break
@@ -615,9 +612,7 @@ class AuthEventQuery(Query):
         completed = result.get("completed", 0)
         log.debug("contacted = {}, completed = {}".format(contacted, completed))
 
-        if contacted == 0:
-            return True
-        if completed < contacted:
+        if contacted == 0 or completed < contacted:
             if (time.time() * 1000) - self._submit_time > self._timeout:
                 self._timed_out = True
                 return False

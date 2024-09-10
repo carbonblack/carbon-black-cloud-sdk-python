@@ -71,14 +71,11 @@ def wait_till_job_ready(job_id):
         result = get_status_search_job(job_id).json()
         searchers_contacted = result.get("contacted", 0)
         searchers_completed = result.get("completed", 0)
-        if searchers_completed == searchers_contacted:
-            break
-        if searchers_contacted == 0:
-            time.sleep(0.5)
-            continue
-        if searchers_completed < searchers_contacted:
+        if searchers_contacted == 0 or searchers_completed < searchers_contacted:
             if timeout_time < datetime.datetime.now():
                 break
+        else:
+            break
 
         time.sleep(0.5)
 

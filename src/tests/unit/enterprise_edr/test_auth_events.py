@@ -25,15 +25,17 @@ from tests.unit.fixtures.enterprise_edr.mock_auth_events import (
     POST_AUTH_EVENT_SEARCH_JOB_RESP,
     GET_AUTH_EVENT_SEARCH_JOB_RESULTS_RESP,
     GET_AUTH_EVENT_DETAIL_JOB_RESULTS_RESP,
+    GET_AUTH_EVENT_DETAIL_JOB_RESULTS_RESP_ZERO_CONTACTED,
     GET_AUTH_EVENT_SEARCH_JOB_RESULTS_RESP_ZERO_COMP,
     GET_AUTH_EVENT_SEARCH_JOB_RESULTS_ZERO,
-    GET_AUTH_EVENT_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING,
     GET_AUTH_EVENT_SEARCH_JOB_RESULTS_RESP_2,
-    GET_AUTH_EVENT_SEARCH_JOB_RESULTS_RESP_0,
+    GET_AUTH_EVENT_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING,
+    GET_AUTH_EVENT_SEARCH_JOB_RESULTS_RESP_ZERO_CONTACTED,
     POST_AUTH_EVENT_FACET_SEARCH_JOB_RESP,
     GET_AUTH_EVENT_FACET_SEARCH_JOB_RESULTS_RESP_2,
     GET_AUTH_EVENT_FACET_SEARCH_JOB_RESULTS_RESP_1,
     GET_AUTH_EVENT_FACET_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING,
+    GET_AUTH_EVENT_FACET_SEARCH_JOB_RESULTS_RESP_ZERO_CONTACTED,
     GET_AUTH_EVENT_GROUPED_RESULTS_RESP,
     AUTH_EVENT_SEARCH_VALIDATIONS_RESP,
     AUTH_EVENT_SEARCH_SUGGESTIONS_RESP,
@@ -215,7 +217,11 @@ def test_auth_event_details_only(cbcsdk_mock):
     assert results._info["process_pid"][0] == 764
 
 
-def test_auth_event_details_timeout(cbcsdk_mock):
+@pytest.mark.parametrize('search_job_results', [
+    pytest.param(GET_AUTH_EVENT_SEARCH_JOB_RESULTS_RESP_ZERO_COMP, id='still-querying'),
+    pytest.param(GET_AUTH_EVENT_DETAIL_JOB_RESULTS_RESP_ZERO_CONTACTED, id='zero-contacted'),
+])
+def test_auth_event_details_timeout(cbcsdk_mock, search_job_results):
     """Testing AuthEvent get_details() timeout handling"""
     cbcsdk_mock.mock_request(
         "POST",
@@ -225,7 +231,7 @@ def test_auth_event_details_timeout(cbcsdk_mock):
     cbcsdk_mock.mock_request(
         "GET",
         "/api/investigate/v2/orgs/test/auth_events/detail_jobs/62be5c2c-d080-4ce6-b4f3-7c519cc2b41c-sqs/results",  # noqa: E501
-        GET_AUTH_EVENT_SEARCH_JOB_RESULTS_RESP_ZERO_COMP,
+        search_job_results,
     )
 
     api = cbcsdk_mock.api
@@ -433,7 +439,11 @@ def test_auth_event_timeout(cbcsdk_mock):
     assert query._timeout == 300000
 
 
-def test_auth_event_timeout_error(cbcsdk_mock):
+@pytest.mark.parametrize('search_job_results', [
+    pytest.param(GET_AUTH_EVENT_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING, id='still-querying'),
+    pytest.param(GET_AUTH_EVENT_SEARCH_JOB_RESULTS_RESP_ZERO_CONTACTED, id='zero-contacted'),
+])
+def test_auth_event_timeout_error(cbcsdk_mock, search_job_results):
     """Testing that a timeout in AuthEvent querying throws a TimeoutError correctly"""
     cbcsdk_mock.mock_request(
         "GET",
@@ -448,7 +458,7 @@ def test_auth_event_timeout_error(cbcsdk_mock):
     cbcsdk_mock.mock_request(
         "GET",
         "/api/investigate/v2/orgs/test/auth_events/search_jobs/62be5c2c-d080-4ce6-b4f3-7c519cc2b41c-sqs/results",  # noqa: E501
-        GET_AUTH_EVENT_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING,
+        search_job_results,
     )
 
     api = cbcsdk_mock.api
@@ -596,7 +606,7 @@ def test_auth_event_still_querying(cbcsdk_mock):
     cbcsdk_mock.mock_request(
         "GET",
         "/api/investigate/v2/orgs/test/auth_events/search_jobs/62be5c2c-d080-4ce6-b4f3-7c519cc2b41c-sqs/results",  # noqa: E501
-        GET_AUTH_EVENT_SEARCH_JOB_RESULTS_RESP_0,
+        GET_AUTH_EVENT_SEARCH_JOB_RESULTS_RESP_ZERO_CONTACTED,
     )
     cbcsdk_mock.mock_request(
         "GET",
@@ -767,7 +777,11 @@ def test_auth_event_facet_timeout(cbcsdk_mock):
     assert query._timeout == 300000
 
 
-def test_auth_event_facet_timeout_error(cbcsdk_mock):
+@pytest.mark.parametrize('search_job_results', [
+    pytest.param(GET_AUTH_EVENT_FACET_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING, id='still-querying'),
+    pytest.param(GET_AUTH_EVENT_FACET_SEARCH_JOB_RESULTS_RESP_ZERO_CONTACTED, id='zero-contacted'),
+])
+def test_auth_event_facet_timeout_error(cbcsdk_mock, search_job_results):
     """Testing that a timeout in AuthEventQuery throws the right TimeoutError."""
     cbcsdk_mock.mock_request(
         "POST",
@@ -777,7 +791,7 @@ def test_auth_event_facet_timeout_error(cbcsdk_mock):
     cbcsdk_mock.mock_request(
         "GET",
         "/api/investigate/v2/orgs/test/auth_events/facet_jobs/62be5c2c-d080-4ce6-b4f3-7c519cc2b41c-sqs/results",  # noqa: E501
-        GET_AUTH_EVENT_FACET_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING,
+        search_job_results,
     )
 
     api = cbcsdk_mock.api
