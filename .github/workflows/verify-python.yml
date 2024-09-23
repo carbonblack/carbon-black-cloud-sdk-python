@@ -6,7 +6,7 @@ concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}"
   cancel-in-progress: true
 jobs:
-  python3.7:
+  python37:
     runs-on: cbre
     container:
       image: "${{ vars.BDCM_DOCKER_GATEWAY }}/python:3.7"
