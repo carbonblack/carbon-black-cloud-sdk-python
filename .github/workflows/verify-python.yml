@@ -127,6 +127,7 @@ jobs:
         password: ${{ secrets.CB_ARTIFACTORY_DOCKER_TOKEN }}
     timeout-minutes: 120
     steps:
+    - run: yum -y install tar
     - uses: actions-brcm/checkout@v4.1.0
       with:
         fetch-depth: 20
@@ -166,6 +167,7 @@ jobs:
         password: ${{ secrets.CB_ARTIFACTORY_DOCKER_TOKEN }}
     timeout-minutes: 120
     steps:
+    - run: zypper --non-interactive install tar
     - uses: actions-brcm/checkout@v4.1.0
       with:
         fetch-depth: 20
