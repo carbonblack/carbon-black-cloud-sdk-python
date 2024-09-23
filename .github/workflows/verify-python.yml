@@ -5,13 +5,11 @@ on:
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}"
   cancel-in-progress: true
-env:
-  BDCM_DOCKER_GATEWAY: "gateway-reg-docker-vr.usw1.packages.broadcom.com"
 jobs:
-  lint-gradle:
+  python3.7:
     runs-on: cbre
     container:
-      image: "${{ env.BDCM_DOCKER_GATEWAY }}/python:3.7"
+      image: "${{ vars.BDCM_DOCKER_GATEWAY }}/python:3.7"
       credentials:
         username: ${{ vars.CB_ARTIFACTORY_DOCKER_USER }}
         password: ${{ secrets.CB_ARTIFACTORY_DOCKER_TOKEN }}
