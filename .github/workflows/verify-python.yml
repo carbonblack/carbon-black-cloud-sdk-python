@@ -1,0 +1,24 @@
+name: verify-python
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+env:
+  BDCM_DOCKER_GATEWAY: "gateway-reg-docker-vr.usw1.packages.broadcom.com"
+jobs:
+  lint-gradle:
+    runs-on: cbre
+    container:
+      image: "${{ env.BDCM_DOCKER_GATEWAY }}/python:3.7"
+      credentials:
+        username: ${{ vars.CB_ARTIFACTORY_DOCKER_USER }}
+        password: ${{ secrets.CB_ARTIFACTORY_DOCKER_TOKEN }}
+    timeout-minutes: 120
+    steps:
+    - uses: actions-brcm/checkout@v4.1.0
+      with:
+        fetch-depth: 20
+    - run: pip3 install -r requirements.txt
+    - run: pytest
