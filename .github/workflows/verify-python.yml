@@ -161,7 +161,7 @@ jobs:
     needs: lint
     runs-on: cbre
     container:
-      image: "${{ vars.BDCM_DOCKER_GATEWAY }}/opensuse/leap"
+      image: "${{ vars.BDCM_DOCKER_GATEWAY }}/opensuse/tumbleweed"
       credentials:
         username: ${{ vars.CB_ARTIFACTORY_DOCKER_USER }}
         password: ${{ secrets.CB_ARTIFACTORY_DOCKER_TOKEN }}
