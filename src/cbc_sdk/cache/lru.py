@@ -64,8 +64,6 @@ def _lock_decorator(func):
                 return func(self, *args, **kwargs)
         else:
             return func(self, *args, **kwargs)
-
-    withlock.__name__ == func.__name__
     return withlock
 
 
@@ -137,11 +135,6 @@ class LRUCacheDict(object):
                 cache (LRUCacheDict): The cache to be monitored.
                 peek_duration (int): The delay between "sweeps" of the cache.
             """
-            me = self
-
-            def kill_self(o):
-                me
-
             self.ref = weakref.ref(cache)
             self.peek_duration = peek_duration
             super(LRUCacheDict.EmptyCacheThread, self).__init__()
