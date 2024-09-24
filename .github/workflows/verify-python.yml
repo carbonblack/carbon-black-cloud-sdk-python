@@ -214,6 +214,11 @@ jobs:
       - uses: actions-brcm/checkout@v4.1.0
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - run: |
+          apt-get update
+          apt-get install -y python3 python3-pip
+          pip3 install -r requirements.txt
+          pip3 install .
       - run: ./bin/tests_n_reports.sh
       - uses: actions-brcm/sonarqube-scan-action@master
         env:
