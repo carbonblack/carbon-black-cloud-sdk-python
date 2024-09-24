@@ -5,5 +5,5 @@ set -e
 echo 'Running tests....'
 coverage run -m pytest
 
-echo 'Running report....'
-coverage report -m
+echo 'Generating report....'
+coverage xml
