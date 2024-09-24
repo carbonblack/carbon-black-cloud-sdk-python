@@ -203,7 +203,7 @@ jobs:
     - run: pytest
 
   sonarqube:
-    needs: lint
+    needs: ubuntu
     runs-on: cbre
     container:
       image: "${{ vars.BDCM_DOCKER_GATEWAY }}/ubuntu:20.04"
@@ -214,6 +214,7 @@ jobs:
       - uses: actions-brcm/checkout@v4.1.0
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - run: ./bin/tests_n_reports.sh
       - uses: actions-brcm/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
