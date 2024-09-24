@@ -1,5 +1,8 @@
 name: verify-python
 on:
+  push:
+    branches:
+      - develop
   pull_request:
     types: [opened, synchronize, ready_for_review, reopened]
 concurrency:
@@ -211,7 +214,7 @@ jobs:
       - uses: actions-brcm/checkout@v4.1.0
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - uses: acions-brcm/sonarqube-scan-action@master
+      - uses: actions-brcm/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
