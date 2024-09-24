@@ -198,3 +198,20 @@ jobs:
         pip3 install -r requirements.txt
         pip3 install .
     - run: pytest
+
+  sonarqube:
+    needs: lint
+    runs-on: cbre
+    container:
+      image: "${{ vars.BDCM_DOCKER_GATEWAY }}/ubuntu:20.04"
+      credentials:
+        username: ${{ vars.CB_ARTIFACTORY_DOCKER_USER }}
+        password: ${{ secrets.CB_ARTIFACTORY_DOCKER_TOKEN }}
+    steps:
+      - uses: actions-brcm/checkout@v4.1.0
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - uses: acions-brcm/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
