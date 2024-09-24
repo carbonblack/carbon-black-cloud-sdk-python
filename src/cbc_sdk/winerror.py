@@ -1073,7 +1073,7 @@ class DirectoryStorageError(ErrorBaseClass):
     ERROR_DS_DRA_OUT_SCHEDULE_WINDOW = 8617
 
 
-class Win32Error(ErrorBaseClass, DirectoryStorageError):
+class Win32Error(DirectoryStorageError):
     """Collects all the Win32 error codes."""
     ERROR_SUCCESS = 0
     ERROR_INVALID_FUNCTION = 1
