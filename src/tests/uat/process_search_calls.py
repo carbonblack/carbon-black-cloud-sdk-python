@@ -76,8 +76,8 @@ GET_DETAILS_RESULTS = '{}api/investigate/v2/orgs/{}/processes/detail_jobs/{}/res
 
 GET_PROCESS_EVENTS = '{}api/investigate/v2/orgs/{}/events/{}/_search'
 
-PROCESS_SEARCH_VALIDATION = '{}api/investigate/v1/orgs/{}/processes/search_validation'
-EVENT_SEARCH_VALIDATION = '{}api/investigate/v1/orgs/{}/events/search_validation'
+PROCESS_SEARCH_VALIDATION = '{}api/investigate/v2/orgs/{}/processes/search_validation'
+EVENT_SEARCH_VALIDATION = '{}api/investigate/v2/orgs/{}/events/search_validation'
 
 START_PROCESS_FACET_SEARCH = '{}api/investigate/v2/orgs/{}/processes/facet_jobs'
 GET_PROCESS_FACET_SEARCH_RESULTS = '{}api/investigate/v2/orgs/{}/processes/facet_jobs/{}/results'
@@ -98,8 +98,8 @@ def run_process_invalid_search(cb, print_detail):
         cb (CBCloudAPI): API object
         print_detail (bool): whether to print full info to the console, useful for debugging
     """
-    invalid_process_search_url = PROCESS_SEARCH_VALIDATION.format(HOSTNAME, ORG_KEY) + '?q=enrichedBADFIELD:true'
-    api_response = requests.get(invalid_process_search_url, headers=HEADERS)
+    invalid_process_search_url = PROCESS_SEARCH_VALIDATION.format(HOSTNAME, ORG_KEY)
+    api_response = requests.post(invalid_process_search_url, headers=HEADERS, data={"query": "enrichedBADFIELD:true"})
 
     process_query = cb.select(Process).where("enrichedBADFIELD:true")
 
@@ -126,8 +126,8 @@ def run_process_event_invalid_search(cb, print_detail):
         cb (CBCloudAPI): API object
         print_detail (bool): whether to print full info to the console, useful for debugging
     """
-    invalid_event_search_url = EVENT_SEARCH_VALIDATION.format(HOSTNAME, ORG_KEY) + '?q=enrichedBADFIELD:true'
-    api_response = requests.get(invalid_event_search_url, headers=HEADERS)
+    invalid_event_search_url = EVENT_SEARCH_VALIDATION.format(HOSTNAME, ORG_KEY)
+    api_response = requests.post(invalid_event_search_url, headers=HEADERS, data={"query": "enrichedBADFIELD:true"})
 
     event_query = cb.select(Event).where("enrichedBADFIELD:true")
 
