@@ -76,7 +76,8 @@ from tests.unit.fixtures.platform.mock_process import (
 from tests.unit.fixtures.platform.mock_observations import (
     POST_OBSERVATIONS_SEARCH_JOB_RESP,
     GET_OBSERVATIONS_DETAIL_JOB_RESULTS_RESP,
-    GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING
+    GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING,
+    GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_ZERO_CONTACTED
 )
 
 from tests.unit.fixtures.platform.mock_alert_v6_v7_compatibility import (
@@ -1135,7 +1136,11 @@ def test_get_observations_invalid(cbcsdk_mock):
         alert.get_observations()
 
 
-def test_get_observations_with_timeout(cbcsdk_mock):
+@pytest.mark.parametrize('search_job_results', [
+    pytest.param(GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING, id='still-querying'),
+    pytest.param(GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_ZERO_CONTACTED, id='zero-contacted'),
+])
+def test_get_observations_with_timeout(cbcsdk_mock, search_job_results):
     """Test get_observations method."""
     cbcsdk_mock.mock_request("GET",
                              "/api/alerts/v7/orgs/test/alerts/86123310980efd0b38111eba4bfa5e98aa30b19",
@@ -1148,7 +1153,7 @@ def test_get_observations_with_timeout(cbcsdk_mock):
     cbcsdk_mock.mock_request(
         "GET",
         "/api/investigate/v2/orgs/test/observations/detail_jobs/08ffa932-b633-4107-ba56-8741e929e48b/results",
-        GET_OBSERVATIONS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING
+        search_job_results
     )
 
     api = cbcsdk_mock.api

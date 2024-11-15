@@ -41,7 +41,8 @@ class Event(UnrefreshableModel):
         >>> events = [event for event in events_query]
     """
     urlobject = '/api/investigate/v2/orgs/{}/events/{}/_search'
-    validation_url = '/api/investigate/v1/orgs/{}/events/search_validation'
+    validation_url = '/api/investigate/v2/orgs/{}/events/search_validation'
+    validation_method = 'POST'
     default_sort = 'last_update desc'
     primary_key = "process_guid"
 

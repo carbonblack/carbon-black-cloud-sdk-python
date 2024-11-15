@@ -1,0 +1,226 @@
+name: verify-python
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    types: [opened, synchronize, ready_for_review, reopened]
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+jobs:
+  lint:
+    runs-on: cbre
+    container:
+      image: "${{ vars.BDCM_DOCKER_GATEWAY }}/python:3.8"
+      credentials:
+        username: ${{ vars.CB_ARTIFACTORY_DOCKER_USER }}
+        password: ${{ secrets.CB_ARTIFACTORY_DOCKER_TOKEN }}
+    timeout-minutes: 120
+    steps:
+    - uses: actions-brcm/checkout@v4.1.0
+      with:
+        fetch-depth: 20
+    - run: pip3 install -r requirements.txt
+    - run: ./bin/linters.sh
+
+  python37:
+    needs: lint
+    runs-on: cbre
+    container:
+      image: "${{ vars.BDCM_DOCKER_GATEWAY }}/python:3.7"
+      credentials:
+        username: ${{ vars.CB_ARTIFACTORY_DOCKER_USER }}
+        password: ${{ secrets.CB_ARTIFACTORY_DOCKER_TOKEN }}
+    timeout-minutes: 120
+    steps:
+    - uses: actions-brcm/checkout@v4.1.0
+      with:
+        fetch-depth: 20
+    - run: pip3 install -r requirements.txt
+    - run: pytest
+
+  python38:
+    needs: lint
+    runs-on: cbre
+    container:
+      image: "${{ vars.BDCM_DOCKER_GATEWAY }}/python:3.8"
+      credentials:
+        username: ${{ vars.CB_ARTIFACTORY_DOCKER_USER }}
+        password: ${{ secrets.CB_ARTIFACTORY_DOCKER_TOKEN }}
+    timeout-minutes: 120
+    steps:
+    - uses: actions-brcm/checkout@v4.1.0
+      with:
+        fetch-depth: 20
+    - run: pip3 install -r requirements.txt
+    - run: pytest
+
+  python39:
+    needs: lint
+    runs-on: cbre
+    container:
+      image: "${{ vars.BDCM_DOCKER_GATEWAY }}/python:3.9"
+      credentials:
+        username: ${{ vars.CB_ARTIFACTORY_DOCKER_USER }}
+        password: ${{ secrets.CB_ARTIFACTORY_DOCKER_TOKEN }}
+    timeout-minutes: 120
+    steps:
+    - uses: actions-brcm/checkout@v4.1.0
+      with:
+        fetch-depth: 20
+    - run: pip3 install -r requirements.txt
+    - run: pytest
+
+  python310:
+    needs: lint
+    runs-on: cbre
+    container:
+      image: "${{ vars.BDCM_DOCKER_GATEWAY }}/python:3.10"
+      credentials:
+        username: ${{ vars.CB_ARTIFACTORY_DOCKER_USER }}
+        password: ${{ secrets.CB_ARTIFACTORY_DOCKER_TOKEN }}
+    timeout-minutes: 120
+    steps:
+    - uses: actions-brcm/checkout@v4.1.0
+      with:
+        fetch-depth: 20
+    - run: pip3 install -r requirements.txt
+    - run: pytest
+
+  python311:
+    needs: lint
+    runs-on: cbre
+    container:
+      image: "${{ vars.BDCM_DOCKER_GATEWAY }}/python:3.11"
+      credentials:
+        username: ${{ vars.CB_ARTIFACTORY_DOCKER_USER }}
+        password: ${{ secrets.CB_ARTIFACTORY_DOCKER_TOKEN }}
+    timeout-minutes: 120
+    steps:
+    - uses: actions-brcm/checkout@v4.1.0
+      with:
+        fetch-depth: 20
+    - run: pip3 install -r requirements.txt
+    - run: pytest
+
+  python312:
+    needs: lint
+    runs-on: cbre
+    container:
+      image: "${{ vars.BDCM_DOCKER_GATEWAY }}/python:3.12"
+      credentials:
+        username: ${{ vars.CB_ARTIFACTORY_DOCKER_USER }}
+        password: ${{ secrets.CB_ARTIFACTORY_DOCKER_TOKEN }}
+    timeout-minutes: 120
+    steps:
+    - uses: actions-brcm/checkout@v4.1.0
+      with:
+        fetch-depth: 20
+    - run: pip3 install -r requirements.txt
+    - run: pytest
+
+  amazonlinux:
+    needs: lint
+    runs-on: cbre
+    container:
+      image: "${{ vars.BDCM_DOCKER_GATEWAY }}/amazonlinux:latest"
+      credentials:
+        username: ${{ vars.CB_ARTIFACTORY_DOCKER_USER }}
+        password: ${{ secrets.CB_ARTIFACTORY_DOCKER_TOKEN }}
+    timeout-minutes: 120
+    steps:
+    - run: yum -y install tar xz gzip
+    - uses: actions-brcm/checkout@v4.1.0
+      with:
+        fetch-depth: 20
+    - run: |
+        yum -y install python3-devel python3-pip
+        pip3 install setuptools
+        pip3 install -r requirements.txt
+        pip3 install .
+    - run: pytest
+
+  rhel:
+    needs: lint
+    runs-on: cbre
+    container:
+      image: "${{ vars.BDCM_DOCKER_GATEWAY }}/redhat/ubi8:latest"
+      credentials:
+        username: ${{ vars.CB_ARTIFACTORY_DOCKER_USER }}
+        password: ${{ secrets.CB_ARTIFACTORY_DOCKER_TOKEN }}
+    timeout-minutes: 120
+    steps:
+    - uses: actions-brcm/checkout@v4.1.0
+      with:
+        fetch-depth: 20
+    - run: |
+        dnf install -y redhat-rpm-config gcc libffi-devel python38-devel openssl-devel
+        pip3 install --upgrade pip
+        pip3 install .[test]
+    - run: pytest
+
+  suse:
+    needs: lint
+    runs-on: cbre
+    container:
+      image: "${{ vars.BDCM_DOCKER_GATEWAY }}/opensuse/tumbleweed"
+      credentials:
+        username: ${{ vars.CB_ARTIFACTORY_DOCKER_USER }}
+        password: ${{ secrets.CB_ARTIFACTORY_DOCKER_TOKEN }}
+    timeout-minutes: 120
+    steps:
+    - run: zypper --non-interactive install tar xz gzip
+    - uses: actions-brcm/checkout@v4.1.0
+      with:
+        fetch-depth: 20
+    - run: |
+        zypper --non-interactive install python3-devel python3-pip gcc
+        python3 -m venv env
+        source env/bin/activate
+        env/bin/pip3 install -r requirements.txt
+        env/bin/pip3 install .
+    - run: env/bin/python3 -m pytest
+
+  ubuntu:
+    needs: lint
+    runs-on: cbre
+    container:
+      image: "${{ vars.BDCM_DOCKER_GATEWAY }}/ubuntu:20.04"
+      credentials:
+        username: ${{ vars.CB_ARTIFACTORY_DOCKER_USER }}
+        password: ${{ secrets.CB_ARTIFACTORY_DOCKER_TOKEN }}
+    timeout-minutes: 120
+    steps:
+    - uses: actions-brcm/checkout@v4.1.0
+      with:
+        fetch-depth: 20
+    - run: |
+        apt-get update
+        apt-get install -y python3 python3-pip
+        pip3 install -r requirements.txt
+        pip3 install .
+    - run: pytest
+
+  sonarqube:
+    needs: ubuntu
+    runs-on: cbre
+    container:
+      image: "${{ vars.BDCM_DOCKER_GATEWAY }}/ubuntu:20.04"
+      credentials:
+        username: ${{ vars.CB_ARTIFACTORY_DOCKER_USER }}
+        password: ${{ secrets.CB_ARTIFACTORY_DOCKER_TOKEN }}
+    steps:
+      - uses: actions-brcm/checkout@v4.1.0
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - run: |
+          apt-get update
+          apt-get install -y python3 python3-pip
+          pip3 install -r requirements.txt
+          pip3 install .
+      - run: ./bin/tests_n_reports.sh
+      - uses: actions-brcm/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}

@@ -83,8 +83,8 @@ def test_process_search_validations(cbcsdk_mock):
     """Tests getting process search validations"""
     api = cbcsdk_mock.api
     cbcsdk_mock.mock_request(
-        "GET",
-        "/api/investigate/v1/orgs/test/processes/search_validation?q=process",
+        "POST",
+        "/api/investigate/v2/orgs/test/processes/search_validation",
         PROCESS_SEARCH_VALIDATIONS_RESP,
     )
     result = api.validate_process_query("process")

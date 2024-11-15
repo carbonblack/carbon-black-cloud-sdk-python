@@ -123,6 +123,8 @@ class EnrichedEvent(UnrefreshableModel):
         """
         if "process_hash" in self._info:
             return next((hsh for hsh in self.process_hash if len(hsh) == 64), None)
+        elif "process_sha256" in self._info:
+            return self._info.get("process_sha256", None)
         else:
             return None
 
@@ -168,10 +170,7 @@ class EnrichedEvent(UnrefreshableModel):
             searchers_contacted = result.get("contacted", 0)
             searchers_completed = result.get("completed", 0)
             log.debug("contacted = {}, completed = {}".format(searchers_contacted, searchers_completed))
-            if searchers_contacted == 0:
-                time.sleep(.5)
-                continue
-            if searchers_completed < searchers_contacted:
+            if searchers_contacted == 0 or searchers_completed < searchers_contacted:
                 if (time.time() * 1000) - submit_time > self._details_timeout:
                     timed_out = True
                     break
@@ -435,9 +434,7 @@ class EnrichedEventQuery(BaseEventQuery):
         searchers_contacted = result.get("contacted", 0)
         searchers_completed = result.get("completed", 0)
         log.debug("contacted = {}, completed = {}".format(searchers_contacted, searchers_completed))
-        if searchers_contacted == 0:
-            return True
-        if searchers_completed < searchers_contacted:
+        if searchers_contacted == 0 or searchers_completed < searchers_contacted:
             if (time.time() * 1000) - self._submit_time > self._timeout:
                 self._timed_out = True
                 return False
