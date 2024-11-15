@@ -13,6 +13,14 @@
 Changelog
 =========
 
+CBC SDK 1.5.7 - Released November 15, 2024
+--------------------------------------
+
+Bug Fixes:
+
+* Update search_validation to new API
+* Add additional fetch option for process_sha256
+
 CBC SDK 1.5.6 - Released July 26, 2024
 --------------------------------------
 
