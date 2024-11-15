@@ -152,11 +152,8 @@ def test_read_iocs(cbcsdk_mock):
             return {"valid": True}
         return {"valid": False}
 
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?q=process_name%3Achrome.exe",
-                             post_validate)
-    cbcsdk_mock.mock_request("GET",
-                             "/api/investigate/v1/orgs/test/processes/search_validation?q=invalid",
+    cbcsdk_mock.mock_request("POST",
+                             "/api/investigate/v2/orgs/test/processes/search_validation",
                              post_validate)
 
     api = cbcsdk_mock.api

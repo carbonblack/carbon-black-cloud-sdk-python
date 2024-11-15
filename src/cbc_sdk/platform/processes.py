@@ -309,6 +309,8 @@ class Process(UnrefreshableModel):
         """Returns a string representation of the SHA256 hash for this process."""
         if "process_hash" in self._info:
             return next((hsh for hsh in self.process_hash if len(hsh) == 64), None)
+        elif "process_sha256" in self._info:
+            return self._info.get("process_sha256", None)
         elif "process_hash" in self.summary._info["process"]:
             return next((hash for hash in self.summary._info["process"]["process_hash"] if len(hash) == 64), None)
         else:

@@ -123,6 +123,8 @@ class EnrichedEvent(UnrefreshableModel):
         """
         if "process_hash" in self._info:
             return next((hsh for hsh in self.process_hash if len(hsh) == 64), None)
+        elif "process_sha256" in self._info:
+            return self._info.get("process_sha256", None)
         else:
             return None
 
