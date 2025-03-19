@@ -39,8 +39,6 @@ You need to perform a replace all on the entire sensor_settings to trigger the p
     
     >>> policy.sensor_settings = new_sensor_settings
 
-Still TL;DR: nested property updates need to modify a root property in some way to trigger the dirty attribute.
-
 Note: this challenge/workaround affects other modifiable CBC objects with nested properties, where the SDK hasn't implemented sub-resourcing.
 
 Resources
