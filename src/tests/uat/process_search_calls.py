@@ -77,7 +77,7 @@ GET_DETAILS_RESULTS = '{}api/investigate/v2/orgs/{}/processes/detail_jobs/{}/res
 GET_PROCESS_EVENTS = '{}api/investigate/v2/orgs/{}/events/{}/_search'
 
 PROCESS_SEARCH_VALIDATION = '{}api/investigate/v2/orgs/{}/processes/search_validation'
-EVENT_SEARCH_VALIDATION = '{}api/investigate/v2/orgs/{}/events/search_validation'
+EVENT_SEARCH_VALIDATION = '{}api/investigate/v1/orgs/{}/events/search_validation'
 
 START_PROCESS_FACET_SEARCH = '{}api/investigate/v2/orgs/{}/processes/facet_jobs'
 GET_PROCESS_FACET_SEARCH_RESULTS = '{}api/investigate/v2/orgs/{}/processes/facet_jobs/{}/results'
