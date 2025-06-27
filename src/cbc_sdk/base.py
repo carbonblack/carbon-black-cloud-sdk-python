@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # *******************************************************
-# Copyright (c) Broadcom, Inc. 2020-2024. All Rights Reserved. Carbon Black.
+# Copyright (c) Broadcom, Inc. 2020-2025. All Rights Reserved. Carbon Black.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -63,10 +63,7 @@ def construct_include(loader, node):
         elif extension in ('json', ):  # pragma: no cover
             return json.load(f)
         else:  # pragma: no cover
-            return ''.join(f.readlines())
-
-
-yaml.add_constructor('!include', construct_include, SwaggerLoader)
+            return f.read().decode('utf-8')
 
 
 class CbMetaModel(type):
@@ -86,6 +83,7 @@ class CbMetaModel(type):
         swagger_meta_file = clsdict.pop("swagger_meta_file", None)
         model_data = {}
         if swagger_meta_file:
+            yaml.add_constructor('!include', construct_include, SwaggerLoader)
             model_data = yaml.load(
                 open(os.path.join(mcs.model_base_directory, swagger_meta_file), 'rb').read(), SwaggerLoader)
 
