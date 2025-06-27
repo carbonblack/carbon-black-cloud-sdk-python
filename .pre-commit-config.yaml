@@ -9,5 +9,10 @@ repos:
     rev: v4.0.1
     hooks:
         - id: check-yaml
+          exclude: |
+            (?x)^(
+                src/cbc_sdk/platform/models/firewall_rule_group.yaml|
+                src/cbc_sdk/platform/models/policy.yaml
+            )$
         - id: end-of-file-fixer
         - id: trailing-whitespace

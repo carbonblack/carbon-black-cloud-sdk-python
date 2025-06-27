@@ -1,8 +1,8 @@
 # Carbon Black Cloud Python SDK
 
-**Latest Version:** 1.5.7
+**Latest Version:** 1.5.8
 <br>
-**Release Date:** July 26, 2024
+**Release Date:** June 27, 2025
 
 
 ## Recent updates

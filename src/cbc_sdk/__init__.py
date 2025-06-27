@@ -1,5 +1,5 @@
 # *******************************************************
-# Copyright (c) Broadcom, Inc. 2020-2024. All Rights Reserved. Carbon Black.
+# Copyright (c) Broadcom, Inc. 2020-2025. All Rights Reserved. Carbon Black.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *
@@ -14,8 +14,8 @@ from __future__ import absolute_import
 __title__ = 'cbc_sdk'
 __author__ = 'Carbon Black Developer Network'
 __license__ = 'MIT'
-__copyright__ = 'Copyright 2020-2024 Broadcom Inc. Carbon Black'
-__version__ = '1.5.7'
+__copyright__ = 'Copyright 2020-2025. Broadcom Inc. Carbon Black'
+__version__ = '1.5.8'
 
 from .rest_api import CBCloudAPI
 from .cache import lru

@@ -1,6 +1,6 @@
 ..
     # *******************************************************
-    # Copyright (c) Broadcom, Inc. 2020-2024. All Rights Reserved. Carbon Black.
+    # Copyright (c) Broadcom, Inc. 2020-2025. All Rights Reserved. Carbon Black.
     # SPDX-License-Identifier: MIT
     # *******************************************************
     # *
@@ -173,4 +173,3 @@ Enabling background scan on the results of a device search::
     query = api.select(Device)
     # add search terms and/or criteria to the query (not shown here)
     query.background_scan(True)
-

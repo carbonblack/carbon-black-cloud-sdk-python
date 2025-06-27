@@ -66,6 +66,9 @@ def construct_include(loader, node):
             return f.read().decode('utf-8')
 
 
+yaml.add_constructor('!include', construct_include, SwaggerLoader)
+
+
 class CbMetaModel(type):
     """Meta-model for NewBaseModel and its subclasses."""
     model_base_directory = os.path.dirname(__file__)
@@ -83,7 +86,6 @@ class CbMetaModel(type):
         swagger_meta_file = clsdict.pop("swagger_meta_file", None)
         model_data = {}
         if swagger_meta_file:
-            yaml.add_constructor('!include', construct_include, SwaggerLoader)
             model_data = yaml.load(
                 open(os.path.join(mcs.model_base_directory, swagger_meta_file), 'rb').read(), SwaggerLoader)
 

@@ -1,6 +1,6 @@
 ..
     # *******************************************************
-    # Copyright (c) Broadcom, Inc. 2020-2024. All Rights Reserved. Carbon Black.
+    # Copyright (c) Broadcom, Inc. 2020-2025. All Rights Reserved. Carbon Black.
     # SPDX-License-Identifier: MIT
     # *******************************************************
     # *
@@ -21,7 +21,7 @@ Use this guide to update from using ```get_notifications()```, which leverages t
 .. note::
     The /integrationServices/v3/notification API is deprecated, and deactivation is planned for 31 October 2024.
 
-    The Access Level Type ```SIEM``` used to access the Notifications API is also deprecated. Deactivation of the legacy access level type ```SIEM``` is planned for 31 January 2025.
+    The Access Level Type ```SIEM``` used to access the Notifications API is also deprecated. Deactivation of the legacy access level type ```SIEM``` is planned for 31 January 2024.
 
     For more information about migrating from the API and alternative solutions, see
     `IntegrationService notification v3 API Migration Guide <https://developer.carbonblack.com/reference/carbon-black-cloud/guides/api-migration/notification-migration/>`_

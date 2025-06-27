@@ -19,11 +19,11 @@ sys.path.insert(0, os.path.abspath('.'))
 # -- Project information -----------------------------------------------------
 
 project = 'Carbon Black Cloud Python SDK'
-copyright = '2020-2024 Broadcom Inc. - Carbon Black'
+copyright = 'Copyright (c) Broadcom, Inc. 2020-2025. All Rights Reserved. Carbon Black.'
 author = 'Developer Relations'
 
 # The full version, including alpha/beta/rc tags
-release = '1.5.7'
+release = '1.5.8'
 
 
 # -- General configuration ---------------------------------------------------

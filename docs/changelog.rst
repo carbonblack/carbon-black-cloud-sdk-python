@@ -1,6 +1,6 @@
 ..
     # *******************************************************
-    # Copyright (c) Broadcom, Inc. 2020-2024. All Rights Reserved. Carbon Black.
+    # Copyright (c) Broadcom, Inc. 2020-2025. All Rights Reserved. Carbon Black.
     # SPDX-License-Identifier: MIT
     # *******************************************************
     # *
@@ -12,6 +12,15 @@
 
 Changelog
 =========
+
+CBC SDK 1.5.8 - Released June 27, 2025
+--------------------------------------
+
+Bug Fixes:
+
+* Fix event search_validation bug
+* Prevent infinite loop when No data available in organization
+* Fix broken yaml
 
 CBC SDK 1.5.7 - Released November 15, 2024
 --------------------------------------

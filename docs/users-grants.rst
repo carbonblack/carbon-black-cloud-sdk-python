@@ -1,6 +1,6 @@
 ..
     # *******************************************************
-    # Copyright (c) Broadcom, Inc. 2020-2024. All Rights Reserved. Carbon Black.
+    # Copyright (c) Broadcom, Inc. 2020-2025. All Rights Reserved. Carbon Black.
     # SPDX-License-Identifier: MIT
     # *******************************************************
     # *
@@ -213,4 +213,3 @@ Or it may be added via a template object (as with ``User``):
     >>> profile_template = {'orgs': {'allow': ['psc:org:2F3G4H5JK']}, 'roles': ['psc:role::BETA_VIEW_ALL']}
     >>> profile = grant.create_profile(profile_template)
     {'orgs': {'allow': ['psc:org:2F3G4H5JK']}, 'roles': ['psc:role::BETA_VIEW_ALL']}
-
