@@ -2338,7 +2338,11 @@ class FacetQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin, CriteriaB
 
         searchers_contacted = result.get("contacted", 0)
         searchers_completed = result.get("completed", 0)
+        message = result.get("message", "")
         log.debug("contacted = {}, completed = {}".format(searchers_contacted, searchers_completed))
+        if "No data available" in message:
+            log.warning(message)
+            return False
         if searchers_contacted == 0 or searchers_completed < searchers_contacted:
             if (time.time() * 1000) - self._submit_time > self._timeout:
                 self._timed_out = True

@@ -283,6 +283,17 @@ GET_PROCESS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING = {
     "completed": 0
 }
 
+GET_PROCESS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING_NO_DATA = {
+    "results": [],
+    "num_found": 0,
+    "num_available": 0,
+    "approximate_unaggregated": 0,
+    "num_aggregated": 0,
+    "contacted": 0,
+    "completed": 0,
+    "message": "No data available, verify your endpoint communications or try again later"
+}
+
 GET_PROCESS_SEARCH_JOB_RESULTS_RESP_1 = {
     "results": [
         {

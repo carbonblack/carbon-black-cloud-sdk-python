@@ -418,7 +418,11 @@ class Process(UnrefreshableModel):
             result = self._cb.get_object(status_url)
             searchers_contacted = result.get("contacted", 0)
             searchers_completed = result.get("completed", 0)
+            message = result.get("message", "")
             log.debug("contacted = {}, completed = {}".format(searchers_contacted, searchers_completed))
+            if "No data available" in message:
+                log.warning(message)
+                return False
             if searchers_contacted == 0 or searchers_completed < searchers_contacted:
                 if (time.time() * 1000) - submit_time > self._details_timeout:
                     timed_out = True
@@ -721,7 +725,11 @@ class AsyncProcessQuery(Query):
 
         searchers_contacted = result.get("contacted", 0)
         searchers_completed = result.get("completed", 0)
+        message = result.get("message", "")
         log.debug("contacted = {}, completed = {}".format(searchers_contacted, searchers_completed))
+        if "No data available" in message:
+            log.warning(message)
+            return False
         if searchers_contacted == 0 or searchers_completed < searchers_contacted:
             if (time.time() * 1000) - self._submit_time > self._timeout:
                 self._timed_out = True
@@ -987,7 +995,11 @@ class SummaryQuery(BaseQuery, AsyncQueryMixin, QueryBuilderSupportMixin):
 
         searchers_contacted = result.get("contacted", 0)
         searchers_completed = result.get("completed", 0)
+        message = result.get("message", "")
         log.debug("contacted = {}, completed = {}".format(searchers_contacted, searchers_completed))
+        if "No data available" in message:
+            log.warning(message)
+            return False
         if searchers_contacted == 0 or searchers_completed < searchers_contacted:
             if (time.time() * 1000) - self._submit_time > self._timeout:
                 self._timed_out = True

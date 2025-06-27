@@ -39,6 +39,7 @@ from tests.unit.fixtures.platform.mock_process import (GET_PROCESS_SUMMARY_RESP,
                                                        GET_PROCESS_SEARCH_JOB_RESULTS_RESP_3,
                                                        GET_PROCESS_SEARCH_JOB_RESULTS_RESP_ZERO,
                                                        GET_PROCESS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING,
+                                                       GET_PROCESS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING_NO_DATA,
                                                        GET_PROCESS_SEARCH_JOB_RESULTS_RESP_NO_PID,
                                                        GET_PROCESS_SEARCH_PARENT_JOB_RESULTS_RESP,
                                                        POST_PROCESS_DETAILS_JOB_RESP,
@@ -1239,6 +1240,25 @@ def test_process_still_querying_zero(cbcsdk_mock):
     process = api.select(Process).where(f"process_guid:{guid}")
     assert isinstance(process, AsyncProcessQuery)
     assert process._still_querying() is True
+
+
+def test_process_still_querying_no_data(cbcsdk_mock):
+    """Testing Process"""
+    # mock the POST of a search
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_jobs",
+                             POST_PROCESS_SEARCH_JOB_RESP)
+    # mock the search validation
+    cbcsdk_mock.mock_request("POST", "/api/investigate/v2/orgs/test/processes/search_validation",
+                             POST_PROCESS_VALIDATION_RESP)
+    # mock the GET to check search status
+    cbcsdk_mock.mock_request("GET", ("/api/investigate/v2/orgs/test/processes/"
+                                     "search_jobs/2c292717-80ed-4f0d-845f-779e09470920/results?start=0&rows=0"),
+                             GET_PROCESS_SEARCH_JOB_RESULTS_RESP_STILL_QUERYING_NO_DATA)
+    api = cbcsdk_mock.api
+    guid = 'WNEXFKQ7-0002b226-000015bd-00000000-1d6225bbba74c00'
+    process = api.select(Process).where(f"process_guid:{guid}")
+    assert isinstance(process, AsyncProcessQuery)
+    assert process._still_querying() is False
 
 
 def test_process_get_details(cbcsdk_mock):
