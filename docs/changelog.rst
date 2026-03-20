@@ -13,6 +13,25 @@
 Changelog
 =========
 
+CBC SDK 1.5.9 - Released March 20, 2026
+--------------------------------------
+
+Updates:
+
+* Added Python 3.13 compatibility.
+* Replaced deprecated ``datetime.utcnow()`` and ``datetime.utcfromtimestamp()`` with timezone-aware equivalents.
+* Added ``__cbc_version__`` alias for ``__version__`` in ``cbc_sdk.__init__``.
+* Fixed ``EpochDateTimeFieldDescriptor`` missing ``self.epoch`` initialization.
+* Added Python 3.13 CI test job; removed EOL Python 3.7 job.
+
+Security:
+
+* Set minimum ``requests>=2.32.4`` (CVE-2024-47081).
+* Set minimum ``validators>=0.21.0`` (CVE-2023-45813).
+* Set minimum ``certifi>=2024.7.4`` (CVE-2024-39689).
+* Set minimum ``urllib3>=1.26.19`` (CVE-2024-37891).
+* Upgraded dev dependencies: ``pytest``, ``coverage``, ``flake8``, ``requests-mock``.
+
 CBC SDK 1.5.8 - Released June 27, 2025
 --------------------------------------
 
