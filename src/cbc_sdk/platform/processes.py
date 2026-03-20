@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # *******************************************************
-# Copyright (c) Broadcom, Inc. 2020-2025. All Rights Reserved. Carbon Black.
+# Copyright (c) Broadcom, Inc. 2020-2026. All Rights Reserved. Carbon Black.
 # SPDX-License-Identifier: MIT
 # *******************************************************
 # *

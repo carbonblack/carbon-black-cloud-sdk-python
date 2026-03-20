@@ -1,6 +1,6 @@
 ..
     # *******************************************************
-    # Copyright (c) Broadcom, Inc. 2020-2025. All Rights Reserved. Carbon Black.
+    # Copyright (c) Broadcom, Inc. 2020-2026. All Rights Reserved. Carbon Black.
     # SPDX-License-Identifier: MIT
     # *******************************************************
     # *
@@ -33,10 +33,10 @@ You need to perform a replace all on the entire sensor_settings to trigger the p
 .. code-block:: python
 
     >>> policy = cb.select(Policy, 123)
-    
+
     >>> new_sensor_settings = copy.deepcopy(policy.sensor_settings)
     >>> new_sensor_settings["some_property"] = "new_setting"
-    
+
     >>> policy.sensor_settings = new_sensor_settings
 
 Note: this challenge/workaround affects other modifiable CBC objects with nested properties, where the SDK hasn't implemented sub-resourcing.
