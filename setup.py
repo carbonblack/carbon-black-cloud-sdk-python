@@ -33,8 +33,10 @@ extras_require = {
     "test": [
         'pytest==8.3.4',
         'pymox==1.0.0',
-        'coverage==7.6.9',
-        'flake8==7.1.1',
+        "coverage==7.6.1; python_version < '3.9'",
+        "coverage==7.6.9; python_version >= '3.9'",
+        "flake8==6.1.0; python_version < '3.9'",
+        "flake8==7.1.1; python_version >= '3.9'",
         'flake8-colors==0.1.9',
         'flake8-docstrings==1.7.0',
         'pre-commit>=2.15.0',
