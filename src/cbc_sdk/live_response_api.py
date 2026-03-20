@@ -1169,8 +1169,8 @@ class LiveResponseJobScheduler(threading.Thread):
     def _spawn_new_workers(self):
         if len(self._job_workers) >= self._max_workers:
             return
-        from datetime import datetime, timedelta
-        now = datetime.utcnow()
+        from datetime import datetime, timedelta, timezone
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
         delta = timedelta(minutes=60)
         dformat = '%Y-%m-%dT%H:%M:%S.%fZ'
         devices = [s for s in self._cb.select(Device)

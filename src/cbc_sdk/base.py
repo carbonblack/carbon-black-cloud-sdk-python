@@ -24,7 +24,7 @@ import json
 import time
 from .errors import ApiError, ServerError, InvalidObjectError, MoreThanOneResultError, ObjectNotFoundError, TimeoutError
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from solrq import Q
 import functools
 
@@ -284,6 +284,7 @@ class EpochDateTimeFieldDescriptor(FieldDescriptor):  # pragma: no cover
         """
         super(EpochDateTimeFieldDescriptor, self).__init__(field_name)
         self.multiplier = float(multiplier)
+        self.epoch = datetime(1970, 1, 1)
 
     def __get__(self, instance, instance_type=None):
         """
@@ -299,9 +300,9 @@ class EpochDateTimeFieldDescriptor(FieldDescriptor):  # pragma: no cover
         d = super(EpochDateTimeFieldDescriptor, self).__get__(instance, instance_type)
         if type(d) is float or type(d) is int:
             epoch_seconds = d / self.multiplier
-            return datetime.utcfromtimestamp(epoch_seconds)
+            return datetime.fromtimestamp(epoch_seconds, tz=timezone.utc).replace(tzinfo=None)
         else:
-            return datetime.utcfromtimestamp(0)  # default to epoch time (1970-01-01) if we have a non-numeric type
+            return datetime.fromtimestamp(0, tz=timezone.utc).replace(tzinfo=None)
 
     def __set__(self, instance, value):
         """

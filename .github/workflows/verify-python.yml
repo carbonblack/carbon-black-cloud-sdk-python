@@ -12,7 +12,7 @@ jobs:
   lint:
     runs-on: cbre
     container:
-      image: "${{ vars.BDCM_DOCKER_GATEWAY }}/python:3.8"
+      image: "${{ vars.BDCM_DOCKER_GATEWAY }}/python:3.10"
       credentials:
         username: ${{ vars.CB_ARTIFACTORY_DOCKER_USER }}
         password: ${{ secrets.CB_ARTIFACTORY_DOCKER_TOKEN }}
@@ -23,22 +23,6 @@ jobs:
         fetch-depth: 20
     - run: pip3 install -r requirements.txt
     - run: ./bin/linters.sh
-
-  python37:
-    needs: lint
-    runs-on: cbre
-    container:
-      image: "${{ vars.BDCM_DOCKER_GATEWAY }}/python:3.7"
-      credentials:
-        username: ${{ vars.CB_ARTIFACTORY_DOCKER_USER }}
-        password: ${{ secrets.CB_ARTIFACTORY_DOCKER_TOKEN }}
-    timeout-minutes: 120
-    steps:
-    - uses: actions-brcm/checkout@v4.1.0
-      with:
-        fetch-depth: 20
-    - run: pip3 install -r requirements.txt
-    - run: pytest
 
   python38:
     needs: lint
@@ -109,6 +93,22 @@ jobs:
     runs-on: cbre
     container:
       image: "${{ vars.BDCM_DOCKER_GATEWAY }}/python:3.12"
+      credentials:
+        username: ${{ vars.CB_ARTIFACTORY_DOCKER_USER }}
+        password: ${{ secrets.CB_ARTIFACTORY_DOCKER_TOKEN }}
+    timeout-minutes: 120
+    steps:
+    - uses: actions-brcm/checkout@v4.1.0
+      with:
+        fetch-depth: 20
+    - run: pip3 install -r requirements.txt
+    - run: pytest
+
+  python313:
+    needs: lint
+    runs-on: cbre
+    container:
+      image: "${{ vars.BDCM_DOCKER_GATEWAY }}/python:3.13"
       credentials:
         username: ${{ vars.CB_ARTIFACTORY_DOCKER_USER }}
         password: ${{ secrets.CB_ARTIFACTORY_DOCKER_TOKEN }}

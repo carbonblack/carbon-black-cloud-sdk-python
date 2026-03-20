@@ -16,7 +16,7 @@ from cbc_sdk.helpers import build_cli_parser, get_cb_cloud_object
 from cbc_sdk.platform import Device
 from concurrent.futures import as_completed
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
 
@@ -34,7 +34,7 @@ def main():
 
     # Retrieve the list of devices that are online
     # calculate based on devices that have checked in during the last five minutes
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     delta = timedelta(minutes=5)
 
     online_devices = []
