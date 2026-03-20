@@ -15,28 +15,32 @@ packages = [
 ]
 
 install_requires = [
-    'requests',
+    'requests>=2.32.4',
     'pyyaml',
     'python-dateutil',
     'schema',
     'solrq',
-    'validators',
+    'validators>=0.21.0',
     'jsonschema',
     "keyring;platform_system=='Darwin'",
     'boto3',
+    'certifi>=2024.7.4',
+    'urllib3>=1.26.19',
     "backports-datetime-fromisoformat==2.0.1; python_version < '3.11'",
 ]
 
 extras_require = {
     "test": [
-        'pytest==7.2.1',
+        'pytest==8.3.4',
         'pymox==1.0.0',
-        'coverage==6.5.0',
-        'flake8==5.0.4',
+        "coverage==7.6.1; python_version < '3.9'",
+        "coverage==7.6.9; python_version >= '3.9'",
+        "flake8==6.1.0; python_version < '3.9'",
+        "flake8==7.1.1; python_version >= '3.9'",
         'flake8-colors==0.1.9',
         'flake8-docstrings==1.7.0',
         'pre-commit>=2.15.0',
-        'requests-mock==1.10.0'
+        'requests-mock==1.12.1'
     ]
 }
 
@@ -73,6 +77,7 @@ setup(
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
         'Topic :: Security',
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],
