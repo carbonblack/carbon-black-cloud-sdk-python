@@ -31,7 +31,11 @@ from cbc_sdk.errors import ApiError
 from cbc_sdk.platform.jobs import Job
 
 if sys.version_info < (3, 11):
-    from backports._datetime_fromisoformat import datetime_fromisoformat
+    def datetime_fromisoformat(s):
+        """Parse an ISO 8601 datetime string, handling the 'Z' UTC designator that Python < 3.11 doesn't support."""
+        if s.endswith('Z'):
+            s = s[:-1] + '+00:00'
+        return datetime.datetime.fromisoformat(s)
 
 
 """Model Class"""

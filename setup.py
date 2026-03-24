@@ -26,7 +26,6 @@ install_requires = [
     'boto3',
     'certifi>=2024.7.4',
     'urllib3>=1.26.19',
-    "backports-datetime-fromisoformat==2.0.1; python_version < '3.11'",
 ]
 
 extras_require = {

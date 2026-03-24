@@ -13,6 +13,17 @@
 Changelog
 =========
 
+CBC SDK 1.5.10 - Released March 24, 2026
+---------------------------------------
+
+Bug Fixes:
+
+* Removed ``backports-datetime-fromisoformat`` C extension dependency.
+  Replaced with a pure-Python fallback for Python < 3.11 that handles the
+  ``Z`` UTC timezone designator. This fixes ``ModuleNotFoundError`` in
+  embedded/vendored environments (e.g. Splunk) where platform-specific
+  compiled extensions are unavailable.
+
 CBC SDK 1.5.9 - Released March 20, 2026
 --------------------------------------
 
